@@ -1,0 +1,12 @@
+.chat-node {
+  border: 1px solid oklch(94.9% 0 NaN);
+  padding: 5px;
+  border-radius: 5px;
+  background: white;
+}
+
+.chat-node label {
+  display: block;
+  color: oklch(56.9% 0 NaN);
+  font-size: 14px;
+}

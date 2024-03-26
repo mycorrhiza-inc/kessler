@@ -1,0 +1,74 @@
+version: '3'
+
+services:
+  reverse-proxy:
+    # official image
+    image: traefik:v2.11
+
+    # eable web ui, listen to docker
+    command: --api.insecure=true --providers.docker
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  rabbitmq:
+    image: rabbitmq:latest
+    ports:
+      - "5672:5672"
+    volumes:
+      - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+      - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ./Dockerfile
+    env_file:
+      - .env
+
+    volumes:
+      - ./backend:/code
+      - ./backend/instance:/code/instance
+    working_dir: "/code"
+
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=PathPrefix(`/api`)"
+    command:
+      - "uvicorn"
+      - "main:app"
+      - "--host"
+      - "0.0.0.0"
+      - "--port"
+      - "5505"
+      - "--workers"
+      - "4"
+      - "--reload"
+    ports:
+      - "5505:5505"
+  frontend:
+    container_name: frontend-kesslab
+    build:
+      context: ./frontend
+      dockerfile: ./Dockerfile
+
+    env_file:
+      - .env
+
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
+
+    ports:
+      - "3000:3000"
+
+    command:
+      - "npm"
+      - "run"
+      - "dev"
