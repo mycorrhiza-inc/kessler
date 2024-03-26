@@ -9,7 +9,7 @@
 ```
 search, sorta
 
-> warning!!: this code is pre-deployment. Use with anythign you care about at your own peril
+> warning!!: this code is pre-deployment. Use with anything you care about at your own peril
 
 ## Development
 
