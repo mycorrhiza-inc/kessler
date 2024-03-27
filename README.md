@@ -11,25 +11,60 @@ search, sorta
 
 > warning!!: this code is pre-deployment. Use with anything you care about at your own peril
 
-## Development
+# Usage
 
-### Requirements
+## Requirements
 
 - docker
 - docker compose
 
+## Running the application
+
+To start the application run `docker compose up -d`
+
+Once up, the Kessler API can be found at backend.docker.localhost or
+`localhost:5055`
+
+# Development
+
+## Setting Up your Dev Environment
+
+### Requirements
+
+Copy the environment file:
+```bash
+cp .env.example .env
+```
+
+You will need `docker` and `docker compose`
+
+
 ### Running it
 
-currently the kessler docker compose is in dev mode.
+Currently the Kessler docker compose is in dev mode.
 
-to run it:
+To run it:
 
 ```bash
 docker compose -d 
 ```
 
 
-### Adding dependencies to the frontend
+### Adding packages
 
-adding a depenency to the frontend requires a reload (no dynamic dependency reloads!)
+Adding packages to the frontend or the backend requires a rebuild for the
+respective container.
 
+```
+docker compose up -d --no-deps --build frontend
+```
+
+and
+
+```
+docker compose up -d --no-deps --build backend
+```
+
+# Contribute
+
+the software is currently under heavy development. No outside contributions will be accepted at this time.
