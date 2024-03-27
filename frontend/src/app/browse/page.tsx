@@ -1,3 +1,5 @@
+"use client"
+import ToolBar from "../../lib/components/ToolBar";
 
 
 const BrowseView = () => { 
@@ -8,6 +10,7 @@ const BrowseView = () => {
                 
             </div>
         </div> 
+        <ToolBar/>
     </>
 }
 
