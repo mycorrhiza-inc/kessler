@@ -5,8 +5,10 @@ from litestar import Litestar, Router
 from litestar.logging import LoggingConfig
 from litestar.config.cors import CORSConfig
 from litestar.repository.filters import LimitOffset
+
 from litestar.params import Parameter
 from litestar.di import Provide
+from litestar.contrib.sqlalchemy.base import UUIDBase
 from litestar.contrib.sqlalchemy.plugins import \
     AsyncSessionConfig, \
     SQLAlchemyAsyncConfig, \
