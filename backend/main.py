@@ -1,18 +1,30 @@
-import logging 
+import logging
+from files import FileController
 
 from litestar import Litestar, Router
-
-from litestar.contrib.sqlalchemy.base import UUIDAuditBase, UUIDBase
-from litestar.contrib.sqlalchemy.plugins import AsyncSessionConfig, SQLAlchemyAsyncConfig, SQLAlchemyInitPlugin
+from litestar.logging import LoggingConfig
+from litestar.config.cors import CORSConfig
+from litestar.repository.filters import LimitOffset
 
 from litestar.params import Parameter
 from litestar.di import Provide
-from litestar.repository.filters import LimitOffset
+from litestar.contrib.sqlalchemy.base import UUIDBase
+from litestar.contrib.sqlalchemy.plugins import \
+    AsyncSessionConfig, \
+    SQLAlchemyAsyncConfig, \
+    SQLAlchemyInitPlugin
 
-from litestar.config.cors import CORSConfig
-from litestar.logging import LoggingConfig
-
-from files import FileController
+# logging configuration
+logging_config = LoggingConfig(
+    root={
+        "level": logging.getLevelName(logging.INFO),
+        "handlers": ["console"]
+    },
+    formatters={
+        "standard": {
+            "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        }
+    })
 
 # set up the database
 session_config = AsyncSessionConfig(expire_on_commit=False)
@@ -22,12 +34,6 @@ sqlalchemy_config = SQLAlchemyAsyncConfig(
 )
 sqlalchemy_plugin = SQLAlchemyInitPlugin(config=sqlalchemy_config)
 
-logging_config = LoggingConfig(
-    root={"level": logging.getLevelName(logging.INFO), "handlers": ["console"]},
-    formatters={
-        "standard": {"format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"}
-    },
-)
 
 async def on_startup() -> None:
     async with sqlalchemy_config.get_engine().begin() as conn:
