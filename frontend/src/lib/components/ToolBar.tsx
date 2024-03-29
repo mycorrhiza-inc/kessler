@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import useGraphStore, { GraphState } from "../utils/GraphUtilities";
 import { Node, Edge } from "reactflow";
 import axios from "axios";
@@ -5,7 +6,7 @@ import { useState } from "react";
 import { shallow } from "zustand/shallow";
 import * as React from "react";
 
-import { usePathname, useRouter } from "next/navigation";
+import { redirect, usePathname, useRouter } from "next/navigation";
 
 // mui elements
 import Box from "@mui/joy/Box";
@@ -16,9 +17,11 @@ import Tab, { tabClasses } from "@mui/joy/Tab";
 
 // icons
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
-import FavoriteBorder from "@mui/icons-material/FavoriteBorder";
+import CollectionsBookmarkIcon from "@mui/icons-material/CollectionsBookmark";
+import { SatelliteAlt } from "@mui/icons-material";
 import Search from "@mui/icons-material/Search";
-import Person from "@mui/icons-material/Person";
+import SettingsIcon from "@mui/icons-material/Settings";
+import { Tooltip } from "@mui/joy";
 
 const selector = (state: GraphState) => ({
   setNodes: state.setNodes,
@@ -126,17 +129,43 @@ const ToolBar2 = () => {
 
 const ToolBar = () => {
   const pathname = usePathname();
-  const [index, setIndex] = React.useState(0);
-  const colors = ["primary", "danger", "success", "warning"] as const;
+  const [index, setIndex] = React.useState(-1);
+  const color = "success";
+  const pathval: { [key: string]: number } = {
+    realms: 1,
+    search: 2,
+    browse: 3,
+    settings: 4,
+  };
+  const handleNav = (event: any, value: any) => {
+    setIndex(value as number);
+    if (value == 0) {
+      redirect("/");
+    }
+    let path = Object.keys(pathval).find((key) => pathval[key] === value);
+    redirect(`/${path}`);
+  };
+  useEffect(() => {
+    let path = pathname.substring(pathname.lastIndexOf("/") + 1);
+
+    console.log("PATH:", path);
+
+    if (path == "") {
+      setIndex(0);
+      return;
+    }
+    if (pathval[path]) setIndex(pathval[path]);
+  }, []);
   return (
     <Box
       sx={{
         flexGrow: 1,
+        bottom: 1,
+        position: "fixed",
         m: -3,
         p: 4,
         borderTopLeftRadius: "12px",
         borderTopRightRadius: "12px",
-        bgcolor: `${colors[index]}.500`,
       }}
       className="toolbar"
     >
@@ -144,14 +173,13 @@ const ToolBar = () => {
         size="lg"
         aria-label="Bottom Navigation"
         value={index}
-        onChange={(event, value) => setIndex(value as number)}
+        onChange={handleNav}
         sx={(theme) => ({
           p: 1,
           borderRadius: 16,
           maxWidth: 400,
           mx: "auto",
           boxShadow: theme.shadow.sm,
-          "--joy-shadowChannel": theme.vars.palette[colors[index]].darkChannel,
           [`& .${tabClasses.root}`]: {
             py: 1,
             flex: 1,
@@ -170,46 +198,65 @@ const ToolBar = () => {
           disableUnderline
           sx={{ borderRadius: "lg", p: 0 }}
         >
-          <Tab
-            disableIndicator
-            orientation="vertical"
-            {...(index === 0 && { color: colors[0] })}
-          >
-            <ListItemDecorator>
-              <HomeRoundedIcon />
-            </ListItemDecorator>
-            Home
-          </Tab>
-          <Tab
-            disableIndicator
-            orientation="vertical"
-            {...(index === 1 && { color: colors[1] })}
-          >
-            <ListItemDecorator>
-              <FavoriteBorder />
-            </ListItemDecorator>
-            Likes
-          </Tab>
-          <Tab
-            disableIndicator
-            orientation="vertical"
-            {...(index === 2 && { color: colors[2] })}
-          >
-            <ListItemDecorator>
-              <Search />
-            </ListItemDecorator>
-            Search
-          </Tab>
-          <Tab
-            disableIndicator
-            orientation="vertical"
-            {...(index === 3 && { color: colors[3] })}
-          >
-            <ListItemDecorator>
-              <Person />
-            </ListItemDecorator>
-            Profile
-          </Tab>
+          <Tooltip title="Home">
+            <Tab
+              disableIndicator
+              orientation="vertical"
+              {...(index === 0 && { color: color })}
+            >
+              <ListItemDecorator>
+                <HomeRoundedIcon />
+              </ListItemDecorator>
+              
+            </Tab>
+          </Tooltip>
+          <Tooltip title="Realms">
+            <Tab
+              disableIndicator
+              orientation="vertical"
+              {...(index === 1 && { color: color })}
+            >
+              <ListItemDecorator>
+                <SatelliteAlt />
+              </ListItemDecorator>
+              
+            </Tab>
+          </Tooltip>
+          <Tooltip title="Search">
+            <Tab
+              disableIndicator
+              orientation="vertical"
+              {...(index === 2 && { color: color })}
+            >
+              <ListItemDecorator>
+                <Search />
+              </ListItemDecorator>
+              
+            </Tab>
+          </Tooltip>
+          <Tooltip title="Browse">
+            <Tab
+              disableIndicator
+              orientation="vertical"
+              {...(index === 3 && { color: color })}
+            >
+              <ListItemDecorator>
+                <CollectionsBookmarkIcon />
+              </ListItemDecorator>
+              
+            </Tab>
+          </Tooltip>
+          <Tooltip title="Settings">
+            <Tab
+              disableIndicator
+              orientation="vertical"
+              {...(index === 4 && { color: color })}
+            >
+              <ListItemDecorator>
+                <SettingsIcon />
+              </ListItemDecorator>
+            </Tab>
+          </Tooltip>
         </TabList>
       </Tabs>
     </Box>
