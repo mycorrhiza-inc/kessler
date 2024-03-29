@@ -39,7 +39,7 @@ body {
 
   color-scheme: light dark;
   color: oklch(100% 0 NaN / 0.87);
-  background-color: oklch(89.09% 0.05 129.54);
+  background-color: oklch(89.09% 0.15 129.54);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
