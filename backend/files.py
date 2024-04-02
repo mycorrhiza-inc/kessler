@@ -23,16 +23,51 @@ from pydantic import TypeAdapter, validator
 from db import BaseModel
 
 
+from pathlib import Path
+
+
 class FileModel(UUIDAuditBase):
     __tablename__ = "file"
-    url: Mapped[str]
-    title: Mapped[str]
+    hash: Mapped[
+        str
+    ]  # Blake2. For the file database this should absolutely be the primary key,
+    path: Mapped[Path]
+    url: Mapped[Optional[str]]
+    doctype: Mapped[str]
+    lang: Mapped[str]
+    title: Mapped[
+        str
+    ]  # I dont know if this should be included either in here or as a entry in doc_metadata, expecially since its only ever going to be used by the frontend. However, it might be an important query paramater and it seems somewhat irresponsible to not include.
+    doc_metadata: Mapped[str]
+    status: Mapped[str]  # Either "stage0" "stage1" "stage2" or "stage3"
+    summary: Mapped[str]
+    short_summary: Mapped[str]
+    full_text_embedding: Mapped[
+        any
+    ]  # whatever the type for this is lol, potentially generate it by embedding the summary if the long embeddings dont work.
 
     @validator("id")
     def validate_uuid(cls, value):
         if value:
             return str(value)
         return value
+
+
+class TextStorage(UUIDAuditBase):
+    hash: Mapped[str]  # Foreign Key into FileModel
+    original_text: Mapped[str]
+    en_text: Mapped[str]
+
+
+class FileUpload(BaseModel):
+    file_metadata: dict
+    # Figure out how to do a file upload datatype, maybe with werkzurg or something
+
+
+class UrlUpload(BaseModel):
+    url: str
+    # I am going to be removing the ability for overloading metadata
+    # title: str | None = None
 
 
 class FileRepository(SQLAlchemyAsyncRepository[FileModel]):
@@ -63,12 +98,6 @@ class FileUpdate(BaseModel):
     title: str | None = None
 
 
-class FileCreate(BaseModel):
-    url: str
-    title: str | None = None
-    isUrl: bool
-
-
 # litestar only
 class FileController(Controller):
     """File Controller"""
@@ -79,20 +108,14 @@ class FileController(Controller):
     async def get_file(
         self,
         files_repo: FileRepository,
-        file_id: UUID = Parameter(
-            title="File ID",
-            description="File to retieve"
-        ),
+        file_id: UUID = Parameter(title="File ID", description="File to retieve"),
     ) -> File:
         obj = files_repo.get(file_id)
         return File.model_validate(obj)
 
     @get(path="/files/all")
     async def get_all_files(
-        self,
-        files_repo: FileRepository,
-        limit_offset: LimitOffset,
-        request: Request
+        self, files_repo: FileRepository, limit_offset: LimitOffset, request: Request
     ) -> list[File]:
         """List files."""
         results = await files_repo.list()
@@ -100,17 +123,12 @@ class FileController(Controller):
         return type_adapter.validate_python(results)
 
     @post(path="files/upload")
-    async def upload_file(
-        self
-    ) -> File:
+    async def upload_file(self) -> File:
         pass
 
     @post(path="/links/add")
     async def add_file(
-        self,
-        files_repo: FileRepository,
-        data: FileCreate,
-        request: Request
+        self, files_repo: FileRepository, data: FileCreate, request: Request
     ) -> File:
         request.logger.info("adding files")
         request.logger.info(data)
@@ -130,10 +148,7 @@ class FileController(Controller):
         self,
         files_repo: FileRepository,
         data: FileUpdate,
-        file_id: UUID = Parameter(
-            title="File ID",
-            description="File to retieve"
-        ),
+        file_id: UUID = Parameter(title="File ID", description="File to retieve"),
     ) -> File:
         """Update a File."""
         raw_obj = data.model_dump(exclude_unset=True, exclude_none=True)
@@ -146,10 +161,7 @@ class FileController(Controller):
     async def delete_file(
         self,
         files_repo: FileRepository,
-        file_id: UUID = Parameter(
-            title="File ID",
-            description="File to retieve"
-        ),
+        file_id: UUID = Parameter(title="File ID", description="File to retieve"),
     ) -> None:
         _ = files_repo.delete(files_repo)
         files_repo.session.commit()
