@@ -10,5 +10,5 @@ def getChromaClient():
         chroma_client = chromadb.PersistentClient(path=chroma_path)
         return chroma_client
     else:
-        chroma_client = chromadb.HttpClient(host='localhost', port=8000)
+        chroma_client = chromadb.HttpClient(host=chroma_path, port=8000)
         return chroma_client

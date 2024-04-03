@@ -14,9 +14,9 @@ from sqlalchemy import ForeignKey
 class LinkResourceModel(SQLABase):
     __tablename__ = "LinkResource"
     # used to get Links from resource IDs
-    id = mapped_column(ForeignKey("resource.id"), primary_key=True)
+    id = mapped_column(ForeignKey("resource.id"))
     # these are different so we can update link objects without regard to their resource id
-    link_id = mapped_column(ForeignKey("link.id"))
+    link_id = mapped_column(ForeignKey("link.id"), primary_key=True)
 
 
 class LinkModel(UUIDAuditBase):
@@ -25,8 +25,8 @@ class LinkModel(UUIDAuditBase):
     text_id: Mapped[ForeignKey | None] = mapped_column(
         ForeignKey("text_object.id"))
     url: Mapped[str]
-    doctype: Mapped[str] # webpage and the rest
-    lang: Mapped[str] # en etc
+    doctype: Mapped[str]  # webpage and the rest
+    lang: Mapped[str]  # en etc
     title: Mapped[
         str
     ]
