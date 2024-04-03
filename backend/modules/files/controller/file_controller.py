@@ -12,7 +12,11 @@ from pydantic import TypeAdapter, validator
 
 from db import BaseModel
 
-from modules.files.dbm import FileRepository, provide_files_repo, FileModel
+from modules.files.dbm.files import (
+    FileRepository,
+    provide_files_repo,
+    FileModel,
+)
 
 
 class FileUpload(BaseModel):
@@ -58,8 +62,7 @@ class FileController(Controller):
     async def get_file(
         self,
         files_repo: FileRepository,
-        file_id: UUID = Parameter(
-            title="File ID", description="File to retieve"),
+        file_id: UUID = Parameter(title="File ID", description="File to retieve"),
     ) -> File:
         obj = files_repo.get(file_id)
         return File.model_validate(obj)
@@ -99,8 +102,7 @@ class FileController(Controller):
         self,
         files_repo: FileRepository,
         data: FileUpdate,
-        file_id: UUID = Parameter(
-            title="File ID", description="File to retieve"),
+        file_id: UUID = Parameter(title="File ID", description="File to retieve"),
     ) -> File:
         """Update a File."""
         raw_obj = data.model_dump(exclude_unset=True, exclude_none=True)
@@ -113,8 +115,7 @@ class FileController(Controller):
     async def delete_file(
         self,
         files_repo: FileRepository,
-        file_id: UUID = Parameter(
-            title="File ID", description="File to retieve"),
+        file_id: UUID = Parameter(title="File ID", description="File to retieve"),
     ) -> None:
         _ = files_repo.delete(files_repo)
         files_repo.session.commit()

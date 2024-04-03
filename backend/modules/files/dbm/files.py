@@ -15,7 +15,7 @@ class FileModel(UUIDAuditBase):
     hash: Mapped[
         str
     ]  # Blake2. For the file database this should absolutely be the primary key,
-    path: Mapped[Path]
+    path: Mapped[str]  # No type for os.pathlib type Path
     doctype: Mapped[str]
     lang: Mapped[str]
     name: Mapped[
