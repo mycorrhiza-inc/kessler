@@ -1,5 +1,5 @@
 import logging
-from files import FileController
+from modules.files.controller.file_controller import FileController
 
 from litestar import Litestar, Router
 from litestar.logging import LoggingConfig
@@ -9,28 +9,25 @@ from litestar.repository.filters import LimitOffset
 from litestar.params import Parameter
 from litestar.di import Provide
 from litestar.contrib.sqlalchemy.base import UUIDBase
-from litestar.contrib.sqlalchemy.plugins import \
-    AsyncSessionConfig, \
-    SQLAlchemyAsyncConfig, \
-    SQLAlchemyInitPlugin
+from litestar.contrib.sqlalchemy.plugins import (
+    AsyncSessionConfig,
+    SQLAlchemyAsyncConfig,
+    SQLAlchemyInitPlugin,
+)
 
 # logging configuration
 logging_config = LoggingConfig(
-    root={
-        "level": logging.getLevelName(logging.INFO),
-        "handlers": ["console"]
-    },
+    root={"level": logging.getLevelName(logging.INFO), "handlers": ["console"]},
     formatters={
-        "standard": {
-            "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-        }
-    })
+        "standard": {"format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"}
+    },
+)
 
 # set up the database
 session_config = AsyncSessionConfig(expire_on_commit=False)
 sqlalchemy_config = SQLAlchemyAsyncConfig(
     connection_string="sqlite+aiosqlite:///instance/kessler.sqlite",
-    session_config=session_config
+    session_config=session_config,
 )
 sqlalchemy_plugin = SQLAlchemyInitPlugin(config=sqlalchemy_config)
 
@@ -42,8 +39,7 @@ async def on_startup() -> None:
 
 
 async def provide_limit_offset_pagination(
-    current_page: int = Parameter(
-        ge=1, query="currentPage", default=1, required=False),
+    current_page: int = Parameter(ge=1, query="currentPage", default=1, required=False),
     page_size: int = Parameter(
         query="pageSize",
         ge=1,
@@ -67,10 +63,7 @@ async def provide_limit_offset_pagination(
 
 cors_config = CORSConfig(allow_origins=["*.*"])
 
-api_router = Router(
-    path="/api",
-    route_handlers=[FileController]
-)
+api_router = Router(path="/api", route_handlers=[FileController])
 
 app = Litestar(
     on_startup=[on_startup],
@@ -78,5 +71,5 @@ app = Litestar(
     route_handlers=[api_router],
     dependencies={"limit_offset": Provide(provide_limit_offset_pagination)},
     cors_config=cors_config,
-    logging_config=logging_config
+    logging_config=logging_config,
 )
