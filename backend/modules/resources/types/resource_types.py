@@ -8,6 +8,3 @@ class ResourceCreate(BaseModel):
 class Resource(BaseModel):
     id: any  # TODO: figure out a better type for this UUID :/
     type: str
-
-
-

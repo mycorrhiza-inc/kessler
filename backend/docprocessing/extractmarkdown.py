@@ -38,7 +38,7 @@ from util.gpu_compute_calls import GPUComputeEndpoint
 
 class MarkdownExtractor:
     def __init__(
-        self, endpoint_url: str, tmpdir=Path("/tmp/kessler/extractmarkdown")
+        self, endpoint_url: str, tmpdir : Path
     ):
         self.tmpdir = tmpdir
         self.endpoint_url = endpoint
