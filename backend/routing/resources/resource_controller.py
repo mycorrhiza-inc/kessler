@@ -12,8 +12,7 @@ from litestar.repository.filters import LimitOffset
 from pydantic import TypeAdapter
 
 
-from modules.resources.dbm import provide_resource_repo, ResourceRepository
-from modules.resources.types import Resource
+from models.resources import Resource
 
 
 class ResourceController(Controller):
@@ -33,10 +32,11 @@ class ResourceController(Controller):
 
     @get(path="/resources/all")
     async def get_all_Resources(
-        self, Resources_repo: ResourceRepository, limit_offset: LimitOffset, request: Request
+        self,  limit_offset: LimitOffset, request: Request
     ) -> list[Resource]:
         """List Resources."""
-        results = await Resources_repo.list()
+        Resource.list()
+        results = await Resource.list()
         type_adapter = TypeAdapter(list[Resource])
         return type_adapter.validate_python(results)
 
@@ -44,12 +44,11 @@ class ResourceController(Controller):
     async def upload_Resource(self) -> Resource:
         pass
 
-    @delete(path="/resources/{Resource_id:uuid}")
+    @delete(path="/resources/{resource_id:uuid}")
     async def delete_Resource(
         self,
-        Resources_repo: ResourceRepository,
-        Resource_id: UUID = Parameter(
+        resource_id: UUID = Parameter(
             title="Resource ID", description="Resource to retieve"),
     ) -> None:
-        _ = Resources_repo.delete(Resources_repo)
-        Resources_repo.session.commit()
+        _ = Resource.delete(resource_id)
+        Resource.commit()

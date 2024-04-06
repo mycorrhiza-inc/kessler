@@ -1,12 +1,19 @@
+from sqlalchemy.orm import Mapped
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from litestar.contrib.sqlalchemy.base import UUIDAuditBase
 from litestar.contrib.sqlalchemy.repository import SQLAlchemyAsyncRepository
 
-from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import validator
 
+from utils import RepoCrudMixin, RepoMixin
 
-class ResourceModel(UUIDAuditBase):
+class ResourceModel(UUIDAuditBase, RepoMixin, RepoCrudMixin):
+    """
+    A general Identifier to any given resource
+    """
     __tablename__ = "resource"
+    metadata: Mapped[str]
 
     @validator("id")
     def validate_uuid(cls, value):

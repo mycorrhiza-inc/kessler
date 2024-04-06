@@ -12,7 +12,7 @@ from pydantic import TypeAdapter, validator
 
 from db import BaseModel
 
-from modules.links.dbm import LinkRepository, provide_Links_repo, LinkModel
+from routing.links.dbm import LinkRepository, provide_Links_repo, LinkModel
 
 
 class Link(BaseModel):
