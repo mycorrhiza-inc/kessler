@@ -1,20 +1,19 @@
 from typing import Optional
 
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from litestar.contrib.sqlalchemy.base import UUIDAuditBase, Base as SQLABase
+from litestar.contrib.sqlalchemy.base import UUIDAuditBase, AuditColumns
 from litestar.contrib.sqlalchemy.repository import SQLAlchemyAsyncRepository
 
-from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import validator
 
-from sqlalchemy import ForeignKey
 
-
-class LinkResourceModel(SQLABase):
+class LinkResourceModel(AuditColumns):
     __tablename__ = "LinkResource"
     # used to get Links from resource IDs
-    id = mapped_column(ForeignKey("resource.id"))
+    resource_id = mapped_column(ForeignKey("resource.id"))
     # these are different so we can update link objects without regard to their resource id
     link_id = mapped_column(ForeignKey("link.id"), primary_key=True)
 
@@ -30,10 +29,13 @@ class LinkModel(UUIDAuditBase):
     title: Mapped[
         str
     ]
-    metadata: Mapped[str]
     stage: Mapped[str]  # Either "stage0" "stage1" "stage2" or "stage3"
     summary: Mapped[str]
     short_summary: Mapped[str]
+    
+    # TODO: implement this
+    def bumpLinkResourceTimestamp():
+        pass
 
     @validator("id")
     def validate_uuid(cls, value):

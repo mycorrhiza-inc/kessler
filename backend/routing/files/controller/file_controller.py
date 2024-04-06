@@ -12,7 +12,7 @@ from pydantic import TypeAdapter, validator
 
 from db import BaseModel
 
-from modules.files.dbm import FileRepository, provide_files_repo, FileModel
+from models.files import File
 
 
 class FileUpload(BaseModel):
