@@ -2,8 +2,8 @@ import anyio
 from rich import get_console
 
 
-
 console = get_console()
+
 
 async def run_script() -> None:
     """Load data from a fixture."""
@@ -24,6 +24,7 @@ async def run_script() -> None:
     # 4) Let's verify the record no longer exists.
     console.print("4) Select one or none.")
     _should_be_none = await get_author_if_exists(author_id)
+
 
 if __name__ == "__main__":
 

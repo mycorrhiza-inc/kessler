@@ -14,16 +14,11 @@ from routing.files import FileController
 
 # logging configuration
 logging_config = LoggingConfig(
-    root={
-        "level": logging.getLevelName(logging.INFO),
-        "handlers": ["console"]
-    },
+    root={"level": logging.getLevelName(logging.INFO), "handlers": ["console"]},
     formatters={
-        "standard": {
-            "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-        }
-    })
-
+        "standard": {"format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"}
+    },
+)
 
 
 async def on_startup() -> None:
@@ -33,8 +28,7 @@ async def on_startup() -> None:
 
 
 async def provide_limit_offset_pagination(
-    current_page: int = Parameter(
-        ge=1, query="currentPage", default=1, required=False),
+    current_page: int = Parameter(ge=1, query="currentPage", default=1, required=False),
     page_size: int = Parameter(
         query="pageSize",
         ge=1,
@@ -58,10 +52,7 @@ async def provide_limit_offset_pagination(
 
 cors_config = CORSConfig(allow_origins=["*.*"])
 
-api_router = Router(
-    path="/api",
-    route_handlers=[FileController]
-)
+api_router = Router(path="/api", route_handlers=[FileController])
 
 app = Litestar(
     on_startup=[on_startup],
@@ -69,5 +60,5 @@ app = Litestar(
     route_handlers=[api_router],
     dependencies={"limit_offset": Provide(provide_limit_offset_pagination)},
     cors_config=cors_config,
-    logging_config=logging_config
+    logging_config=logging_config,
 )

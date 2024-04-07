@@ -16,6 +16,7 @@ from models.files import File
 
 from modules.files.dbm.files import provide_files_repo
 
+
 class FileUpload(BaseModel):
     file_metadata: dict
     # Figure out how to do a file upload datatype, maybe with werkzurg or something

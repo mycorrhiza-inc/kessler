@@ -21,18 +21,15 @@ class LinkResourceModel(AuditColumns):
 class LinkModel(UUIDAuditBase):
     __tablename__ = "Link"
     # path exists if the link has been stored as text
-    text_id: Mapped[ForeignKey | None] = mapped_column(
-        ForeignKey("text_object.id"))
+    text_id: Mapped[ForeignKey | None] = mapped_column(ForeignKey("text_object.id"))
     url: Mapped[str]
     doctype: Mapped[str]  # webpage and the rest
     lang: Mapped[str]  # en etc
-    title: Mapped[
-        str
-    ]
+    title: Mapped[str]
     stage: Mapped[str]  # Either "stage0" "stage1" "stage2" or "stage3"
     summary: Mapped[str]
     short_summary: Mapped[str]
-    
+
     # TODO: implement this
     def bumpLinkResourceTimestamp():
         pass

@@ -47,8 +47,7 @@ class LinkController(Controller):
     async def get_Link(
         self,
         Links_repo: LinkRepository,
-        Link_id: UUID = Parameter(
-            title="Link ID", description="Link to retieve"),
+        Link_id: UUID = Parameter(title="Link ID", description="Link to retieve"),
     ) -> Link:
         obj = Links_repo.get(Link_id)
         return Link.model_validate(obj)
@@ -88,8 +87,7 @@ class LinkController(Controller):
         self,
         Links_repo: LinkRepository,
         data: LinkUpdate,
-        Link_id: UUID = Parameter(
-            title="Link ID", description="Link to retieve"),
+        Link_id: UUID = Parameter(title="Link ID", description="Link to retieve"),
     ) -> Link:
         """Update a Link."""
         raw_obj = data.model_dump(exclude_unset=True, exclude_none=True)
@@ -102,8 +100,7 @@ class LinkController(Controller):
     async def delete_Link(
         self,
         Links_repo: LinkRepository,
-        Link_id: UUID = Parameter(
-            title="Link ID", description="Link to retieve"),
+        Link_id: UUID = Parameter(title="Link ID", description="Link to retieve"),
     ) -> None:
         _ = Links_repo.delete(Links_repo)
         Links_repo.session.commit()

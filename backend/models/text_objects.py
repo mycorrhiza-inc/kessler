@@ -4,7 +4,7 @@ from litestar.contrib.sqlalchemy.base import UUIDAuditBase, AuditColumns
 
 
 class TextResourceModel(AuditColumns):
-    __tablename__ ="TextResource"
+    __tablename__ = "TextResource"
     # used to get Links from resource IDs
     resource_id = mapped_column(ForeignKey("resource.id"))
     # these are different so we can update link objects without regard to their resource id

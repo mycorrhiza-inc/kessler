@@ -24,6 +24,7 @@ class FileResourceModel(AuditColumns):
     """
     Used to access and maniuplate files without regard to their resourceid
     """
+
     __tablename__ = "LinkResource"
     resource_id = mapped_column(ForeignKey("resource.id"))
     # used to get Files from resource IDs
@@ -49,13 +50,14 @@ class File(UUIDAuditBase):
         if value:
             return str(value)
         return value
-# TODO: i need to define the repo factory as a mixin for any future work we do
-# https://stackoverflow.com/questions/36690588/should-mixins-use-parent-attributes
-# this should be extremely easy to
+
+    # TODO: i need to define the repo factory as a mixin for any future work we do
+    # https://stackoverflow.com/questions/36690588/should-mixins-use-parent-attributes
+    # this should be extremely easy to
 
     @classmethod
     @asynccontextmanager
-    async def repo(self) -> AsyncIterator['FileRepository']:
+    async def repo(self) -> AsyncIterator["FileRepository"]:
         session_factory = sqlalchemy_config.create_session_maker()
         async with session_factory() as db_session:
             try:
@@ -71,7 +73,7 @@ class File(UUIDAuditBase):
     @classmethod
     def printself(cls):
         print(cls.__dict__)
-        
+
     @classmethod
     async def create_self(cls):
         async with cls.repo() as repo:
@@ -88,22 +90,21 @@ class File(UUIDAuditBase):
             return obj
 
     @classmethod
-    async def new(cls, f: 'File'):
+    async def new(cls, f: "File"):
         async with cls.repo() as repo:
             obj = await repo.add(f)
             print(obj.__dict__)
             return obj
 
 
-
 async def newfi():
     """
     to run this test in a python repl
-    make the db 
+    make the db
     > import asynio
     > import files
     > asynio.run(files.newfi())
-    
+
     """
     async with sqlalchemy_config.get_engine().begin() as conn:
         # UUIDAuditBase extends UUIDBase so create_all should build both

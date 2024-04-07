@@ -8,10 +8,12 @@ from pydantic import validator
 
 from utils import RepoCrudMixin, RepoMixin
 
+
 class ResourceModel(UUIDAuditBase, RepoMixin, RepoCrudMixin):
     """
     A general Identifier to any given resource
     """
+
     __tablename__ = "resource"
     metadata: Mapped[str]
 
