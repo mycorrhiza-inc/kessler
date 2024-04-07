@@ -14,6 +14,7 @@ from db import BaseModel
 
 from models.files import File
 
+from modules.files.dbm.files import provide_files_repo
 
 class FileUpload(BaseModel):
     file_metadata: dict
