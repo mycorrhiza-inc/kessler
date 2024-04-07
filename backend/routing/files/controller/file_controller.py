@@ -78,13 +78,14 @@ class FileController(Controller):
     async def upload_file(self) -> File:
         pass
 
+    from crawleringest.docingest import DocumentIngester
+
     @post(path="/links/add")
     async def add_file(
         self, files_repo: FileRepository, data: FileCreate, request: Request
     ) -> File:
         request.logger.info("adding files")
         request.logger.info(data)
-        new_file = FileModel(url=data.url, title="")
         # New stuff here, is this where this code belongs? <new stuff>
         docingest = DocumentIngester()
         metadata, raw_file_path = docingest.url_to_file_and_metadata(data.url)
