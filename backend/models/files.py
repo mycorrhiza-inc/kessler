@@ -17,7 +17,7 @@ import traceback
 
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-from utils import sqlalchemy_config
+from .utils import sqlalchemy_config
 
 
 class FileResourceModel(AuditColumns):
