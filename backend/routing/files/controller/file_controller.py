@@ -87,13 +87,13 @@ class FileController(Controller):
         new_file = FileModel(url=data.url, title="")
         # New stuff here, is this where this code belongs? <new stuff>
         docingest = DocumentIngester()
-        metadata, raw_file = docingest.url_to_file_and_metadata(data.url)
+        metadata, raw_file_path = docingest.url_to_file_and_metadata(data.url)
         new_file = FileModel(
             url=data.url,
             title=metadata["title"],
             doctype=metadata["doctype"],
             lang=metadata["lang"],
-            file=raw_file,
+            file=read(raw_file_path),
             metadata=metadata,
             stage="stage0",
         )
