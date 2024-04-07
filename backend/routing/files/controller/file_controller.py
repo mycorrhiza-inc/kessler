@@ -84,6 +84,19 @@ class FileController(Controller):
         request.logger.info("adding files")
         request.logger.info(data)
         new_file = FileModel(url=data.url, title="")
+        # New stuff here, is this where this code belongs? <new stuff>
+        docingest = DocumentIngester()
+        metadata, raw_file = docingest.url_to_file_and_metadata(data.url)
+        new_file = FileModel(
+            url=data.url,
+            title=metadata["title"],
+            doctype=metadata["doctype"],
+            lang=metadata["lang"],
+            file=raw_file,
+            metadata=metadata,
+            stage="stage0",
+        )
+        # </new stuff>
         request.logger.info("new file:{file}".format(file=new_file.to_dict()))
         try:
             new_file = await files_repo.add(new_file)
