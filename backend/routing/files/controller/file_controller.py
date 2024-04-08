@@ -1,60 +1,55 @@
 from uuid import UUID
+from typing import Annotated
 
 
 from litestar import Controller, Request
 
-from litestar.handlers.http_handlers.decorators import get, post, delete, patch
+from litestar.handlers.http_handlers.decorators import \
+    get, post, delete, patch, MediaType
+
 from litestar.params import Parameter
 from litestar.di import Provide
 from litestar.repository.filters import LimitOffset
+from litestar.datastructures import UploadFile
+from litestar.enums import RequestEncodingType
+from litestar.params import Body
 
-from pydantic import TypeAdapter, validator
-
-from db import BaseModel
-
-from models.files import File
+from pydantic import TypeAdapter, BaseModel
 
 from modules.files.dbm.files import provide_files_repo
 
 
-class FileUpload(BaseModel):
-    file_metadata: dict
-    # Figure out how to do a file upload datatype, maybe with werkzurg or something
+from models.files import FileRepository, File, FileModel
 
-
-class UrlUpload(BaseModel):
-    url: str
-    # I am going to be removing the ability for overloading metadata
-    # title: str | None = None
-
-
-class File(BaseModel):
-    id: any  # TODO: figure out a better type for this UUID :/
-    url: str
-    title: str | None
-
-    @validator("id")
-    def validate_uuid(cls, value):
-        if value:
-            return str(value)
-        return value
+# for testing purposese
+emptyFile = FileModel(
+    path="",
+    doctype="",
+    lang="",
+    name="",
+    stage="unprocessed",
+    summary=None,
+    short_summary=None)
 
 
 class FileUpdate(BaseModel):
-    url: str | None = None
-    title: str | None = None
+    message: str
 
 
 class FileCreate(BaseModel):
-    url: str | None = None
-    title: str | None = None
+    message: str
 
+
+class FileUpload(BaseModel):
+    message: str
 
 # litestar only
+
+
 class FileController(Controller):
     """File Controller"""
 
-    dependencies = {"files_repo": Provide(provide_files_repo)}
+    dependencies = {"files_repo": Provide(FileModel.provide_repo)}
 
     @get(path="/files/{file_id:uuid}")
     async def get_file(
@@ -74,9 +69,15 @@ class FileController(Controller):
         type_adapter = TypeAdapter(list[File])
         return type_adapter.validate_python(results)
 
-    @post(path="files/upload")
-    async def upload_file(self) -> File:
-        pass
+    @post(path="/files/upload", media_type=MediaType.TEXT)
+    async def handle_file_upload(
+        self,
+        files_repo: FileRepository,
+        data: Annotated[UploadFile, Body(media_type=RequestEncodingType.MULTI_PART)],
+    ) -> FileUpload:
+        content = await data.read()
+        newFileObj = emptyFile()
+        newFileObj.name = data.filename
 
     from crawleringest.docingest import DocumentIngester
 
@@ -173,7 +174,7 @@ class FileController(Controller):
         return File.model_validate(newobj) # TODO : Return Response code and response message
     
     @patch(path="/files/{file_id:uuid}")
-    async def update_File(
+    async def update_file(
         self,
         files_repo: FileRepository,
         data: FileUpdate,
@@ -182,7 +183,7 @@ class FileController(Controller):
         """Update a File."""
         raw_obj = data.model_dump(exclude_unset=True, exclude_none=True)
         raw_obj.update({"id": file_id})
-        obj = files_repo.update(FileModel(**raw_obj))
+        obj = files_repo.update(File(**raw_obj))
         files_repo.session.commit()
         return File.model_validate(obj)
     

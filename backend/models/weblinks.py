@@ -10,14 +10,6 @@ from litestar.contrib.sqlalchemy.repository import SQLAlchemyAsyncRepository
 from pydantic import validator
 
 
-class LinkResourceModel(AuditColumns):
-    __tablename__ = "LinkResource"
-    # used to get Links from resource IDs
-    resource_id = mapped_column(ForeignKey("resource.id"))
-    # these are different so we can update link objects without regard to their resource id
-    link_id = mapped_column(ForeignKey("link.id"), primary_key=True)
-
-
 class LinkModel(UUIDAuditBase):
     __tablename__ = "Link"
     # path exists if the link has been stored as text
