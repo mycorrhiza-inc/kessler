@@ -34,14 +34,13 @@ from pathlib import Path
 import shlex
 
 from util.gpu_compute_calls import GPUComputeEndpoint
+from util.datatypes import DocumentID
 
 
 class MarkdownExtractor:
-    def __init__(
-        self, endpoint_url: str, tmpdir=Path("/tmp/kessler/extractmarkdown")
-    ):
+    def __init__(self, endpoint_url: str, tmpdir=Path("/tmp/kessler/extractmarkdown")):
         self.tmpdir = tmpdir
-        self.endpoint_url = endpoint
+        self.endpoint_url = endpoint_url
         # TODO : Add database connection.
 
     def process_raw_document_into_english_text(self, file_loc: Path, metadata: dict):
@@ -49,7 +48,9 @@ class MarkdownExtractor:
         lang = metadata["lang"]
         if lang in ["en", "eng", "english", None]:
             return raw_text
-        english_text = GPUComputeEndpoint(self.endpoint_url).translate_text(raw_text, lang, "en")
+        english_text = GPUComputeEndpoint(self.endpoint_url).translate_text(
+            raw_text, lang, "en"
+        )
         return english_text
 
     def process_raw_document_into_untranslated_text(
@@ -110,8 +111,10 @@ class MarkdownExtractor:
             )
 
     def get_proc_doc_original(self, doc: DocumentID) -> Optional[str]:
-        # TODO: 
+        # TODO:
+        pass
 
     def get_proc_doc_translated(
         self, doc: DocumentID, target_lang: str
     ) -> Optional[str]:
+        pass
