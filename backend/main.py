@@ -1,5 +1,4 @@
 import logging
-from files import FileController
 
 from litestar import Litestar, Router
 from litestar.logging import LoggingConfig
@@ -9,11 +8,9 @@ from litestar.repository.filters import LimitOffset
 from litestar.params import Parameter
 from litestar.di import Provide
 from litestar.contrib.sqlalchemy.base import UUIDBase
-from litestar.contrib.sqlalchemy.plugins import (
-    AsyncSessionConfig,
-    SQLAlchemyAsyncConfig,
-    SQLAlchemyInitPlugin,
-)
+
+from models import utils
+from routing.files import FileController
 
 # logging configuration
 logging_config = LoggingConfig(
@@ -23,17 +20,10 @@ logging_config = LoggingConfig(
     },
 )
 
-# set up the database
-session_config = AsyncSessionConfig(expire_on_commit=False)
-sqlalchemy_config = SQLAlchemyAsyncConfig(
-    connection_string="sqlite+aiosqlite:///instance/kessler.sqlite",
-    session_config=session_config,
-)
-sqlalchemy_plugin = SQLAlchemyInitPlugin(config=sqlalchemy_config)
 
 
 async def on_startup() -> None:
-    async with sqlalchemy_config.get_engine().begin() as conn:
+    async with utils.sqlalchemy_config.get_engine().begin() as conn:
         # UUIDAuditBase extends UUIDBase so create_all should build both
         await conn.run_sync(UUIDBase.metadata.create_all)
 
@@ -67,7 +57,7 @@ api_router = Router(path="/api", route_handlers=[FileController])
 
 app = Litestar(
     on_startup=[on_startup],
-    plugins=[sqlalchemy_plugin],
+    plugins=[utils.sqlalchemy_plugin],
     route_handlers=[api_router],
     dependencies={"limit_offset": Provide(provide_limit_offset_pagination)},
     cors_config=cors_config,
