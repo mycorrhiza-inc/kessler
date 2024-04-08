@@ -117,47 +117,57 @@ class FileController(Controller):
         files_repo: FileRepository,
         data: FileUpdate,
         file_id: UUID = Parameter(title="File ID", description="File to retieve"),
+        regenerate : Bool = False, # Figure out how to pass in a boolean as a query paramater
     ) -> File:
         """Process a File."""
         obj = files_repo.get(file_id)
         current_stage = obj.stage
         mdextract = MarkdownExtractor()        
         genextras = GenerateExtras()
+
         if current_stage == "stage0":
             response_code, response_message = (422, "Failure in stage 0: Document was incorrectly added to database, try readding it again." )
+        if regenerate and current_stage != "stage0":
+            current_stage = "stage1"
         if current_stage == "stage1":
             try:
                 processed_original_text = mdextract.process_raw_document_into_untranslated_text(obj.path, obj.metadata)
-                obj.original_text = processed_original_text
-                current_stage = "stage2"
             except:
                 response_code, response_message = (422, "failure in stage 1: document was unable to be converted to markdown," )
+            else:
+                obj.original_text = processed_original_text
+                current_stage = "stage2"
         if current_stage == "stage2":
             try:
                 processed_english_text = mdextract.convert_text_into_eng(obj.original_text, obj.lang)
-                obj.english_text = processed_english_text
-                current_stage = "stage3"
             except:
                 response_code, response_message = (422, "failure in stage 2: document was unable to be translated to english." )
+            else:
+                obj.english_text = processed_english_text
+                current_stage = "stage3"
         if current_stage == "stage3":
             try:
                 links = genextras.extract_markdown_links(obj.original_text, obj.lang)
                 long_sum = genextras.summarize_document_text(obj.original_text)
                 short_sum = genextras.gen_short_sum_from_long_sum(long_sum)
+            except:
+                response_code, response_message = (422, "failure in stage 3: Unable to generate summaries and links for document." )
+            else:
                 obj.links = links
                 obj.long_summary = long_sum
                 obj.short_summary = short_sum
                 current_stage = "stage4"
-            except:
-                response_code, response_message = (422, "failure in stage 3: Unable to generate summaries and links for document." )
         if current_stage == "stage4":
             try:
-                # TODO : Chunk and throw into chroma
-                current_stage = "completed"
+                # TODO : Chunk document and generate embeddings.
+                print("Create Embeddings.")
             except:
                 response_code, response_message = (422, "failure in stage 2: document was unable to be translated to english." )
+            else:
+
+                current_stage = "completed"
         if current_stage == "completed":
-            response_code, response_message = (200, "Document Fully Processed." )
+            response_code, r3esponse_message = (200, "Document Fully Processed." )
         newobj = files_repo.update(obj)
         files_repo.session.commit()
         return File.model_validate(newobj) # TODO : Return Response code and response message
