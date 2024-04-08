@@ -44,6 +44,8 @@ class File(UUIDAuditBase):
     stage: Mapped[str | None]  # Either "stage0" "stage1" "stage2" or "stage3"
     summary: Mapped[str | None]
     short_summary: Mapped[str | None]
+    original_text : Mapped[str | None]
+    english_text : Mapped[str | None]
 
     @validator("id")
     def validate_uuid(cls, value):

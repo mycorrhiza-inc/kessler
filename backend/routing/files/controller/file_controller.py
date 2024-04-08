@@ -85,7 +85,7 @@ class FileController(Controller):
         self, files_repo: FileRepository, data: FileCreate, request: Request
     ) -> File:
         request.logger.info("adding files")
-        request.logger.info(data)
+        request.logger.info(data) 
         # New stuff here, is this where this code belongs? <new stuff>
         docingest = DocumentIngester()
         metadata, raw_file_path = docingest.url_to_file_and_metadata(data.url)
@@ -108,7 +108,49 @@ class FileController(Controller):
         request.logger.info("added file!~")
         await files_repo.session.commit()
         return File.model_validate(new_file)
-
+    
+    from docprocessing.extractmarkdown import MarkdownExtractor
+    from docprocessing.genextras import GenerateExtras
+    @patch(path="/docproc/{file_id:uuid}")
+    async def process_File(
+        self,
+        files_repo: FileRepository,
+        data: FileUpdate,
+        file_id: UUID = Parameter(title="File ID", description="File to retieve"),
+    ) -> File:
+        """Process a File."""
+        obj = files_repo.get(file_id)
+        current_stage = obj.stage
+        mdextract = MarkdownExtractor()        
+        genextras = GenerateExtras()
+        if current_stage == "stage0":
+            response_code, response_message = (422, "Failure in stage 0: Document was incorrectly added to database, try readding it again." )
+        if current_stage == "stage1":
+            try:
+                processed_original_text = mdextract.process_raw_document_into_untranslated_text(obj.path, obj.metadata)
+                obj.original_text = processed_original_text
+                current_stage == "stage2"
+            except:
+                response_code, response_message = (422, "failure in stage 1: document was unable to be converted to markdown," )
+        if current_stage == "stage2":
+            try:
+                processed_english_text = mdextract.convert_text_into_eng(obj.original_text, obj.lang)
+                obj.english_text = processed_english_text
+                current_stage == "stage3"
+            except:
+                response_code, response_message = (422, "failure in stage 2: document was unable to be translated to english." )
+        if current_stage == "stage3":
+            try:
+                # TODO : Chunk and throw into chroma
+                current_stage == "completed"
+            except:
+                response_code, response_message = (422, "failure in stage 2: document was unable to be translated to english." )
+        if current_stage == "completed":
+            response_code, response_message = (200, "Document Fully Processed." )
+        newobj = files_repo.update(obj)
+        files_repo.session.commit()
+        return File.model_validate(newobj) # TODO : Return Response code and response message
+    
     @patch(path="/files/{file_id:uuid}")
     async def update_File(
         self,
@@ -122,7 +164,7 @@ class FileController(Controller):
         obj = files_repo.update(FileModel(**raw_obj))
         files_repo.session.commit()
         return File.model_validate(obj)
-
+    
     @delete(path="/files/{file_id:uuid}")
     async def delete_file(
         self,
