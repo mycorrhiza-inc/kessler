@@ -1,3 +1,4 @@
+from langchain.embeddings import HuggingFaceBgeEmbeddings
 from typing import Optional, List, Union
 from src.gpu_compute_calls import *
 
@@ -46,8 +47,6 @@ from langchain.vectorstores import FAISS
 DEFAULT_VECT = FAISS
 
 
-from langchain.embeddings import HuggingFaceBgeEmbeddings
-
 langchain_hf_uae_large_v1 = HuggingFaceBgeEmbeddings(
     model_name="WhereIsAI/UAE-Large-V1",
     model_kwargs={"device": "cpu"},
@@ -78,7 +77,7 @@ class DocumentProcessor:
         self.tmpdir.mkdir(parents=True, exist_ok=True)
         self.crossref = Crossref()
         self.embeddings = embeddings
-        GPUComputeEndpoint(self.endpoint_url) = gpu_compute_endpoint
+        self.endpoint_url = gpu_compute_endpoint
         self.llm = llm
         if picklepath == None:
             self.__documentlist: dict = {}
@@ -406,7 +405,9 @@ class DocumentProcessor:
             return self.get_proc_doc_original(doc)
         elif self.is_english(doc):
             eng_text = self.get_proc_doc(doc)
-            return GPUComputeEndpoint(self.endpoint_url).translate_text(eng_text, "en", target_lang)
+            return GPUComputeEndpoint(self.endpoint_url).translate_text(
+                eng_text, "en", target_lang
+            )
         else:
             doc_text = self.get_proc_doc_original(doc)
             return GPUComputeEndpoint(self.endpoint_url).translate_text(
@@ -519,12 +520,15 @@ class DocumentProcessor:
         processed_doc_text = self.get_proc_doc(doc)
         assert processed_doc_text != None
         chunks = token_split(processed_doc_text, chunk_size)
-        create_smalldoc = lambda x: Document(x)
+
+        def create_smalldoc(x):
+            return Document(x)
+
         # TODO: Verify and rewrite the vector database side of this whole thing so it isnt using langchain for imports.
         return list(map(create_smalldoc, chunks))
 
     def add_docid_to_vdb(self, docid: DocumentID):
-        ## Convert doc into chunks
+        # Convert doc into chunks
         chunks = self.chunkify_doc(docid)
         self.vdb.add_documents(chunks)
 

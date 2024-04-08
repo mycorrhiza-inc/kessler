@@ -45,8 +45,7 @@ def downsample_audio(
     # Check if FFmpeg command execution was successful
     if result.returncode != 0:
         warn(
-            f"Error converting video file, falling back to original. FFmpeg said:\n{
-                result.stderr.decode()}"
+            f"Error converting video file, falling back to original. FFmpeg said:\n{result.stderr.decode()}"
         )
         return filepath
     return outfile
@@ -164,7 +163,7 @@ class GPUComputeEndpoint:
         raw_list = list(query_dict_list) + list(text_dict_list)
         embeddings = self.embed_raw_dicts(raw_list, "mistral7b-sfr")
         query_embeddings = embeddings[: len(query_list)]
-        text_embeddings = embeddings[len(query_list):]
+        text_embeddings = embeddings[len(query_list) :]
         return (query_embeddings, text_embeddings)
 
     def embedding_query(self, embedding: str):
