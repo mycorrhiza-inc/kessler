@@ -1,4 +1,3 @@
-
 from litestar.contrib.sqlalchemy.base import UUIDAuditBase, UUIDBase, AuditColumns
 from litestar.contrib.sqlalchemy.repository import SQLAlchemyAsyncRepository
 
@@ -26,23 +25,23 @@ resource_association_table = Table(
     "resource_association_table",
     DeclarativeBase.metadata,
     Column("left_id", ForeignKey("resource.id"), primary_key=True),
-    Column("right_id", ForeignKey("resource.id"), primary_key=True)
+    Column("right_id", ForeignKey("resource.id"), primary_key=True),
 )
 
 
 class ResourceModel(UUIDAuditBase, RepoMixin):
     __tablename__ = "resource"
     # how we manage multiple files for one resource
-    files: Mapped[List[FileModel]] = relationship(
-        "File", back_populates="parent")
+    files: Mapped[List[FileModel]] = relationship("File", back_populates="parent")
     # how we manage multiple links for one resource
-    links: Mapped[List[FileModel]] = relationship(
-        "File", back_populates="parent")
+    links: Mapped[List[FileModel]] = relationship("File", back_populates="parent")
     # how we manage resource trees
-    children: Mapped[List['ResourceModel']] = relationship(
-        secondary=resource_association_table, back_populates="children")
-    parents: Mapped[List['ResourceModel']] = relationship(
-        secondary=resource_association_table, back_populates="parents")
+    children: Mapped[List["ResourceModel"]] = relationship(
+        secondary=resource_association_table, back_populates="children"
+    )
+    parents: Mapped[List["ResourceModel"]] = relationship(
+        secondary=resource_association_table, back_populates="parents"
+    )
 
     @validator("id")
     def validate_uuid(cls, value):
@@ -51,13 +50,13 @@ class ResourceModel(UUIDAuditBase, RepoMixin):
         return value
 
     @classmethod
-    async def provide_repo(cls, session) -> 'ResourceRepository':
+    async def provide_repo(cls, session) -> "ResourceRepository":
         return ResourceRepository(session=session)
 
     # # define the context manager for each file repo
     @classmethod
     @asynccontextmanager
-    async def repo(cls) -> AsyncIterator['ResourceRepository']:
+    async def repo(cls) -> AsyncIterator["ResourceRepository"]:
         session_factory = sqlalchemy_config.create_session_maker()
         async with session_factory() as db_session:
             try:

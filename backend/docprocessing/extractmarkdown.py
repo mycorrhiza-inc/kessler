@@ -38,9 +38,7 @@ from util.datatypes import DocumentID
 
 
 class MarkdownExtractor:
-    def __init__(
-        self, endpoint_url: str, tmpdir : Path
-    ):
+    def __init__(self, endpoint_url: str, tmpdir: Path):
         self.tmpdir = tmpdir
         self.endpoint_url = endpoint_url
         # TODO : Add database connection.
@@ -48,9 +46,9 @@ class MarkdownExtractor:
     def process_raw_document_into_english_text(self, file_loc: Path, metadata: str):
         lang = metadata["str"]
         raw_text = self.process_raw_document_into_untranslated_text(file_loc, metadata)
-        return self.convert_text_into_eng(raw_text,lang)
+        return self.convert_text_into_eng(raw_text, lang)
 
-    def convert_text_into_eng(self, file_text : str, lang :str):
+    def convert_text_into_eng(self, file_text: str, lang: str):
         if lang in ["en", "eng", "english", None]:
             return raw_text
         english_text = GPUComputeEndpoint(self.endpoint_url).translate_text(
