@@ -1,6 +1,7 @@
 import tokenizers
 import math
 
+from .datatypes import SystemMessage, HumanMessage
 
 tokenizer = tokenizers.Tokenizer.from_pretrained("bert-base-uncased")
 

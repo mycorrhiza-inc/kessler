@@ -7,7 +7,7 @@ import hashlib
 
 from pathlib import Path
 
-from src.niclib import *
+from .niclib import *
 
 
 def HumanMessage(content: str):
