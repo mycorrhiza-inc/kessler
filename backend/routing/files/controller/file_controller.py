@@ -129,20 +129,31 @@ class FileController(Controller):
             try:
                 processed_original_text = mdextract.process_raw_document_into_untranslated_text(obj.path, obj.metadata)
                 obj.original_text = processed_original_text
-                current_stage == "stage2"
+                current_stage = "stage2"
             except:
                 response_code, response_message = (422, "failure in stage 1: document was unable to be converted to markdown," )
         if current_stage == "stage2":
             try:
                 processed_english_text = mdextract.convert_text_into_eng(obj.original_text, obj.lang)
                 obj.english_text = processed_english_text
-                current_stage == "stage3"
+                current_stage = "stage3"
             except:
                 response_code, response_message = (422, "failure in stage 2: document was unable to be translated to english." )
         if current_stage == "stage3":
             try:
+                links = genextras.extract_markdown_links(obj.original_text, obj.lang)
+                long_sum = genextras.summarize_document_text(obj.original_text)
+                short_sum = genextras.gen_short_sum_from_long_sum(long_sum)
+                obj.links = links
+                obj.long_summary = long_sum
+                obj.short_summary = short_sum
+                current_stage = "stage4"
+            except:
+                response_code, response_message = (422, "failure in stage 3: Unable to generate summaries and links for document." )
+        if current_stage == "stage4":
+            try:
                 # TODO : Chunk and throw into chroma
-                current_stage == "completed"
+                current_stage = "completed"
             except:
                 response_code, response_message = (422, "failure in stage 2: document was unable to be translated to english." )
         if current_stage == "completed":
