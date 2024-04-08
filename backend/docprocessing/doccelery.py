@@ -1,6 +1,9 @@
+from docprocessing.genextras import GenerateExtras
+from docprocessing.extractmarkdown import MarkdownExtractor
+from docprocessing.docingest import DocumentIngester
 from celery import Celery
 
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Path
 
 app = Celery("tasks", broker="pyamqp://guest@localhost//")
 
