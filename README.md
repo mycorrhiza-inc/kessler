@@ -31,6 +31,9 @@ Once up, the Kessler API can be found at backend.docker.localhost or
 
 ### Requirements
 
+
+FIXME : Since node modules is docker ignored, it runs an error when you try to build the frontend without it.
+
 Copy the environment file:
 ```bash
 cp .env.example .env

@@ -7,17 +7,18 @@ from sqlalchemy.ext.declarative import declared_attr
 from litestar.contrib.sqlalchemy.repository import SQLAlchemyAsyncRepository
 from litestar.contrib.sqlalchemy.base import UUIDBase
 
-from litestar.contrib.sqlalchemy.plugins import \
-    AsyncSessionConfig, \
-    SQLAlchemyAsyncConfig, \
-    SQLAlchemyInitPlugin
+from litestar.contrib.sqlalchemy.plugins import (
+    AsyncSessionConfig,
+    SQLAlchemyAsyncConfig,
+    SQLAlchemyInitPlugin,
+)
 
 session_config = AsyncSessionConfig(expire_on_commit=False)
 
 sqlalchemy_config = SQLAlchemyAsyncConfig(
     connection_string="sqlite+aiosqlite:///instance/kessler.sqlite",
     # connection_string="sqlite+aiosqlite:///kessler.sqlite",
-    session_config=session_config
+    session_config=session_config,
 )
 
 sqlalchemy_plugin = SQLAlchemyInitPlugin(config=sqlalchemy_config)
@@ -27,8 +28,8 @@ T = TypeVar("T")
 
 class RepoMixin:
     """
-       Implements common class level functionality for all objects. 
-       Wraps the repository
+    Implements common class level functionality for all objects.
+    Wraps the repository
     """
 
     # TODO: generalize this
@@ -52,7 +53,7 @@ class RepoMixin:
         async with cls.repo() as repo:
             new = cls(**kw)
             obj = await repo.add(new)
-            print(f'created {obj.__dict__}')
+            print(f"created {obj.__dict__}")
             return obj
 
     @classmethod
@@ -60,14 +61,14 @@ class RepoMixin:
         """Passing an object to create will add it"""
         async with cls.repo() as repo:
             obj = await repo.add(newObj)
-            print(f'added {obj.__dict__}')
+            print(f"added {obj.__dict__}")
             return obj
 
     @classmethod
     async def remove(cls, id):
         async with cls.repo() as repo:
             obj = await repo.delete(id)
-            print(f'deleted {obj.__dict__}')
+            print(f"deleted {obj.__dict__}")
             return obj
 
     @classmethod

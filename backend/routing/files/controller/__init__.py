@@ -1,1 +1,7 @@
-from .file_controller import FileController, FileUpload, FileUpdate, FileCreate, FileRepository
+from .file_controller import (
+    FileController,
+    FileUpload,
+    FileUpdate,
+    FileCreate,
+    FileRepository,
+)

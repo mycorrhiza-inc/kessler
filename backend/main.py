@@ -21,7 +21,6 @@ logging_config = LoggingConfig(
 )
 
 
-
 async def on_startup() -> None:
     async with utils.sqlalchemy_config.get_engine().begin() as conn:
         # UUIDAuditBase extends UUIDBase so create_all should build both

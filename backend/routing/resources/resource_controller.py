@@ -25,14 +25,15 @@ class ResourceController(Controller):
         self,
         Resources_repo: ResourceRepository,
         Resource_id: UUID = Parameter(
-            title="Resource ID", description="Resource to retieve"),
+            title="Resource ID", description="Resource to retieve"
+        ),
     ) -> Resource:
         obj = Resources_repo.get(Resource_id)
         return Resource.model_validate(obj)
 
     @get(path="/resources/all")
     async def get_all_Resources(
-        self,  limit_offset: LimitOffset, request: Request
+        self, limit_offset: LimitOffset, request: Request
     ) -> list[Resource]:
         """List Resources."""
         Resource.list()
@@ -48,7 +49,8 @@ class ResourceController(Controller):
     async def delete_Resource(
         self,
         resource_id: UUID = Parameter(
-            title="Resource ID", description="Resource to retieve"),
+            title="Resource ID", description="Resource to retieve"
+        ),
     ) -> None:
         _ = Resource.delete(resource_id)
         Resource.commit()

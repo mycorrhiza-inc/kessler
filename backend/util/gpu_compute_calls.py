@@ -15,7 +15,9 @@ from typing import List, Optional
 
 from warnings import warn
 
-DEFAULT_TMPDIR = Path("/tmp/")
+import os
+
+OS_TMPDIR = Path(os.environ["TMPDIR"])
 
 
 # YOUR CPU SHALL BE SACRIFICED FOR OUR SERVER BANDWITH, MUAHAHAHAHAHA
@@ -111,7 +113,7 @@ class GPUComputeEndpoint:
         target_lang: str,
         file_type: str,
         bitrate: int = 15000,
-        tmpdir: Path = DEFAULT_TMPDIR,
+        tmpdir: Path = OS_TMPDIR,
     ) -> str:
         downsampled = downsample_audio(filepath, file_type, bitrate, tmpdir)
         if downsampled == filepath:

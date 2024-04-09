@@ -4,8 +4,13 @@ from typing import Annotated
 
 from litestar import Controller, Request
 
-from litestar.handlers.http_handlers.decorators import \
-    get, post, delete, patch, MediaType
+from litestar.handlers.http_handlers.decorators import (
+    get,
+    post,
+    delete,
+    patch,
+    MediaType,
+)
 
 from litestar.params import Parameter
 from litestar.di import Provide
@@ -15,6 +20,8 @@ from litestar.enums import RequestEncodingType
 from litestar.params import Body
 
 from pydantic import TypeAdapter, BaseModel
+
+from modules.files.dbm.files import provide_files_repo
 
 
 from models.files import FileRepository, File, FileModel
@@ -27,7 +34,8 @@ emptyFile = FileModel(
     name="",
     stage="unprocessed",
     summary=None,
-    short_summary=None)
+    short_summary=None,
+)
 
 
 class FileUpdate(BaseModel):
@@ -41,6 +49,7 @@ class FileCreate(BaseModel):
 class FileUpload(BaseModel):
     message: str
 
+
 # litestar only
 
 
@@ -53,8 +62,7 @@ class FileController(Controller):
     async def get_file(
         self,
         files_repo: FileRepository,
-        file_id: UUID = Parameter(
-            title="File ID", description="File to retieve"),
+        file_id: UUID = Parameter(title="File ID", description="File to retieve"),
     ) -> File:
         obj = files_repo.get(file_id)
         return File.model_validate(obj)
@@ -78,20 +86,130 @@ class FileController(Controller):
         newFileObj = emptyFile()
         newFileObj.name = data.filename
 
-        obj = files_repo.add(newFileObj)
+    from crawleringest.docingest import DocumentIngester
 
-        # TODO: emit event for celery to process this file
+    @post(path="/links/add")
+    async def add_file(
+        self, files_repo: FileRepository, data: FileCreate, request: Request
+    ) -> File:
+        request.logger.info("adding files")
+        request.logger.info(data)
+        # New stuff here, is this where this code belongs? <new stuff>
+        docingest = DocumentIngester()
+        metadata, raw_file_path = docingest.url_to_file_and_metadata(data.url)
+        new_file = FileModel(
+            url=data.url,
+            title=metadata["title"],
+            doctype=metadata["doctype"],
+            lang=metadata["lang"],
+            file=read(raw_file_path),
+            metadata=metadata,
+            stage="stage0",
+        )
+        # </new stuff>
+        request.logger.info("new file:{file}".format(file=new_file.to_dict()))
+        try:
+            new_file = await files_repo.add(new_file)
+        except Exception as e:
+            request.logger.info(e)
+            return e
+        request.logger.info("added file!~")
+        await files_repo.session.commit()
+        return File.model_validate(new_file)
 
-        # return f"{newFileObj.name}, {content.decode()}"
-        return obj
+    from docprocessing.extractmarkdown import MarkdownExtractor
+    from docprocessing.genextras import GenerateExtras
+
+    @patch(path="/docproc/{file_id:uuid}")
+    async def process_File(
+        self,
+        files_repo: FileRepository,
+        data: FileUpdate,
+        file_id: UUID = Parameter(title="File ID", description="File to retieve"),
+        regenerate: Bool = False,  # Figure out how to pass in a boolean as a query paramater
+    ) -> File:
+        """Process a File."""
+        obj = files_repo.get(file_id)
+        current_stage = obj.stage
+        mdextract = MarkdownExtractor()
+        genextras = GenerateExtras()
+
+        if current_stage == "stage0":
+            response_code, response_message = (
+                422,
+                "Failure in stage 0: Document was incorrectly added to database, try readding it again.",
+            )
+        if regenerate and current_stage != "stage0":
+            current_stage = "stage1"
+        if current_stage == "stage1":
+            try:
+                processed_original_text = (
+                    mdextract.process_raw_document_into_untranslated_text(
+                        obj.path, obj.metadata
+                    )
+                )
+            except:
+                response_code, response_message = (
+                    422,
+                    "failure in stage 1: document was unable to be converted to markdown,",
+                )
+            else:
+                obj.original_text = processed_original_text
+                current_stage = "stage2"
+        if current_stage == "stage2":
+            try:
+                processed_english_text = mdextract.convert_text_into_eng(
+                    obj.original_text, obj.lang
+                )
+            except:
+                response_code, response_message = (
+                    422,
+                    "failure in stage 2: document was unable to be translated to english.",
+                )
+            else:
+                obj.english_text = processed_english_text
+                current_stage = "stage3"
+        if current_stage == "stage3":
+            try:
+                links = genextras.extract_markdown_links(obj.original_text, obj.lang)
+                long_sum = genextras.summarize_document_text(obj.original_text)
+                short_sum = genextras.gen_short_sum_from_long_sum(long_sum)
+            except:
+                response_code, response_message = (
+                    422,
+                    "failure in stage 3: Unable to generate summaries and links for document.",
+                )
+            else:
+                obj.links = links
+                obj.long_summary = long_sum
+                obj.short_summary = short_sum
+                current_stage = "stage4"
+        if current_stage == "stage4":
+            try:
+                # TODO : Chunk document and generate embeddings.
+                print("Create Embeddings.")
+            except:
+                response_code, response_message = (
+                    422,
+                    "failure in stage 2: document was unable to be translated to english.",
+                )
+            else:
+
+                current_stage = "completed"
+        if current_stage == "completed":
+            response_code, r3esponse_message = (200, "Document Fully Processed.")
+        newobj = files_repo.update(obj)
+        files_repo.session.commit()
+        return File.model_validate(
+            newobj
+        )  # TODO : Return Response code and response message
 
     @patch(path="/files/{file_id:uuid}")
     async def update_file(
         self,
         files_repo: FileRepository,
         data: FileUpdate,
-        file_id: UUID = Parameter(
-            title="File ID", description="File to retieve"),
+        file_id: UUID = Parameter(title="File ID", description="File to retieve"),
     ) -> File:
         """Update a File."""
         raw_obj = data.model_dump(exclude_unset=True, exclude_none=True)
@@ -104,8 +222,7 @@ class FileController(Controller):
     async def delete_file(
         self,
         files_repo: FileRepository,
-        file_id: UUID = Parameter(
-            title="File ID", description="File to retieve"),
+        file_id: UUID = Parameter(title="File ID", description="File to retieve"),
     ) -> None:
         _ = files_repo.delete(files_repo)
         files_repo.session.commit()

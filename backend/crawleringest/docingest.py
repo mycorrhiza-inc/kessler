@@ -48,8 +48,11 @@ def download_file(url: str, savedir: Path) -> Path:
     return local_filename
 
 
+OS_TMPDIR = Path(os.environ["TMPDIR"])
+
+
 class DocumentIngester:
-    def __init__(self, tmpdir=Path("/tmp/kessler/docingest")):
+    def __init__(self, tmpdir=OS_TMPDIR / Path("kessler/docingest")):
         self.tmpdir = tmpdir
         self.crossref = Crossref()
         # TODO : Add database connection.

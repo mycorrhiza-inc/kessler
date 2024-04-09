@@ -1,4 +1,3 @@
-
 from litestar.contrib.sqlalchemy.base import UUIDAuditBase, AuditColumns
 from litestar.contrib.sqlalchemy.repository import SQLAlchemyAsyncRepository
 from litestar.contrib.sqlalchemy.base import UUIDBase
@@ -18,19 +17,18 @@ import uuid
 from uuid import UUID
 
 
-from utils import sqlalchemy_config
+from .utils import sqlalchemy_config
 
 
-class File(BaseModel):
-    id: any # TODO: figure out a better type for this UUID :/
-    url: str
-    path: str
-    doctype: str
-    lang: str
-    name: str
-    stage: str   # Either "stage0" "stage1" "stage2" or "stage3"
-    summary: str | None
-    short_summary: str | None
+class FileResourceModel(AuditColumns):
+    """
+    Used to access and maniuplate files without regard to their resourceid
+    """
+
+    __tablename__ = "LinkResource"
+    resource_id = mapped_column(ForeignKey("resource.id"))
+    # used to get Files from resource IDs
+    file_id = mapped_column(ForeignKey("file.id"), primary_key=True)
 
     @validator("id")
     def validate_uuid(cls, value):
@@ -48,6 +46,8 @@ class FileModel(UUIDAuditBase, RepoMixin):
     stage: Mapped[str]  # Either "stage0" "stage1" "stage2" or "stage3"
     summary: Mapped[str | None]
     short_summary: Mapped[str | None]
+    original_text: Mapped[str | None]
+    english_text: Mapped[str | None]
 
     @validator("id")
     def validate_uuid(cls, value):
@@ -56,13 +56,13 @@ class FileModel(UUIDAuditBase, RepoMixin):
         return value
 
     @classmethod
-    async def provide_repo(cls, session) -> 'FileRepository':
+    async def provide_repo(cls, session) -> "FileRepository":
         return FileRepository(session=session)
 
     # # define the context manager for each file repo
     @classmethod
     @asynccontextmanager
-    async def repo(cls) -> AsyncIterator['FileRepository']:
+    async def repo(cls) -> AsyncIterator["FileRepository"]:
         session_factory = sqlalchemy_config.create_session_maker()
         async with session_factory() as db_session:
             try:
@@ -74,7 +74,6 @@ class FileModel(UUIDAuditBase, RepoMixin):
             else:
                 print("committhing change")
                 await db_session.commit()
-
 
     @classmethod
     async def updateStage(cls, id, stage):
