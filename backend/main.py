@@ -14,7 +14,8 @@ from routing.files import FileController
 
 # logging configuration
 logging_config = LoggingConfig(
-    root={"level": logging.getLevelName(logging.INFO), "handlers": ["console"]},
+    root={"level": logging.getLevelName(
+        logging.INFO), "handlers": ["console"]},
     formatters={
         "standard": {"format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"}
     },
@@ -28,7 +29,8 @@ async def on_startup() -> None:
 
 
 async def provide_limit_offset_pagination(
-    current_page: int = Parameter(ge=1, query="currentPage", default=1, required=False),
+    current_page: int = Parameter(
+        ge=1, query="currentPage", default=1, required=False),
     page_size: int = Parameter(
         query="pageSize",
         ge=1,
