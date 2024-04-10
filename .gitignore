@@ -50,3 +50,5 @@ next-env.d.ts
 instance/*
 __pycache__/
 .env
+
+# frontend environment
