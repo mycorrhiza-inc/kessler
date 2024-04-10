@@ -16,15 +16,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-<<<<<<< HEAD
-<<<<<<< HEAD
-      <body className={"container"+inter.className}>{children}</body>
-=======
-      <body className={"container h-lvh aspect-auto"+inter.className}>{children}</body>
->>>>>>> d57a0f4 (working frontend link add !)
-=======
-      <body className={"container"+inter.className}>{children}</body>
->>>>>>> fb33946 (fixed frontend spacing, added link form)
+      <body className={"container h-lvh aspect-auto" + inter.className}>
+        {children}
+      </body>
     </html>
   );
 }
