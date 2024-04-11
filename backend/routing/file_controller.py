@@ -21,10 +21,14 @@ from litestar.params import Body
 
 from pydantic import TypeAdapter, BaseModel
 
-from modules.files.dbm.files import provide_files_repo
-
 
 from models.files import FileRepository, File, FileModel
+
+
+from crawler.docingest import DocumentIngester
+from docprocessing.extractmarkdown import MarkdownExtractor
+from docprocessing.genextras import GenerateExtras
+
 
 # for testing purposese
 emptyFile = FileModel(
@@ -86,7 +90,6 @@ class FileController(Controller):
         newFileObj = emptyFile()
         newFileObj.name = data.filename
 
-    from crawleringest.docingest import DocumentIngester
 
     @post(path="/links/add")
     async def add_file(
@@ -117,8 +120,6 @@ class FileController(Controller):
         await files_repo.session.commit()
         return File.model_validate(new_file)
 
-    from docprocessing.extractmarkdown import MarkdownExtractor
-    from docprocessing.genextras import GenerateExtras
 
     @patch(path="/docproc/{file_id:uuid}")
     async def process_File(
