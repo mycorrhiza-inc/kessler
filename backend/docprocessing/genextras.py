@@ -10,26 +10,6 @@ class GenerateExtras:
         urls = re.findall(markdown_url_pattern, markdown_document_text)
         return urls
 
-    # Checks if the supplied DocumentID has a summary and if it doesnt it generates one and returns the docid.
-    def generate_long_summary(
-        self,
-        document_text: str,
-    ) -> DocumentID:
-        # Check to see if a summary was already generated
-        not_regen_summary = not regenerate_summary
-        if (
-            (docid.extras["summary"] == None)
-            & (docid.extras["short_summary"])
-            & not_regen_summary
-        ):
-            return docid
-        processed_text = self.get_proc_doc(docid)
-        summary_text = self.llm.summarize_document_text(processed_text)
-        docid.extras["summary"] = summary_text
-        short_summary_text = self.llm.gen_short_sum_from_long_sum(summary_text)
-        docid.extras["short_summary"] = short_summary_text
-        return docid
-
     def summarize_document_text(
         self, document_text: str, max_chunk_size: int = 5000
     ) -> str:

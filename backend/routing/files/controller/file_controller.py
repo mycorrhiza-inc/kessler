@@ -21,10 +21,11 @@ from litestar.params import Body
 
 from pydantic import TypeAdapter, BaseModel
 
-from modules.files.dbm.files import provide_files_repo
+# from modules.files.dbm.files import provide_files_repo
 
 
-from models.files import FileRepository, File, FileModel
+from models.files import FileRepository, FileModel
+#Test remove file from models.files import FileRepository, File, FileModel
 
 # for testing purposese
 emptyFile = FileModel(
@@ -63,17 +64,17 @@ class FileController(Controller):
         self,
         files_repo: FileRepository,
         file_id: UUID = Parameter(title="File ID", description="File to retieve"),
-    ) -> File:
+    ) -> FileModel:
         obj = files_repo.get(file_id)
         return File.model_validate(obj)
 
     @get(path="/files/all")
     async def get_all_files(
         self, files_repo: FileRepository, limit_offset: LimitOffset, request: Request
-    ) -> list[File]:
+    ) -> list[FileModel]:
         """List files."""
         results = await files_repo.list()
-        type_adapter = TypeAdapter(list[File])
+        type_adapter = TypeAdapter(list[FileModel])
         return type_adapter.validate_python(results)
 
     @post(path="/files/upload", media_type=MediaType.TEXT)
@@ -91,7 +92,7 @@ class FileController(Controller):
     @post(path="/links/add")
     async def add_file(
         self, files_repo: FileRepository, data: FileCreate, request: Request
-    ) -> File:
+    ) -> FileModel:
         request.logger.info("adding files")
         request.logger.info(data)
         # New stuff here, is this where this code belongs? <new stuff>
@@ -115,7 +116,7 @@ class FileController(Controller):
             return e
         request.logger.info("added file!~")
         await files_repo.session.commit()
-        return File.model_validate(new_file)
+        return FileModel.model_validate(new_file)
 
     from docprocessing.extractmarkdown import MarkdownExtractor
     from docprocessing.genextras import GenerateExtras
@@ -126,8 +127,8 @@ class FileController(Controller):
         files_repo: FileRepository,
         data: FileUpdate,
         file_id: UUID = Parameter(title="File ID", description="File to retieve"),
-        regenerate: Bool = False,  # Figure out how to pass in a boolean as a query paramater
-    ) -> File:
+        regenerate: bool = False,  # Figure out how to pass in a boolean as a query paramater
+    ) -> FileModel:
         """Process a File."""
         obj = files_repo.get(file_id)
         current_stage = obj.stage
@@ -200,7 +201,7 @@ class FileController(Controller):
             response_code, r3esponse_message = (200, "Document Fully Processed.")
         newobj = files_repo.update(obj)
         files_repo.session.commit()
-        return File.model_validate(
+        return FileModel.model_validate(
             newobj
         )  # TODO : Return Response code and response message
 
@@ -210,13 +211,13 @@ class FileController(Controller):
         files_repo: FileRepository,
         data: FileUpdate,
         file_id: UUID = Parameter(title="File ID", description="File to retieve"),
-    ) -> File:
+    ) -> FileModel:
         """Update a File."""
         raw_obj = data.model_dump(exclude_unset=True, exclude_none=True)
         raw_obj.update({"id": file_id})
         obj = files_repo.update(File(**raw_obj))
         files_repo.session.commit()
-        return File.model_validate(obj)
+        return FileModel.model_validate(obj)
 
     @delete(path="/files/{file_id:uuid}")
     async def delete_file(

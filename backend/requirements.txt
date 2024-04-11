@@ -1,3 +1,4 @@
+habanero
 advanced-alchemy==0.7.4
 aiosqlite==0.20.0
 alembic==1.13.1
