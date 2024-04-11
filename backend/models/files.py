@@ -1,43 +1,20 @@
+from contextlib import asynccontextmanager
+from typing import AsyncIterator, Annotated
+import traceback
+from uuid import UUID
+
 from litestar.contrib.sqlalchemy.base import UUIDAuditBase, AuditColumns
 from litestar.contrib.sqlalchemy.repository import SQLAlchemyAsyncRepository
-from litestar.contrib.sqlalchemy.base import UUIDBase
 
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
-from pydantic import BaseModel, ConfigDict, StringConstraints, validator
-from contextlib import asynccontextmanager
 
-from .utils import RepoMixin
-
-from typing import AsyncIterator, Annotated
-
-import traceback
-import uuid
-from uuid import UUID
-
-
-from .utils import sqlalchemy_config
-
-
-class FileResourceModel(AuditColumns):
-    """
-    Used to access and maniuplate files without regard to their resourceid
-    """
-
-    __tablename__ = "LinkResource"
-    resource_id = mapped_column(ForeignKey("resource.id"))
-    # used to get Files from resource IDs
-    file_id = mapped_column(ForeignKey("file.id"), primary_key=True)
-
-    @validator("id")
-    def validate_uuid(cls, value):
-        if value:
-            return str(value)
-        return value
+from .utils import RepoMixin, sqlalchemy_config, PydanticBaseModel
 
 
 class FileModel(UUIDAuditBase, RepoMixin):
+    """Database representation of a file"""
     __tablename__ = "file"
     path: Mapped[str]
     doctype: Mapped[str]
@@ -49,20 +26,14 @@ class FileModel(UUIDAuditBase, RepoMixin):
     original_text: Mapped[str | None]
     english_text: Mapped[str | None]
 
-    @validator("id")
-    def validate_uuid(cls, value):
-        if value:
-            return str(value)
-        return value
-
     @classmethod
-    async def provide_repo(cls, session) -> "FileRepository":
+    async def provide_repo(cls, session) -> 'FileRepository':
         return FileRepository(session=session)
 
     # # define the context manager for each file repo
     @classmethod
     @asynccontextmanager
-    async def repo(cls) -> AsyncIterator["FileRepository"]:
+    async def repo(cls) -> AsyncIterator['FileRepository']:
         session_factory = sqlalchemy_config.create_session_maker()
         async with session_factory() as db_session:
             try:
@@ -89,3 +60,18 @@ class FileRepository(SQLAlchemyAsyncRepository[FileModel]):
     """File repository."""
 
     model_type = FileModel
+
+
+class FileSchema(PydanticBaseModel):
+    """pydantic schema of the FileModel"""
+    id: UUID | str  # TODO: better typing for this
+    path: str
+    doctype: str
+    lang: str
+    name: str
+    # Either "stage0" "stage1" "stage2" or "stage3"
+    stage: str
+    summary: str | None = None
+    short_summary: str | None = None
+    original_text: str | None = None
+    english_text: str | None = None

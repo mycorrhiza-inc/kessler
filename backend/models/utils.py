@@ -12,6 +12,8 @@ from litestar.contrib.sqlalchemy.plugins import (
     SQLAlchemyAsyncConfig,
     SQLAlchemyInitPlugin,
 )
+    
+from pydantic import BaseModel as _BaseModel
 
 session_config = AsyncSessionConfig(expire_on_commit=False)
 
@@ -77,3 +79,9 @@ class RepoMixin:
         async with cls.repo() as repo:
             obj = await repo.get(id)
             return obj
+
+
+
+class PydanticBaseModel(_BaseModel):
+    """Extend Pydantic's BaseModel to enable ORM mode"""
+    model_config = {"from_attributes": True}

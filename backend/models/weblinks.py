@@ -1,4 +1,6 @@
-from typing import Optional
+from contextlib import asynccontextmanager
+from typing import AsyncIterator, Annotated
+import traceback
 
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
@@ -9,8 +11,10 @@ from litestar.contrib.sqlalchemy.repository import SQLAlchemyAsyncRepository
 
 from pydantic import validator
 
+from models.utils import sqlalchemy_config
 
-class LinkModel(UUIDAuditBase):
+
+class WeblinkModel(UUIDAuditBase):
     __tablename__ = "Link"
     # path exists if the link has been stored as text
     text_id: Mapped[ForeignKey | None] = mapped_column(ForeignKey("text_object.id"))
@@ -22,9 +26,20 @@ class LinkModel(UUIDAuditBase):
     summary: Mapped[str]
     short_summary: Mapped[str]
 
-    # TODO: implement this
-    def bumpLinkResourceTimestamp():
-        pass
+    @classmethod
+    @asynccontextmanager
+    async def repo(cls) -> AsyncIterator['WeblinkRepository']:
+        session_factory = sqlalchemy_config.create_session_maker()
+        async with session_factory() as db_session:
+            try:
+                yield cls.provide_repo(session=db_session)
+            except Exception as e:
+                print(traceback.format_exc())
+                print("rolling back")
+                await db_session.rollback()
+            else:
+                print("committhing change")
+                await db_session.commit()
 
     @validator("id")
     def validate_uuid(cls, value):
@@ -33,12 +48,12 @@ class LinkModel(UUIDAuditBase):
         return value
 
 
-class LinkRepository(SQLAlchemyAsyncRepository[LinkModel]):
+class WeblinkRepository(SQLAlchemyAsyncRepository[WeblinkModel]):
     """Link repository."""
 
-    model_type = LinkModel
+    model_type = WeblinkModel
 
 
-async def provide_Links_repo(db_session: AsyncSession) -> LinkRepository:
+async def provide_weblinks_repo(db_session: AsyncSession) -> WeblinkRepository:
     """This provides the default Link repository."""
-    return LinkRepository(session=db_session)
+    return WeblinkRepository(session=db_session)
