@@ -21,11 +21,14 @@ from litestar.params import Body
 
 from pydantic import TypeAdapter, BaseModel
 
-# from modules.files.dbm.files import provide_files_repo
+
+from models import FileModel, FileRepository, FileSchema
 
 
-from models.files import FileRepository, FileModel
-#Test remove file from models.files import FileRepository, File, FileModel
+from crawler.docingest import DocumentIngester
+from docprocessing.extractmarkdown import MarkdownExtractor
+from docprocessing.genextras import GenerateExtras
+
 
 # for testing purposese
 emptyFile = FileModel(
@@ -63,18 +66,19 @@ class FileController(Controller):
     async def get_file(
         self,
         files_repo: FileRepository,
-        file_id: UUID = Parameter(title="File ID", description="File to retieve"),
-    ) -> FileModel:
+        file_id: UUID = Parameter(
+            title="File ID", description="File to retieve"),
+    ) -> FileSchema:
         obj = files_repo.get(file_id)
-        return File.model_validate(obj)
+        return FileSchema.model_validate(obj)
 
     @get(path="/files/all")
     async def get_all_files(
         self, files_repo: FileRepository, limit_offset: LimitOffset, request: Request
-    ) -> list[FileModel]:
+    ) -> list[FileSchema]:
         """List files."""
         results = await files_repo.list()
-        type_adapter = TypeAdapter(list[FileModel])
+        type_adapter = TypeAdapter(list[FileSchema])
         return type_adapter.validate_python(results)
 
     @post(path="/files/upload", media_type=MediaType.TEXT)
@@ -87,12 +91,10 @@ class FileController(Controller):
         newFileObj = emptyFile()
         newFileObj.name = data.filename
 
-    from crawleringest.docingest import DocumentIngester
-
-    @post(path="/links/add")
+    @post(path="/files/add")
     async def add_file(
         self, files_repo: FileRepository, data: FileCreate, request: Request
-    ) -> FileModel:
+    ) -> FileSchema:
         request.logger.info("adding files")
         request.logger.info(data)
         # New stuff here, is this where this code belongs? <new stuff>
@@ -103,7 +105,7 @@ class FileController(Controller):
             title=metadata["title"],
             doctype=metadata["doctype"],
             lang=metadata["lang"],
-            file=read(raw_file_path),
+            file=open(raw_file_path),
             metadata=metadata,
             stage="stage0",
         )
@@ -116,19 +118,17 @@ class FileController(Controller):
             return e
         request.logger.info("added file!~")
         await files_repo.session.commit()
-        return FileModel.model_validate(new_file)
+        return FileSchema.model_validate(new_file)
 
-    from docprocessing.extractmarkdown import MarkdownExtractor
-    from docprocessing.genextras import GenerateExtras
-
-    @patch(path="/docproc/{file_id:uuid}")
+    @patch(path="/files/{file_id:uuid}")
     async def process_File(
         self,
         files_repo: FileRepository,
         data: FileUpdate,
-        file_id: UUID = Parameter(title="File ID", description="File to retieve"),
+        file_id: UUID = Parameter(
+            title="File ID", description="File to retieve"),
         regenerate: bool = False,  # Figure out how to pass in a boolean as a query paramater
-    ) -> File:
+    ) -> FileSchema:
         """Process a File."""
         obj = files_repo.get(file_id)
         current_stage = obj.stage
@@ -172,7 +172,8 @@ class FileController(Controller):
                 current_stage = "stage3"
         if current_stage == "stage3":
             try:
-                links = genextras.extract_markdown_links(obj.original_text, obj.lang)
+                links = genextras.extract_markdown_links(
+                    obj.original_text, obj.lang)
                 long_sum = genextras.summarize_document_text(obj.original_text)
                 short_sum = genextras.gen_short_sum_from_long_sum(long_sum)
             except:
@@ -198,10 +199,11 @@ class FileController(Controller):
 
                 current_stage = "completed"
         if current_stage == "completed":
-            response_code, r3esponse_message = (200, "Document Fully Processed.")
+            response_code, r3esponse_message = (
+                200, "Document Fully Processed.")
         newobj = files_repo.update(obj)
         files_repo.session.commit()
-        return FileModel.model_validate(
+        return FileSchema.model_validate(
             newobj
         )  # TODO : Return Response code and response message
 
@@ -210,20 +212,22 @@ class FileController(Controller):
         self,
         files_repo: FileRepository,
         data: FileUpdate,
-        file_id: UUID = Parameter(title="File ID", description="File to retieve"),
-    ) -> FileModel:
+        file_id: UUID = Parameter(
+            title="File ID", description="File to retieve"),
+    ) -> FileSchema:
         """Update a File."""
         raw_obj = data.model_dump(exclude_unset=True, exclude_none=True)
         raw_obj.update({"id": file_id})
-        obj = files_repo.update(File(**raw_obj))
+        obj = files_repo.update(FileModel(**raw_obj))
         files_repo.session.commit()
-        return FileModel.model_validate(obj)
+        return FileSchema.model_validate(obj)
 
     @delete(path="/files/{file_id:uuid}")
     async def delete_file(
         self,
         files_repo: FileRepository,
-        file_id: UUID = Parameter(title="File ID", description="File to retieve"),
+        file_id: UUID = Parameter(
+            title="File ID", description="File to retieve"),
     ) -> None:
-        _ = files_repo.delete(files_repo)
+        _ = files_repo.delete(file_id)
         files_repo.session.commit()
