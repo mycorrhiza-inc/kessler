@@ -19,6 +19,7 @@ sqlalchemy_config = SQLAlchemyAsyncConfig(
     connection_string="sqlite+aiosqlite:///instance/kessler.sqlite",
     # connection_string="sqlite+aiosqlite:///kessler.sqlite",
     session_config=session_config,
+    # extend_existing=True
 )
 
 sqlalchemy_plugin = SQLAlchemyInitPlugin(config=sqlalchemy_config)

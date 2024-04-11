@@ -8,7 +8,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from pydantic import BaseModel, ConfigDict, StringConstraints, validator
 from contextlib import asynccontextmanager
 
-from utils import RepoMixin
+from .utils import RepoMixin
 
 from typing import AsyncIterator, Annotated
 
