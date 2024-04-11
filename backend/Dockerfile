@@ -5,7 +5,8 @@ ENV VIRTUAL_ENV=/usr/local
 ADD --chmod=755 https://github.com/astral-sh/uv/releases/latest/download/uv-installer.sh /install.sh
 RUN /install.sh && rm /install.sh
  
-COPY requirements.txt /requirements.txt
+WORKDIR /app
+COPY requirements.txt /app/requirements.txt
  
 RUN /root/.cargo/bin/uv pip install --no-cache -r requirements.txt 
 

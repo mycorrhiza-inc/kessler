@@ -29,9 +29,8 @@ services:
       - .env
 
     volumes:
-      - ./backend:/code
-      - ./backend/instance:/code/instance
-    working_dir: "/code"
+      - ./backend:/app
+      - ./backend/instance:/app/instance
 
     labels:
       - "traefik.enable=true"
@@ -58,6 +57,7 @@ services:
     volumes:
       - ./frontend/src:/app/src
       - ./frontend/public:/app/public
+      - ./frontend/.env.local:/app/.env.local
 
     labels:
       - "traefik.enable=true"

@@ -4,7 +4,7 @@ import Layout from "../lib/components/AppLayout";
 import LinksView from "../lib/components/ResourceList";
 
 // utils
-import { AddLink } from "../lib/api/files/requests";
+import { AddLink } from "../lib/requests";
 
 // mui
 import Textarea from "@mui/joy/Textarea";
@@ -22,6 +22,10 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import type { FileType } from "../lib/interfaces";
 
+// clerk
+import { useAuth } from "@clerk/nextjs";
+import AuthenticatedFetch from "../lib/requests";
+
 const VisuallyHiddenInput = styled("input")`
   clip: rect(0 0 0 0);
   clip-path: inset(50%);
@@ -37,6 +41,7 @@ const VisuallyHiddenInput = styled("input")`
 const AddResourceComponent = () => {
   const [buttonLoading, setButtonLoad] = useState(false);
   const [hasError, setError] = useState(false);
+  const { getToken } = useAuth();
 
   const [links, setLinks] = useState<FileType[]>([]);
 
@@ -64,11 +69,12 @@ const AddResourceComponent = () => {
     }, 3000);
   };
   const getAllLinks = async () => {
-    let result = await fetch("/api/files/all", {
+    const authfetch = AuthenticatedFetch();
+    let result = await authfetch("/api/files/all", {
       method: "get",
       headers: {
         Accept: "application/json",
-        "Access-Control-Allow-Origin": "*",
+        Authorization: `Bearer ${await getToken()}`,
       },
     })
       .then((e) => {

@@ -47,7 +47,7 @@ next-env.d.ts
 .next
 
 # backend data
-instance/*
+instance/
 __pycache__/
 .env
 

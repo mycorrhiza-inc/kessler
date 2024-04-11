@@ -126,7 +126,7 @@ class FileController(Controller):
         files_repo: FileRepository,
         data: FileUpdate,
         file_id: UUID = Parameter(title="File ID", description="File to retieve"),
-        regenerate: Bool = False,  # Figure out how to pass in a boolean as a query paramater
+        regenerate: bool = False,  # Figure out how to pass in a boolean as a query paramater
     ) -> File:
         """Process a File."""
         obj = files_repo.get(file_id)
