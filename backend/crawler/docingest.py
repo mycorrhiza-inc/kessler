@@ -7,7 +7,7 @@ import json
 import re
 
 
-from habanero import Crossref
+# from habanero import Crossref
 
 
 import logging

@@ -7,7 +7,6 @@ import json
 import re
 
 
-from habanero import Crossref
 
 
 import logging
@@ -34,7 +33,6 @@ from pathlib import Path
 import shlex
 
 from util.gpu_compute_calls import GPUComputeEndpoint
-from util.datatypes import DocumentID
 
 
 class MarkdownExtractor:
@@ -113,11 +111,3 @@ class MarkdownExtractor:
                 f'Improper File Type, processing Failed with doctype: "{doctype}"'
             )
 
-    def get_proc_doc_original(self, doc: DocumentID) -> Optional[str]:
-        # TODO:
-        pass
-
-    def get_proc_doc_translated(
-        self, doc: DocumentID, target_lang: str
-    ) -> Optional[str]:
-        pass
