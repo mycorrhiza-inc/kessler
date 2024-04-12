@@ -22,7 +22,7 @@ from litestar.params import Body
 from pydantic import TypeAdapter, BaseModel
 
 
-from models import FileModel, FileRepository, FileSchema
+from models import FileModel, FileRepository, FileSchema, provide_files_repo
 
 
 from crawler.docingest import DocumentIngester
@@ -60,7 +60,7 @@ class FileUpload(BaseModel):
 class FileController(Controller):
     """File Controller"""
 
-    dependencies = {"files_repo": Provide(FileModel.provide_repo)}
+    dependencies = {"files_repo": Provide(provide_files_repo)}
 
     @get(path="/files/{file_id:uuid}")
     async def get_file(
@@ -202,25 +202,25 @@ class FileController(Controller):
             response_code, r3esponse_message = (
                 200, "Document Fully Processed.")
         newobj = files_repo.update(obj)
-        files_repo.session.commit()
+        await files_repo.session.commit()
         return FileSchema.model_validate(
             newobj
         )  # TODO : Return Response code and response message
 
-    @patch(path="/files/{file_id:uuid}")
-    async def update_file(
-        self,
-        files_repo: FileRepository,
-        data: FileUpdate,
-        file_id: UUID = Parameter(
-            title="File ID", description="File to retieve"),
-    ) -> FileSchema:
-        """Update a File."""
-        raw_obj = data.model_dump(exclude_unset=True, exclude_none=True)
-        raw_obj.update({"id": file_id})
-        obj = files_repo.update(FileModel(**raw_obj))
-        files_repo.session.commit()
-        return FileSchema.model_validate(obj)
+    # @patch(path="/files/{file_id:uuid}")
+    # async def update_file(
+    #     self,
+    #     files_repo: FileRepository,
+    #     data: FileUpdate,
+    #     file_id: UUID = Parameter(
+    #         title="File ID", description="File to retieve"),
+    # ) -> FileSchema:
+    #     """Update a File."""
+    #     raw_obj = data.model_dump(exclude_unset=True, exclude_none=True)
+    #     raw_obj.update({"id": file_id})
+    #     obj = files_repo.update(FileModel(**raw_obj))
+    #     await files_repo.session.commit()
+    #     return FileSchema.model_validate(obj)
 
     @delete(path="/files/{file_id:uuid}")
     async def delete_file(
@@ -229,5 +229,5 @@ class FileController(Controller):
         file_id: UUID = Parameter(
             title="File ID", description="File to retieve"),
     ) -> None:
-        _ = files_repo.delete(file_id)
-        files_repo.session.commit()
+        _ = await files_repo.delete(file_id)
+        await files_repo.session.commit()
