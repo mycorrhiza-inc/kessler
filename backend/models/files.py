@@ -11,6 +11,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 
 from .utils import RepoMixin, sqlalchemy_config, PydanticBaseModel
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
 
 class FileModel(UUIDAuditBase, RepoMixin):
@@ -61,6 +62,10 @@ class FileRepository(SQLAlchemyAsyncRepository[FileModel]):
 
     model_type = FileModel
 
+
+async def provide_files_repo(db_session: AsyncSession) -> FileRepository:
+    """This provides the default Authors repository."""
+    return FileRepository(session=db_session)
 
 class FileSchema(PydanticBaseModel):
     """pydantic schema of the FileModel"""
