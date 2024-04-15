@@ -34,44 +34,35 @@ from pathlib import Path
 import shlex
 
 
-def download_file(url: str, savedir: Path) -> Path:
-    local_filename = savedir  # TODO: Use a temporary directory for downloads or archive it in some other way.
-    # NOTE the stream=True parameter below
-    with requests.get(url, stream=True) as r:
-        r.raise_for_status()
-        with open(local_filename, "wb") as f:
-            for chunk in r.iter_content(chunk_size=8192):
-                # If you have chunk encoded response uncomment if
-                # and set chunk_size parameter to None.
-                # if chunk:
-                f.write(chunk)
-    return local_filename
 
 
 OS_TMPDIR = Path(os.environ["TMPDIR"])
 
 
 class DocumentIngester:
-    def __init__(self, tmpdir=OS_TMPDIR / Path("kessler/docingest")):
+    def __init__(self,logger, tmpdir=OS_TMPDIR / Path("kessler/docingest")):
         self.tmpdir = tmpdir
-        self.crossref = Crossref()
-        # TODO : Add database connection.
-
-    def add_document_to_database(self, document_path: Path, metadata: dict):
-        # TODO : Add document to database
-        print("Yell at nicole to add stuff to the database.")
+        self.logger=logger
+        # self.crossref = Crossref()
 
     def url_to_file_and_metadata(self, url: str) -> tuple[Path, dict]:
+        self.logger.warn("File function running")
         parsed_url = urllib.parse.urlparse(url)
         domain = (
             parsed_url.netloc.split(".")[-2] + "." + parsed_url.netloc.split(".")[-1]
         )
-        if domain in ["youtube.com", "youtu.be"]:
-            filepath, metadata = self.get_file_from_ytdlp(url)
-        elif domain in ["arxiv.org"]:
-            filepath, metadata = self.get_file_from_arxiv(url)
-        else:
-            filepath, metadata = self.add_file_from_url_nocall(url)
+        self.logger.info("Domain Successfully processed")
+        # TODO:  youtube and arxiv document adding, or refactor and use in a crawler
+        # if domain in ["youtube.com", "youtu.be"]:
+        #     filepath, metadata = self.get_file_from_ytdlp(url)
+        # elif domain in ["arxiv.org"]:
+        #     filepath, metadata = self.get_file_from_arxiv(url)
+        
+        self.logger.info("Proceeding to Download Regular file")
+        filepath, metadata = self.add_file_from_url_nocall(url)
+        self.logger.info("Successfully got file and metadata")
+        if metadata.get("lang") == None:
+            metadata["lang"] = "en"
         return (filepath, metadata)
 
     def get_file_from_arxiv(self, url: str) -> tuple[Path, dict]:
@@ -101,9 +92,10 @@ class DocumentIngester:
 
         # TODO : Generalize this function into a general metadata searcher, this fails if the doi is not found for example.
         try:
-            metadata = self.crossref.works(ids=f"10.48550/arXiv.{arxiv_id}")
+            # metadata = self.crossref.works(ids=f"10.48550/arXiv.{arxiv_id}")
+            assert 0==1 # TODO : Fix crossref metadata lookup
         except:
-            logging.warning(
+            self.logger.warning(
                 "Not able to lookup metadata based on doi, defaulting to extracting html metadata from arxiv."
             )
             metadata = self.get_metada_from_url(f"https://arxiv.org/abs/{arxiv_id}")
@@ -127,7 +119,7 @@ class DocumentIngester:
         json_path = self.tmpdir / Path(filename + ".info.json")
         json_filepath = self.tmpdir / Path(rand_string())
         command = f"yt-dlp --remux-video mkv --write-info-json -o {shlex.quote(str(ytdlp_path))} {shlex.quote(url)}"
-        logging.info(f"Calling youtube dlp with call: {command}")
+        self.logger.info(f"Calling youtube dlp with call: {command}")
         try:
             result = subprocess.run(
                 command,
@@ -145,15 +137,17 @@ class DocumentIngester:
                     "url": url,
                     "doctype": "mkv",
                 }
-                logging.info((video_path, metadata))
+                self.logger.info((video_path, metadata))
                 return (video_path, metadata)
         except subprocess.CalledProcessError as e:
-            logging.critical(f"An error occurred when using yt-dlp: {e.stderr}")
+            self.logger.critical(f"An error occurred when using yt-dlp: {e.stderr}")
             return None
 
     def get_metada_from_url(self, url: str) -> dict:
-        response = requests.get(url)
+        self.logger.info("Getting Metadata from Url")
 
+        response = requests.get(url)
+        
         def get_doctype_from_header_and_url(response, url: str) -> Optional[str]:
             # Guess the file extension from the URL itself
             # This is useful for direct links to files with a clear file extension in the URL
@@ -194,10 +188,23 @@ class DocumentIngester:
             "date": last_modified,
             "title": name,
         }
+    def download_file(self,url: str, savepath: Path) -> Path:
+        self.logger(f"Downloading file to dir: {savepath}")
+        with requests.get(url, stream=True) as r:
+            r.raise_for_status()
+            with open(savepath, "wb") as f:
+                for chunk in r.iter_content(chunk_size=8192):
+                    # If you have chunk encoded response uncomment if
+                    # and set chunk_size parameter to None.
+                    # if chunk:
+                    f.write(chunk)
+        return savepath
+
 
     def add_file_from_url_nocall(self, url: str) -> tuple[Path, dict]:
         metadata = self.get_metada_from_url(url)
-        fileloc = download_file(url, self.tmpdir / Path(rand_string()))
+        self.logger.info("Got Metadata from Url")
+        fileloc = self.download_file(url, self.tmpdir / Path(rand_string()))
         return (fileloc, metadata)
 
     def infer_metadata_from_path(self, filepath: Path) -> dict:

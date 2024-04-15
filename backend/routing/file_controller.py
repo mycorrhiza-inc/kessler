@@ -1,5 +1,5 @@
 from uuid import UUID
-from typing import Annotated
+from typing import Annotated, assert_type
 import logging
 
 from litestar import Controller, Request
@@ -30,6 +30,7 @@ from crawler.docingest import DocumentIngester
 from docprocessing.extractmarkdown import MarkdownExtractor
 from docprocessing.genextras import GenerateExtras
 
+from typing import List, Optional, Union
 
 # for testing purposese
 emptyFile = FileModel(
@@ -46,6 +47,11 @@ emptyFile = FileModel(
 class FileUpdate(BaseModel):
     message: str
 
+class UrlUpload(BaseModel):
+    url : str
+
+class UrlUploadList(BaseModel):
+    url : List[str]
 
 class FileCreate(BaseModel):
     message: str
@@ -72,6 +78,7 @@ class FileController(Controller):
     ) -> FileSchema:
         obj = files_repo.get(file_id)
         return FileSchema.model_validate(obj)
+
     @get(path="/test")
     async def get_file(self) -> None:
         return None
@@ -91,25 +98,38 @@ class FileController(Controller):
         self,
         files_repo: FileRepository,
         data: Annotated[UploadFile, Body(media_type=RequestEncodingType.MULTI_PART)],
-    ) -> FileUpload:
+    ) -> Optional[FileUpload]:
         content = await data.read()
         newFileObj = emptyFile()
         newFileObj.name = data.filename
 
-    @post(path="/files/add")
-    async def add_file(
-        self, files_repo: FileRepository, data: FileCreate, request: Request
+    @post(path="/files/add_url")
+    async def add_url(
+        self, files_repo: FileRepository, data: UrlUpload, request: Request
     ) -> FileSchema:
         request.logger.info("adding files")
         request.logger.info(data)
         # New stuff here, is this where this code belongs? <new stuff>
-        docingest = DocumentIngester()
-        metadata, raw_file_path = docingest.url_to_file_and_metadata(data.url)
+        docingest = DocumentIngester(request.logger)
+        request.logger.info("DocumentIngester Created")
+        raw_file_path,metadata = docingest.url_to_file_and_metadata(data.url)
+        request.logger.info(f"Metadata Successfully Created with raw path : {raw_file_path} and metadata {metadata}")
+        document_title=metadata.get("title")
+        document_doctype=metadata.get("doctype")
+        document_lang=metadata.get("lang")
+        try:
+            assert isinstance(document_title,str)
+            assert isinstance(document_doctype,str)
+            assert isinstance()(document_lang,str)
+        except:
+            request.logger.error("Illformed Metadata please fix")
+        else:
+            request.logger.info(f"Title, Doctype and language successfully declared")
         new_file = FileModel(
             url=data.url,
-            title=metadata["title"],
-            doctype=metadata["doctype"],
-            lang=metadata["lang"],
+            title=document_title,
+            doctype=document_doctype,
+            lang=document_lang,
             file=open(raw_file_path),
             metadata=metadata,
             stage="stage0",
@@ -124,6 +144,37 @@ class FileController(Controller):
         request.logger.info("added file!~")
         await files_repo.session.commit()
         return FileSchema.model_validate(new_file)
+
+    @post(path="/files/addurls")
+    async def add_urls(
+        self, files_repo: FileRepository, data: UrlUploadList, request: Request
+    ) -> None:
+        request.logger.info("adding files")
+        request.logger.info(data)
+        # New stuff here, is this where this code belongs? <new stuff>
+        docingest = DocumentIngester()
+        urls = data.urls
+        for url in urls:
+            metadata, raw_file_path = docingest.url_to_file_and_metadata(url)
+            new_file = FileModel(
+                url=data.url,
+                title=metadata["title"],
+                doctype=metadata["doctype"],
+                lang=metadata["lang"],
+                file=open(raw_file_path),
+                metadata=metadata,
+                stage="stage0",
+            )
+            # </new stuff>
+            request.logger.info("new file:{file}".format(file=new_file.to_dict()))
+            try:
+                new_file = await files_repo.add(new_file)
+            except Exception as e:
+                request.logger.info(e)
+                return e
+            request.logger.info("added file!~")
+            await files_repo.session.commit()
+        return None
 
     @patch(path="/files/{file_id:uuid}")
     async def process_File(
