@@ -72,6 +72,9 @@ class FileController(Controller):
     ) -> FileSchema:
         obj = files_repo.get(file_id)
         return FileSchema.model_validate(obj)
+    @get(path="/test")
+    async def get_file(self) -> None:
+        return None
 
     @get(path="/files/all")
     async def get_all_files(
