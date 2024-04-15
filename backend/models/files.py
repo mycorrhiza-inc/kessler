@@ -69,7 +69,8 @@ async def provide_files_repo(db_session: AsyncSession) -> FileRepository:
 
 class FileSchema(PydanticBaseModel):
     """pydantic schema of the FileModel"""
-    id: UUID | str  # TODO: better typing for this
+
+    id: any  # TODO: better typing for this
     path: str
     doctype: str
     lang: str

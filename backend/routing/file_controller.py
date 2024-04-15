@@ -1,6 +1,6 @@
 from uuid import UUID
 from typing import Annotated
-
+import logging
 
 from litestar import Controller, Request
 
@@ -18,6 +18,7 @@ from litestar.repository.filters import LimitOffset
 from litestar.datastructures import UploadFile
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
+from litestar.logging import LoggingConfig
 
 from pydantic import TypeAdapter, BaseModel
 
@@ -77,6 +78,7 @@ class FileController(Controller):
         self, files_repo: FileRepository, limit_offset: LimitOffset, request: Request
     ) -> list[FileSchema]:
         """List files."""
+
         results = await files_repo.list()
         type_adapter = TypeAdapter(list[FileSchema])
         return type_adapter.validate_python(results)
