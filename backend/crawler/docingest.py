@@ -1,3 +1,4 @@
+from routing.file_controller import FileUpload
 from util.niclib import rand_string, rand_filepath
 
 
@@ -36,6 +37,8 @@ import shlex
 
 from util.niclib import rand_string
 
+
+from tempfile import TemporaryFile
 
 OS_TMPDIR = Path(os.environ["TMPDIR"])
 
@@ -189,7 +192,7 @@ class DocumentIngester:
             "date": last_modified,
             "title": name,
         }
-    def download_file(self,url: str, savepath: Path) -> Path:
+    def download_file_to_path(self,url: str, savepath: Path) -> Path:
         self.logger(f"Downloading file to dir: {savepath}")
         with requests.get(url, stream=True) as r:
             r.raise_for_status()
@@ -201,14 +204,24 @@ class DocumentIngester:
                     f.write(chunk)
         return savepath
 
+    def download_file_to_tmpfile(self,url: str) -> any: # TODO : Get types for temporary file
+        self.logger(f"Downloading file to temporary file")
+        with requests.get(url, stream=True) as r:
+            r.raise_for_status()
+            with TemporaryFile("wb") as f:
+                for chunk in r.iter_content(chunk_size=8192):
+                    # If you have chunk encoded response uncomment if
+                    # and set chunk_size parameter to None.
+                    # if chunk:
+                    f.write(chunk)
+                return f
 
-    def add_file_from_url_nocall(self, url: str) -> tuple[Path, dict]:
+
+    def add_file_from_url_nocall(self, url: str) -> tuple[any, dict]:
         metadata = self.get_metada_from_url(url)
         self.logger.info("Got Metadata from Url")
-        savepath = self.tmpdir / Path(rand_string())
-        self.logger(f"Downloading file to dir: {savepath}")
-        fileloc = self.download_file(url, savepath)
-        return (fileloc, metadata)
+        tmpfile = self.download_file_to_tmpfile(url)
+        return (tmpfile, metadata)
 
     def infer_metadata_from_path(self, filepath: Path) -> dict:
         return {"title": filepath.stem, "doctype": filepath.suffix}
