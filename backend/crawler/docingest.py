@@ -1,8 +1,7 @@
-from routing.file_controller import FileUpload
 from util.niclib import rand_string, rand_filepath
 
 
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Any
 
 import json
 import re
@@ -23,7 +22,6 @@ from typing import Optional, List, Union
 # from langchain.vectorstores import FAISS
 
 import subprocess
-import warnings
 import shutil
 import urllib
 import mimetypes
@@ -193,7 +191,7 @@ class DocumentIngester:
             "title": name,
         }
     def download_file_to_path(self,url: str, savepath: Path) -> Path:
-        self.logger(f"Downloading file to dir: {savepath}")
+        self.logger.info(f"Downloading file to dir: {savepath}")
         with requests.get(url, stream=True) as r:
             r.raise_for_status()
             with open(savepath, "wb") as f:
@@ -204,8 +202,8 @@ class DocumentIngester:
                     f.write(chunk)
         return savepath
 
-    def download_file_to_tmpfile(self,url: str) -> any: # TODO : Get types for temporary file
-        self.logger(f"Downloading file to temporary file")
+    def download_file_to_tmpfile(self,url: str): # TODO : Get types for temporary file
+        self.logger.info(f"Downloading file to temporary file")
         with requests.get(url, stream=True) as r:
             r.raise_for_status()
             with TemporaryFile("wb") as f:
@@ -215,12 +213,26 @@ class DocumentIngester:
                     # if chunk:
                     f.write(chunk)
                 return f
+    def rectify_unknown_metadata(self,metadata : dict):
+        assert metadata.get("doctype") != None
+        def mut_rectify_empty_field(metadata : dict, field : str, defaultval : Any):
+            if metadata.get(field)==None:
+                metadata[field]=defaultval
+            return metadata
+        # TODO : Double check and test how mutable values in python work to remove unnecessary assignments.
+        metadata = mut_rectify_empty_field(metadata,"title","unknown")
+        metadata = mut_rectify_empty_field(metadata,"author","unknown")
+        metadata = mut_rectify_empty_field(metadata,"lang","en")
+        return metadata
 
 
-    def add_file_from_url_nocall(self, url: str) -> tuple[any, dict]:
+    def add_file_from_url_nocall(self, url: str) -> tuple[Any, dict]:
         metadata = self.get_metada_from_url(url)
         self.logger.info("Got Metadata from Url")
+        metadata = self.rectify_unknown_metadata(metadata)
+        self.logger.info(f"Rectified missing metadata, yielding:{metadata}")
         tmpfile = self.download_file_to_tmpfile(url)
+        self.logger.info("Successfully downloaded file from url")
         return (tmpfile, metadata)
 
     def infer_metadata_from_path(self, filepath: Path) -> dict:

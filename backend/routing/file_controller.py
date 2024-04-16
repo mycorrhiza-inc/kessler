@@ -145,7 +145,7 @@ class FileController(Controller):
         await files_repo.session.commit()
         return FileSchema.model_validate(new_file)
 
-    @post(path="/files/addurls")
+    @post(path="/files/add_urls")
     async def add_urls(
         self, files_repo: FileRepository, data: UrlUploadList, request: Request
     ) -> None:
