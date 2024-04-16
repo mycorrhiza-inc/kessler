@@ -36,14 +36,19 @@ from typing import List, Optional, Union
 from util.niclib import get_blake2
 # for testing purposese
 emptyFile = FileModel(
-    path="",
-    doctype="",
-    lang="",
+    url="",
     name="",
-    stage="unprocessed",
-    summary=None,
+    doctype="",
+    lang="en",
+    path="",
+    # file=raw_tmpfile,
+    doc_metadata={},
+    stage="stage0",
+    hash = "",
+    summary = None,
     short_summary=None,
 )
+
 
 
 class FileUpdate(BaseModel):
@@ -115,12 +120,12 @@ class FileController(Controller):
         docingest = DocumentIngester(request.logger)
         request.logger.info("DocumentIngester Created")
         raw_tmpfile,metadata = docingest.url_to_file_and_metadata(data.url)
-        request.logger.info(f"Metadata Successfully Created with raw path : {raw_file_path} and metadata {metadata}")
+        request.logger.info(f"Metadata Successfully Created with metadata {metadata}")
         document_title=metadata.get("title")
         document_doctype=metadata.get("doctype")
         document_lang=metadata.get("language")
         try:
-            assert isinstance(document_title,str)
+           assert isinstance(document_title,str)
             assert isinstance(document_doctype,str)
             assert isinstance(document_lang,str)
         except:
@@ -131,13 +136,16 @@ class FileController(Controller):
         # request.logger.info(f"Got document hash: {b264hash}")
         new_file = FileModel(
             url=data.url,
-            title=document_title,
+            name=document_title,
             doctype=document_doctype,
             lang=document_lang,
+            path="",
             # file=raw_tmpfile,
-            metadata=metadata,
+            doc_metadata=metadata,
             stage="stage0",
-            # hash = b264hash,
+            hash = "",
+            summary = None,
+            short_summary=None,
         )
         # </new stuff>
         request.logger.info("new file:{file}".format(file=new_file.to_dict()))
@@ -148,6 +156,7 @@ class FileController(Controller):
             return e
         request.logger.info("added file!~")
         await files_repo.session.commit()
+        request.logger.info("commited file to DB")
         return FileSchema.model_validate(new_file)
 
     @post(path="/files/add_urls")

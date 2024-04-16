@@ -17,10 +17,13 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 class FileModel(UUIDAuditBase, RepoMixin):
     """Database representation of a file"""
     __tablename__ = "file"
+    url: Mapped[str | None] # TODO : Implement system for url's that doesnt store it in the file model.
     path: Mapped[str]
     doctype: Mapped[str]
     lang: Mapped[str]
-    name: Mapped[str]
+    name: Mapped[str | None]
+    hash: Mapped[str]
+    doc_metadata : Mapped[dict]
     stage: Mapped[str]  # Either "stage0" "stage1" "stage2" or "stage3"
     summary: Mapped[str | None]
     short_summary: Mapped[str | None]
