@@ -34,6 +34,7 @@ from pathlib import Path
 import shlex
 
 
+from util.niclib import rand_string
 
 
 OS_TMPDIR = Path(os.environ["TMPDIR"])
@@ -204,7 +205,9 @@ class DocumentIngester:
     def add_file_from_url_nocall(self, url: str) -> tuple[Path, dict]:
         metadata = self.get_metada_from_url(url)
         self.logger.info("Got Metadata from Url")
-        fileloc = self.download_file(url, self.tmpdir / Path(rand_string()))
+        savepath = self.tmpdir / Path(rand_string())
+        self.logger(f"Downloading file to dir: {savepath}")
+        fileloc = self.download_file(url, savepath)
         return (fileloc, metadata)
 
     def infer_metadata_from_path(self, filepath: Path) -> dict:
