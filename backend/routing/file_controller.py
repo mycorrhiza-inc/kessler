@@ -49,6 +49,7 @@ emptyFile = FileModel(
     short_summary=None,
 )
 
+from typing import Any
 
 
 class FileUpdate(BaseModel):
@@ -113,7 +114,7 @@ class FileController(Controller):
     @post(path="/files/add_url")
     async def add_url(
         self, files_repo: FileRepository, data: UrlUpload, request: Request
-    ) -> FileSchema:
+    ) -> Any:
         request.logger.info("adding files")
         request.logger.info(data)
         # New stuff here, is this where this code belongs? <new stuff>
@@ -125,7 +126,7 @@ class FileController(Controller):
         document_doctype=metadata.get("doctype")
         document_lang=metadata.get("language")
         try:
-           assert isinstance(document_title,str)
+            assert isinstance(document_title,str)
             assert isinstance(document_doctype,str)
             assert isinstance(document_lang,str)
         except:
@@ -157,7 +158,8 @@ class FileController(Controller):
         request.logger.info("added file!~")
         await files_repo.session.commit()
         request.logger.info("commited file to DB")
-        return FileSchema.model_validate(new_file)
+        return None
+        # return FileSchema.model_validate(new_file)
 
     @post(path="/files/add_urls")
     async def add_urls(
