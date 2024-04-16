@@ -112,7 +112,7 @@ class FileController(Controller):
         # New stuff here, is this where this code belongs? <new stuff>
         docingest = DocumentIngester(request.logger)
         request.logger.info("DocumentIngester Created")
-        raw_file_path,metadata = docingest.url_to_file_and_metadata(data.url)
+        raw_tmpfile,metadata = docingest.url_to_file_and_metadata(data.url)
         request.logger.info(f"Metadata Successfully Created with raw path : {raw_file_path} and metadata {metadata}")
         document_title=metadata.get("title")
         document_doctype=metadata.get("doctype")
@@ -125,12 +125,13 @@ class FileController(Controller):
             request.logger.error("Illformed Metadata please fix")
         else:
             request.logger.info(f"Title, Doctype and language successfully declared")
+        b264hash
         new_file = FileModel(
             url=data.url,
             title=document_title,
             doctype=document_doctype,
             lang=document_lang,
-            file=raw_file_path),
+            # file=raw_tmpfile,
             metadata=metadata,
             stage="stage0",
         )

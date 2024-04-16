@@ -19,6 +19,8 @@ import itertools
 import math
 
 
+from typing import Union, Optional, Any
+
 def clean_and_empty_directory(dir: Path):
     files = glob.glob(str(dir / Path("*")))
     for f in files:
@@ -28,13 +30,17 @@ def clean_and_empty_directory(dir: Path):
 # tests
 
 
-def get_hash_str(file_path: Path, hasher) -> str:
-    with open(file_path, "rb") as f:
+def get_hash_str(file_input: Union[Path,Any], hasher) -> str: # TODO: Figure out how df file types work
+    if isinstance(file_input,Path):
+        f = open(file_input,"rb")
+    else:
+        f = file_input
+    buf = f.read(65536)
+    while len(buf) > 0:
+        hasher.update(buf)
         buf = f.read(65536)
-        while len(buf) > 0:
-            hasher.update(buf)
-            buf = f.read(65536)
     return base64.urlsafe_b64encode(hasher.digest()).decode()
+    
 
 
 get_blake2 = lambda filepath: get_hash_str(filepath, hashlib.blake2b())
