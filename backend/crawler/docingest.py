@@ -222,7 +222,7 @@ class DocumentIngester:
         # TODO : Double check and test how mutable values in python work to remove unnecessary assignments.
         metadata = mut_rectify_empty_field(metadata,"title","unknown")
         metadata = mut_rectify_empty_field(metadata,"author","unknown")
-        metadata = mut_rectify_empty_field(metadata,"lang","en")
+        metadata = mut_rectify_empty_field(metadata,"language","en")
         return metadata
 
 

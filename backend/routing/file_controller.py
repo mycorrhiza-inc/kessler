@@ -32,6 +32,8 @@ from docprocessing.genextras import GenerateExtras
 
 from typing import List, Optional, Union
 
+
+from util.niclib import get_blake2
 # for testing purposese
 emptyFile = FileModel(
     path="",
@@ -116,7 +118,7 @@ class FileController(Controller):
         request.logger.info(f"Metadata Successfully Created with raw path : {raw_file_path} and metadata {metadata}")
         document_title=metadata.get("title")
         document_doctype=metadata.get("doctype")
-        document_lang=metadata.get("lang")
+        document_lang=metadata.get("language")
         try:
             assert isinstance(document_title,str)
             assert isinstance(document_doctype,str)
@@ -125,7 +127,8 @@ class FileController(Controller):
             request.logger.error("Illformed Metadata please fix")
         else:
             request.logger.info(f"Title, Doctype and language successfully declared")
-        b264hash
+        # b264hash = get_blake2(raw_tmpfile)
+        # request.logger.info(f"Got document hash: {b264hash}")
         new_file = FileModel(
             url=data.url,
             title=document_title,
@@ -134,6 +137,7 @@ class FileController(Controller):
             # file=raw_tmpfile,
             metadata=metadata,
             stage="stage0",
+            # hash = b264hash,
         )
         # </new stuff>
         request.logger.info("new file:{file}".format(file=new_file.to_dict()))
