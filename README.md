@@ -38,6 +38,8 @@ Copy the environment file:
 ```bash
 cp .env.example .env
 ```
+ 
+ And fill them out.
 
 You will need `docker` and `docker compose`
 
