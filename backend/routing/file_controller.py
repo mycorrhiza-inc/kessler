@@ -136,16 +136,19 @@ class FileController(Controller):
             request.logger.info(f"Title, Doctype and language successfully declared")
         # b264hash = get_blake2(raw_tmpfile)
         # request.logger.info(f"Got document hash: {b264hash}")
+        request.logger.info("Attempting to save data to file")
+        filehash, filepath = docingest.save_file_to_hash(raw_tmpfile)
+        request.logger.info("Creating File Object")
         new_file = FileModel(
             url=data.url,
             name=document_title,
             doctype=document_doctype,
             lang=document_lang,
-            path="",
+            path=str(filepath),
             # file=raw_tmpfile,
             doc_metadata=metadata,
             stage="stage0",
-            hash = "",
+            hash = filehash,
             summary = None,
             short_summary=None,
         )
