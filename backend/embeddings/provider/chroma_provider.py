@@ -1,8 +1,8 @@
 import chromadb
 import os
 
-local_chroma = os.environ["LOCAL_CHROMA"]
-chroma_path = os.environ["CHROMA_PATH"]
+local_chroma = os.environ["LOCAL_APP"]
+chroma_path = os.environ["CHROMA_PERSIST_PATH"]
 
 
 def getChromaClient():
@@ -10,5 +10,5 @@ def getChromaClient():
         chroma_client = chromadb.PersistentClient(path=chroma_path)
         return chroma_client
     else:
-        chroma_client = chromadb.HttpClient(host=chroma_path, port=8000)
+        chroma_client = chromadb.HttpClient(host=os.environ["CHROMA_URL"], port=os.environ["CHROMA_PORT"])
         return chroma_client
