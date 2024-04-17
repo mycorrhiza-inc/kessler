@@ -3,8 +3,8 @@ import chromadb
 import os
 from util.logging import get_logger
 
-local_chroma = os.environ["LOCAL_CHROMA"]
-chroma_path = os.environ["CHROMA_PATH"]
+local_chroma = os.environ["LOCAL_APP"]
+chroma_path = os.environ["CHROMA_PERSIST_PATH"]
 
 logger = get_logger(__name__)
 
