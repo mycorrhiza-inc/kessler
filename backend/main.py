@@ -1,7 +1,6 @@
 import logging
 
 from litestar import Litestar, Router
-from litestar.logging import LoggingConfig
 from litestar.config.cors import CORSConfig
 from litestar.repository.filters import LimitOffset
 
@@ -10,16 +9,8 @@ from litestar.di import Provide
 from litestar.contrib.sqlalchemy.base import UUIDBase
 
 from models import utils
+from util.logging import logging_config
 from routing.file_controller import FileController
-
-# logging configuration
-logging_config = LoggingConfig(
-    root={"level": logging.getLevelName(
-        logging.INFO), "handlers": ["console"]},
-    formatters={
-        "standard": {"format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"}
-    },
-)
 
 
 async def on_startup() -> None:

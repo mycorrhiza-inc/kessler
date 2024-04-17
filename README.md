@@ -29,18 +29,34 @@ Once up, the Kessler API can be found at backend.docker.localhost or
 
 ## Setting Up your Dev Environment
 
-### Requirements
-
-
-FIXME : Since node modules is docker ignored, it runs an error when you try to build the frontend without it.
+### Environment Variables 
 
 Copy the environment file:
 ```bash
 cp .env.example .env
 ```
+ 
+ And fill them out
 
 You will need `docker` and `docker compose`
 
+### Chroma
+
+To run chroma on a non-local basis you will need to set up basic auth for chroma's docker container as specified in the [Authentication Documentation](https://docs.trychroma.com/usage-guide#authentication).
+
+At the root of the project run
+
+
+```bash
+htpasswd -Bbn admin admin > server.htpasswd
+```
+
+and in the `.env` file add:
+```bash
+export CHROMA_SERVER_AUTH_CREDENTIALS_FILE="server.htpasswd"
+export CHROMA_SERVER_AUTH_CREDENTIALS_PROVIDER="chromadb.auth.providers.HtpasswdFileServerAuthCredentialsProvider"
+export CHROMA_SERVER_AUTH_PROVIDER="chromadb.auth.basic.BasicAuthServerProvider"
+```
 
 ### Running it
 
