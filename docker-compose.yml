@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 #
 
 services:
@@ -43,6 +43,7 @@ services:
     volumes:
       - ./backend:/app
       - ./backend/instance:/app/instance
+      - ./files:/files
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.backend.rule=PathPrefix(`/api`)"

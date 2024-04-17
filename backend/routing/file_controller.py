@@ -106,6 +106,7 @@ class FileController(Controller):
         self,
         files_repo: FileRepository,
         data: Annotated[UploadFile, Body(media_type=RequestEncodingType.MULTI_PART)],
+
     ) -> Optional[FileUpload]:
         content = await data.read()
         newFileObj = emptyFile()
@@ -158,8 +159,7 @@ class FileController(Controller):
         request.logger.info("added file!~")
         await files_repo.session.commit()
         request.logger.info("commited file to DB")
-        return None
-        # return FileSchema.model_validate(new_file)
+        return FileSchema.model_validate(new_file)
 
     @post(path="/files/add_urls")
     async def add_urls(

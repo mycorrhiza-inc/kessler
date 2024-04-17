@@ -13,15 +13,21 @@ import mimetypes
 import os
 from pathlib import Path
 import shlex
-from util.niclib import rand_string
+from util.niclib import rand_string, get_blake2
 from tempfile import TemporaryFile
+
+
+import shutil
 
 OS_TMPDIR = Path(os.environ["TMPDIR"])
 
 
+OS_FILEDIR = Path("/files/")
+
 class DocumentIngester:
-    def __init__(self,logger, tmpdir=OS_TMPDIR / Path("kessler/docingest")):
+    def __init__(self,logger,savedir = OS_FILEDIR, tmpdir=OS_TMPDIR / Path("kessler/docingest")):
         self.tmpdir = tmpdir
+        self.savedir = savedir
         self.logger=logger
         # self.crossref = Crossref()
 
@@ -211,7 +217,12 @@ class DocumentIngester:
         self.logger.info("Successfully downloaded file from url")
         return (tmpfile, metadata)
 
-    def save_file_to_hash(self,fileobject : Any, savedir : Path,)
+    def save_file_to_hash(self,fileobject : Any) -> tuple[str,Path]:
+        b264_hash = get_blake2(fileobject)
+        saveloc = self.savedir / Path(b264_hash)
+        dest_file = open(saveloc,"wb")
+        shutil.copyfileobj(fileobject,dest_file)
+        return (b264_hash,saveloc)
 
     def infer_metadata_from_path(self, filepath: Path) -> dict:
         return {"title": filepath.stem, "doctype": filepath.suffix}
