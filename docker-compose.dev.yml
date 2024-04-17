@@ -1,5 +1,5 @@
+# local development docker compose
 version: '3'
-#
 
 services:
   reverse-proxy:
@@ -21,18 +21,8 @@ services:
     volumes:
       - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
       - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
-
-  chroma:
-    image: chromadb/chroma
-    env_file:
-      - .env
-    ports:
-      - "${CHROMA_PORT}:8000"
-    volumes:
-      - "${CHROMA_VOLUME}:/chroma/chroma"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=PathPrefix(`/api/chromadb`)"
+      
+  # chroma is handled in process in the backend
 
   backend:
     build:
@@ -40,9 +30,11 @@ services:
       dockerfile: ./Dockerfile
     env_file:
       - .env
+
     volumes:
       - ./backend:/app
       - ./backend/instance:/app/instance
+
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.backend.rule=PathPrefix(`/api`)"
@@ -55,6 +47,7 @@ services:
       - "${BACKEND_PORT}"
       - "--workers"
       - "4"
+      - "--reload"
     ports:
       - "${BACKEND_PORT}:${BACKEND_PORT}"
 
@@ -82,4 +75,4 @@ services:
       - "dev"
       - "--"
       - "-p"
-      - "${FRONTEND_PORT}"
+      - "$FRONTEND_PORT"
