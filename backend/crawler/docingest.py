@@ -5,37 +5,15 @@ from typing import Optional, List, Union, Any
 
 import json
 import re
-
-
-# from habanero import Crossref
-
-
 import logging
-
-# Note: Refactoring imports.py
-
 import requests
-
-from typing import Optional, List, Union
-
-
-# from langchain.vectorstores import FAISS
-
 import subprocess
-import shutil
 import urllib
 import mimetypes
 import os
-import pickle
-
-
 from pathlib import Path
 import shlex
-
-
 from util.niclib import rand_string
-
-
 from tempfile import TemporaryFile
 
 OS_TMPDIR = Path(os.environ["TMPDIR"])
@@ -147,9 +125,7 @@ class DocumentIngester:
 
     def get_metada_from_url(self, url: str) -> dict:
         self.logger.info("Getting Metadata from Url")
-
         response = requests.get(url)
-        
         def get_doctype_from_header_and_url(response, url: str) -> Optional[str]:
             # Guess the file extension from the URL itself
             # This is useful for direct links to files with a clear file extension in the URL
@@ -202,7 +178,7 @@ class DocumentIngester:
                     f.write(chunk)
         return savepath
 
-    def download_file_to_tmpfile(self,url: str): # TODO : Get types for temporary file
+    def download_file_to_tmpfile(self,url: str)-> Any: # TODO : Get types for temporary file
         self.logger.info(f"Downloading file to temporary file")
         with requests.get(url, stream=True) as r:
             r.raise_for_status()
@@ -234,6 +210,8 @@ class DocumentIngester:
         tmpfile = self.download_file_to_tmpfile(url)
         self.logger.info("Successfully downloaded file from url")
         return (tmpfile, metadata)
+
+    def save_file_to_hash(self,fileobject : Any, savedir : Path,)
 
     def infer_metadata_from_path(self, filepath: Path) -> dict:
         return {"title": filepath.stem, "doctype": filepath.suffix}
