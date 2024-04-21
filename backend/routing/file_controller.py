@@ -32,16 +32,24 @@ from docprocessing.genextras import GenerateExtras
 
 from typing import List, Optional, Union
 
+
+from util.niclib import get_blake2
 # for testing purposese
 emptyFile = FileModel(
-    path="",
-    doctype="",
-    lang="",
+    url="",
     name="",
-    stage="unprocessed",
-    summary=None,
+    doctype="",
+    lang="en",
+    path="",
+    # file=raw_tmpfile,
+    doc_metadata={},
+    stage="stage0",
+    hash = "",
+    summary = None,
     short_summary=None,
 )
+
+from typing import Any
 
 
 class FileUpdate(BaseModel):
@@ -98,6 +106,7 @@ class FileController(Controller):
         self,
         files_repo: FileRepository,
         data: Annotated[UploadFile, Body(media_type=RequestEncodingType.MULTI_PART)],
+
     ) -> Optional[FileUpload]:
         content = await data.read()
         newFileObj = emptyFile()
@@ -106,33 +115,42 @@ class FileController(Controller):
     @post(path="/files/add_url")
     async def add_url(
         self, files_repo: FileRepository, data: UrlUpload, request: Request
-    ) -> FileSchema:
+    ) -> Any:
         request.logger.info("adding files")
         request.logger.info(data)
         # New stuff here, is this where this code belongs? <new stuff>
         docingest = DocumentIngester(request.logger)
         request.logger.info("DocumentIngester Created")
-        raw_file_path,metadata = docingest.url_to_file_and_metadata(data.url)
-        request.logger.info(f"Metadata Successfully Created with raw path : {raw_file_path} and metadata {metadata}")
+        raw_tmpfile,metadata = docingest.url_to_file_and_metadata(data.url)
+        request.logger.info(f"Metadata Successfully Created with metadata {metadata}")
         document_title=metadata.get("title")
         document_doctype=metadata.get("doctype")
-        document_lang=metadata.get("lang")
+        document_lang=metadata.get("language")
         try:
             assert isinstance(document_title,str)
             assert isinstance(document_doctype,str)
-            assert isinstance()(document_lang,str)
+            assert isinstance(document_lang,str)
         except:
             request.logger.error("Illformed Metadata please fix")
         else:
             request.logger.info(f"Title, Doctype and language successfully declared")
+        # b264hash = get_blake2(raw_tmpfile)
+        # request.logger.info(f"Got document hash: {b264hash}")
+        request.logger.info("Attempting to save data to file")
+        filehash, filepath = docingest.save_file_to_hash(raw_tmpfile)
+        request.logger.info("Creating File Object")
         new_file = FileModel(
             url=data.url,
-            title=document_title,
+            name=document_title,
             doctype=document_doctype,
             lang=document_lang,
-            file=open(raw_file_path),
-            metadata=metadata,
+            path=str(filepath),
+            # file=raw_tmpfile,
+            doc_metadata=metadata,
             stage="stage0",
+            hash = filehash,
+            summary = None,
+            short_summary=None,
         )
         # </new stuff>
         request.logger.info("new file:{file}".format(file=new_file.to_dict()))
@@ -143,37 +161,13 @@ class FileController(Controller):
             return e
         request.logger.info("added file!~")
         await files_repo.session.commit()
+        request.logger.info("commited file to DB")
         return FileSchema.model_validate(new_file)
 
-    @post(path="/files/addurls")
+    @post(path="/files/add_urls")
     async def add_urls(
         self, files_repo: FileRepository, data: UrlUploadList, request: Request
     ) -> None:
-        request.logger.info("adding files")
-        request.logger.info(data)
-        # New stuff here, is this where this code belongs? <new stuff>
-        docingest = DocumentIngester()
-        urls = data.urls
-        for url in urls:
-            metadata, raw_file_path = docingest.url_to_file_and_metadata(url)
-            new_file = FileModel(
-                url=data.url,
-                title=metadata["title"],
-                doctype=metadata["doctype"],
-                lang=metadata["lang"],
-                file=open(raw_file_path),
-                metadata=metadata,
-                stage="stage0",
-            )
-            # </new stuff>
-            request.logger.info("new file:{file}".format(file=new_file.to_dict()))
-            try:
-                new_file = await files_repo.add(new_file)
-            except Exception as e:
-                request.logger.info(e)
-                return e
-            request.logger.info("added file!~")
-            await files_repo.session.commit()
         return None
 
     @patch(path="/files/{file_id:uuid}")

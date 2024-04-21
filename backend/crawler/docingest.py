@@ -1,47 +1,33 @@
 from util.niclib import rand_string, rand_filepath
 
 
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Any
 
 import json
 import re
-
-
-# from habanero import Crossref
-
-
 import logging
-
-# Note: Refactoring imports.py
-
 import requests
-
-from typing import Optional, List, Union
-
-
-# from langchain.vectorstores import FAISS
-
 import subprocess
-import warnings
-import shutil
 import urllib
 import mimetypes
 import os
-import pickle
-
-
 from pathlib import Path
 import shlex
+from util.niclib import rand_string, get_blake2
+from tempfile import TemporaryFile
 
 
-
+import shutil
 
 OS_TMPDIR = Path(os.environ["TMPDIR"])
 
 
+OS_FILEDIR = Path("/files/")
+
 class DocumentIngester:
-    def __init__(self,logger, tmpdir=OS_TMPDIR / Path("kessler/docingest")):
+    def __init__(self,logger,savedir = OS_FILEDIR, tmpdir=OS_TMPDIR / Path("kessler/docingest")):
         self.tmpdir = tmpdir
+        self.savedir = savedir
         self.logger=logger
         # self.crossref = Crossref()
 
@@ -145,9 +131,7 @@ class DocumentIngester:
 
     def get_metada_from_url(self, url: str) -> dict:
         self.logger.info("Getting Metadata from Url")
-
         response = requests.get(url)
-        
         def get_doctype_from_header_and_url(response, url: str) -> Optional[str]:
             # Guess the file extension from the URL itself
             # This is useful for direct links to files with a clear file extension in the URL
@@ -188,8 +172,8 @@ class DocumentIngester:
             "date": last_modified,
             "title": name,
         }
-    def download_file(self,url: str, savepath: Path) -> Path:
-        self.logger(f"Downloading file to dir: {savepath}")
+    def download_file_to_path(self,url: str, savepath: Path) -> Path:
+        self.logger.info(f"Downloading file to dir: {savepath}")
         with requests.get(url, stream=True) as r:
             r.raise_for_status()
             with open(savepath, "wb") as f:
@@ -200,12 +184,45 @@ class DocumentIngester:
                     f.write(chunk)
         return savepath
 
+    def download_file_to_tmpfile(self,url: str)-> Any: # TODO : Get types for temporary file
+        self.logger.info(f"Downloading file to temporary file")
+        with requests.get(url, stream=True) as r:
+            r.raise_for_status()
+            with TemporaryFile("wb") as f:
+                for chunk in r.iter_content(chunk_size=8192):
+                    # If you have chunk encoded response uncomment if
+                    # and set chunk_size parameter to None.
+                    # if chunk:
+                    f.write(chunk)
+                return f
+    def rectify_unknown_metadata(self,metadata : dict):
+        assert metadata.get("doctype") != None
+        def mut_rectify_empty_field(metadata : dict, field : str, defaultval : Any):
+            if metadata.get(field)==None:
+                metadata[field]=defaultval
+            return metadata
+        # TODO : Double check and test how mutable values in python work to remove unnecessary assignments.
+        metadata = mut_rectify_empty_field(metadata,"title","unknown")
+        metadata = mut_rectify_empty_field(metadata,"author","unknown")
+        metadata = mut_rectify_empty_field(metadata,"language","en")
+        return metadata
 
-    def add_file_from_url_nocall(self, url: str) -> tuple[Path, dict]:
+
+    def add_file_from_url_nocall(self, url: str) -> tuple[Any, dict]:
         metadata = self.get_metada_from_url(url)
         self.logger.info("Got Metadata from Url")
-        fileloc = self.download_file(url, self.tmpdir / Path(rand_string()))
-        return (fileloc, metadata)
+        metadata = self.rectify_unknown_metadata(metadata)
+        self.logger.info(f"Rectified missing metadata, yielding:{metadata}")
+        tmpfile = self.download_file_to_tmpfile(url)
+        self.logger.info("Successfully downloaded file from url")
+        return (tmpfile, metadata)
+
+    def save_file_to_hash(self,fileobject : Any) -> tuple[str,Path]:
+        b264_hash = get_blake2(fileobject)
+        saveloc = self.savedir / Path(b264_hash)
+        dest_file = open(saveloc,"wb")
+        shutil.copyfileobj(fileobject,dest_file)
+        return (b264_hash,saveloc)
 
     def infer_metadata_from_path(self, filepath: Path) -> dict:
         return {"title": filepath.stem, "doctype": filepath.suffix}
