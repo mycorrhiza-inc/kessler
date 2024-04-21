@@ -9,9 +9,9 @@ import Modal from "@mui/joy/Modal";
 import Sheet from "@mui/joy/Sheet";
 import ModalClose from "@mui/joy/ModalClose";
 
-type DocumentNodeProps = { 
-  data: any; 
-  isConnectable: boolean 
+type DocumentNodeProps = {
+  data: any;
+  isConnectable: boolean;
 };
 
 function DocumentNode({ data, isConnectable }: DocumentNodeProps) {
