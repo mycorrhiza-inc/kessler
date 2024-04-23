@@ -71,6 +71,13 @@ class FileUpload(BaseModel):
 
 # litestar only
 
+from pathlib import Path
+import os
+
+OS_TMPDIR = Path(os.environ["TMPDIR"])
+OS_GPU_COMPUTE_URL = os.environ["GPU_COMPUTE_URL"]
+OS_FILEDIR = Path("/files/")
+
 
 class FileController(Controller):
     """File Controller"""
@@ -137,8 +144,16 @@ class FileController(Controller):
         # b264hash = get_blake2(raw_tmpfile)
         # request.logger.info(f"Got document hash: {b264hash}")
         request.logger.info("Attempting to save data to file")
-        filehash, filepath = docingest.save_file_to_hash(raw_tmpfile)
+        request.logger.info(type(raw_tmpfile))
+        try:
+            result= docingest.save_file_to_hash_test(raw_tmpfile)
+        except Exception as inst:
+            request.logger(type(inst))    # the exception type
+            request.logger(inst.args)     # arguments stored in .args
+            request.logger(inst)
+
         request.logger.info("Creating File Object")
+        (filehash, filepath) =result 
         new_file = FileModel(
             url=data.url,
             name=document_title,
@@ -170,19 +185,20 @@ class FileController(Controller):
     ) -> None:
         return None
 
-    @patch(path="/files/{file_id:uuid}")
+    @post(path="/process/{file_id:uuid}")
     async def process_File(
         self,
         files_repo: FileRepository,
-        data: FileUpdate,
+        request : Request,
         file_id: UUID = Parameter(
             title="File ID", description="File to retieve"),
-        regenerate: bool = False,  # Figure out how to pass in a boolean as a query paramater
+        regenerate: bool = True,  # Figure out how to pass in a boolean as a query paramater
+
     ) -> FileSchema:
         """Process a File."""
         obj = files_repo.get(file_id)
         current_stage = obj.stage
-        mdextract = MarkdownExtractor()
+        mdextract = MarkdownExtractor(request.logger,OS_GPU_COMPUTE_URL,OS_TMPDIR)
         genextras = GenerateExtras()
 
         if current_stage == "stage0":

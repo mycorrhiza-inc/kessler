@@ -20,8 +20,6 @@ from tempfile import TemporaryFile
 import shutil
 
 OS_TMPDIR = Path(os.environ["TMPDIR"])
-
-
 OS_FILEDIR = Path("/files/")
 
 class DocumentIngester:
@@ -65,7 +63,6 @@ class DocumentIngester:
             # If a match is found, return the ID in the required format
             if match:
                 arxiv_id = match.group(1)
-
                 return arxiv_id
             return None
 
@@ -218,8 +215,13 @@ class DocumentIngester:
         self.logger.info("Successfully downloaded file from url")
         return (tmpfile, metadata)
 
+    def save_file_to_hash_test(self,fileobject : Any) -> tuple[str,Path]:
+        self.logger(f"Getting hash")
+        return ("blah",Path("/"))
     def save_file_to_hash(self,fileobject : Any) -> tuple[str,Path]:
+        self.logger(f"Getting hash")
         b264_hash = get_blake2(fileobject)
+        self.logger(f"Got hash {b264_hash}")
         saveloc = self.savedir / Path(b264_hash)
         dest_file = open(saveloc,"wb")
         shutil.copyfileobj(fileobject,dest_file)
