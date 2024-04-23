@@ -1,7 +1,6 @@
 import base64
 import secrets
 import os
-import math
 import glob
 
 import requests

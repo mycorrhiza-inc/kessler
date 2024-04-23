@@ -65,6 +65,7 @@ class DocumentIngester:
             # If a match is found, return the ID in the required format
             if match:
                 arxiv_id = match.group(1)
+
                 return arxiv_id
             return None
 
