@@ -6,7 +6,21 @@ import {
   SignedOut,
   UserButton,
 } from "@clerk/nextjs";
-import { Box, Image, IconButton, Spacer, Menu } from "@chakra-ui/react";
+import {
+  Box,
+  Image,
+  Button,
+  IconButton,
+  Spacer,
+  Menu,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+} from "@chakra-ui/react";
 import {
   AppShell,
   Sidebar,
@@ -31,16 +45,25 @@ import {
   FiSearch,
   FiChevronsLeft,
   FiChevronsRight,
+  FiMessageCircle,
+  FiLayers,
+  FiFeather,
 } from "react-icons/fi";
 
 import { usePathname } from "next/navigation";
 
 export default function Page({ children }: { children: React.ReactNode }) {
   const [isOpen, toggleOpen] = useState(false);
+  const [searchModal, changeSearchModal] = useState(false);
+
+  const toggleSearchModal = () => {
+    changeSearchModal(!searchModal);
+  };
+
   const pathname = usePathname();
 
   function pathIs(name: string) {
-    let leafName = pathname.split("/")[pathname.length - 1];
+    let leafName = pathname.split("/")[-1];
     if (leafName == name) {
       return true;
     }
@@ -76,7 +99,7 @@ export default function Page({ children }: { children: React.ReactNode }) {
           width={isOpen ? "280px" : "16"}
           minWidth="auto"
         >
-          <SidebarSection direction={isOpen ? "row" : "column"}>
+          <SidebarSection>
             <NavItem
               padding="3px"
               display="flex"
@@ -90,7 +113,8 @@ export default function Page({ children }: { children: React.ReactNode }) {
                 <UserButton />
               </SignedIn>
             </NavItem>
-            <Spacer />
+          </SidebarSection>
+          <SidebarSection direction={isOpen ? "row" : "column"}>
             <IconButton
               onClick={() => {
                 toggleOpen(!isOpen);
@@ -104,13 +128,27 @@ export default function Page({ children }: { children: React.ReactNode }) {
 
           <SidebarSection flex="1" overflowY="auto" overflowX="hidden">
             <NavGroup>
-              <NavItem icon={<FiHome />} isActive={pathIs("home")}>
+              <NavItem href="/" icon={<FiHome />} isActive={pathIs("")}>
                 Home
+              </NavItem>
+              <NavItem
+                href="/chat"
+                icon={<FiMessageCircle />}
+                isActive={pathIs("chat")}
+              >
+                Chat
+              </NavItem>
+              <NavItem
+                href="/projects"
+                icon={<FiFeather />}
+                isActive={pathIs("projects")}
+              >
+                Projects
               </NavItem>
               <NavItem icon={<FiBookmark />} isActive={pathIs("saved")}>
                 Saved Documents
               </NavItem>
-              <NavItem icon={<FiSearch />} isActive={pathIs("search")}>
+              <NavItem onClick={toggleSearchModal} icon={<FiSearch />}>
                 Search
               </NavItem>
             </NavGroup>
@@ -122,6 +160,14 @@ export default function Page({ children }: { children: React.ReactNode }) {
       <Box as="main" flex="1" py="2" px="4">
         {children}
       </Box>
+      <Modal isOpen={searchModal} onClose={toggleSearchModal}>
+        <ModalOverlay />
+        <ModalContent maxH="1500px" maxW="1500px" overflow="scroll">
+          <ModalBody>
+            <SearchInput placeholder="Search" />
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     </AppShell>
   );
 }

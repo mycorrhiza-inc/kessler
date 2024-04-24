@@ -1,9 +1,13 @@
+"use client";
+import {
+  Center,
+} from "@chakra-ui/react";
 import { SignIn } from "@clerk/nextjs";
 
 export default function Page() {
   return (
-    // <div className="flex content-center place-self-center">
+    <Center justifyContent="center">
       <SignIn path="/sign-in" signUpUrl="/sign-up" />
-    // </div>
+    </Center>
   );
 }
