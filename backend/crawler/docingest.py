@@ -17,6 +17,9 @@ from util.niclib import rand_string, get_blake2
 from tempfile import TemporaryFile
 
 
+from io import BufferedWriter
+
+
 import shutil
 
 OS_TMPDIR = Path(os.environ["TMPDIR"])
@@ -32,9 +35,11 @@ class DocumentIngester:
     def url_to_file_and_metadata(self, url: str) -> tuple[Path, dict]:
         self.logger.warn("File function running")
         parsed_url = urllib.parse.urlparse(url)
-        domain = (
-            parsed_url.netloc.split(".")[-2] + "." + parsed_url.netloc.split(".")[-1]
-        )
+        self.logger.warn("Creating File Name")
+        # FIXME : Make this work with ip domains like 127.0.0,1:8080/filename.pdf
+        # domain = (
+        #     parsed_url.netloc.split(".")[-2] + "." + parsed_url.netloc.split(".")[-1]
+        # )
         self.logger.info("Domain Successfully processed")
         # TODO:  youtube and arxiv document adding, or refactor and use in a crawler
         # if domain in ["youtube.com", "youtu.be"]:
@@ -215,13 +220,13 @@ class DocumentIngester:
         self.logger.info("Successfully downloaded file from url")
         return (tmpfile, metadata)
 
-    def save_file_to_hash_test(self,fileobject : Any) -> tuple[str,Path]:
-        self.logger(f"Getting hash")
+    def save_file_to_hash_test(self,fileobject : BufferedWriter) -> tuple[str,Path]:
+        self.logger.info(f"Getting hash")
         return ("blah",Path("/"))
-    def save_file_to_hash(self,fileobject : Any) -> tuple[str,Path]:
-        self.logger(f"Getting hash")
+    def save_file_to_hash(self,fileobject : BufferedWriter) -> tuple[str,Path]:
+        self.logger.info(f"Getting hash")
         b264_hash = get_blake2(fileobject)
-        self.logger(f"Got hash {b264_hash}")
+        self.logger.info(f"Got hash {b264_hash}")
         saveloc = self.savedir / Path(b264_hash)
         dest_file = open(saveloc,"wb")
         shutil.copyfileobj(fileobject,dest_file)

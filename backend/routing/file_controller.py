@@ -79,6 +79,9 @@ OS_GPU_COMPUTE_URL = os.environ["GPU_COMPUTE_URL"]
 OS_FILEDIR = Path("/files/")
 
 
+from hashlib import blake2b
+# import base64
+
 class FileController(Controller):
     """File Controller"""
 
@@ -124,6 +127,7 @@ class FileController(Controller):
         self, files_repo: FileRepository, data: UrlUpload, request: Request
     ) -> Any:
         request.logger.info("adding files")
+        request.logger.info("DOES THE FUCKING ERROR LOGGER WORK")
         request.logger.info(data)
         # New stuff here, is this where this code belongs? <new stuff>
         docingest = DocumentIngester(request.logger)
@@ -152,6 +156,13 @@ class FileController(Controller):
             request.logger(inst.args)     # arguments stored in .args
             request.logger(inst)
 
+        # request.logger.info(f"Getting Hash")
+        # b264_hash = get_blake2(raw_tmpfile)
+        # request.logger.info(f"Got hash {b264_hash}")
+        # saveloc = self.savedir / Path(b264_hash)
+        # dest_file = open(saveloc,"wb")
+        # shutil.copyfileobj(raw_tmpfile,dest_file)
+
         request.logger.info("Creating File Object")
         (filehash, filepath) =result 
         new_file = FileModel(
@@ -179,6 +190,10 @@ class FileController(Controller):
         request.logger.info("commited file to DB")
         return FileSchema.model_validate(new_file)
 
+    
+
+
+
     @post(path="/files/add_urls")
     async def add_urls(
         self, files_repo: FileRepository, data: UrlUploadList, request: Request
@@ -196,11 +211,15 @@ class FileController(Controller):
 
     ) -> FileSchema:
         """Process a File."""
-        obj = files_repo.get(file_id)
+        obj = files_repo.get(file_id) # TODO : Add error for invalid document ID
         current_stage = obj.stage
         mdextract = MarkdownExtractor(request.logger,OS_GPU_COMPUTE_URL,OS_TMPDIR)
         genextras = GenerateExtras()
 
+        response_code, response_message = (
+            500,
+            "Internal error somewhere in process.",
+        )
         if current_stage == "stage0":
             response_code, response_message = (
                 422,
@@ -239,7 +258,7 @@ class FileController(Controller):
         if current_stage == "stage3":
             try:
                 links = genextras.extract_markdown_links(
-                    obj.original_text, obj.lang)
+                    obj.original_text)
                 long_sum = genextras.summarize_document_text(obj.original_text)
                 short_sum = genextras.gen_short_sum_from_long_sum(long_sum)
             except:
@@ -265,9 +284,13 @@ class FileController(Controller):
 
                 current_stage = "completed"
         if current_stage == "completed":
-            response_code, r3esponse_message = (
+            response_code, response_message = (
                 200, "Document Fully Processed.")
+        request.logger.info(current_stage)
+        request.logger.info(response_code)
+        request.logger.info(response_message)
         newobj = files_repo.update(obj)
+
         await files_repo.session.commit()
         return FileSchema.model_validate(
             newobj
