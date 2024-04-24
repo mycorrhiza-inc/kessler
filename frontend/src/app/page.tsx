@@ -1,9 +1,10 @@
 import DefaultShell from "../lib/components/DefaultShell";
+import DashboardPrompt from "../lib/components/DashboardPrompt";
 
 export default function Page() {
-  return <DefaultShell>
-    <>
-      <h1>asdf</h1>
-    </>
-  </DefaultShell>;
+  return (
+    <DefaultShell>
+      <DashboardPrompt />
+    </DefaultShell>
+  );
 }
