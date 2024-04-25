@@ -71,83 +71,84 @@ class DocumentIngester:
             metadata["lang"] = "en"
         return (filepath, metadata)
 
-    def get_file_from_arxiv(self, url: str) -> tuple[Path, dict]:
-        def extract_arxiv_id(url: str) -> Optional[str]:
-            # Regular expression to match arXiv ID patterns in the URL
-            arxiv_regex = re.compile(
-                r"arxiv\.org/(?:abs|html|pdf|e-print)/(\d+\.\d+v?\d*)(?:\.pdf)?",
-                re.IGNORECASE,
-            )
+    # TODO : Get alternative download and ingest methods working
+    # def get_file_from_arxiv(self, url: str) -> tuple[Path, dict]:
+    #     def extract_arxiv_id(url: str) -> Optional[str]:
+    #         # Regular expression to match arXiv ID patterns in the URL
+    #         arxiv_regex = re.compile(
+    #             r"arxiv\.org/(?:abs|html|pdf|e-print)/(\d+\.\d+v?\d*)(?:\.pdf)?",
+    #             re.IGNORECASE,
+    #         )
 
-            # Search for matches using the regex
-            match = arxiv_regex.search(url)
+    #         # Search for matches using the regex
+    #         match = arxiv_regex.search(url)
 
-            # If a match is found, return the ID in the required format
-            if match:
-                arxiv_id = match.group(1)
-                return arxiv_id
-            return None
+    #         # If a match is found, return the ID in the required format
+    #         if match:
+    #             arxiv_id = match.group(1)
+    #             return arxiv_id
+    #         return None
 
-        arxiv_id = extract_arxiv_id(url)
-        if arxiv_id == None:
-            logging.warn("Failed to find arxiv id, falling back to HTML,")
-            return self.add_file_from_url_nocall(url)
-        htmlurl = f"https://arxiv.org/html/{arxiv_id}v1"
+    #     arxiv_id = extract_arxiv_id(url)
+    #     if arxiv_id == None:
+    #         logging.warn("Failed to find arxiv id, falling back to HTML,")
+    #         return self.add_file_from_url_nocall(url)
+    #     htmlurl = f"https://arxiv.org/html/{arxiv_id}v1"
 
-        htmlresponse = requests.get(htmlurl)
+    #     htmlresponse = requests.get(htmlurl)
 
-        # TODO : Generalize this function into a general metadata searcher, this fails if the doi is not found for example.
-        try:
-            # metadata = self.crossref.works(ids=f"10.48550/arXiv.{arxiv_id}")
-            assert 0 == 1  # TODO : Fix crossref metadata lookup
-        except:
-            self.logger.warning(
-                "Not able to lookup metadata based on doi, defaulting to extracting html metadata from arxiv."
-            )
-            metadata = self.get_metada_from_url(f"https://arxiv.org/abs/{arxiv_id}")
+    #     # TODO : Generalize this function into a general metadata searcher, this fails if the doi is not found for example.
+    #     try:
+    #         # metadata = self.crossref.works(ids=f"10.48550/arXiv.{arxiv_id}")
+    #         assert 0 == 1  # TODO : Fix crossref metadata lookup
+    #     except:
+    #         self.logger.warning(
+    #             "Not able to lookup metadata based on doi, defaulting to extracting html metadata from arxiv."
+    #         )
+    #         metadata = self.get_metada_from_url(f"https://arxiv.org/abs/{arxiv_id}")
 
-        if "HTML is not available for the source" in htmlresponse.text:
-            metadata["doctype"] = "pdf"
-            pdfdir = download_file(
-                f"https://arxiv.org/pdf/{arxiv_id}.pdf", self.tmpdir / rand_filepath()
-            )
-            return (pdfdir, metadata)
-        htmlpath = self.tmpdir / Path(rand_string())
-        with open(htmlpath, "w") as file:
-            file.write(htmlresponse.text)
-        metadata["doctype"] = "html"
-        return (htmlpath, metadata)
+    #     if "HTML is not available for the source" in htmlresponse.text:
+    #         metadata["doctype"] = "pdf"
+    #         pdfdir = download_file(
+    #             f"https://arxiv.org/pdf/{arxiv_id}.pdf", self.tmpdir / rand_filepath()
+    #         )
+    #         return (pdfdir, metadata)
+    #     htmlpath = self.tmpdir / Path(rand_string())
+    #     with open(htmlpath, "w") as file:
+    #         file.write(htmlresponse.text)
+    #     metadata["doctype"] = "html"
+    #     return (htmlpath, metadata)
 
-    def get_file_from_ytdlp(self, url: str) -> Optional[tuple[Path, dict]]:
-        filename = rand_string()
-        ytdlp_path = self.tmpdir / Path(filename)
-        video_path = self.tmpdir / Path(filename + ".mkv")
-        json_path = self.tmpdir / Path(filename + ".info.json")
-        json_filepath = self.tmpdir / Path(rand_string())
-        command = f"yt-dlp --remux-video mkv --write-info-json -o {shlex.quote(str(ytdlp_path))} {shlex.quote(url)}"
-        self.logger.info(f"Calling youtube dlp with call: {command}")
-        try:
-            result = subprocess.run(
-                command,
-                shell=True,
-                check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-            )
-            with open(json_path, "r", encoding="utf-8") as info_file:
-                info_data = json.load(info_file)
-                metadata = {
-                    "title": info_data.get("title"),
-                    "author": info_data.get("uploader"),
-                    "language": info_data.get("language"),
-                    "url": url,
-                    "doctype": "mkv",
-                }
-                self.logger.info((video_path, metadata))
-                return (video_path, metadata)
-        except subprocess.CalledProcessError as e:
-            self.logger.critical(f"An error occurred when using yt-dlp: {e.stderr}")
-            return None
+    # def get_file_from_ytdlp(self, url: str) -> Optional[tuple[Path, dict]]:
+    #     filename = rand_string()
+    #     ytdlp_path = self.tmpdir / Path(filename)
+    #     video_path = self.tmpdir / Path(filename + ".mkv")
+    #     json_path = self.tmpdir / Path(filename + ".info.json")
+    #     json_filepath = self.tmpdir / Path(rand_string())
+    #     command = f"yt-dlp --remux-video mkv --write-info-json -o {shlex.quote(str(ytdlp_path))} {shlex.quote(url)}"
+    #     self.logger.info(f"Calling youtube dlp with call: {command}")
+    #     try:
+    #         result = subprocess.run(
+    #             command,
+    #             shell=True,
+    #             check=True,
+    #             stdout=subprocess.PIPE,
+    #             stderr=subprocess.PIPE,
+    #         )
+    #         with open(json_path, "r", encoding="utf-8") as info_file:
+    #             info_data = json.load(info_file)
+    #             metadata = {
+    #                 "title": info_data.get("title"),
+    #                 "author": info_data.get("uploader"),
+    #                 "language": info_data.get("language"),
+    #                 "url": url,
+    #                 "doctype": "mkv",
+    #             }
+    #             self.logger.info((video_path, metadata))
+    #             return (video_path, metadata)
+    #     except subprocess.CalledProcessError as e:
+    #         self.logger.critical(f"An error occurred when using yt-dlp: {e.stderr}")
+    #         return None
 
     def get_metada_from_url(self, url: str) -> dict:
         self.logger.info("Getting Metadata from Url")
@@ -227,31 +228,6 @@ class DocumentIngester:
     #             # if chunk:
     #             f.write(chunk)
     #         return f
-
-
-    def rectify_unknown_metadata(self, metadata: dict):
-        assert metadata.get("doctype") != None
-
-        def mut_rectify_empty_field(metadata: dict, field: str, defaultval: Any):
-            if metadata.get(field) == None:
-                metadata[field] = defaultval
-            return metadata
-
-        # TODO : Double check and test how mutable values in python work to remove unnecessary assignments.
-        metadata = mut_rectify_empty_field(metadata, "title", "unknown")
-        metadata = mut_rectify_empty_field(metadata, "author", "unknown")
-        metadata = mut_rectify_empty_field(metadata, "language", "en")
-        return metadata
-
-    def add_file_from_url_nocall(self, url: str) -> tuple[Any, dict]:
-        metadata = self.get_metada_from_url(url)
-        self.logger.info("Got Metadata from Url")
-        metadata = self.rectify_unknown_metadata(metadata)
-        self.logger.info(f"Rectified missing metadata, yielding:{metadata}")
-        tmpfile = self.download_file_to_file_in_tmpdir(url)
-        self.logger.info("Successfully downloaded file from url")
-        return (tmpfile, metadata)
-
     # def save_fileobject_to_hash(self, fileobject: BufferedWriter) -> tuple[str, Path]:
     #     self.logger.info(f"Getting hash")
     #     b264_hash = self.get_blake2_str(fileobject)
@@ -261,6 +237,31 @@ class DocumentIngester:
     #     self.write_tmpfile_to_path(fileobject, saveloc)
     #     self.logger.info(f"Successfully Saved File to: {saveloc}")
     #     return (b264_hash, saveloc)
+
+
+
+    def add_file_from_url_nocall(self, url: str) -> tuple[Any, dict]:
+        def rectify_unknown_metadata(metadata: dict):
+            assert metadata.get("doctype") != None
+
+            def mut_rectify_empty_field(metadata: dict, field: str, defaultval: Any):
+                if metadata.get(field) == None:
+                    metadata[field] = defaultval
+                return metadata
+
+            # TODO : Double check and test how mutable values in python work to remove unnecessary assignments.
+            metadata = mut_rectify_empty_field(metadata, "title", "unknown")
+            metadata = mut_rectify_empty_field(metadata, "author", "unknown")
+            metadata = mut_rectify_empty_field(metadata, "language", "en")
+            return metadata
+        metadata = self.get_metada_from_url(url)
+        self.logger.info("Got Metadata from Url")
+        metadata = rectify_unknown_metadata(metadata)
+        self.logger.info(f"Rectified missing metadata, yielding:{metadata}")
+        tmpfile = self.download_file_to_file_in_tmpdir(url)
+        self.logger.info("Successfully downloaded file from url")
+        return (tmpfile, metadata)
+
 
     def save_filepath_to_hash(self, filepath: Path) -> tuple[str, Path]:
         filepath.parent.mkdir(exist_ok=True, parents=True)
