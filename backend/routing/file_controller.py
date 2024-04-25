@@ -139,7 +139,7 @@ class FileController(Controller):
 
     @post(path="/files/add_url")
     async def add_url(
-        self, files_repo: FileRepository, data: UrlUpload, request: Request
+        self, files_repo: FileRepository, data: UrlUpload, request: Request, process : bool = False
     ) -> Any:
         request.logger.info("adding files")
         request.logger.info("DOES THE FUCKING ERROR LOGGER WORK")
@@ -198,6 +198,8 @@ class FileController(Controller):
         request.logger.info("added file!~")
         await files_repo.session.commit()
         request.logger.info("commited file to DB")
+        # if process:
+        #    await self.process_File(files_repo,request,str(new_file.uuid))
         return FileSchema.model_validate(new_file)
 
     @post(path="/files/add_urls")
@@ -248,7 +250,7 @@ class FileController(Controller):
                 )
             )
             try:
-                assert 1 == 0
+                assert 0 == 0
             except:
                 response_code, response_message = (
                     422,
