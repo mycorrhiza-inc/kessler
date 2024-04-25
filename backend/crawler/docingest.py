@@ -14,13 +14,14 @@ import os
 from pathlib import Path
 import shlex
 from util.niclib import rand_string, get_blake2
-from tempfile import TemporaryFile
+from tempfile import TemporaryFile, NamedTemporaryFile, _TemporaryFileWrapper
 
 
 from io import BufferedWriter
 
 
 import shutil
+import hashlib
 
 OS_TMPDIR = Path(os.environ["TMPDIR"])
 OS_FILEDIR = Path("/files/")
@@ -30,6 +31,8 @@ class DocumentIngester:
         self.tmpdir = tmpdir
         self.savedir = savedir
         self.logger=logger
+        # self.rawfile_savedir = savedir + Path("/raw/") TODO : Fix this not working dynamically
+        self.rawfile_savedir = Path("/files/raw/")
         # self.crossref = Crossref()
 
     def url_to_file_and_metadata(self, url: str) -> tuple[Path, dict]:
@@ -191,13 +194,13 @@ class DocumentIngester:
         self.logger.info(f"Downloading file to temporary file")
         with requests.get(url, stream=True) as r:
             r.raise_for_status()
-            with TemporaryFile("wb") as f:
-                for chunk in r.iter_content(chunk_size=8192):
-                    # If you have chunk encoded response uncomment if
-                    # and set chunk_size parameter to None.
-                    # if chunk:
-                    f.write(chunk)
-                return f
+            f = NamedTemporaryFile("wb") 
+            for chunk in r.iter_content(chunk_size=8192):
+                # If you have chunk encoded response uncomment if
+                # and set chunk_size parameter to None.
+                # if chunk:
+                f.write(chunk)
+            return f
     def rectify_unknown_metadata(self,metadata : dict):
         assert metadata.get("doctype") != None
         def mut_rectify_empty_field(metadata : dict, field : str, defaultval : Any):
@@ -225,12 +228,55 @@ class DocumentIngester:
         return ("blah",Path("/"))
     def save_file_to_hash(self,fileobject : BufferedWriter) -> tuple[str,Path]:
         self.logger.info(f"Getting hash")
-        b264_hash = get_blake2(fileobject)
+        b264_hash = self.get_blake2_str(fileobject)
         self.logger.info(f"Got hash {b264_hash}")
-        saveloc = self.savedir / Path(b264_hash)
-        dest_file = open(saveloc,"wb")
-        shutil.copyfileobj(fileobject,dest_file)
+        saveloc = self.rawfile_savedir / Path(b264_hash)
+        self.logger.info(f"Saving file to {saveloc}")
+        self.write_tmpfile_to_path(fileobject,saveloc)
+        self.logger.info(f"Successfully Saved File to: {saveloc}")
         return (b264_hash,saveloc)
+    def write_tmpfile_to_path(self,tmp : Any, path : Path):
+        self.logger.info("Seeking to beginning of file")
+        # Seek to the beginning of the file
+        tmp.seek(0)
+        self.logger.info("Attempting to read file contents")
+        # Read the file contents
+        try:
+            file_contents = tmp.read()
+        except Exception as e:
+            self.logger.info(f"The error is: {e}")
+        self.logger.info("Attempting to write contents to permanent file")
+        # Write the file contents to the desired path
+        with open(path, 'wb') as dest_file:
+            dest_file.write(file_contents)
+
+    def get_blake2_str(self,file_input: Any) -> str: # TODO: Figure out how df file types work
+        self.logger.info("Setting Blake2b as the hash method of choice")
+        hasher = hashlib.blake2b
+        hash_object = hasher()
+        self.logger.error("Failed to hash file")
+        return "ErrorHashingFile" + rand_string() # I am really sorry about this
+        self.logger.info("Created Hash object and initialized hash.")
+        if isinstance(file_input,Path):
+            f = open(file_input,"rb")
+            buf = f.read(65536)
+            while len(buf) > 0:
+                hash_object.update(buf)
+                buf = f.read(65536)
+            return base64.urlsafe_b64encode(hasher_object.digest()).decode()
+        if isinstance(file_input,File ): # FIXME : Solve hashing for temporary files
+            self.logger.info("Hashing from Temporary File")
+            # Read the file in chunks and update the hash object
+            buf = file_input.read(65536)
+            self.logger.info("buf once")
+            while len(buf) > 0:
+                hash_object.update(buf)
+                buf = file_input.read(65536)
+
+            self.logger.info("Hashed file")
+            return base64.url_safe_b64encode(hash_object.digest())
+
+
 
     def infer_metadata_from_path(self, filepath: Path) -> dict:
         return {"title": filepath.stem, "doctype": filepath.suffix}

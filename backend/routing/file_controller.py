@@ -150,7 +150,7 @@ class FileController(Controller):
         request.logger.info("Attempting to save data to file")
         request.logger.info(type(raw_tmpfile))
         try:
-            result= docingest.save_file_to_hash_test(raw_tmpfile)
+            result= docingest.save_file_to_hash(raw_tmpfile)
         except Exception as inst:
             request.logger(type(inst))    # the exception type
             request.logger(inst.args)     # arguments stored in .args
