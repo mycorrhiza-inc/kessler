@@ -208,7 +208,7 @@ class DocumentIngester:
                     # if chunk:
                     f.write(chunk)
         return savepath
-    
+
     def download_file_to_file_in_tmpdir(
         self, url: str
     ) -> Any:  # TODO : Get types for temporary file
@@ -239,8 +239,6 @@ class DocumentIngester:
     #     self.logger.info(f"Successfully Saved File to: {saveloc}")
     #     return (b264_hash, saveloc)
 
-
-
     def add_file_from_url_nocall(self, url: str) -> tuple[Any, dict]:
         def rectify_unknown_metadata(metadata: dict):
             assert metadata.get("doctype") != None
@@ -255,6 +253,7 @@ class DocumentIngester:
             metadata = mut_rectify_empty_field(metadata, "author", "unknown")
             metadata = mut_rectify_empty_field(metadata, "language", "en")
             return metadata
+
         metadata = self.get_metada_from_url(url)
         self.logger.info("Got Metadata from Url")
         metadata = rectify_unknown_metadata(metadata)
@@ -262,7 +261,6 @@ class DocumentIngester:
         tmpfile = self.download_file_to_file_in_tmpdir(url)
         self.logger.info("Successfully downloaded file from url")
         return (tmpfile, metadata)
-
 
     def save_filepath_to_hash(self, filepath: Path) -> tuple[str, Path]:
         filepath.parent.mkdir(exist_ok=True, parents=True)

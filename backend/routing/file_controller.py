@@ -45,6 +45,7 @@ class UUIDEncoder(json.JSONEncoder):
             return obj.hex
         return json.JSONEncoder.default(self, obj)
 
+
 # for testing purposese
 emptyFile = FileModel(
     url="",
@@ -210,7 +211,9 @@ class FileController(Controller):
         self,
         files_repo: FileRepository,
         request: Request,
-        file_id_str: str = Parameter(title="File ID as hex string", description="File to retieve"),
+        file_id_str: str = Parameter(
+            title="File ID as hex string", description="File to retieve"
+        ),
         regenerate: bool = True,  # Figure out how to pass in a boolean as a query paramater
     ) -> FileSchema:
         """Process a File."""
@@ -243,7 +246,7 @@ class FileController(Controller):
                 )
             )
             try:
-                assert 1==0
+                assert 1 == 0
             except:
                 response_code, response_message = (
                     422,
