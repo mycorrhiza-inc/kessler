@@ -276,8 +276,9 @@ class FileController(Controller):
     async def delete_file(
         self,
         files_repo: FileRepository,
-        file_id: UUID = Parameter(
+        file_id: str = Parameter(
             title="File ID", description="File to retieve"),
     ) -> None:
-        _ = await files_repo.delete(file_id)
+        fid = UUID(file_id)
+        _ = await files_repo.delete(fid)
         await files_repo.session.commit()
