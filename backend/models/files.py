@@ -16,11 +16,11 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
 class FileModel(UUIDAuditBase, RepoMixin):
     """Database representation of a file"""
+
     __tablename__ = "file"
     url: Mapped[
         str | None
-        # TODO : Implement system for url's that doesnt store it in the file model.
-    ]
+    ]  # TODO : Implement system for url's that doesnt store it in the file model.
     path: Mapped[str]
     doctype: Mapped[str]
     lang: Mapped[str]
@@ -34,13 +34,13 @@ class FileModel(UUIDAuditBase, RepoMixin):
     english_text: Mapped[str | None]
 
     @classmethod
-    async def provide_repo(cls, session) -> 'FileRepository':
+    async def provide_repo(cls, session) -> "FileRepository":
         return FileRepository(session=session)
 
     # # define the context manager for each file repo
     @classmethod
     @asynccontextmanager
-    async def repo(cls) -> AsyncIterator['FileRepository']:
+    async def repo(cls) -> AsyncIterator["FileRepository"]:
         session_factory = sqlalchemy_config.create_session_maker()
         async with session_factory() as db_session:
             try:
@@ -73,6 +73,7 @@ async def provide_files_repo(db_session: AsyncSession) -> FileRepository:
     """This provides the default Authors repository."""
     return FileRepository(session=db_session)
 
+
 class FileSchema(PydanticBaseModel):
     """pydantic schema of the FileModel"""
 
@@ -83,7 +84,7 @@ class FileSchema(PydanticBaseModel):
     name: str
     # Either "stage0" "stage1" "stage2" or "stage3"
     stage: str
-    doc_metadata : dict
+    doc_metadata: dict
     summary: str | None = None
     short_summary: str | None = None
     original_text: str | None = None

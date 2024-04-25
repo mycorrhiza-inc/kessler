@@ -3,11 +3,6 @@ from util.niclib import rand_string, rand_filepath
 
 from typing import Optional, List, Union
 
-import json
-import re
-
-
-
 
 import logging
 
@@ -21,16 +16,10 @@ from typing import Optional, List, Union
 # from langchain.vectorstores import FAISS
 
 import subprocess
-import warnings
-import shutil
-import urllib
-import mimetypes
 import os
-import pickle
 
 
 from pathlib import Path
-import shlex
 
 from util.gpu_compute_calls import GPUComputeEndpoint
 
@@ -40,7 +29,7 @@ def CrossReferenceTMPFIles():
 
 
 class MarkdownExtractor:
-    def __init__(self, endpoint_url: str, tmpdir: Path):
+    def __init__(self, logger, endpoint_url: str, tmpdir: Path):
         self.tmpdir = tmpdir
         self.endpoint_url = endpoint_url
         # TODO : Add database connection.
@@ -114,4 +103,3 @@ class MarkdownExtractor:
             raise ValueError(
                 f'Improper File Type, processing Failed with doctype: "{doctype}"'
             )
-

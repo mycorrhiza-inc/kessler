@@ -40,6 +40,18 @@ from typing import List, Optional, Union
 
 
 from util.niclib import get_blake2
+
+import json
+
+
+class UUIDEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, UUID):
+            # if the obj is uuid, we simply return the value of uuid
+            return obj.hex
+        return json.JSONEncoder.default(self, obj)
+
+
 # for testing purposese
 emptyFile = FileModel(
     url="",
@@ -50,8 +62,8 @@ emptyFile = FileModel(
     # file=raw_tmpfile,
     doc_metadata={},
     stage="stage0",
-    hash = "",
-    summary = None,
+    hash="",
+    summary=None,
     short_summary=None,
 )
 
@@ -59,11 +71,14 @@ emptyFile = FileModel(
 class FileUpdate(BaseModel):
     message: str
 
+
 class UrlUpload(BaseModel):
-    url : str
+    url: str
+
 
 class UrlUploadList(BaseModel):
-    url : List[str]
+    url: List[str]
+
 
 class FileCreate(BaseModel):
     message: str
@@ -74,6 +89,18 @@ class FileUpload(BaseModel):
 
 
 # litestar only
+
+from pathlib import Path
+import os
+
+OS_TMPDIR = Path(os.environ["TMPDIR"])
+OS_GPU_COMPUTE_URL = os.environ["GPU_COMPUTE_URL"]
+OS_FILEDIR = Path("/files/")
+
+
+from hashlib import blake2b
+
+# import base64
 
 
 OS_TMPDIR = Path(os.environ["TMPDIR"])
@@ -93,8 +120,7 @@ class FileController(Controller):
     async def get_file(
         self,
         files_repo: FileRepository,
-        file_id: UUID = Parameter(
-            title="File ID", description="File to retieve"),
+        file_id: UUID = Parameter(title="File ID", description="File to retieve"),
     ) -> FileSchema:
         obj = files_repo.get(file_id)
         return FileSchema.model_validate(obj)
@@ -118,7 +144,6 @@ class FileController(Controller):
         self,
         files_repo: FileRepository,
         data: Annotated[UploadFile, Body(media_type=RequestEncodingType.MULTI_PART)],
-
     ) -> Optional[FileUpload]:
         content = await data.read()
         newFileObj = emptyFile()
@@ -129,19 +154,20 @@ class FileController(Controller):
         self, files_repo: FileRepository, data: UrlUpload, request: Request
     ) -> Any:
         request.logger.info("adding files")
+        request.logger.info("DOES THE FUCKING ERROR LOGGER WORK")
         request.logger.info(data)
         # New stuff here, is this where this code belongs? <new stuff>
         docingest = DocumentIngester(request.logger)
         request.logger.info("DocumentIngester Created")
-        raw_tmpfile,metadata = docingest.url_to_file_and_metadata(data.url)
+        tmpfile_path, metadata = docingest.url_to_filepath_and_metadata(data.url)
         request.logger.info(f"Metadata Successfully Created with metadata {metadata}")
-        document_title=metadata.get("title")
-        document_doctype=metadata.get("doctype")
-        document_lang=metadata.get("language")
+        document_title = metadata.get("title")
+        document_doctype = metadata.get("doctype")
+        document_lang = metadata.get("language")
         try:
-            assert isinstance(document_title,str)
-            assert isinstance(document_doctype,str)
-            assert isinstance(document_lang,str)
+            assert isinstance(document_title, str)
+            assert isinstance(document_doctype, str)
+            assert isinstance(document_lang, str)
         except:
             request.logger.error("Illformed Metadata please fix")
         else:
@@ -149,8 +175,18 @@ class FileController(Controller):
         # b264hash = get_blake2(raw_tmpfile)
         # request.logger.info(f"Got document hash: {b264hash}")
         request.logger.info("Attempting to save data to file")
-        filehash, filepath = docingest.save_file_to_hash(raw_tmpfile)
+        result = docingest.save_filepath_to_hash(tmpfile_path)
+        docingest.backup_metadata_to_hash(metadata, hash)
+
+        # request.logger.info(f"Getting Hash")
+        # b264_hash = get_blake2(raw_tmpfile)
+        # request.logger.info(f"Got hash {b264_hash}")
+        # saveloc = self.savedir / Path(b264_hash)
+        # dest_file = open(saveloc,"wb")
+        # shutil.copyfileobj(raw_tmpfile,dest_file)
+
         request.logger.info("Creating File Object")
+        (filehash, filepath) = result
         new_file = FileModel(
             url=data.url,
             name=document_title,
@@ -159,9 +195,9 @@ class FileController(Controller):
             path=str(filepath),
             # file=raw_tmpfile,
             doc_metadata=metadata,
-            stage="stage0",
-            hash = filehash,
-            summary = None,
+            stage="stage1",
+            hash=filehash,
+            summary=None,
             short_summary=None,
         )
         # </new stuff>
@@ -188,35 +224,47 @@ class FileController(Controller):
     ) -> None:
         return None
 
-    @patch(path="/files/{file_id:uuid}")
+    @post(path="/process/{file_id_str:str}")
     async def process_File(
         self,
         files_repo: FileRepository,
-        data: FileUpdate,
-        file_id: UUID = Parameter(
-            title="File ID", description="File to retieve"),
-        regenerate: bool = False,  # Figure out how to pass in a boolean as a query paramater
+        request: Request,
+        file_id_str: str = Parameter(
+            title="File ID as hex string", description="File to retieve"
+        ),
+        regenerate: bool = True,  # Figure out how to pass in a boolean as a query paramater
     ) -> FileSchema:
         """Process a File."""
-        obj = files_repo.get(file_id)
+        file_id = UUID(file_id_str)
+        request.logger.info(file_id)
+        obj = await files_repo.get(file_id)
+        # TODO : Add error for invalid document ID
+        request.logger.info(type(obj))
+        request.logger.info(obj)
         current_stage = obj.stage
-        mdextract = MarkdownExtractor()
+        mdextract = MarkdownExtractor(request.logger, OS_GPU_COMPUTE_URL, OS_TMPDIR)
         genextras = GenerateExtras()
 
+        response_code, response_message = (
+            500,
+            "Internal error somewhere in process.",
+        )
         if current_stage == "stage0":
             response_code, response_message = (
                 422,
                 "Failure in stage 0: Document was incorrectly added to database, try readding it again.",
             )
+            current_stage = "stage1"
         if regenerate and current_stage != "stage0":
             current_stage = "stage1"
         if current_stage == "stage1":
-            try:
-                processed_original_text = (
-                    mdextract.process_raw_document_into_untranslated_text(
-                        obj.path, obj.metadata
-                    )
+            processed_original_text = (
+                mdextract.process_raw_document_into_untranslated_text(
+                    obj.path, obj.metadata
                 )
+            )
+            try:
+                assert 1 == 0
             except:
                 response_code, response_message = (
                     422,
@@ -226,22 +274,22 @@ class FileController(Controller):
                 obj.original_text = processed_original_text
                 current_stage = "stage2"
         if current_stage == "stage2":
-            try:
-                processed_english_text = mdextract.convert_text_into_eng(
-                    obj.original_text, obj.lang
-                )
-            except:
-                response_code, response_message = (
-                    422,
-                    "failure in stage 2: document was unable to be translated to english.",
-                )
-            else:
-                obj.english_text = processed_english_text
-                current_stage = "stage3"
+            obj.english_text = obj.original_text
+            current_stage = "stage3"
+            # TODO : Fix issue of existence of languages aside from english
+            # try:
+            #     processed_english_text = mdextract.convert_text_into_eng(
+            #         obj.original_text, obj.lang
+            #     )
+            # except:
+            #     response_code, response_message = (
+            #         422,
+            #         "failure in stage 2: document was unable to be translated to english.",
+            #     )
+            # else:
         if current_stage == "stage3":
             try:
-                links = genextras.extract_markdown_links(
-                    obj.original_text, obj.lang)
+                links = genextras.extract_markdown_links(obj.original_text)
                 long_sum = genextras.summarize_document_text(obj.original_text)
                 short_sum = genextras.gen_short_sum_from_long_sum(long_sum)
             except:
@@ -264,12 +312,15 @@ class FileController(Controller):
                     "failure in stage 2: document was unable to be translated to english.",
                 )
             else:
+                current_stage = "stage5"
 
-                current_stage = "completed"
         if current_stage == "completed":
-            response_code, r3esponse_message = (
-                200, "Document Fully Processed.")
+            response_code, response_message = (200, "Document Fully Processed.")
+        request.logger.info(current_stage)
+        request.logger.info(response_code)
+        request.logger.info(response_message)
         newobj = files_repo.update(obj)
+
         await files_repo.session.commit()
         return FileSchema.model_validate(
             newobj
@@ -294,8 +345,7 @@ class FileController(Controller):
     async def delete_file(
         self,
         files_repo: FileRepository,
-        file_id: str = Parameter(
-            title="File ID", description="File to retieve"),
+        file_id: UUID = Parameter(title="File ID", description="File to retieve"),
     ) -> None:
         fid = UUID(file_id)
         _ = await files_repo.delete(fid)
