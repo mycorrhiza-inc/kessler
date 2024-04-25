@@ -35,6 +35,10 @@ import shlex
 from util.gpu_compute_calls import GPUComputeEndpoint
 
 
+def CrossReferenceTMPFIles():
+    names = 
+
+
 class MarkdownExtractor:
     def __init__(self, endpoint_url: str, tmpdir: Path):
         self.tmpdir = tmpdir

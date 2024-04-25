@@ -1,3 +1,4 @@
+from io import BufferedWriter
 import base64
 import secrets
 import os
@@ -30,21 +31,18 @@ def clean_and_empty_directory(dir: Path):
 # tests
 
 
-def get_hash_str(file_input: Union[Path,Any], hasher) -> str: # TODO: Figure out how df file types work
-    if isinstance(file_input,Path):
-        f = open(file_input,"rb")
-    else:
-        f = file_input
-    buf = f.read(65536)
-    while len(buf) > 0:
-        hasher.update(buf)
+def get_hash_str(
+    file_input: Union[Path, Any], hasher
+) -> str:  # TODO: Figure out how df file types work
+    if isinstance(file_input, Path):
+        f = open(file_input, "rb")
         buf = f.read(65536)
     return base64.urlsafe_b64encode(hasher.digest()).decode()
     
 
 
-get_blake2 = lambda filepath: get_hash_str(filepath, hashlib.blake2b())
-get_sha256 = lambda filepath: get_hash_str(filepath, hashlib.sha256())
+def get_blake2(filepath): return get_hash_str(filepath, hashlib.blake2b)
+def get_sha256(filepath): return get_hash_str(filepath, hashlib.sha256)
 
 
 def rand_string() -> str:
@@ -60,7 +58,8 @@ def secs_since_1970() -> int:
 
 
 def download_file(url: str, savedir: Path) -> Path:
-    local_filename = savedir  # TODO: Use a temporary directory for downloads or archive it in some other way.
+    # TODO: Use a temporary directory for downloads or archive it in some other way.
+    local_filename = savedir
     # NOTE the stream=True parameter below
     with requests.get(url, stream=True) as r:
         r.raise_for_status()

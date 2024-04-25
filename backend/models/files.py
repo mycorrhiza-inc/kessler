@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-from typing import AsyncIterator, Annotated
+from typing import AsyncIterator, Annotated, Dict, Any
 import traceback
 from uuid import UUID
 
@@ -17,15 +17,17 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 class FileModel(UUIDAuditBase, RepoMixin):
     """Database representation of a file"""
     __tablename__ = "file"
-    url: Mapped[str | None] # TODO : Implement system for url's that doesnt store it in the file model.
+    url: Mapped[
+        str | None
+        # TODO : Implement system for url's that doesnt store it in the file model.
+    ]
     path: Mapped[str]
     doctype: Mapped[str]
     lang: Mapped[str]
     name: Mapped[str | None]
     hash: Mapped[str]
-    doc_metadata : Mapped[dict]
+    doc_metadata: Mapped[Dict[str, Any]]
     stage: Mapped[str]  # Either "stage0" "stage1" "stage2" or "stage3"
-    doc_metadata : Mapped[dict]
     summary: Mapped[str | None]
     short_summary: Mapped[str | None]
     original_text: Mapped[str | None]

@@ -1,3 +1,8 @@
+from haystack.components.writers import DocumentWriter
+from hashlib import blake2b
+import os
+from pathlib import Path
+from typing import Any
 from uuid import UUID
 from typing import Annotated, assert_type
 import logging
@@ -29,6 +34,7 @@ from models import FileModel, FileRepository, FileSchema, provide_files_repo
 from crawler.docingest import DocumentIngester
 from docprocessing.extractmarkdown import MarkdownExtractor
 from docprocessing.genextras import GenerateExtras
+from util.haystack import indexDocByID
 
 from typing import List, Optional, Union
 
@@ -49,8 +55,6 @@ emptyFile = FileModel(
     short_summary=None,
 )
 
-from typing import Any
-
 
 class FileUpdate(BaseModel):
     message: str
@@ -70,6 +74,14 @@ class FileUpload(BaseModel):
 
 
 # litestar only
+
+
+OS_TMPDIR = Path(os.environ["TMPDIR"])
+OS_GPU_COMPUTE_URL = os.environ["GPU_COMPUTE_URL"]
+OS_FILEDIR = Path("/files/")
+
+
+# import base64
 
 
 class FileController(Controller):
@@ -156,10 +168,16 @@ class FileController(Controller):
         request.logger.info("new file:{file}".format(file=new_file.to_dict()))
         try:
             new_file = await files_repo.add(new_file)
+            
+            
         except Exception as e:
             request.logger.info(e)
             return e
         request.logger.info("added file!~")
+
+        request.logger.info("adding file to vector db")
+        await indexDocByID(new_file.id)
+
         await files_repo.session.commit()
         request.logger.info("commited file to DB")
         return FileSchema.model_validate(new_file)
