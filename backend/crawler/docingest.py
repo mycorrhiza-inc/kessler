@@ -72,6 +72,7 @@ class DocumentIngester:
         return (filepath, metadata)
 
     # TODO : Get alternative download and ingest methods working
+
     # def get_file_from_arxiv(self, url: str) -> tuple[Path, dict]:
     #     def extract_arxiv_id(url: str) -> Optional[str]:
     #         # Regular expression to match arXiv ID patterns in the URL
