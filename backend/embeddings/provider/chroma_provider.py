@@ -17,9 +17,14 @@ def getChromaClient():
         # get the chroma instance from the local docker swarm
 
         try:
-            client = chromadb.HttpClient(host=chroma_path, port=8000,
-                                         settings=Settings(chroma_client_auth_provider="chromadb.auth.token.TokenAuthClientProvider",
-                                                           chroma_client_auth_credentials="test-token"))
+            client = chromadb.HttpClient(
+                host=chroma_path,
+                port=8000,
+                settings=Settings(
+                    chroma_client_auth_provider="chromadb.auth.token.TokenAuthClientProvider",
+                    chroma_client_auth_credentials="test-token",
+                ),
+            )
 
             # this should work with or without authentication - it is a public endpoint
             if client.heartbeat():
@@ -27,18 +32,17 @@ def getChromaClient():
 
             # this should work with or without authentication - it is a public endpoint
             chroma_version = client.get_version()
-            logger.info(f'chroma version: {chroma_version}')
+            logger.info(f"chroma version: {chroma_version}")
 
             # this is a protected endpoint and requires authentication
             try:
                 collections = client.list_collections()
-                logger.info(f'available collections:\n{collections}')
+                logger.info(f"available collections:\n{collections}")
             except Exception as e:
-                logger.fatal(
-                    f'Unable to authenticate to the chromadb instance')
+                logger.fatal(f"Unable to authenticate to the chromadb instance")
                 raise e
         except Exception as e:
-            logger.fatal(f'Error connecting to remote chroma\n{e}')
+            logger.fatal(f"Error connecting to remote chroma\n{e}")
             raise e
 
         return client

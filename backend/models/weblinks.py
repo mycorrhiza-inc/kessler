@@ -28,7 +28,7 @@ class WeblinkModel(UUIDAuditBase):
 
     @classmethod
     @asynccontextmanager
-    async def repo(cls) -> AsyncIterator['WeblinkRepository']:
+    async def repo(cls) -> AsyncIterator["WeblinkRepository"]:
         session_factory = sqlalchemy_config.create_session_maker()
         async with session_factory() as db_session:
             try:
