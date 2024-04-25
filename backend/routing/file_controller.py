@@ -132,11 +132,11 @@ class FileController(Controller):
         # New stuff here, is this where this code belongs? <new stuff>
         docingest = DocumentIngester(request.logger)
         request.logger.info("DocumentIngester Created")
-        raw_tmpfile,metadata = docingest.url_to_file_and_metadata(data.url)
+        tmpfile_path,metadata = docingest.url_to_filepath_and_metadata(data.url)
         request.logger.info(f"Metadata Successfully Created with metadata {metadata}")
-        document_title=metadata.get("title")
-        document_doctype=metadata.get("doctype")
-        document_lang=metadata.get("language")
+        document_title = metadata.get("title")
+        document_doctype = metadata.get("doctype")
+        document_lang = metadata.get("language")
         try:
             assert isinstance(document_title,str)
             assert isinstance(document_doctype,str)
@@ -148,13 +148,7 @@ class FileController(Controller):
         # b264hash = get_blake2(raw_tmpfile)
         # request.logger.info(f"Got document hash: {b264hash}")
         request.logger.info("Attempting to save data to file")
-        request.logger.info(type(raw_tmpfile))
-        try:
-            result= docingest.save_file_to_hash(raw_tmpfile)
-        except Exception as inst:
-            request.logger.info(type(inst))    # the exception type
-            request.logger.info(inst.args)     # arguments stored in .args
-            request.logger.info(inst)
+        result= docingest.save_filepath_to_hash(tmpfile_path)
 
         # request.logger.info(f"Getting Hash")
         # b264_hash = get_blake2(raw_tmpfile)
@@ -189,10 +183,6 @@ class FileController(Controller):
         await files_repo.session.commit()
         request.logger.info("commited file to DB")
         return FileSchema.model_validate(new_file)
-
-    
-
-
 
     @post(path="/files/add_urls")
     async def add_urls(
@@ -243,18 +233,19 @@ class FileController(Controller):
                 obj.original_text = processed_original_text
                 current_stage = "stage2"
         if current_stage == "stage2":
-            try:
-                processed_english_text = mdextract.convert_text_into_eng(
-                    obj.original_text, obj.lang
-                )
-            except:
-                response_code, response_message = (
-                    422,
-                    "failure in stage 2: document was unable to be translated to english.",
-                )
-            else:
-                obj.english_text = processed_english_text
-                current_stage = "stage3"
+            obj.english_text = obj.original_text 
+            current_stage = "stage3"
+            # TODO : Fix issue of existence of languages aside from english
+            # try:
+            #     processed_english_text = mdextract.convert_text_into_eng(
+            #         obj.original_text, obj.lang
+            #     )
+            # except:
+            #     response_code, response_message = (
+            #         422,
+            #         "failure in stage 2: document was unable to be translated to english.",
+            #     )
+            # else:
         if current_stage == "stage3":
             try:
                 links = genextras.extract_markdown_links(
@@ -281,8 +272,9 @@ class FileController(Controller):
                     "failure in stage 2: document was unable to be translated to english.",
                 )
             else:
+                current_stage = "stage5"
 
-                current_stage = "completed"
+
         if current_stage == "completed":
             response_code, response_message = (
                 200, "Document Fully Processed.")

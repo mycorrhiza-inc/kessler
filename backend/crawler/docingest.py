@@ -33,9 +33,10 @@ class DocumentIngester:
         self.logger=logger
         # self.rawfile_savedir = savedir + Path("/raw/") TODO : Fix this not working dynamically
         self.rawfile_savedir = Path("/files/raw/")
+        self.rawfile_savedir.mkdir(exist_ok=True, parents=True) # Make sure the different directories always exist
         # self.crossref = Crossref()
 
-    def url_to_file_and_metadata(self, url: str) -> tuple[Path, dict]:
+    def url_to_filepath_and_metadata(self, url: str) -> tuple[Path, dict]:
         self.logger.warn("File function running")
         parsed_url = urllib.parse.urlparse(url)
         self.logger.warn("Creating File Name")
@@ -179,6 +180,7 @@ class DocumentIngester:
             "title": name,
         }
     def download_file_to_path(self,url: str, savepath: Path) -> Path:
+        savepath.parent.mkdir(exist_ok=True, parents=True)
         self.logger.info(f"Downloading file to dir: {savepath}")
         with requests.get(url, stream=True) as r:
             r.raise_for_status()
@@ -201,6 +203,9 @@ class DocumentIngester:
                 # if chunk:
                 f.write(chunk)
             return f
+    def download_file_to_file_in_tmpdir(self,url: str)-> Any: # TODO : Get types for temporary file
+        savedir = self.tmpdir  / Path(rand_string())
+        return self.download_file_to_path(url,savedir)
     def rectify_unknown_metadata(self,metadata : dict):
         assert metadata.get("doctype") != None
         def mut_rectify_empty_field(metadata : dict, field : str, defaultval : Any):
@@ -219,14 +224,11 @@ class DocumentIngester:
         self.logger.info("Got Metadata from Url")
         metadata = self.rectify_unknown_metadata(metadata)
         self.logger.info(f"Rectified missing metadata, yielding:{metadata}")
-        tmpfile = self.download_file_to_tmpfile(url)
+        tmpfile = self.download_file_to_file_in_tmpdir(url)
         self.logger.info("Successfully downloaded file from url")
         return (tmpfile, metadata)
 
-    def save_file_to_hash_test(self,fileobject : BufferedWriter) -> tuple[str,Path]:
-        self.logger.info(f"Getting hash")
-        return ("blah",Path("/"))
-    def save_file_to_hash(self,fileobject : BufferedWriter) -> tuple[str,Path]:
+    def save_fileobject_to_hash(self,fileobject : BufferedWriter) -> tuple[str,Path]:
         self.logger.info(f"Getting hash")
         b264_hash = self.get_blake2_str(fileobject)
         self.logger.info(f"Got hash {b264_hash}")
@@ -235,7 +237,20 @@ class DocumentIngester:
         self.write_tmpfile_to_path(fileobject,saveloc)
         self.logger.info(f"Successfully Saved File to: {saveloc}")
         return (b264_hash,saveloc)
+
+    def save_filepath_to_hash(self,filepath : Path) -> tuple[str,Path]:
+        filepath.parent.mkdir(exist_ok=True, parents=True)
+        self.logger.info(f"Getting hash")
+        b264_hash = self.get_blake2_str(filepath)
+        self.logger.info(f"Got hash {b264_hash}")
+        saveloc = self.rawfile_savedir / Path(b264_hash)
+        self.logger.info(f"Saving file to {saveloc}")
+        shutil.copyfile(filepath,saveloc)
+        self.logger.info(f"Successfully Saved File to: {saveloc}")
+        return (b264_hash,saveloc)
+
     def write_tmpfile_to_path(self,tmp : Any, path : Path):
+        path.parent.mkdir(exist_ok=True, parents=True)
         self.logger.info("Seeking to beginning of file")
         # Seek to the beginning of the file
         tmp.seek(0)
