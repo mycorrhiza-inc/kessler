@@ -1,8 +1,12 @@
 import logging
+import traceback
 
 from litestar import Litestar, Router
 from litestar.config.cors import CORSConfig
 from litestar.repository.filters import LimitOffset
+from litestar import Litestar, MediaType, Request, Response, get
+from litestar.exceptions import HTTPException
+from litestar.status_codes import HTTP_500_INTERNAL_SERVER_ERROR
 
 from litestar.params import Parameter
 from litestar.di import Provide
@@ -12,11 +16,28 @@ from models import utils
 from util.logging import logging_config
 from routing.file_controller import FileController
 
+logger = logging.getLogger(__name__)
+
 
 async def on_startup() -> None:
     async with utils.sqlalchemy_config.get_engine().begin() as conn:
         # UUIDAuditBase extends UUIDBase so create_all should build both
         await conn.run_sync(UUIDBase.metadata.create_all)
+
+
+def plain_text_exception_handler(request: Request, exc: Exception) -> Response:
+    """Default handler for exceptions subclassed from HTTPException."""
+    tb = traceback.format_exc()
+    logger.warn(f"exception: {exc}")
+    logger.warn(f"traceback:\n{tb}")
+    status_code = getattr(exc, "status_code", HTTP_500_INTERNAL_SERVER_ERROR)
+    detail = getattr(exc, "detail", "")
+
+    return Response(
+        media_type=MediaType.TEXT,
+        content=tb,
+        status_code=status_code,
+    )
 
 
 async def provide_limit_offset_pagination(
@@ -54,4 +75,5 @@ app = Litestar(
     dependencies={"limit_offset": Provide(provide_limit_offset_pagination)},
     cors_config=cors_config,
     logging_config=logging_config,
+    exception_handlers={Exception: plain_text_exception_handler},
 )

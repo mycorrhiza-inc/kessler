@@ -8,6 +8,3 @@ logging_config = LoggingConfig(
         "standard": {"format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"}
     },
 )
-
-def get_logger():
-    return logging_config.configure()()

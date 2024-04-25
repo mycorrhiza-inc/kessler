@@ -152,9 +152,9 @@ class FileController(Controller):
         try:
             result= docingest.save_file_to_hash(raw_tmpfile)
         except Exception as inst:
-            request.logger(type(inst))    # the exception type
-            request.logger(inst.args)     # arguments stored in .args
-            request.logger(inst)
+            request.logger.info(type(inst))    # the exception type
+            request.logger.info(inst.args)     # arguments stored in .args
+            request.logger.info(inst)
 
         # request.logger.info(f"Getting Hash")
         # b264_hash = get_blake2(raw_tmpfile)
