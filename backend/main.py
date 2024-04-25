@@ -41,8 +41,7 @@ def plain_text_exception_handler(request: Request, exc: Exception) -> Response:
 
 
 async def provide_limit_offset_pagination(
-    current_page: int = Parameter(
-        ge=1, query="currentPage", default=1, required=False),
+    current_page: int = Parameter(ge=1, query="currentPage", default=1, required=False),
     page_size: int = Parameter(
         query="pageSize",
         ge=1,

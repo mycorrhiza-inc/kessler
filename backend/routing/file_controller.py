@@ -34,6 +34,7 @@ from typing import List, Optional, Union
 
 
 from util.niclib import get_blake2
+
 # for testing purposese
 emptyFile = FileModel(
     url="",
@@ -44,8 +45,8 @@ emptyFile = FileModel(
     # file=raw_tmpfile,
     doc_metadata={},
     stage="stage0",
-    hash = "",
-    summary = None,
+    hash="",
+    summary=None,
     short_summary=None,
 )
 
@@ -55,11 +56,14 @@ from typing import Any
 class FileUpdate(BaseModel):
     message: str
 
+
 class UrlUpload(BaseModel):
-    url : str
+    url: str
+
 
 class UrlUploadList(BaseModel):
-    url : List[str]
+    url: List[str]
+
 
 class FileCreate(BaseModel):
     message: str
@@ -80,7 +84,9 @@ OS_FILEDIR = Path("/files/")
 
 
 from hashlib import blake2b
+
 # import base64
+
 
 class FileController(Controller):
     """File Controller"""
@@ -91,8 +97,7 @@ class FileController(Controller):
     async def get_file(
         self,
         files_repo: FileRepository,
-        file_id: UUID = Parameter(
-            title="File ID", description="File to retieve"),
+        file_id: UUID = Parameter(title="File ID", description="File to retieve"),
     ) -> FileSchema:
         obj = files_repo.get(file_id)
         return FileSchema.model_validate(obj)
@@ -116,7 +121,6 @@ class FileController(Controller):
         self,
         files_repo: FileRepository,
         data: Annotated[UploadFile, Body(media_type=RequestEncodingType.MULTI_PART)],
-
     ) -> Optional[FileUpload]:
         content = await data.read()
         newFileObj = emptyFile()
@@ -132,15 +136,15 @@ class FileController(Controller):
         # New stuff here, is this where this code belongs? <new stuff>
         docingest = DocumentIngester(request.logger)
         request.logger.info("DocumentIngester Created")
-        tmpfile_path,metadata = docingest.url_to_filepath_and_metadata(data.url)
+        tmpfile_path, metadata = docingest.url_to_filepath_and_metadata(data.url)
         request.logger.info(f"Metadata Successfully Created with metadata {metadata}")
         document_title = metadata.get("title")
         document_doctype = metadata.get("doctype")
         document_lang = metadata.get("language")
         try:
-            assert isinstance(document_title,str)
-            assert isinstance(document_doctype,str)
-            assert isinstance(document_lang,str)
+            assert isinstance(document_title, str)
+            assert isinstance(document_doctype, str)
+            assert isinstance(document_lang, str)
         except:
             request.logger.error("Illformed Metadata please fix")
         else:
@@ -148,8 +152,8 @@ class FileController(Controller):
         # b264hash = get_blake2(raw_tmpfile)
         # request.logger.info(f"Got document hash: {b264hash}")
         request.logger.info("Attempting to save data to file")
-        result= docingest.save_filepath_to_hash(tmpfile_path)
-        docingest.backup_metadata_to_hash(metadata,hash)
+        result = docingest.save_filepath_to_hash(tmpfile_path)
+        docingest.backup_metadata_to_hash(metadata, hash)
 
         # request.logger.info(f"Getting Hash")
         # b264_hash = get_blake2(raw_tmpfile)
@@ -159,7 +163,7 @@ class FileController(Controller):
         # shutil.copyfileobj(raw_tmpfile,dest_file)
 
         request.logger.info("Creating File Object")
-        (filehash, filepath) =result 
+        (filehash, filepath) = result
         new_file = FileModel(
             url=data.url,
             name=document_title,
@@ -169,8 +173,8 @@ class FileController(Controller):
             # file=raw_tmpfile,
             doc_metadata=metadata,
             stage="stage0",
-            hash = filehash,
-            summary = None,
+            hash=filehash,
+            summary=None,
             short_summary=None,
         )
         # </new stuff>
@@ -195,16 +199,14 @@ class FileController(Controller):
     async def process_File(
         self,
         files_repo: FileRepository,
-        request : Request,
-        file_id: UUID = Parameter(
-            title="File ID", description="File to retieve"),
+        request: Request,
+        file_id: UUID = Parameter(title="File ID", description="File to retieve"),
         regenerate: bool = True,  # Figure out how to pass in a boolean as a query paramater
-
     ) -> FileSchema:
         """Process a File."""
-        obj = files_repo.get(file_id) # TODO : Add error for invalid document ID
+        obj = files_repo.get(file_id)  # TODO : Add error for invalid document ID
         current_stage = obj.stage
-        mdextract = MarkdownExtractor(request.logger,OS_GPU_COMPUTE_URL,OS_TMPDIR)
+        mdextract = MarkdownExtractor(request.logger, OS_GPU_COMPUTE_URL, OS_TMPDIR)
         genextras = GenerateExtras()
 
         response_code, response_message = (
@@ -234,7 +236,7 @@ class FileController(Controller):
                 obj.original_text = processed_original_text
                 current_stage = "stage2"
         if current_stage == "stage2":
-            obj.english_text = obj.original_text 
+            obj.english_text = obj.original_text
             current_stage = "stage3"
             # TODO : Fix issue of existence of languages aside from english
             # try:
@@ -249,8 +251,7 @@ class FileController(Controller):
             # else:
         if current_stage == "stage3":
             try:
-                links = genextras.extract_markdown_links(
-                    obj.original_text)
+                links = genextras.extract_markdown_links(obj.original_text)
                 long_sum = genextras.summarize_document_text(obj.original_text)
                 short_sum = genextras.gen_short_sum_from_long_sum(long_sum)
             except:
@@ -275,10 +276,8 @@ class FileController(Controller):
             else:
                 current_stage = "stage5"
 
-
         if current_stage == "completed":
-            response_code, response_message = (
-                200, "Document Fully Processed.")
+            response_code, response_message = (200, "Document Fully Processed.")
         request.logger.info(current_stage)
         request.logger.info(response_code)
         request.logger.info(response_message)
@@ -308,8 +307,7 @@ class FileController(Controller):
     async def delete_file(
         self,
         files_repo: FileRepository,
-        file_id: UUID = Parameter(
-            title="File ID", description="File to retieve"),
+        file_id: UUID = Parameter(title="File ID", description="File to retieve"),
     ) -> None:
         _ = await files_repo.delete(file_id)
         await files_repo.session.commit()

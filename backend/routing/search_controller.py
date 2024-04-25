@@ -36,10 +36,6 @@ class SearchController(Controller):
     """Search Controller"""
 
     @get(path="/search")
-    async def get_file(
-        self,
-        data: dict[str, str]
-    ) -> SearchResponse:
+    async def get_file(self, data: dict[str, str]) -> SearchResponse:
         request = SearchQuery.model_validate(data)
         query = request.query
-		

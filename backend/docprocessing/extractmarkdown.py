@@ -4,9 +4,6 @@ from util.niclib import rand_string, rand_filepath
 from typing import Optional, List, Union
 
 
-
-
-
 import logging
 
 # Note: Refactoring imports.py
@@ -28,7 +25,7 @@ from util.gpu_compute_calls import GPUComputeEndpoint
 
 
 class MarkdownExtractor:
-    def __init__(self,logger, endpoint_url: str, tmpdir: Path):
+    def __init__(self, logger, endpoint_url: str, tmpdir: Path):
         self.tmpdir = tmpdir
         self.endpoint_url = endpoint_url
         # TODO : Add database connection.
@@ -102,4 +99,3 @@ class MarkdownExtractor:
             raise ValueError(
                 f'Improper File Type, processing Failed with doctype: "{doctype}"'
             )
-
