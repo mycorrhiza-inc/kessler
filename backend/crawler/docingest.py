@@ -250,15 +250,15 @@ class DocumentIngester:
         self.logger.info("Successfully downloaded file from url")
         return (tmpfile, metadata)
 
-    def save_fileobject_to_hash(self, fileobject: BufferedWriter) -> tuple[str, Path]:
-        self.logger.info(f"Getting hash")
-        b264_hash = self.get_blake2_str(fileobject)
-        self.logger.info(f"Got hash {b264_hash}")
-        saveloc = self.rawfile_savedir / Path(b264_hash)
-        self.logger.info(f"Saving file to {saveloc}")
-        self.write_tmpfile_to_path(fileobject, saveloc)
-        self.logger.info(f"Successfully Saved File to: {saveloc}")
-        return (b264_hash, saveloc)
+    # def save_fileobject_to_hash(self, fileobject: BufferedWriter) -> tuple[str, Path]:
+    #     self.logger.info(f"Getting hash")
+    #     b264_hash = self.get_blake2_str(fileobject)
+    #     self.logger.info(f"Got hash {b264_hash}")
+    #     saveloc = self.rawfile_savedir / Path(b264_hash)
+    #     self.logger.info(f"Saving file to {saveloc}")
+    #     self.write_tmpfile_to_path(fileobject, saveloc)
+    #     self.logger.info(f"Successfully Saved File to: {saveloc}")
+    #     return (b264_hash, saveloc)
 
     def save_filepath_to_hash(self, filepath: Path) -> tuple[str, Path]:
         filepath.parent.mkdir(exist_ok=True, parents=True)
