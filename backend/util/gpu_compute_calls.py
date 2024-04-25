@@ -61,7 +61,7 @@ class GPUComputeEndpoint:
         self, msg_history: list[dict], model_name: Optional[str]
     ) -> dict:
         if model_name == None:
-            model_name = "nous-hermes-2-mistral-7b-dpo"
+            model_name = "meta-llama-3-8b-instruct"
         # The API endpoint you will be hitting
         url = f"{self.endpoint_urll}/v0/chat_completion/external_api"
         jsonpayload = {
@@ -123,7 +123,9 @@ class GPUComputeEndpoint:
     def transcribe_pdf(self, filepath: Path) -> str:
         # The API endpoint you will be hitting
         # url = "http://api.mycor.io/v0/multimodal_asr/local-m4t"
-        url = f"{self.endpoint_url}/v0/document-ocr/local-nougat"
+        # FIXME : Work out what this url should fucking be
+        url = f"{self.endpoint_url}/v0/document-ocr/local_nougat"
+        # url = "https://www.google.com/"
         # Open the file in binary mode
         with filepath.open("rb") as file:
             # Define the multipart/form-data payload
@@ -132,15 +134,17 @@ class GPUComputeEndpoint:
             }
             # Mke the POST request with files
             response = requests.post(url, files=files)
-            print(f"Request Headers: {response.request.headers}")
+            print(f"Request Headers: response.request.headers")
             # Raise an exception if the request was unsuccessful
             response.raise_for_status()
 
         # Parse the JSON response
         response_json = response.json()
-
         # Extract the translated text from the JSON response
-        translated_text = response_json["response"]
+        # translated_text = response_json["response"]
+        
+        # Please forgive me lord
+        translated_text = str(response_json)
         return translated_text
 
     def embed_raw_dicts(self, text_list: List[dict], model_name: str) -> list:

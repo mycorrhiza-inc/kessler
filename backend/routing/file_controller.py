@@ -139,7 +139,7 @@ class FileController(Controller):
 
     @post(path="/files/add_url")
     async def add_url(
-        self, files_repo: FileRepository, data: UrlUpload, request: Request
+        self, files_repo: FileRepository, data: UrlUpload, request: Request, process : bool = False
     ) -> Any:
         request.logger.info("adding files")
         request.logger.info("DOES THE FUCKING ERROR LOGGER WORK")
@@ -198,6 +198,8 @@ class FileController(Controller):
         request.logger.info("added file!~")
         await files_repo.session.commit()
         request.logger.info("commited file to DB")
+        # if process:
+        #    await self.process_File(files_repo,request,str(new_file.uuid))
         return FileSchema.model_validate(new_file)
 
     @post(path="/files/add_urls")
@@ -224,6 +226,8 @@ class FileController(Controller):
         request.logger.info(type(obj))
         request.logger.info(obj)
         current_stage = obj.stage
+        doctype = obj.doctype
+        request.logger.info(obj.doctype)
         mdextract = MarkdownExtractor(request.logger, OS_GPU_COMPUTE_URL, OS_TMPDIR)
         genextras = GenerateExtras()
 
@@ -242,11 +246,11 @@ class FileController(Controller):
         if current_stage == "stage1":
             processed_original_text = (
                 mdextract.process_raw_document_into_untranslated_text(
-                    obj.path, obj.metadata
+                    Path(obj.path),obj.doctype, obj.lang
                 )
             )
             try:
-                assert 1 == 0
+                assert 0 == 0
             except:
                 response_code, response_message = (
                     422,

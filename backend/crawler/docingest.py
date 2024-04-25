@@ -27,6 +27,7 @@ import base64
 OS_TMPDIR = Path(os.environ["TMPDIR"])
 OS_FILEDIR = Path("/files/")
 
+import yaml
 
 class DocumentIngester:
     def __init__(
@@ -282,7 +283,7 @@ class DocumentIngester:
         return filepath
 
     def backup_metadata_to_hash(self, metadata: dict, hash: str) -> Path:
-        savedir = self.metadata_backupdir / Path(hash + ".yaml")
+        savedir = self.metadata_backupdir / Path(str(hash) + ".yaml")
         return self.backup_metadata_to_filepath(metadata, savedir)
 
     def write_tmpfile_to_path(self, tmp: Any, path: Path):
