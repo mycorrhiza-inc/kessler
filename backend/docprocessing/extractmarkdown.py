@@ -28,6 +28,7 @@ class MarkdownExtractor:
     def __init__(self, logger, endpoint_url: str, tmpdir: Path):
         self.tmpdir = tmpdir
         self.endpoint_url = endpoint_url
+        self.logger = logger
         # TODO : Add database connection.
 
     def process_raw_document_into_english_text(self, file_loc: Path, metadata: str):
@@ -44,10 +45,8 @@ class MarkdownExtractor:
         return english_text
 
     def process_raw_document_into_untranslated_text(
-        self, file_loc: Path, metadata: dict
+        self, file_loc: Path, doctype : str, lang : str
     ) -> str:
-        doctype = metadata["doctype"]
-
         def process_audio(filepath: Path, metadata: dict) -> str:
             source_lang = metadata["language"]
             target_lang = "en"

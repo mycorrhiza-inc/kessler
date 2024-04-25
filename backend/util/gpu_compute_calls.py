@@ -123,7 +123,7 @@ class GPUComputeEndpoint:
     def transcribe_pdf(self, filepath: Path) -> str:
         # The API endpoint you will be hitting
         # url = "http://api.mycor.io/v0/multimodal_asr/local-m4t"
-        url = f"{self.endpoint_url}/v0/document-ocr/local-nougat"
+        url = f"{self.endpoint_url}/v0/document_ocr/local_nougat"
         # Open the file in binary mode
         with filepath.open("rb") as file:
             # Define the multipart/form-data payload

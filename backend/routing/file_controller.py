@@ -224,6 +224,8 @@ class FileController(Controller):
         request.logger.info(type(obj))
         request.logger.info(obj)
         current_stage = obj.stage
+        doctype = obj.doctype
+        request.logger.info(obj.doctype)
         mdextract = MarkdownExtractor(request.logger, OS_GPU_COMPUTE_URL, OS_TMPDIR)
         genextras = GenerateExtras()
 
@@ -242,7 +244,7 @@ class FileController(Controller):
         if current_stage == "stage1":
             processed_original_text = (
                 mdextract.process_raw_document_into_untranslated_text(
-                    obj.path, obj.metadata
+                    Path(obj.path),obj.doctype, obj.lang
                 )
             )
             try:
