@@ -35,6 +35,16 @@ from typing import List, Optional, Union
 
 from util.niclib import get_blake2
 
+import json
+
+
+class UUIDEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, UUID):
+            # if the obj is uuid, we simply return the value of uuid
+            return obj.hex
+        return json.JSONEncoder.default(self, obj)
+
 # for testing purposese
 emptyFile = FileModel(
     url="",
@@ -172,7 +182,7 @@ class FileController(Controller):
             path=str(filepath),
             # file=raw_tmpfile,
             doc_metadata=metadata,
-            stage="stage0",
+            stage="stage1",
             hash=filehash,
             summary=None,
             short_summary=None,
@@ -195,16 +205,21 @@ class FileController(Controller):
     ) -> None:
         return None
 
-    @post(path="/process/{file_id:uuid}")
+    @post(path="/process/{file_id_str:str}")
     async def process_File(
         self,
         files_repo: FileRepository,
         request: Request,
-        file_id: UUID = Parameter(title="File ID", description="File to retieve"),
+        file_id_str: str = Parameter(title="File ID as hex string", description="File to retieve"),
         regenerate: bool = True,  # Figure out how to pass in a boolean as a query paramater
     ) -> FileSchema:
         """Process a File."""
-        obj = files_repo.get(file_id)  # TODO : Add error for invalid document ID
+        file_id = UUID(file_id_str)
+        request.logger.info(file_id)
+        obj = await files_repo.get(file_id)
+        # TODO : Add error for invalid document ID
+        request.logger.info(type(obj))
+        request.logger.info(obj)
         current_stage = obj.stage
         mdextract = MarkdownExtractor(request.logger, OS_GPU_COMPUTE_URL, OS_TMPDIR)
         genextras = GenerateExtras()
@@ -218,15 +233,17 @@ class FileController(Controller):
                 422,
                 "Failure in stage 0: Document was incorrectly added to database, try readding it again.",
             )
+            current_stage = "stage1"
         if regenerate and current_stage != "stage0":
             current_stage = "stage1"
         if current_stage == "stage1":
-            try:
-                processed_original_text = (
-                    mdextract.process_raw_document_into_untranslated_text(
-                        obj.path, obj.metadata
-                    )
+            processed_original_text = (
+                mdextract.process_raw_document_into_untranslated_text(
+                    obj.path, obj.metadata
                 )
+            )
+            try:
+                assert 1==0
             except:
                 response_code, response_message = (
                     422,
