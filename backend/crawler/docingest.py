@@ -22,6 +22,7 @@ from io import BufferedWriter
 
 import shutil
 import hashlib
+import base64
 
 OS_TMPDIR = Path(os.environ["TMPDIR"])
 OS_FILEDIR = Path("/files/")
@@ -246,7 +247,10 @@ class DocumentIngester:
         saveloc = self.rawfile_savedir / Path(b264_hash)
         self.logger.info(f"Saving file to {saveloc}")
         shutil.copyfile(filepath,saveloc)
-        self.logger.info(f"Successfully Saved File to: {saveloc}")
+        if saveloc.exists():
+            self.logger.info(f"Successfully Saved File to: {saveloc}")
+        else:
+            self.logger.error(f"File could not be saved to : {saveloc}")
         return (b264_hash,saveloc)
 
     def write_tmpfile_to_path(self,tmp : Any, path : Path):
@@ -269,16 +273,15 @@ class DocumentIngester:
         self.logger.info("Setting Blake2b as the hash method of choice")
         hasher = hashlib.blake2b
         hash_object = hasher()
-        self.logger.error("Failed to hash file")
-        return "ErrorHashingFile" + rand_string() # I am really sorry about this
         self.logger.info("Created Hash object and initialized hash.")
         if isinstance(file_input,Path):
             f = open(file_input,"rb")
             buf = f.read(65536)
+            # self.logger.info(buf)
             while len(buf) > 0:
                 hash_object.update(buf)
                 buf = f.read(65536)
-            return base64.urlsafe_b64encode(hasher_object.digest()).decode()
+            return base64.urlsafe_b64encode(hash_object.digest()).decode()
         if isinstance(file_input,File ): # FIXME : Solve hashing for temporary files
             self.logger.info("Hashing from Temporary File")
             # Read the file in chunks and update the hash object
@@ -290,6 +293,8 @@ class DocumentIngester:
 
             self.logger.info("Hashed file")
             return base64.url_safe_b64encode(hash_object.digest())
+        self.logger.error("Failed to hash file")
+        return "ErrorHashingFile" + rand_string() # I am really sorry about this
 
 
 
