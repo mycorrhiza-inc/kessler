@@ -149,6 +149,7 @@ class FileController(Controller):
         # request.logger.info(f"Got document hash: {b264hash}")
         request.logger.info("Attempting to save data to file")
         result= docingest.save_filepath_to_hash(tmpfile_path)
+        docingest.backup_metadata_to_hash(metadata,hash)
 
         # request.logger.info(f"Getting Hash")
         # b264_hash = get_blake2(raw_tmpfile)

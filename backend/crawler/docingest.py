@@ -32,9 +32,12 @@ class DocumentIngester:
         self.tmpdir = tmpdir
         self.savedir = savedir
         self.logger=logger
-        # self.rawfile_savedir = savedir + Path("/raw/") TODO : Fix this not working dynamically
-        self.rawfile_savedir = Path("/files/raw/")
+        self.rawfile_savedir = savedir / Path("raw")    
         self.rawfile_savedir.mkdir(exist_ok=True, parents=True) # Make sure the different directories always exist
+        self.metadata_backupdir = savedir / Path("metadata") 
+        self.metadata_backupdir.mkdir(exist_ok=True, parents=True) # Make sure the different directories always exist
+        self.proctext_backupdir = savedir / Path("processed_text") 
+        self.proctext_backupdir.mkdir(exist_ok=True, parents=True) # Make sure the different directories always exist
         # self.crossref = Crossref()
 
     def url_to_filepath_and_metadata(self, url: str) -> tuple[Path, dict]:
@@ -253,6 +256,15 @@ class DocumentIngester:
             self.logger.error(f"File could not be saved to : {saveloc}")
         return (b264_hash,saveloc)
 
+    def backup_metadata_to_filepath(self,metadata : dict,filepath : Path) -> Path:
+        with open(filepath, 'w+') as ff:
+            yaml.dump(metadata, ff)
+        return filepath
+
+    def backup_metadata_to_hash(self,metadata : dict, hash : str) -> Path:
+        savedir = self.metadata_backupdir / Path(hash + ".yaml")
+        return self.backup_metadata_to_filepath(metadata,savedir)
+
     def write_tmpfile_to_path(self,tmp : Any, path : Path):
         path.parent.mkdir(exist_ok=True, parents=True)
         self.logger.info("Seeking to beginning of file")
@@ -295,6 +307,7 @@ class DocumentIngester:
             return base64.url_safe_b64encode(hash_object.digest())
         self.logger.error("Failed to hash file")
         return "ErrorHashingFile" + rand_string() # I am really sorry about this
+    
 
 
 
