@@ -206,26 +206,28 @@ class DocumentIngester:
                     # if chunk:
                     f.write(chunk)
         return savepath
-
-    def download_file_to_tmpfile(
-        self, url: str
-    ) -> Any:  # TODO : Get types for temporary file
-        self.logger.info(f"Downloading file to temporary file")
-        with requests.get(url, stream=True) as r:
-            r.raise_for_status()
-            f = NamedTemporaryFile("wb")
-            for chunk in r.iter_content(chunk_size=8192):
-                # If you have chunk encoded response uncomment if
-                # and set chunk_size parameter to None.
-                # if chunk:
-                f.write(chunk)
-            return f
-
+    
     def download_file_to_file_in_tmpdir(
         self, url: str
     ) -> Any:  # TODO : Get types for temporary file
         savedir = self.tmpdir / Path(rand_string())
         return self.download_file_to_path(url, savedir)
+
+    # TODO : Rework code to use temporary files in the future
+    # def download_file_to_tmpfile(
+    #     self, url: str
+    # ) -> Any:  # TODO : Get types for temporary file
+    #     self.logger.info(f"Downloading file to temporary file")
+    #     with requests.get(url, stream=True) as r:
+    #         r.raise_for_status()
+    #         f = NamedTemporaryFile("wb")
+    #         for chunk in r.iter_content(chunk_size=8192):
+    #             # If you have chunk encoded response uncomment if
+    #             # and set chunk_size parameter to None.
+    #             # if chunk:
+    #             f.write(chunk)
+    #         return f
+
 
     def rectify_unknown_metadata(self, metadata: dict):
         assert metadata.get("doctype") != None
