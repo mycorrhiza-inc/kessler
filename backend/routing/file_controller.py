@@ -181,25 +181,10 @@ class FileController(Controller):
         # dest_file = open(saveloc,"wb")
         # shutil.copyfileobj(raw_tmpfile,dest_file)
 
-        request.logger.info("Creating File Object")
         (filehash, filepath) = result
-        request.logger.info(type(files_repo))
-        # def return_duplicate_file_obj(db_session: FileRepository, hash_value: str) -> Optional[FileModel]:
-        #     """
-        #     Queries the Files table in the database to check if the given hash exists.
-        #     
-        #     :param db_session: SQLAlchemy session object connected to the database
-        #     :param hash_value: Hash string to look up in the database
-        #     :return: True if hash exists, False otherwise
-        #     """
-        #     # Query for the hash in the Files table
-        #     first_result = db_session.query(Files.hash).filter_by(hash=hash_value).first()
-        #     # Is none if does not exist
-        #     return exists
-        # duplicate_file_obj = return_duplicate_file_obj(files_repo,filehash)
         query = select(FileModel).where(FileModel.hash == filehash)
         duplicate_file_objects = await files_repo.session.execute(query)
-        duplicate_file_obj = duplicate_file_objects.first()
+        duplicate_file_obj = duplicate_file_objects.scalar()
         if duplicate_file_obj is None:
             new_file = FileModel(
                 url=data.url,
@@ -225,7 +210,9 @@ class FileController(Controller):
             await files_repo.session.commit()
             request.logger.info("commited file to DB")
         else:
-            request.logger.info(f"File with hash already exists in DB with uuid: {duplicate_file_obj}")
+            request.logger.info(type(duplicate_file_obj))
+            request.logger.info("")
+            request.logger.info(f"File with hash {duplicate_file_obj.hash} already exists in DB with uuid: {duplicate_file_obj.hash}")
             new_file=duplicate_file_obj
         if process:
             request.logger.info("Processing File")
