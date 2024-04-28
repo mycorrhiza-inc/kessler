@@ -110,7 +110,7 @@ class FileController(Controller):
         files_repo: FileRepository,
         file_id: UUID = Parameter(title="File ID", description="File to retieve"),
     ) -> FileSchema:
-        obj = files_repo.get(file_id)
+        obj = await files_repo.get(file_id)
         return FileSchema.model_validate(obj)
 
     @get(path="/test")
@@ -174,20 +174,21 @@ class FileController(Controller):
 
         request.logger.info("Creating File Object")
         (filehash, filepath) = result
-
-        def return_duplicate_file_obj(db_session: Session, hash_value: str) -> Optional[File]:
-            """
-            Queries the Files table in the database to check if the given hash exists.
-            
-            :param db_session: SQLAlchemy session object connected to the database
-            :param hash_value: Hash string to look up in the database
-            :return: True if hash exists, False otherwise
-            """
-            # Query for the hash in the Files table
-            first_result = db_session.query(Files.hash).filter_by(hash=hash_value).first()
-            # Is none if does not exist
-            return exists
-        duplicate_file_obj = return_duplicate_uuid_str(files_repo,filehash)
+        request.logger.info(type(files_repo))
+        # def return_duplicate_file_obj(db_session: FileRepository, hash_value: str) -> Optional[FileModel]:
+        #     """
+        #     Queries the Files table in the database to check if the given hash exists.
+        #     
+        #     :param db_session: SQLAlchemy session object connected to the database
+        #     :param hash_value: Hash string to look up in the database
+        #     :return: True if hash exists, False otherwise
+        #     """
+        #     # Query for the hash in the Files table
+        #     first_result = db_session.query(Files.hash).filter_by(hash=hash_value).first()
+        #     # Is none if does not exist
+        #     return exists
+        # duplicate_file_obj = return_duplicate_file_obj(files_repo,filehash)
+        duplicate_file_obj = await files_repo.session.filter_by(hash=filehash).first()
         if duplicate_file_obj is None:
             new_file = FileModel(
                 url=data.url,
