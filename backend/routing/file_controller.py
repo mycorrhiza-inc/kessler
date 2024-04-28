@@ -215,12 +215,11 @@ class FileController(Controller):
             request.logger.info("commited file to DB")
         else:
             request.logger.info(type(duplicate_file_obj))
-            request.logger.info("")
             request.logger.info(f"File with identical hash already exists in DB with uuid: {duplicate_file_obj.id}")
             new_file=duplicate_file_obj
         if process:
             request.logger.info("Processing File")
-            await self.process_File(files_repo,request,str(new_file.id))
+            await self.process_File(files_repo,str(new_file.id))
         return self.validate_and_jsonify(new_file)
 
     @post(path="/files/add_urls")
@@ -358,7 +357,7 @@ class FileController(Controller):
         await files_repo.session.commit()
 
     def validate_and_jsonify(self,file_object : FileModel) -> dict:
-        validated =  self.validate_and_jsonify(new_file)
+        validated =  FileSchema.model_validate(file_object)
         validated_dict = dict(validated)
         validated_dict["id"]= str(validated_dict["id"])
         return validated_dict
