@@ -219,7 +219,7 @@ class FileController(Controller):
             new_file=duplicate_file_obj
         if process:
             request.logger.info("Processing File")
-            await self.process_file_raw(new_file,files_repo,request.logger)
+            await self.process_file_raw(new_file,files_repo,request.logger,False)
         return self.validate_and_jsonify(new_file)
 
     @post(path="/files/add_urls")
@@ -243,12 +243,12 @@ class FileController(Controller):
         logger.info(file_id)
         obj = await files_repo.get(file_id)
         # TODO : Add error for invalid document ID
-        await self.process_file_raw(obj,files_repo,request.logger)
+        await self.process_file_raw(obj,files_repo,request.logger,regenerate)
         return self.validate_and_jsonify(
             newobj
         )  # TODO : Return Response code and response message
 
-    async def process_file_raw(obj : FileModel, files_repo : FileRepository , logger : Any):
+    async def process_file_raw(self,obj : FileModel, files_repo : FileRepository , logger : Any,regenerate: bool):
         logger.info(type(obj))
         logger.info(obj)
         current_stage = obj.stage
