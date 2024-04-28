@@ -197,7 +197,9 @@ class FileController(Controller):
         #     # Is none if does not exist
         #     return exists
         # duplicate_file_obj = return_duplicate_file_obj(files_repo,filehash)
-        duplicate_file_obj = await files_repo.filter_by(hash=filehash).first()
+        query = select(FileModel).where(FileModel.hash == filehash)
+        duplicate_file_objects = await files_repo.session.execute(query)
+        duplicate_file_obj = duplicate_file_objects.first()
         if duplicate_file_obj is None:
             new_file = FileModel(
                 url=data.url,
@@ -223,11 +225,11 @@ class FileController(Controller):
             await files_repo.session.commit()
             request.logger.info("commited file to DB")
         else:
-            request.logger.info(f"File with hash already exists in DB with uuid: {duplicate_file_obj.uuid}")
+            request.logger.info(f"File with hash already exists in DB with uuid: {duplicate_file_obj}")
             new_file=duplicate_file_obj
         if process:
             request.logger.info("Processing File")
-            await self.process_File(files_repo,request,str(new_file.uuid))
+            await self.process_File(files_repo,request,str(new_file.UUID))
         return FileSchema.model_validate(new_file)
 
     @post(path="/files/add_urls")
