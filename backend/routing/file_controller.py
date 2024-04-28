@@ -12,6 +12,15 @@ from litestar.handlers.http_handlers.decorators import (
     MediaType,
 )
 
+
+from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError, NoResultFound
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+
+
+
 from litestar.params import Parameter
 from litestar.di import Provide
 from litestar.repository.filters import LimitOffset
@@ -188,7 +197,7 @@ class FileController(Controller):
         #     # Is none if does not exist
         #     return exists
         # duplicate_file_obj = return_duplicate_file_obj(files_repo,filehash)
-        duplicate_file_obj = await files_repo.session.filter_by(hash=filehash).first()
+        duplicate_file_obj = await files_repo.filter_by(hash=filehash).first()
         if duplicate_file_obj is None:
             new_file = FileModel(
                 url=data.url,
@@ -197,7 +206,7 @@ class FileController(Controller):
                 lang=document_lang,
                 path=str(filepath),
                 # file=raw_tmpfile,
-                doc_metadata=metadata,
+                doc_metadata=str(metadata),
                 stage="stage1",
                 hash=filehash,
                 summary=None,
