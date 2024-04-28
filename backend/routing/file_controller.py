@@ -113,6 +113,10 @@ class FileController(Controller):
 
     dependencies = {"files_repo": Provide(provide_files_repo)}
 
+
+    # def jsonify_validate_return(self,):
+    #     return None
+
     @get(path="/files/{file_id:uuid}")
     async def get_file(
         self,
@@ -120,7 +124,7 @@ class FileController(Controller):
         file_id: UUID = Parameter(title="File ID", description="File to retieve"),
     ) -> FileSchema:
         obj = await files_repo.get(file_id)
-        return FileSchema.model_validate(obj)
+        return self.validate_and_jsonify(obj)
 
     @get(path="/test")
     async def test_api(self) -> None:
@@ -172,7 +176,6 @@ class FileController(Controller):
         # request.logger.info(f"Got document hash: {b264hash}")
         request.logger.info("Attempting to save data to file")
         result = docingest.save_filepath_to_hash(tmpfile_path)
-        docingest.backup_metadata_to_hash(metadata, hash)
 
         # request.logger.info(f"Getting Hash")
         # b264_hash = get_blake2(raw_tmpfile)
@@ -186,6 +189,7 @@ class FileController(Controller):
         duplicate_file_objects = await files_repo.session.execute(query)
         duplicate_file_obj = duplicate_file_objects.scalar()
         if duplicate_file_obj is None:
+            docingest.backup_metadata_to_hash(metadata, filehash)
             new_file = FileModel(
                 url=data.url,
                 name=document_title,
@@ -212,12 +216,12 @@ class FileController(Controller):
         else:
             request.logger.info(type(duplicate_file_obj))
             request.logger.info("")
-            request.logger.info(f"File with hash {duplicate_file_obj.hash} already exists in DB with uuid: {duplicate_file_obj.hash}")
+            request.logger.info(f"File with identical hash already exists in DB with uuid: {duplicate_file_obj.id}")
             new_file=duplicate_file_obj
         if process:
             request.logger.info("Processing File")
-            await self.process_File(files_repo,request,str(new_file.UUID))
-        return FileSchema.model_validate(new_file)
+            await self.process_File(files_repo,request,str(new_file.id))
+        return self.validate_and_jsonify(new_file)
 
     @post(path="/files/add_urls")
     async def add_urls(
@@ -325,7 +329,7 @@ class FileController(Controller):
         newobj = files_repo.update(obj)
 
         await files_repo.session.commit()
-        return FileSchema.model_validate(
+        return self.validate_and_jsonify(
             newobj
         )  # TODO : Return Response code and response message
 
@@ -342,7 +346,7 @@ class FileController(Controller):
     #     raw_obj.update({"id": file_id})
     #     obj = files_repo.update(FileModel(**raw_obj))
     #     await files_repo.session.commit()
-    #     return FileSchema.model_validate(obj)
+    #     return self.validate_and_jsonify(obj)
 
     @delete(path="/files/{file_id:uuid}")
     async def delete_file(
@@ -352,3 +356,9 @@ class FileController(Controller):
     ) -> None:
         _ = await files_repo.delete(file_id)
         await files_repo.session.commit()
+
+    def validate_and_jsonify(self,file_object : FileModel) -> dict:
+        validated =  self.validate_and_jsonify(new_file)
+        validated_dict = dict(validated)
+        validated_dict["id"]= str(validated_dict["id"])
+        return validated_dict
