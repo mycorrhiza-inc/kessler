@@ -219,7 +219,7 @@ class FileController(Controller):
             new_file=duplicate_file_obj
         if process:
             request.logger.info("Processing File")
-            await self.process_File(files_repo,str(new_file.id))
+            await self.process_file_raw(new_file,files_repo,request.logger)
         return self.validate_and_jsonify(new_file)
 
     @post(path="/files/add_urls")
@@ -229,7 +229,7 @@ class FileController(Controller):
         return None
 
     @post(path="/process/{file_id_str:str}")
-    async def process_File(
+    async def process_file(
         self,
         files_repo: FileRepository,
         request: Request,
@@ -240,15 +240,21 @@ class FileController(Controller):
     ) -> FileSchema:
         """Process a File."""
         file_id = UUID(file_id_str)
-        request.logger.info(file_id)
+        logger.info(file_id)
         obj = await files_repo.get(file_id)
         # TODO : Add error for invalid document ID
-        request.logger.info(type(obj))
-        request.logger.info(obj)
+        await self.process_file_raw(obj,files_repo,request.logger)
+        return self.validate_and_jsonify(
+            newobj
+        )  # TODO : Return Response code and response message
+
+    async def process_file_raw(obj : FileModel, files_repo : FileRepository , logger : Any):
+        logger.info(type(obj))
+        logger.info(obj)
         current_stage = obj.stage
         doctype = obj.doctype
-        request.logger.info(obj.doctype)
-        mdextract = MarkdownExtractor(request.logger, OS_GPU_COMPUTE_URL, OS_TMPDIR)
+        logger.info(obj.doctype)
+        mdextract = MarkdownExtractor(logger, OS_GPU_COMPUTE_URL, OS_TMPDIR)
         genextras = GenerateExtras()
 
         response_code, response_message = (
@@ -322,16 +328,12 @@ class FileController(Controller):
 
         if current_stage == "completed":
             response_code, response_message = (200, "Document Fully Processed.")
-        request.logger.info(current_stage)
-        request.logger.info(response_code)
-        request.logger.info(response_message)
+        logger.info(current_stage)
+        logger.info(response_code)
+        logger.info(response_message)
         newobj = files_repo.update(obj)
 
         await files_repo.session.commit()
-        return self.validate_and_jsonify(
-            newobj
-        )  # TODO : Return Response code and response message
-
     # @patch(path="/files/{file_id:uuid}")
     # async def update_file(
     #     self,
