@@ -270,13 +270,12 @@ class FileController(Controller):
         if regenerate and current_stage != "stage0":
             current_stage = "stage1"
         if current_stage == "stage1":
-            processed_original_text = (
-                mdextract.process_raw_document_into_untranslated_text(
-                    Path(obj.path),obj.doctype, obj.lang
-                )
-            )
             try:
-                assert 0 == 0
+                processed_original_text = (
+                    mdextract.process_raw_document_into_untranslated_text(
+                        Path(obj.path),obj.doctype, obj.lang
+                    )
+                )
             except:
                 response_code, response_message = (
                     422,
@@ -300,10 +299,11 @@ class FileController(Controller):
             #     )
             # else:
         if current_stage == "stage3":
+            links = genextras.extract_markdown_links(obj.original_text)
+            long_sum = genextras.summarize_document_text(obj.original_text)
+            short_sum = genextras.gen_short_sum_from_long_sum(long_sum)
             try:
-                links = genextras.extract_markdown_links(obj.original_text)
-                long_sum = genextras.summarize_document_text(obj.original_text)
-                short_sum = genextras.gen_short_sum_from_long_sum(long_sum)
+                x=3
             except:
                 response_code, response_message = (
                     422,
@@ -329,6 +329,7 @@ class FileController(Controller):
         if current_stage == "completed":
             response_code, response_message = (200, "Document Fully Processed.")
         logger.info(current_stage)
+        obj.stage=current_stage
         logger.info(response_code)
         logger.info(response_message)
         newobj = files_repo.update(obj)
