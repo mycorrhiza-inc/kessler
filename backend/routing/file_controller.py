@@ -114,7 +114,7 @@ class FileController(Controller):
         return FileSchema.model_validate(obj)
 
     @get(path="/test")
-    async def get_file(self) -> None:
+    async def test_api(self) -> None:
         return None
 
     @get(path="/files/all")
@@ -142,7 +142,6 @@ class FileController(Controller):
         self, files_repo: FileRepository, data: UrlUpload, request: Request, process : bool = False
     ) -> Any:
         request.logger.info("adding files")
-        request.logger.info("DOES THE FUCKING ERROR LOGGER WORK")
         request.logger.info(data)
         # New stuff here, is this where this code belongs? <new stuff>
         docingest = DocumentIngester(request.logger)
@@ -175,31 +174,50 @@ class FileController(Controller):
 
         request.logger.info("Creating File Object")
         (filehash, filepath) = result
-        new_file = FileModel(
-            url=data.url,
-            name=document_title,
-            doctype=document_doctype,
-            lang=document_lang,
-            path=str(filepath),
-            # file=raw_tmpfile,
-            doc_metadata=metadata,
-            stage="stage1",
-            hash=filehash,
-            summary=None,
-            short_summary=None,
-        )
-        # </new stuff>
-        request.logger.info("new file:{file}".format(file=new_file.to_dict()))
-        try:
-            new_file = await files_repo.add(new_file)
-        except Exception as e:
-            request.logger.info(e)
-            return e
-        request.logger.info("added file!~")
-        await files_repo.session.commit()
-        request.logger.info("commited file to DB")
-        # if process:
-        #    await self.process_File(files_repo,request,str(new_file.uuid))
+
+        def return_duplicate_file_obj(db_session: Session, hash_value: str) -> Optional[File]:
+            """
+            Queries the Files table in the database to check if the given hash exists.
+            
+            :param db_session: SQLAlchemy session object connected to the database
+            :param hash_value: Hash string to look up in the database
+            :return: True if hash exists, False otherwise
+            """
+            # Query for the hash in the Files table
+            first_result = db_session.query(Files.hash).filter_by(hash=hash_value).first()
+            # Is none if does not exist
+            return exists
+        duplicate_file_obj = return_duplicate_uuid_str(files_repo,filehash)
+        if duplicate_file_obj is None:
+            new_file = FileModel(
+                url=data.url,
+                name=document_title,
+                doctype=document_doctype,
+                lang=document_lang,
+                path=str(filepath),
+                # file=raw_tmpfile,
+                doc_metadata=metadata,
+                stage="stage1",
+                hash=filehash,
+                summary=None,
+                short_summary=None,
+            )
+            # </new stuff>
+            request.logger.info("new file:{file}".format(file=new_file.to_dict()))
+            try:
+                new_file = await files_repo.add(new_file)
+            except Exception as e:
+                request.logger.info(e)
+                return e
+            request.logger.info("added file!~")
+            await files_repo.session.commit()
+            request.logger.info("commited file to DB")
+        else:
+            request.logger.info(f"File with hash already exists in DB with uuid: {duplicate_file_obj.uuid}")
+            new_file=duplicate_file_obj
+        if process:
+            request.logger.info("Processing File")
+            await self.process_File(files_repo,request,str(new_file.uuid))
         return FileSchema.model_validate(new_file)
 
     @post(path="/files/add_urls")
