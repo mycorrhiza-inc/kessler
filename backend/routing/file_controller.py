@@ -12,6 +12,15 @@ from litestar.handlers.http_handlers.decorators import (
     MediaType,
 )
 
+
+from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError, NoResultFound
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+
+
+
 from litestar.params import Parameter
 from litestar.di import Provide
 from litestar.repository.filters import LimitOffset
@@ -30,7 +39,7 @@ from crawler.docingest import DocumentIngester
 from docprocessing.extractmarkdown import MarkdownExtractor
 from docprocessing.genextras import GenerateExtras
 
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Any, Dict
 
 
 from util.niclib import get_blake2
@@ -61,15 +70,16 @@ emptyFile = FileModel(
     short_summary=None,
 )
 
-from typing import Any
 
 
 class FileUpdate(BaseModel):
     message: str
+    metadata : Dict[str,Any]
 
 
 class UrlUpload(BaseModel):
     url: str
+    metadata : Dict[str,Any]
 
 
 class UrlUploadList(BaseModel):
@@ -104,17 +114,21 @@ class FileController(Controller):
 
     dependencies = {"files_repo": Provide(provide_files_repo)}
 
+
+    # def jsonify_validate_return(self,):
+    #     return None
+
     @get(path="/files/{file_id:uuid}")
     async def get_file(
         self,
         files_repo: FileRepository,
         file_id: UUID = Parameter(title="File ID", description="File to retieve"),
     ) -> FileSchema:
-        obj = files_repo.get(file_id)
-        return FileSchema.model_validate(obj)
+        obj = await files_repo.get(file_id)
+        return self.validate_and_jsonify(obj)
 
     @get(path="/test")
-    async def get_file(self) -> None:
+    async def test_api(self) -> None:
         return None
 
     @get(path="/files/all")
@@ -122,7 +136,6 @@ class FileController(Controller):
         self, files_repo: FileRepository, limit_offset: LimitOffset, request: Request
     ) -> list[FileSchema]:
         """List files."""
-
         results = await files_repo.list()
         type_adapter = TypeAdapter(list[FileSchema])
         return type_adapter.validate_python(results)
@@ -142,12 +155,14 @@ class FileController(Controller):
         self, files_repo: FileRepository, data: UrlUpload, request: Request, process : bool = False
     ) -> Any:
         request.logger.info("adding files")
-        request.logger.info("DOES THE FUCKING ERROR LOGGER WORK")
         request.logger.info(data)
         # New stuff here, is this where this code belongs? <new stuff>
         docingest = DocumentIngester(request.logger)
         request.logger.info("DocumentIngester Created")
         tmpfile_path, metadata = docingest.url_to_filepath_and_metadata(data.url)
+        override_metadata = data.metadata
+        if override_metadata is not None:
+            metadata.update(override_metadata)
         request.logger.info(f"Metadata Successfully Created with metadata {metadata}")
         document_title = metadata.get("title")
         document_doctype = metadata.get("doctype")
@@ -160,47 +175,45 @@ class FileController(Controller):
             request.logger.error("Illformed Metadata please fix")
         else:
             request.logger.info(f"Title, Doctype and language successfully declared")
-        # b264hash = get_blake2(raw_tmpfile)
-        # request.logger.info(f"Got document hash: {b264hash}")
         request.logger.info("Attempting to save data to file")
         result = docingest.save_filepath_to_hash(tmpfile_path)
-        docingest.backup_metadata_to_hash(metadata, hash)
-
-        # request.logger.info(f"Getting Hash")
-        # b264_hash = get_blake2(raw_tmpfile)
-        # request.logger.info(f"Got hash {b264_hash}")
-        # saveloc = self.savedir / Path(b264_hash)
-        # dest_file = open(saveloc,"wb")
-        # shutil.copyfileobj(raw_tmpfile,dest_file)
-
-        request.logger.info("Creating File Object")
         (filehash, filepath) = result
-        new_file = FileModel(
-            url=data.url,
-            name=document_title,
-            doctype=document_doctype,
-            lang=document_lang,
-            path=str(filepath),
-            # file=raw_tmpfile,
-            doc_metadata=metadata,
-            stage="stage1",
-            hash=filehash,
-            summary=None,
-            short_summary=None,
-        )
-        # </new stuff>
-        request.logger.info("new file:{file}".format(file=new_file.to_dict()))
-        try:
-            new_file = await files_repo.add(new_file)
-        except Exception as e:
-            request.logger.info(e)
-            return e
-        request.logger.info("added file!~")
-        await files_repo.session.commit()
-        request.logger.info("commited file to DB")
-        # if process:
-        #    await self.process_File(files_repo,request,str(new_file.uuid))
-        return FileSchema.model_validate(new_file)
+        query = select(FileModel).where(FileModel.hash == filehash)
+        duplicate_file_objects = await files_repo.session.execute(query)
+        duplicate_file_obj = duplicate_file_objects.scalar()
+        if duplicate_file_obj is None:
+            docingest.backup_metadata_to_hash(metadata, filehash)
+            new_file = FileModel(
+                url=data.url,
+                name=document_title,
+                doctype=document_doctype,
+                lang=document_lang,
+                path=str(filepath),
+                # file=raw_tmpfile,
+                doc_metadata=metadata,
+                stage="stage1",
+                hash=filehash,
+                summary=None,
+                short_summary=None,
+            )
+            # </new stuff>
+            request.logger.info("new file:{file}".format(file=new_file.to_dict()))
+            try:
+                new_file = await files_repo.add(new_file)
+            except Exception as e:
+                request.logger.info(e)
+                return e
+            request.logger.info("added file!~")
+            await files_repo.session.commit()
+            request.logger.info("commited file to DB")
+        else:
+            request.logger.info(type(duplicate_file_obj))
+            request.logger.info(f"File with identical hash already exists in DB with uuid: {duplicate_file_obj.id}")
+            new_file=duplicate_file_obj
+        if process:
+            request.logger.info("Processing File")
+            await self.process_file_raw(new_file,files_repo,request.logger,False)
+        return self.validate_and_jsonify(new_file)
 
     @post(path="/files/add_urls")
     async def add_urls(
@@ -209,7 +222,7 @@ class FileController(Controller):
         return None
 
     @post(path="/process/{file_id_str:str}")
-    async def process_File(
+    async def process_file(
         self,
         files_repo: FileRepository,
         request: Request,
@@ -220,16 +233,22 @@ class FileController(Controller):
     ) -> FileSchema:
         """Process a File."""
         file_id = UUID(file_id_str)
-        request.logger.info(file_id)
+        logger.info(file_id)
         obj = await files_repo.get(file_id)
         # TODO : Add error for invalid document ID
-        request.logger.info(type(obj))
-        request.logger.info(obj)
+        await self.process_file_raw(obj,files_repo,request.logger,regenerate)
+        return self.validate_and_jsonify(
+            newobj
+        )  # TODO : Return Response code and response message
+
+    async def process_file_raw(self,obj : FileModel, files_repo : FileRepository , logger : Any,regenerate: bool):
+        logger.info(type(obj))
+        logger.info(obj)
         current_stage = obj.stage
         doctype = obj.doctype
-        request.logger.info(obj.doctype)
-        mdextract = MarkdownExtractor(request.logger, OS_GPU_COMPUTE_URL, OS_TMPDIR)
-        genextras = GenerateExtras()
+        logger.info(obj.doctype)
+        mdextract = MarkdownExtractor(logger, OS_GPU_COMPUTE_URL, OS_TMPDIR)
+        genextras = GenerateExtras(logger, OS_GPU_COMPUTE_URL, OS_TMPDIR)
 
         response_code, response_message = (
             500,
@@ -244,13 +263,12 @@ class FileController(Controller):
         if regenerate and current_stage != "stage0":
             current_stage = "stage1"
         if current_stage == "stage1":
-            processed_original_text = (
-                mdextract.process_raw_document_into_untranslated_text(
-                    Path(obj.path),obj.doctype, obj.lang
-                )
-            )
             try:
-                assert 0 == 0
+                processed_original_text = (
+                    mdextract.process_raw_document_into_untranslated_text(
+                        Path(obj.path),obj.doctype, obj.lang
+                    )
+                )
             except:
                 response_code, response_message = (
                     422,
@@ -274,10 +292,12 @@ class FileController(Controller):
             #     )
             # else:
         if current_stage == "stage3":
+            # TODO : Figure out better way to extract references
+            # links = genextras.extract_markdown_links(obj.original_text)
+            long_sum = genextras.summarize_document_text(obj.original_text)
+            short_sum = genextras.gen_short_sum_from_long_sum(long_sum)
             try:
-                links = genextras.extract_markdown_links(obj.original_text)
-                long_sum = genextras.summarize_document_text(obj.original_text)
-                short_sum = genextras.gen_short_sum_from_long_sum(long_sum)
+                x=3
             except:
                 response_code, response_message = (
                     422,
@@ -302,16 +322,13 @@ class FileController(Controller):
 
         if current_stage == "completed":
             response_code, response_message = (200, "Document Fully Processed.")
-        request.logger.info(current_stage)
-        request.logger.info(response_code)
-        request.logger.info(response_message)
+        logger.info(current_stage)
+        obj.stage=current_stage
+        logger.info(response_code)
+        logger.info(response_message)
         newobj = files_repo.update(obj)
 
         await files_repo.session.commit()
-        return FileSchema.model_validate(
-            newobj
-        )  # TODO : Return Response code and response message
-
     # @patch(path="/files/{file_id:uuid}")
     # async def update_file(
     #     self,
@@ -325,7 +342,7 @@ class FileController(Controller):
     #     raw_obj.update({"id": file_id})
     #     obj = files_repo.update(FileModel(**raw_obj))
     #     await files_repo.session.commit()
-    #     return FileSchema.model_validate(obj)
+    #     return self.validate_and_jsonify(obj)
 
     @delete(path="/files/{file_id:uuid}")
     async def delete_file(
@@ -335,3 +352,9 @@ class FileController(Controller):
     ) -> None:
         _ = await files_repo.delete(file_id)
         await files_repo.session.commit()
+
+    def validate_and_jsonify(self,file_object : FileModel) -> dict:
+        validated =  FileSchema.model_validate(file_object)
+        validated_dict = dict(validated)
+        validated_dict["id"]= str(validated_dict["id"])
+        return validated_dict
