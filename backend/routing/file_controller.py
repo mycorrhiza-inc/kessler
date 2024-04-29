@@ -39,7 +39,7 @@ from crawler.docingest import DocumentIngester
 from docprocessing.extractmarkdown import MarkdownExtractor
 from docprocessing.genextras import GenerateExtras
 
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Any, Dict
 
 
 from util.niclib import get_blake2
@@ -70,15 +70,16 @@ emptyFile = FileModel(
     short_summary=None,
 )
 
-from typing import Any
 
 
 class FileUpdate(BaseModel):
     message: str
+    metadata : Optional[Dict[str,Any]]
 
 
 class UrlUpload(BaseModel):
     url: str
+    metadata : Optional[Dict[str,Any]]
 
 
 class UrlUploadList(BaseModel):
@@ -135,7 +136,6 @@ class FileController(Controller):
         self, files_repo: FileRepository, limit_offset: LimitOffset, request: Request
     ) -> list[FileSchema]:
         """List files."""
-
         results = await files_repo.list()
         type_adapter = TypeAdapter(list[FileSchema])
         return type_adapter.validate_python(results)
@@ -160,6 +160,9 @@ class FileController(Controller):
         docingest = DocumentIngester(request.logger)
         request.logger.info("DocumentIngester Created")
         tmpfile_path, metadata = docingest.url_to_filepath_and_metadata(data.url)
+        override_metadata = data.metadata
+        if override_metadata is not None:
+            metadata = metadata.update(override_metadata)
         request.logger.info(f"Metadata Successfully Created with metadata {metadata}")
         document_title = metadata.get("title")
         document_doctype = metadata.get("doctype")
@@ -172,18 +175,8 @@ class FileController(Controller):
             request.logger.error("Illformed Metadata please fix")
         else:
             request.logger.info(f"Title, Doctype and language successfully declared")
-        # b264hash = get_blake2(raw_tmpfile)
-        # request.logger.info(f"Got document hash: {b264hash}")
         request.logger.info("Attempting to save data to file")
         result = docingest.save_filepath_to_hash(tmpfile_path)
-
-        # request.logger.info(f"Getting Hash")
-        # b264_hash = get_blake2(raw_tmpfile)
-        # request.logger.info(f"Got hash {b264_hash}")
-        # saveloc = self.savedir / Path(b264_hash)
-        # dest_file = open(saveloc,"wb")
-        # shutil.copyfileobj(raw_tmpfile,dest_file)
-
         (filehash, filepath) = result
         query = select(FileModel).where(FileModel.hash == filehash)
         duplicate_file_objects = await files_repo.session.execute(query)
@@ -197,7 +190,7 @@ class FileController(Controller):
                 lang=document_lang,
                 path=str(filepath),
                 # file=raw_tmpfile,
-                doc_metadata=str(metadata),
+                doc_metadata=metadata,
                 stage="stage1",
                 hash=filehash,
                 summary=None,
