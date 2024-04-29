@@ -74,12 +74,12 @@ emptyFile = FileModel(
 
 class FileUpdate(BaseModel):
     message: str
-    metadata : Optional[Dict[str,Any]]
+    metadata : Dict[str,Any]
 
 
 class UrlUpload(BaseModel):
     url: str
-    metadata : Optional[Dict[str,Any]]
+    metadata : Dict[str,Any]
 
 
 class UrlUploadList(BaseModel):
@@ -162,7 +162,7 @@ class FileController(Controller):
         tmpfile_path, metadata = docingest.url_to_filepath_and_metadata(data.url)
         override_metadata = data.metadata
         if override_metadata is not None:
-            metadata = metadata.update(override_metadata)
+            metadata.update(override_metadata)
         request.logger.info(f"Metadata Successfully Created with metadata {metadata}")
         document_title = metadata.get("title")
         document_doctype = metadata.get("doctype")
@@ -248,7 +248,7 @@ class FileController(Controller):
         doctype = obj.doctype
         logger.info(obj.doctype)
         mdextract = MarkdownExtractor(logger, OS_GPU_COMPUTE_URL, OS_TMPDIR)
-        genextras = GenerateExtras()
+        genextras = GenerateExtras(logger, OS_GPU_COMPUTE_URL, OS_TMPDIR)
 
         response_code, response_message = (
             500,
@@ -292,7 +292,8 @@ class FileController(Controller):
             #     )
             # else:
         if current_stage == "stage3":
-            links = genextras.extract_markdown_links(obj.original_text)
+            # TODO : Figure out better way to extract references
+            # links = genextras.extract_markdown_links(obj.original_text)
             long_sum = genextras.summarize_document_text(obj.original_text)
             short_sum = genextras.gen_short_sum_from_long_sum(long_sum)
             try:
