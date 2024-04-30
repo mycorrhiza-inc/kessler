@@ -62,6 +62,10 @@ class GPUComputeEndpoint:
     ) -> dict:
         if model_name == None:
             model_name = "meta-llama-3-8b-instruct"
+        if model_name == "small":
+            model_name = "meta-llama-3-8b-instruct"
+        if model_name == "large":
+            model_name = "meta-llama-3-70b-instruct"
         # The API endpoint you will be hitting
         url = f"{self.endpoint_urll}/v0/chat_completion/external_api"
         jsonpayload = {

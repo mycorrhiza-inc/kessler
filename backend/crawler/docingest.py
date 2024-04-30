@@ -305,14 +305,15 @@ class DocumentIngester:
             self.logger.error(f"File could not be saved to : {saveloc}")
         return (b264_hash, saveloc)
 
-    def backup_metadata_to_filepath(self, metadata: dict, filepath: Path) -> Path:
-        with open(filepath, "w+") as ff:
-            yaml.dump(metadata, ff)
-        return filepath
 
     def backup_metadata_to_hash(self, metadata: dict, hash: str) -> Path:
+        def backup_metadata_to_filepath(metadata: dict, filepath: Path) -> Path:
+            with open(filepath, "w+") as ff:
+                yaml.dump(metadata, ff)
+            return filepath
         savedir = self.metadata_backupdir / Path(str(hash) + ".yaml")
-        return self.backup_metadata_to_filepath(metadata, savedir)
+        self.logger.info(f"Backing up metadata to: {savedir}")
+        return backup_metadata_to_filepath(metadata, savedir)
 
     def write_tmpfile_to_path(self, tmp: Any, path: Path):
         path.parent.mkdir(exist_ok=True, parents=True)

@@ -1,9 +1,4 @@
 from util.niclib import rand_string, rand_filepath
-
-
-from typing import Optional, List, Union
-
-
 import logging
 
 # Note: Refactoring imports.py
@@ -22,10 +17,6 @@ import os
 from pathlib import Path
 
 from util.gpu_compute_calls import GPUComputeEndpoint
-
-
-def CrossReferenceTMPFIles():
-    names = 
 
 
 class MarkdownExtractor:

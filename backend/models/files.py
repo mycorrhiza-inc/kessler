@@ -13,6 +13,8 @@ from sqlalchemy.orm import Mapped, mapped_column
 from .utils import RepoMixin, sqlalchemy_config, PydanticBaseModel
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
+from pydantic import Field, field_validator
+
 
 class FileModel(UUIDAuditBase, RepoMixin):
     """Database representation of a file"""
@@ -20,13 +22,14 @@ class FileModel(UUIDAuditBase, RepoMixin):
     __tablename__ = "file"
     url: Mapped[
         str | None
-    ]  # TODO : Implement system for url's that doesnt store it in the file model.
+        # TODO : Implement system for url's that doesnt store it in the file model.
+    ]
     path: Mapped[str]
     doctype: Mapped[str]
     lang: Mapped[str]
     name: Mapped[str | None]
     hash: Mapped[str]
-    doc_metadata: Mapped[Dict[str, Any]]
+    doc_metadata: Mapped[dict]
     stage: Mapped[str]  # Either "stage0" "stage1" "stage2" or "stage3"
     summary: Mapped[str | None]
     short_summary: Mapped[str | None]
@@ -62,7 +65,6 @@ class FileModel(UUIDAuditBase, RepoMixin):
 
             return obj
 
-
 class FileRepository(SQLAlchemyAsyncRepository[FileModel]):
     """File repository."""
 
@@ -77,7 +79,8 @@ async def provide_files_repo(db_session: AsyncSession) -> FileRepository:
 class FileSchema(PydanticBaseModel):
     """pydantic schema of the FileModel"""
 
-    id: any  # TODO: better typing for this
+    # TODO: better typing for this
+    id: Annotated[Any, Field(validate_default=True)]
     path: str
     doctype: str
     lang: str
@@ -89,3 +92,8 @@ class FileSchema(PydanticBaseModel):
     short_summary: str | None = None
     original_text: str | None = None
     english_text: str | None = None
+
+    @field_validator('id')
+    @classmethod
+    def stringify_id(cls, id: any) -> str:
+        return str(id)
