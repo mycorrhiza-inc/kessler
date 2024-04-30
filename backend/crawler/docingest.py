@@ -31,7 +31,8 @@ import yaml
 
 class DocumentIngester:
     def __init__(
-        self, logger, savedir=OS_FILEDIR, tmpdir=OS_TMPDIR / Path("kessler/docingest")
+        self, logger, savedir=OS_FILEDIR, tmpdir=OS_TMPDIR /
+            Path("kessler/docingest")
     ):
         self.tmpdir = tmpdir
         self.savedir = savedir
@@ -168,7 +169,8 @@ class DocumentIngester:
             if content_type is None or content_type == None:
                 return None
             # Use the mimetypes library to get the corresponding extension
-            file_extension = mimetypes.guess_extension(content_type.split(";")[0])
+            file_extension = mimetypes.guess_extension(
+                content_type.split(";")[0])
             if file_extension:
                 return file_extension.strip(
                     "."
@@ -209,6 +211,32 @@ class DocumentIngester:
                     # if chunk:
                     f.write(chunk)
         return savepath
+
+    # TODO : Get types for temporary file
+    def download_file_to_tmpfile(self, url: str) -> Any:
+        self.logger.info(f"Downloading file to temporary file")
+        with requests.get(url, stream=True) as r:
+            r.raise_for_status()
+            with TemporaryFile("wb") as f:
+                for chunk in r.iter_content(chunk_size=8192):
+                    # If you have chunk encoded response uncomment if
+                    # and set chunk_size parameter to None.
+                    # if chunk:
+                    f.write(chunk)
+                return f
+
+    def rectify_unknown_metadata(self, metadata: dict):
+        assert metadata.get("doctype") != None
+
+        def mut_rectify_empty_field(metadata: dict, field: str, defaultval: Any):
+            if metadata.get(field) == None:
+                metadata[field] = defaultval
+            return metadata
+        # TODO : Double check and test how mutable values in python work to remove unnecessary assignments.
+        metadata = mut_rectify_empty_field(metadata, "title", "unknown")
+        metadata = mut_rectify_empty_field(metadata, "author", "unknown")
+        metadata = mut_rectify_empty_field(metadata, "language", "en")
+        return metadata
 
     def download_file_to_file_in_tmpdir(
         self, url: str

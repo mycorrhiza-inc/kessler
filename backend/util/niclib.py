@@ -1,3 +1,4 @@
+from io import BufferedWriter
 import base64
 import secrets
 import os
@@ -68,7 +69,8 @@ def secs_since_1970() -> int:
 
 
 def download_file(url: str, savedir: Path) -> Path:
-    local_filename = savedir  # TODO: Use a temporary directory for downloads or archive it in some other way.
+    # TODO: Use a temporary directory for downloads or archive it in some other way.
+    local_filename = savedir
     # NOTE the stream=True parameter below
     with requests.get(url, stream=True) as r:
         r.raise_for_status()

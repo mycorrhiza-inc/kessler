@@ -15,6 +15,7 @@ from litestar.contrib.sqlalchemy.base import UUIDBase
 from models import utils
 from util.logging import logging_config
 from routing.file_controller import FileController
+from routing.search_controller import SearchController
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +66,7 @@ async def provide_limit_offset_pagination(
 
 cors_config = CORSConfig(allow_origins=["*.*"])
 
-api_router = Router(path="/api", route_handlers=[FileController])
+api_router = Router(path="/api", route_handlers=[FileController, SearchController])
 
 app = Litestar(
     on_startup=[on_startup],

@@ -52,6 +52,8 @@ import {
 
 import { usePathname } from "next/navigation";
 
+import SearchDialog from "./SearchDialog";
+
 export default function Page({ children }: { children: React.ReactNode }) {
   const [isOpen, toggleOpen] = useState(false);
   const [searchModal, changeSearchModal] = useState(false);
@@ -148,9 +150,7 @@ export default function Page({ children }: { children: React.ReactNode }) {
               <NavItem icon={<FiBookmark />} isActive={pathIs("saved")}>
                 Saved Documents
               </NavItem>
-              <NavItem onClick={toggleSearchModal} icon={<FiSearch />}>
-                Search
-              </NavItem>
+              <SearchDialog />
             </NavGroup>
           </SidebarSection>
           <SidebarOverlay zIndex="1" />

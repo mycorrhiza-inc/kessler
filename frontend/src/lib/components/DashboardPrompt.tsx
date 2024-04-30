@@ -37,7 +37,7 @@ import {
   FiChevronsRight,
 } from "react-icons/fi";
 
-export default function DashboardPrompt() {
+export function DashboardPrompt() {
   return (
     <Center width="100%" height="100%">
       <Box
@@ -71,4 +71,12 @@ export default function DashboardPrompt() {
       </Box>
     </Center>
   );
+}
+
+export default function DashboardFileBrowser() {
+  return (
+    <>
+      
+    </>
+  ) 
 }

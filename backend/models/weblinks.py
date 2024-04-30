@@ -13,7 +13,16 @@ from pydantic import validator
 
 from models.utils import sqlalchemy_config
 
+from haystack.components.converters import HTMLToDocument
 
+
+converter = HTMLToDocument()
+results = converter.run(sources=["path/to/sample.html"])
+documents = results["documents"]
+print(documents[0].content)
+
+
+# 'This is a text from the HTML file.'
 class WeblinkModel(UUIDAuditBase):
     __tablename__ = "Link"
     # path exists if the link has been stored as text

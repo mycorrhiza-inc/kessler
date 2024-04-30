@@ -1,3 +1,8 @@
+from haystack.components.writers import DocumentWriter
+from hashlib import blake2b
+import os
+from pathlib import Path
+from typing import Any
 from uuid import UUID
 from typing import Annotated, assert_type
 import logging
@@ -19,8 +24,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
-
-
 from litestar.params import Parameter
 from litestar.di import Provide
 from litestar.repository.filters import LimitOffset
@@ -29,7 +32,8 @@ from litestar.enums import RequestEncodingType
 from litestar.params import Body
 from litestar.logging import LoggingConfig
 
-from pydantic import TypeAdapter, BaseModel
+from pydantic import TypeAdapter
+from models.utils import PydanticBaseModel as BaseModel
 
 
 from models import FileModel, FileRepository, FileSchema, provide_files_repo
@@ -38,11 +42,14 @@ from models import FileModel, FileRepository, FileSchema, provide_files_repo
 from crawler.docingest import DocumentIngester
 from docprocessing.extractmarkdown import MarkdownExtractor
 from docprocessing.genextras import GenerateExtras
+from util.haystack import indexDocByID
 
 from typing import List, Optional, Union, Any, Dict
 
 
 from util.niclib import get_blake2
+
+from util.haystack import indexDocByID, get_indexed_by_id
 
 import json
 
@@ -71,15 +78,14 @@ emptyFile = FileModel(
 )
 
 
-
 class FileUpdate(BaseModel):
     message: str
-    metadata : Dict[str,Any]
+    metadata: Dict[str, Any]
 
 
 class UrlUpload(BaseModel):
     url: str
-    metadata : Dict[str,Any]
+    metadata: Dict[str, Any]
 
 
 class UrlUploadList(BaseModel):
@@ -94,17 +100,24 @@ class FileUpload(BaseModel):
     message: str
 
 
+class IndexFileRequest(BaseModel):
+    id: UUID
+
 # litestar only
 
-from pathlib import Path
-import os
 
 OS_TMPDIR = Path(os.environ["TMPDIR"])
 OS_GPU_COMPUTE_URL = os.environ["GPU_COMPUTE_URL"]
 OS_FILEDIR = Path("/files/")
 
 
-from hashlib import blake2b
+# import base64
+
+
+OS_TMPDIR = Path(os.environ["TMPDIR"])
+OS_GPU_COMPUTE_URL = os.environ["GPU_COMPUTE_URL"]
+OS_FILEDIR = Path("/files/")
+
 
 # import base64
 
@@ -114,7 +127,6 @@ class FileController(Controller):
 
     dependencies = {"files_repo": Provide(provide_files_repo)}
 
-
     # def jsonify_validate_return(self,):
     #     return None
 
@@ -122,10 +134,12 @@ class FileController(Controller):
     async def get_file(
         self,
         files_repo: FileRepository,
-        file_id: UUID = Parameter(title="File ID", description="File to retieve"),
+        file_id: UUID = Parameter(
+            title="File ID", description="File to retieve"),
     ) -> FileSchema:
         obj = await files_repo.get(file_id)
-        return self.validate_and_jsonify(obj)
+        type_adapter = TypeAdapter(FileSchema)
+        return type_adapter.validate_python(obj)
 
     @get(path="/test")
     async def test_api(self) -> None:
@@ -152,18 +166,20 @@ class FileController(Controller):
 
     @post(path="/files/add_url")
     async def add_url(
-        self, files_repo: FileRepository, data: UrlUpload, request: Request, process : bool = False
+        self, files_repo: FileRepository, data: UrlUpload, request: Request, process: bool = False
     ) -> Any:
         request.logger.info("adding files")
         request.logger.info(data)
         # New stuff here, is this where this code belongs? <new stuff>
         docingest = DocumentIngester(request.logger)
         request.logger.info("DocumentIngester Created")
-        tmpfile_path, metadata = docingest.url_to_filepath_and_metadata(data.url)
+        tmpfile_path, metadata = docingest.url_to_filepath_and_metadata(
+            data.url)
         override_metadata = data.metadata
         if override_metadata is not None:
             metadata.update(override_metadata)
-        request.logger.info(f"Metadata Successfully Created with metadata {metadata}")
+        request.logger.info(
+            f"Metadata Successfully Created with metadata {metadata}")
         document_title = metadata.get("title")
         document_doctype = metadata.get("doctype")
         document_lang = metadata.get("language")
@@ -174,7 +190,8 @@ class FileController(Controller):
         except:
             request.logger.error("Illformed Metadata please fix")
         else:
-            request.logger.info(f"Title, Doctype and language successfully declared")
+            request.logger.info(
+                f"Title, Doctype and language successfully declared")
         request.logger.info("Attempting to save data to file")
         result = docingest.save_filepath_to_hash(tmpfile_path)
         (filehash, filepath) = result
@@ -197,7 +214,8 @@ class FileController(Controller):
                 short_summary=None,
             )
             # </new stuff>
-            request.logger.info("new file:{file}".format(file=new_file.to_dict()))
+            request.logger.info(
+                "new file:{file}".format(file=new_file.to_dict()))
             try:
                 new_file = await files_repo.add(new_file)
             except Exception as e:
@@ -208,12 +226,14 @@ class FileController(Controller):
             request.logger.info("commited file to DB")
         else:
             request.logger.info(type(duplicate_file_obj))
-            request.logger.info(f"File with identical hash already exists in DB with uuid: {duplicate_file_obj.id}")
-            new_file=duplicate_file_obj
+            request.logger.info(f"File with identical hash already exists in DB with uuid: {
+                                duplicate_file_obj.id}")
+            new_file = duplicate_file_obj
         if process:
             request.logger.info("Processing File")
-            await self.process_file_raw(new_file,files_repo,request.logger,False)
-        return self.validate_and_jsonify(new_file)
+            await self.process_file_raw(new_file, files_repo, request.logger, False)
+        type_adapter = TypeAdapter(FileSchema)
+        return type_adapter.validate_python(new_file)
 
     @post(path="/files/add_urls")
     async def add_urls(
@@ -236,12 +256,12 @@ class FileController(Controller):
         logger.info(file_id)
         obj = await files_repo.get(file_id)
         # TODO : Add error for invalid document ID
-        await self.process_file_raw(obj,files_repo,request.logger,regenerate)
+        await self.process_file_raw(obj, files_repo, request.logger, regenerate)
         return self.validate_and_jsonify(
             newobj
         )  # TODO : Return Response code and response message
 
-    async def process_file_raw(self,obj : FileModel, files_repo : FileRepository , logger : Any,regenerate: bool):
+    async def process_file_raw(self, obj: FileModel, files_repo: FileRepository, logger: Any, regenerate: bool):
         logger.info(type(obj))
         logger.info(obj)
         current_stage = obj.stage
@@ -266,7 +286,7 @@ class FileController(Controller):
             try:
                 processed_original_text = (
                     mdextract.process_raw_document_into_untranslated_text(
-                        Path(obj.path),obj.doctype, obj.lang
+                        Path(obj.path), obj.doctype, obj.lang
                     )
                 )
             except:
@@ -297,7 +317,7 @@ class FileController(Controller):
             long_sum = genextras.summarize_document_text(obj.original_text)
             short_sum = genextras.gen_short_sum_from_long_sum(long_sum)
             try:
-                x=3
+                x = 3
             except:
                 response_code, response_message = (
                     422,
@@ -321,9 +341,10 @@ class FileController(Controller):
                 current_stage = "stage5"
 
         if current_stage == "completed":
-            response_code, response_message = (200, "Document Fully Processed.")
+            response_code, response_message = (
+                200, "Document Fully Processed.")
         logger.info(current_stage)
-        obj.stage=current_stage
+        obj.stage = current_stage
         logger.info(response_code)
         logger.info(response_message)
         newobj = files_repo.update(obj)
@@ -348,13 +369,21 @@ class FileController(Controller):
     async def delete_file(
         self,
         files_repo: FileRepository,
-        file_id: UUID = Parameter(title="File ID", description="File to retieve"),
+        file_id: UUID = Parameter(
+            title="File ID", description="File to retieve"),
     ) -> None:
-        _ = await files_repo.delete(file_id)
+        fid = UUID(file_id)
+        _ = await files_repo.delete(fid)
         await files_repo.session.commit()
 
-    def validate_and_jsonify(self,file_object : FileModel) -> dict:
-        validated =  FileSchema.model_validate(file_object)
-        validated_dict = dict(validated)
-        validated_dict["id"]= str(validated_dict["id"])
-        return validated_dict
+    @post(path="/files/index")
+    async def index_file(self, data: IndexFileRequest, request: Request) -> Any:
+        request.logger.info(f'index request data:\n{data}')
+        id = data.id
+        try:
+            await indexDocByID(id)
+            return "successfully indexed"
+        except Exception as e:
+            request.logger.critical("unable to index file")
+            return "faield to index"
+
