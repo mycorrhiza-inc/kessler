@@ -33,9 +33,9 @@ class MarkdownExtractor:
 
     def convert_text_into_eng(self, file_text: str, lang: str):
         if lang in ["en", "eng", "english", None]:
-            return raw_text
+            return file_text
         english_text = GPUComputeEndpoint(self.endpoint_url).translate_text(
-            raw_text, lang, "en"
+            file_text, lang, "en"
         )
         return english_text
 
