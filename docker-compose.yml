@@ -33,6 +33,7 @@ services:
       - ./backend/instance:/app/instance
       - ./files:/files
       - ./server.htpasswd:/app/server.htpasswd
+      - ./tmp:/tmp/
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.backend.rule=PathPrefix(`/api`)"
