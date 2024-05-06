@@ -14,6 +14,15 @@ search, sorta
 
 # Usage
 
+## Prod
+
+```bash
+cd frontend
+npm run build
+cd ..
+docker compose up
+```
+
 ## Requirements
 
 - docker
