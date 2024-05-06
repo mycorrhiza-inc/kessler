@@ -14,25 +14,13 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 
-  rabbitmq:
-    image: rabbitmq:latest
-    ports:
-      - "5672:5672"
-    volumes:
-      - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
-      - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
-
-  chroma:
-    image: chromadb/chroma
-    env_file:
-      - .env
-    ports:
-      - "${CHROMA_PORT}:8000"
-    volumes:
-      - "${CHROMA_VOLUME}:/chroma/chroma"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=PathPrefix(`/api/chromadb`)"
+  # rabbitmq:
+  #   image: rabbitmq:latest
+  #   ports:
+  #     - "5672:5672"
+  #   volumes:
+  #     - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+  #     - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
 
   backend:
     build:
@@ -63,7 +51,7 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: ./Dockerfile
+      dockerfile: ./ProdDockerfile
     env_file:
       - .env
     volumes:
@@ -81,7 +69,7 @@ services:
     command:
       - "npm"
       - "run"
-      - "dev"
+      - "start"
       - "--"
       - "-p"
       - "${FRONTEND_PORT}"
