@@ -6,7 +6,9 @@ COPY package.json ./
 COPY postcss.config.js ./
 COPY tailwind.config.js ./
 COPY .env.local ./
-COPY src ./src
 
 RUN npm install --save-dev --force
+
+COPY src ./src
+
 RUN npm run build
