@@ -50,8 +50,7 @@ next-env.d.ts
 .next
 
 # backend data
-instance/
-__pycache__/
+/volumes/
 .env
 
 # frontend environment
