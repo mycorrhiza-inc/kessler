@@ -1,4 +1,5 @@
 export interface FileType {
-    url: string,
-    title: string
+  id: string;
+  url: string;
+  title: string;
 }

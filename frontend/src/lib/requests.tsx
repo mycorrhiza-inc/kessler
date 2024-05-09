@@ -1,3 +1,5 @@
+import { FileType } from "./interfaces";
+
 export default function AuthenticatedFetch() {
   const authenticatedFetch = async (
     // same type signature as fetch
@@ -27,30 +29,34 @@ export default function AuthenticatedFetch() {
   return authenticatedFetch;
 }
 
-export const AddLink = async (link: string): Promise<any> => {
-  console.log(`link:\n${link}`);
-
-  let result = await fetch("/api/files/add", {
-    method: "POST",
+export const GetAllFiles = async (): Promise<any> => {
+  let result = await fetch("/api/files/all", {
+    method: "GET",
     headers: {
-      "Content-Type": "application/json",
+      // "Content-Type": "application/json",
       Accept: "application/json",
       "Access-Control-Allow-Origin": "*",
     },
-    body: JSON.stringify({ url: link, title: "Textual content", isUrl: true }),
-  })
-    .then((e) => {
-      if (e.status < 200 || e.status > 299) {
-        console.log(`error adding links:\n${e}`);
-        return "failed request";
-      }
-      console.log(`successfully added link "${link}":\n${e}`);
-      return null;
-    })
-    .catch((e) => {
+    // body: JSON.stringify({ url: link, title: "Textual content", isUrl: true }),
+  }).then((e) => {
+    console.log("completed request");
+    console.log(e)
+    if (e.status < 200 || e.status > 299) {
       console.log(`error adding links:\n${e}`);
-      return e;
-    });
-  return result;
+      return "failed request";
+    }
+    return e.json();
+  });
+  if (result == undefined) return [];
+  console.log(result);
+  let out = result.map((f: any) => {
+    return {
+      id: f.id.toString(),
+      url: "",
+      title: f.name,
+    };
+  });
+  console.log(out);
+  return out;
 };
 const RemoveLink = () => {};
