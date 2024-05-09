@@ -68,7 +68,7 @@ const AddResourceComponent = () => {
       setErrorText(old);
     }, 3000);
   };
-  const getAllLinks = async () => {
+  export const getAllFiles = async () => {
     const authfetch = AuthenticatedFetch();
     let result = await authfetch("/api/files/all", {
       method: "get",

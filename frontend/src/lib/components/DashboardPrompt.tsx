@@ -26,6 +26,7 @@ import {
 } from "@saas-ui/react";
 import React, { useState } from "react";
 import { Node } from "reactflow";
+import FileExplorer from "./FileBrowser";
 import {
   FiHome,
   FiUsers,
@@ -76,7 +77,19 @@ export function DashboardPrompt() {
 export default function DashboardFileBrowser() {
   return (
     <>
-      
+      <Center width="100%" height="100%">
+        <Box
+          border="solid"
+          borderColor="oklch(92.83% 0.001 286.37)"
+          width="90%"
+          borderRadius="10px"
+          borderWidth="1px"
+          margin="20px"
+          justifySelf="center"
+        >
+          <FileExplorer />
+        </Box>
+      </Center>
     </>
-  ) 
+  );
 }
