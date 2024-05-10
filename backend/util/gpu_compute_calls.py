@@ -146,7 +146,7 @@ class GPUComputeEndpoint:
         response_json = response.json()
         # Extract the translated text from the JSON response
         # translated_text = response_json["response"]
-        
+
         # Please forgive me lord
         translated_text = str(response_json)
         return translated_text

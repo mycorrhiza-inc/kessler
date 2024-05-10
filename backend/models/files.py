@@ -21,7 +21,8 @@ class FileModel(UUIDAuditBase, RepoMixin):
 
     __tablename__ = "file"
     url: Mapped[
-        str | None
+        str
+        | None
         # TODO : Implement system for url's that doesnt store it in the file model.
     ]
     path: Mapped[str]
@@ -65,6 +66,7 @@ class FileModel(UUIDAuditBase, RepoMixin):
 
             return obj
 
+
 class FileRepository(SQLAlchemyAsyncRepository[FileModel]):
     """File repository."""
 
@@ -93,7 +95,7 @@ class FileSchema(PydanticBaseModel):
     original_text: str | None = None
     english_text: str | None = None
 
-    @field_validator('id')
+    @field_validator("id")
     @classmethod
     def stringify_id(cls, id: any) -> str:
         return str(id)

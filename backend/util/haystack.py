@@ -23,14 +23,15 @@ from models.utils import sqlalchemy_config
 logger = getLogger(__name__)
 
 
-octo_ef = OpenAIDocumentEmbedder(api_key=Secret.from_env_var(
-    "OCTO_API_KEY"), model="thenlper/gte-large", api_base_url="https://text.octoai.run/v1/embeddings")
+octo_ef = OpenAIDocumentEmbedder(
+    api_key=Secret.from_env_var("OCTO_API_KEY"),
+    model="thenlper/gte-large",
+    api_base_url="https://text.octoai.run/v1/embeddings",
+)
 
 chroma_path = os.environ["CHROMA_PERSIST_PATH"]
-chroma_store = ChromaDocumentStore(
-    persist_path=chroma_path)
-chroma_embedding_retriever = ChromaEmbeddingRetriever(
-    document_store=chroma_store)
+chroma_store = ChromaDocumentStore(persist_path=chroma_path)
+chroma_embedding_retriever = ChromaEmbeddingRetriever(document_store=chroma_store)
 chroma_text_retriever = ChromaQueryTextRetriever(document_store=chroma_store)
 
 chroma_pipeline = Pipeline()
@@ -40,7 +41,7 @@ chroma_pipeline.add_component("writer", DocumentWriter(chroma_store))
 
 async def indexDocByID(fid: UUID):
     # find file
-    logger.info(f'INDEXER: indexing document with fid: {fid}')
+    logger.info(f"INDEXER: indexing document with fid: {fid}")
     session_factory = sqlalchemy_config.create_session_maker()
     async with session_factory() as db_session:
         try:
@@ -49,15 +50,9 @@ async def indexDocByID(fid: UUID):
             logger.error("unable to get file model repo", e)
         logger.info("created file repo")
         f = await file_repo.get(fid)
-        logger.info(f'INDEXER: found file')
+        logger.info(f"INDEXER: found file")
         # get
-        docs = [
-            Document(
-                id=str(f.id),
-                content=f.english_text,
-                meta=f.doc_metadata
-            )
-        ]
+        docs = [Document(id=str(f.id), content=f.english_text, meta=f.doc_metadata)]
 
         try:
             f.stage = "indexing"
@@ -68,7 +63,7 @@ async def indexDocByID(fid: UUID):
             indexing.run({"writer": {"documents": docs}})
             logger.info("completed indexing ")
         except Exception as e:
-            logger.critical(f'Failed to index document with id {fid}', e)
+            logger.critical(f"Failed to index document with id {fid}", e)
             raise e
 
 
@@ -76,12 +71,7 @@ async def get_indexed_by_id(fid: UUID):
     searching = Pipeline()
     querying = Pipeline()
     querying.add_component("retriever", ChromaQueryTextRetriever(chroma_store))
-    results = querying.run({
-        "retriever": {
-            "query": f'id: str(fid)', 
-            "top_k": 3
-        }
-    })
+    results = querying.run({"retriever": {"query": f"id: str(fid)", "top_k": 3}})
     return results
 
 
@@ -94,10 +84,5 @@ async def indexDocByHash(hash: str):
 def query_chroma(query: str, top_k: int = 5):
     querying = Pipeline()
     querying.add_component("retriever", ChromaQueryTextRetriever(chroma_store))
-    results = querying.run({
-        "retriever": {
-            "query": query, 
-            "top_k": top_k
-        }
-    })
+    results = querying.run({"retriever": {"query": query, "top_k": top_k}})
     return results

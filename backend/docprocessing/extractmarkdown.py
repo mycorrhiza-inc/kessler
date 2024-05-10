@@ -27,7 +27,7 @@ class MarkdownExtractor:
         # TODO : Add database connection.
 
     def process_raw_document_into_english_text(self, file_loc: Path, metadata: str):
-        lang = metadata["str"]
+        lang = metadata.get("lang")
         raw_text = self.process_raw_document_into_untranslated_text(file_loc, metadata)
         return self.convert_text_into_eng(raw_text, lang)
 
@@ -40,7 +40,7 @@ class MarkdownExtractor:
         return english_text
 
     def process_raw_document_into_untranslated_text(
-        self, file_loc: Path, doctype : str, lang : str
+        self, file_loc: Path, doctype: str, lang: str
     ) -> str:
         def process_audio(filepath: Path, metadata: dict) -> str:
             source_lang = metadata["language"]

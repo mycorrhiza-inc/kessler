@@ -13,9 +13,7 @@ from litestar.params import Parameter
 from litestar import Controller, Request
 from util.haystack import query_chroma, get_indexed_by_id
 
-from litestar.handlers.http_handlers.decorators import (
-    get, post
-)
+from litestar.handlers.http_handlers.decorators import get, post
 
 
 from pydantic import TypeAdapter
@@ -56,7 +54,7 @@ class SearchController(Controller):
         self,
         fid: UUID = Parameter(
             title="File ID as hex string", description="File to retieve"
-        )
+        ),
     ) -> Any:
         res = await get_indexed_by_id(fid)
         return res
