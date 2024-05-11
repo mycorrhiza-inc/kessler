@@ -1,4 +1,3 @@
-from haystack.components.writers import DocumentWriter
 from hashlib import blake2b
 import os
 from pathlib import Path
