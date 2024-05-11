@@ -41,14 +41,14 @@ from models import FileModel, FileRepository, FileSchema, provide_files_repo
 from crawler.docingest import DocumentIngester
 from docprocessing.extractmarkdown import MarkdownExtractor
 from docprocessing.genextras import GenerateExtras
-from util.haystack import indexDocByID
+# from util.haystack import indexDocByID
 
 from typing import List, Optional, Union, Any, Dict
 
 
 from util.niclib import get_blake2
 
-from util.haystack import indexDocByID, get_indexed_by_id
+# from util.haystack import indexDocByID, get_indexed_by_id
 
 import json
 

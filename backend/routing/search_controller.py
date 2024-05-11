@@ -11,7 +11,7 @@ import logging
 
 from litestar.params import Parameter
 from litestar import Controller, Request
-from util.haystack import query_chroma, get_indexed_by_id
+# from util.haystack import query_chroma, get_indexed_by_id
 
 from litestar.handlers.http_handlers.decorators import get, post
 
