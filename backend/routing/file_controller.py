@@ -226,8 +226,7 @@ class FileController(Controller):
             request.logger.info("commited file to DB")
         else:
             request.logger.info(type(duplicate_file_obj))
-            request.logger.info(f"File with identical hash already exists in DB with uuid: {
-                                duplicate_file_obj.id}")
+            request.logger.info(f"File with identical hash already exists in DB with uuid: {duplicate_file_obj.id}")
             new_file = duplicate_file_obj
         if process:
             request.logger.info("Processing File")
@@ -295,22 +294,30 @@ class FileController(Controller):
                     "failure in stage 1: document was unable to be converted to markdown,",
                 )
             else:
-                obj.original_text = processed_original_text
-                current_stage = "stage2"
+                if obj.lang == "en":
+                    # Write directly to the english text box if oriiginal text is identical to save space.
+                    obj.english_text = processed_original_text
+                    # Skip translation stage if text already english.
+                    current_stage = "stage3"
+                else:
+                    obj.original_text = processed_original_text
+                    current_stage = "stage2"
         if current_stage == "stage2":
-            obj.english_text = obj.original_text
-            current_stage = "stage3"
-            # TODO : Fix issue of existence of languages aside from english
-            # try:
-            #     processed_english_text = mdextract.convert_text_into_eng(
-            #         obj.original_text, obj.lang
-            #     )
-            # except:
-            #     response_code, response_message = (
-            #         422,
-            #         "failure in stage 2: document was unable to be translated to english.",
-            #     )
-            # else:
+            try:
+                if obj.lang == "en":
+                    processed_english_text = mdextract.convert_text_into_eng(
+                        obj.original_text, obj.lang
+                    )
+                else:
+                    assert False , "Code is in an unreachable state, this situation should have been caught by an error in stage 1."
+            except:
+                response_code, response_message = (
+                    422,
+                    "failure in stage 2: document was unable to be translated to english.",
+                )
+            else:
+                obj.english_text = processed_english_text 
+                current_stage = "stage3"
         if current_stage == "stage3":
             # TODO : Figure out better way to extract references
             # links = genextras.extract_markdown_links(obj.original_text)
