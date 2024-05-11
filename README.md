@@ -80,7 +80,7 @@ Currently the Kessler docker compose is in dev mode.
 To run it:
 
 ```bash
-docker compose -d
+docker compose -f docker-compose.dev.yml up --force-recreate
 ```
 
 ### Adding packages

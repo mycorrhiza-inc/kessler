@@ -30,8 +30,9 @@ services:
       - .env
     volumes:
       - ./backend:/app
-      - ./backend/instance:/app/instance
-      - ./files:/files
+      - ./volumes/instance:/app/instance
+      - ./volumes/files:/files
+      - ./volumes/tmp:/tmp/
       - ./server.htpasswd:/app/server.htpasswd
     labels:
       - "traefik.enable=true"

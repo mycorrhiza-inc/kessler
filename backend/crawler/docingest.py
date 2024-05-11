@@ -29,10 +29,10 @@ OS_FILEDIR = Path("/files/")
 
 import yaml
 
+
 class DocumentIngester:
     def __init__(
-        self, logger, savedir=OS_FILEDIR, tmpdir=OS_TMPDIR /
-            Path("kessler/docingest")
+        self, logger, savedir=OS_FILEDIR, tmpdir=OS_TMPDIR / Path("kessler/docingest")
     ):
         self.tmpdir = tmpdir
         self.savedir = savedir
@@ -169,8 +169,7 @@ class DocumentIngester:
             if content_type is None or content_type == None:
                 return None
             # Use the mimetypes library to get the corresponding extension
-            file_extension = mimetypes.guess_extension(
-                content_type.split(";")[0])
+            file_extension = mimetypes.guess_extension(content_type.split(";")[0])
             if file_extension:
                 return file_extension.strip(
                     "."
@@ -232,6 +231,7 @@ class DocumentIngester:
             if metadata.get(field) == None:
                 metadata[field] = defaultval
             return metadata
+
         # TODO : Double check and test how mutable values in python work to remove unnecessary assignments.
         metadata = mut_rectify_empty_field(metadata, "title", "unknown")
         metadata = mut_rectify_empty_field(metadata, "author", "unknown")
@@ -305,12 +305,12 @@ class DocumentIngester:
             self.logger.error(f"File could not be saved to : {saveloc}")
         return (b264_hash, saveloc)
 
-
     def backup_metadata_to_hash(self, metadata: dict, hash: str) -> Path:
         def backup_metadata_to_filepath(metadata: dict, filepath: Path) -> Path:
             with open(filepath, "w+") as ff:
                 yaml.dump(metadata, ff)
             return filepath
+
         savedir = self.metadata_backupdir / Path(str(hash) + ".yaml")
         self.logger.info(f"Backing up metadata to: {savedir}")
         return backup_metadata_to_filepath(metadata, savedir)
