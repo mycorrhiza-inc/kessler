@@ -111,3 +111,12 @@ All volumes are stored in the volumes folder off of main, the three volumes are 
 `./volumes/instance`
 
 The last volume is where you should copy over database files to when running it on the backend.
+
+# Debugging
+
+If running into any weird issues with the software run these 2 commands first
+
+```
+docker rmi $(docker images -a -q)
+docker prune -a
+```
