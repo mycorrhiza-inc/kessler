@@ -17,17 +17,17 @@ If you're opening this Notebook on colab, you will probably need to install Llam
 # Commented out IPython magic to ensure Python compatibility.
 # %pip install llama-index-vector-stores-postgres
 
-!pip install llama-index
+# !pip install llama-index
 
 """Running the following cell will install Postgres with PGVector in Colab."""
 
-!sudo apt update
-!echo | sudo apt install -y postgresql-common
-!echo | sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh
-!echo | sudo apt install postgresql-15-pgvector
-!sudo service postgresql start
-!sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'password';"
-!sudo -u postgres psql -c "CREATE DATABASE vector_db;"
+# !sudo apt update
+# !echo | sudo apt install -y postgresql-common
+# !echo | sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh
+# !echo | sudo apt install postgresql-15-pgvector
+# !sudo service postgresql start
+# !sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'password';"
+# !sudo -u postgres psql -c "CREATE DATABASE vector_db;"
 
 
 
@@ -50,19 +50,20 @@ The first step is to configure the openai key. It will be used to created embedd
 
 import os
 
-os.environ["OPENAI_API_KEY"] = "<your key>"
+# os.environ["OPENAI_API_KEY"] = "<your key>"
 openai.api_key = os.environ["OPENAI_API_KEY"]
 
 """Download Data"""
 
-!mkdir -p 'data/paul_graham/'
-!wget 'https://raw.githubusercontent.com/run-llama/llama_index/main/docs/docs/examples/data/paul_graham/paul_graham_essay.txt' -O 'data/paul_graham/paul_graham_essay.txt'
+# !mkdir -p 'data/paul_graham/'
+# !wget 'https://raw.githubusercontent.com/run-llama/llama_index/main/docs/docs/examples/data/paul_graham/paul_graham_essay.txt' -O 'data/paul_graham/paul_graham_essay.txt'
 
 """### Loading documents
 Load the documents stored in the `data/paul_graham/` using the SimpleDirectoryReader
 """
+datadir = "/home/nicole/Documents/mycorrhizae/kessler/files/example_data/"
 
-documents = SimpleDirectoryReader("./data/paul_graham").load_data()
+document = SimpleDirectoryReader(datadir).load_data()
 print("Document ID:", documents[0].doc_id)
 
 """### Create the Database
