@@ -72,7 +72,7 @@ Using an existing postgres running at localhost, create the database we'll be us
 
 import psycopg2
 
-connection_string = "postgresql://postgres:password@database:5432"
+connection_string = "postgresql://postgres:password@localhost:5432"
 db_name = "vector_db"
 conn = psycopg2.connect(connection_string)
 conn.autocommit = True
@@ -121,7 +121,7 @@ print(textwrap.fill(str(response), 100))
 
 vector_store = PGVectorStore.from_params(
     database="vector_db",
-    host="database",
+    host="localhost",
     password="password",
     port=5432,
     user="postgres",

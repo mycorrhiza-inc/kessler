@@ -84,8 +84,11 @@ services:
   database:
     image: pgvector/pgvector:pg16
     restart: always
-    expose:
-      - "5432"
+    # FIXME : This is not secure, figure out a way to not expose the database to the network either using internal rules with traefik or dockercompose's expose functionality
+    port:
+      - 5432:5432
+    #expose:
+    # - "5432"
     environment:
       POSTGRES_PASSWORD: password
 
