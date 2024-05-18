@@ -61,7 +61,7 @@ openai.api_key = os.environ["OPENAI_API_KEY"]
 """### Loading documents
 Load the documents stored in the `data/paul_graham/` using the SimpleDirectoryReader
 """
-datadir = "/home/nicole/Documents/mycorrhizae/kessler/files/example_data/"
+datadir = "/files/example_data/"
 
 document = SimpleDirectoryReader(datadir).load_data()
 print("Document ID:", document[0].doc_id)
