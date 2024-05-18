@@ -94,7 +94,7 @@ Using an existing postgres running at localhost, create the database we'll be us
 
 import psycopg2
 
-connection_string = "postgresql://postgres:password@uttu-fedora:5432"
+connection_string = "postgresql://postgres:password@database:5432"
 db_name = "vector_db"
 conn = psycopg2.connect(connection_string)
 conn.autocommit = True
@@ -142,11 +142,11 @@ logger.info(textwrap.fill(str(response), 100))
 """### Querying existing index"""
 
 vector_store = PGVectorStore.from_params(
-    database="vector_db",
-    host="localhost",
-    password="password",
-    port=5432,
-    user="postgres",
+    database=db_name,
+    host=url.host,
+    password=url.password,
+    port=url.port,
+    user=url.username,
     table_name="paul_graham_essay",
     embed_dim=1536,  # openai embedding dimension
 )
