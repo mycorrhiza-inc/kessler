@@ -1,7 +1,14 @@
+import logging 
 
-import time 
+logger= logging.getLogger()
 
-time.sleep(5)
+
+logger.setLevel(logging.DEBUG)
+
+
+
+
+
 
 """postgres.ipynb
 
@@ -30,7 +37,7 @@ If you're opening this Notebook on colab, you will probably need to install Llam
 # !echo | sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh
 # !echo | sudo apt install postgresql-15-pgvector
 # !sudo service postgresql start
-# !sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'password';"
+#  !sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'password';"
 # !sudo -u postgres psql -c "CREATE DATABASE vector_db;"
 
 
@@ -68,7 +75,7 @@ Load the documents stored in the `data/paul_graham/` using the SimpleDirectoryRe
 datadir = "/files/example_data/"
 
 documents = SimpleDirectoryReader(datadir).load_data()
-print("Document ID:", documents[0].doc_id)
+logger.info("Document ID:", documents[0].doc_id)
 
 """### Create the Database
 Using an existing postgres running at localhost, create the database we'll be using.
@@ -115,11 +122,11 @@ We can now ask questions using our index.
 
 response = query_engine.query("What did the author do?")
 
-print(textwrap.fill(str(response), 100))
+logger.info(textwrap.fill(str(response), 100))
 
 response = query_engine.query("What happened in the mid 1980s?")
 
-print(textwrap.fill(str(response), 100))
+logger.info(textwrap.fill(str(response), 100))
 
 """### Querying existing index"""
 
@@ -138,7 +145,7 @@ query_engine = index.as_query_engine()
 
 response = query_engine.query("What did the author do?")
 
-print(textwrap.fill(str(response), 100))
+logger.info(textwrap.fill(str(response), 100))
 
 """### Hybrid Search
 
@@ -176,7 +183,7 @@ hybrid_response = hybrid_query_engine.query(
     "Who does Paul Graham think of with the word schtick"
 )
 
-print(hybrid_response)
+logger.info(hybrid_response)
 
 """#### Improving hybrid search with QueryFusionRetriever
 
@@ -214,7 +221,7 @@ query_engine = RetrieverQueryEngine(
 response = query_engine.query(
     "Who does Paul Graham think of with the word schtick, and why?"
 )
-print(response)
+logger.info(response)
 
 """### Metadata filters
 
@@ -231,8 +238,8 @@ import csv
 with open("data/git_commits/commit_history.csv", "r") as f:
     commits = list(csv.DictReader(f))
 
-print(commits[0])
-print(len(commits))
+logger.info(commits[0])
+logger.info(len(commits))
 
 """#### Add nodes with custom metadata"""
 
@@ -266,9 +273,9 @@ for commit in commits[:100]:
     dates.add(commit_date)
     authors.add(author_email)
 
-print(nodes[0])
-print(min(dates), "to", max(dates))
-print(authors)
+logger.info(nodes[0])
+logger.info(min(dates), "to", max(dates))
+logger.info(authors)
 
 vector_store = PGVectorStore.from_params(
     database=db_name,
@@ -283,7 +290,7 @@ vector_store = PGVectorStore.from_params(
 index = VectorStoreIndex.from_vector_store(vector_store=vector_store)
 index.insert_nodes(nodes)
 
-print(index.as_query_engine().query("How did Lakshmi fix the segfault?"))
+logger.info(index.as_query_engine().query("How did Lakshmi fix the segfault?"))
 
 """#### Apply metadata filters
 
@@ -311,7 +318,7 @@ retriever = index.as_retriever(
 retrieved_nodes = retriever.retrieve("What is this software project about?")
 
 for node in retrieved_nodes:
-    print(node.node.metadata)
+    logger.info(node.node.metadata)
 
 filters = MetadataFilters(
     filters=[
@@ -329,7 +336,7 @@ retriever = index.as_retriever(
 retrieved_nodes = retriever.retrieve("What is this software project about?")
 
 for node in retrieved_nodes:
-    print(node.node.metadata)
+    logger.info(node.node.metadata)
 
 """#### Apply nested filters
 
@@ -373,7 +380,7 @@ retriever = index.as_retriever(
 retrieved_nodes = retriever.retrieve("What is this software project about?")
 
 for node in retrieved_nodes:
-    print(node.node.metadata)
+    logger.info(node.node.metadata)
 
 """The above can be simplified by using the IN operator. `PGVectorStore` supports `in`, `nin`, and `contains` for comparing an element with a list."""
 
@@ -398,7 +405,7 @@ retriever = index.as_retriever(
 retrieved_nodes = retriever.retrieve("What is this software project about?")
 
 for node in retrieved_nodes:
-    print(node.node.metadata)
+    logger.info(node.node.metadata)
 
 # Same thing, with NOT IN
 filters = MetadataFilters(
@@ -422,7 +429,7 @@ retriever = index.as_retriever(
 retrieved_nodes = retriever.retrieve("What is this software project about?")
 
 for node in retrieved_nodes:
-    print(node.node.metadata)
+    logger.info(node.node.metadata)
 
 # CONTAINS
 filters = MetadataFilters(
@@ -438,7 +445,7 @@ retriever = index.as_retriever(
 
 retrieved_nodes = retriever.retrieve("How did these commits fix the issue?")
 for node in retrieved_nodes:
-    print(node.node.metadata)
+    logger.info(node.node.metadata)
 
 """### PgVector Query Options
 
