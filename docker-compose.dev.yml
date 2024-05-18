@@ -27,7 +27,8 @@ services:
   backend:
     build:
       context: ./backend
-      dockerfile: ./Dockerfile
+      # dockerfile: ./Dockerfile
+      dockerfile: ./DockerfileTest
     env_file:
       - .env
 

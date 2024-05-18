@@ -3,10 +3,10 @@ FROM python:3.12-bookworm
 ENV VIRTUAL_ENV=/usr/local
 
 # Install PostgreSQL 15 with pgvector
-RUN apt-get update && \
-    echo | apt-get install -y postgresql-common && \
-    echo | /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh && \
-    apt-get install -y postgresql-15-pgvector && \
+RUN apt-get update
+RUN apt-get install -y postgresql-common 
+RUN echo | /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh
+RUN apt-get install -y postgresql-15-pgvector && \
     service postgresql start && \
     sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'password';" && \
     sudo -u postgres psql -c "CREATE DATABASE vector_db;"
@@ -25,5 +25,6 @@ RUN /root/.cargo/bin/uv pip install --no-cache -r requirements.txt
 # expose to docker network
 EXPOSE 5505
 
-CMD ["uvicorn","main:app", "--host", "0.0.0.0", "5505", "--workers", "4"]
+# CMD ["uvicorn","main:app", "--host", "0.0.0.0", "5505", "--workers", "4"]
+CMD ["python" "rag/postgres_example.py"]
 
