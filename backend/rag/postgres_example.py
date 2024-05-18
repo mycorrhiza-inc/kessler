@@ -57,8 +57,8 @@ If you're opening this Notebook on colab, you will probably need to install Llam
 # import sys
 
 # Uncomment to see debug logs
-# logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
-# logging.getLogger().addHandler(logging.StreamHandler(stream=sys.stdout))
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+logging.getLogger().addHandler(logging.StreamHandler(stream=sys.stdout))
 
 from llama_index.core import SimpleDirectoryReader, StorageContext
 from llama_index.core import VectorStoreIndex
@@ -94,7 +94,7 @@ Using an existing postgres running at localhost, create the database we'll be us
 
 import psycopg2
 
-connection_string = "postgresql://postgres:password@localhost:5432"
+connection_string = "postgresql://postgres:password@uttu-fedora:5432"
 db_name = "vector_db"
 conn = psycopg2.connect(connection_string)
 conn.autocommit = True
