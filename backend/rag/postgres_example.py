@@ -64,7 +64,7 @@ Load the documents stored in the `data/paul_graham/` using the SimpleDirectoryRe
 datadir = "/home/nicole/Documents/mycorrhizae/kessler/files/example_data/"
 
 document = SimpleDirectoryReader(datadir).load_data()
-print("Document ID:", documents[0].doc_id)
+print("Document ID:", document[0].doc_id)
 
 """### Create the Database
 Using an existing postgres running at localhost, create the database we'll be using.
@@ -104,7 +104,8 @@ index = VectorStoreIndex.from_documents(
 )
 query_engine = index.as_query_engine()
 
-"""### Query the index
+"""
+### Query the index
 We can now ask questions using our index.
 """
 
@@ -218,8 +219,8 @@ PGVectorStore supports storing metadata in nodes, and filtering based on that me
 #### Download git commits dataset
 """
 
-!mkdir -p 'data/git_commits/'
-!wget 'https://raw.githubusercontent.com/run-llama/llama_index/main/docs/docs/examples/data/csv/commit_history.csv' -O 'data/git_commits/commit_history.csv'
+# !mkdir -p 'data/git_commits/'
+# !wget 'https://raw.githubusercontent.com/run-llama/llama_index/main/docs/docs/examples/data/csv/commit_history.csv' -O 'data/git_commits/commit_history.csv'
 
 import csv
 
