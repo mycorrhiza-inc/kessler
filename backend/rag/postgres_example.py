@@ -94,7 +94,7 @@ Using an existing postgres running at localhost, create the database we'll be us
 
 import psycopg2
 
-connection_string = "postgresql://postgres:password@database:5432"
+connection_string = os.environ["DATABASE_CONNECTION_STRING"]
 db_name = "vector_db"
 conn = psycopg2.connect(connection_string)
 conn.autocommit = True
