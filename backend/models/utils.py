@@ -18,12 +18,10 @@ from pydantic import BaseModel as _BaseModel
 
 session_config = AsyncSessionConfig(expire_on_commit=False)
 
-connection_string = os.environ["DATABASE_CONNECTION_STRING"]
+postgres_connection_string = os.environ["DATABASE_CONNECTION_STRING"]
 
 sqlalchemy_config = SQLAlchemyAsyncConfig(
-    # connection_string="sqlite+aiosqlite:///instance/kessler.sqlite",
-    
-    # connection_string="sqlite+aiosqlite:///kessler.sqlite",
+    connection_string=postgres_connection_string,
     session_config=session_config,
     # extend_existing=True
 )
