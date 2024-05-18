@@ -121,7 +121,7 @@ print(textwrap.fill(str(response), 100))
 
 vector_store = PGVectorStore.from_params(
     database="vector_db",
-    host="localhost",
+    host="database",
     password="password",
     port=5432,
     user="postgres",
