@@ -5,6 +5,10 @@ ENV VIRTUAL_ENV=/usr/local
 
 # use UV
 ADD --chmod=755 https://github.com/astral-sh/uv/releases/latest/download/uv-installer.sh /install.sh
+# Test to see if resolution is a problem unique 
+# RUN wget https://github.com/astral-sh/uv/releases/download/0.1.44/uv-x86_64-unknown-linux-gnu.tar.gz
+RUN /install.sh 
+RUN rm /install.sh
 
 # Set up working directory and dependencies
 WORKDIR /app
