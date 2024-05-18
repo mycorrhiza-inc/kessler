@@ -63,8 +63,8 @@ Load the documents stored in the `data/paul_graham/` using the SimpleDirectoryRe
 """
 datadir = "/files/example_data/"
 
-document = SimpleDirectoryReader(datadir).load_data()
-print("Document ID:", document[0].doc_id)
+documents = SimpleDirectoryReader(datadir).load_data()
+print("Document ID:", documents[0].doc_id)
 
 """### Create the Database
 Using an existing postgres running at localhost, create the database we'll be using.
