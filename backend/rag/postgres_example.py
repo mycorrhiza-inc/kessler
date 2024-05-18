@@ -11,6 +11,8 @@ handler = logging.StreamHandler(sys.stderr)
 
 
 import os
+
+import sys
 hostname = "localhost:5432" #example
 response = os.system(f"ping -c 1 {hostname}")
 
