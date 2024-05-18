@@ -117,8 +117,5 @@ The last volume is where you should copy over database files to when running it 
 If running into any weird issues with the software run these 2 commands first
 
 ```
-docker stop $(docker ps -a -q)
-docker rm $(docker ps -a -q)
-docker rmi $(docker images -a -q)
-docker prune -a
+docker stop $(docker ps -a -q) && docker rm $(docker ps -a -q) && docker rmi $(docker images -a -q) && docker system prune -a
 ```
