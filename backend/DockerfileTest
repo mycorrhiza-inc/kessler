@@ -2,19 +2,9 @@ FROM python:3.12-bookworm
 
 ENV VIRTUAL_ENV=/usr/local
 
-# Install PostgreSQL 15 with pgvector
-RUN apt-get update
-RUN apt-get install -y postgresql-common 
-RUN echo | /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh
-RUN apt-get install -y postgresql-15-pgvector && \
-    service postgresql start && \
-    sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'password';" && \
-    sudo -u postgres psql -c "CREATE DATABASE vector_db;"
-
 
 # use UV
 ADD --chmod=755 https://github.com/astral-sh/uv/releases/latest/download/uv-installer.sh /install.sh
-RUN /install.sh && rm /install.sh
 
 # Set up working directory and dependencies
 WORKDIR /app
