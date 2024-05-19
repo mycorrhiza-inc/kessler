@@ -14,4 +14,4 @@ RUN /root/.cargo/bin/uv pip install --no-cache -r requirements.txt
 EXPOSE 5505
 
 # Command should be in dockerfile
-# CMD ["uvicorn","main:app", "--host", "0.0.0.0", "5505", "--workers", "4"]
+CMD ["uvicorn","main:app", "--host", "0.0.0.0", "5505", "--workers", "4"]
