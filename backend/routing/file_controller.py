@@ -48,7 +48,7 @@ from typing import List, Optional, Union, Any, Dict
 
 from util.niclib import get_blake2
 
-# from util.haystack import indexDocByID, get_indexed_by_id
+from util.haystack import indexDocByID, get_indexed_by_id
 
 import json
 
