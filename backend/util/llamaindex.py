@@ -168,8 +168,9 @@ if "postgresql+asyncpg://" in connection_string:
         "postgresql+asyncpg://", "postgresql://"
     )
 
-vec_db_name = "vector_db"
-file_db_name = "files"
+
+vec_table_name = "vector_db"
+file_table_name = "files"
 
 
 conn = psycopg2.connect(connection_string)
