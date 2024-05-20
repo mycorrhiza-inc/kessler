@@ -21,14 +21,15 @@ class FileModel(UUIDAuditBase, RepoMixin):
 
     __tablename__ = "file"
     url: Mapped[
-        str
-        | None
-        # TODO : Implement system for url's that doesnt store it in the file model.
+        str | None
+     
     ]
+    # TODO : Move functionality to url controller.
     path: Mapped[str]
     doctype: Mapped[str]
     lang: Mapped[str]
     name: Mapped[str | None]
+    source : Mapped[str]
     hash: Mapped[str]
     doc_metadata: Mapped[dict]
     stage: Mapped[str]  # Either "stage0" "stage1" "stage2" or "stage3"
@@ -87,6 +88,7 @@ class FileSchema(PydanticBaseModel):
     doctype: str
     lang: str
     name: str
+    source: str
     # Either "stage0" "stage1" "stage2" or "stage3"
     stage: str
     doc_metadata: dict

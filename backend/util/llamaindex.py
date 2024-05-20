@@ -192,9 +192,6 @@ db_name = "vector_db"
 conn = psycopg2.connect(connection_string)
 conn.autocommit = True
 
-with conn.cursor() as c:
-    c.execute(f"DROP DATABASE IF EXISTS {db_name}")
-    c.execute(f"CREATE DATABASE {db_name}")
 
 """### Create the index
 Here we create an index backed by Postgres using the documents loaded previously. PGVectorStore takes a few arguments.

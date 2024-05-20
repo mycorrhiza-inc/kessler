@@ -67,6 +67,7 @@ emptyFile = FileModel(
     name="",
     doctype="",
     lang="en",
+    source = "",
     path="",
     # file=raw_tmpfile,
     doc_metadata={},
@@ -191,6 +192,10 @@ class FileController(Controller):
         else:
             request.logger.info(
                 f"Title, Doctype and language successfully declared")
+        document_source = metadata.get("source")
+        if document_source is None:
+            document_source = "UNKOWN"
+        
         request.logger.info("Attempting to save data to file")
         result = docingest.save_filepath_to_hash(tmpfile_path)
         (filehash, filepath) = result
@@ -204,6 +209,7 @@ class FileController(Controller):
                 name=document_title,
                 doctype=document_doctype,
                 lang=document_lang,
+                source=document_source,
                 path=str(filepath),
                 # file=raw_tmpfile,
                 doc_metadata=metadata,
