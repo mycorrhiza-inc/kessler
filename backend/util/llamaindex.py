@@ -155,10 +155,20 @@ logging.getLogger().addHandler(logging.StreamHandler(stream=sys.stdout))
 
 from llama_index.core import SimpleDirectoryReader, StorageContext
 from llama_index.core import VectorStoreIndex
+from llama_index.core import Settings
 from llama_index.vector_stores.postgres import PGVectorStore
 import textwrap
 import openai
+from llama_index.llms.groq import Groq
 
+
+
+GROQ_API_KEY = os.environ["GROQ_API_KEY"]
+Settings.llm = Groq(model="llama3-70b-8192", request_timeout=360.0, api_key=GROQ_API_KEY)
+
+openai.api_key = os.environ["OPENAI_API_KEY"]
+# TODO : Change embedding model to use not openai.
+# Settings.embed_model = OllamaEmbedding(model_name="nomic-embed-text")
 """### Setup OpenAI
 The first step is to configure the openai key. It will be used to created embeddings for the documents loaded into the index
 """
@@ -166,7 +176,6 @@ The first step is to configure the openai key. It will be used to created embedd
 import os
 
 # os.environ["OPENAI_API_KEY"] = "<your key>"
-openai.api_key = os.environ["OPENAI_API_KEY"]
 
 """Download Data"""
 

@@ -195,7 +195,7 @@ class FileController(Controller):
         document_source = metadata.get("source")
         if document_source is None:
             document_source = "UNKOWN"
-        
+
         request.logger.info("Attempting to save data to file")
         result = docingest.save_filepath_to_hash(tmpfile_path)
         (filehash, filepath) = result
