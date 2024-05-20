@@ -1,4 +1,3 @@
-
 from uuid import UUID
 import uuid
 from typing import Annotated, assert_type, Any

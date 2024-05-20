@@ -20,7 +20,9 @@ session_config = AsyncSessionConfig(expire_on_commit=False)
 
 postgres_connection_string = os.environ["DATABASE_CONNECTION_STRING"]
 if "postgresql://" in postgres_connection_string:
-    postgres_connection_string = postgres_connection_string.replace("postgresql://", "postgresql+asyncpg://")
+    postgres_connection_string = postgres_connection_string.replace(
+        "postgresql://", "postgresql+asyncpg://"
+    )
 
 sqlalchemy_config = SQLAlchemyAsyncConfig(
     connection_string=postgres_connection_string,

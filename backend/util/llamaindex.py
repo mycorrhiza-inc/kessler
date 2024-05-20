@@ -88,14 +88,11 @@ def query_chroma(query: str, top_k: int = 5):
     return results
 
 
-
-
-
-import logging 
+import logging
 import sys
 import os
 
-logger= logging.getLogger()
+logger = logging.getLogger()
 
 
 logger.setLevel(logging.DEBUG)
@@ -109,7 +106,6 @@ If you're opening this Notebook on colab, you will probably need to install Llam
 """
 
 """Running the following cell will install Postgres with PGVector in Colab."""
-
 
 
 # import logging
@@ -131,7 +127,9 @@ from llama_index.readers.database import DatabaseReader
 
 
 GROQ_API_KEY = os.environ["GROQ_API_KEY"]
-Settings.llm = Groq(model="llama3-70b-8192", request_timeout=360.0, api_key=GROQ_API_KEY)
+Settings.llm = Groq(
+    model="llama3-70b-8192", request_timeout=360.0, api_key=GROQ_API_KEY
+)
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
 # TODO : Change embedding model to use not openai.
@@ -166,17 +164,16 @@ connection_string = os.environ["DATABASE_CONNECTION_STRING"]
 
 # FIXME : Go ahead and try to figure out how to get this to work asynchronously assuming that is an important thing to do.
 if "postgresql+asyncpg://" in connection_string:
-    postgres_connection_string = connection_string.replace("postgresql+asyncpg://","postgresql://")
+    postgres_connection_string = connection_string.replace(
+        "postgresql+asyncpg://", "postgresql://"
+    )
 
 vec_db_name = "vector_db"
 file_db_name = "files"
 
 
-
-
 conn = psycopg2.connect(connection_string)
 conn.autocommit = True
-
 
 
 """### Hybrid Search
@@ -213,14 +210,13 @@ hybrid_vector_store = PGVectorStore.from_params(
     text_search_config="english",
 )
 
+
 def add_document_to_db_from_uuid(uuid_str: str) -> None:
     query = "SELECT * FROM users"
     documents = reader.load_data(query=query)
 
 
-storage_context = StorageContext.from_defaults(
-    vector_store=hybrid_vector_store
-)
+storage_context = StorageContext.from_defaults(vector_store=hybrid_vector_store)
 hybrid_index = VectorStoreIndex.from_documents(
     documents, storage_context=storage_context
 )
@@ -283,20 +279,20 @@ PGVectorStore supports storing metadata in nodes, and filtering based on that me
 # !wget 'https://raw.githubusercontent.com/run-llama/llama_index/main/docs/docs/examples/data/csv/commit_history.csv' -O 'data/git_commits/commit_history.csv'
 
 # import csv
-# 
+#
 # with open("data/git_commits/commit_history.csv", "r") as f:
 #     commits = list(csv.DictReader(f))
-# 
+#
 # logger.info(commits[0])
 # logger.info(len(commits))
-# 
+#
 # """#### Add nodes with custom metadata"""
-# 
+#
 # # Create TextNode for each of the first 100 commits
 # from llama_index.core.schema import TextNode
 # from datetime import datetime
 # import re
-# 
+#
 # nodes = []
 # dates = set()
 # authors = set()
@@ -321,11 +317,11 @@ PGVectorStore supports storing metadata in nodes, and filtering based on that me
 #     )
 #     dates.add(commit_date)
 #     authors.add(author_email)
-# 
+#
 # logger.info(nodes[0])
 # logger.info(min(dates), "to", max(dates))
 # logger.info(authors)
-# 
+#
 # vector_store = PGVectorStore.from_params(
 #     database=db_name,
 #     host=url.host,
@@ -335,22 +331,22 @@ PGVectorStore supports storing metadata in nodes, and filtering based on that me
 #     table_name="metadata_filter_demo3",
 #     embed_dim=1536,  # openai embedding dimension
 # )
-# 
+#
 # index = VectorStoreIndex.from_vector_store(vector_store=vector_store)
 # index.insert_nodes(nodes)
-# 
+#
 # logger.info(index.as_query_engine().query("How did Lakshmi fix the segfault?"))
-# 
+#
 # """#### Apply metadata filters
-# 
+#
 # Now we can filter by commit author or by date when retrieving nodes.
 # """
-# 
+#
 # from llama_index.core.vector_stores.types import (
 #     MetadataFilter,
 #     MetadataFilters,
 # )
-# 
+#
 # filters = MetadataFilters(
 #     filters=[
 #         MetadataFilter(key="author", value="mats@timescale.com"),
@@ -358,17 +354,17 @@ PGVectorStore supports storing metadata in nodes, and filtering based on that me
 #     ],
 #     condition="or",
 # )
-# 
+#
 # retriever = index.as_retriever(
 #     similarity_top_k=10,
 #     filters=filters,
 # )
-# 
+#
 # retrieved_nodes = retriever.retrieve("What is this software project about?")
-# 
+#
 # for node in retrieved_nodes:
 #     logger.info(node.node.metadata)
-# 
+#
 # filters = MetadataFilters(
 #     filters=[
 #         MetadataFilter(key="commit_date", value="2023-08-15", operator=">="),
@@ -376,27 +372,27 @@ PGVectorStore supports storing metadata in nodes, and filtering based on that me
 #     ],
 #     condition="and",
 # )
-# 
+#
 # retriever = index.as_retriever(
 #     similarity_top_k=10,
 #     filters=filters,
 # )
-# 
+#
 # retrieved_nodes = retriever.retrieve("What is this software project about?")
-# 
+#
 # for node in retrieved_nodes:
 #     logger.info(node.node.metadata)
-# 
+#
 # """#### Apply nested filters
-# 
+#
 # In the above examples, we combined multiple filters using AND or OR. We can also combine multiple sets of filters.
-# 
+#
 # e.g. in SQL:
 # ```sql
 # WHERE (commit_date >= '2023-08-01' AND commit_date <= '2023-08-15') AND (author = 'mats@timescale.com' OR author = 'sven@timescale.com')
 # ```
 # """
-# 
+#
 # filters = MetadataFilters(
 #     filters=[
 #         MetadataFilters(
@@ -420,19 +416,19 @@ PGVectorStore supports storing metadata in nodes, and filtering based on that me
 #     ],
 #     condition="and",
 # )
-# 
+#
 # retriever = index.as_retriever(
 #     similarity_top_k=10,
 #     filters=filters,
 # )
-# 
+#
 # retrieved_nodes = retriever.retrieve("What is this software project about?")
-# 
+#
 # for node in retrieved_nodes:
 #     logger.info(node.node.metadata)
-# 
+#
 # """The above can be simplified by using the IN operator. `PGVectorStore` supports `in`, `nin`, and `contains` for comparing an element with a list."""
-# 
+#
 # filters = MetadataFilters(
 #     filters=[
 #         MetadataFilter(key="commit_date", value="2023-08-01", operator=">="),
@@ -445,17 +441,17 @@ PGVectorStore supports storing metadata in nodes, and filtering based on that me
 #     ],
 #     condition="and",
 # )
-# 
+#
 # retriever = index.as_retriever(
 #     similarity_top_k=10,
 #     filters=filters,
 # )
-# 
+#
 # retrieved_nodes = retriever.retrieve("What is this software project about?")
-# 
+#
 # for node in retrieved_nodes:
 #     logger.info(node.node.metadata)
-# 
+#
 # # Same thing, with NOT IN
 # filters = MetadataFilters(
 #     filters=[
@@ -469,53 +465,53 @@ PGVectorStore supports storing metadata in nodes, and filtering based on that me
 #     ],
 #     condition="and",
 # )
-# 
+#
 # retriever = index.as_retriever(
 #     similarity_top_k=10,
 #     filters=filters,
 # )
-# 
+#
 # retrieved_nodes = retriever.retrieve("What is this software project about?")
-# 
+#
 # for node in retrieved_nodes:
 #     logger.info(node.node.metadata)
-# 
+#
 # # CONTAINS
 # filters = MetadataFilters(
 #     filters=[
 #         MetadataFilter(key="fixes", value="5680", operator="contains"),
 #     ]
 # )
-# 
+#
 # retriever = index.as_retriever(
 #     similarity_top_k=10,
 #     filters=filters,
 # )
-# 
+#
 # retrieved_nodes = retriever.retrieve("How did these commits fix the issue?")
 # for node in retrieved_nodes:
 #     logger.info(node.node.metadata)
-# 
+#
 # """### PgVector Query Options
-# 
+#
 # #### IVFFlat Probes
-# 
+#
 # Specify the number of [IVFFlat probes](https://github.com/pgvector/pgvector?tab=readme-ov-file#query-options) (1 by default)
-# 
+#
 # When retrieving from the index, you can specify an appropriate number of IVFFlat probes (higher is better for recall, lower is better for speed)
 # """
-# 
+#
 # retriever = index.as_retriever(
 #     vector_store_query_mode="hybrid",
 #     similarity_top_k=5,
 #     vector_store_kwargs={"ivfflat_probes": 10},
 # )
-# 
+#
 # """#### HNSW EF Search
-# 
+#
 # Specify the size of the dynamic [candidate list](https://github.com/pgvector/pgvector?tab=readme-ov-file#query-options-1) for search (40 by default)
 # """
-# 
+#
 # retriever = index.as_retriever(
 #     vector_store_query_mode="hybrid",
 #     similarity_top_k=5,

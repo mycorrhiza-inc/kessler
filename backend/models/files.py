@@ -20,16 +20,13 @@ class FileModel(UUIDAuditBase, RepoMixin):
     """Database representation of a file"""
 
     __tablename__ = "file"
-    url: Mapped[
-        str | None
-     
-    ]
+    url: Mapped[str | None]
     # TODO : Move functionality to url controller.
     path: Mapped[str]
     doctype: Mapped[str]
     lang: Mapped[str]
     name: Mapped[str | None]
-    source : Mapped[str]
+    source: Mapped[str]
     hash: Mapped[str]
     doc_metadata: Mapped[dict]
     stage: Mapped[str]  # Either "stage0" "stage1" "stage2" or "stage3"
