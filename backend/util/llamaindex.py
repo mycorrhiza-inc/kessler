@@ -168,9 +168,9 @@ if "postgresql+asyncpg://" in connection_string:
         "postgresql+asyncpg://", "postgresql://"
     )
 
-
+db_name = "postgres"
 vec_table_name = "vector_db"
-file_table_name = "files"
+file_table_name = "file"
 
 
 conn = psycopg2.connect(connection_string)
@@ -190,22 +190,21 @@ url = make_url(connection_string)
 
 
 reader = DatabaseReader(
-    dbname=vec_db_name,
+    dbname=db_name,
     host=url.host,
     password=url.password,
     port=url.port,
     user=url.username,
-    dbname=os.getenv("DB_NAME"),
 )
 
 
 hybrid_vector_store = PGVectorStore.from_params(
-    database=vec_db_name,
+    database=db_name,
     host=url.host,
     password=url.password,
     port=url.port,
     user=url.username,
-    table_name="paul_graham_essay_hybrid_search",
+    table_name=vec_table_name,
     embed_dim=1536,  # openai embedding dimension
     hybrid_search=True,
     text_search_config="english",
@@ -213,7 +212,7 @@ hybrid_vector_store = PGVectorStore.from_params(
 
 
 def add_document_to_db_from_uuid(uuid_str: str) -> None:
-    query = "SELECT * FROM users"
+    query = f"SELECT english_text FROM file WHERE document_id = '{uuid_str}';"
     documents = reader.load_data(query=query)
 
 
