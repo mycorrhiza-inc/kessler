@@ -23,14 +23,13 @@ services:
       - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
 
   # chroma is handled in process in the backend
-
   backend:
     build:
       context: ./backend
+      # dockerfile: ./Dockerfile
       dockerfile: ./Dockerfile
     env_file:
       - .env
-
     volumes:
       - ./backend:/app
       - ./volumes/instance:/app/instance
@@ -41,6 +40,8 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.backend.rule=PathPrefix(`/api`)"
     command:
+      # - "python"
+      # - "rag/postgres_example.py"
       - "uvicorn"
       - "main:app"
       - "--host"
@@ -78,3 +79,13 @@ services:
       - "--"
       - "-p"
       - "$FRONTEND_PORT"
+  database:
+    image: pgvector/pgvector:pg16
+    restart: always
+    expose:
+      - "5432"
+    environment:
+      POSTGRES_PASSWORD: password
+
+    volumes:
+      - ./volumes/pgdata:/var/lib/postgresql/data

@@ -101,3 +101,21 @@ docker compose up -d --no-deps --build backend
 # Contribute
 
 the software is currently under heavy development. No outside contributions will be accepted at this time.
+
+# Volumes and Storage
+
+All volumes are stored in the volumes folder off of main, the three volumes are currently mounted are
+
+`./volumes/files`
+`./volumes/tmp`
+`./volumes/instance`
+
+The last volume is where you should copy over database files to when running it on the backend.
+
+# Debugging
+
+If running into any weird issues with the software run these 2 commands first
+
+```
+docker rm $(docker ps -a -q) && docker rmi $(docker images -a -q) && docker system prune -a
+```

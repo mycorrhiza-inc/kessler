@@ -1,6 +1,7 @@
 from typing import AsyncIterator, Generic, TypeVar
 from contextlib import asynccontextmanager
 import traceback
+import os
 
 from sqlalchemy.ext.declarative import declared_attr
 
@@ -17,9 +18,12 @@ from pydantic import BaseModel as _BaseModel
 
 session_config = AsyncSessionConfig(expire_on_commit=False)
 
+postgres_connection_string = os.environ["DATABASE_CONNECTION_STRING"]
+if "postgresql://" in postgres_connection_string:
+    postgres_connection_string = postgres_connection_string.replace("postgresql://", "postgresql+asyncpg://")
+
 sqlalchemy_config = SQLAlchemyAsyncConfig(
-    connection_string="sqlite+aiosqlite:///instance/kessler.sqlite",
-    # connection_string="sqlite+aiosqlite:///kessler.sqlite",
+    connection_string=postgres_connection_string,
     session_config=session_config,
     # extend_existing=True
 )
