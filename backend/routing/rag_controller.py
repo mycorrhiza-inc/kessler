@@ -103,8 +103,8 @@ groq_llm = Groq(
 
 
 def validate_chat(chat_history : List[Dict[str, str]]) -> bool:
-    if not isinstance(chat_history, List[Dict[str,str]]):
-        return False
+    # if not isinstance(chat_history, List[Dict[str,str]]):
+    #    return False
     found_problem = False
     for chat in chat_history:
         if not chat.get("role") in ["user","system","assistant"]:
