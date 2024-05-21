@@ -107,6 +107,8 @@ def validate_chat(chat_history : List[Dict[str, str]]) -> bool:
        return False
     found_problem = False
     for chat in chat_history:
+        if not isinstance(chat, dict):
+            found_problem = True
         if not chat.get("role") in ["user","system","assistant"]:
             found_problem = True 
         if not isinstance(chat.get("message"),str):
@@ -131,7 +133,7 @@ class RagController(Controller):
     #     return None
 
     @post(path="/rag/simple_chat_completion")
-    async def get_file(
+    async def simple_chat_completion(
         self,
         files_repo: FileRepository,
         data : SimpleChatCompletion
