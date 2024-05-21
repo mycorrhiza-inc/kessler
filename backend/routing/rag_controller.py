@@ -135,7 +135,7 @@ class RagController(Controller):
             model=model_name, request_timeout=360.0, api_key=GROQ_API_KEY
         )
         chat_history = data.chat_history
-        assert validate_chat(chat_history)
+        assert validate_chat(chat_history), chat_history
         response = groq_llm.chat(chat_history)
         return response
 
