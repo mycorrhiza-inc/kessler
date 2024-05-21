@@ -110,7 +110,7 @@ class RagController(Controller):
     # def jsonify_validate_return(self,):
     #     return None
 
-    @get(path="/rag/simple_chat_completion")
+    @post(path="/rag/simple_chat_completion")
     async def get_file(
         self,
         files_repo: FileRepository,
