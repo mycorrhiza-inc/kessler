@@ -67,26 +67,14 @@ class SimpleChatCompletion(BaseModel):
     chat_history: List[Dict[str, str]]
 
 
-
-
-# litestar only
-
-
+class RAGChat(BaseModel):
+    model: Optional[str]
+    chat_history: List[Dict[str, str]]
 OS_TMPDIR = Path(os.environ["TMPDIR"])
 OS_GPU_COMPUTE_URL = os.environ["GPU_COMPUTE_URL"]
 OS_FILEDIR = Path("/files/")
 
 
-# import base64
-
-
-OS_TMPDIR = Path(os.environ["TMPDIR"])
-OS_GPU_COMPUTE_URL = os.environ["GPU_COMPUTE_URL"]
-OS_FILEDIR = Path("/files/")
-
-
-# import base64
-# crypto_keyfile.bin
 
 
 from llama_index.llms.groq import Groq
@@ -97,9 +85,6 @@ GROQ_API_KEY = os.environ["GROQ_API_KEY"]
 groq_llm = Groq(
     model="llama3-70b-8192", request_timeout=360.0, api_key=GROQ_API_KEY
 )
-
-
-
 
 
 def validate_chat(chat_history : List[Dict[str, str]]) -> bool:
@@ -134,6 +119,25 @@ class RagController(Controller):
 
     @post(path="/rag/simple_chat_completion")
     async def simple_chat_completion(
+        self,
+        files_repo: FileRepository,
+        data : SimpleChatCompletion
+    ) -> str:
+        model_name = data.model
+        if model_name is None:
+            model_name = "llama3-70b-8192" 
+        groq_llm = Groq(
+            model=model_name, request_timeout=360.0, api_key=GROQ_API_KEY
+        )
+        chat_history = data.chat_history
+        chat_history = force_conform_chat(chat_history)
+        assert validate_chat(chat_history), chat_history
+        response = groq_llm.chat(chat_history)
+        return response
+
+
+    @post(path="/rag/rag_chat")
+    async def rag_chat(
         self,
         files_repo: FileRepository,
         data : SimpleChatCompletion

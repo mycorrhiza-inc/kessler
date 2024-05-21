@@ -350,6 +350,7 @@ class FileController(Controller):
             try:
                 # TODO : Chunk document and generate embeddings.
                 print("Create Embeddings.")
+
             except:
                 response_code, response_message = (
                     422,
