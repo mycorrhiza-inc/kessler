@@ -102,6 +102,18 @@ groq_llm = Groq(
 
 
 
+def validate_chat(chat_history : List[Dict[str, str]]) -> bool:
+    if not isinstance(chat_history, List[Dict[str,str]]):
+        return False
+    found_problem = False
+    for chat in chat_history:
+        if not chat.get("role") in ["user","system","assistant"]:
+            found_problem = True 
+        if not isinstance(chat.get("message"),str):
+            found_problem = True 
+    return not found_problem
+
+
 class RagController(Controller):
     """File Controller"""
 
@@ -123,6 +135,7 @@ class RagController(Controller):
             model=model_name, request_timeout=360.0, api_key=GROQ_API_KEY
         )
         chat_history = data.chat_history
+        assert validate_chat(chat_history)
         response = groq_llm.chat(chat_history)
         return response
 
