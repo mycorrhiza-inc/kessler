@@ -70,6 +70,9 @@ class SimpleChatCompletion(BaseModel):
 class RAGChat(BaseModel):
     model: Optional[str]
     chat_history: List[Dict[str, str]]
+class RAGQueryResponse(BaseModel):
+    model: Optional[str]
+    prompt : str
 OS_TMPDIR = Path(os.environ["TMPDIR"])
 OS_GPU_COMPUTE_URL = os.environ["GPU_COMPUTE_URL"]
 OS_FILEDIR = Path("/files/")
@@ -86,6 +89,8 @@ groq_llm = Groq(
     model="llama3-70b-8192", request_timeout=360.0, api_key=GROQ_API_KEY
 )
 
+
+import 
 
 def validate_chat(chat_history : List[Dict[str, str]]) -> bool:
     if not isinstance(chat_history, list):
@@ -113,9 +118,6 @@ class RagController(Controller):
     """File Controller"""
 
     dependencies = {"files_repo": Provide(provide_files_repo)}
-
-    # def jsonify_validate_return(self,):
-    #     return None
 
     @post(path="/rag/simple_chat_completion")
     async def simple_chat_completion(
@@ -154,3 +156,18 @@ class RagController(Controller):
         response = groq_llm.chat(chat_history)
         return response
 
+    @post(path="/rag/rag_chat")
+    async def rag_query(
+        self,
+        files_repo: FileRepository,
+        data : SimpleChatCompletion
+    ) -> str:
+        model_name = data.model
+        if model_name is None:
+            model_name = "llama3-70b-8192" 
+        # TODO : Add support for custom model stuff.
+        query = data.prompt
+        response = 
+
+        
+        return response

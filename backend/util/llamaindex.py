@@ -1,96 +1,19 @@
-from haystack_integrations.document_stores.chroma import ChromaDocumentStore
-from haystack_integrations.components.retrievers.chroma import ChromaEmbeddingRetriever
-from haystack_integrations.components.retrievers.chroma import ChromaQueryTextRetriever
-from haystack.components.converters import MarkdownToDocument
-from haystack.components.embedders import OpenAIDocumentEmbedder
-from haystack.components.retrievers.in_memory import InMemoryEmbeddingRetriever
-from haystack.components.writers import DocumentWriter
-from haystack.utils import Secret, deserialize_secrets_inplace
-from haystack import Document, Pipeline, PredefinedPipeline
-
-from sqlalchemy import select
-from models.files import FileModel
-
-from typing import Optional, List
-from pathlib import Path
-from uuid import UUID
-from logging import getLogger
-import os
-from models.files import provide_files_repo, FileModel, FileRepository
-
-from models.utils import sqlalchemy_config
-
-logger = getLogger(__name__)
-
-
-octo_ef = OpenAIDocumentEmbedder(
-    api_key=Secret.from_env_var("OCTO_API_KEY"),
-    model="thenlper/gte-large",
-    api_base_url="https://text.octoai.run/v1/embeddings",
-)
-
-chroma_path = os.environ["CHROMA_PERSIST_PATH"]
-chroma_store = ChromaDocumentStore(persist_path=chroma_path)
-chroma_embedding_retriever = ChromaEmbeddingRetriever(document_store=chroma_store)
-chroma_text_retriever = ChromaQueryTextRetriever(document_store=chroma_store)
-
-chroma_pipeline = Pipeline()
-chroma_pipeline.add_component("OpenAIDocumentEmbedder", octo_ef)
-chroma_pipeline.add_component("writer", DocumentWriter(chroma_store))
-
-
-async def indexDocByID(fid: UUID):
-    # find file
-    logger.info(f"INDEXER: indexing document with fid: {fid}")
-    session_factory = sqlalchemy_config.create_session_maker()
-    async with session_factory() as db_session:
-        try:
-            file_repo = FileRepository(session=db_session)
-        except Exception as e:
-            logger.error("unable to get file model repo", e)
-        logger.info("created file repo")
-        f = await file_repo.get(fid)
-        logger.info(f"INDEXER: found file")
-        # get
-        docs = [Document(id=str(f.id), content=f.english_text, meta=f.doc_metadata)]
-
-        try:
-            f.stage = "indexing"
-            await file_repo.update(f, auto_commit=True)
-            indexing = Pipeline()
-            indexing.add_component("writer", DocumentWriter(chroma_store))
-            logger.info("indexing document")
-            indexing.run({"writer": {"documents": docs}})
-            logger.info("completed indexing ")
-        except Exception as e:
-            logger.critical(f"Failed to index document with id {fid}", e)
-            raise e
-
-
-async def get_indexed_by_id(fid: UUID):
-    searching = Pipeline()
-    querying = Pipeline()
-    querying.add_component("retriever", ChromaQueryTextRetriever(chroma_store))
-    results = querying.run({"retriever": {"query": f"id: str(fid)", "top_k": 3}})
-    return results
-
-
-async def indexDocByHash(hash: str):
-    file_repo = FileModel.repo()
-    stmt = select(FileModel).where(FileModel.hash == hash)
-    f = file_repo.get(statement=stmt)
-
-
-def query_chroma(query: str, top_k: int = 5):
-    querying = Pipeline()
-    querying.add_component("retriever", ChromaQueryTextRetriever(chroma_store))
-    results = querying.run({"retriever": {"query": query, "top_k": top_k}})
-    return results
-
-
 import logging
 import sys
 import os
+
+
+
+import asyncio
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.orm import sessionmaker
+
+from typing import List, Dict, Tuple, Optional
+
+# Import the FileModel from file.py
+from file import FileModel, sqlalchemy_config
+
 
 logger = logging.getLogger()
 
@@ -160,13 +83,18 @@ Using an existing postgres running at localhost, create the database we'll be us
 
 import psycopg2
 
-connection_string = os.environ["DATABASE_CONNECTION_STRING"]
+connection_string_unknown = os.environ["DATABASE_CONNECTION_STRING"]
 
 # FIXME : Go ahead and try to figure out how to get this to work asynchronously assuming that is an important thing to do.
-if "postgresql+asyncpg://" in connection_string:
-    postgres_connection_string = connection_string.replace(
+if "postgresql+asyncpg://" in connection_string_unknown:
+    sync_postgres_connection_string = connection_string_unknown.replace(
         "postgresql+asyncpg://", "postgresql://"
     )
+else:
+    sync_postgres_connection_string = connection_string_unknown
+
+async_postgres_connection_string = sync_postgres_connection_string.replace("postgresql://","postgresql+asyncpg://")
+
 
 db_name = "postgres"
 vec_table_name = "vector_db"
@@ -198,37 +126,44 @@ reader = DatabaseReader(
 )
 
 
-hybrid_vector_store = PGVectorStore.from_params(
-    database=db_name,
-    host=url.host,
-    password=url.password,
-    port=url.port,
-    user=url.username,
-    table_name=vec_table_name,
-    embed_dim=1536,  # openai embedding dimension
-    hybrid_search=True,
-    text_search_config="english",
-)
+from llama_index.core import Document
 
+async def add_document_to_db_from_uuid(uuid_str: str) -> None:
+    async def query_file_table(id: str) -> Tuple[any, any]:
+        # Create an async engine and session
+        engine = create_async_engine(async_postgres_connection_string, echo=True)
+        async_session_maker = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 
-def add_document_to_db_from_uuid(uuid_str: str) -> None:
-    query = f"SELECT english_text FROM file WHERE document_id = '{uuid_str}';"
-    documents = reader.load_data(query=query)
+        async with async_session_maker() as session:
+            async with FileModel.repo() as repo:
+                # Create a query to select the first row matching the given id
+                stmt = select(FileModel).where(FileModel.id == id)
+                result = await session.execute(stmt)
+                file_row = result.scalars().first()
 
+                if file_row:
+                    english_text = file_row.english_text
+                    document_metadata = file_row.doc_metadata
+                else:
+                    english_text = None
+                    document_metadata = None
 
-storage_context = StorageContext.from_defaults(vector_store=hybrid_vector_store)
-hybrid_index = VectorStoreIndex.from_documents(
-    documents, storage_context=storage_context
-)
+                return (english_text, document_metadata)
+    return_tuple = await query_file_table(id)
+    english_text = return_tuple[0]
+    doc_metadata = return_tuple[1]
+    assert isinstance(english_text,str)
+    assert isinstance(doc_metadata,dict)
+    # TODO : Add support for metadata filtering 
+    additional_document = Document(text = english_text, metadata = doc_metadata)
+    additional_document.doc_id = str(uuid_str)
+    hybrid_index.insert(additional_document)
+    return None
 
-hybrid_query_engine = hybrid_index.as_query_engine(
-    vector_store_query_mode="hybrid", sparse_top_k=2
-)
 hybrid_response = hybrid_query_engine.query(
     "Who does Paul Graham think of with the word schtick"
 )
 
-logger.info(hybrid_response)
 
 """#### Improving hybrid search with QueryFusionRetriever
 
@@ -266,254 +201,7 @@ query_engine = RetrieverQueryEngine(
 response = query_engine.query(
     "Who does Paul Graham think of with the word schtick, and why?"
 )
-logger.info(response)
+def create_rag_response_from_query( query : str ):
+    return str(query_engine.query(query))
 
-"""### Metadata filters
 
-PGVectorStore supports storing metadata in nodes, and filtering based on that metadata during the retrieval step.
-
-#### Download git commits dataset
-"""
-
-# !mkdir -p 'data/git_commits/'
-# !wget 'https://raw.githubusercontent.com/run-llama/llama_index/main/docs/docs/examples/data/csv/commit_history.csv' -O 'data/git_commits/commit_history.csv'
-
-# import csv
-#
-# with open("data/git_commits/commit_history.csv", "r") as f:
-#     commits = list(csv.DictReader(f))
-#
-# logger.info(commits[0])
-# logger.info(len(commits))
-#
-# """#### Add nodes with custom metadata"""
-#
-# # Create TextNode for each of the first 100 commits
-# from llama_index.core.schema import TextNode
-# from datetime import datetime
-# import re
-#
-# nodes = []
-# dates = set()
-# authors = set()
-# for commit in commits[:100]:
-#     author_email = commit["author"].split("<")[1][:-1]
-#     commit_date = datetime.strptime(
-#         commit["date"], "%a %b %d %H:%M:%S %Y %z"
-#     ).strftime("%Y-%m-%d")
-#     commit_text = commit["change summary"]
-#     if commit["change details"]:
-#         commit_text += "\n\n" + commit["change details"]
-#     fixes = re.findall(r"#(\d+)", commit_text, re.IGNORECASE)
-#     nodes.append(
-#         TextNode(
-#             text=commit_text,
-#             metadata={
-#                 "commit_date": commit_date,
-#                 "author": author_email,
-#                 "fixes": fixes,
-#             },
-#         )
-#     )
-#     dates.add(commit_date)
-#     authors.add(author_email)
-#
-# logger.info(nodes[0])
-# logger.info(min(dates), "to", max(dates))
-# logger.info(authors)
-#
-# vector_store = PGVectorStore.from_params(
-#     database=db_name,
-#     host=url.host,
-#     password=url.password,
-#     port=url.port,
-#     user=url.username,
-#     table_name="metadata_filter_demo3",
-#     embed_dim=1536,  # openai embedding dimension
-# )
-#
-# index = VectorStoreIndex.from_vector_store(vector_store=vector_store)
-# index.insert_nodes(nodes)
-#
-# logger.info(index.as_query_engine().query("How did Lakshmi fix the segfault?"))
-#
-# """#### Apply metadata filters
-#
-# Now we can filter by commit author or by date when retrieving nodes.
-# """
-#
-# from llama_index.core.vector_stores.types import (
-#     MetadataFilter,
-#     MetadataFilters,
-# )
-#
-# filters = MetadataFilters(
-#     filters=[
-#         MetadataFilter(key="author", value="mats@timescale.com"),
-#         MetadataFilter(key="author", value="sven@timescale.com"),
-#     ],
-#     condition="or",
-# )
-#
-# retriever = index.as_retriever(
-#     similarity_top_k=10,
-#     filters=filters,
-# )
-#
-# retrieved_nodes = retriever.retrieve("What is this software project about?")
-#
-# for node in retrieved_nodes:
-#     logger.info(node.node.metadata)
-#
-# filters = MetadataFilters(
-#     filters=[
-#         MetadataFilter(key="commit_date", value="2023-08-15", operator=">="),
-#         MetadataFilter(key="commit_date", value="2023-08-25", operator="<="),
-#     ],
-#     condition="and",
-# )
-#
-# retriever = index.as_retriever(
-#     similarity_top_k=10,
-#     filters=filters,
-# )
-#
-# retrieved_nodes = retriever.retrieve("What is this software project about?")
-#
-# for node in retrieved_nodes:
-#     logger.info(node.node.metadata)
-#
-# """#### Apply nested filters
-#
-# In the above examples, we combined multiple filters using AND or OR. We can also combine multiple sets of filters.
-#
-# e.g. in SQL:
-# ```sql
-# WHERE (commit_date >= '2023-08-01' AND commit_date <= '2023-08-15') AND (author = 'mats@timescale.com' OR author = 'sven@timescale.com')
-# ```
-# """
-#
-# filters = MetadataFilters(
-#     filters=[
-#         MetadataFilters(
-#             filters=[
-#                 MetadataFilter(
-#                     key="commit_date", value="2023-08-01", operator=">="
-#                 ),
-#                 MetadataFilter(
-#                     key="commit_date", value="2023-08-15", operator="<="
-#                 ),
-#             ],
-#             condition="and",
-#         ),
-#         MetadataFilters(
-#             filters=[
-#                 MetadataFilter(key="author", value="mats@timescale.com"),
-#                 MetadataFilter(key="author", value="sven@timescale.com"),
-#             ],
-#             condition="or",
-#         ),
-#     ],
-#     condition="and",
-# )
-#
-# retriever = index.as_retriever(
-#     similarity_top_k=10,
-#     filters=filters,
-# )
-#
-# retrieved_nodes = retriever.retrieve("What is this software project about?")
-#
-# for node in retrieved_nodes:
-#     logger.info(node.node.metadata)
-#
-# """The above can be simplified by using the IN operator. `PGVectorStore` supports `in`, `nin`, and `contains` for comparing an element with a list."""
-#
-# filters = MetadataFilters(
-#     filters=[
-#         MetadataFilter(key="commit_date", value="2023-08-01", operator=">="),
-#         MetadataFilter(key="commit_date", value="2023-08-15", operator="<="),
-#         MetadataFilter(
-#             key="author",
-#             value=["mats@timescale.com", "sven@timescale.com"],
-#             operator="in",
-#         ),
-#     ],
-#     condition="and",
-# )
-#
-# retriever = index.as_retriever(
-#     similarity_top_k=10,
-#     filters=filters,
-# )
-#
-# retrieved_nodes = retriever.retrieve("What is this software project about?")
-#
-# for node in retrieved_nodes:
-#     logger.info(node.node.metadata)
-#
-# # Same thing, with NOT IN
-# filters = MetadataFilters(
-#     filters=[
-#         MetadataFilter(key="commit_date", value="2023-08-01", operator=">="),
-#         MetadataFilter(key="commit_date", value="2023-08-15", operator="<="),
-#         MetadataFilter(
-#             key="author",
-#             value=["mats@timescale.com", "sven@timescale.com"],
-#             operator="nin",
-#         ),
-#     ],
-#     condition="and",
-# )
-#
-# retriever = index.as_retriever(
-#     similarity_top_k=10,
-#     filters=filters,
-# )
-#
-# retrieved_nodes = retriever.retrieve("What is this software project about?")
-#
-# for node in retrieved_nodes:
-#     logger.info(node.node.metadata)
-#
-# # CONTAINS
-# filters = MetadataFilters(
-#     filters=[
-#         MetadataFilter(key="fixes", value="5680", operator="contains"),
-#     ]
-# )
-#
-# retriever = index.as_retriever(
-#     similarity_top_k=10,
-#     filters=filters,
-# )
-#
-# retrieved_nodes = retriever.retrieve("How did these commits fix the issue?")
-# for node in retrieved_nodes:
-#     logger.info(node.node.metadata)
-#
-# """### PgVector Query Options
-#
-# #### IVFFlat Probes
-#
-# Specify the number of [IVFFlat probes](https://github.com/pgvector/pgvector?tab=readme-ov-file#query-options) (1 by default)
-#
-# When retrieving from the index, you can specify an appropriate number of IVFFlat probes (higher is better for recall, lower is better for speed)
-# """
-#
-# retriever = index.as_retriever(
-#     vector_store_query_mode="hybrid",
-#     similarity_top_k=5,
-#     vector_store_kwargs={"ivfflat_probes": 10},
-# )
-#
-# """#### HNSW EF Search
-#
-# Specify the size of the dynamic [candidate list](https://github.com/pgvector/pgvector?tab=readme-ov-file#query-options-1) for search (40 by default)
-# """
-#
-# retriever = index.as_retriever(
-#     vector_store_query_mode="hybrid",
-#     similarity_top_k=5,
-#     vector_store_kwargs={"hnsw_ef_search": 300},
-# )
