@@ -90,7 +90,7 @@ groq_llm = Groq(
 )
 
 
-import 
+from rag.llamaindex import create_rag_response_from_query
 
 def validate_chat(chat_history : List[Dict[str, str]]) -> bool:
     if not isinstance(chat_history, list):
@@ -167,7 +167,5 @@ class RagController(Controller):
             model_name = "llama3-70b-8192" 
         # TODO : Add support for custom model stuff.
         query = data.prompt
-        response = 
-
-        
+        response = create_rag_response_from_query(query)
         return response

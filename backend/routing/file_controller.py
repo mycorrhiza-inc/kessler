@@ -123,6 +123,9 @@ OS_FILEDIR = Path("/files/")
 # import base64
 
 
+from rag.llamaindex import add_document_to_db_from_uuid
+
+
 class FileController(Controller):
     """File Controller"""
 
@@ -348,9 +351,8 @@ class FileController(Controller):
                 current_stage = "stage4"
         if current_stage == "stage4":
             try:
-                # TODO : Chunk document and generate embeddings.
-                print("Create Embeddings.")
-
+                uuidstr=
+                add_document_to_db_from_uuid()
             except:
                 response_code, response_message = (
                     422,
