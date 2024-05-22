@@ -1,9 +1,3 @@
-from haystack_integrations.document_stores.chroma import ChromaDocumentStore
-from haystack import Document
-
-from haystack_integrations.document_stores.chroma import ChromaDocumentStore
-from haystack_integrations.components.retrievers.chroma import ChromaEmbeddingRetriever
-
 from uuid import UUID
 import uuid
 from typing import Annotated, assert_type, Any

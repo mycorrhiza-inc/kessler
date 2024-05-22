@@ -67,6 +67,7 @@ emptyFile = FileModel(
     name="",
     doctype="",
     lang="en",
+    source="",
     path="",
     # file=raw_tmpfile,
     doc_metadata={},
@@ -102,6 +103,7 @@ class FileUpload(BaseModel):
 class IndexFileRequest(BaseModel):
     id: UUID
 
+
 # litestar only
 
 
@@ -121,6 +123,9 @@ OS_FILEDIR = Path("/files/")
 # import base64
 
 
+from rag.llamaindex import add_document_to_db_from_uuid
+
+
 class FileController(Controller):
     """File Controller"""
 
@@ -133,8 +138,7 @@ class FileController(Controller):
     async def get_file(
         self,
         files_repo: FileRepository,
-        file_id: UUID = Parameter(
-            title="File ID", description="File to retieve"),
+        file_id: UUID = Parameter(title="File ID", description="File to retieve"),
     ) -> FileSchema:
         obj = await files_repo.get(file_id)
         type_adapter = TypeAdapter(FileSchema)
@@ -165,20 +169,22 @@ class FileController(Controller):
 
     @post(path="/files/add_url")
     async def add_url(
-        self, files_repo: FileRepository, data: UrlUpload, request: Request, process: bool = False
+        self,
+        files_repo: FileRepository,
+        data: UrlUpload,
+        request: Request,
+        process: bool = False,
     ) -> Any:
         request.logger.info("adding files")
         request.logger.info(data)
         # New stuff here, is this where this code belongs? <new stuff>
         docingest = DocumentIngester(request.logger)
         request.logger.info("DocumentIngester Created")
-        tmpfile_path, metadata = docingest.url_to_filepath_and_metadata(
-            data.url)
+        tmpfile_path, metadata = docingest.url_to_filepath_and_metadata(data.url)
         override_metadata = data.metadata
         if override_metadata is not None:
             metadata.update(override_metadata)
-        request.logger.info(
-            f"Metadata Successfully Created with metadata {metadata}")
+        request.logger.info(f"Metadata Successfully Created with metadata {metadata}")
         document_title = metadata.get("title")
         document_doctype = metadata.get("doctype")
         document_lang = metadata.get("language")
@@ -189,8 +195,11 @@ class FileController(Controller):
         except:
             request.logger.error("Illformed Metadata please fix")
         else:
-            request.logger.info(
-                f"Title, Doctype and language successfully declared")
+            request.logger.info(f"Title, Doctype and language successfully declared")
+        document_source = metadata.get("source")
+        if document_source is None:
+            document_source = "UNKOWN"
+
         request.logger.info("Attempting to save data to file")
         result = docingest.save_filepath_to_hash(tmpfile_path)
         (filehash, filepath) = result
@@ -204,6 +213,7 @@ class FileController(Controller):
                 name=document_title,
                 doctype=document_doctype,
                 lang=document_lang,
+                source=document_source,
                 path=str(filepath),
                 # file=raw_tmpfile,
                 doc_metadata=metadata,
@@ -213,8 +223,7 @@ class FileController(Controller):
                 short_summary=None,
             )
             # </new stuff>
-            request.logger.info(
-                "new file:{file}".format(file=new_file.to_dict()))
+            request.logger.info("new file:{file}".format(file=new_file.to_dict()))
             try:
                 new_file = await files_repo.add(new_file)
             except Exception as e:
@@ -225,7 +234,9 @@ class FileController(Controller):
             request.logger.info("commited file to DB")
         else:
             request.logger.info(type(duplicate_file_obj))
-            request.logger.info(f"File with identical hash already exists in DB with uuid: {duplicate_file_obj.id}")
+            request.logger.info(
+                f"File with identical hash already exists in DB with uuid: {duplicate_file_obj.id}"
+            )
             new_file = duplicate_file_obj
         if process:
             request.logger.info("Processing File")
@@ -259,7 +270,9 @@ class FileController(Controller):
             newobj
         )  # TODO : Return Response code and response message
 
-    async def process_file_raw(self, obj: FileModel, files_repo: FileRepository, logger: Any, regenerate: bool):
+    async def process_file_raw(
+        self, obj: FileModel, files_repo: FileRepository, logger: Any, regenerate: bool
+    ):
         logger.info(type(obj))
         logger.info(obj)
         current_stage = obj.stage
@@ -308,14 +321,16 @@ class FileController(Controller):
                         obj.original_text, obj.lang
                     )
                 else:
-                    assert False , "Code is in an unreachable state, this situation should have been caught by an error in stage 1."
+                    assert (
+                        False
+                    ), "Code is in an unreachable state, this situation should have been caught by an error in stage 1."
             except:
                 response_code, response_message = (
                     422,
                     "failure in stage 2: document was unable to be translated to english.",
                 )
             else:
-                obj.english_text = processed_english_text 
+                obj.english_text = processed_english_text
                 current_stage = "stage3"
         if current_stage == "stage3":
             # TODO : Figure out better way to extract references
@@ -336,8 +351,8 @@ class FileController(Controller):
                 current_stage = "stage4"
         if current_stage == "stage4":
             try:
-                # TODO : Chunk document and generate embeddings.
-                print("Create Embeddings.")
+                uuidstr=
+                add_document_to_db_from_uuid()
             except:
                 response_code, response_message = (
                     422,
@@ -347,8 +362,7 @@ class FileController(Controller):
                 current_stage = "stage5"
 
         if current_stage == "completed":
-            response_code, response_message = (
-                200, "Document Fully Processed.")
+            response_code, response_message = (200, "Document Fully Processed.")
         logger.info(current_stage)
         obj.stage = current_stage
         logger.info(response_code)
@@ -356,6 +370,7 @@ class FileController(Controller):
         newobj = files_repo.update(obj)
 
         await files_repo.session.commit()
+
     # @patch(path="/files/{file_id:uuid}")
     # async def update_file(
     #     self,
@@ -375,8 +390,7 @@ class FileController(Controller):
     async def delete_file(
         self,
         files_repo: FileRepository,
-        file_id: UUID = Parameter(
-            title="File ID", description="File to retieve"),
+        file_id: UUID = Parameter(title="File ID", description="File to retieve"),
     ) -> None:
         fid = UUID(file_id)
         _ = await files_repo.delete(fid)
@@ -384,7 +398,7 @@ class FileController(Controller):
 
     @post(path="/files/index")
     async def index_file(self, data: IndexFileRequest, request: Request) -> Any:
-        request.logger.info(f'index request data:\n{data}')
+        request.logger.info(f"index request data:\n{data}")
         id = data.id
         try:
             await indexDocByID(id)
@@ -392,4 +406,3 @@ class FileController(Controller):
         except Exception as e:
             request.logger.critical("unable to index file")
             return "faield to index"
-

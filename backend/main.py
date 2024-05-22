@@ -16,6 +16,7 @@ from models import utils
 from util.logging import logging_config
 from routing.file_controller import FileController
 from routing.search_controller import SearchController
+from routing.rag_controller import RagController
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +67,7 @@ async def provide_limit_offset_pagination(
 
 cors_config = CORSConfig(allow_origins=["*.*"])
 
-api_router = Router(path="/api", route_handlers=[FileController, SearchController])
+api_router = Router(path="/api", route_handlers=[FileController, SearchController,RagController])
 
 app = Litestar(
     on_startup=[on_startup],
