@@ -60,12 +60,9 @@ class UUIDEncoder(json.JSONEncoder):
             return obj.hex
         return json.JSONEncoder.default(self, obj)
 
-
-
 class SimpleChatCompletion(BaseModel):
     model: Optional[str]
     chat_history: List[Dict[str, str]]
-
 
 class RAGChat(BaseModel):
     model: Optional[str]

@@ -2,8 +2,6 @@ import logging
 import sys
 import os
 
-
-
 import asyncio
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
@@ -13,30 +11,6 @@ from typing import List, Dict, Tuple, Optional
 
 # Import the FileModel from file.py
 from file import FileModel, sqlalchemy_config
-
-
-logger = logging.getLogger()
-
-
-logger.setLevel(logging.DEBUG)
-
-handler = logging.StreamHandler(sys.stderr)
-""""
-# Postgres Vector Store
-In this notebook we are going to show how to use [Postgresql](https://www.postgresql.org) and  [pgvector](https://github.com/pgvector/pgvector)  to perform vector searches in LlamaIndex
-
-If you're opening this Notebook on colab, you will probably need to install LlamaIndex 🦙.
-"""
-
-"""Running the following cell will install Postgres with PGVector in Colab."""
-
-
-# import logging
-# import sys
-
-# Uncomment to see debug logs
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
-logging.getLogger().addHandler(logging.StreamHandler(stream=sys.stdout))
 
 from llama_index.core import SimpleDirectoryReader, StorageContext
 from llama_index.core import VectorStoreIndex
@@ -48,6 +22,29 @@ from llama_index.llms.groq import Groq
 
 from llama_index.readers.database import DatabaseReader
 
+from sqlalchemy import make_url
+from llama_index.core.response_synthesizers import CompactAndRefine
+from llama_index.core.retrievers import QueryFusionRetriever
+from llama_index.core.query_engine import RetrieverQueryEngine
+
+import os
+
+
+import psycopg2
+
+
+logger = logging.getLogger()
+
+
+logger.setLevel(logging.DEBUG)
+
+handler = logging.StreamHandler(sys.stderr)
+
+
+# Uncomment to see debug logs
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+logging.getLogger().addHandler(logging.StreamHandler(stream=sys.stdout))
+
 
 GROQ_API_KEY = os.environ["GROQ_API_KEY"]
 Settings.llm = Groq(
@@ -57,31 +54,6 @@ Settings.llm = Groq(
 openai.api_key = os.environ["OPENAI_API_KEY"]
 # TODO : Change embedding model to use not openai.
 # Settings.embed_model = OllamaEmbedding(model_name="nomic-embed-text")
-"""### Setup OpenAI
-The first step is to configure the openai key. It will be used to created embeddings for the documents loaded into the index
-"""
-
-import os
-
-# os.environ["OPENAI_API_KEY"] = "<your key>"
-
-"""Download Data"""
-
-# !mkdir -p 'data/paul_graham/'
-# !wget 'https://raw.githubusercontent.com/run-llama/llama_index/main/docs/docs/examples/data/paul_graham/paul_graham_essay.txt' -O 'data/paul_graham/paul_graham_essay.txt'
-
-"""### Loading documents
-Load the documents stored in the `data/paul_graham/` using the SimpleDirectoryReader
-"""
-
-documents = SimpleDirectoryReader(datadir).load_data()
-logger.info("Document ID:", documents[0].doc_id)
-
-"""### Create the Database
-Using an existing postgres running at localhost, create the database we'll be using.
-"""
-
-import psycopg2
 
 connection_string_unknown = os.environ["DATABASE_CONNECTION_STRING"]
 
@@ -97,7 +69,7 @@ async_postgres_connection_string = sync_postgres_connection_string.replace("post
 
 
 db_name = "postgres"
-vec_table_name = "vector_db"
+vec_table_name = "demo_vectordb"
 file_table_name = "file"
 
 
@@ -105,27 +77,50 @@ conn = psycopg2.connect(connection_string)
 conn.autocommit = True
 
 
-"""### Hybrid Search
-
-To enable hybrid search, you need to:
-1. pass in `hybrid_search=True` when constructing the `PGVectorStore` (and optionally configure `text_search_config` with the desired language)
-2. pass in `vector_store_query_mode="hybrid"` when constructing the query engine (this config is passed to the retriever under the hood). You can also optionally set the `sparse_top_k` to configure how many results we should obtain from sparse text search (default is using the same value as `similarity_top_k`).
-"""
-
-from sqlalchemy import make_url
-
-url = make_url(connection_string)
 
 
-reader = DatabaseReader(
-    dbname=db_name,
+url = make_url(sync_postgres_connection_string)
+hybrid_vector_store = PGVectorStore.from_params(
+    database=db_name,
     host=url.host,
     password=url.password,
     port=url.port,
     user=url.username,
+    table_name=vec_table_name,
+    embed_dim=1536,  # openai embedding dimension
+    hybrid_search=True,
+    text_search_config="english",
+)
+storage_context = StorageContext.from_defaults(
+    vector_store=hybrid_vector_store
 )
 
+initial_documents = []
+hybrid_index = VectorStoreIndex.from_documents(
+    initial_documents, storage_context=storage_context
+)
 
+vector_retriever = hybrid_index.as_retriever(
+    vector_store_query_mode="default",
+    similarity_top_k=5,
+)
+text_retriever = hybrid_index.as_retriever(
+    vector_store_query_mode="sparse",
+    similarity_top_k=5,  # interchangeable with sparse_top_k in this context
+)
+retriever = QueryFusionRetriever(
+    [vector_retriever, text_retriever],
+    similarity_top_k=5,
+    num_queries=1,  # set this to 1 to disable query generation
+    mode="relative_score",
+    use_async=False,
+)
+
+response_synthesizer = CompactAndRefine()
+query_engine = RetrieverQueryEngine(
+    retriever=retriever,
+    response_synthesizer=response_synthesizer,
+)
 from llama_index.core import Document
 
 async def add_document_to_db_from_uuid(uuid_str: str) -> None:
@@ -195,47 +190,10 @@ async def add_document_to_db_from_hash(hash_str: str) -> None:
     hybrid_index.insert(additional_document)
     return None
 
-hybrid_response = hybrid_query_engine.query(
-    "Who does Paul Graham think of with the word schtick"
-)
 
 
-"""#### Improving hybrid search with QueryFusionRetriever
 
-Since the scores for text search and vector search are calculated differently, the nodes that were found only by text search will have a much lower score.
 
-You can often improve hybrid search performance by using `QueryFusionRetriever`, which makes better use of the mutual information to rank the nodes.
-"""
-
-from llama_index.core.response_synthesizers import CompactAndRefine
-from llama_index.core.retrievers import QueryFusionRetriever
-from llama_index.core.query_engine import RetrieverQueryEngine
-
-vector_retriever = hybrid_index.as_retriever(
-    vector_store_query_mode="default",
-    similarity_top_k=5,
-)
-text_retriever = hybrid_index.as_retriever(
-    vector_store_query_mode="sparse",
-    similarity_top_k=5,  # interchangeable with sparse_top_k in this context
-)
-retriever = QueryFusionRetriever(
-    [vector_retriever, text_retriever],
-    similarity_top_k=5,
-    num_queries=1,  # set this to 1 to disable query generation
-    mode="relative_score",
-    use_async=False,
-)
-
-response_synthesizer = CompactAndRefine()
-query_engine = RetrieverQueryEngine(
-    retriever=retriever,
-    response_synthesizer=response_synthesizer,
-)
-
-# response = query_engine.query(
-#     "Who does Paul Graham think of with the word schtick, and why?"
-# )
 def create_rag_response_from_query( query : str ):
     return str(query_engine.query(query))
 
