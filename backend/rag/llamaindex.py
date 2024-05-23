@@ -10,7 +10,7 @@ from sqlalchemy.orm import sessionmaker
 from typing import List, Dict, Tuple, Optional
 
 # Import the FileModel from file.py
-from file import FileModel, sqlalchemy_config
+from models.files import FileModel
 
 from llama_index.core import SimpleDirectoryReader, StorageContext
 from llama_index.core import VectorStoreIndex
