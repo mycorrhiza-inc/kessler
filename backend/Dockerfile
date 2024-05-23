@@ -6,6 +6,7 @@ ENV VIRTUAL_ENV=/usr/local
 # RUN /install.sh && rm /install.sh
  
 WORKDIR /app
+COPY . /app
 COPY requirements.txt /app/requirements.txt
  
 RUN pip install --no-cache -r requirements.txt 
