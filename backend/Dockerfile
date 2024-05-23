@@ -9,10 +9,10 @@ WORKDIR /app
 COPY requirements.txt /app/requirements.txt
  
 RUN pip install --no-cache -r requirements.txt 
+COPY . . 
 
 # expose to docker network
-COPY . .
-EXPOSE 5505
+EXPOSE 5555
 
 # Command should be in dockerfile
-CMD ["uvicorn","main:app", "--host", "0.0.0.0", "5505", "--workers", "4"]
+CMD ["uvicorn","main:app", "--host", "0.0.0.0", "5555", "--workers", "4"]

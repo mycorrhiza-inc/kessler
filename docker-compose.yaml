@@ -2,25 +2,25 @@
 version: "3"
 
 services:
-  #   reverse-proxy:
-  #     # official image
-  #     image: traefik:v2.11
-  #
-  #     # eable web ui, listen to docker
-  #     command: --api.insecure=true --providers.docker
-  #     ports:
-  #       - "80:80"
-  #       - "8081:8080"
-  #     volumes:
-  #       - /var/run/docker.sock:/var/run/docker.sock
+  reverse-proxy:
+    # official image
+    image: traefik:v2.11
 
-  rabbitmq:
-    image: rabbitmq:latest
+    # eable web ui, listen to docker
+    command: --api.insecure=true --providers.docker
     ports:
-      - "5672:5672"
+      - "${PROXY_PORT}:80"
+      - "${PROXY_UI_PORT}:8080"
     volumes:
-      - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
-      - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  # rabbitmq:
+  #   image: rabbitmq:latest
+  #   ports:
+  #     - "5672:5672"
+  #   volumes:
+  #     - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+  #     - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
 
   # chroma is handled in process in the backend
   backend:
@@ -31,11 +31,9 @@ services:
     env_file:
       - .env
     volumes:
-      # - ./backend:/app
       - ./volumes/instance:/app/instance
       - ./volumes/files:/files
       - ./volumes/tmp:/tmp/
-      # - ./server.htpasswd:/app/server.htpasswd
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.backend.rule=PathPrefix(`/api`)"
