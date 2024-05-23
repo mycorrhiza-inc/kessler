@@ -9,6 +9,7 @@ WORKDIR /app
 COPY requirements.txt /app/requirements.txt
  
 RUN pip install --no-cache -r requirements.txt 
+COPY . . 
 
 # expose to docker network
 EXPOSE 5555
