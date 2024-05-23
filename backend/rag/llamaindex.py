@@ -123,37 +123,6 @@ query_engine = RetrieverQueryEngine(
 )
 from llama_index.core import Document
 
-async def add_document_to_db_from_uuid(uuid_str: str) -> None:
-    async def query_file_table_for_id(id: str) -> Tuple[any, any]:
-        # Create an async engine and session
-        engine = create_async_engine(async_postgres_connection_string, echo=True)
-        async_session_maker = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
-
-        async with async_session_maker() as session:
-            async with FileModel.repo() as repo:
-                # Create a query to select the first row matching the given id
-                stmt = select(FileModel).where(FileModel.id == id)
-                result = await session.execute(stmt)
-                file_row = result.scalars().first()
-
-                if file_row:
-                    english_text = file_row.english_text
-                    document_metadata = file_row.doc_metadata
-                else:
-                    english_text = None
-                    document_metadata = None
-
-                return (english_text, document_metadata)
-    return_tuple = await query_file_table_for_id(id)
-    english_text = return_tuple[0]
-    doc_metadata = return_tuple[1]
-    assert isinstance(english_text,str)
-    assert isinstance(doc_metadata,dict)
-    # TODO : Add support for metadata filtering 
-    additional_document = Document(text = english_text, metadata = doc_metadata)
-    additional_document.doc_id = str(uuid_str)
-    hybrid_index.insert(additional_document)
-    return None
 
 
 
@@ -181,15 +150,49 @@ async def add_document_to_db_from_hash(hash_str: str) -> None:
     return_tuple = await query_file_table_for_hash(hash_str)
     english_text = return_tuple[0]
     doc_metadata = return_tuple[1]
-    assert isinstance(english_text,str)
-    assert isinstance(doc_metadata,dict)
-    # TODO : Add support for metadata filtering 
-    additional_document = Document(text = english_text, metadata = doc_metadata)
-    additional_document.doc_id = str(hash) 
-    # FIXME : Make sure the UUID matches the other function, and dryify this entire fucking mess.
-    hybrid_index.insert(additional_document)
+    if not english_text is None:
+        assert isinstance(english_text,str)
+        assert isinstance(doc_metadata,dict)
+        # TODO : Add support for metadata filtering 
+        additional_document = Document(text = english_text, metadata = doc_metadata)
+        additional_document.doc_id = str(hash) 
+        # FIXME : Make sure the UUID matches the other function, and dryify this entire fucking mess.
+        hybrid_index.insert(additional_document)
     return None
 
+
+async def add_all_documents_to_db() -> None:
+    async def query_file_table_for_all_rows() -> List[Tuple[str, dict]]:
+        # Create an async engine and session
+        engine = create_async_engine(async_postgres_connection_string, echo=True)
+        async_session_maker = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+
+        async with async_session_maker() as session:
+            async with FileModel.repo() as repo:
+                # Create a query to select all rows
+                stmt = select(FileModel)
+                result = await session.execute(stmt)
+                file_rows = result.scalars().all()
+
+                documents = []
+                for file_row in file_rows:
+                    if file_row.english_text is not None and isinstance(file_row.doc_metadata, dict):
+                        documents.append((file_row.english_text, file_row.doc_metadata))
+                
+                return documents
+    
+    documents = await query_file_table_for_all_rows()
+    
+    for english_text, doc_metadata in documents:
+        if not english_text is None: 
+            additional_document = Document(text=english_text, metadata=doc_metadata)
+            additional_document.doc_id = str(doc_metadata.get('hash', ''))  # Setting a value for `doc_id`, customize as needed
+            # FIXME: Ensure the UUID generation strategy matches the rest of your system.
+            hybrid_index.insert(additional_document)
+    return None
+
+async def regenerate_vector_database_from_file_table() -> None:
+    return None
 
 
 

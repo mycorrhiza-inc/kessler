@@ -81,13 +81,15 @@ from llama_index.llms.groq import Groq
 
 
 
+
+
 GROQ_API_KEY = os.environ["GROQ_API_KEY"]
 groq_llm = Groq(
     model="llama3-70b-8192", request_timeout=360.0, api_key=GROQ_API_KEY
 )
 
 
-from rag.llamaindex import create_rag_response_from_query
+from rag.llamaindex import create_rag_response_from_query, regenerate_vector_database_from_file_table
 
 def validate_chat(chat_history : List[Dict[str, str]]) -> bool:
     if not isinstance(chat_history, list):
@@ -165,4 +167,12 @@ class RagController(Controller):
         # TODO : Add support for custom model stuff.
         query = data.prompt
         response = create_rag_response_from_query(query)
+        return response
+
+    @post(path="/dangerous/regenerate_vector_database")
+    async def regen_vecdb(
+        self,
+        files_repo: FileRepository,
+    ) -> str:
+        regenerate_vector_database_from_file_table()
         return response
