@@ -191,6 +191,7 @@ async def add_all_documents_to_db() -> None:
     return None
 
 async def regenerate_vector_database_from_file_table() -> None:
+    await add_all_documents_to_db()
     return None
 
 

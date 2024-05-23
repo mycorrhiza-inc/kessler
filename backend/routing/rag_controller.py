@@ -155,7 +155,7 @@ class RagController(Controller):
         response = groq_llm.chat(chat_history)
         return response
 
-    @post(path="/rag/rag_chat")
+    @post(path="/rag/rag_query")
     async def rag_query(
         self,
         files_repo: FileRepository,
