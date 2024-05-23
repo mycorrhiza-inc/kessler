@@ -35,7 +35,7 @@ services:
       - ./volumes/instance:/app/instance
       - ./volumes/files:/files
       - ./volumes/tmp:/tmp/
-      - ./server.htpasswd:/app/server.htpasswd
+      # - ./server.htpasswd:/app/server.htpasswd
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.backend.rule=PathPrefix(`/api`)"
