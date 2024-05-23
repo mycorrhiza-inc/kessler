@@ -159,7 +159,7 @@ class RagController(Controller):
     async def rag_query(
         self,
         files_repo: FileRepository,
-        data : SimpleChatCompletion
+        data : RAGQueryResponse
     ) -> str:
         model_name = data.model
         if model_name is None:
