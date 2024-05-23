@@ -20,7 +20,6 @@ import textwrap
 import openai
 from llama_index.llms.groq import Groq
 
-from llama_index.readers.database import DatabaseReader
 
 from sqlalchemy import make_url
 from llama_index.core.response_synthesizers import CompactAndRefine
