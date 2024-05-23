@@ -351,7 +351,6 @@ class FileController(Controller):
                 current_stage = "stage4"
         if current_stage == "stage4":
             try:
-                uuidstr=
                 add_document_to_db_from_uuid()
             except:
                 response_code, response_message = (
