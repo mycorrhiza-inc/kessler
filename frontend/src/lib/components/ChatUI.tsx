@@ -402,8 +402,8 @@ function MessageComponent({
 }
 
 function ChatBox() {
-  const [messages, setMessages] = useState<Message[]>(startingMessages);
-  // const [messages, setMessages] = useState<Message[]>([]);
+  // const [messages, setMessages] = useState<Message[]>(startingMessages);
+  const [messages, setMessages] = useState<Message[]>([]);
   let roleText = "";
   const appendMessage = async (m: Message) => {
     console.log(`appending message "${m.body}"`);
