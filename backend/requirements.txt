@@ -74,6 +74,7 @@ language-data==1.2.0
 lazy-imports==0.3.1
 litestar==2.7.2
 llama-index-core==0.10.37.post1
+llama-index-embeddings-openai==0.1.10
 llama-index-llms-groq==0.1.4
 llama-index-llms-openai==0.1.19
 llama-index-llms-openai-like==0.1.3
