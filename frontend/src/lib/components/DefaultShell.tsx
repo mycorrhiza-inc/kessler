@@ -75,23 +75,6 @@ export default function Page({ children }: { children: React.ReactNode }) {
     <AppShell
       variant="static"
       minH="100vh"
-      //   navbar={
-      //     <Navbar borderBottomWidth="1px" position="sticky" top="0">
-      //       <NavbarContent justifyContent="flex-end">
-      //         <NavbarItem>
-      //           <SearchInput size="sm" />
-      //         </NavbarItem>
-      //         <NavbarItem padding="10px">
-      //           <SignedOut>
-      //             <SignInButton />
-      //           </SignedOut>
-      //           <SignedIn>
-      //             <UserButton />
-      //           </SignedIn>
-      //         </NavbarItem>
-      //       </NavbarContent>
-      //     </Navbar>
-      //   }
       sidebar={
         <Sidebar
           toggleBreakpoint={false}
@@ -108,12 +91,13 @@ export default function Page({ children }: { children: React.ReactNode }) {
               alignItems="center"
               justifyContent="center"
             >
-              <SignedOut>
+              {/* TODO: enable this when users work */}
+              {/* <SignedOut>
                 <SignInButton />
               </SignedOut>
               <SignedIn>
                 <UserButton />
-              </SignedIn>
+              </SignedIn> */}
             </NavItem>
           </SidebarSection>
           <SidebarSection direction={isOpen ? "row" : "column"}>

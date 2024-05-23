@@ -6,6 +6,7 @@ import {
   IconButton,
   Flex,
   VStack,
+  HStack,
   StackDivider,
   Box,
   Grid,
@@ -29,14 +30,17 @@ import {
 } from "@saas-ui/react";
 import { FiArrowUpCircle } from "react-icons/fi";
 import { useState } from "react";
+import { message } from "antd";
+import { start } from "repl";
 
-function ChatElement(props: {}) {
-  return <Box>a chat element</Box>;
+interface ChatAgent {
+  role: boolean;
 }
 
 function SourceModal() {
   // full screen modal for a given source
-  //
+
+  // TODO: cache the sourceModal text in the zustand state manager
   return (
     <Box>
       Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur
@@ -313,32 +317,152 @@ function ContextSources() {
 }
 
 interface Message {
-  body: String;
-}
-interface SystemMessage {
-  body: String;
+  role: boolean;
+  body: string;
+  key: string;
 }
 
+const startingMessages: Message[] = [
+  {
+    role: true,
+    body: "what is up?",
+    key: `${Math.floor(Math.random() * 100)}`,
+  },
+  {
+    role: false,
+    body: "nothing much, how are you? Is there anything i can help you with today?",
+    key: `${Math.floor(Math.random() * 100)}`,
+  },
+  {
+    role: true,
+    body: "Yes! I was wondering if you could check on the recent power assesment for Pueblo Colorado?",
+    key: `${Math.floor(Math.random() * 100)}`,
+  },
+  {
+    role: false,
+    body: "Sure thing, Let me Take a look",
+    key: `${Math.floor(Math.random() * 100)}`,
+  },
+  {
+    role: false,
+    body: "...",
+    key: `${Math.floor(Math.random() * 100)}`,
+  },
+  {
+    role: false,
+    body: "Pueblo colorado has .........",
+    key: `${Math.floor(Math.random() * 100)}`,
+  },
+];
+
 interface MessageComponentProps {
+  message: Message;
   editMessage: () => {};
 }
 
-function MessageComponent(message: Message) {
-  return <Box>{message.body}</Box>;
+function MessageComponent({
+  message = {
+    role: false,
+    body: "",
+    key: `${Math.floor(Math.random() * 100)}`,
+  },
+}: {
+  message: Message;
+}) {
+  return (
+    <Box
+      width="90%"
+      background={message.role == true ? "aquamarine" : "antiquewhite"}
+      borderRadius="10px"
+      // maxWidth="800px"
+      minHeight="100px"
+      justifyContent={message.role ? "right" : "left"}
+      padding="20px"
+    >
+      {/* enclosing the message */}
+      <VStack
+        // divider={<StackDivider borderColor="gray.200" />}
+        spacing={4}
+        // align="stretch"
+        overflowY="scroll"
+        // justifyContent={message.role == true ? "right" : "left"}
+        // h="100vh"
+      >
+        {/* role message */}
+          <div>
+            {message.body}
+          </div>
+        {/* <Box width="100%" height="50px">
+          {!message.role && <div>Regenerate</div>}{" "}
+          {message.role && <div>Edit</div>}
+        </Box> */}
+      </VStack>
+    </Box>
+  );
 }
 
 function ChatBox() {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const appendMessage = (m: Message) => {
-    setMessages([...messages, m]);
+  const [messages, setMessages] = useState<Message[]>(startingMessages);
+  // const [messages, setMessages] = useState<Message[]>([]);
+  let roleText = "";
+  const appendMessage = async (m: Message) => {
+    console.log(`appending message "${m.body}"`);
+    if (messages.length == 0) {
+      setMessages([m]);
+      return;
+    } else {
+      setMessages([...messages, m]);
+    }
+    console.log(messages);
+    return;
   };
 
-  const sendMessage = (params: any) => {
+  const getResponse = async () => {
+    let chat_hist = messages.map((m) => {
+      let { key, ...rest } = m;
+
+      return rest;
+    });
+    let result = await fetch(
+      "http://uttu-fedora/api/rag/basic_chat_completion",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
+        body: JSON.stringify({
+          model: null,
+          chat_history: messages,
+        }),
+      }
+    ).then((e) => {
+      console.log("completed request");
+      console.log(e);
+      if (e.status < 200 || e.status > 299) {
+        console.log(`error adding links:\n${e}`);
+        return "failed request";
+      }
+      return e.json();
+    });
+    console.log(result);
+    setMessages(result);
+  };
+
+  interface msgSent {
+    messageInput: string;
+  }
+  const sendMessage = async (params: msgSent) => {
     console.log("sending message");
     console.log(params);
-    return new Promise((resolve) => {
-      setTimeout(resolve, 1000);
-    });
+    console.log(`msg: ${params.messageInput}`);
+    let roleMsg: Message = {
+      role: true,
+      body: params.messageInput,
+      key: `${Math.floor(Math.random() * 100)}`,
+    };
+    appendMessage(roleMsg);
   };
 
   /*
@@ -351,22 +475,14 @@ function ChatBox() {
       <VStack
         divider={<StackDivider borderColor="gray.200" />}
         spacing={4}
-        align="stretch"
         flexDir="column"
         overflow="scroll"
         h="100vh"
       >
-        <SourceBox content="Source" />
-        <SourceBox content="Source" />
-        <SourceBox content="Source" />
-        <SourceBox content="Source" />
-        <SourceBox content="Source" />
-        <SourceBox content="overflow" />
-        <SourceBox content="overflow" />
-        <SourceBox content="overflow" />
-        <SourceBox content="overflow" />
-        <SourceBox content="overflow" />
-        <SourceBox content="overflow" />
+        {messages.map((m: Message) => {
+          return <MessageComponent key={m.key} message={m} />;
+        })}
+        <Box minHeight="300px" width="100%" color="red"/>
       </VStack>
       <Form onSubmit={sendMessage}>
         <FormLayout>
@@ -376,9 +492,8 @@ function ChatBox() {
             justifySelf="center"
             justifyContent="center"
             bg="white"
-            w="90%"
+            w="85%"
             borderColor="green"
-            border="solid"
             borderRadius="10px"
             borderWidth="1px"
             position="absolute"
@@ -432,14 +547,14 @@ export default function ChatUI({ convoID = "" }: { convoID?: string }) {
         overflow="clip"
         position="relative"
       >
-        <Grid h="100%" gridTemplateColumns={"5fr 1.4fr"} gap={5}>
-          <GridItem rowSpan={10} overflow="scroll clip" position="relative">
+        <Grid h="100%" gridTemplateColumns={"5fr"} gap={5}>
+          <GridItem rowSpan={10} colSpan="auto" overflow="scroll clip" position="relative">
             <ChatBox />
           </GridItem>
 
-          <GridItem rowSpan={10} overflow="scroll clip">
+          {/* <GridItem rowSpan={10} overflow="scroll clip">
             <ContextSources />
-          </GridItem>
+          </GridItem> */}
         </Grid>
       </Box>
     </Center>
