@@ -11,7 +11,7 @@ COPY requirements.txt /app/requirements.txt
 RUN pip install --no-cache -r requirements.txt 
 
 # expose to docker network
-ADD . .
+COPY . .
 EXPOSE 5505
 
 # Command should be in dockerfile
