@@ -174,6 +174,7 @@ class FileController(Controller):
         data: UrlUpload,
         request: Request,
         process: bool = False,
+        override_hash : bool = False
     ) -> Any:
         request.logger.info("adding files")
         request.logger.info(data)
@@ -206,6 +207,9 @@ class FileController(Controller):
         query = select(FileModel).where(FileModel.hash == filehash)
         duplicate_file_objects = await files_repo.session.execute(query)
         duplicate_file_obj = duplicate_file_objects.scalar()
+        if override_hash == True:
+            await files_repo.delete(duplicate_file_obj.id)
+            duplicate_file_obj = None
         if duplicate_file_obj is None:
             docingest.backup_metadata_to_hash(metadata, filehash)
             new_file = FileModel(
