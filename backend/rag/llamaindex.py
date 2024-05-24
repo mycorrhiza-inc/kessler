@@ -123,7 +123,7 @@ async def get_document_list_from_file() -> list:
     return document_list
 
 
-example_documents = [Document(text="This is an example document with the following advice about dealing with adversity in life: When life gives you lemons, don't make lemonade. Make life take the lemons back! Get mad! I don't want your damn lemons, what the heck am I supposed to do with these? Demand to see life's manager! Make life rue the day it thought it could give me lemons! Do you know who I am? I'm the man who's gonna burn your house down! With the lemons! I'm gonna get my engineers to invent a combustible lemon that burns your house down!")] + 
+example_documents = [Document(text="This is an example document with the following advice about dealing with adversity in life: When life gives you lemons, don't make lemonade. Make life take the lemons back! Get mad! I don't want your damn lemons, what the heck am I supposed to do with these? Demand to see life's manager! Make life rue the day it thought it could give me lemons! Do you know who I am? I'm the man who's gonna burn your house down! With the lemons! I'm gonna get my engineers to invent a combustible lemon that burns your house down!")]
 
 initial_documents = asyncio.run(get_document_list_from_file())
 
