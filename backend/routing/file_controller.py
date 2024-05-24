@@ -209,7 +209,11 @@ class FileController(Controller):
         duplicate_file_objects = await files_repo.session.execute(query)
         duplicate_file_obj = duplicate_file_objects.scalar()
         if override_hash == True:
-            await files_repo.delete(duplicate_file_obj.id)
+            if not duplicate_file_obj is None:
+                try:
+                    await files_repo.delete(duplicate_file_obj.id)
+                finally:
+                    duplicate_file_obj = None
             duplicate_file_obj = None
         if duplicate_file_obj is None:
             docingest.backup_metadata_to_hash(metadata, filehash)
