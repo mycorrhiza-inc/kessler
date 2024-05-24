@@ -90,7 +90,10 @@ storage_context = StorageContext.from_defaults(
     vector_store=hybrid_vector_store
 )
 
-initial_documents = []
+
+from llama_index.core import Document
+
+initial_documents = [Document(text="This is a test document with example text.")]
 hybrid_index = VectorStoreIndex.from_documents(
     initial_documents, storage_context=storage_context
 )
@@ -116,7 +119,6 @@ query_engine = RetrieverQueryEngine(
     retriever=retriever,
     response_synthesizer=response_synthesizer,
 )
-from llama_index.core import Document
 
 
 
