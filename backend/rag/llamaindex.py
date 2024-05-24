@@ -92,10 +92,6 @@ hybrid_vector_store = PGVectorStore.from_params(
 storage_context = StorageContext.from_defaults(
     vector_store=hybrid_vector_store
 )
-
-
-
-
 # initial_documents = asyncio.run(get_document_list_from_file())
 # initial_documents = await get_document_list_from_file()
 
