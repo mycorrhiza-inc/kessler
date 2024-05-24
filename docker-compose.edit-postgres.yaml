@@ -14,13 +14,13 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 
-  # rabbitmq:
-  #   image: rabbitmq:latest
-  #   ports:
-  #     - "5672:5672"
-  #   volumes:
-  #     - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
-  #     - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+  rabbitmq:
+    image: rabbitmq:latest
+    ports:
+      - "5672:5672"
+    volumes:
+      - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+      - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
 
   # chroma is handled in process in the backend
   backend:
@@ -28,8 +28,6 @@ services:
       context: ./backend
       # dockerfile: ./Dockerfile
       dockerfile: ./Dockerfile
-    environment:
-      - DATABASE_CONNECTION_STRING=postgresql+asyncpg://postgres:password@postgres:5432
     env_file:
       - .env
     volumes:
@@ -94,3 +92,4 @@ services:
     volumes:
       - ./volumes/pgdata:/var/lib/postgresql/data
 # A docker compose for editing the postgres directly
+
