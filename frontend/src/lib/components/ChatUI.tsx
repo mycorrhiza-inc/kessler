@@ -16,7 +16,6 @@ import {
   ModalContent,
   ModalHeader,
   ModalFooter,
-  ModalBody,
   ModalCloseButton,
   Container,
 } from "@chakra-ui/react";
@@ -261,9 +260,9 @@ function SourceBox({ content }: { content: string }) {
         <ModalContent maxH="3000px" maxW="1500px" overflow="scroll">
           <ModalHeader>Modal Title</ModalHeader>
           <ModalCloseButton />
-          <ModalBody>
+          <Modalcontent>
             <SourceModal />
-          </ModalBody>
+          </Modalcontent>
 
           <ModalFooter>
             <Button colorScheme="blue" mr={3} onClick={toggleModal}>
@@ -318,39 +317,41 @@ function ContextSources() {
 
 interface Message {
   role: string;
-  body: string;
+  content: string;
   key: string;
 }
 
 const startingMessages: Message[] = [
   {
-    role: true,
-    body: "what is up?",
+    role: "user",
+    content: "what is up?",
     key: `${Math.floor(Math.random() * 100)}`,
   },
   {
-    role: false,
-    body: "nothing much, how are you? Is there anything i can help you with today?",
+    role: "assistant",
+    content:
+      "nothing much, how are you? Is there anything i can help you with today?",
     key: `${Math.floor(Math.random() * 100)}`,
   },
   {
-    role: true,
-    body: "Yes! I was wondering if you could check on the recent power assesment for Pueblo Colorado?",
+    role: "user",
+    content:
+      "Yes! I was wondering if you could check on the recent power assesment for Pueblo Colorado?",
     key: `${Math.floor(Math.random() * 100)}`,
   },
   {
-    role: false,
-    body: "Sure thing, Let me Take a look",
+    role: "assistant",
+    content: "Sure thing, Let me Take a look",
     key: `${Math.floor(Math.random() * 100)}`,
   },
   {
-    role: false,
-    body: "...",
+    role: "user",
+    content: "...",
     key: `${Math.floor(Math.random() * 100)}`,
   },
   {
-    role: false,
-    body: "Pueblo colorado has .........",
+    role: "assistant",
+    content: "Pueblo colorado has .........",
     key: `${Math.floor(Math.random() * 100)}`,
   },
 ];
@@ -363,7 +364,7 @@ interface MessageComponentProps {
 function MessageComponent({
   message = {
     role: "user",
-    body: "",
+    content: "",
     key: `${Math.floor(Math.random() * 100)}`,
   },
 }: {
@@ -389,9 +390,7 @@ function MessageComponent({
         // h="100vh"
       >
         {/* role message */}
-          <div>
-            {message.body}
-          </div>
+        <div>{message.content}</div>
         {/* <Box width="100%" height="50px">
           {!message.role && <div>Regenerate</div>}{" "}
           {message.role && <div>Edit</div>}
@@ -404,50 +403,61 @@ function MessageComponent({
 function ChatBox() {
   // const [messages, setMessages] = useState<Message[]>(startingMessages);
   const [messages, setMessages] = useState<Message[]>([]);
+  // let messages: Message[] = [];
   let roleText = "";
   const appendMessage = async (m: Message) => {
-    console.log(`appending message "${m.body}"`);
+    console.log(`appending message "${m.content}"`);
     if (messages.length == 0) {
+      // messages = [m];
       setMessages([m]);
       return;
     } else {
+      // messages = [...messages, m];
       setMessages([...messages, m]);
     }
     console.log(messages);
     return;
   };
 
-  const getResponse = async () => {
+  const getResponse = async (m: Message) => {
+    appendMessage(m);
     let chat_hist = messages.map((m) => {
       let { key, ...rest } = m;
 
       return rest;
     });
     let result = await fetch(
-      "http://uttu-fedora:5505/api/rag/basic_chat_completion",
+      "http://uttu-fedora:5505/api/rag/simple_chat_completion",
       {
         method: "POST",
+        mode: "cors",
         headers: {
           "Content-Type": "application/json",
-          Accept: "application/json",
-          "Access-Control-Allow-Origin":"*"
+          accept: "application/json",
+          "Access-Control-Allow-Origin": "*",
+          "Referrer-Policy": "no-referrer"
         },
         body: JSON.stringify({
           model: null,
-          chat_history: messages,
+          chat_history: chat_hist,
         }),
       }
-    ).then((e) => {
-      console.log("completed request");
-      console.log(e);
-      if (e.status < 200 || e.status > 299) {
-        console.log(`error adding links:\n${e}`);
-        return "failed request";
-      }
-      return e.json();
-    });
+    )
+      .then((e) => {
+        console.log("completed request");
+        console.log(e);
+        if (e.status < 200 || e.status > 299) {
+          console.log(`error adding links:\n${e}`);
+          return "failed request";
+        }
+        return e.json();
+      })
+      .catch((e) => {
+        console.log("error making request");
+        console.log(JSON.stringify(e));
+      });
     console.log(result);
-    setMessages(result);
+    // setMessages(result);
   };
 
   interface msgSent {
@@ -459,11 +469,10 @@ function ChatBox() {
     console.log(`msg: ${params.messageInput}`);
     let roleMsg: Message = {
       role: "user",
-      body: params.messageInput,
+      content: params.messageInput,
       key: `${Math.floor(Math.random() * 100)}`,
     };
-    appendMessage(roleMsg);
-    await getResponse();
+    getResponse(roleMsg);
   };
 
   /*
@@ -483,7 +492,7 @@ function ChatBox() {
         {messages.map((m: Message) => {
           return <MessageComponent key={m.key} message={m} />;
         })}
-        <Box minHeight="300px" width="100%" color="red"/>
+        <Box minHeight="300px" width="100%" color="red" />
       </VStack>
       <Form onSubmit={sendMessage}>
         <FormLayout>
@@ -549,7 +558,12 @@ export default function ChatUI({ convoID = "" }: { convoID?: string }) {
         position="relative"
       >
         <Grid h="100%" gridTemplateColumns={"5fr"} gap={5}>
-          <GridItem rowSpan={10} colSpan="auto" overflow="scroll clip" position="relative">
+          <GridItem
+            rowSpan={10}
+            colSpan="auto"
+            overflow="scroll clip"
+            position="relative"
+          >
             <ChatBox />
           </GridItem>
 
