@@ -53,6 +53,7 @@ from util.haystack import indexDocByID, get_indexed_by_id
 import json
 
 
+
 class UUIDEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, UUID):
@@ -123,7 +124,7 @@ OS_FILEDIR = Path("/files/")
 # import base64
 
 
-from rag.llamaindex import add_document_to_db_from_hash
+from rag.llamaindex import add_document_to_db_from_text
 
 
 class FileController(Controller):
@@ -356,12 +357,10 @@ class FileController(Controller):
             current_stage = "stage4"
         if current_stage == "stage4":
             try:
-                hashstr = obj.hash
-                await add_document_to_db_from_hash(hashstr)
+                add_document_to_db_from_text(obj.english_text,obj.doc_metadata)
             except:
                 response_code, response_message = (
-                    422,
-                    "failure in stage 2: document was unable to be translated to english.",
+                    422, "Failure in adding document to vector database"
                 )
             else:
                 current_stage = "stage5"
