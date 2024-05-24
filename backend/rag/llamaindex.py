@@ -72,10 +72,6 @@ vec_table_name = "demo_vectordb"
 file_table_name = "file"
 
 
-conn = psycopg2.connect(sync_postgres_connection_string)
-conn.autocommit = True
-
-
 
 
 url = make_url(sync_postgres_connection_string)
