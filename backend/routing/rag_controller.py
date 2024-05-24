@@ -60,62 +60,71 @@ class UUIDEncoder(json.JSONEncoder):
             return obj.hex
         return json.JSONEncoder.default(self, obj)
 
+
 class SimpleChatCompletion(BaseModel):
     model: Optional[str] = None
-    chat_history: List[Dict[str, str]] 
+    chat_history: List[Dict[str, str]]
+
 
 class RAGChat(BaseModel):
     model: Optional[str] = None
     chat_history: List[Dict[str, str]]
+
+
 class RAGQueryResponse(BaseModel):
     model: Optional[str] = None
-    prompt : str
+    prompt: str
+
+
 class ManualDocument(BaseModel):
-    text : str 
-    metadata : Optional[dict]
+    text: str
+    metadata: Optional[dict]
+
 
 OS_TMPDIR = Path(os.environ["TMPDIR"])
 OS_GPU_COMPUTE_URL = os.environ["GPU_COMPUTE_URL"]
 OS_FILEDIR = Path("/files/")
 
 
-
-
 from llama_index.llms.groq import Groq
 
 
-
-
-
 GROQ_API_KEY = os.environ["GROQ_API_KEY"]
-groq_llm = Groq(
-    model="llama3-70b-8192", request_timeout=360.0, api_key=GROQ_API_KEY
+groq_llm = Groq(model="llama3-70b-8192", request_timeout=360.0, api_key=GROQ_API_KEY)
+
+
+from rag.llamaindex import (
+    create_rag_response_from_query,
+    regenerate_vector_database_from_file_table,
+    add_document_to_db_from_text,
+    generate_chat_completion,
+    sanitzie_chathistory_llamaindex,
 )
 
 
-from rag.llamaindex import create_rag_response_from_query, regenerate_vector_database_from_file_table, add_document_to_db_from_text, generate_chat_completion, sanitzie_chathistory_llamaindex
-
-def validate_chat(chat_history : List[Dict[str, str]]) -> bool:
+def validate_chat(chat_history: List[Dict[str, str]]) -> bool:
     if not isinstance(chat_history, list):
-       return False
+        return False
     found_problem = False
     for chat in chat_history:
         if not isinstance(chat, dict):
             found_problem = True
-        if not chat.get("role") in ["user","system","assistant"]:
-            found_problem = True 
-        if not isinstance(chat.get("message"),str):
-            found_problem = True 
+        if not chat.get("role") in ["user", "system", "assistant"]:
+            found_problem = True
+        if not isinstance(chat.get("message"), str):
+            found_problem = True
     return not found_problem
 
-def force_conform_chat(chat_history : List[Dict[str, str]]) -> List[Dict[str, str]]:
+
+def force_conform_chat(chat_history: List[Dict[str, str]]) -> List[Dict[str, str]]:
     chat_history = list(chat_history)
     for chat in chat_history:
-        if not chat.get("role") in ["user","system","assistant"]:
-            chat["role"] = "system" 
-        if not isinstance(chat.get("message"),str):
+        if not chat.get("role") in ["user", "system", "assistant"]:
+            chat["role"] = "system"
+        if not isinstance(chat.get("message"), str):
             chat["message"] = str(chat.get("message"))
     return chat_history
+
 
 class RagController(Controller):
     """File Controller"""
@@ -124,36 +133,26 @@ class RagController(Controller):
 
     @post(path="/rag/simple_chat_completion")
     async def simple_chat_completion(
-        self,
-        files_repo: FileRepository,
-        data : SimpleChatCompletion
+        self, files_repo: FileRepository, data: SimpleChatCompletion
     ) -> dict:
         model_name = data.model
         if model_name == "":
             model_name = None
         if model_name is None:
-            model_name = "llama3-70b-8192" 
-        groq_llm = Groq(
-            model=model_name, request_timeout=360.0, api_key=GROQ_API_KEY
-        )
+            model_name = "llama3-70b-8192"
+        groq_llm = Groq(model=model_name, request_timeout=360.0, api_key=GROQ_API_KEY)
         chat_history = data.chat_history
         chat_history = force_conform_chat(chat_history)
         assert validate_chat(chat_history), chat_history
-        llama_chat_history=sanitzie_chathistory_llamaindex(chat_history)
+        llama_chat_history = sanitzie_chathistory_llamaindex(chat_history)
         response = groq_llm.chat(llama_chat_history)
         str_response = str(response)
 
-        return {
-            "role" : "assistant",
-            "content": str_response
-        }
-
+        return {"role": "assistant", "content": str_response}
 
     @post(path="/rag/rag_chat")
     async def rag_chat(
-        self,
-        files_repo: FileRepository,
-        data : SimpleChatCompletion
+        self, files_repo: FileRepository, data: SimpleChatCompletion
     ) -> dict:
         chat_history = data.chat_history
         ai_message_response = generate_chat_completion(chat_history)
@@ -161,13 +160,11 @@ class RagController(Controller):
 
     @post(path="/rag/rag_query")
     async def rag_query(
-        self,
-        files_repo: FileRepository,
-        data : RAGQueryResponse
+        self, files_repo: FileRepository, data: RAGQueryResponse
     ) -> str:
         model_name = data.model
         if model_name is None:
-            model_name = "llama3-70b-8192" 
+            model_name = "llama3-70b-8192"
         # TODO : Add support for custom model stuff.
         query = data.prompt
         response = create_rag_response_from_query(query)
@@ -175,19 +172,14 @@ class RagController(Controller):
 
     @post(path="/rag/manaul_add_doc_to_vecdb")
     async def manual_add_doc_vecdb(
-        self,
-        files_repo : FileRepository,
-        data : ManualDocument
-    )-> None:
+        self, files_repo: FileRepository, data: ManualDocument
+    ) -> None:
         doc_metadata = data.metadata
-        doc_text = data.text 
+        doc_text = data.text
         if doc_text == "":
             # Congrats for finding the portal easter egg!
             doc_text = "This is the cannonical example document with the following advice for dealing with adversity in life: All right, I've been thinking, when life gives you lemons, don't make lemonade! Make life take the lemons back! Get mad! I don't want your damn lemons! What am I supposed to do with these? Demand to see life's manager! Make life rue the day it thought it could give Cave Johnson lemons! Do you know who I am? I'm the man whose gonna burn your house down - with the lemons!"
-        add_document_to_db_from_text(doc_text,doc_metadata)
-        
-
-
+        add_document_to_db_from_text(doc_text, doc_metadata)
 
     @post(path="/dangerous/rag/regenerate_vector_database")
     async def regen_vecdb(

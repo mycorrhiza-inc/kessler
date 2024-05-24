@@ -67,14 +67,14 @@ if "postgresql+asyncpg://" in connection_string_unknown:
 else:
     sync_postgres_connection_string = connection_string_unknown
 
-async_postgres_connection_string = sync_postgres_connection_string.replace("postgresql://","postgresql+asyncpg://")
+async_postgres_connection_string = sync_postgres_connection_string.replace(
+    "postgresql://", "postgresql+asyncpg://"
+)
 
 
 db_name = "postgres"
 vec_table_name = "demo_vectordb"
 file_table_name = "file"
-
-
 
 
 url = make_url(sync_postgres_connection_string)
@@ -89,9 +89,7 @@ hybrid_vector_store = PGVectorStore.from_params(
     hybrid_search=True,
     text_search_config="english",
 )
-storage_context = StorageContext.from_defaults(
-    vector_store=hybrid_vector_store
-)
+storage_context = StorageContext.from_defaults(vector_store=hybrid_vector_store)
 # initial_documents = asyncio.run(get_document_list_from_file())
 # initial_documents = await get_document_list_from_file()
 
@@ -121,12 +119,13 @@ query_engine = RetrieverQueryEngine(
 )
 
 
-
 async def get_document_list_from_file_table() -> list:
     async def query_file_table_for_all_rows() -> List[Tuple[str, dict]]:
         # Create an async engine and session
         engine = create_async_engine(async_postgres_connection_string, echo=True)
-        async_session_maker = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+        async_session_maker = sessionmaker(
+            engine, expire_on_commit=False, class_=AsyncSession
+        )
 
         async with async_session_maker() as session:
             async with FileModel.repo() as repo:
@@ -137,38 +136,41 @@ async def get_document_list_from_file_table() -> list:
 
                 documents = []
                 for file_row in file_rows:
-                    if file_row.english_text is not None and isinstance(file_row.doc_metadata, dict):
+                    if file_row.english_text is not None and isinstance(
+                        file_row.doc_metadata, dict
+                    ):
                         documents.append((file_row.english_text, file_row.doc_metadata))
-                
+
                 return documents
-    
+
     documents = await query_file_table_for_all_rows()
     document_list = []
     for english_text, doc_metadata in documents:
-        if not english_text is None: 
+        if not english_text is None:
             additional_document = Document(text=english_text, metadata=doc_metadata)
-            additional_document.doc_id = str(doc_metadata.get('hash'))
+            additional_document.doc_id = str(doc_metadata.get("hash"))
             document_list.append(document_list)
     return document_list
 
 
-def add_document_to_db(doc : Document) -> None:
+def add_document_to_db(doc: Document) -> None:
     hybrid_index.insert(doc)
 
-def add_document_to_db_from_text(text : str, metadata : Optional[dict] = None) -> None:
+
+def add_document_to_db_from_text(text: str, metadata: Optional[dict] = None) -> None:
     if metadata is None:
         metadata = {}
-    document = Document(text=text,metadata=metadata)
+    document = Document(text=text, metadata=metadata)
     add_document_to_db(document)
-
-
 
 
 async def add_document_to_db_from_hash(hash_str: str) -> None:
     async def query_file_table_for_hash(hash: str) -> Tuple[any, any]:
         # Create an async engine and session
         engine = create_async_engine(async_postgres_connection_string, echo=True)
-        async_session_maker = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+        async_session_maker = sessionmaker(
+            engine, expire_on_commit=False, class_=AsyncSession
+        )
 
         async with async_session_maker() as session:
             async with FileModel.repo() as repo:
@@ -185,15 +187,16 @@ async def add_document_to_db_from_hash(hash_str: str) -> None:
                     document_metadata = None
 
                 return (english_text, document_metadata)
+
     return_tuple = await query_file_table_for_hash(hash_str)
     english_text = return_tuple[0]
     doc_metadata = return_tuple[1]
     if not english_text is None:
-        assert isinstance(english_text,str)
-        assert isinstance(doc_metadata,dict)
-        # TODO : Add support for metadata filtering 
-        additional_document = Document(text = english_text, metadata = doc_metadata)
-        additional_document.doc_id = str(hash) 
+        assert isinstance(english_text, str)
+        assert isinstance(doc_metadata, dict)
+        # TODO : Add support for metadata filtering
+        additional_document = Document(text=english_text, metadata=doc_metadata)
+        additional_document.doc_id = str(hash)
         # FIXME : Make sure the UUID matches the other function, and dryify this entire fucking mess.
         add_document_to_db(additional_document)
     else:
@@ -201,40 +204,36 @@ async def add_document_to_db_from_hash(hash_str: str) -> None:
     return None
 
 
-
 async def regenerate_vector_database_from_file_table() -> None:
     document_list = await get_document_list_from_file_table()
     # TODO : Try to get this to set the global VAR
-    global hybrid_index 
+    global hybrid_index
     hybrid_index = VectorStoreIndex.from_documents(
         document_list, storage_context=storage_context
     )
 
 
-
-
-
-def create_rag_response_from_query( query : str ):
+def create_rag_response_from_query(query: str):
     return str(query_engine.query(query))
 
 
-# Chat engine for rag 
+# Chat engine for rag
 from llama_index.core.llms import ChatMessage
 
-def sanitzie_chathistory_llamaindex( chat_history : List[dict]) -> List[ChatMessage]:
-    def sanitize_message(raw_message : dict) -> ChatMessage:
-        return ChatMessage(role=raw_message["role"],content = raw_message["content"])
-    return list(map(sanitize_message,chat_history))
+
+def sanitzie_chathistory_llamaindex(chat_history: List[dict]) -> List[ChatMessage]:
+    def sanitize_message(raw_message: dict) -> ChatMessage:
+        return ChatMessage(role=raw_message["role"], content=raw_message["content"])
+
+    return list(map(sanitize_message, chat_history))
 
 
-def generate_chat_completion(chat_history : List[dict]) -> dict:
+def generate_chat_completion(chat_history: List[dict]) -> dict:
     llama_index_chat_history = sanitzie_chathistory_llamaindex(chat_history)
-    chat_engine = hybrid_index.as_chat_engine(chat_mode="react", verbose=True, chat_history = llama_index_chat_history)
+    chat_engine = hybrid_index.as_chat_engine(
+        chat_mode="react", verbose=True, chat_history=llama_index_chat_history
+    )
     response = chat_engine.chat("")
     response_str = str(response)
     chat_engine.reset()
-    return {
-        "role" : "assistant",
-        "content" : response_str
-    }
-
+    return {"role": "assistant", "content": response_str}

@@ -67,7 +67,9 @@ async def provide_limit_offset_pagination(
 
 cors_config = CORSConfig(allow_origins=["*"])
 
-api_router = Router(path="/api", route_handlers=[FileController, SearchController,RagController])
+api_router = Router(
+    path="/api", route_handlers=[FileController, SearchController, RagController]
+)
 
 app = Litestar(
     on_startup=[on_startup],

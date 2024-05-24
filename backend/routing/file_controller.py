@@ -53,7 +53,6 @@ from util.haystack import indexDocByID, get_indexed_by_id
 import json
 
 
-
 class UUIDEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, UUID):
@@ -175,7 +174,7 @@ class FileController(Controller):
         data: UrlUpload,
         request: Request,
         process: bool = False,
-        override_hash : bool = False
+        override_hash: bool = False,
     ) -> Any:
         request.logger.info("adding files")
         request.logger.info(data)
@@ -361,10 +360,11 @@ class FileController(Controller):
             current_stage = "stage4"
         if current_stage == "stage4":
             try:
-                add_document_to_db_from_text(obj.english_text,obj.doc_metadata)
+                add_document_to_db_from_text(obj.english_text, obj.doc_metadata)
             except:
                 response_code, response_message = (
-                    422, "Failure in adding document to vector database"
+                    422,
+                    "Failure in adding document to vector database",
                 )
             else:
                 current_stage = "stage5"
