@@ -70,6 +70,10 @@ class RAGChat(BaseModel):
 class RAGQueryResponse(BaseModel):
     model: Optional[str]
     prompt : str
+class ManualDocument(BaseModel):
+    text : str 
+    metadata : Optional[dict]
+
 OS_TMPDIR = Path(os.environ["TMPDIR"])
 OS_GPU_COMPUTE_URL = os.environ["GPU_COMPUTE_URL"]
 OS_FILEDIR = Path("/files/")
@@ -89,7 +93,7 @@ groq_llm = Groq(
 )
 
 
-from rag.llamaindex import create_rag_response_from_query, regenerate_vector_database_from_file_table
+from rag.llamaindex import create_rag_response_from_query, regenerate_vector_database_from_file_table, add_document_to_db_from_text
 
 def validate_chat(chat_history : List[Dict[str, str]]) -> bool:
     if not isinstance(chat_history, list):
@@ -169,7 +173,23 @@ class RagController(Controller):
         response = create_rag_response_from_query(query)
         return response
 
-    @post(path="/dangerous/regenerate_vector_database")
+    @post(path="/rag/manaul_add_doc_to_vecdb")
+    async def manual_add_doc_vecdb(
+        self,
+        files_repo : FileRepository,
+        data : ManualDocument
+    )-> None:
+        doc_metadata = data.metadata
+        doc_text = data.text 
+        if doc_text == "":
+            # Congrats for finding the portal easter egg!
+            doc_text = "This is the cannonical example document with the following advice for dealing with adversity in life: All right, I've been thinking, when life gives you lemons, don't make lemonade! Make life take the lemons back! Get mad! I don't want your damn lemons! What am I supposed to do with these? Demand to see life's manager! Make life rue the day it thought it could give Cave Johnson lemons! Do you know who I am? I'm the man whose gonna burn your house down - with the lemons!"
+        add_document_to_db_from_text(doc_text,doc_metadata)
+        
+
+
+
+    @post(path="/dangerous/rag/regenerate_vector_database")
     async def regen_vecdb(
         self,
         files_repo: FileRepository,
