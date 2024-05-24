@@ -32,6 +32,9 @@ import os
 import psycopg2
 
 
+from llama_index.core import Document
+
+
 logger = logging.getLogger()
 
 
@@ -91,7 +94,39 @@ storage_context = StorageContext.from_defaults(
 )
 
 
-from llama_index.core import Document
+
+example_document= Document(text="This is an example document with the following advice about dealing with adversity in life: When life gives you lemons, don't make lemonade. Make life take the lemons back! Get mad! I don't want your damn lemons, what the heck am I supposed to do with these? Demand to see life's manager! Make life rue the day it thought it could give me lemons! Do you know who I am? I'm the man who's gonna burn your house down! With the lemons! I'm gonna get my engineers to invent a combustible lemon that burns your house down!")
+
+# initial_documents = asyncio.run(get_document_list_from_file())
+# initial_documents = await get_document_list_from_file()
+
+hybrid_index = VectorStoreIndex.from_documents(
+    example_documents + initial_documents, storage_context=storage_context
+)
+
+vector_retriever = hybrid_index.as_retriever(
+    vector_store_query_mode="default",
+    similarity_top_k=5,
+)
+text_retriever = hybrid_index.as_retriever(
+    vector_store_query_mode="sparse",
+    similarity_top_k=5,  # interchangeable with sparse_top_k in this context
+)
+retriever = QueryFusionRetriever(
+    [vector_retriever, text_retriever],
+    similarity_top_k=5,
+    num_queries=1,  # set this to 1 to disable query generation
+    mode="relative_score",
+    use_async=False,
+)
+
+response_synthesizer = CompactAndRefine()
+query_engine = RetrieverQueryEngine(
+    retriever=retriever,
+    response_synthesizer=response_synthesizer,
+)
+
+
 
 async def get_document_list_from_file() -> list:
     async def query_file_table_for_all_rows() -> List[Tuple[str, dict]]:
@@ -123,37 +158,8 @@ async def get_document_list_from_file() -> list:
     return document_list
 
 
-example_documents = [Document(text="This is an example document with the following advice about dealing with adversity in life: When life gives you lemons, don't make lemonade. Make life take the lemons back! Get mad! I don't want your damn lemons, what the heck am I supposed to do with these? Demand to see life's manager! Make life rue the day it thought it could give me lemons! Do you know who I am? I'm the man who's gonna burn your house down! With the lemons! I'm gonna get my engineers to invent a combustible lemon that burns your house down!")]
-
-# initial_documents = asyncio.run(get_document_list_from_file())
-# initial_documents = await get_document_list_from_file()
-initial_documents = []
-
-hybrid_index = VectorStoreIndex.from_documents(
-    example_documents + initial_documents, storage_context=storage_context
-)
-
-vector_retriever = hybrid_index.as_retriever(
-    vector_store_query_mode="default",
-    similarity_top_k=5,
-)
-text_retriever = hybrid_index.as_retriever(
-    vector_store_query_mode="sparse",
-    similarity_top_k=5,  # interchangeable with sparse_top_k in this context
-)
-retriever = QueryFusionRetriever(
-    [vector_retriever, text_retriever],
-    similarity_top_k=5,
-    num_queries=1,  # set this to 1 to disable query generation
-    mode="relative_score",
-    use_async=False,
-)
-
-response_synthesizer = CompactAndRefine()
-query_engine = RetrieverQueryEngine(
-    retriever=retriever,
-    response_synthesizer=response_synthesizer,
-)
+def add_singular_document_to_db(doc : Document) -> None:
+    hybrid_index.insert(doc)
 
 
 
@@ -189,16 +195,21 @@ async def add_document_to_db_from_hash(hash_str: str) -> None:
         additional_document = Document(text = english_text, metadata = doc_metadata)
         additional_document.doc_id = str(hash) 
         # FIXME : Make sure the UUID matches the other function, and dryify this entire fucking mess.
-        hybrid_index.insert(additional_document)
+        add_singular_document_to_db(additional_document)
+    else:
+        assert False, "English text not present for document."
     return None
 
 
 
 async def regenerate_vector_database_from_file_table() -> None:
     document_list = await get_document_list_from_file()
-    for document in document_list:
-        hybrid_index.insert(document)
-    return None
+    # TODO : Try to get this to set the global VAR
+    global hybrid_index 
+    hybrid_index = VectorStoreIndex.from_documents(
+        document_list, storage_context=storage_context
+    )
+
 
 
 
