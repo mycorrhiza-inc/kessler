@@ -61,14 +61,14 @@ class UUIDEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 class SimpleChatCompletion(BaseModel):
-    model: Optional[str]
-    chat_history: List[Dict[str, str]]
+    model: Optional[str] = None
+    chat_history: List[Dict[str, str]] 
 
 class RAGChat(BaseModel):
-    model: Optional[str]
+    model: Optional[str] = None
     chat_history: List[Dict[str, str]]
 class RAGQueryResponse(BaseModel):
-    model: Optional[str]
+    model: Optional[str] = None
     prompt : str
 class ManualDocument(BaseModel):
     text : str 
