@@ -29,7 +29,7 @@ services:
       # dockerfile: ./Dockerfile
       dockerfile: ./Dockerfile
     environment:
-      - DATABASE_CONNECTION_STRING="postgresql://postgres:password@localhost:5435"
+      - DATABASE_CONNECTION_STRING="postgresql://postgres:password@localhost:5432"
     env_file:
       - .env
     volumes:
@@ -83,7 +83,7 @@ services:
     image: pgvector/pgvector:pg16
     restart: always
     ports:
-      - 5435:5432
+      - 5432:5432
     # expose:
     #  - "5432"
     environment:
