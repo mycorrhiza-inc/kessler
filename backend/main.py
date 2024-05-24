@@ -65,7 +65,7 @@ async def provide_limit_offset_pagination(
     return LimitOffset(page_size, page_size * (current_page - 1))
 
 
-cors_config = CORSConfig(allow_origins=["*.*"])
+cors_config = CORSConfig(allow_origins=["*"])
 
 api_router = Router(path="/api", route_handlers=[FileController, SearchController,RagController])
 

@@ -317,7 +317,7 @@ function ContextSources() {
 }
 
 interface Message {
-  role: boolean;
+  role: string;
   body: string;
   key: string;
 }
@@ -362,7 +362,7 @@ interface MessageComponentProps {
 
 function MessageComponent({
   message = {
-    role: false,
+    role: "user",
     body: "",
     key: `${Math.floor(Math.random() * 100)}`,
   },
@@ -372,7 +372,7 @@ function MessageComponent({
   return (
     <Box
       width="90%"
-      background={message.role == true ? "aquamarine" : "antiquewhite"}
+      background={message.role == "user" ? "aquamarine" : "antiquewhite"}
       borderRadius="10px"
       // maxWidth="800px"
       minHeight="100px"
@@ -424,13 +424,13 @@ function ChatBox() {
       return rest;
     });
     let result = await fetch(
-      "http://uttu-fedora/api/rag/basic_chat_completion",
+      "http://uttu-fedora:5505/api/rag/basic_chat_completion",
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
-          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Origin":"*"
         },
         body: JSON.stringify({
           model: null,
@@ -458,11 +458,12 @@ function ChatBox() {
     console.log(params);
     console.log(`msg: ${params.messageInput}`);
     let roleMsg: Message = {
-      role: true,
+      role: "user",
       body: params.messageInput,
       key: `${Math.floor(Math.random() * 100)}`,
     };
     appendMessage(roleMsg);
+    await getResponse();
   };
 
   /*
