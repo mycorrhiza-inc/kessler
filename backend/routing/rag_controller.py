@@ -167,6 +167,7 @@ class RagController(Controller):
         # TODO : Add support for custom model stuff.
         query = data.prompt
         response = create_rag_response_from_query(query)
+        assert False, response
         return response
 
     @post(path="/dangerous/regenerate_vector_database")
