@@ -337,26 +337,27 @@ class FileController(Controller):
                 obj.english_text = processed_english_text
                 current_stage = "stage3"
         if current_stage == "stage3":
-            # TODO : Figure out better way to extract references
+            # TODO : Rework entirely with llamaindex.
             # links = genextras.extract_markdown_links(obj.original_text)
-            long_sum = genextras.summarize_document_text(obj.original_text)
-            short_sum = genextras.gen_short_sum_from_long_sum(long_sum)
-            try:
-                x = 3
-            except:
-                response_code, response_message = (
-                    422,
-                    "failure in stage 3: Unable to generate summaries and links for document.",
-                )
-            else:
-                obj.links = links
-                obj.long_summary = long_sum
-                obj.short_summary = short_sum
-                current_stage = "stage4"
+            # try:
+            #     long_sum = genextras.summarize_document_text(obj.original_text)
+            #     short_sum = genextras.gen_short_sum_from_long_sum(long_sum)
+            #     x = 3
+            # except:
+            #     response_code, response_message = (
+            #         422,
+            #         "failure in stage 3: Unable to generate summaries and links for document.",
+            #     )
+            # else:
+            #     obj.links = links
+            #     obj.long_summary = long_sum
+            #     obj.short_summary = short_sum
+            #     current_stage = "stage4"
+            current_stage = "stage4"
         if current_stage == "stage4":
             try:
                 hashstr = obj.hash
-                add_document_to_db_from_hash(hashstr)
+                await add_document_to_db_from_hash(hashstr)
             except:
                 response_code, response_message = (
                     422,
