@@ -93,9 +93,43 @@ storage_context = StorageContext.from_defaults(
 
 from llama_index.core import Document
 
-initial_documents = [Document(text="This is a test document with example text.")]
+async def get_document_list_from_file() -> list:
+    async def query_file_table_for_all_rows() -> List[Tuple[str, dict]]:
+        # Create an async engine and session
+        engine = create_async_engine(async_postgres_connection_string, echo=True)
+        async_session_maker = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+
+        async with async_session_maker() as session:
+            async with FileModel.repo() as repo:
+                # Create a query to select all rows
+                stmt = select(FileModel)
+                result = await session.execute(stmt)
+                file_rows = result.scalars().all()
+
+                documents = []
+                for file_row in file_rows:
+                    if file_row.english_text is not None and isinstance(file_row.doc_metadata, dict):
+                        documents.append((file_row.english_text, file_row.doc_metadata))
+                
+                return documents
+    
+    documents = await query_file_table_for_all_rows()
+    document_list = []
+    for english_text, doc_metadata in documents:
+        if not english_text is None: 
+            additional_document = Document(text=english_text, metadata=doc_metadata)
+            additional_document.doc_id = str(doc_metadata.get('hash'))
+            document_list.append(document_list)
+    return document_list
+
+
+example_documents = [Document(text="This is an example document with the following advice about dealing with adversity in life: When life gives you lemons, don't make lemonade. Make life take the lemons back! Get mad! I don't want your damn lemons, what the heck am I supposed to do with these? Demand to see life's manager! Make life rue the day it thought it could give me lemons! Do you know who I am? I'm the man who's gonna burn your house down! With the lemons! I'm gonna get my engineers to invent a combustible lemon that burns your house down!")] + 
+
+initial_documents = asyncio.run(get_document_list_from_file())
+
+
 hybrid_index = VectorStoreIndex.from_documents(
-    initial_documents, storage_context=storage_context
+    example_documents + initial_documents, storage_context=storage_context
 )
 
 vector_retriever = hybrid_index.as_retriever(
@@ -158,38 +192,11 @@ async def add_document_to_db_from_hash(hash_str: str) -> None:
     return None
 
 
-async def add_all_documents_to_db() -> None:
-    async def query_file_table_for_all_rows() -> List[Tuple[str, dict]]:
-        # Create an async engine and session
-        engine = create_async_engine(async_postgres_connection_string, echo=True)
-        async_session_maker = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
-
-        async with async_session_maker() as session:
-            async with FileModel.repo() as repo:
-                # Create a query to select all rows
-                stmt = select(FileModel)
-                result = await session.execute(stmt)
-                file_rows = result.scalars().all()
-
-                documents = []
-                for file_row in file_rows:
-                    if file_row.english_text is not None and isinstance(file_row.doc_metadata, dict):
-                        documents.append((file_row.english_text, file_row.doc_metadata))
-                
-                return documents
-    
-    documents = await query_file_table_for_all_rows()
-    
-    for english_text, doc_metadata in documents:
-        if not english_text is None: 
-            additional_document = Document(text=english_text, metadata=doc_metadata)
-            additional_document.doc_id = str(doc_metadata.get('hash', ''))  # Setting a value for `doc_id`, customize as needed
-            # FIXME: Ensure the UUID generation strategy matches the rest of your system.
-            hybrid_index.insert(additional_document)
-    return None
 
 async def regenerate_vector_database_from_file_table() -> None:
-    await add_all_documents_to_db()
+    document_list = await get_document_list_from_file()
+    for document in document_list:
+        hybrid_index.insert(document)
     return None
 
 
