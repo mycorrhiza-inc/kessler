@@ -218,3 +218,23 @@ def create_rag_response_from_query( query : str ):
     return str(query_engine.query(query))
 
 
+# Chat engine for rag 
+from llama_index.core.llms import ChatMessage
+
+def sanitzie_chathistory_llamaindex( chat_history : List[dict]) -> List[ChatMessage]:
+    def sanitize_message(raw_message : dict) -> ChatMessage:
+        return ChatMessage(role=raw_message["role"],content = raw_message["content"])
+    return list(map(sanitize_message,chat_history))
+
+
+def generate_chat_completion(chat_history : List[dict]) -> dict:
+    llama_index_chat_history = sanitzie_chathistory_llamaindex(chat_history)
+    chat_engine = hybrid_index.as_chat_engine(chat_mode="react", verbose=True, chat_history = llama_index_chat_history)
+    response = chat_engine.chat("")
+    response_str = str(response)
+    chat_engine.reset()
+    return {
+        "role" : "assistant",
+        "content" : response_str
+    }
+

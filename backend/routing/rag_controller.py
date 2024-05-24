@@ -93,7 +93,7 @@ groq_llm = Groq(
 )
 
 
-from rag.llamaindex import create_rag_response_from_query, regenerate_vector_database_from_file_table, add_document_to_db_from_text
+from rag.llamaindex import create_rag_response_from_query, regenerate_vector_database_from_file_table, add_document_to_db_from_text, generate_chat_completion
 
 def validate_chat(chat_history : List[Dict[str, str]]) -> bool:
     if not isinstance(chat_history, list):
@@ -147,17 +147,9 @@ class RagController(Controller):
         files_repo: FileRepository,
         data : SimpleChatCompletion
     ) -> str:
-        model_name = data.model
-        if model_name is None:
-            model_name = "llama3-70b-8192" 
-        groq_llm = Groq(
-            model=model_name, request_timeout=360.0, api_key=GROQ_API_KEY
-        )
         chat_history = data.chat_history
-        chat_history = force_conform_chat(chat_history)
-        assert validate_chat(chat_history), chat_history
-        response = groq_llm.chat(chat_history)
-        return response
+        ai_message_response = generate_chat_completion(chat_history)
+        return ai_message_response
 
     @post(path="/rag/rag_query")
     async def rag_query(
