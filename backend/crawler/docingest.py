@@ -161,7 +161,7 @@ class DocumentIngester:
             # Guess the file extension from the URL itself
             # This is useful for direct links to files with a clear file extension in the URL
             if url.lower().endswith(
-                (".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".md")
+                (".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".md", ".epub")
             ):
                 return url.split(".")[-1].lower()
             content_type = response.headers.get("Content-Type")
