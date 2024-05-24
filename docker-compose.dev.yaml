@@ -2,9 +2,9 @@
 version: "3"
 
 services:
-  reverse-proxy:
-    # official image
-    image: traefik:v2.11
+  # reverse-proxy:
+  #   # official image
+  #   image: traefik:v2.11
 
     # eable web ui, listen to docker
     command: --api.insecure=true --providers.docker
@@ -31,9 +31,11 @@ services:
     env_file:
       - .env
     volumes:
+      - ./backend:/app
       - ./volumes/instance:/app/instance
       - ./volumes/files:/files
       - ./volumes/tmp:/tmp/
+      # - ./server.htpasswd:/app/server.htpasswd
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.backend.rule=PathPrefix(`/api`)"

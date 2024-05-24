@@ -31,11 +31,9 @@ services:
     env_file:
       - .env
     volumes:
-      - ./backend:/app
       - ./volumes/instance:/app/instance
       - ./volumes/files:/files
       - ./volumes/tmp:/tmp/
-      - ./server.htpasswd:/app/server.htpasswd
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.backend.rule=PathPrefix(`/api`)"
@@ -82,10 +80,16 @@ services:
   database:
     image: pgvector/pgvector:pg16
     restart: always
+    ports:
+      - 5432:5432
     expose:
-      - "5432"
+      - 5432
+    # expose:
+    #  - "5432"
     environment:
       POSTGRES_PASSWORD: password
 
     volumes:
       - ./volumes/pgdata:/var/lib/postgresql/data
+# A docker compose for editing the postgres directly
+

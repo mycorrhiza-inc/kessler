@@ -53,6 +53,7 @@ from util.haystack import indexDocByID, get_indexed_by_id
 import json
 
 
+
 class UUIDEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, UUID):
@@ -123,7 +124,7 @@ OS_FILEDIR = Path("/files/")
 # import base64
 
 
-from rag.llamaindex import add_document_to_db_from_uuid
+from rag.llamaindex import add_document_to_db_from_text
 
 
 class FileController(Controller):
@@ -174,6 +175,7 @@ class FileController(Controller):
         data: UrlUpload,
         request: Request,
         process: bool = False,
+        override_hash : bool = False
     ) -> Any:
         request.logger.info("adding files")
         request.logger.info(data)
@@ -206,6 +208,9 @@ class FileController(Controller):
         query = select(FileModel).where(FileModel.hash == filehash)
         duplicate_file_objects = await files_repo.session.execute(query)
         duplicate_file_obj = duplicate_file_objects.scalar()
+        if override_hash == True:
+            await files_repo.delete(duplicate_file_obj.id)
+            duplicate_file_obj = None
         if duplicate_file_obj is None:
             docingest.backup_metadata_to_hash(metadata, filehash)
             new_file = FileModel(
@@ -333,29 +338,29 @@ class FileController(Controller):
                 obj.english_text = processed_english_text
                 current_stage = "stage3"
         if current_stage == "stage3":
-            # TODO : Figure out better way to extract references
+            # TODO : Rework entirely with llamaindex.
             # links = genextras.extract_markdown_links(obj.original_text)
-            long_sum = genextras.summarize_document_text(obj.original_text)
-            short_sum = genextras.gen_short_sum_from_long_sum(long_sum)
-            try:
-                x = 3
-            except:
-                response_code, response_message = (
-                    422,
-                    "failure in stage 3: Unable to generate summaries and links for document.",
-                )
-            else:
-                obj.links = links
-                obj.long_summary = long_sum
-                obj.short_summary = short_sum
-                current_stage = "stage4"
+            # try:
+            #     long_sum = genextras.summarize_document_text(obj.original_text)
+            #     short_sum = genextras.gen_short_sum_from_long_sum(long_sum)
+            #     x = 3
+            # except:
+            #     response_code, response_message = (
+            #         422,
+            #         "failure in stage 3: Unable to generate summaries and links for document.",
+            #     )
+            # else:
+            #     obj.links = links
+            #     obj.long_summary = long_sum
+            #     obj.short_summary = short_sum
+            #     current_stage = "stage4"
+            current_stage = "stage4"
         if current_stage == "stage4":
             try:
-                add_document_to_db_from_uuid()
+                add_document_to_db_from_text(obj.english_text,obj.doc_metadata)
             except:
                 response_code, response_message = (
-                    422,
-                    "failure in stage 2: document was unable to be translated to english.",
+                    422, "Failure in adding document to vector database"
                 )
             else:
                 current_stage = "stage5"
