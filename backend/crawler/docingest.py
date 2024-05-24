@@ -202,7 +202,7 @@ class DocumentIngester:
         }
 
     def get_metadata_from_file(self, path : Path, doctype : str) -> dict:
-        def extract_yaml_front_matter_markdown(markdown_str -> str) -> dict:
+        def extract_yaml_front_matter_markdown(markdown_str : str) -> dict:
             """
             Extract the YAML front matter from a given Markdown string and return it as a Python dictionary.
 
