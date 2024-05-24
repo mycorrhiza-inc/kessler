@@ -28,7 +28,7 @@ import {
   SubmitButton,
 } from "@saas-ui/react";
 import { FiArrowUpCircle } from "react-icons/fi";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { message } from "antd";
 import { start } from "repl";
 
@@ -376,6 +376,8 @@ function MessageComponent({
       background={message.role == "user" ? "aquamarine" : "antiquewhite"}
       borderRadius="10px"
       // maxWidth="800px"
+      height="auto"
+      overflow="auto"
       minHeight="100px"
       justifyContent={message.role ? "right" : "left"}
       padding="20px"
@@ -403,39 +405,27 @@ function MessageComponent({
 function ChatBox() {
   // const [messages, setMessages] = useState<Message[]>(startingMessages);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [needsResponse, setResponse] = useState(false);
   // let messages: Message[] = [];
   let roleText = "";
-  const appendMessage = async (m: Message) => {
-    console.log(`appending message "${m.content}"`);
-    if (messages.length == 0) {
-      // messages = [m];
-      setMessages([m]);
-      return;
-    } else {
-      // messages = [...messages, m];
-      setMessages([...messages, m]);
-    }
-    console.log(messages);
-    return;
-  };
 
-  const getResponse = async (m: Message) => {
-    appendMessage(m);
+  const getResponse = async () => {
     let chat_hist = messages.map((m) => {
       let { key, ...rest } = m;
-
       return rest;
     });
+    console.log(`chat history`);
+    console.log(chat_hist);
     let result = await fetch(
-      "http://uttu-fedora:5505/api/rag/simple_chat_completion",
+      "http://143.198.140.106:5055//api/rag/simple_chat_completion",
       {
         method: "POST",
         mode: "cors",
         headers: {
           "Content-Type": "application/json",
           accept: "application/json",
-          "Access-Control-Allow-Origin": "*",
-          "Referrer-Policy": "no-referrer"
+          // "Access-Control-Allow-Origin": "*",
+          "Referrer-Policy": "no-referrer",
         },
         body: JSON.stringify({
           model: null,
@@ -443,22 +433,31 @@ function ChatBox() {
         }),
       }
     )
-      .then((e) => {
+      .then((resp) => {
         console.log("completed request");
-        console.log(e);
-        if (e.status < 200 || e.status > 299) {
-          console.log(`error adding links:\n${e}`);
+        console.log(resp);
+        if (resp.status < 200 || resp.status > 299) {
+          console.log(`error with request:\n${resp}`);
           return "failed request";
         }
-        return e.json();
+        return resp.json();
+      })
+      .then((data) => {
+        return data
       })
       .catch((e) => {
         console.log("error making request");
         console.log(JSON.stringify(e));
       });
     console.log(result);
+    setMessages([...messages, result]);
+    // let c = result.body;
+
     // setMessages(result);
   };
+  useEffect(() => {
+    if (needsResponse) getResponse(); // This is be executed when `loading` state changes
+  }, [needsResponse]);
 
   interface msgSent {
     messageInput: string;
@@ -467,12 +466,23 @@ function ChatBox() {
     console.log("sending message");
     console.log(params);
     console.log(`msg: ${params.messageInput}`);
-    let roleMsg: Message = {
+    let m: Message = {
       role: "user",
       content: params.messageInput,
       key: `${Math.floor(Math.random() * 100)}`,
     };
-    getResponse(roleMsg);
+    console.log(`appending message "${m.content}"`);
+    if (messages.length == 0) {
+      // messages = [m];
+      setMessages([m]);
+      console.log(messages);
+    } else {
+      // messages = [...messages, m];
+      setMessages([...messages, m]);
+      console.log(messages);
+    }
+    setResponse(true);
+
   };
 
   /*
@@ -480,6 +490,14 @@ function ChatBox() {
 
 	*/
 
+  // get a response every time a message is sent
+  useEffect(() => {
+    console.log("getting response")
+    if (needsResponse) {
+      getResponse();
+      setResponse(false);
+    }
+  }, [needsResponse]);
   return (
     <>
       <VStack
@@ -540,7 +558,6 @@ function ChatBox() {
  */
 export default function ChatUI({ convoID = "" }: { convoID?: string }) {
   // convoId being empty is a new chat instance
-  function appendNewMessage() {}
 
   return (
     <Center width="100%" height="100%">
