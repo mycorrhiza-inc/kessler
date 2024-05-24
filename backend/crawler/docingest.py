@@ -226,7 +226,7 @@ class DocumentIngester:
                 print("No valid YAML front matter found")
                 return {}
         if doctype == "md":
-            with open(file_loc, "r") as file:
+            with open(path, "r") as file:
                 result = file.read()
                 metadata = extract_yaml_front_matter_markdown(result)
             return metadata
