@@ -73,7 +73,8 @@ class DocumentIngester:
             metadata["lang"] = "en"
         file_metadata = self.get_metadata_from_file(filepath,metadata.get("doctype"))
         self.logger.info("Attempted to get metadata from file, adding to main source.")
-        metadata.update(file_metadata)
+        # FIXME : 
+        #metadata.update(file_metadata)
         return (filepath, metadata)
 
     # TODO : Get alternative download and ingest methods working

@@ -129,6 +129,8 @@ class RagController(Controller):
         data : SimpleChatCompletion
     ) -> dict:
         model_name = data.model
+        if model_name == "":
+            model_name = None
         if model_name is None:
             model_name = "llama3-70b-8192" 
         groq_llm = Groq(
