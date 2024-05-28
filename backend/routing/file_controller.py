@@ -341,24 +341,6 @@ class FileController(Controller):
                 obj.english_text = processed_english_text
                 current_stage = "stage3"
         if current_stage == "stage3":
-            # TODO : Rework entirely with llamaindex.
-            # links = genextras.extract_markdown_links(obj.original_text)
-            # try:
-            #     long_sum = genextras.summarize_document_text(obj.original_text)
-            #     short_sum = genextras.gen_short_sum_from_long_sum(long_sum)
-            #     x = 3
-            # except:
-            #     response_code, response_message = (
-            #         422,
-            #         "failure in stage 3: Unable to generate summaries and links for document.",
-            #     )
-            # else:
-            #     obj.links = links
-            #     obj.long_summary = long_sum
-            #     obj.short_summary = short_sum
-            #     current_stage = "stage4"
-            current_stage = "stage4"
-        if current_stage == "stage4":
             try:
                 add_document_to_db_from_text(obj.english_text, obj.doc_metadata)
             except:
@@ -367,7 +349,24 @@ class FileController(Controller):
                     "Failure in adding document to vector database",
                 )
             else:
-                current_stage = "stage5"
+                current_stage = "stage4"
+        if current_stage == "stage4":
+            links = genextras.extract_markdown_links(obj.original_text)
+            try:
+                long_sum = genextras.summarize_document_text(obj.original_text)
+                short_sum = genextras.gen_short_sum_from_long_sum(long_sum)
+                x = 3
+            except:
+                response_code, response_message = (
+                    422,
+                    "failure in stage 3: Unable to generate summaries and links for document.",
+                )
+            else:
+                obj.links = links
+                obj.long_summary = long_sum
+                obj.short_summary = short_sum
+                current_stage = "stage4"
+            current_stage = "stage4"
 
         if current_stage == "completed":
             response_code, response_message = (200, "Document Fully Processed.")
