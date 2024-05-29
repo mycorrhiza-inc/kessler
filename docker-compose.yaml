@@ -37,7 +37,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.backend.rule=PathPrefix(`/api`)"
-      - "traefik.http.middlewares.testheader.headers.accesscontrolalloworigin=*"
+      # - "traefik.http.middlewares.testheader.headers.accesscontrolalloworigin=*"
     command:
       # - "python"
       # - "rag/postgres_example.py"
