@@ -26,7 +26,6 @@ services:
   backend:
     build:
       context: ./backend
-      # dockerfile: ./Dockerfile
       dockerfile: ./Dockerfile
     env_file:
       - .env
@@ -35,8 +34,8 @@ services:
       - ./volumes/files:/files
       - ./volumes/tmp:/tmp/
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=PathPrefix(`/api`)"
+      # - "traefik.enable=true"
+      # - "traefik.http.routers.backend.rule=PathPrefix(`/api`)"
       # - "traefik.http.middlewares.testheader.headers.accesscontrolalloworigin=*"
     command:
       # - "python"
