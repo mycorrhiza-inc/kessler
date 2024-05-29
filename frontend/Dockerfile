@@ -2,7 +2,7 @@ FROM node:alpine as BUILD_IMAGE
 WORKDIR /app
 COPY package.json ./
 # install dependencies
-RUN npm install --frozen-lockfile
+RUN npm install
 COPY . .
 # build
 RUN npm run build
