@@ -5,7 +5,7 @@ import logging
 
 from litestar.params import Parameter
 from litestar import Controller, Request
-from util.haystack import query_chroma, get_indexed_by_id
+# from util.haystack import query_chroma, get_indexed_by_id
 
 from litestar.handlers.http_handlers.decorators import get, post
 
@@ -50,21 +50,11 @@ class SearchController(Controller):
             title="File ID as hex string", description="File to retieve"
         ),
     ) -> Any:
-        res = await get_indexed_by_id(fid)
-        return res
+        # FIXME : Get module working with llamaindex and pgvector
+        return "Failure"
 
     @post(path="/search")
     async def get_file(self, data: SearchQuery) -> SearchResponse:
-        request = SearchQuery.model_validate(data)
-        query = request.query
-        results = query_chroma(query=query)
-        documents = results["retriever"]["documents"]
-        ids = []
-        for i in documents:
-            ids.append(str(i.id))
-        type_adapter = TypeAdapter(SearchResult)
-        return type_adapter.validate_python({"ids": ids})
+        # FIXME : Get module working with llamaindex and pgvector
+        return "Failure"
 
-    # @post(path="/search/index/")
-    # async def index_file(self, data: IndexFileRequest) -> IndexFileResponse:
-    #     query = data.query

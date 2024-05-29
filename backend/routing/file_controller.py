@@ -41,14 +41,12 @@ from models import FileModel, FileRepository, FileSchema, provide_files_repo
 from crawler.docingest import DocumentIngester
 from docprocessing.extractmarkdown import MarkdownExtractor
 from docprocessing.genextras import GenerateExtras
-from util.haystack import indexDocByID
 
 from typing import List, Optional, Union, Any, Dict
 
 
 from util.niclib import get_blake2
 
-from util.haystack import indexDocByID, get_indexed_by_id
 
 import json
 
@@ -199,11 +197,13 @@ class FileController(Controller):
             request.logger.info(f"Title, Doctype and language successfully declared")
         document_source = metadata.get("source")
         if document_source is None:
-            document_source = "UNKOWN"
+            document_source = "UNKNOWN"
+            metadata["source"] = "UNKNOWN"
 
         request.logger.info("Attempting to save data to file")
         result = docingest.save_filepath_to_hash(tmpfile_path)
         (filehash, filepath) = result
+        os.remove(tmpfile_path) 
         query = select(FileModel).where(FileModel.hash == filehash)
         duplicate_file_objects = await files_repo.session.execute(query)
         duplicate_file_obj = duplicate_file_objects.scalar()
@@ -341,24 +341,6 @@ class FileController(Controller):
                 obj.english_text = processed_english_text
                 current_stage = "stage3"
         if current_stage == "stage3":
-            # TODO : Rework entirely with llamaindex.
-            # links = genextras.extract_markdown_links(obj.original_text)
-            # try:
-            #     long_sum = genextras.summarize_document_text(obj.original_text)
-            #     short_sum = genextras.gen_short_sum_from_long_sum(long_sum)
-            #     x = 3
-            # except:
-            #     response_code, response_message = (
-            #         422,
-            #         "failure in stage 3: Unable to generate summaries and links for document.",
-            #     )
-            # else:
-            #     obj.links = links
-            #     obj.long_summary = long_sum
-            #     obj.short_summary = short_sum
-            #     current_stage = "stage4"
-            current_stage = "stage4"
-        if current_stage == "stage4":
             try:
                 add_document_to_db_from_text(obj.english_text, obj.doc_metadata)
             except:
@@ -367,7 +349,22 @@ class FileController(Controller):
                     "Failure in adding document to vector database",
                 )
             else:
-                current_stage = "stage5"
+                current_stage = "stage4"
+        if current_stage == "stage4":
+            links = genextras.extract_markdown_links(obj.original_text)
+            try:
+                
+            except:
+                response_code, response_message = (
+                    422,
+                    "failure in stage 3: Unable to generate summaries and links for document.",
+                )
+            else:
+                obj.links = links
+                obj.long_summary = long_sum
+                obj.short_summary = short_sum
+                current_stage = "stage4"
+            current_stage = "stage4"
 
         if current_stage == "completed":
             response_code, response_message = (200, "Document Fully Processed.")
