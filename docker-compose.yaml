@@ -2,17 +2,17 @@
 version: "3"
 
 services:
-  reverse-proxy:
-    # official image
-    image: traefik:v2.11
+  # reverse-proxy:
+  #   # official image
+  #   image: traefik:v2.11
 
-    # eable web ui, listen to docker
-    command: --api.insecure=true --providers.docker
-    ports:
-      - "80:80"
-      - "8083:8080"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+  #   # eable web ui, listen to docker
+  #   command: --api.insecure=true --providers.docker
+  #   ports:
+  #     - "80:80"
+  #     - "8083:8080"
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
 
   rabbitmq:
     image: rabbitmq:latest
