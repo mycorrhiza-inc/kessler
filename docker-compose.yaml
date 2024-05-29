@@ -74,7 +74,10 @@ services:
     command:
       - "npm"
       - "run"
-      - "dev"
+      - "build"
+      - "npm"
+      - "run"
+      - "start"
       - "--"
       - "-p"
       - "$FRONTEND_PORT"
