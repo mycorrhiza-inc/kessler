@@ -1,8 +1,8 @@
 FROM node:alpine as BUILD_IMAGE
 WORKDIR /app
-COPY package.json yarn.lock ./
+COPY package.json ./
 # install dependencies
-RUN yarn install --frozen-lockfile
+RUN npm install --frozen-lockfile
 COPY . .
 # build
 RUN npm run build
