@@ -353,9 +353,7 @@ class FileController(Controller):
         if current_stage == "stage4":
             links = genextras.extract_markdown_links(obj.original_text)
             try:
-                long_sum = genextras.summarize_document_text(obj.original_text)
-                short_sum = genextras.gen_short_sum_from_long_sum(long_sum)
-                x = 3
+                
             except:
                 response_code, response_message = (
                     422,
