@@ -5,7 +5,7 @@ COPY package.json yarn.lock ./
 RUN yarn install --frozen-lockfile
 COPY . .
 # build
-RUN yarn build
+RUN npm run build
 # remove dev dependencies
 RUN npm prune --production
 FROM node:alpine
@@ -18,5 +18,3 @@ COPY --from=BUILD_IMAGE /app/public ./public
 COPY --from=BUILD_IMAGE postcss.config.js ./
 COPY --from=BUILD_IMAGE tailwind.config.js ./
 EXPOSE 3000
-
-CMD ["yarn", "start"]
