@@ -8,3 +8,4 @@ COPY tailwind.config.js ./
 COPY . ./
 
 RUN npm install --save-dev  --force
+RUN num run build
