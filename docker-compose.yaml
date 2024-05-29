@@ -46,12 +46,12 @@ services:
       - "--host"
       - "0.0.0.0"
       - "--port"
-      - "${BACKEND_PORT}"
+      - "5505"
       - "--workers"
       - "4"
       - "--reload"
-    ports:
-      - "${BACKEND_PORT}:${BACKEND_PORT}"
+    expose:
+      - "5055"
 
   frontend:
     build:
@@ -68,8 +68,8 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
 
-    ports:
-      - "${FRONTEND_PORT}:${FRONTEND_PORT}"
+    expose:
+      - "3001"
 
     command:
       - "npm"
