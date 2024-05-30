@@ -4,7 +4,7 @@ import Layout from "../lib/components/AppLayout";
 import LinksView from "../lib/components/ResourceList";
 
 // utils
-import { AddLink } from "../lib/requests";
+import AddLink from "../lib/requests";
 
 // mui
 import Textarea from "@mui/joy/Textarea";
@@ -46,7 +46,7 @@ const AddResourceComponent = () => {
   const [links, setLinks] = useState<FileType[]>([]);
 
   const [errorText, setErrorText] = useState(
-    "there was an issue processing your request"
+    "there was an issue processing your request",
   );
   const [success, setSuccess] = useState(false);
 
@@ -110,7 +110,7 @@ const AddResourceComponent = () => {
           "(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*" + // validate port and path
           "(\\?[;&a-z\\d%_.~+=-]*)?" + // validate query string
           "(\\#[-a-z\\d_]*)?$",
-        "i"
+        "i",
       ); // validate fragment locator
       return urlPattern.test(urlString);
     };
