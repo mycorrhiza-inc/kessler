@@ -260,7 +260,7 @@ function SourceBox({ content }: { content: string }) {
         <ModalContent maxH="3000px" maxW="1500px" overflow="scroll">
           <ModalHeader>Modal Title</ModalHeader>
           <ModalCloseButton />
-          <Modalcontent>
+          <ModalContent>
             <SourceModal />
           </Modalcontent>
 
