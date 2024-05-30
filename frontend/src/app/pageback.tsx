@@ -135,14 +135,15 @@ const AddResourceComponent = () => {
         // getAllLinks();
       }, 3000);
     }
-    notifyOfErrorSubmission(result);
+    // FIXME : Type error
+    // notifyOfErrorSubmission(result);
     setButtonLoad(false);
   };
 
   // update the user list every 5 sec
   useEffect(() => {
     const interval = setInterval(() => {
-      getAllLinks();
+      // getAllLinks();
     }, 5000);
 
     return () => clearInterval(interval);
