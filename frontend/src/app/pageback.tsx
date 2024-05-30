@@ -38,26 +38,6 @@ const VisuallyHiddenInput = styled("input")`
   width: 1px;
 `;
 
-export const getAllFiles = async () => {
-  const authfetch = AuthenticatedFetch();
-  let result = await authfetch("/api/files/all", {
-    method: "get",
-    headers: {
-      Accept: "application/json",
-      // Authorization: `Bearer ${await getToken()}`,
-    },
-  })
-    .then((e) => {
-      return e.json();
-    })
-    .then((e) => {
-      setLinks(e);
-    })
-    .catch((e) => {
-      console.log("error getting links:\n", e);
-      return e;
-    });
-};
 const AddResourceComponent = () => {
   const [buttonLoading, setButtonLoad] = useState(false);
   const [hasError, setError] = useState(false);
@@ -65,6 +45,27 @@ const AddResourceComponent = () => {
 
   const [links, setLinks] = useState<FileType[]>([]);
 
+  // FIXME : Tried removing from block and got error with setlinks, just removed the export statement.
+  const getAllFiles = async () => {
+    const authfetch = AuthenticatedFetch();
+    let result = await authfetch("/api/files/all", {
+      method: "get",
+      headers: {
+        Accept: "application/json",
+        // Authorization: `Bearer ${await getToken()}`,
+      },
+    })
+      .then((e) => {
+        return e.json();
+      })
+      .then((e) => {
+        setLinks(e);
+      })
+      .catch((e) => {
+        console.log("error getting links:\n", e);
+        return e;
+      });
+  };
   const [errorText, setErrorText] = useState(
     "there was an issue processing your request",
   );
