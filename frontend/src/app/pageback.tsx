@@ -38,6 +38,26 @@ const VisuallyHiddenInput = styled("input")`
   width: 1px;
 `;
 
+export const getAllFiles = async () => {
+  const authfetch = AuthenticatedFetch();
+  let result = await authfetch("/api/files/all", {
+    method: "get",
+    headers: {
+      Accept: "application/json",
+      // Authorization: `Bearer ${await getToken()}`,
+    },
+  })
+    .then((e) => {
+      return e.json();
+    })
+    .then((e) => {
+      setLinks(e);
+    })
+    .catch((e) => {
+      console.log("error getting links:\n", e);
+      return e;
+    });
+};
 const AddResourceComponent = () => {
   const [buttonLoading, setButtonLoad] = useState(false);
   const [hasError, setError] = useState(false);
@@ -67,26 +87,6 @@ const AddResourceComponent = () => {
       setError(false);
       setErrorText(old);
     }, 3000);
-  };
-  export const getAllFiles = async () => {
-    const authfetch = AuthenticatedFetch();
-    let result = await authfetch("/api/files/all", {
-      method: "get",
-      headers: {
-        Accept: "application/json",
-        // Authorization: `Bearer ${await getToken()}`,
-      },
-    })
-      .then((e) => {
-        return e.json();
-      })
-      .then((e) => {
-        setLinks(e);
-      })
-      .catch((e) => {
-        console.log("error getting links:\n", e);
-        return e;
-      });
   };
 
   const handleLinkSubmission = async (e: any) => {
