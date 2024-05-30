@@ -131,7 +131,8 @@ const AddResourceComponent = () => {
       setTimeout(() => {
         setButtonLoad(false);
         notifyOfSuccessfulSubmission();
-        getAllLinks();
+        // FIXME : Uncomment
+        // getAllLinks();
       }, 3000);
     }
     notifyOfErrorSubmission(result);
