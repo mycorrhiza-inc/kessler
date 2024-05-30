@@ -1,7 +1,6 @@
 FROM node:alpine as BUILD_IMAGE
 WORKDIR /app
-COPY package.json yarn.lock ./
-# COPY package.json yarn.lock ./
+COPY package.json ./
 # install dependencies
 RUN npm install
 COPY . .
