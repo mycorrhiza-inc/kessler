@@ -122,7 +122,9 @@ const AddResourceComponent = () => {
       return;
     }
 
-    const result = await AddLink(linkText);
+    // FIXME:  Seemed to not 0 arguments instead of one argument
+    // const result = await AddLink(linkText);
+    const result = await AddLink();
     console.log("result from adding link", result);
 
     if (result == null) {
