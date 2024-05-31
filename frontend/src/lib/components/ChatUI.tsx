@@ -262,7 +262,7 @@ function SourceBox({ content }: { content: string }) {
           <ModalCloseButton />
           <ModalContent>
             <SourceModal />
-          </Modalcontent>
+          </ModalContent>
 
           <ModalFooter>
             <Button colorScheme="blue" mr={3} onClick={toggleModal}>
@@ -431,7 +431,7 @@ function ChatBox() {
           model: null,
           chat_history: chat_hist,
         }),
-      }
+      },
     )
       .then((resp) => {
         console.log("completed request");
@@ -443,7 +443,7 @@ function ChatBox() {
         return resp.json();
       })
       .then((data) => {
-        return data
+        return data;
       })
       .catch((e) => {
         console.log("error making request");
@@ -482,7 +482,6 @@ function ChatBox() {
       console.log(messages);
     }
     setResponse(true);
-
   };
 
   /*
@@ -492,7 +491,7 @@ function ChatBox() {
 
   // get a response every time a message is sent
   useEffect(() => {
-    console.log("getting response")
+    console.log("getting response");
     if (needsResponse) {
       getResponse();
       setResponse(false);
