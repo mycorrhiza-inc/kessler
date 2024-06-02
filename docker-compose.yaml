@@ -50,8 +50,10 @@ services:
       - "--workers"
       - "4"
       - "--reload"
+    expose:
+      - 5505
     ports:
-      - "5055:5055"
+      - "5505:5505"
 
 #  frontend:
 #    build:
