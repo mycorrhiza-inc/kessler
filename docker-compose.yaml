@@ -50,8 +50,8 @@ services:
       - "--workers"
       - "4"
       - "--reload"
-    expose:
-      - "5055"
+    ports:
+      - "5055:5055"
 
 #  frontend:
 #    build:
@@ -76,7 +76,9 @@ services:
     image: pgvector/pgvector:pg16
     restart: always
     ports:
-      - "5432:5432"
+      - "6543:5432"
+    env_file:
+      - .env
     expose:
       - "5432"
     volumes:
