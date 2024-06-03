@@ -64,7 +64,7 @@ class GPUComputeEndpoint:
         # The API endpoint you will be hitting
         # url = "http://api.mycor.io/v0/multimodal_asr/local-m4t"
         # FIXME : Work out what this url should fucking be
-        url = f"{self.markerendpoint_url}"
+        url = f"{self.marker_endpoint_url}"
         # url = "https://www.google.com/"
         # Open the file in binary mode
         with filepath.open("rb") as file:
@@ -79,6 +79,7 @@ class GPUComputeEndpoint:
             response.raise_for_status()
 
         # Parse the JSON response
+        assert False, str(response)
         response_json = response.json()
         # Extract the translated text from the JSON response
         # translated_text = response_json["response"]

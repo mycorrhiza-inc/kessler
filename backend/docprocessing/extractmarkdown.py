@@ -50,7 +50,7 @@ class MarkdownExtractor:
             )
 
         def process_pdf(filepath: Path) -> str:
-            return GPUComputeEndpoint(self.endpoint_url).transcribe_pdf(filepath)
+            return GPUComputeEndpoint().transcribe_pdf(filepath)
 
         # Take a file with a path of path and a pandoc type of doctype and convert it to pandoc markdown and return the output as a string.
         # TODO: Make it so that you dont need to run sudo apt install pandoc for it to work, and it bundles with the pandoc python library
