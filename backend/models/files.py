@@ -28,7 +28,7 @@ class FileModel(UUIDAuditBase, RepoMixin):
     name: Mapped[str | None]
     source: Mapped[str]
     hash: Mapped[str]
-    doc_metadata: Mapped[dict]
+    metadata_str: Mapped[str]
     stage: Mapped[str]  # Either "stage0" "stage1" "stage2" or "stage3"
     summary: Mapped[str | None]
     short_summary: Mapped[str | None]
@@ -88,7 +88,7 @@ class FileSchema(PydanticBaseModel):
     source: str
     # Either "stage0" "stage1" "stage2" or "stage3"
     stage: str
-    doc_metadata: dict
+    metadata_str: str
     summary: str | None = None
     short_summary: str | None = None
     original_text: str | None = None

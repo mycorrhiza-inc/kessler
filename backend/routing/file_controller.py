@@ -40,7 +40,6 @@ from models import FileModel, FileRepository, FileSchema, provide_files_repo
 
 from crawler.docingest import DocumentIngester
 from docprocessing.extractmarkdown import MarkdownExtractor
-from docprocessing.genextras import GenerateExtras
 
 from typing import List, Optional, Union, Any, Dict
 
@@ -68,7 +67,7 @@ emptyFile = FileModel(
     source="",
     path="",
     # file=raw_tmpfile,
-    doc_metadata={},
+    metadata_str="",
     stage="stage0",
     hash="",
     summary=None,
@@ -216,6 +215,7 @@ class FileController(Controller):
             duplicate_file_obj = None
         if duplicate_file_obj is None:
             docingest.backup_metadata_to_hash(metadata, filehash)
+            metadata_str=json.dumps(metadata)
             new_file = FileModel(
                 url=data.url,
                 name=document_title,
@@ -224,7 +224,7 @@ class FileController(Controller):
                 source=document_source,
                 path=str(filepath),
                 # file=raw_tmpfile,
-                doc_metadata=metadata,
+                doc_metadata=metadata_str,
                 stage="stage1",
                 hash=filehash,
                 summary=None,
@@ -342,7 +342,9 @@ class FileController(Controller):
                 current_stage = "stage3"
         if current_stage == "stage3":
             try:
-                add_document_to_db_from_text(obj.english_text, obj.doc_metadata)
+                doc_metadata_str = obj.metadata_str
+                doc_metadata = json.loads(doc_metadata_str)
+                add_document_to_db_from_text(obj.english_text, doc_metadata)
             except:
                 response_code, response_message = (
                     422,
@@ -351,19 +353,20 @@ class FileController(Controller):
             else:
                 current_stage = "stage4"
         if current_stage == "stage4":
-            links = genextras.extract_markdown_links(obj.original_text)
-            try:
-                assert False, "TODO: Add llamaindex summary functionality."
-            except:
-                response_code, response_message = (
-                    422,
-                    "failure in stage 4: Unable to generate summaries and links for document.",
-                )
-            else:
-                obj.links = links
-                obj.long_summary = long_sum
-                obj.short_summary = short_sum
-                current_stage = "stage5"
+            # FIXME: Throw out entire section of genextras and replace with something llamaindexy.
+            # links = genextras.extract_markdown_links(obj.original_text)
+            # try:
+            #     assert False, "TODO: Add llamaindex summary functionality."
+            # except:
+            #     response_code, response_message = (
+            #         422,
+            #         "failure in stage 4: Unable to generate summaries and links for document.",
+            #     )
+            # else:
+            #     obj.links = links
+            #     obj.long_summary = long_sum
+            #     obj.short_summary = short_sum
+            #     current_stage = "stage5"
             current_stage = "stage5"
 
         if current_stage == "completed":

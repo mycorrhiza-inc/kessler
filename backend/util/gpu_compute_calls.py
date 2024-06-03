@@ -53,9 +53,39 @@ def downsample_audio(
     return outfile
 
 
+MARKER_ENDPOINT_URL = os.environ("MARKER_ENDPOINT_URL")
+
 class GPUComputeEndpoint:
-    def __init__(self, endpoint_url: str):
-        self.endpoint_url = endpoint_url
+    def __init__(self, marker_endpoint_url: str = MARKER_ENDPOINT_URL, legacy_endpoint_url : str = "https://depricated-url.com"):
+        self.marker_endpoint_url = marker_endpoint_url
+        self.endpoint_url = legacy_endpoint_url
+
+    def transcribe_pdf(self, filepath: Path) -> str:
+        # The API endpoint you will be hitting
+        # url = "http://api.mycor.io/v0/multimodal_asr/local-m4t"
+        # FIXME : Work out what this url should fucking be
+        url = f"{self.markerendpoint_url}"
+        # url = "https://www.google.com/"
+        # Open the file in binary mode
+        with filepath.open("rb") as file:
+            # Define the multipart/form-data payload
+            files = {
+                "file": (filepath.name, file, "application/octet-stream"),
+            }
+            # Mke the POST request with files
+            response = requests.post(url, files=files)
+            print(f"Request Headers: response.request.headers")
+            # Raise an exception if the request was unsuccessful
+            response.raise_for_status()
+
+        # Parse the JSON response
+        response_json = response.json()
+        # Extract the translated text from the JSON response
+        # translated_text = response_json["response"]
+
+        # Please forgive me lord
+        translated_text = str(response_json)
+        return translated_text
 
     def llm_nonlocal_raw_call(
         self, msg_history: list[dict], model_name: Optional[str]
@@ -124,32 +154,6 @@ class GPUComputeEndpoint:
             return self.audio_to_text_raw(filepath, source_lang, target_lang, file_type)
         return self.audio_to_text_raw(downsampled, source_lang, target_lang, "opus")
 
-    def transcribe_pdf(self, filepath: Path) -> str:
-        # The API endpoint you will be hitting
-        # url = "http://api.mycor.io/v0/multimodal_asr/local-m4t"
-        # FIXME : Work out what this url should fucking be
-        url = f"{self.endpoint_url}/v0/document-ocr/local_nougat"
-        # url = "https://www.google.com/"
-        # Open the file in binary mode
-        with filepath.open("rb") as file:
-            # Define the multipart/form-data payload
-            files = {
-                "file": (filepath.name, file, "application/octet-stream"),
-            }
-            # Mke the POST request with files
-            response = requests.post(url, files=files)
-            print(f"Request Headers: response.request.headers")
-            # Raise an exception if the request was unsuccessful
-            response.raise_for_status()
-
-        # Parse the JSON response
-        response_json = response.json()
-        # Extract the translated text from the JSON response
-        # translated_text = response_json["response"]
-
-        # Please forgive me lord
-        translated_text = str(response_json)
-        return translated_text
 
     def embed_raw_dicts(self, text_list: List[dict], model_name: str) -> list:
         if not model_name in ["mistral7b-sfr"]:

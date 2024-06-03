@@ -2,10 +2,8 @@
 version: "3"
 
 services:
-  # reverse-proxy:
-  #   # official image
-  #   image: traefik:v2.11
-
+  reverse-proxy:
+    image: traefik:v2.11
     # eable web ui, listen to docker
     command: --api.insecure=true --providers.docker
     ports:
@@ -19,7 +17,7 @@ services:
     ports:
       - "5672:5672"
     volumes:
-      - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+      - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq
       - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
 
   # chroma is handled in process in the backend
@@ -64,14 +62,11 @@ services:
       - ./frontend/src:/app/src
       - ./frontend/public:/app/public
       - ./frontend/.env.local:/app/.env.local
-
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
-
     ports:
       - "${FRONTEND_PORT}:${FRONTEND_PORT}"
-
     command:
       - "npm"
       - "run"
@@ -79,6 +74,7 @@ services:
       - "--"
       - "-p"
       - "$FRONTEND_PORT"
+
   database:
     image: pgvector/pgvector:pg16
     restart: always
