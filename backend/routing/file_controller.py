@@ -301,12 +301,13 @@ class FileController(Controller):
         if regenerate and current_stage != "stage0":
             current_stage = "stage1"
         if current_stage == "stage1":
-            try:
-                processed_original_text = (
-                    mdextract.process_raw_document_into_untranslated_text(
-                        Path(obj.path), obj.doctype, obj.lang
-                    )
+            processed_original_text = (
+                mdextract.process_raw_document_into_untranslated_text(
+                    Path(obj.path), obj.doctype, obj.lang
                 )
+            )
+            try:
+                print(3)
             except:
                 response_code, response_message = (
                     422,

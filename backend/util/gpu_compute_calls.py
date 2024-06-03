@@ -53,7 +53,7 @@ def downsample_audio(
     return outfile
 
 
-MARKER_ENDPOINT_URL = os.environ("MARKER_ENDPOINT_URL")
+MARKER_ENDPOINT_URL = os.environ["MARKER_ENDPOINT_URL"]
 
 class GPUComputeEndpoint:
     def __init__(self, marker_endpoint_url: str = MARKER_ENDPOINT_URL, legacy_endpoint_url : str = "https://depricated-url.com"):
