@@ -286,8 +286,7 @@ class FileController(Controller):
         current_stage = obj.stage
         doctype = obj.doctype
         logger.info(obj.doctype)
-        mdextract = MarkdownExtractor(logger, OS_GPU_COMPUTE_URL, OS_TMPDIR)
-        genextras = GenerateExtras(logger, OS_GPU_COMPUTE_URL, OS_TMPDIR)
+        mdextract = MarkdownExtractor(logger, OS_TMPDIR)
 
         response_code, response_message = (
             500,

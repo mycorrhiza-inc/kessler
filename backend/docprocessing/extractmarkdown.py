@@ -20,9 +20,8 @@ from util.gpu_compute_calls import GPUComputeEndpoint
 
 
 class MarkdownExtractor:
-    def __init__(self, logger, endpoint_url: str, tmpdir: Path):
+    def __init__(self, logger, tmpdir: Path):
         self.tmpdir = tmpdir
-        self.endpoint_url = endpoint_url
         self.logger = logger
         # TODO : Add database connection.
 
@@ -34,7 +33,7 @@ class MarkdownExtractor:
     def convert_text_into_eng(self, file_text: str, lang: str):
         if lang in ["en", "eng", "english", None]:
             return file_text
-        english_text = GPUComputeEndpoint(self.endpoint_url).translate_text(
+        english_text = GPUComputeEndpoint().translate_text(
             file_text, lang, "en"
         )
         return english_text
@@ -46,7 +45,7 @@ class MarkdownExtractor:
             source_lang = metadata["language"]
             target_lang = "en"
             doctype = metadata["doctype"]
-            return GPUComputeEndpoint(self.endpoint_url).audio_to_text(
+            return GPUComputeEndpoint().audio_to_text(
                 filepath, source_lang, target_lang, doctype
             )
 
