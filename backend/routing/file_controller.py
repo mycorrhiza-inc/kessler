@@ -224,7 +224,7 @@ class FileController(Controller):
                 source=document_source,
                 path=str(filepath),
                 # file=raw_tmpfile,
-                doc_metadata=metadata_str,
+                metadata_str=metadata_str,
                 stage="stage1",
                 hash=filehash,
                 summary=None,

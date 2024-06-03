@@ -9,8 +9,8 @@ services:
     env_file:
       - .env
     volumes:
-      # - ./frontend/src:/app/src
-      # - ./frontend/public:/app/public
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
       - ./frontend/.env.local:/app/.env.local
     labels:
       - "traefik.enable=true"
@@ -50,6 +50,7 @@ services:
     env_file:
       - .env
     volumes:
+      - ./backend:/app
       - ./volumes/instance:/app/instance
       - ./volumes/files:/files
       - ./volumes/tmp:/tmp/
