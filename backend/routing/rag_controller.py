@@ -40,7 +40,6 @@ from models import FileModel, FileRepository, FileSchema, provide_files_repo
 
 from crawler.docingest import DocumentIngester
 from docprocessing.extractmarkdown import MarkdownExtractor
-from docprocessing.genextras import GenerateExtras
 
 from typing import List, Optional, Union, Any, Dict
 
