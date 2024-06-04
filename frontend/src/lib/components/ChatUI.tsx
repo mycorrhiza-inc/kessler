@@ -351,7 +351,7 @@ function ChatBox() {
       console.log(messages);
     }
     setResponse(true);
-    setUserChatbox("");
+    // setUserChatbox("");
   };
 
   /*
@@ -399,6 +399,7 @@ function ChatBox() {
             <Field
               name="messageInput"
               type="textarea"
+              type="submit"
               placeholder="chat..."
               // flex-grow="2"
               paddingLeft="20px"
@@ -406,16 +407,16 @@ function ChatBox() {
               border="none"
               padding="10px"
               margin="10px"
-              onKeyPress={(event) => {
-                if (event.key === 'Enter') {
-                  event.preventDefault();
-                  sendMessage(); // Call the submit function
-                }
-              }}
-              value={userChatbox}
-              // FIXME : Ask Mirrir for help on this type signature thing
-              // @ts-ignore
-              onChange={() => setUserChatbox()}
+            // onKeyPress={(event) => {
+            //   if (event.key === 'Enter') {
+            //     event.preventDefault();
+            //     sendMessage(); // Call the submit function
+            //   }
+            // }}
+            // value={userChatbox}
+            // FIXME : Ask Mirrir for help on this type signature thing
+            // @ts-ignore
+            // onChange={() => setUserChatbox()}
             />
             <Center padding="10px">
               <IconButton
