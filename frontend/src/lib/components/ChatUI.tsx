@@ -332,12 +332,12 @@ function ChatBox() {
     messageInput: string;
   }
   // TODO : Fix Horrible Buggy passing the any function
-  const sendMessage = async () => {
+  const sendMessage = async (params: msgSent) => {
     console.log("sending message");
-    console.log(`msg: ${userChatbox}`);
+    console.log(`msg: ${params.messageInput}`);
     let m: Message = {
       role: "user",
-      content: userChatbox,
+      content: params.messageInput,
       key: `${Math.floor(Math.random() * 100)}`,
     };
     console.log(`appending message "${m.content}"`);
@@ -381,7 +381,7 @@ function ChatBox() {
         })}
         <Box minHeight="300px" width="100%" color="red" />
       </VStack>
-      <Form onSubmit={sendMessage}>
+      <Form onSubmit={sendMessage} ref={el => this.myFormRef = el} >
         <FormLayout>
           <Box
             display="flex"
@@ -409,7 +409,7 @@ function ChatBox() {
               onKeyPress={(event) => {
                 if (event.key === 'Enter') {
                   event.preventDefault();
-                  sendMessage(); // Call the submit function
+                  this.myFormRef.requestSubmit();
                 }
               }}
               value={userChatbox}
@@ -428,7 +428,7 @@ function ChatBox() {
             </Center>
           </Box>
         </FormLayout>
-      </Form>
+      </Form >
     </>
   );
 }
