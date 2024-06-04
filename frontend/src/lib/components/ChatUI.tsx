@@ -398,7 +398,7 @@ function ChatBox() {
           >
             <Field
               name="messageInput"
-              type="textarea"
+              type="text"
               placeholder="chat..."
               // flex-grow="2"
               paddingLeft="20px"
@@ -406,15 +406,15 @@ function ChatBox() {
               border="none"
               padding="10px"
               margin="10px"
-              onKeyPress={(event) => {
-                if (event.key === 'Enter') {
-                  event.preventDefault();
-                  this.myFormRef.requestSubmit();
-                }
-              }}
-              value={userChatbox}
-              // FIXME : Figure out the proper type for this
-              onChange={(e: any) => setUserChatbox(e.targetvalue)}
+            // onKeyPress={(event) => {
+            //   if (event.key === 'Enter') {
+            //     event.preventDefault();
+            //     this.myFormRef.requestSubmit();
+            //   }
+            // }}
+            // value={userChatbox}
+            // // FIXME : Figure out the proper type for this
+            // onChange={(e: any) => setUserChatbox(e.targetvalue)}
             />
             <Center padding="10px">
               <IconButton
