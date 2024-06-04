@@ -388,8 +388,8 @@ function MessageComponent({
         spacing={4}
         // align="stretch"
         overflowY="scroll"
-        // justifyContent={message.role == true ? "right" : "left"}
-        // h="100vh"
+      // justifyContent={message.role == true ? "right" : "left"}
+      // h="100vh"
       >
         {/* role message */}
         <div>{message.content}</div>
@@ -417,14 +417,15 @@ function ChatBox() {
     console.log(`chat history`);
     console.log(chat_hist);
     let result = await fetch(
-      "http://143.198.140.106:5055//api/rag/simple_chat_completion",
+      // FIXME : Add the base url instead of localhost to make it more amenable to this stuff.
+      "http://localhost/api/rag/simple_chat_completion",
       {
         method: "POST",
         mode: "cors",
         headers: {
           "Content-Type": "application/json",
           accept: "application/json",
-          // "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Origin": "*",
           "Referrer-Policy": "no-referrer",
         },
         body: JSON.stringify({
@@ -485,9 +486,9 @@ function ChatBox() {
   };
 
   /*
-		with take the current message, find the message
+    with take the current message, find the message
 
-	*/
+  */
 
   // get a response every time a message is sent
   useEffect(() => {
