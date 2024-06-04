@@ -29,6 +29,7 @@ import {
 } from "@saas-ui/react";
 import { FiArrowUpCircle } from "react-icons/fi";
 import { useState, useEffect } from "react";
+import Markdown from 'react-markdown'
 import { message } from "antd";
 import { start } from "repl";
 import { initialState } from "node_modules/@clerk/nextjs/dist/types/app-router/server/auth";
@@ -258,7 +259,7 @@ function MessageComponent({
       // h="100vh"
       >
         {/* role message */}
-        <div>{message.content}</div>
+        <div><Markdown>{message.content}</Markdown></div>
         {/* <Box width="100%" height="50px">
           {!message.role && <div>Regenerate</div>}{" "}
           {message.role && <div>Edit</div>}
@@ -330,13 +331,13 @@ function ChatBox() {
   interface msgSent {
     messageInput: string;
   }
-  const sendMessage = async (params: msgSent) => {
+  // TODO : Fix Horrible Buggy passing the any function
+  const sendMessage = async () => {
     console.log("sending message");
-    console.log(params);
-    console.log(`msg: ${params.messageInput}`);
+    console.log(`msg: ${userChatbox}`);
     let m: Message = {
       role: "user",
-      content: params.messageInput,
+      content: userChatbox,
       key: `${Math.floor(Math.random() * 100)}`,
     };
     console.log(`appending message "${m.content}"`);
@@ -350,6 +351,7 @@ function ChatBox() {
       console.log(messages);
     }
     setResponse(true);
+    setUserChatbox("");
   };
 
   /*
@@ -379,7 +381,7 @@ function ChatBox() {
         })}
         <Box minHeight="300px" width="100%" color="red" />
       </VStack>
-      <Form onSubmit={sendMessage}>
+      <Form onSubmit={() => sendMessage()}>
         <FormLayout>
           <Box
             display="flex"
@@ -404,7 +406,15 @@ function ChatBox() {
               border="none"
               padding="10px"
               margin="10px"
+              onKeyPress={(event) => {
+                if (event.key === 'Enter') {
+                  event.preventDefault();
+                  sendMessage(); // Call the submit function
+                }
+              }}
               value={userChatbox}
+              // FIXME : Ask Mirrir for help on this type signature thing
+              // @ts-ignore
               onChange={() => setUserChatbox()}
             />
             <Center padding="10px">
