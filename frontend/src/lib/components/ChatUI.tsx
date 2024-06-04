@@ -399,7 +399,6 @@ function ChatBox() {
             <Field
               name="messageInput"
               type="textarea"
-              type="submit"
               placeholder="chat..."
               // flex-grow="2"
               paddingLeft="20px"
