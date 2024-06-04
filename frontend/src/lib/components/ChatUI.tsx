@@ -351,7 +351,7 @@ function ChatBox() {
       console.log(messages);
     }
     setResponse(true);
-    // setUserChatbox("");
+    setUserChatbox("");
   };
 
   /*
@@ -381,7 +381,7 @@ function ChatBox() {
         })}
         <Box minHeight="300px" width="100%" color="red" />
       </VStack>
-      <Form onSubmit={() => sendMessage()}>
+      <Form onSubmit={sendMessage}>
         <FormLayout>
           <Box
             display="flex"
@@ -407,16 +407,15 @@ function ChatBox() {
               border="none"
               padding="10px"
               margin="10px"
-            // onKeyPress={(event) => {
-            //   if (event.key === 'Enter') {
-            //     event.preventDefault();
-            //     sendMessage(); // Call the submit function
-            //   }
-            // }}
-            // value={userChatbox}
-            // FIXME : Ask Mirrir for help on this type signature thing
-            // @ts-ignore
-            // onChange={() => setUserChatbox()}
+              onKeyPress={(event) => {
+                if (event.key === 'Enter') {
+                  event.preventDefault();
+                  sendMessage(); // Call the submit function
+                }
+              }}
+              value={userChatbox}
+              // FIXME : Figure out the proper type for this
+              onChange={(e: any) => setUserChatbox(e.targetvalue)}
             />
             <Center padding="10px">
               <IconButton
