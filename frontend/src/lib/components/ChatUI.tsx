@@ -381,7 +381,7 @@ function ChatBox() {
         })}
         <Box minHeight="300px" width="100%" color="red" />
       </VStack>
-      <Form onSubmit={sendMessage} ref={el => this.myFormRef = el} >
+      <Form onSubmit={sendMessage}>
         <FormLayout>
           <Box
             display="flex"
