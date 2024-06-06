@@ -40,13 +40,10 @@ from models import FileModel, FileRepository, FileSchema, provide_files_repo
 
 from crawler.docingest import DocumentIngester
 from docprocessing.extractmarkdown import MarkdownExtractor
-from docprocessing.genextras import GenerateExtras
 
 from typing import List, Optional, Union, Any, Dict
 
-
 from util.niclib import get_blake2
-
 
 import json
 
@@ -145,7 +142,6 @@ class RagController(Controller):
         llama_chat_history = sanitzie_chathistory_llamaindex(chat_history)
         response = groq_llm.chat(llama_chat_history)
         str_response = str(response)
-
         return {"role": "assistant", "content": str_response}
 
     @post(path="/rag/rag_chat")
