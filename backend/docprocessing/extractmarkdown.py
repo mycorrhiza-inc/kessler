@@ -74,7 +74,8 @@ class MarkdownExtractor:
             return output_str
         if not override_dir is None:
             hash = metadata["hash"]
-            checkpath = override_dir / Path(hash + ".md")
+            checkpath = override_dir / Path(f"{hash}/{hash}.md"})
+            # checkpath = override_dir / Path(hash + ".md")
             if os.path.exists(checkpath):
                 with open(checkpath, "r") as file:
                     data = file.read().rstrip()

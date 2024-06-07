@@ -222,7 +222,8 @@ class DocumentIngester:
         self.logger.info(f"Getting hash")
         b264_hash = self.get_blake2_str(filepath)
         self.logger.info(f"Got hash {b264_hash}")
-        saveloc =  targetpath / Path(b264_hash)
+        saveloc =  hashpath / Path(b264_hash)
+
         self.logger.info(f"Saving file to {saveloc}")
         shutil.copyfile(filepath, saveloc)
         if saveloc.exists():
