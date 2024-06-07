@@ -42,6 +42,14 @@ class MarkdownExtractor:
         )
         return english_text
 
+    def backup_processed_text(self,text : str, metadata : dict, backupdir : path) -> None:
+        savestring = create_markdown_string(text,metadata,include_previous_metadata = False)
+        backuppath = backupdir / Path(metadata["hash"] + ".md")
+        with open(backuppath, "w") as text_file:
+            text_file.write(savestring)
+
+
+
     def process_raw_document_into_untranslated_text(
         self, file_loc: Path, metadata: dict,override_dir : Optional[Path] = None
     ) -> str:

@@ -290,6 +290,7 @@ class FileController(Controller):
         doctype = obj.doctype
         logger.info(obj.doctype)
         mdextract = MarkdownExtractor(logger, OS_TMPDIR)
+        doc_metadata = json.loads(obj.metadata_str)
 
         response_code, response_message = (
             500,
@@ -304,11 +305,10 @@ class FileController(Controller):
         if regenerate and current_stage != "stage0":
             current_stage = "stage1"
         if current_stage == "stage1":
-            processed_original_text = (
-                mdextract.process_raw_document_into_untranslated_text(
+            processed_original_text = mdextract.process_raw_document_into_untranslated_text(
                     Path(obj.path), obj.doctype, obj.lang
                 )
-            )
+            mdextract.backup_processed_text(processed_original_text,doc_metadata,OS_BACKUP_FILEDIR)
             try:
                 print(3)
             except:
@@ -345,8 +345,6 @@ class FileController(Controller):
                 current_stage = "stage3"
         if current_stage == "stage3":
             try:
-                doc_metadata_str = obj.metadata_str
-                doc_metadata = json.loads(doc_metadata_str)
                 add_document_to_db_from_text(obj.english_text, doc_metadata)
             except:
                 response_code, response_message = (

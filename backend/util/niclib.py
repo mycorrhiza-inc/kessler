@@ -16,8 +16,6 @@ from pathlib import Path
 
 from typing import Union, Optional, Any, Tuple
 
-from io import BufferedWriter
-
 
 
 def clean_and_empty_directory(dir: Path):
