@@ -156,6 +156,16 @@ class FileController(Controller):
         results = await files_repo.list()
         type_adapter = TypeAdapter(list[FileSchema])
         return type_adapter.validate_python(results)
+    @post(path="/files/process_all")
+    async def process_all_files(
+        self, files_repo: FileRepository, limit_offset: LimitOffset, request: Request, reprocess_all : bool = False
+    ) -> list[FileSchema]:
+        """List files."""
+        results = await files_repo.list()
+        type_adapter = TypeAdapter(list[FileSchema])
+        for file in results:
+            process_file_raw(file,files_repo,request.logger,reprocess_all)
+        return type_adapter.validate_python(results)
 
     @post(path="/files/upload", media_type=MediaType.TEXT)
     async def handle_file_upload(
