@@ -29,6 +29,7 @@ OS_FILEDIR = Path("/files/")
 
 import yaml
 
+from util.niclib import seperate_markdown_string
 
 class DocumentIngester:
     def __init__(
@@ -174,6 +175,7 @@ class DocumentIngester:
                     ".ppt",
                     ".pptx",
                     ".md",
+                    ".txt",
                     ".epub",
                 )
             ):
@@ -213,36 +215,10 @@ class DocumentIngester:
         }
 
     def get_metadata_from_file(self, path: Path, doctype: str) -> dict:
-        def extract_yaml_front_matter_markdown(markdown_str: str) -> dict:
-            """
-            Extract the YAML front matter from a given Markdown string and return it as a Python dictionary.
-
-            :param markdown_str: string, Markdown content with YAML front matter at the top
-            :return: dictionary, the parsed YAML front matter
-            """
-            # Split the markdown string at the YAML boundary
-            parts = markdown_str.split("---")
-
-            # Check if the markdown contains the expected YAML front matter
-            if len(parts) >= 3:
-                yaml_str = parts[
-                    1
-                ].strip()  # Extract the YAML part and remove any surrounding whitespace
-                try:
-                    # Parse the YAML content
-                    yaml_dict = yaml.safe_load(yaml_str)
-                    return yaml_dict
-                except yaml.YAMLError as e:
-                    print(f"Error parsing YAML: {e}")
-                    return {}
-            else:
-                print("No valid YAML front matter found")
-                return {}
-
         if doctype == "md":
             with open(path, "r") as file:
                 result = file.read()
-                metadata = extract_yaml_front_matter_markdown(result)
+                text, metadata = seperate_markdown_string(result)
             return metadata
 
         return {}
@@ -340,12 +316,14 @@ class DocumentIngester:
         self.logger.info("Successfully downloaded file from url")
         return (tmpfile, metadata)
 
-    def save_filepath_to_hash(self, filepath: Path) -> tuple[str, Path]:
+    def save_filepath_to_hash(self, filepath: Path, hashpath : Optional[Path] = None ) -> tuple[str, Path]:
+        if hashpath is None:
+            hashpath = self.rawfile_savedir
         filepath.parent.mkdir(exist_ok=True, parents=True)
         self.logger.info(f"Getting hash")
         b264_hash = self.get_blake2_str(filepath)
         self.logger.info(f"Got hash {b264_hash}")
-        saveloc = self.rawfile_savedir / Path(b264_hash)
+        saveloc =  targetpath / Path(b264_hash)
         self.logger.info(f"Saving file to {saveloc}")
         shutil.copyfile(filepath, saveloc)
         if saveloc.exists():

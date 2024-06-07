@@ -275,7 +275,6 @@ function ChatBox() {
   const [needsResponse, setResponse] = useState(false);
   const [userChatbox, setUserChatbox] = useState("");
   // let messages: Message[] = [];
-  let roleText = "";
 
   const getResponse = async () => {
     let chat_hist = messages.map((m) => {
@@ -286,7 +285,8 @@ function ChatBox() {
     console.log(chat_hist);
     let result = await fetch(
       // FIXME : Add the base url instead of localhost to make it more amenable to this stuff.
-      "http://localhost/api/rag/simple_chat_completion",
+      // "http://localhost/api/rag/rag_chat",
+      "http://localhost/api/rag/basic_chat",
       {
         method: "POST",
         mode: "cors",

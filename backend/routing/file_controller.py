@@ -115,6 +115,9 @@ OS_FILEDIR = Path("/files/")
 OS_TMPDIR = Path(os.environ["TMPDIR"])
 OS_GPU_COMPUTE_URL = os.environ["GPU_COMPUTE_URL"]
 OS_FILEDIR = Path("/files/")
+OS_HASH_FILEDIR = OS_FILEDIR / Path("raw")
+OS_OVERRIDE_FILEDIR = OS_FILEDIR / Path("override")
+OS_BACKUP_FILEDIR = OS_FILEDIR / Path("backup")
 
 
 # import base64
@@ -200,7 +203,7 @@ class FileController(Controller):
             metadata["source"] = "UNKNOWN"
 
         request.logger.info("Attempting to save data to file")
-        result = docingest.save_filepath_to_hash(tmpfile_path)
+        result = docingest.save_filepath_to_hash(tmpfile_path,OS_HASH_FILEDIR)
         (filehash, filepath) = result
         os.remove(tmpfile_path) 
         query = select(FileModel).where(FileModel.hash == filehash)

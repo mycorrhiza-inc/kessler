@@ -80,7 +80,6 @@ OS_TMPDIR = Path(os.environ["TMPDIR"])
 OS_GPU_COMPUTE_URL = os.environ["GPU_COMPUTE_URL"]
 OS_FILEDIR = Path("/files/")
 
-
 from llama_index.llms.groq import Groq
 
 
@@ -126,8 +125,8 @@ class RagController(Controller):
 
     dependencies = {"files_repo": Provide(provide_files_repo)}
 
-    @post(path="/rag/simple_chat_completion")
-    async def simple_chat_completion(
+    @post(path="/rag/basic_chat")
+    async def basic_chat_no_rag(
         self, files_repo: FileRepository, data: SimpleChatCompletion
     ) -> dict:
         model_name = data.model
