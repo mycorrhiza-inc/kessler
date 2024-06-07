@@ -46,7 +46,14 @@ def seperate_markdown_string(mdstr_with_metadata : str) -> Tuple[str,dict]:
         frontmatter = match.group(1)
         # Remove front matter from markdown text to get main body
         main_body = markdown_text[match.end():]
-        # Parse YAML frontmatter into a dictionary
+        # 
+        try:
+            # Parse the YAML content
+            yaml_dict = yaml.safe_load(frontmatter)
+            return (main_body,yaml_dict)
+        except yaml.YAMLError as e:
+            print(f"Error parsing YAML: {e}")
+            return (main_body,{})
         metadata = yaml.safe_load(frontmatter)
         return (main_body, metadata)
     else:
