@@ -115,6 +115,9 @@ OS_FILEDIR = Path("/files/")
 OS_TMPDIR = Path(os.environ["TMPDIR"])
 OS_GPU_COMPUTE_URL = os.environ["GPU_COMPUTE_URL"]
 OS_FILEDIR = Path("/files/")
+OS_HASH_FILEDIR = OS_FILEDIR / Path("raw")
+OS_OVERRIDE_FILEDIR = OS_FILEDIR / Path("override")
+OS_BACKUP_FILEDIR = OS_FILEDIR / Path("backup")
 
 
 # import base64
@@ -152,6 +155,16 @@ class FileController(Controller):
         """List files."""
         results = await files_repo.list()
         type_adapter = TypeAdapter(list[FileSchema])
+        return type_adapter.validate_python(results)
+    @post(path="/files/process_all")
+    async def process_all_files(
+        self, files_repo: FileRepository, limit_offset: LimitOffset, request: Request, reprocess_all : bool = False
+    ) -> list[FileSchema]:
+        """List files."""
+        results = await files_repo.list()
+        type_adapter = TypeAdapter(list[FileSchema])
+        for file in results:
+            process_file_raw(file,files_repo,request.logger,reprocess_all)
         return type_adapter.validate_python(results)
 
     @post(path="/files/upload", media_type=MediaType.TEXT)
@@ -200,7 +213,7 @@ class FileController(Controller):
             metadata["source"] = "UNKNOWN"
 
         request.logger.info("Attempting to save data to file")
-        result = docingest.save_filepath_to_hash(tmpfile_path)
+        result = docingest.save_filepath_to_hash(tmpfile_path,OS_HASH_FILEDIR)
         (filehash, filepath) = result
         os.remove(tmpfile_path) 
         query = select(FileModel).where(FileModel.hash == filehash)
@@ -287,6 +300,7 @@ class FileController(Controller):
         doctype = obj.doctype
         logger.info(obj.doctype)
         mdextract = MarkdownExtractor(logger, OS_TMPDIR)
+        doc_metadata = json.loads(obj.metadata_str)
 
         response_code, response_message = (
             500,
@@ -301,11 +315,10 @@ class FileController(Controller):
         if regenerate and current_stage != "stage0":
             current_stage = "stage1"
         if current_stage == "stage1":
-            processed_original_text = (
-                mdextract.process_raw_document_into_untranslated_text(
+            processed_original_text = mdextract.process_raw_document_into_untranslated_text(
                     Path(obj.path), obj.doctype, obj.lang
                 )
-            )
+            mdextract.backup_processed_text(processed_original_text,doc_metadata,OS_BACKUP_FILEDIR)
             try:
                 print(3)
             except:
@@ -342,8 +355,6 @@ class FileController(Controller):
                 current_stage = "stage3"
         if current_stage == "stage3":
             try:
-                doc_metadata_str = obj.metadata_str
-                doc_metadata = json.loads(doc_metadata_str)
                 add_document_to_db_from_text(obj.english_text, doc_metadata)
             except:
                 response_code, response_message = (

@@ -29,8 +29,10 @@ import {
 } from "@saas-ui/react";
 import { FiArrowUpCircle } from "react-icons/fi";
 import { useState, useEffect } from "react";
+import Markdown from 'react-markdown'
 import { message } from "antd";
 import { start } from "repl";
+import { initialState } from "node_modules/@clerk/nextjs/dist/types/app-router/server/auth";
 
 interface ChatAgent {
   role: boolean;
@@ -42,141 +44,6 @@ function SourceModal() {
   // TODO: cache the sourceModal text in the zustand state manager
   return (
     <Box>
-      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur
-      ultricies vehicula velit, at condimentum diam tristique a. Sed commodo,
-      metus quis scelerisque porta, turpis libero placerat erat, quis semper
-      sapien nisi eu neque. Donec id maximus lacus. Proin dolor erat, tempus ac
-      scelerisque fringilla, imperdiet in orci. Curabitur egestas magna ut
-      mollis sollicitudin. Sed nec pulvinar eros. Donec porta tempor convallis.
-      Aliquam erat volutpat. Nulla facilisi. Aenean faucibus ipsum sit amet
-      dictum lobortis. Cras congue magna sapien, et facilisis arcu efficitur
-      vitae. Integer nec tellus nec lectus molestie tristique. Vestibulum a sem
-      aliquam, cursus erat ac, luctus lectus. Pellentesque et augue facilisis,
-      ullamcorper ante at, facilisis nibh. Mauris placerat ut sapien ac pretium.
-      Fusce maximus dignissim diam quis blandit. Aliquam eget ultrices velit.
-      Cras in rutrum arcu. Praesent volutpat, sapien vitae pulvinar commodo,
-      urna neque lobortis arcu, a condimentum libero arcu sagittis leo. Nulla
-      ante arcu, pharetra id turpis quis, consectetur semper ex. Pellentesque
-      habitant morbi tristique senectus et netus et malesuada fames ac turpis
-      egestas. Praesent pulvinar id turpis sed semper. Praesent ac dignissim
-      odio. Nullam accumsan tincidunt augue. Nullam id interdum metus. Vivamus
-      sodales laoreet dolor a condimentum. Maecenas tincidunt semper lorem, sed
-      lacinia tellus lacinia sit amet. Ut augue odio, fermentum ut luctus at,
-      cursus quis risus. Vivamus lacinia augue lectus. Morbi facilisis nibh
-      massa, in vestibulum mauris fermentum at. Lorem ipsum dolor sit amet,
-      consectetur adipiscing elit. Ut sollicitudin fermentum justo, vitae
-      malesuada lorem ullamcorper id. Mauris vitae dui ornare, luctus libero
-      nec, posuere massa. Suspendisse at odio tristique, maximus nunc eu,
-      ullamcorper mauris. Mauris ultricies sit amet tortor non gravida. Cras
-      pellentesque justo dui, posuere ultricies ante lobortis quis. Sed bibendum
-      mattis fringilla. Quisque id pharetra ligula. In consectetur sagittis enim
-      sed pellentesque. Vestibulum quam libero, posuere et nisi ut, egestas
-      laoreet augue. Aliquam diam ex, ultricies quis pellentesque ut, venenatis
-      et erat. Nam at elementum augue, sit amet fermentum lorem. Cras aliquet
-      elit eu dui mollis gravida vitae non sapien. Donec sit amet est eu est
-      tincidunt rhoncus. Vivamus id urna odio. Lorem ipsum dolor sit amet,
-      consectetur adipiscing elit. Curabitur ultricies vehicula velit, at
-      condimentum diam tristique a. Sed commodo, metus quis scelerisque porta,
-      turpis libero placerat erat, quis semper sapien nisi eu neque. Donec id
-      maximus lacus. Proin dolor erat, tempus ac scelerisque fringilla,
-      imperdiet in orci. Curabitur egestas magna ut mollis sollicitudin. Sed nec
-      pulvinar eros. Donec porta tempor convallis. Aliquam erat volutpat. Nulla
-      facilisi. Aenean faucibus ipsum sit amet dictum lobortis. Cras congue
-      magna sapien, et facilisis arcu efficitur vitae. Integer nec tellus nec
-      lectus molestie tristique. Vestibulum a sem aliquam, cursus erat ac,
-      luctus lectus. Pellentesque et augue facilisis, ullamcorper ante at,
-      facilisis nibh. Mauris placerat ut sapien ac pretium. Fusce maximus
-      dignissim diam quis blandit. Aliquam eget ultrices velit. Cras in rutrum
-      arcu. Praesent volutpat, sapien vitae pulvinar commodo, urna neque
-      lobortis arcu, a condimentum libero arcu sagittis leo. Nulla ante arcu,
-      pharetra id turpis quis, consectetur semper ex. Pellentesque habitant
-      morbi tristique senectus et netus et malesuada fames ac turpis egestas.
-      Praesent pulvinar id turpis sed semper. Praesent ac dignissim odio. Nullam
-      accumsan tincidunt augue. Nullam id interdum metus. Vivamus sodales
-      laoreet dolor a condimentum. Maecenas tincidunt semper lorem, sed lacinia
-      tellus lacinia sit amet. Ut augue odio, fermentum ut luctus at, cursus
-      quis risus. Vivamus lacinia augue lectus. Morbi facilisis nibh massa, in
-      vestibulum mauris fermentum at. Lorem ipsum dolor sit amet, consectetur
-      adipiscing elit. Ut sollicitudin fermentum justo, vitae malesuada lorem
-      ullamcorper id. Mauris vitae dui ornare, luctus libero nec, posuere massa.
-      Suspendisse at odio tristique, maximus nunc eu, ullamcorper mauris. Mauris
-      ultricies sit amet tortor non gravida. Cras pellentesque justo dui,
-      posuere ultricies ante lobortis quis. Sed bibendum mattis fringilla.
-      Quisque id pharetra ligula. In consectetur sagittis enim sed pellentesque.
-      Vestibulum quam libero, posuere et nisi ut, egestas laoreet augue. Aliquam
-      diam ex, ultricies quis pellentesque ut, venenatis et erat. Nam at
-      elementum augue, sit amet fermentum lorem. Cras aliquet elit eu dui mollis
-      gravida vitae non sapien. Donec sit amet est eu est tincidunt rhoncus.
-      Vivamus id urna odio.
-      <br />
-      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur
-      ultricies vehicula velit, at condimentum diam tristique a. Sed commodo,
-      metus quis scelerisque porta, turpis libero placerat erat, quis semper
-      sapien nisi eu neque. Donec id maximus lacus. Proin dolor erat, tempus ac
-      scelerisque fringilla, imperdiet in orci. Curabitur egestas magna ut
-      mollis sollicitudin. Sed nec pulvinar eros. Donec porta tempor convallis.
-      Aliquam erat volutpat. Nulla facilisi. Aenean faucibus ipsum sit amet
-      dictum lobortis. Cras congue magna sapien, et facilisis arcu efficitur
-      vitae. Integer nec tellus nec lectus molestie tristique. Vestibulum a sem
-      aliquam, cursus erat ac, luctus lectus. Pellentesque et augue facilisis,
-      ullamcorper ante at, facilisis nibh. Mauris placerat ut sapien ac pretium.
-      Fusce maximus dignissim diam quis blandit. Aliquam eget ultrices velit.
-      Cras in rutrum arcu. Praesent volutpat, sapien vitae pulvinar commodo,
-      urna neque lobortis arcu, a condimentum libero arcu sagittis leo. Nulla
-      ante arcu, pharetra id turpis quis, consectetur semper ex. Pellentesque
-      habitant morbi tristique senectus et netus et malesuada fames ac turpis
-      egestas. Praesent pulvinar id turpis sed semper. Praesent ac dignissim
-      odio. Nullam accumsan tincidunt augue. Nullam id interdum metus. Vivamus
-      sodales laoreet dolor a condimentum. Maecenas tincidunt semper lorem, sed
-      lacinia tellus lacinia sit amet. Ut augue odio, fermentum ut luctus at,
-      cursus quis risus. Vivamus lacinia augue lectus. Morbi facilisis nibh
-      massa, in vestibulum mauris fermentum at. Lorem ipsum dolor sit amet,
-      consectetur adipiscing elit. Ut sollicitudin fermentum justo, vitae
-      malesuada lorem ullamcorper id. Mauris vitae dui ornare, luctus libero
-      nec, posuere massa. Suspendisse at odio tristique, maximus nunc eu,
-      ullamcorper mauris. Mauris ultricies sit amet tortor non gravida. Cras
-      pellentesque justo dui, posuere ultricies ante lobortis quis. Sed bibendum
-      mattis fringilla. Quisque id pharetra ligula. In consectetur sagittis enim
-      sed pellentesque. Vestibulum quam libero, posuere et nisi ut, egestas
-      laoreet augue. Aliquam diam ex, ultricies quis pellentesque ut, venenatis
-      et erat. Nam at elementum augue, sit amet fermentum lorem. Cras aliquet
-      elit eu dui mollis gravida vitae non sapien. Donec sit amet est eu est
-      tincidunt rhoncus. Vivamus id urna odio.
-      <br />
-      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur
-      ultricies vehicula velit, at condimentum diam tristique a. Sed commodo,
-      metus quis scelerisque porta, turpis libero placerat erat, quis semper
-      sapien nisi eu neque. Donec id maximus lacus. Proin dolor erat, tempus ac
-      scelerisque fringilla, imperdiet in orci. Curabitur egestas magna ut
-      mollis sollicitudin. Sed nec pulvinar eros. Donec porta tempor convallis.
-      Aliquam erat volutpat. Nulla facilisi. Aenean faucibus ipsum sit amet
-      dictum lobortis. Cras congue magna sapien, et facilisis arcu efficitur
-      vitae. Integer nec tellus nec lectus molestie tristique. Vestibulum a sem
-      aliquam, cursus erat ac, luctus lectus. Pellentesque et augue facilisis,
-      ullamcorper ante at, facilisis nibh. Mauris placerat ut sapien ac pretium.
-      Fusce maximus dignissim diam quis blandit. Aliquam eget ultrices velit.
-      Cras in rutrum arcu. Praesent volutpat, sapien vitae pulvinar commodo,
-      urna neque lobortis arcu, a condimentum libero arcu sagittis leo. Nulla
-      ante arcu, pharetra id turpis quis, consectetur semper ex. Pellentesque
-      habitant morbi tristique senectus et netus et malesuada fames ac turpis
-      egestas. Praesent pulvinar id turpis sed semper. Praesent ac dignissim
-      odio. Nullam accumsan tincidunt augue. Nullam id interdum metus. Vivamus
-      sodales laoreet dolor a condimentum. Maecenas tincidunt semper lorem, sed
-      lacinia tellus lacinia sit amet. Ut augue odio, fermentum ut luctus at,
-      cursus quis risus. Vivamus lacinia augue lectus. Morbi facilisis nibh
-      massa, in vestibulum mauris fermentum at. Lorem ipsum dolor sit amet,
-      consectetur adipiscing elit. Ut sollicitudin fermentum justo, vitae
-      malesuada lorem ullamcorper id. Mauris vitae dui ornare, luctus libero
-      nec, posuere massa. Suspendisse at odio tristique, maximus nunc eu,
-      ullamcorper mauris. Mauris ultricies sit amet tortor non gravida. Cras
-      pellentesque justo dui, posuere ultricies ante lobortis quis. Sed bibendum
-      mattis fringilla. Quisque id pharetra ligula. In consectetur sagittis enim
-      sed pellentesque. Vestibulum quam libero, posuere et nisi ut, egestas
-      laoreet augue. Aliquam diam ex, ultricies quis pellentesque ut, venenatis
-      et erat. Nam at elementum augue, sit amet fermentum lorem. Cras aliquet
-      elit eu dui mollis gravida vitae non sapien. Donec sit amet est eu est
-      tincidunt rhoncus. Vivamus id urna odio.
-      <br />
       Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur
       ultricies vehicula velit, at condimentum diam tristique a. Sed commodo,
       metus quis scelerisque porta, turpis libero placerat erat, quis semper
@@ -388,11 +255,11 @@ function MessageComponent({
         spacing={4}
         // align="stretch"
         overflowY="scroll"
-        // justifyContent={message.role == true ? "right" : "left"}
-        // h="100vh"
+      // justifyContent={message.role == true ? "right" : "left"}
+      // h="100vh"
       >
         {/* role message */}
-        <div>{message.content}</div>
+        <div><Markdown>{message.content}</Markdown></div>
         {/* <Box width="100%" height="50px">
           {!message.role && <div>Regenerate</div>}{" "}
           {message.role && <div>Edit</div>}
@@ -406,8 +273,8 @@ function ChatBox() {
   // const [messages, setMessages] = useState<Message[]>(startingMessages);
   const [messages, setMessages] = useState<Message[]>([]);
   const [needsResponse, setResponse] = useState(false);
+  const [userChatbox, setUserChatbox] = useState("");
   // let messages: Message[] = [];
-  let roleText = "";
 
   const getResponse = async () => {
     let chat_hist = messages.map((m) => {
@@ -417,7 +284,9 @@ function ChatBox() {
     console.log(`chat history`);
     console.log(chat_hist);
     let result = await fetch(
-      "http://143.198.140.106:5055//api/rag/simple_chat_completion",
+      // FIXME : Add the base url instead of localhost to make it more amenable to this stuff.
+      // "http://localhost/api/rag/rag_chat",
+      "http://localhost/api/rag/basic_chat",
       {
         method: "POST",
         mode: "cors",
@@ -462,9 +331,9 @@ function ChatBox() {
   interface msgSent {
     messageInput: string;
   }
+  // TODO : Fix Horrible Buggy passing the any function
   const sendMessage = async (params: msgSent) => {
     console.log("sending message");
-    console.log(params);
     console.log(`msg: ${params.messageInput}`);
     let m: Message = {
       role: "user",
@@ -482,12 +351,13 @@ function ChatBox() {
       console.log(messages);
     }
     setResponse(true);
+    setUserChatbox("");
   };
 
   /*
-		with take the current message, find the message
+    with take the current message, find the message
 
-	*/
+  */
 
   // get a response every time a message is sent
   useEffect(() => {
@@ -528,7 +398,7 @@ function ChatBox() {
           >
             <Field
               name="messageInput"
-              type="textarea"
+              type="text"
               placeholder="chat..."
               // flex-grow="2"
               paddingLeft="20px"
@@ -536,6 +406,15 @@ function ChatBox() {
               border="none"
               padding="10px"
               margin="10px"
+            // onKeyPress={(event) => {
+            //   if (event.key === 'Enter') {
+            //     event.preventDefault();
+            //     this.myFormRef.requestSubmit();
+            //   }
+            // }}
+            // value={userChatbox}
+            // // FIXME : Figure out the proper type for this
+            // onChange={(e: any) => setUserChatbox(e.targetvalue)}
             />
             <Center padding="10px">
               <IconButton
@@ -549,7 +428,7 @@ function ChatBox() {
             </Center>
           </Box>
         </FormLayout>
-      </Form>
+      </Form >
     </>
   );
 }

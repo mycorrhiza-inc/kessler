@@ -19,6 +19,10 @@ from pathlib import Path
 from util.gpu_compute_calls import GPUComputeEndpoint
 
 
+import yaml
+
+from util.niclib import create_markdown_string, seperate_markdown_string
+
 class MarkdownExtractor:
     def __init__(self, logger, tmpdir: Path):
         self.tmpdir = tmpdir
@@ -38,17 +42,20 @@ class MarkdownExtractor:
         )
         return english_text
 
-    def process_raw_document_into_untranslated_text(
-        self, file_loc: Path, doctype: str, lang: str
-    ) -> str:
-        def process_audio(filepath: Path, metadata: dict) -> str:
-            source_lang = metadata["language"]
-            target_lang = "en"
-            doctype = metadata["doctype"]
-            return GPUComputeEndpoint().audio_to_text(
-                filepath, source_lang, target_lang, doctype
-            )
+    def backup_processed_text(self,text : str, metadata : dict, backupdir : Path) -> None:
+        savestring = create_markdown_string(text,metadata,include_previous_metadata = False)
+        backuppath = backupdir / Path(metadata["hash"] + ".md")
+        with open(backuppath, "w") as text_file:
+            text_file.write(savestring)
 
+
+
+    def process_raw_document_into_untranslated_text(
+        self, file_loc: Path, metadata: dict,override_dir : Optional[Path] = None
+    ) -> str:
+        doctype = metadata["doctype"]
+        lang = metadata["lang"]
+            
         def process_pdf(filepath: Path) -> str:
             return GPUComputeEndpoint().transcribe_pdf(filepath)
 
@@ -65,15 +72,28 @@ class MarkdownExtractor:
             if error_str:  # TODO : Debug this weird if statement
                 raise Exception(f"Error running pandoc command: {error_str}")
             return output_str
+        if not override_dir is None:
+            hash = metadata["hash"]
+            checkpath = override_dir / Path(hash + ".md")
+            if os.path.exists(checkpath):
+                with open(checkpath, "r") as file:
+                    data = file.read().rstrip()
+                    text,new_metadata = seperate_markdown_string(data)
+                    metadata.update(new_metadata)
+                    return (text,metadata)
 
         if not os.path.isfile(file_loc):
             raise Exception("A document with that hash is not present")
         if doctype == "md":
             with open(file_loc, "r") as file:
-                result = file.read()
-            return result
+                data = file.read().rstrip()
+                text,new_metadata = seperate_markdown_string(data)
+                # Redundant due to it processing metadata upon ingest.
+                # metadata.update(new_metadata)
+                return (text,metadata)
+            
         elif doctype == "pdf":
-            return process_pdf(file_loc)
+            return (process_pdf(file_loc),metadata)
         elif doctype in [
             "html",
             "doc",
@@ -83,11 +103,12 @@ class MarkdownExtractor:
             "odt",
             "rtf",
         ]:
-            return process_pandoc(file_loc, doctype)
+            return (process_pandoc(file_loc, doctype),metadata)
         elif doctype == "tex":
-            return process_pandoc(file_loc, "latex")
+            return (process_pandoc(file_loc, "latex"),metadata)
         elif doctype in ["mp3", "opus", "mkv"]:
-            return process_audio(file_loc, metadata)
+            assert False
+            return ""
         else:
             raise ValueError(
                 f'Improper File Type, processing Failed with doctype: "{doctype}"'

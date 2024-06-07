@@ -20,7 +20,7 @@ services:
     command:
       - "npm"
       - "run"
-      - "start"
+      - "dev"
 
   reverse-proxy:
     # official image
