@@ -286,7 +286,7 @@ function ChatBox() {
     let result = await fetch(
       // FIXME : Add the base url instead of localhost to make it more amenable to this stuff.
       // "http://localhost/api/rag/rag_chat",
-      "http://localhost/api/rag/basic_chat",
+      "http://localhost/api/rag/rag_chat",
       {
         method: "POST",
         mode: "cors",
