@@ -18,8 +18,8 @@ import {
   ModalFooter,
   ModalCloseButton,
   Container,
+  Text,
 } from "@chakra-ui/react";
-
 import {
   Form,
   FormLayout,
@@ -268,8 +268,7 @@ function MessageComponent({
     </Box>
   );
 }
-
-function ChatBox() {
+function ChatBox({ chatUrl }: { chatUrl: string }) {
   // const [messages, setMessages] = useState<Message[]>(startingMessages);
   const [messages, setMessages] = useState<Message[]>([]);
   const [needsResponse, setResponse] = useState(false);
@@ -286,7 +285,7 @@ function ChatBox() {
     let result = await fetch(
       // FIXME : Add the base url instead of localhost to make it more amenable to this stuff.
       // "http://localhost/api/rag/rag_chat",
-      "http://localhost/api/rag/rag_chat",
+      chatUrl,
       {
         method: "POST",
         mode: "cors",
@@ -383,7 +382,10 @@ function ChatBox() {
           </Box>
         )}
         {messages.map((m: Message) => {
-          return <MessageComponent key={m.key.toString()} message={m} />;
+          return <MessageComponent
+            // key={m.key.toString()} 
+            message={m}
+          />;
         })}
         <Box minHeight="300px" width="100%" color="red" />
       </VStack>
@@ -440,7 +442,7 @@ function ChatBox() {
 }
 /*
  */
-export default function ChatUI({ convoID = "" }: { convoID?: string }) {
+export default function ChatUI({ convoID = "", chatUrl }: { convoID?: string, chatUrl: string }) {
   // convoId being empty is a new chat instance
 
   return (
@@ -465,8 +467,8 @@ export default function ChatUI({ convoID = "" }: { convoID?: string }) {
             overflow="scroll clip"
             position="relative"
           >
-            <ChatBox />
-          </GridItem>
+            <ChatBox chatUrl={chatUrl} />
+          </GridItem >
 
           {/* <GridItem rowSpan={10} overflow="scroll clip">
             <ContextSources />
