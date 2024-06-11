@@ -34,6 +34,8 @@ import { message } from "antd";
 import { start } from "repl";
 import { initialState } from "node_modules/@clerk/nextjs/dist/types/app-router/server/auth";
 
+
+import MarkdownRenderer from "./MarkdownRenderer"
 interface ChatAgent {
   role: boolean;
 }
@@ -259,7 +261,7 @@ function MessageComponent({
       // h="100vh"
       >
         {/* role message */}
-        <div><Markdown>{message.content}</Markdown></div>
+        <div><MarkdownRenderer>{message.content}</MarkdownRenderer></div>
         {/* <Box width="100%" height="50px">
           {!message.role && <div>Regenerate</div>}{" "}
           {message.role && <div>Edit</div>}

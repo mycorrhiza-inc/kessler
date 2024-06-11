@@ -1,3 +1,5 @@
+// TODO : Maybe this is a bad idea since it could really bloat the application
+// Math stuff could be thrown out, having tables is important, and code highlighting is kinda standard.
 import React from 'react';
 import Markdown from 'react-markdown';
 import rehypeKatex from 'rehype-katex';
