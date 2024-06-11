@@ -376,8 +376,14 @@ function ChatBox() {
         overflow="scroll"
         h="100vh"
       >
+        {messages.length === 0 && (
+          <Box p={5} textAlign="center" color="gray.500">
+            <Text fontSize="lg" fontWeight="bold">Welcome to the Chatbot!</Text>
+            <Text>Type your message in the input box below and press Enter to send.</Text>
+          </Box>
+        )}
         {messages.map((m: Message) => {
-          return <MessageComponent message={m} />;
+          return <MessageComponent key={m.key.toString()} message={m} />;
         })}
         <Box minHeight="300px" width="100%" color="red" />
       </VStack>
