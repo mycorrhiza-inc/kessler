@@ -1,1 +1,5 @@
 llama-index
+uvicorn
+litestar
+advanced_alchemy
+haystack
