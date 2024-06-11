@@ -12,7 +12,7 @@ from typing import List, Dict, Tuple, Optional
 # Import the FileModel from file.py
 from models.files import FileModel
 
-from llama_index.core import SimpleDirectoryReader, StorageContext
+from llama_index.core import StorageContext
 from llama_index.core import VectorStoreIndex
 from llama_index.core import Settings
 from llama_index.vector_stores.postgres import PGVectorStore
