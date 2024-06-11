@@ -227,7 +227,7 @@ function MessageComponent({
       // h="100vh"
       >
         {/* role message */}
-        <div><Markdown>{message.content}</Markdown></div>
+        <div><MarkdownRenderer>{message.content}</MarkdownRenderer></div>
         {/* <Box width="100%" height="50px">
           {!message.role && <div>Regenerate</div>}{" "}
           {message.role && <div>Edit</div>}
