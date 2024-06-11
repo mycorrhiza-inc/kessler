@@ -114,26 +114,28 @@ export default function Page({ children }: { children: React.ReactNode }) {
 
           <SidebarSection flex="1" overflowY="auto" overflowX="hidden">
             <NavGroup>
-              <NavItem href="/" icon={<FiHome />} isActive={pathIs("")}>
-                Home (Currently Basic Chat)
-              </NavItem>
-              <NavItem
-                href="/chat"
-                icon={<FiMessageCircle />}
-                isActive={pathIs("chat")}
-              >
-                Chat (BROKEN)
+              <NavItem href="/" icon={<FiMessageCircle />} isActive={pathIs("")}>
+                Chat with Documents
               </NavItem>
               <NavItem
                 href="/projects"
                 icon={<FiFeather />}
                 isActive={pathIs("projects")}
               >
-                Projects (BROKEN)
+                Document Search (BROKEN)
               </NavItem>
-              <NavItem icon={<FiBookmark />} isActive={pathIs("saved")}>
-                Saved Documents (BROKEN)
+              <NavItem
+                href="/basic-chat"
+                icon={<FiMessageCircle />}
+                isActive={pathIs("basic-chat")}
+              >
+                Basic LLM Chat
               </NavItem>
+              {
+                // <NavItem icon={<FiBookmark />} isActive={pathIs("saved")}>
+                //   Saved Documents (BROKEN)
+                // </NavItem>
+              }
               {/* <SearchDialog /> */}
             </NavGroup>
           </SidebarSection>

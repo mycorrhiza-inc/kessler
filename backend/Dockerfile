@@ -1,4 +1,4 @@
-FROM python:3.12-bookworm
+FROM python:3.11-alpine
 
 ENV VIRTUAL_ENV=/usr/local
 # use UV
