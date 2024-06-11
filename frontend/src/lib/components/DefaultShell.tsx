@@ -55,7 +55,7 @@ import { usePathname } from "next/navigation";
 // import SearchDialog from "./SearchDialog";
 
 export default function Page({ children }: { children: React.ReactNode }) {
-  const [isOpen, toggleOpen] = useState(false);
+  const [isOpen, toggleOpen] = useState(true);
   const [searchModal, changeSearchModal] = useState(false);
 
   const toggleSearchModal = () => {

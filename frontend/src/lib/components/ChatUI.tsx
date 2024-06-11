@@ -185,43 +185,43 @@ function ContextSources() {
 interface Message {
   role: string;
   content: string;
-  key: string;
+  key: symbol;
 }
 
-const startingMessages: Message[] = [
-  {
-    role: "user",
-    content: "what is up?",
-    key: `${Math.floor(Math.random() * 100)}`,
-  },
-  {
-    role: "assistant",
-    content:
-      "nothing much, how are you? Is there anything i can help you with today?",
-    key: `${Math.floor(Math.random() * 100)}`,
-  },
-  {
-    role: "user",
-    content:
-      "Yes! I was wondering if you could check on the recent power assesment for Pueblo Colorado?",
-    key: `${Math.floor(Math.random() * 100)}`,
-  },
-  {
-    role: "assistant",
-    content: "Sure thing, Let me Take a look",
-    key: `${Math.floor(Math.random() * 100)}`,
-  },
-  {
-    role: "user",
-    content: "...",
-    key: `${Math.floor(Math.random() * 100)}`,
-  },
-  {
-    role: "assistant",
-    content: "Pueblo colorado has .........",
-    key: `${Math.floor(Math.random() * 100)}`,
-  },
-];
+// const startingMessages: Message[] = [
+//   {
+//     role: "user",
+//     content: "what is up?",
+//     key: `${Math.floor(Math.random() * 100)}`,
+//   },
+//   {
+//     role: "assistant",
+//     content:
+//       "nothing much, how are you? Is there anything i can help you with today?",
+//     key: `${Math.floor(Math.random() * 100)}`,
+//   },
+//   {
+//     role: "user",
+//     content:
+//       "Yes! I was wondering if you could check on the recent power assesment for Pueblo Colorado?",
+//     key: `${Math.floor(Math.random() * 100)}`,
+//   },
+//   {
+//     role: "assistant",
+//     content: "Sure thing, Let me Take a look",
+//     key: `${Math.floor(Math.random() * 100)}`,
+//   },
+//   {
+//     role: "user",
+//     content: "...",
+//     key: `${Math.floor(Math.random() * 100)}`,
+//   },
+//   {
+//     role: "assistant",
+//     content: "Pueblo colorado has .........",
+//     key: `${Math.floor(Math.random() * 100)}`,
+//   },
+// ];
 
 interface MessageComponentProps {
   message: Message;
@@ -232,7 +232,7 @@ function MessageComponent({
   message = {
     role: "user",
     content: "",
-    key: `${Math.floor(Math.random() * 100)}`,
+    key: Symbol(),
   },
 }: {
   message: Message;
@@ -338,7 +338,7 @@ function ChatBox() {
     let m: Message = {
       role: "user",
       content: params.messageInput,
-      key: `${Math.floor(Math.random() * 100)}`,
+      key: Symbol(),
     };
     console.log(`appending message "${m.content}"`);
     if (messages.length == 0) {
@@ -377,7 +377,7 @@ function ChatBox() {
         h="100vh"
       >
         {messages.map((m: Message) => {
-          return <MessageComponent key={m.key} message={m} />;
+          return <MessageComponent message={m} />;
         })}
         <Box minHeight="300px" width="100%" color="red" />
       </VStack>
