@@ -1,3 +1,5 @@
+from util.niclib import seperate_markdown_string
+import yaml
 from util.niclib import rand_string, rand_filepath
 
 
@@ -27,10 +29,6 @@ import base64
 OS_TMPDIR = Path(os.environ["TMPDIR"])
 OS_FILEDIR = Path("/files/")
 
-import yaml
-
-from util.niclib import seperate_markdown_string
-
 
 class DocumentIngester:
     def __init__(
@@ -40,44 +38,36 @@ class DocumentIngester:
         self.savedir = savedir
         self.logger = logger
         self.rawfile_savedir = savedir / Path("raw")
-        self.rawfile_savedir.mkdir(
-            exist_ok=True, parents=True
-        )  # Make sure the different directories always exist
+        # Make sure the different directories always exist
+        self.rawfile_savedir.mkdir(exist_ok=True, parents=True)
         self.metadata_backupdir = savedir / Path("metadata")
-        self.metadata_backupdir.mkdir(
-            exist_ok=True, parents=True
-        )  # Make sure the different directories always exist
+        # Make sure the different directories always exist
+        self.metadata_backupdir.mkdir(exist_ok=True, parents=True)
         self.proctext_backupdir = savedir / Path("processed_text")
-        self.proctext_backupdir.mkdir(
-            exist_ok=True, parents=True
-        )  # Make sure the different directories always exist
-        # self.crossref = Crossref()
+        # Make sure the different directories always exist
+        self.proctext_backupdir.mkdir(exist_ok=True, parents=True)
 
     def url_to_filepath_and_metadata(self, url: str) -> tuple[Path, dict]:
-        self.logger.warn("File function running")
-        parsed_url = urllib.parse.urlparse(url)
-        self.logger.warn("Creating File Name")
-        # FIXME : Make this work with ip domains like 127.0.0,1:8080/filename.pdf
-        # domain = (
-        #     parsed_url.netloc.split(".")[-2] + "." + parsed_url.netloc.split(".")[-1]
-        # )
-        self.logger.info("Domain Successfully processed")
-        # TODO:  youtube and arxiv document adding, or refactor and use in a crawler
-        # if domain in ["youtube.com", "youtu.be"]:
-        #     filepath, metadata = self.get_file_from_ytdlp(url)
-        # elif domain in ["arxiv.org"]:
-        #     filepath, metadata = self.get_file_from_arxiv(url)
+        self.logger.info("collecting filepath metadata")
 
-        self.logger.info("Proceeding to Download Regular file")
-        filepath, metadata = self.add_file_from_url_nocall(url)
-        self.logger.info("Successfully got file and metadata")
+        try:
+            filepath, metadata = self.add_file_from_url_nocall(url)
+            self.logger.info("Successfully got file and metadata")
+        except Exception:
+            self.logger.error("unable to get file and metadata")
+            pass
+
         if metadata.get("lang") == None:
             metadata["lang"] = "en"
         file_metadata = self.get_metadata_from_file(filepath, metadata.get("doctype"))
         self.logger.info("Attempted to get metadata from file, adding to main source.")
         # FIXME :
         # metadata.update(file_metadata)
-        return (filepath, metadata)
+
+        def cleanup():
+            os.remove(filepath)
+
+        return (filepath, metadata, cleanup)
 
     def get_metada_from_url(self, url: str) -> dict:
         self.logger.info("Getting Metadata from Url")
@@ -141,7 +131,8 @@ class DocumentIngester:
                 result = file.read()
                 text, metadata = seperate_markdown_string(result)
                 metadata["doctype"] = (
-                    doctype  # Make sure that the doc doesnt set the source type to something else, causing a crash when processing docs.
+                    # Make sure that the doc doesnt set the source type to something else, causing a crash when processing docs.
+                    doctype
                 )
             return metadata
 
@@ -292,107 +283,3 @@ class DocumentIngester:
 
     def infer_metadata_from_path(self, filepath: Path) -> dict:
         return {"title": filepath.stem, "doctype": filepath.suffix}
-
-    # TODO : Rework code to use temporary files in the future
-    # def download_file_to_tmpfile(
-    #     self, url: str
-    # ) -> Any:  # TODO : Get types for temporary file
-    #     self.logger.info(f"Downloading file to temporary file")
-    #     with requests.get(url, stream=True) as r:
-    #         r.raise_for_status()
-    #         f = NamedTemporaryFile("wb")
-    #         for chunk in r.iter_content(chunk_size=8192):
-    #             # If you have chunk encoded response uncomment if
-    #             # and set chunk_size parameter to None.
-    #             # if chunk:
-    #             f.write(chunk)
-    #         return f
-    # def save_fileobject_to_hash(self, fileobject: BufferedWriter) -> tuple[str, Path]:
-    #     self.logger.info(f"Getting hash")
-    #     b264_hash = self.get_blake2_str(fileobject)
-    #     self.logger.info(f"Got hash {b264_hash}")
-    #     saveloc = self.rawfile_savedir / Path(b264_hash)
-    #     self.logger.info(f"Saving file to {saveloc}")
-    #     self.write_tmpfile_to_path(fileobject, saveloc)
-    #     self.logger.info(f"Successfully Saved File to: {saveloc}")
-    #     return (b264_hash, saveloc)
-
-    # TODO : Get alternative download and ingest methods working
-
-    # def get_file_from_arxiv(self, url: str) -> tuple[Path, dict]:
-    #     def extract_arxiv_id(url: str) -> Optional[str]:
-    #         # Regular expression to match arXiv ID patterns in the URL
-    #         arxiv_regex = re.compile(
-    #             r"arxiv\.org/(?:abs|html|pdf|e-print)/(\d+\.\d+v?\d*)(?:\.pdf)?",
-    #             re.IGNORECASE,
-    #         )
-
-    #         # Search for matches using the regex
-    #         match = arxiv_regex.search(url)
-
-    #         # If a match is found, return the ID in the required format
-    #         if match:
-    #             arxiv_id = match.group(1)
-    #             return arxiv_id
-    #         return None
-
-    #     arxiv_id = extract_arxiv_id(url)
-    #     if arxiv_id == None:
-    #         logging.warn("Failed to find arxiv id, falling back to HTML,")
-    #         return self.add_file_from_url_nocall(url)
-    #     htmlurl = f"https://arxiv.org/html/{arxiv_id}v1"
-
-    #     htmlresponse = requests.get(htmlurl)
-
-    #     # TODO : Generalize this function into a general metadata searcher, this fails if the doi is not found for example.
-    #     try:
-    #         # metadata = self.crossref.works(ids=f"10.48550/arXiv.{arxiv_id}")
-    #         assert 0 == 1  # TODO : Fix crossref metadata lookup
-    #     except:
-    #         self.logger.warning(
-    #             "Not able to lookup metadata based on doi, defaulting to extracting html metadata from arxiv."
-    #         )
-    #         metadata = self.get_metada_from_url(f"https://arxiv.org/abs/{arxiv_id}")
-
-    #     if "HTML is not available for the source" in htmlresponse.text:
-    #         metadata["doctype"] = "pdf"
-    #         pdfdir = download_file(
-    #             f"https://arxiv.org/pdf/{arxiv_id}.pdf", self.tmpdir / rand_filepath()
-    #         )
-    #         return (pdfdir, metadata)
-    #     htmlpath = self.tmpdir / Path(rand_string())
-    #     with open(htmlpath, "w") as file:
-    #         file.write(htmlresponse.text)
-    #     metadata["doctype"] = "html"
-    #     return (htmlpath, metadata)
-
-    # def get_file_from_ytdlp(self, url: str) -> Optional[tuple[Path, dict]]:
-    #     filename = rand_string()
-    #     ytdlp_path = self.tmpdir / Path(filename)
-    #     video_path = self.tmpdir / Path(filename + ".mkv")
-    #     json_path = self.tmpdir / Path(filename + ".info.json")
-    #     json_filepath = self.tmpdir / Path(rand_string())
-    #     command = f"yt-dlp --remux-video mkv --write-info-json -o {shlex.quote(str(ytdlp_path))} {shlex.quote(url)}"
-    #     self.logger.info(f"Calling youtube dlp with call: {command}")
-    #     try:
-    #         result = subprocess.run(
-    #             command,
-    #             shell=True,
-    #             check=True,
-    #             stdout=subprocess.PIPE,
-    #             stderr=subprocess.PIPE,
-    #         )
-    #         with open(json_path, "r", encoding="utf-8") as info_file:
-    #             info_data = json.load(info_file)
-    #             metadata = {
-    #                 "title": info_data.get("title"),
-    #                 "author": info_data.get("uploader"),
-    #                 "language": info_data.get("language"),
-    #                 "url": url,
-    #                 "doctype": "mkv",
-    #             }
-    #             self.logger.info((video_path, metadata))
-    #             return (video_path, metadata)
-    #     except subprocess.CalledProcessError as e:
-    #         self.logger.critical(f"An error occurred when using yt-dlp: {e.stderr}")
-    #         return None
