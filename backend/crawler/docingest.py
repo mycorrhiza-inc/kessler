@@ -31,6 +31,7 @@ import yaml
 
 from util.niclib import seperate_markdown_string
 
+
 class DocumentIngester:
     def __init__(
         self, logger, savedir=OS_FILEDIR, tmpdir=OS_TMPDIR / Path("kessler/docingest")
@@ -77,7 +78,6 @@ class DocumentIngester:
         # FIXME :
         # metadata.update(file_metadata)
         return (filepath, metadata)
-
 
     def get_metada_from_url(self, url: str) -> dict:
         self.logger.info("Getting Metadata from Url")
@@ -140,7 +140,9 @@ class DocumentIngester:
             with open(path, "r") as file:
                 result = file.read()
                 text, metadata = seperate_markdown_string(result)
-                metadata["doctype"] = doctype # Make sure that the doc doesnt set the source type to something else, causing a crash when processing docs.
+                metadata["doctype"] = (
+                    doctype  # Make sure that the doc doesnt set the source type to something else, causing a crash when processing docs.
+                )
             return metadata
 
         return {}
@@ -191,7 +193,6 @@ class DocumentIngester:
         savedir = self.tmpdir / Path(rand_string())
         return self.download_file_to_path(url, savedir)
 
-
     def add_file_from_url_nocall(self, url: str) -> tuple[Any, dict]:
         def rectify_unknown_metadata(metadata: dict):
             assert metadata.get("doctype") != None
@@ -215,14 +216,16 @@ class DocumentIngester:
         self.logger.info("Successfully downloaded file from url")
         return (tmpfile, metadata)
 
-    def save_filepath_to_hash(self, filepath: Path, hashpath : Optional[Path] = None ) -> tuple[str, Path]:
+    def save_filepath_to_hash(
+        self, filepath: Path, hashpath: Optional[Path] = None
+    ) -> tuple[str, Path]:
         if hashpath is None:
             hashpath = self.rawfile_savedir
         filepath.parent.mkdir(exist_ok=True, parents=True)
         self.logger.info(f"Getting hash")
         b264_hash = self.get_blake2_str(filepath)
         self.logger.info(f"Got hash {b264_hash}")
-        saveloc =  hashpath / Path(b264_hash)
+        saveloc = hashpath / Path(b264_hash)
 
         self.logger.info(f"Saving file to {saveloc}")
         shutil.copyfile(filepath, saveloc)
@@ -289,9 +292,6 @@ class DocumentIngester:
 
     def infer_metadata_from_path(self, filepath: Path) -> dict:
         return {"title": filepath.stem, "doctype": filepath.suffix}
-
-
-
 
     # TODO : Rework code to use temporary files in the future
     # def download_file_to_tmpfile(

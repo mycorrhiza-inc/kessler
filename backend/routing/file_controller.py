@@ -156,15 +156,20 @@ class FileController(Controller):
         results = await files_repo.list()
         type_adapter = TypeAdapter(list[FileSchema])
         return type_adapter.validate_python(results)
+
     @post(path="/files/process_all")
     async def process_all_files(
-        self, files_repo: FileRepository, limit_offset: LimitOffset, request: Request, reprocess_all : bool = False
+        self,
+        files_repo: FileRepository,
+        limit_offset: LimitOffset,
+        request: Request,
+        reprocess_all: bool = False,
     ) -> list[FileSchema]:
         """List files."""
         results = await files_repo.list()
         type_adapter = TypeAdapter(list[FileSchema])
         for file in results:
-            process_file_raw(file,files_repo,request.logger,reprocess_all)
+            process_file_raw(file, files_repo, request.logger, reprocess_all)
         return type_adapter.validate_python(results)
 
     @post(path="/files/upload", media_type=MediaType.TEXT)
@@ -213,9 +218,9 @@ class FileController(Controller):
             metadata["source"] = "UNKNOWN"
 
         request.logger.info("Attempting to save data to file")
-        result = docingest.save_filepath_to_hash(tmpfile_path,OS_HASH_FILEDIR)
+        result = docingest.save_filepath_to_hash(tmpfile_path, OS_HASH_FILEDIR)
         (filehash, filepath) = result
-        os.remove(tmpfile_path) 
+        os.remove(tmpfile_path)
         query = select(FileModel).where(FileModel.hash == filehash)
         duplicate_file_objects = await files_repo.session.execute(query)
         duplicate_file_obj = duplicate_file_objects.scalar()
@@ -228,7 +233,7 @@ class FileController(Controller):
             duplicate_file_obj = None
         if duplicate_file_obj is None:
             docingest.backup_metadata_to_hash(metadata, filehash)
-            metadata_str=json.dumps(metadata)
+            metadata_str = json.dumps(metadata)
             new_file = FileModel(
                 url=data.url,
                 name=document_title,
@@ -315,10 +320,14 @@ class FileController(Controller):
         if regenerate and current_stage != "stage0":
             current_stage = "stage1"
         if current_stage == "stage1":
-            processed_original_text = mdextract.process_raw_document_into_untranslated_text(
+            processed_original_text = (
+                mdextract.process_raw_document_into_untranslated_text(
                     Path(obj.path), obj.doctype, obj.lang
                 )
-            mdextract.backup_processed_text(processed_original_text,doc_metadata,OS_BACKUP_FILEDIR)
+            )
+            mdextract.backup_processed_text(
+                processed_original_text, doc_metadata, OS_BACKUP_FILEDIR
+            )
             try:
                 print(3)
             except:

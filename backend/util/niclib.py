@@ -7,8 +7,8 @@ import requests
 import hashlib
 import itertools
 import math
-import yaml 
-import re 
+import yaml
+import re
 
 from datetime import datetime, timezone
 
@@ -17,46 +17,50 @@ from pathlib import Path
 from typing import Union, Optional, Any, Tuple
 
 
-
 def clean_and_empty_directory(dir: Path):
     files = glob.glob(str(dir / Path("*")))
     for f in files:
         os.remove(f)
 
-def create_markdown_string(text : str, metadata : dict,include_previous_metadata : bool = True) -> str:
+
+def create_markdown_string(
+    text: str, metadata: dict, include_previous_metadata: bool = True
+) -> str:
     text_without_metadata, extra_metadata = seperate_markdown_string(text)
     if include_previous_metadata and (extra_metadata != {}):
-        metadata=extra_metadata.update(metadata)
+        metadata = extra_metadata.update(metadata)
     yaml_metadata = yaml.safe_dump(metadata, default_flow_style=False)
-    
+
     # Construct the markdown string with front matter
     markdown_with_frontmatter = f"---\n{yaml_metadata}\n---\n{text_without_metadata}"
     return markdown_with_frontmatter
 
-def seperate_markdown_string(mdstr_with_metadata : str) -> Tuple[str,dict]:
+
+def seperate_markdown_string(mdstr_with_metadata: str) -> Tuple[str, dict]:
     # Define regex pattern for front matter
-    frontmatter_pattern = re.compile(r'^---\s*\n(.*?)\s*\n---\s*\n', re.DOTALL)
-    
+    frontmatter_pattern = re.compile(r"^---\s*\n(.*?)\s*\n---\s*\n", re.DOTALL)
+
     match = frontmatter_pattern.match(markdown_text)
-    
+
     if match:
         # Extract metadata
         frontmatter = match.group(1)
         # Remove front matter from markdown text to get main body
-        main_body = markdown_text[match.end():]
-        # 
+        main_body = markdown_text[match.end() :]
+        #
         try:
             # Parse the YAML content
             yaml_dict = yaml.safe_load(frontmatter)
-            return (main_body,yaml_dict)
+            return (main_body, yaml_dict)
         except yaml.YAMLError as e:
             print(f"Error parsing YAML: {e}")
-            return (main_body,{})
+            return (main_body, {})
         metadata = yaml.safe_load(frontmatter)
         return (main_body, metadata)
     else:
         # If no front matter, return markdown text and empty dictionary
         return (markdown_text, {})
+
 
 def get_hash_str(
     file_input: Union[Path, Any], hasher
