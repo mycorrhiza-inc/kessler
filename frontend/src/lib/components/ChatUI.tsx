@@ -18,8 +18,8 @@ import {
   ModalFooter,
   ModalCloseButton,
   Container,
+  Text,
 } from "@chakra-ui/react";
-
 import {
   Form,
   FormLayout,
@@ -34,6 +34,8 @@ import { message } from "antd";
 import { start } from "repl";
 import { initialState } from "node_modules/@clerk/nextjs/dist/types/app-router/server/auth";
 
+
+import MarkdownRenderer from "./MarkdownRenderer"
 interface ChatAgent {
   role: boolean;
 }
@@ -188,40 +190,6 @@ interface Message {
   key: symbol;
 }
 
-// const startingMessages: Message[] = [
-//   {
-//     role: "user",
-//     content: "what is up?",
-//     key: `${Math.floor(Math.random() * 100)}`,
-//   },
-//   {
-//     role: "assistant",
-//     content:
-//       "nothing much, how are you? Is there anything i can help you with today?",
-//     key: `${Math.floor(Math.random() * 100)}`,
-//   },
-//   {
-//     role: "user",
-//     content:
-//       "Yes! I was wondering if you could check on the recent power assesment for Pueblo Colorado?",
-//     key: `${Math.floor(Math.random() * 100)}`,
-//   },
-//   {
-//     role: "assistant",
-//     content: "Sure thing, Let me Take a look",
-//     key: `${Math.floor(Math.random() * 100)}`,
-//   },
-//   {
-//     role: "user",
-//     content: "...",
-//     key: `${Math.floor(Math.random() * 100)}`,
-//   },
-//   {
-//     role: "assistant",
-//     content: "Pueblo colorado has .........",
-//     key: `${Math.floor(Math.random() * 100)}`,
-//   },
-// ];
 
 interface MessageComponentProps {
   message: Message;
@@ -259,7 +227,7 @@ function MessageComponent({
       // h="100vh"
       >
         {/* role message */}
-        <div><Markdown>{message.content}</Markdown></div>
+        <div><MarkdownRenderer>{message.content}</MarkdownRenderer></div>
         {/* <Box width="100%" height="50px">
           {!message.role && <div>Regenerate</div>}{" "}
           {message.role && <div>Edit</div>}
@@ -268,8 +236,7 @@ function MessageComponent({
     </Box>
   );
 }
-
-function ChatBox() {
+function ChatBox({ chatUrl }: { chatUrl: string }) {
   // const [messages, setMessages] = useState<Message[]>(startingMessages);
   const [messages, setMessages] = useState<Message[]>([]);
   const [needsResponse, setResponse] = useState(false);
@@ -286,7 +253,7 @@ function ChatBox() {
     let result = await fetch(
       // FIXME : Add the base url instead of localhost to make it more amenable to this stuff.
       // "http://localhost/api/rag/rag_chat",
-      "http://localhost/api/rag/rag_chat",
+      chatUrl,
       {
         method: "POST",
         mode: "cors",
@@ -376,8 +343,17 @@ function ChatBox() {
         overflow="scroll"
         h="100vh"
       >
+        {messages.length === 0 && (
+          <Box p={5} textAlign="center" color="gray.500">
+            <Text fontSize="lg" fontWeight="bold">Welcome to the Chatbot!</Text>
+            <Text>Type your message in the input box below and press Enter to send.</Text>
+          </Box>
+        )}
         {messages.map((m: Message) => {
-          return <MessageComponent message={m} />;
+          return <MessageComponent
+            // key={m.key.toString()} 
+            message={m}
+          />;
         })}
         <Box minHeight="300px" width="100%" color="red" />
       </VStack>
@@ -434,7 +410,7 @@ function ChatBox() {
 }
 /*
  */
-export default function ChatUI({ convoID = "" }: { convoID?: string }) {
+export default function ChatUI({ convoID = "", chatUrl }: { convoID?: string, chatUrl: string }) {
   // convoId being empty is a new chat instance
 
   return (
@@ -459,8 +435,8 @@ export default function ChatUI({ convoID = "" }: { convoID?: string }) {
             overflow="scroll clip"
             position="relative"
           >
-            <ChatBox />
-          </GridItem>
+            <ChatBox chatUrl={chatUrl} />
+          </GridItem >
 
           {/* <GridItem rowSpan={10} overflow="scroll clip">
             <ContextSources />

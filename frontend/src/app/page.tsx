@@ -6,7 +6,7 @@ export default function Page() {
   return (
     <DefaultShell>
       {/* <DashboardPrompt /> */}
-      <ChatUI/>
+      <ChatUI chatUrl="/api/rag/rag_chat" />
     </DefaultShell>
   );
 }

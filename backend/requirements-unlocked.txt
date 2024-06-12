@@ -1,0 +1,13 @@
+llama-index
+llama-index-llms-groq
+llama-index-llms-openai
+llama-index-vector-stores-postgres
+
+uvicorn
+litestar
+advanced_alchemy
+haystack
+
+tokenizers
+
+
