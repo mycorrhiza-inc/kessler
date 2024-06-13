@@ -5,12 +5,11 @@ from sqlalchemy import ForeignKey, Column, Table
 from sqlalchemy.orm import Mapped, relationship, DeclarativeBase
 from sqlalchemy.types import PickleType
 
-from pydantic import BaseModel, ConfigDict, StringConstraints, validator
+from pydantic import BaseModel, Field, field_validator
 from contextlib import asynccontextmanager
 
-from utils import RepoMixin
 
-from typing import AsyncIterator, List, Optional
+from typing import List, Annotated, Any
 
 import traceback
 import uuid
@@ -29,7 +28,7 @@ resource_association_table = Table(
 )
 
 
-class ResourceModel(UUIDAuditBase, RepoMixin):
+class ResourceModel(UUIDAuditBase):
     __tablename__ = "resource"
     # how we manage multiple files for one resource
     files: Mapped[List[FileModel]] = relationship("File", back_populates="parent")
@@ -49,40 +48,20 @@ class ResourceModel(UUIDAuditBase, RepoMixin):
             return str(value)
         return value
 
-    @classmethod
-    async def provide_repo(cls, session) -> "ResourceRepository":
-        return ResourceRepository(session=session)
 
-    # # define the context manager for each file repo
-    @classmethod
-    @asynccontextmanager
-    async def repo(cls) -> AsyncIterator["ResourceRepository"]:
-        session_factory = sqlalchemy_config.create_session_maker()
-        async with session_factory() as db_session:
-            try:
-                yield cls.provide_repo(session=db_session)
-            except Exception as e:
-                print(traceback.format_exc())
-                print("rolling back")
-                await db_session.rollback()
-            else:
-                print("committhing change")
-                await db_session.commit()
-
-
-class Resource(BaseModel):
-    id: uuid  # TODO: figure out a better type for this UUID :/
+class ResourceSchema(BaseModel):
+    id: Annotated[Any, Field(validate_default=True)]
     files: List[any]
-    links: List[any]
+    document: List[any]
     children: List[any]
     parents: List[any]
 
-    @validator("id")
-    def validate_uuid(cls, value):
-        if value:
-            return str(value)
-        return value
+    @field_validator("id")
+    @classmethod
+    def stringify_id(cls, id: any) -> str:
+        return str(id)
 
+    @classmethod
     def update(cls):
         """get the most up to date version of this resource"""
 

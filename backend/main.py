@@ -4,8 +4,7 @@ import traceback
 from litestar import Litestar, Router
 from litestar.config.cors import CORSConfig
 from litestar.repository.filters import LimitOffset
-from litestar import Litestar, MediaType, Request, Response, get
-from litestar.exceptions import HTTPException
+from litestar import MediaType, Request, Response
 from litestar.status_codes import HTTP_500_INTERNAL_SERVER_ERROR
 
 from litestar.params import Parameter
@@ -17,6 +16,8 @@ from util.logging import logging_config
 from routing.file_controller import FileController
 from routing.search_controller import SearchController
 from routing.rag_controller import RagController
+
+from lance_store.connection import get_lance_connection
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +76,11 @@ app = Litestar(
     on_startup=[on_startup],
     plugins=[utils.sqlalchemy_plugin],
     route_handlers=[api_router],
-    dependencies={"limit_offset": Provide(provide_limit_offset_pagination)},
+    dependencies={
+        "limit_offset": Provide(provide_limit_offset_pagination),
+        # do a lance connections for each request
+        "lancedb": Provide(get_lance_connection, sync_to_thread=True),
+    },
     cors_config=cors_config,
     logging_config=logging_config,
     exception_handlers={Exception: plain_text_exception_handler},

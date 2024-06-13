@@ -3,7 +3,9 @@ from typing import Annotated, Any
 from litestar.contrib.sqlalchemy.base import UUIDAuditBase
 from litestar.contrib.sqlalchemy.repository import SQLAlchemyAsyncRepository
 
-from sqlalchemy.orm import Mapped
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from uuid import UUID
 
 
 from .utils import RepoMixin, PydanticBaseModel
@@ -11,13 +13,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from pydantic import Field, field_validator
 
+from .resources import ResourceModel
+
 
 class FileModel(UUIDAuditBase, RepoMixin):
     """Database representation of a file"""
 
     __tablename__ = "file"
     url: Mapped[str | None] = None
-    # TODO : Move functionality to url controller.
     doctype: Mapped[str]
     lang: Mapped[str]
     name: Mapped[str | None]
@@ -28,6 +31,9 @@ class FileModel(UUIDAuditBase, RepoMixin):
     short_summary: Mapped[str | None]
     original_text: Mapped[str | None]
     english_text: Mapped[str | None]
+
+    resource_id = mapped_column(UUID, ForeignKey("resource.id"))
+    resource = relationship(ResourceModel)
 
 
 class FileRepository(SQLAlchemyAsyncRepository[FileModel]):
