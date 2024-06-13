@@ -19,7 +19,7 @@ class ACL(BaseModel):
 
 
 class BaseLance(LanceModel):
-    __tablename__ = ""
+    __tablename__: str
     vector: Vector(func.ndims()) = func.VectorField()
     metadata: Metadata
     # kessler wide resource id
@@ -29,6 +29,7 @@ class BaseLance(LanceModel):
 class Chunks(BaseLance):
     # every single chunk
     __tablename__ = "text_chunks"
+    parent_resource_id: str
     text: str = func.SourceField()
     pos: Optional[tuple[int, int] | None] = None  # row, col
 
