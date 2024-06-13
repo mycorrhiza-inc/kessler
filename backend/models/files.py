@@ -18,6 +18,7 @@ from .resources import ResourceModel
 
 class FileModel(UUIDAuditBase, RepoMixin):
     """Database representation of a file"""
+
     __tablename__ = "file"
     url: Mapped[str | None] = None
     doctype: Mapped[str]

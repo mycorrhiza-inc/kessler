@@ -5,7 +5,7 @@ from sqlalchemy import ForeignKey, Column, Table
 from sqlalchemy.orm import Mapped, relationship, DeclarativeBase
 from sqlalchemy.types import PickleType
 
-from pydantic import BaseModel,  Field, field_validator
+from pydantic import BaseModel, Field, field_validator
 from contextlib import asynccontextmanager
 
 
@@ -31,11 +31,9 @@ resource_association_table = Table(
 class ResourceModel(UUIDAuditBase):
     __tablename__ = "resource"
     # how we manage multiple files for one resource
-    files: Mapped[List[FileModel]] = relationship(
-        "File", back_populates="parent")
+    files: Mapped[List[FileModel]] = relationship("File", back_populates="parent")
     # how we manage multiple links for one resource
-    links: Mapped[List[FileModel]] = relationship(
-        "File", back_populates="parent")
+    links: Mapped[List[FileModel]] = relationship("File", back_populates="parent")
     # how we manage resource trees
     children: Mapped[List["ResourceModel"]] = relationship(
         secondary=resource_association_table, back_populates="children"
