@@ -1,4 +1,4 @@
-from typing import Annotated, Any
+from typing import Annotated, Any, List
 
 from litestar.contrib.sqlalchemy.base import UUIDAuditBase
 from litestar.contrib.sqlalchemy.repository import SQLAlchemyAsyncRepository
@@ -31,6 +31,10 @@ class FileModel(UUIDAuditBase, RepoMixin):
     short_summary: Mapped[str | None]
     original_text: Mapped[str | None]
     english_text: Mapped[str | None]
+
+    # when rechunking, remove all of these vectors
+    #
+    chunk_ids: Mapped[List[str] | None]
 
     resource_id = mapped_column(UUID, ForeignKey("resource.id"))
     resource = relationship(ResourceModel)
