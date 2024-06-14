@@ -231,9 +231,6 @@ function ChatBox({ chatUrl, modelOptions }: { chatUrl: string, modelOptions: str
 
     // setMessages(result);
   };
-  useEffect(() => {
-    if (needsResponse) getResponse(); // This is be executed when `loading` state changes
-  }, [needsResponse]);
 
   interface msgSent {
     messageInput: string;
