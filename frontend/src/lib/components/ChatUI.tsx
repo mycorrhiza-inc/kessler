@@ -19,6 +19,7 @@ import {
   ModalCloseButton,
   Container,
   Text,
+  Select,
 } from "@chakra-ui/react";
 import {
   Form,
@@ -58,60 +59,6 @@ function SourceModal() {
       aliquam, cursus erat ac, luctus lectus. Pellentesque et augue facilisis,
       ullamcorper ante at, facilisis nibh. Mauris placerat ut sapien ac pretium.
       Fusce maximus dignissim diam quis blandit. Aliquam eget ultrices velit.
-      Cras in rutrum arcu. Praesent volutpat, sapien vitae pulvinar commodo,
-      urna neque lobortis arcu, a condimentum libero arcu sagittis leo. Nulla
-      ante arcu, pharetra id turpis quis, consectetur semper ex. Pellentesque
-      habitant morbi tristique senectus et netus et malesuada fames ac turpis
-      egestas. Praesent pulvinar id turpis sed semper. Praesent ac dignissim
-      odio. Nullam accumsan tincidunt augue. Nullam id interdum metus. Vivamus
-      sodales laoreet dolor a condimentum. Maecenas tincidunt semper lorem, sed
-      lacinia tellus lacinia sit amet. Ut augue odio, fermentum ut luctus at,
-      cursus quis risus. Vivamus lacinia augue lectus. Morbi facilisis nibh
-      massa, in vestibulum mauris fermentum at. Lorem ipsum dolor sit amet,
-      consectetur adipiscing elit. Ut sollicitudin fermentum justo, vitae
-      malesuada lorem ullamcorper id. Mauris vitae dui ornare, luctus libero
-      nec, posuere massa. Suspendisse at odio tristique, maximus nunc eu,
-      ullamcorper mauris. Mauris ultricies sit amet tortor non gravida. Cras
-      pellentesque justo dui, posuere ultricies ante lobortis quis. Sed bibendum
-      mattis fringilla. Quisque id pharetra ligula. In consectetur sagittis enim
-      sed pellentesque. Vestibulum quam libero, posuere et nisi ut, egestas
-      laoreet augue. Aliquam diam ex, ultricies quis pellentesque ut, venenatis
-      et erat. Nam at elementum augue, sit amet fermentum lorem. Cras aliquet
-      elit eu dui mollis gravida vitae non sapien. Donec sit amet est eu est
-      tincidunt rhoncus. Vivamus id urna odio. Lorem ipsum dolor sit amet,
-      consectetur adipiscing elit. Curabitur ultricies vehicula velit, at
-      condimentum diam tristique a. Sed commodo, metus quis scelerisque porta,
-      turpis libero placerat erat, quis semper sapien nisi eu neque. Donec id
-      maximus lacus. Proin dolor erat, tempus ac scelerisque fringilla,
-      imperdiet in orci. Curabitur egestas magna ut mollis sollicitudin. Sed nec
-      pulvinar eros. Donec porta tempor convallis. Aliquam erat volutpat. Nulla
-      facilisi. Aenean faucibus ipsum sit amet dictum lobortis. Cras congue
-      magna sapien, et facilisis arcu efficitur vitae. Integer nec tellus nec
-      lectus molestie tristique. Vestibulum a sem aliquam, cursus erat ac,
-      luctus lectus. Pellentesque et augue facilisis, ullamcorper ante at,
-      facilisis nibh. Mauris placerat ut sapien ac pretium. Fusce maximus
-      dignissim diam quis blandit. Aliquam eget ultrices velit. Cras in rutrum
-      arcu. Praesent volutpat, sapien vitae pulvinar commodo, urna neque
-      lobortis arcu, a condimentum libero arcu sagittis leo. Nulla ante arcu,
-      pharetra id turpis quis, consectetur semper ex. Pellentesque habitant
-      morbi tristique senectus et netus et malesuada fames ac turpis egestas.
-      Praesent pulvinar id turpis sed semper. Praesent ac dignissim odio. Nullam
-      accumsan tincidunt augue. Nullam id interdum metus. Vivamus sodales
-      laoreet dolor a condimentum. Maecenas tincidunt semper lorem, sed lacinia
-      tellus lacinia sit amet. Ut augue odio, fermentum ut luctus at, cursus
-      quis risus. Vivamus lacinia augue lectus. Morbi facilisis nibh massa, in
-      vestibulum mauris fermentum at. Lorem ipsum dolor sit amet, consectetur
-      adipiscing elit. Ut sollicitudin fermentum justo, vitae malesuada lorem
-      ullamcorper id. Mauris vitae dui ornare, luctus libero nec, posuere massa.
-      Suspendisse at odio tristique, maximus nunc eu, ullamcorper mauris. Mauris
-      ultricies sit amet tortor non gravida. Cras pellentesque justo dui,
-      posuere ultricies ante lobortis quis. Sed bibendum mattis fringilla.
-      Quisque id pharetra ligula. In consectetur sagittis enim sed pellentesque.
-      Vestibulum quam libero, posuere et nisi ut, egestas laoreet augue. Aliquam
-      diam ex, ultricies quis pellentesque ut, venenatis et erat. Nam at
-      elementum augue, sit amet fermentum lorem. Cras aliquet elit eu dui mollis
-      gravida vitae non sapien. Donec sit amet est eu est tincidunt rhoncus.
-      Vivamus id urna odio.
     </Box>
   );
 }
@@ -169,15 +116,6 @@ function ContextSources() {
       h="100vh"
     >
       <SourceBox content="Source" />
-      <SourceBox content="Source" />
-      <SourceBox content="Source" />
-      <SourceBox content="Source" />
-      <SourceBox content="Source" />
-      <SourceBox content="Source" />
-      <SourceBox content="Overflow" />
-      <SourceBox content="Overflow" />
-      <SourceBox content="Overflow" />
-      <SourceBox content="Overflow" />
       <SourceBox content="Overflow" />
       <SourceBox content="Overflow" />
     </VStack>
@@ -236,10 +174,11 @@ function MessageComponent({
     </Box>
   );
 }
-function ChatBox({ chatUrl }: { chatUrl: string }) {
+function ChatBox({ chatUrl, modelOptions }: { chatUrl: string, modelOptions: string[] }) {
   // const [messages, setMessages] = useState<Message[]>(startingMessages);
   const [messages, setMessages] = useState<Message[]>([]);
   const [needsResponse, setResponse] = useState(false);
+  const [selectedModel, setSelectedModel] = useState("default");
   const [userChatbox, setUserChatbox] = useState("");
   // let messages: Message[] = [];
 
@@ -250,6 +189,7 @@ function ChatBox({ chatUrl }: { chatUrl: string }) {
     });
     console.log(`chat history`);
     console.log(chat_hist);
+    const modelToSend = selectedModel === "default" ? undefined : selectedModel;
     let result = await fetch(
       // FIXME : Add the base url instead of localhost to make it more amenable to this stuff.
       // "http://localhost/api/rag/rag_chat",
@@ -264,7 +204,7 @@ function ChatBox({ chatUrl }: { chatUrl: string }) {
           "Referrer-Policy": "no-referrer",
         },
         body: JSON.stringify({
-          model: null,
+          model: modelToSend,
           chat_history: chat_hist,
         }),
       },
@@ -402,6 +342,19 @@ function ChatBox({ chatUrl }: { chatUrl: string }) {
                 icon={<FiArrowUpCircle />}
               />
             </Center>
+            <Select
+              placeholder="default"
+              onChange={(e) => setSelectedModel(e.target.value)}
+              margin="10px"
+              size="sm" // Adjust size to make it smaller
+              width="150px" // Adjust width as needed
+            >
+              {modelOptions.map((model: string) => (
+                <option key={model} value={model}>
+                  {model}
+                </option>
+              ))}
+            </Select>
           </Box>
         </FormLayout>
       </Form >
@@ -410,7 +363,7 @@ function ChatBox({ chatUrl }: { chatUrl: string }) {
 }
 /*
  */
-export default function ChatUI({ convoID = "", chatUrl }: { convoID?: string, chatUrl: string }) {
+export default function ChatUI({ convoID = "", chatUrl, modelOptions }: { convoID?: string, chatUrl: string, modelOptions: string[] }) {
   // convoId being empty is a new chat instance
 
   return (
@@ -435,7 +388,9 @@ export default function ChatUI({ convoID = "", chatUrl }: { convoID?: string, ch
             overflow="scroll clip"
             position="relative"
           >
-            <ChatBox chatUrl={chatUrl} />
+            <ChatBox
+              chatUrl={chatUrl}
+              modelOptions={modelOptions} />
           </GridItem >
 
           {/* <GridItem rowSpan={10} overflow="scroll clip">

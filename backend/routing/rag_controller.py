@@ -81,10 +81,10 @@ OS_GPU_COMPUTE_URL = os.environ["GPU_COMPUTE_URL"]
 OS_FILEDIR = Path("/files/")
 
 from llama_index.llms.groq import Groq
-
+from llama_index.llms.openai import OpenAI
 
 GROQ_API_KEY = os.environ["GROQ_API_KEY"]
-groq_llm = Groq(model="llama3-70b-8192", request_timeout=360.0, api_key=GROQ_API_KEY)
+OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
 
 
 from rag.llamaindex import (
@@ -134,12 +134,16 @@ class RagController(Controller):
             model_name = None
         if model_name is None:
             model_name = "llama3-70b-8192"
-        groq_llm = Groq(model=model_name, request_timeout=360.0, api_key=GROQ_API_KEY)
         chat_history = data.chat_history
         chat_history = force_conform_chat(chat_history)
         assert validate_chat(chat_history), chat_history
         llama_chat_history = sanitzie_chathistory_llamaindex(chat_history)
-        response = groq_llm.chat(llama_chat_history)
+        if model_name in ["llama3-70b-8192"]:
+            groq_llm = Groq(model=model_name, request_timeout=60.0, api_key=GROQ_API_KEY)
+            response = groq_llm.chat(llama_chat_history)
+        if model_name in ["gpt-4o"]:
+            openai_llm = OpenAI(model=model_name, request_timeout=60.0,api_key=OPENAI_API_KEY)
+            response = openai_llm.chat(llama_chat_history)
         str_response = str(response)
         def remove_prefixes(input_string : str) -> str:
             prefixes = ["assistant: "]
