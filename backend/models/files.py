@@ -16,7 +16,8 @@ from pydantic import Field, field_validator
 from .resources import ResourceModel
 
 
-class FileModel(UUIDAuditBase, RepoMixin):
+#class FileModel(UUIDAuditBase, RepoMixin):
+class FileModel(UUIDAuditBase):
     """Database representation of a file"""
 
     __tablename__ = "file"

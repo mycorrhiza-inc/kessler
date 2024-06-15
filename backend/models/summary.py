@@ -1,10 +1,11 @@
-from lance_store.tables import BaseLance, Metadata
+# from lance_store.tables import BaseLance, Metadata
+from lancedb.pydantic import LanceModel
 from lance_store.embeddings import func
 
 
-class SummaryMetadata(Metadata):
+# class SummaryMetadata(Metadata):
 
 
-class Summaries(BaseLance):
+class Summaries(LanceModel):
     __tablename__ = "summaries"
     text: str = func.SourceField()

@@ -1,4 +1,3 @@
-from lance_store.tables import BaseLance
 from lancedb.pydantic import LanceModel, Vector
 from lance_store.embeddings import func
 
