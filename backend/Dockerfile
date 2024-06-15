@@ -1,4 +1,4 @@
-FROM python:3.11-alpine
+FROM python:3.12
 
 ENV VIRTUAL_ENV=/usr/local
 # use UV
@@ -7,6 +7,8 @@ ENV VIRTUAL_ENV=/usr/local
  
 WORKDIR /app
 COPY requirements.txt /app/requirements.txt
+# Uncomment for debugging python depenancy issue
+# COPY requirements-unlocked.txt /app/requirements.txt
  
 RUN pip install --no-cache -r requirements.txt 
 COPY . . 

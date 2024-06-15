@@ -3,7 +3,7 @@ llama-index-llms-groq
 llama-index-llms-openai
 llama-index-vector-stores-postgres
 
-lancedb==0.8.2
+lancedb
 
 uvicorn
 litestar
