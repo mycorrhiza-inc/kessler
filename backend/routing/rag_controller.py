@@ -35,7 +35,7 @@ from pydantic import TypeAdapter
 from models.utils import PydanticBaseModel as BaseModel
 
 
-from models import FileModel, FileRepository, FileSchema, provide_files_repo
+from models.files import FileModel, FileRepository, FileSchema, provide_files_repo
 
 
 from crawler.docingest import DocumentIngester

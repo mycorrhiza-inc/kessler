@@ -36,14 +36,19 @@ from pydantic import TypeAdapter
 from models.utils import PydanticBaseModel as BaseModel
 
 
-from models import (
-    FileModel,
-    FileRepository,
-    FileSchema,
-    FileSchemaWithText,
-    provide_files_repo,
-)
-
+# from models import (
+#     FileModel,
+#     FileRepository,
+#     FileSchema,
+#     FileSchemaWithText,
+#     provide_files_repo,
+# )
+from models.files import (
+     FileModel,
+     FileRepository,
+     FileSchema,
+     provide_files_repo,
+ )
 
 from crawler.docingest import DocumentIngester
 from docprocessing.extractmarkdown import MarkdownExtractor
@@ -65,21 +70,21 @@ class UUIDEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-# for testing purposese
-emptyFile = FileModel(
-    uri=None,  # location its stored
-    name="",
-    doctype="",
-    lang="en",
-    source="",
-    path="",
-    # file=raw_tmpfile,
-    metadata_str="",
-    stage="stage0",
-    hash="",
-    summary=None,
-    short_summary=None,
-)
+# # for testing purposese
+# emptyFile = FileModel(
+#     uri=None,  # location its stored
+#     name="",
+#     doctype="",
+#     lang="en",
+#     source="",
+#     path="",
+#     # file=raw_tmpfile,
+#     metadata_str="",
+#     stage="stage0",
+#     hash="",
+#     summary=None,
+#     short_summary=None,
+# )
 
 
 class FileUpdate(BaseModel):

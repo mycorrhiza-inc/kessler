@@ -8,18 +8,17 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from uuid import UUID
 
 
-from .utils import RepoMixin, PydanticBaseModel
+from .utils import PydanticBaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from pydantic import Field, field_validator
 
-from .resources import ResourceModel
+# from .resources import ResourceModel
 
 
 #class FileModel(UUIDAuditBase, RepoMixin):
 class FileModel(UUIDAuditBase):
     """Database representation of a file"""
-
     __tablename__ = "file"
     url: Mapped[str | None] = None
     doctype: Mapped[str]
@@ -35,10 +34,12 @@ class FileModel(UUIDAuditBase):
 
     # when rechunking, remove all of these vectors
     #
-    chunk_ids: Mapped[List[str] | None]
-
-    resource_id = mapped_column(UUID, ForeignKey("resource.id"))
-    resource = relationship(ResourceModel)
+    # NOTE: DO NOT PUSH TO SEVER UNTIL RESOLVED
+    # Every time the DB schema is changed you need to go through an annoying migration process 
+    # chunk_ids: Mapped[List[str] | None]
+    # FIXME : BOTH OF THESE LINES LIKELY NEED REPOMIXIN
+    # resource_id = mapped_column(UUID, ForeignKey("resource.id"))
+    # resource = relationship(ResourceModel)
 
 
 class FileRepository(SQLAlchemyAsyncRepository[FileModel]):
