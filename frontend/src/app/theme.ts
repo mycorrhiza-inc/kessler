@@ -137,16 +137,16 @@ const colors = {
   },
 };
 
-const config: ThemeConfig = {
+const config = {
   colors: {
     ...colors,
   },
-  initialColorMode: 'dark',
-  useSystemColorMode: false,
+  initialColorMode: 'dark'
 }
 
 const theme = extendTheme(
   {
+    config
   },
   baseTheme
 );
