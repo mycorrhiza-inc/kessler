@@ -145,13 +145,17 @@ class RagController(Controller):
             openai_llm = OpenAI(model=model_name, request_timeout=60.0,api_key=OPENAI_API_KEY)
             response = openai_llm.chat(llama_chat_history)
         str_response = str(response)
-        def remove_prefixes(input_string : str) -> str:
+
+        def remove_prefixes(input_string: str) -> str:
             prefixes = ["assistant: "]
             for prefix in prefixes:
                 if input_string.startswith(prefix):
-                    input_string=input_string[len(prefix):]  # 10 is the length of "assistant: "
+                    input_string = input_string[
+                        len(prefix) :
+                    ]  # 10 is the length of "assistant: "
             return input_string
-        str_response=remove_prefixes(str_response)
+
+        str_response = remove_prefixes(str_response)
         return {"role": "assistant", "content": str_response}
 
     @post(path="/rag/rag_chat")

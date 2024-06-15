@@ -1,68 +1,43 @@
-from contextlib import asynccontextmanager
-from typing import AsyncIterator, Annotated, Dict, Any
-import traceback
-from uuid import UUID
+from typing import Annotated, Any, List
 
-from litestar.contrib.sqlalchemy.base import UUIDAuditBase, AuditColumns
+from litestar.contrib.sqlalchemy.base import UUIDAuditBase
 from litestar.contrib.sqlalchemy.repository import SQLAlchemyAsyncRepository
 
 from sqlalchemy import ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from uuid import UUID
 
 
-from .utils import RepoMixin, sqlalchemy_config, PydanticBaseModel
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
+from .utils import RepoMixin, PydanticBaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from pydantic import Field, field_validator
+
+from .resources import ResourceModel
 
 
 class FileModel(UUIDAuditBase, RepoMixin):
     """Database representation of a file"""
 
     __tablename__ = "file"
-    url: Mapped[str | None]
-    # TODO : Move functionality to url controller.
-    path: Mapped[str]
+    url: Mapped[str | None] = None
     doctype: Mapped[str]
     lang: Mapped[str]
     name: Mapped[str | None]
     source: Mapped[str]
     hash: Mapped[str]
-    metadata_str: Mapped[str]
-    stage: Mapped[str]  # Either "stage0" "stage1" "stage2" or "stage3"
+    stage: Mapped[str]
     summary: Mapped[str | None]
     short_summary: Mapped[str | None]
     original_text: Mapped[str | None]
     english_text: Mapped[str | None]
 
-    @classmethod
-    async def provide_repo(cls, session) -> "FileRepository":
-        return FileRepository(session=session)
+    # when rechunking, remove all of these vectors
+    #
+    chunk_ids: Mapped[List[str] | None]
 
-    # # define the context manager for each file repo
-    @classmethod
-    @asynccontextmanager
-    async def repo(cls) -> AsyncIterator["FileRepository"]:
-        session_factory = sqlalchemy_config.create_session_maker()
-        async with session_factory() as db_session:
-            try:
-                yield cls.provide_repo(session=db_session)
-            except Exception as e:
-                print(traceback.format_exc())
-                print("rolling back")
-                await db_session.rollback()
-            else:
-                print("committhing change")
-                await db_session.commit()
-
-    @classmethod
-    async def updateStage(cls, id, stage):
-        async with cls.repo() as repo:
-            obj = await cls.find(id)
-            obj.stage = stage
-            obj = await repo.update(obj)
-
-            return obj
+    resource_id = mapped_column(UUID, ForeignKey("resource.id"))
+    resource = relationship(ResourceModel)
 
 
 class FileRepository(SQLAlchemyAsyncRepository[FileModel]):
@@ -79,22 +54,24 @@ async def provide_files_repo(db_session: AsyncSession) -> FileRepository:
 class FileSchema(PydanticBaseModel):
     """pydantic schema of the FileModel"""
 
-    # TODO: better typing for this
     id: Annotated[Any, Field(validate_default=True)]
-    path: str
+    url: str | None = None
+    path: str | None = None
     doctype: str
     lang: str
-    name: str
+    name: str | None = None
     source: str
-    # Either "stage0" "stage1" "stage2" or "stage3"
     stage: str
     metadata_str: str
     summary: str | None = None
     short_summary: str | None = None
-    original_text: str | None = None
-    english_text: str | None = None
 
     @field_validator("id")
     @classmethod
     def stringify_id(cls, id: any) -> str:
         return str(id)
+
+
+class FileSchemaWithText(FileSchema):
+    original_text: str | None = None
+    english_text: str | None = None

@@ -1,3 +1,4 @@
+from rag.llamaindex import add_document_to_db_from_text
 from hashlib import blake2b
 import os
 from pathlib import Path
@@ -35,13 +36,19 @@ from pydantic import TypeAdapter
 from models.utils import PydanticBaseModel as BaseModel
 
 
-from models import FileModel, FileRepository, FileSchema, provide_files_repo
+from models import (
+    FileModel,
+    FileRepository,
+    FileSchema,
+    FileSchemaWithText,
+    provide_files_repo,
+)
 
 
 from crawler.docingest import DocumentIngester
 from docprocessing.extractmarkdown import MarkdownExtractor
 
-from typing import List, Optional, Union, Any, Dict
+from typing import List, Optional, Dict
 
 
 from util.niclib import get_blake2
@@ -60,7 +67,7 @@ class UUIDEncoder(json.JSONEncoder):
 
 # for testing purposese
 emptyFile = FileModel(
-    url="",
+    uri=None,  # location its stored
     name="",
     doctype="",
     lang="en",
@@ -123,9 +130,6 @@ OS_BACKUP_FILEDIR = OS_FILEDIR / Path("backup")
 # import base64
 
 
-from rag.llamaindex import add_document_to_db_from_text
-
-
 class FileController(Controller):
     """File Controller"""
 
@@ -137,16 +141,18 @@ class FileController(Controller):
     @get(path="/files/{file_id:uuid}")
     async def get_file(
         self,
+        withtext: bool,
         files_repo: FileRepository,
         file_id: UUID = Parameter(title="File ID", description="File to retieve"),
     ) -> FileSchema:
         obj = await files_repo.get(file_id)
-        type_adapter = TypeAdapter(FileSchema)
-        return type_adapter.validate_python(obj)
 
-    @get(path="/test")
-    async def test_api(self) -> None:
-        return None
+        if withtext:
+            type_adapter = TypeAdapter(FileSchemaWithText)
+        else:
+            type_adapter = TypeAdapter(FileSchema)
+
+        return type_adapter.validate_python(obj)
 
     @get(path="/files/all")
     async def get_all_files(
@@ -156,16 +162,23 @@ class FileController(Controller):
         results = await files_repo.list()
         type_adapter = TypeAdapter(list[FileSchema])
         return type_adapter.validate_python(results)
-    @post(path="/files/process_all")
-    async def process_all_files(
-        self, files_repo: FileRepository, limit_offset: LimitOffset, request: Request, reprocess_all : bool = False
-    ) -> list[FileSchema]:
-        """List files."""
-        results = await files_repo.list()
-        type_adapter = TypeAdapter(list[FileSchema])
-        for file in results:
-            process_file_raw(file,files_repo,request.logger,reprocess_all)
-        return type_adapter.validate_python(results)
+
+    # TODO: replace this with a jobs endpoint
+
+    # @post(path="/files/process_all")
+    # async def process_all_files(
+    #     self,
+    #     files_repo: FileRepository,
+    #     limit_offset: LimitOffset,
+    #     request: Request,
+    #     reprocess_all: bool = False,
+    # ) -> list[FileSchema]:
+    #     """List files."""
+    #     results = await files_repo.list()
+    #     type_adapter = TypeAdapter(list[FileSchema])
+    #     for file in results:
+    #         process_file_raw(file, files_repo, request.logger, reprocess_all)
+    #     return type_adapter.validate_python(results)
 
     @post(path="/files/upload", media_type=MediaType.TEXT)
     async def handle_file_upload(
@@ -174,7 +187,7 @@ class FileController(Controller):
         data: Annotated[UploadFile, Body(media_type=RequestEncodingType.MULTI_PART)],
     ) -> Optional[FileUpload]:
         content = await data.read()
-        newFileObj = emptyFile()
+        newFileObj = emptyFile
         newFileObj.name = data.filename
 
     @post(path="/files/add_url")
@@ -188,47 +201,64 @@ class FileController(Controller):
     ) -> Any:
         request.logger.info("adding files")
         request.logger.info(data)
-        # New stuff here, is this where this code belongs? <new stuff>
+
+        # ------------------ here be a site for refactor --------------------
         docingest = DocumentIngester(request.logger)
+
         request.logger.info("DocumentIngester Created")
-        tmpfile_path, metadata = docingest.url_to_filepath_and_metadata(data.url)
-        override_metadata = data.metadata
-        if override_metadata is not None:
-            metadata.update(override_metadata)
+
+        tmpfile_path, metadata, tmpfile_cleanup = (
+            docingest.url_to_filepath_and_metadata(data.url)
+        )
+        new_metadata = data.metadata
+
+        if new_metadata is not None:
+            metadata.update(new_metadata)
+
         request.logger.info(f"Metadata Successfully Created with metadata {metadata}")
+
         document_title = metadata.get("title")
         document_doctype = metadata.get("doctype")
         document_lang = metadata.get("language")
+
         try:
             assert isinstance(document_title, str)
             assert isinstance(document_doctype, str)
             assert isinstance(document_lang, str)
-        except:
+        except Exception:
             request.logger.error("Illformed Metadata please fix")
+
         else:
-            request.logger.info(f"Title, Doctype and language successfully declared")
+            request.logger.info("Title, Doctype and language successfully declared")
+
         document_source = metadata.get("source")
         if document_source is None:
             document_source = "UNKNOWN"
             metadata["source"] = "UNKNOWN"
 
         request.logger.info("Attempting to save data to file")
-        result = docingest.save_filepath_to_hash(tmpfile_path,OS_HASH_FILEDIR)
+        result = docingest.save_filepath_to_hash(tmpfile_path, OS_HASH_FILEDIR)
         (filehash, filepath) = result
-        os.remove(tmpfile_path) 
+
+        tmpfile_cleanup()
+
+        # NOTE: this is a dangeous query
+        # FIX: fix this to not allow for users to DOS files
         query = select(FileModel).where(FileModel.hash == filehash)
+
         duplicate_file_objects = await files_repo.session.execute(query)
         duplicate_file_obj = duplicate_file_objects.scalar()
-        if override_hash == True:
-            if not duplicate_file_obj is None:
-                try:
-                    await files_repo.delete(duplicate_file_obj.id)
-                finally:
-                    duplicate_file_obj = None
+
+        if override_hash is True and duplicate_file_obj is not None:
+            try:
+                await files_repo.delete(duplicate_file_obj.id)
+            except Exception:
+                pass
             duplicate_file_obj = None
+
         if duplicate_file_obj is None:
             docingest.backup_metadata_to_hash(metadata, filehash)
-            metadata_str=json.dumps(metadata)
+            metadata_str = json.dumps(metadata)
             new_file = FileModel(
                 url=data.url,
                 name=document_title,
@@ -236,14 +266,12 @@ class FileController(Controller):
                 lang=document_lang,
                 source=document_source,
                 path=str(filepath),
-                # file=raw_tmpfile,
                 metadata_str=metadata_str,
                 stage="stage1",
                 hash=filehash,
                 summary=None,
                 short_summary=None,
             )
-            # </new stuff>
             request.logger.info("new file:{file}".format(file=new_file.to_dict()))
             try:
                 new_file = await files_repo.add(new_file)
@@ -253,15 +281,19 @@ class FileController(Controller):
             request.logger.info("added file!~")
             await files_repo.session.commit()
             request.logger.info("commited file to DB")
+
         else:
             request.logger.info(type(duplicate_file_obj))
             request.logger.info(
-                f"File with identical hash already exists in DB with uuid: {duplicate_file_obj.id}"
+                f"File with identical hash already exists in DB with uuid: {
+                    duplicate_file_obj.id}"
             )
             new_file = duplicate_file_obj
+
         if process:
             request.logger.info("Processing File")
             await self.process_file_raw(new_file, files_repo, request.logger, False)
+
         type_adapter = TypeAdapter(FileSchema)
         return type_adapter.validate_python(new_file)
 
@@ -270,6 +302,8 @@ class FileController(Controller):
         self, files_repo: FileRepository, data: UrlUploadList, request: Request
     ) -> None:
         return None
+
+    # TODO: anything but this
 
     @post(path="/process/{file_id_str:str}")
     async def process_file(
@@ -283,13 +317,12 @@ class FileController(Controller):
     ) -> FileSchema:
         """Process a File."""
         file_id = UUID(file_id_str)
-        logger.info(file_id)
+        request.logger.info(file_id)
         obj = await files_repo.get(file_id)
         # TODO : Add error for invalid document ID
         await self.process_file_raw(obj, files_repo, request.logger, regenerate)
-        return self.validate_and_jsonify(
-            newobj
-        )  # TODO : Return Response code and response message
+        # TODO : Return Response code and response message
+        return self.validate_and_jsonify(obj)
 
     async def process_file_raw(
         self, obj: FileModel, files_repo: FileRepository, logger: Any, regenerate: bool
@@ -306,104 +339,95 @@ class FileController(Controller):
             500,
             "Internal error somewhere in process.",
         )
-        if current_stage == "stage0":
-            response_code, response_message = (
-                422,
-                "Failure in stage 0: Document was incorrectly added to database, try readding it again.",
-            )
+
+        if regenerate:
             current_stage = "stage1"
-        if regenerate and current_stage != "stage0":
-            current_stage = "stage1"
-        if current_stage == "stage1":
-            processed_original_text = mdextract.process_raw_document_into_untranslated_text(
+
+        # text extraction
+        def process_stage_one():
+
+            processed_original_text = (
+                mdextract.process_raw_document_into_untranslated_text(
                     Path(obj.path), obj.doctype, obj.lang
                 )
-            mdextract.backup_processed_text(processed_original_text,doc_metadata,OS_BACKUP_FILEDIR)
-            try:
-                print(3)
-            except:
-                response_code, response_message = (
-                    422,
-                    "failure in stage 1: document was unable to be converted to markdown,",
-                )
+            )
+            mdextract.backup_processed_text(
+                processed_original_text, doc_metadata, OS_BACKUP_FILEDIR
+            )
+            if obj.lang == "en":
+                # Write directly to the english text box if
+                # original text is identical to save space.
+                obj.english_text = processed_original_text
+                # Skip translation stage if text already english.
+                return "stage3"
             else:
-                if obj.lang == "en":
-                    # Write directly to the english text box if oriiginal text is identical to save space.
-                    obj.english_text = processed_original_text
-                    # Skip translation stage if text already english.
-                    current_stage = "stage3"
-                else:
-                    obj.original_text = processed_original_text
-                    current_stage = "stage2"
-        if current_stage == "stage2":
+                obj.original_text = processed_original_text
+                return "stage2"
+
+        # text conversion
+        def process_stage_two():
             try:
                 if obj.lang == "en":
                     processed_english_text = mdextract.convert_text_into_eng(
                         obj.original_text, obj.lang
                     )
                 else:
-                    assert (
-                        False
-                    ), "Code is in an unreachable state, this situation should have been caught by an error in stage 1."
-            except:
-                response_code, response_message = (
-                    422,
-                    "failure in stage 2: document was unable to be translated to english.",
-                )
-            else:
+                    raise Exception(
+                        "\
+                        Code is in an unreachable state, \
+                        this situation should have been caught \
+                        by an error in stage 1.\
+                    "
+                    )
+            except Exception as e:
                 obj.english_text = processed_english_text
-                current_stage = "stage3"
-        if current_stage == "stage3":
+                raise Exception(
+                    "\
+                    failure in stage 2: \
+                    document was unable to be translated to english.\
+                ",
+                    e,
+                )
+            return "stage3"
+
+        # text commitment
+        def process_stage_three():
             try:
                 add_document_to_db_from_text(obj.english_text, doc_metadata)
-            except:
-                response_code, response_message = (
-                    422,
-                    "Failure in adding document to vector database",
-                )
-            else:
-                current_stage = "stage4"
-        if current_stage == "stage4":
-            # FIXME: Throw out entire section of genextras and replace with something llamaindexy.
-            # links = genextras.extract_markdown_links(obj.original_text)
-            # try:
-            #     assert False, "TODO: Add llamaindex summary functionality."
-            # except:
-            #     response_code, response_message = (
-            #         422,
-            #         "failure in stage 4: Unable to generate summaries and links for document.",
-            #     )
-            # else:
-            #     obj.links = links
-            #     obj.long_summary = long_sum
-            #     obj.short_summary = short_sum
-            #     current_stage = "stage5"
-            current_stage = "stage5"
+            except Exception as e:
+                raise Exception("Failure in adding document to vector database", e)
 
-        if current_stage == "completed":
-            response_code, response_message = (200, "Document Fully Processed.")
-        logger.info(current_stage)
-        obj.stage = current_stage
-        logger.info(response_code)
-        logger.info(response_message)
-        newobj = files_repo.update(obj)
+        while True:
+            try:
+                match current_stage:
+                    case "stage1":
+                        current_stage = process_stage_one()
+                    case "stage2":
+                        current_stage = process_stage_two()
+                    case "stage3":
+                        current_stage = process_stage_three()
+                    case "completed":
+                        response_code, response_message = (
+                            200,
+                            "Document Fully Processed.",
+                        )
+                        logger.info(current_stage)
+                        obj.stage = current_stage
+                        logger.info(response_code)
+                        logger.info(response_message)
+                        new_obj = files_repo.update(obj)
+                        await files_repo.session.commit()
+                        break
+                    case _:
+                        raise Exception(
+                            "Document was incorrectly added to database, \
+                            try readding it again.\
+                        "
+                        )
 
-        await files_repo.session.commit()
-
-    # @patch(path="/files/{file_id:uuid}")
-    # async def update_file(
-    #     self,
-    #     files_repo: FileRepository,
-    #     data: FileUpdate,
-    #     file_id: UUID = Parameter(
-    #         title="File ID", description="File to retieve"),
-    # ) -> FileSchema:
-    #     """Update a File."""
-    #     raw_obj = data.model_dump(exclude_unset=True, exclude_none=True)
-    #     raw_obj.update({"id": file_id})
-    #     obj = files_repo.update(FileModel(**raw_obj))
-    #     await files_repo.session.commit()
-    #     return self.validate_and_jsonify(obj)
+            except Exception as e:
+                logger.error(e)
+                break
 
     @delete(path="/files/{file_id:uuid}")
     async def delete_file(
@@ -414,14 +438,3 @@ class FileController(Controller):
         fid = UUID(file_id)
         _ = await files_repo.delete(fid)
         await files_repo.session.commit()
-
-    @post(path="/files/index")
-    async def index_file(self, data: IndexFileRequest, request: Request) -> Any:
-        request.logger.info(f"index request data:\n{data}")
-        id = data.id
-        try:
-            await indexDocByID(id)
-            return "successfully indexed"
-        except Exception as e:
-            request.logger.critical("unable to index file")
-            return "faield to index"

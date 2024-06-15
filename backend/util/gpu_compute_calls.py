@@ -55,8 +55,13 @@ def downsample_audio(
 
 MARKER_ENDPOINT_URL = os.environ["MARKER_ENDPOINT_URL"]
 
+
 class GPUComputeEndpoint:
-    def __init__(self, marker_endpoint_url: str = MARKER_ENDPOINT_URL, legacy_endpoint_url : str = "https://depricated-url.com"):
+    def __init__(
+        self,
+        marker_endpoint_url: str = MARKER_ENDPOINT_URL,
+        legacy_endpoint_url: str = "https://depricated-url.com",
+    ):
         self.marker_endpoint_url = marker_endpoint_url
         self.endpoint_url = legacy_endpoint_url
 
@@ -154,7 +159,6 @@ class GPUComputeEndpoint:
         if downsampled == filepath:
             return self.audio_to_text_raw(filepath, source_lang, target_lang, file_type)
         return self.audio_to_text_raw(downsampled, source_lang, target_lang, "opus")
-
 
     def embed_raw_dicts(self, text_list: List[dict], model_name: str) -> list:
         if not model_name in ["mistral7b-sfr"]:

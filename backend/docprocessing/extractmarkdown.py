@@ -23,6 +23,7 @@ import yaml
 
 from util.niclib import create_markdown_string, seperate_markdown_string
 
+
 class MarkdownExtractor:
     def __init__(self, logger, tmpdir: Path):
         self.tmpdir = tmpdir
@@ -37,25 +38,23 @@ class MarkdownExtractor:
     def convert_text_into_eng(self, file_text: str, lang: str):
         if lang in ["en", "eng", "english", None]:
             return file_text
-        english_text = GPUComputeEndpoint().translate_text(
-            file_text, lang, "en"
-        )
+        english_text = GPUComputeEndpoint().translate_text(file_text, lang, "en")
         return english_text
 
-    def backup_processed_text(self,text : str, metadata : dict, backupdir : Path) -> None:
-        savestring = create_markdown_string(text,metadata,include_previous_metadata = False)
+    def backup_processed_text(self, text: str, metadata: dict, backupdir: Path) -> None:
+        savestring = create_markdown_string(
+            text, metadata, include_previous_metadata=False
+        )
         backuppath = backupdir / Path(metadata["hash"] + ".md")
         with open(backuppath, "w") as text_file:
             text_file.write(savestring)
 
-
-
     def process_raw_document_into_untranslated_text(
-        self, file_loc: Path, metadata: dict,override_dir : Optional[Path] = None
+        self, file_loc: Path, metadata: dict, override_dir: Optional[Path] = None
     ) -> str:
         doctype = metadata["doctype"]
         lang = metadata["lang"]
-            
+
         def process_pdf(filepath: Path) -> str:
             return GPUComputeEndpoint().transcribe_pdf(filepath)
 
@@ -72,6 +71,7 @@ class MarkdownExtractor:
             if error_str:  # TODO : Debug this weird if statement
                 raise Exception(f"Error running pandoc command: {error_str}")
             return output_str
+
         if not override_dir is None:
             hash = metadata["hash"]
             checkpath = override_dir / Path(f"{hash}/{hash}.md")
@@ -79,22 +79,22 @@ class MarkdownExtractor:
             if os.path.exists(checkpath):
                 with open(checkpath, "r") as file:
                     data = file.read().rstrip()
-                    text,new_metadata = seperate_markdown_string(data)
+                    text, new_metadata = seperate_markdown_string(data)
                     metadata.update(new_metadata)
-                    return (text,metadata)
+                    return (text, metadata)
 
         if not os.path.isfile(file_loc):
             raise Exception("A document with that hash is not present")
         if doctype == "md":
             with open(file_loc, "r") as file:
                 data = file.read().rstrip()
-                text,new_metadata = seperate_markdown_string(data)
+                text, new_metadata = seperate_markdown_string(data)
                 # Redundant due to it processing metadata upon ingest.
                 # metadata.update(new_metadata)
-                return (text,metadata)
-            
+                return (text, metadata)
+
         elif doctype == "pdf":
-            return (process_pdf(file_loc),metadata)
+            return (process_pdf(file_loc), metadata)
         elif doctype in [
             "html",
             "doc",
@@ -104,9 +104,9 @@ class MarkdownExtractor:
             "odt",
             "rtf",
         ]:
-            return (process_pandoc(file_loc, doctype),metadata)
+            return (process_pandoc(file_loc, doctype), metadata)
         elif doctype == "tex":
-            return (process_pandoc(file_loc, "latex"),metadata)
+            return (process_pandoc(file_loc, "latex"), metadata)
         elif doctype in ["mp3", "opus", "mkv"]:
             assert False
             return ""
