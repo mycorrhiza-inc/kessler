@@ -164,7 +164,7 @@ function MessageComponent({
         spacing={4}
         // align="stretch"
         overflowY="scroll"
-      // justifyContent={message.role == true ? "right" : "left"}
+        justifyContent={message.role == "user" ? "right" : "left"}
       // h="100vh"
       >
         {/* role message */}
