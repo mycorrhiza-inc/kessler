@@ -34,7 +34,7 @@ import Markdown from 'react-markdown'
 import { message } from "antd";
 import { start } from "repl";
 import { initialState } from "node_modules/@clerk/nextjs/dist/types/app-router/server/auth";
-
+import { useColorMode } from '@chakra-ui/react';
 
 import MarkdownRenderer from "./MarkdownRenderer"
 interface ChatAgent {
@@ -143,10 +143,13 @@ function MessageComponent({
 }: {
   message: Message;
 }) {
+  const { colorMode } = useColorMode();
   return (
     <Box
       width="90%"
-      background={message.role == "user" ? "aquamarine" : "antiquewhite"}
+      background={message.role === 'user'
+        ? (colorMode === 'light' ? 'aquamarine' : 'teal.600')
+        : (colorMode === 'light' ? 'antiquewhite' : 'gray.700')}
       borderRadius="10px"
       // maxWidth="800px"
       height="auto"
@@ -301,7 +304,6 @@ function ChatBox({ chatUrl, modelOptions }: { chatUrl: string, modelOptions: str
             flexDir="row"
             justifySelf="center"
             justifyContent="center"
-            bg="white"
             w="85%"
             borderColor="green"
             borderRadius="10px"
