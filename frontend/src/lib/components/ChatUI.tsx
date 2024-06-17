@@ -321,15 +321,15 @@ function ChatBox({ chatUrl, modelOptions }: { chatUrl: string, modelOptions: str
               border="none"
               padding="10px"
               margin="10px"
-            // onKeyPress={(event) => {
-            //   if (event.key === 'Enter') {
-            //     event.preventDefault();
-            //     this.myFormRef.requestSubmit();
-            //   }
-            // }}
-            // value={userChatbox}
-            // // FIXME : Figure out the proper type for this
-            // onChange={(e: any) => setUserChatbox(e.targetvalue)}
+              // onKeyPress={(event) => {
+              //   if (event.key === 'Enter') {
+              //     event.preventDefault();
+              //     this.myFormRef.requestSubmit();
+              //   }
+              // }}
+              value={userChatbox}
+              // FIXME : Figure out the proper type for this
+              onChange={(e: any) => setUserChatbox(e.targetvalue)}
             />
             <Center padding="10px">
               <IconButton

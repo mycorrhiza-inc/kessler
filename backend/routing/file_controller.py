@@ -70,7 +70,7 @@ class UUIDEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-# # for testing purposese
+# TODO : Create test that adds a file once we know what the file DB schema is going to look like
 # emptyFile = FileModel(
 #     uri=None,  # location its stored
 #     name="",
@@ -185,15 +185,16 @@ class FileController(Controller):
     #         process_file_raw(file, files_repo, request.logger, reprocess_all)
     #     return type_adapter.validate_python(results)
 
-    @post(path="/files/upload", media_type=MediaType.TEXT)
-    async def handle_file_upload(
-        self,
-        files_repo: FileRepository,
-        data: Annotated[UploadFile, Body(media_type=RequestEncodingType.MULTI_PART)],
-    ) -> Optional[FileUpload]:
-        content = await data.read()
-        newFileObj = emptyFile
-        newFileObj.name = data.filename
+    # TODO : (Nic) Make function that can process uploaded files.
+    # @post(path="/files/upload", media_type=MediaType.TEXT)
+    # async def handle_file_upload(
+    #     self,
+    #     files_repo: FileRepository,
+    #     data: Annotated[UploadFile, Body(media_type=RequestEncodingType.MULTI_PART)],
+    # ) -> Optional[FileUpload]:
+    #     content = await data.read()
+    #     newFileObj = emptyFile
+    #     newFileObj.name = data.filename
 
     @post(path="/files/add_url")
     async def add_url(
