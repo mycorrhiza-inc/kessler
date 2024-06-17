@@ -71,20 +71,6 @@ class UUIDEncoder(json.JSONEncoder):
 
 
 # TODO : Create test that adds a file once we know what the file DB schema is going to look like
-# emptyFile = FileModel(
-#     uri=None,  # location its stored
-#     name="",
-#     doctype="",
-#     lang="en",
-#     source="",
-#     path="",
-#     # file=raw_tmpfile,
-#     metadata_str="",
-#     stage="stage0",
-#     hash="",
-#     summary=None,
-#     short_summary=None,
-# )
 
 
 class FileUpdate(BaseModel):
