@@ -51,6 +51,7 @@ import {
 } from "react-icons/fi";
 
 import { usePathname } from "next/navigation";
+import ColorModeToggle from "./ColorModeToggle"
 
 // import SearchDialog from "./SearchDialog";
 
@@ -140,6 +141,7 @@ export default function Page({ children }: { children: React.ReactNode }) {
             </NavGroup>
           </SidebarSection>
           <SidebarOverlay zIndex="1" />
+          <ColorModeToggle />
         </Sidebar>
       }
     >

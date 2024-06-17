@@ -10,7 +10,7 @@ from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
 
-from .utils import RepoMixin, sqlalchemy_config, PydanticBaseModel
+from .utils import sqlalchemy_config, PydanticBaseModel
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
 

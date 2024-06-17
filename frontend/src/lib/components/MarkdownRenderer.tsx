@@ -9,10 +9,45 @@ import rehypeRaw from 'rehype-raw';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { dracula } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 
-
+import { Button } from '@chakra-ui/react'
 interface MarkdownRendererProps {
   children: string;
 }
+const CodeBlock = ({ node, inline, className, children, ...props }: any) => {
+  const match = /language-(\w+)/.exec(className || '');
+  const codeContent = String(children).replace(/\n$/, '');
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(codeContent);
+    alert('Code copied to clipboard!');
+  };
+
+  return !inline && match ? (
+    <div style={{ position: 'relative' }}>
+      <div >
+        <SyntaxHighlighter style={dracula} PreTag="div" language={match[1]} {...props}>
+          {codeContent}
+        </SyntaxHighlighter>
+      </div>
+      <Button
+        onClick={copyToClipboard}
+        style={{
+          position: 'absolute',
+          top: '10px',
+          right: '10px',
+          zIndex: 1,
+        }}
+      >
+        Copy
+      </Button>
+    </div >
+  ) : (
+    <code className={className} {...props}>
+      {children}
+    </code>
+  );
+};
+
 
 const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ children }) => {
   return (
@@ -20,19 +55,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ children }) => {
       remarkPlugins={[remarkMath, remarkGfm]}
       rehypePlugins={[rehypeKatex, rehypeRaw]}
       components={{
-        code({ node, inline, className, children, ...props }: any) {
-          const match = /language-(\w+)/.exec(className || '');
-
-          return !inline && match ? (
-            <SyntaxHighlighter style={dracula} PreTag="div" language={match[1]} {...props}>
-              {String(children).replace(/\n$/, '')}
-            </SyntaxHighlighter>
-          ) : (
-            <code className={className} {...props}>
-              {children}
-            </code>
-          );
-        },
+        code: CodeBlock,
       }}
     >
       {children}

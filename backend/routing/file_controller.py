@@ -36,14 +36,19 @@ from pydantic import TypeAdapter
 from models.utils import PydanticBaseModel as BaseModel
 
 
-from models import (
-    FileModel,
-    FileRepository,
-    FileSchema,
-    FileSchemaWithText,
-    provide_files_repo,
-)
-
+# from models import (
+#     FileModel,
+#     FileRepository,
+#     FileSchema,
+#     FileSchemaWithText,
+#     provide_files_repo,
+# )
+from models.files import (
+     FileModel,
+     FileRepository,
+     FileSchema,
+     provide_files_repo,
+ )
 
 from crawler.docingest import DocumentIngester
 from docprocessing.extractmarkdown import MarkdownExtractor
@@ -65,21 +70,7 @@ class UUIDEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-# for testing purposese
-emptyFile = FileModel(
-    uri=None,  # location its stored
-    name="",
-    doctype="",
-    lang="en",
-    source="",
-    path="",
-    # file=raw_tmpfile,
-    metadata_str="",
-    stage="stage0",
-    hash="",
-    summary=None,
-    short_summary=None,
-)
+# TODO : Create test that adds a file once we know what the file DB schema is going to look like
 
 
 class FileUpdate(BaseModel):
@@ -165,30 +156,7 @@ class FileController(Controller):
 
     # TODO: replace this with a jobs endpoint
 
-    # @post(path="/files/process_all")
-    # async def process_all_files(
-    #     self,
-    #     files_repo: FileRepository,
-    #     limit_offset: LimitOffset,
-    #     request: Request,
-    #     reprocess_all: bool = False,
-    # ) -> list[FileSchema]:
-    #     """List files."""
-    #     results = await files_repo.list()
-    #     type_adapter = TypeAdapter(list[FileSchema])
-    #     for file in results:
-    #         process_file_raw(file, files_repo, request.logger, reprocess_all)
-    #     return type_adapter.validate_python(results)
-
-    @post(path="/files/upload", media_type=MediaType.TEXT)
-    async def handle_file_upload(
-        self,
-        files_repo: FileRepository,
-        data: Annotated[UploadFile, Body(media_type=RequestEncodingType.MULTI_PART)],
-    ) -> Optional[FileUpload]:
-        content = await data.read()
-        newFileObj = emptyFile
-        newFileObj.name = data.filename
+    # TODO : (Nic) Make function that can process uploaded files.
 
     @post(path="/files/add_url")
     async def add_url(
