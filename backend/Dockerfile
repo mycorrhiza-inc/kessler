@@ -1,4 +1,4 @@
-FROM python:3.11-alpine
+FROM python:3.11
 
 ENV VIRTUAL_ENV=/usr/local
 # use UV

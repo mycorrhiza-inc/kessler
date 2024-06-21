@@ -1,11 +1,10 @@
+from lance_store.connection import ensure_fts_index
 from rag.llamaindex import add_document_to_db_from_text
-from hashlib import blake2b
 import os
 from pathlib import Path
 from typing import Any
 from uuid import UUID
-from typing import Annotated, assert_type
-import logging
+from typing import Annotated
 
 from litestar import Controller, Request
 
@@ -13,15 +12,11 @@ from litestar.handlers.http_handlers.decorators import (
     get,
     post,
     delete,
-    patch,
     MediaType,
 )
 
 
 from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError, NoResultFound
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
 from litestar.params import Parameter
@@ -30,7 +25,6 @@ from litestar.repository.filters import LimitOffset
 from litestar.datastructures import UploadFile
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
-from litestar.logging import LoggingConfig
 
 from pydantic import TypeAdapter
 from models.utils import PydanticBaseModel as BaseModel
@@ -51,9 +45,6 @@ from docprocessing.extractmarkdown import MarkdownExtractor
 from typing import List, Optional, Dict
 
 
-from util.niclib import get_blake2
-
-
 import json
 
 
@@ -66,20 +57,6 @@ class UUIDEncoder(json.JSONEncoder):
 
 
 # for testing purposese
-emptyFile = FileModel(
-    uri=None,  # location its stored
-    name="",
-    doctype="",
-    lang="en",
-    source="",
-    path="",
-    # file=raw_tmpfile,
-    metadata_str="",
-    stage="stage0",
-    hash="",
-    summary=None,
-    short_summary=None,
-)
 
 
 class FileUpdate(BaseModel):
@@ -160,35 +137,10 @@ class FileController(Controller):
     ) -> list[FileSchema]:
         """List files."""
         results = await files_repo.list()
+        logger = request.logger
+        logger.info(f"{len(results)} results")
         type_adapter = TypeAdapter(list[FileSchema])
         return type_adapter.validate_python(results)
-
-    # TODO: replace this with a jobs endpoint
-
-    # @post(path="/files/process_all")
-    # async def process_all_files(
-    #     self,
-    #     files_repo: FileRepository,
-    #     limit_offset: LimitOffset,
-    #     request: Request,
-    #     reprocess_all: bool = False,
-    # ) -> list[FileSchema]:
-    #     """List files."""
-    #     results = await files_repo.list()
-    #     type_adapter = TypeAdapter(list[FileSchema])
-    #     for file in results:
-    #         process_file_raw(file, files_repo, request.logger, reprocess_all)
-    #     return type_adapter.validate_python(results)
-
-    @post(path="/files/upload", media_type=MediaType.TEXT)
-    async def handle_file_upload(
-        self,
-        files_repo: FileRepository,
-        data: Annotated[UploadFile, Body(media_type=RequestEncodingType.MULTI_PART)],
-    ) -> Optional[FileUpload]:
-        content = await data.read()
-        newFileObj = emptyFile
-        newFileObj.name = data.filename
 
     @post(path="/files/add_url")
     async def add_url(
@@ -265,8 +217,7 @@ class FileController(Controller):
                 doctype=document_doctype,
                 lang=document_lang,
                 source=document_source,
-                path=str(filepath),
-                metadata_str=metadata_str,
+                metadata=metadata_str,
                 stage="stage1",
                 hash=filehash,
                 summary=None,
@@ -285,8 +236,8 @@ class FileController(Controller):
         else:
             request.logger.info(type(duplicate_file_obj))
             request.logger.info(
-                f"File with identical hash already exists in DB with uuid: {
-                    duplicate_file_obj.id}"
+                f"File with identical hash already exists in DB with uuid:\
+                {duplicate_file_obj.id}"
             )
             new_file = duplicate_file_obj
 
@@ -415,7 +366,7 @@ class FileController(Controller):
                         obj.stage = current_stage
                         logger.info(response_code)
                         logger.info(response_message)
-                        new_obj = files_repo.update(obj)
+                        _ = files_repo.update(obj)
                         await files_repo.session.commit()
                         break
                     case _:
@@ -428,6 +379,64 @@ class FileController(Controller):
             except Exception as e:
                 logger.error(e)
                 break
+
+    @post(path="/files/upload/from/md", media_type=MediaType.TEXT)
+    async def upload_from_markdown(
+        self,
+        files_repo: FileRepository,
+        request: Request,
+        data: Annotated[UploadFile, Body(media_type=RequestEncodingType.MULTI_PART)],
+    ) -> None:
+        try:
+            content = await data.read()
+            filename = data.filename
+            file = content.decode()
+            splitfile = file.split("---")
+            restfile = "".join(splitfile[2:])
+            file_metadata = splitfile[1].split("\n")
+            meta = {}
+            for i in file_metadata:
+                if i == "":
+                    continue
+                field = i.split(":")
+                if len(field) >= 2:
+                    meta[field[0]] = "".join(field[1:])
+
+            m_text = json.dumps(meta)
+
+            FileModel(english_text=file, metadata=m_text)
+            new_file = FileModel(
+                url="",
+                name=filename,
+                doctype="mardown",
+                lang="english",
+                source="markdown",
+                metadata=m_text,
+                stage="completed",
+                hash="None",
+                summary=None,
+                short_summary=None,
+                english_text=restfile,
+            )
+            try:
+                files_repo.session.add(new_file)
+                await files_repo.session.flush()
+                files_repo.session.refresh(new_file)
+                await files_repo.session.commit()
+            except Exception as e:
+                return f"issue: \n{e}"
+            try:
+                meta["uid"] = str(new_file.id)
+                add_document_to_db_from_text(text=restfile, metadata=meta)
+                request.app.emit("increment_processed_docs", num=1)
+                request.logger.info("added a document to the db")
+            except Exception as e:
+                request.logger.error(e)
+                return "issue indexing file"
+            return new_file.english_text
+
+        except Exception as e:
+            raise (e)
 
     @delete(path="/files/{file_id:uuid}")
     async def delete_file(
