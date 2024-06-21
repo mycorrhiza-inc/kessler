@@ -30,14 +30,19 @@ from pydantic import TypeAdapter
 from models.utils import PydanticBaseModel as BaseModel
 
 
-from models import (
-    FileModel,
-    FileRepository,
-    FileSchema,
-    FileSchemaWithText,
-    provide_files_repo,
-)
-
+# from models import (
+#     FileModel,
+#     FileRepository,
+#     FileSchema,
+#     FileSchemaWithText,
+#     provide_files_repo,
+# )
+from models.files import (
+     FileModel,
+     FileRepository,
+     FileSchema,
+     provide_files_repo,
+ )
 
 from crawler.docingest import DocumentIngester
 from docprocessing.extractmarkdown import MarkdownExtractor
@@ -56,7 +61,7 @@ class UUIDEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-# for testing purposese
+# TODO : Create test that adds a file once we know what the file DB schema is going to look like
 
 
 class FileUpdate(BaseModel):
@@ -142,6 +147,9 @@ class FileController(Controller):
         type_adapter = TypeAdapter(list[FileSchema])
         return type_adapter.validate_python(results)
 
+
+    # TODO: replace this with a jobs endpoint
+    # TODO : (Nic) Make function that can process uploaded files
     @post(path="/files/add_url")
     async def add_url(
         self,

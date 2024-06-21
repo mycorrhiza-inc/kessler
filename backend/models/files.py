@@ -11,10 +11,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from pydantic import Field, field_validator
 
-
 class FileModel(UUIDAuditBase):
     """Database representation of a file"""
-
     __tablename__ = "file"
     url: Mapped[str | None]
     doctype: Mapped[str | None]
@@ -28,7 +26,6 @@ class FileModel(UUIDAuditBase):
     short_summary: Mapped[str | None]
     original_text: Mapped[str | None]
     english_text: Mapped[str | None]
-    indexed: int = 0
 
 
 class FileRepository(SQLAlchemyAsyncRepository[FileModel]):
@@ -57,7 +54,6 @@ class FileSchema(PydanticBaseModel):
     short_summary: str | None = None
     original_text: str | None = None
     english_text: str | None = None
-    indexed: int = 0
 
     @field_validator("id")
     @classmethod
