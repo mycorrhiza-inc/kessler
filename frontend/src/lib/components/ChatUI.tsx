@@ -263,7 +263,7 @@ function ChatBox({ chatUrl, modelOptions }: { chatUrl: string, modelOptions: str
 
   /*
     with take the current message, find the message
-
+ 
   */
 
   // get a response every time a message is sent
@@ -362,7 +362,7 @@ function ChatBox({ chatUrl, modelOptions }: { chatUrl: string, modelOptions: str
 }
 /*
  */
-export default function ChatUI({ convoID = "", chatUrl, modelOptions }: { convoID?: string, chatUrl: string, modelOptions: string[] }) {
+function ChatUI({ convoID = "", chatUrl, modelOptions }: { convoID?: string, chatUrl: string, modelOptions: string[] }) {
   // convoId being empty is a new chat instance
 
   return (
@@ -400,3 +400,5 @@ export default function ChatUI({ convoID = "", chatUrl, modelOptions }: { convoI
     </Center>
   );
 }
+
+export default ChatUI;

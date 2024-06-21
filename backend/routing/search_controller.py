@@ -14,6 +14,10 @@ from litestar.handlers.http_handlers.decorators import get, post
 from pydantic import TypeAdapter
 from models.utils import PydanticBaseModel as BaseModel
 
+import lancedb
+from lancedb import DBConnection
+
+from lance_store.connection import ensure_fts_index
 
 from typing import List
 
@@ -44,17 +48,27 @@ class IndexFileResponse(BaseModel):
 class SearchController(Controller):
     """Search Controller"""
 
-    @get(path="/search/{fid:uuid}")
+    @post(path="/search/{fid:uuid}")
     async def search_collection_by_id(
         self,
+        request: Request,
+        data: SearchQuery,
         fid: UUID = Parameter(
             title="File ID as hex string", description="File to retieve"
         ),
     ) -> Any:
-        # FIXME : Get module working with llamaindex and pgvector
-        return "Failure"
+        return "failure"
 
     @post(path="/search")
-    async def get_file(self, data: SearchQuery) -> SearchResponse:
-        # FIXME : Get module working with llamaindex and pgvector
-        return "Failure"
+    async def search(
+        self, data: SearchQuery, lanceconn: DBConnection, request: Request
+    ) -> SearchResponse:
+
+        v = lanceconn.open_table("vectors")
+
+        def get_text(x):
+            return x["text"]
+
+        f = v.search(data.query).to_list()
+        # search all dockets for a given item
+        return f"{f[0]['id']}"

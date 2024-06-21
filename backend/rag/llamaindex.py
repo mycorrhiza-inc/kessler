@@ -1,3 +1,4 @@
+from llama_index.core.llms import ChatMessage
 import logging
 import sys
 import os
@@ -10,12 +11,16 @@ from sqlalchemy.orm import sessionmaker
 from typing import List, Dict, Tuple, Optional
 
 # Import the FileModel from file.py
-from models.files import FileModel
+from models.files import FileModel, provide_files_repo
 
 from llama_index.core import StorageContext
 from llama_index.core import VectorStoreIndex
 from llama_index.core import Settings
-from llama_index.vector_stores.postgres import PGVectorStore
+from llama_index.vector_stores.lancedb import LanceDBVectorStore
+
+from llama_index.core.node_parser import SentenceSplitter
+
+# from llama_index.vector_stores.postgres import PGVectorStore
 import textwrap
 import openai
 from llama_index.llms.groq import Groq
@@ -78,16 +83,9 @@ file_table_name = "file"
 
 
 url = make_url(sync_postgres_connection_string)
-hybrid_vector_store = PGVectorStore.from_params(
-    database=db_name,
-    host=url.host,
-    password=url.password,
-    port=url.port,
-    user=url.username,
-    table_name=vec_table_name,
-    embed_dim=1536,  # openai embedding dimension
-    hybrid_search=True,
-    text_search_config="english",
+
+hybrid_vector_store = LanceDBVectorStore(
+    uri="/tmp/lancedb", mode="overwrite", query_type="hybrid"
 )
 storage_context = StorageContext.from_defaults(vector_store=hybrid_vector_store)
 # initial_documents = asyncio.run(get_document_list_from_file())
@@ -128,25 +126,24 @@ async def get_document_list_from_file_table() -> list:
         )
 
         async with async_session_maker() as session:
-            async with FileModel.repo() as repo:
-                # Create a query to select all rows
-                stmt = select(FileModel)
-                result = await session.execute(stmt)
-                file_rows = result.scalars().all()
+            # Create a query to select all rows
+            stmt = session.select(FileModel)
+            result = await session.execute(stmt)
+            file_rows = result.scalars().all()
 
-                documents = []
-                for file_row in file_rows:
-                    if file_row.english_text is not None and isinstance(
-                        file_row.doc_metadata, dict
-                    ):
-                        documents.append((file_row.english_text, file_row.doc_metadata))
+            documents = []
+            for file_row in file_rows:
+                if file_row.english_text is not None and isinstance(
+                    file_row.doc_metadata, dict
+                ):
+                    documents.append((file_row.english_text, file_row.doc_metadata))
 
-                return documents
+            return documents
 
     documents = await query_file_table_for_all_rows()
     document_list = []
     for english_text, doc_metadata in documents:
-        if not english_text is None:
+        if english_text is not None:
             additional_document = Document(text=english_text, metadata=doc_metadata)
             additional_document.doc_id = str(doc_metadata.get("hash"))
             document_list.append(document_list)
@@ -154,7 +151,10 @@ async def get_document_list_from_file_table() -> list:
 
 
 def add_document_to_db(doc: Document) -> None:
-    hybrid_index.insert(doc)
+    # split the document into sentences
+    parser = SentenceSplitter()
+    nodes = parser.get_nodes_from_documents([doc])
+    hybrid_index.insert_nodes(nodes)
 
 
 def add_document_to_db_from_text(text: str, metadata: Optional[dict] = None) -> None:
@@ -162,6 +162,7 @@ def add_document_to_db_from_text(text: str, metadata: Optional[dict] = None) -> 
         metadata = {}
     document = Document(text=text, metadata=metadata)
     add_document_to_db(document)
+    return
 
 
 async def add_document_to_db_from_hash(hash_str: str) -> None:
@@ -173,25 +174,24 @@ async def add_document_to_db_from_hash(hash_str: str) -> None:
         )
 
         async with async_session_maker() as session:
-            async with FileModel.repo() as repo:
-                # Create a query to select the first row matching the given id
-                stmt = select(FileModel).where(FileModel.hash == hash)
-                result = await session.execute(stmt)
-                file_row = result.scalars().first()
+            # Create a query to select the first row matching the given id
+            stmt = session.select(FileModel).where(FileModel.hash == hash)
+            result = await session.execute(stmt)
+            file_row = result.scalars().first()
 
-                if file_row:
-                    english_text = file_row.english_text
-                    document_metadata = file_row.doc_metadata
-                else:
-                    english_text = None
-                    document_metadata = None
+            if file_row:
+                english_text = file_row.english_text
+                document_metadata = file_row.doc_metadata
+            else:
+                english_text = None
+                document_metadata = None
 
-                return (english_text, document_metadata)
+            return (english_text, document_metadata)
 
     return_tuple = await query_file_table_for_hash(hash_str)
     english_text = return_tuple[0]
     doc_metadata = return_tuple[1]
-    if not english_text is None:
+    if english_text is not None:
         assert isinstance(english_text, str)
         assert isinstance(doc_metadata, dict)
         # TODO : Add support for metadata filtering
@@ -218,7 +218,6 @@ def create_rag_response_from_query(query: str):
 
 
 # Chat engine for rag
-from llama_index.core.llms import ChatMessage
 
 
 def sanitzie_chathistory_llamaindex(chat_history: List[dict]) -> List[ChatMessage]:

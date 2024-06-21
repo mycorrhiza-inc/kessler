@@ -3,9 +3,7 @@ from typing import Annotated, Any, List
 from litestar.contrib.sqlalchemy.base import UUIDAuditBase
 from litestar.contrib.sqlalchemy.repository import SQLAlchemyAsyncRepository
 
-from sqlalchemy import ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from uuid import UUID
+from sqlalchemy.orm import Mapped
 
 
 from .utils import PydanticBaseModel
@@ -13,33 +11,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from pydantic import Field, field_validator
 
-# from .resources import ResourceModel
-
-
-#class FileModel(UUIDAuditBase, RepoMixin):
 class FileModel(UUIDAuditBase):
     """Database representation of a file"""
     __tablename__ = "file"
-    url: Mapped[str | None] = None
-    doctype: Mapped[str]
-    lang: Mapped[str]
+    url: Mapped[str | None]
+    doctype: Mapped[str | None]
+    lang: Mapped[str | None]
     name: Mapped[str | None]
-    source: Mapped[str]
-    hash: Mapped[str]
-    stage: Mapped[str]
+    source: Mapped[str | None]
+    hash: Mapped[str | None]
+    mdata: Mapped[str | None]
+    stage: Mapped[str | None]
     summary: Mapped[str | None]
     short_summary: Mapped[str | None]
     original_text: Mapped[str | None]
     english_text: Mapped[str | None]
-
-    # when rechunking, remove all of these vectors
-    #
-    # NOTE: DO NOT PUSH TO SEVER UNTIL RESOLVED
-    # Every time the DB schema is changed you need to go through an annoying migration process 
-    # chunk_ids: Mapped[List[str] | None]
-    # FIXME : BOTH OF THESE LINES LIKELY NEED REPOMIXIN
-    # resource_id = mapped_column(UUID, ForeignKey("resource.id"))
-    # resource = relationship(ResourceModel)
 
 
 class FileRepository(SQLAlchemyAsyncRepository[FileModel]):
@@ -58,15 +44,16 @@ class FileSchema(PydanticBaseModel):
 
     id: Annotated[Any, Field(validate_default=True)]
     url: str | None = None
-    path: str | None = None
-    doctype: str
-    lang: str
+    doctype: str | None = None
+    lang: str | None = None
     name: str | None = None
-    source: str
-    stage: str
-    metadata_str: str
+    source: str | None = None
+    stage: str | None = None
     summary: str | None = None
+    mdata: str | None = None
     short_summary: str | None = None
+    original_text: str | None = None
+    english_text: str | None = None
 
     @field_validator("id")
     @classmethod
