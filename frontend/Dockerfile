@@ -19,5 +19,5 @@ COPY --from=BUILD_IMAGE /app/public ./public
 # COPY --from=BUILD_IMAGE tailwind.config.js ./
 COPY tailwind.config.js ./
 COPY postcss.config.js ./
-COPY ../config/frontend.env.local ./.env.local
+# COPY ../config/frontend.env.local ./.env.local
 EXPOSE 3000
