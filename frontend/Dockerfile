@@ -5,7 +5,8 @@ COPY frontend/package.json ./
 # install dependencies
 RUN npm install --force
 COPY ./frontend/ .
-COPY ./config/frontend.env.local ./env.local
+COPY ./config/frontend.env.local ./
+RUN mv frontend.env.local .env.local
 # build
 RUN npm run build
 # remove dev dependencies
@@ -21,5 +22,7 @@ COPY --from=BUILD_IMAGE /app/public ./public
 # COPY --from=BUILD_IMAGE tailwind.config.js ./
 COPY frontend/tailwind.config.js ./
 COPY frontend/postcss.config.js ./
-# COPY ../config/frontend.env.local ./.env.local
+COPY ../config/frontend.env.local ./ 
+RUN mv frontend.env.local .env.local
+
 EXPOSE 3000
