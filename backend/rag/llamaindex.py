@@ -21,6 +21,7 @@ from llama_index.vector_stores.lancedb import LanceDBVectorStore
 from llama_index.core.node_parser import SentenceSplitter
 
 # from llama_index.vector_stores.postgres import PGVectorStore
+# import psycopg2
 import textwrap
 import openai
 from llama_index.llms.groq import Groq
@@ -31,10 +32,8 @@ from llama_index.core.response_synthesizers import CompactAndRefine
 from llama_index.core.retrievers import QueryFusionRetriever
 from llama_index.core.query_engine import RetrieverQueryEngine
 
-import os
 
 
-import psycopg2
 
 
 from llama_index.core import Document

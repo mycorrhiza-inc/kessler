@@ -25,6 +25,7 @@ class UttuEmbedFunc(TextEmbeddingFunction):
         # this is where do we do the request
         data = {
             "input": [query],
+            # If we do have a 3090 we can run the much larger embedding model based of 7b transformer architectures that are currently at the top of MTEB leaderboard.
             "model": "Alibaba-NLP/gte-large-en-v1.5",
         }
 

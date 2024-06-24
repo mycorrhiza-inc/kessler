@@ -41,7 +41,6 @@ services:
       - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
       - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
 
-  # chroma is handled in process in the backend
   backend:
     build:
       context: ./backend
