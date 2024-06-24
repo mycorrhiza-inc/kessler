@@ -59,8 +59,8 @@ async def on_startup() -> None:
 def plain_text_exception_handler(request: Request, exc: Exception) -> Response:
     """Default handler for exceptions subclassed from HTTPException."""
     tb = traceback.format_exc()
-    logger.warn(f"exception: {exc}")
-    logger.warn(f"traceback:\n{tb}")
+    request.logger.warn(f"exception: {exc}")
+    request.logger.warn(f"traceback:\n{tb}")
     status_code = getattr(exc, "status_code", HTTP_500_INTERNAL_SERVER_ERROR)
     details = getattr(exc, "detail", "")
 

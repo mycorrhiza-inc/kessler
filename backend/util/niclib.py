@@ -15,6 +15,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from typing import Union, Optional, Any, Tuple
+from typing import Callable
+
+def Maybe(func : Callable) -> Callable:
+    return lambda x : (None if x is None else func(x))
+
 
 
 def clean_and_empty_directory(dir: Path):
@@ -40,13 +45,13 @@ def seperate_markdown_string(mdstr_with_metadata: str) -> Tuple[str, dict]:
     # Define regex pattern for front matter
     frontmatter_pattern = re.compile(r"^---\s*\n(.*?)\s*\n---\s*\n", re.DOTALL)
 
-    match = frontmatter_pattern.match(markdown_text)
+    match = frontmatter_pattern.match(mdstr_with_metadata)
 
     if match:
         # Extract metadata
         frontmatter = match.group(1)
         # Remove front matter from markdown text to get main body
-        main_body = markdown_text[match.end() :]
+        main_body = mdstr_with_metadata[match.end() :]
         #
         try:
             # Parse the YAML content
@@ -55,11 +60,9 @@ def seperate_markdown_string(mdstr_with_metadata: str) -> Tuple[str, dict]:
         except yaml.YAMLError as e:
             print(f"Error parsing YAML: {e}")
             return (main_body, {})
-        metadata = yaml.safe_load(frontmatter)
-        return (main_body, metadata)
     else:
         # If no front matter, return markdown text and empty dictionary
-        return (markdown_text, {})
+        return (mdstr_with_metadata, {})
 
 
 def get_hash_str(
