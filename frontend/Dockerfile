@@ -1,9 +1,11 @@
+# BIG UPDATE: Changed the root image and source of the configuration files for deployment
 FROM node:alpine as BUILD_IMAGE
 WORKDIR /app
-COPY package.json ./
+COPY frontend/package.json ./
 # install dependencies
 RUN npm install --force
-COPY . .
+COPY ./frontend/ .
+COPY ./config/frontend.env.local ./env.local
 # build
 RUN npm run build
 # remove dev dependencies
@@ -17,7 +19,7 @@ COPY --from=BUILD_IMAGE /app/.next ./.next
 COPY --from=BUILD_IMAGE /app/public ./public
 # COPY --from=BUILD_IMAGE postcss.config.js ./
 # COPY --from=BUILD_IMAGE tailwind.config.js ./
-COPY tailwind.config.js ./
-COPY postcss.config.js ./
+COPY frontend/tailwind.config.js ./
+COPY frontend/postcss.config.js ./
 # COPY ../config/frontend.env.local ./.env.local
 EXPOSE 3000

@@ -4,8 +4,8 @@ version: "3"
 services:
   frontend:
     build:
-      context: ./frontend
-      dockerfile: ./Dockerfile
+      context: ./
+      dockerfile: ./frontend/Dockerfile
     env_file:
       - config/global.env
     volumes:
