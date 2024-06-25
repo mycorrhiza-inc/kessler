@@ -1,9 +1,5 @@
-"use client"
+"use client";
 import Layout from "../../lib/components/AppLayout";
 export default function SearchPage() {
-  return (
-  <Layout>
-    asdf
-  </Layout>
-  );
+  return <Layout>asdf</Layout>;
 }

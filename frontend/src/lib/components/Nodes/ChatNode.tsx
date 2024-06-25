@@ -80,7 +80,7 @@ function ChatNode({ id, data, isConnectable }: ChatNodeProps) {
   };
   const generateChatCompletion = async (
     chat_history: object[],
-    model_name: string
+    model_name: string,
   ) => {
     try {
       const { data, status } = await axios.post(
@@ -95,7 +95,7 @@ function ChatNode({ id, data, isConnectable }: ChatNodeProps) {
             "Content-Type": "application/json",
           },
           timeout: 30000, // 30 Second timeout
-        }
+        },
       );
       if (status === 200) {
         console.log("Request succeeded");

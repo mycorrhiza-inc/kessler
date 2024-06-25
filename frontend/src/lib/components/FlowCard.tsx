@@ -1,9 +1,11 @@
 import Box from "@mui/joy/Box";
-import BaseFlow from './Flows/BaseFlow';
+import BaseFlow from "./Flows/BaseFlow";
 export default function FlowCard() {
-    return <>
-        <Box className="flowcard">
-            <BaseFlow/>
-        </Box>
+  return (
+    <>
+      <Box className="flowcard">
+        <BaseFlow />
+      </Box>
     </>
+  );
 }

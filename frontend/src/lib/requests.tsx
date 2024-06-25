@@ -4,7 +4,7 @@ export default function AuthenticatedFetch() {
   const authenticatedFetch = async (
     // same type signature as fetch
     resource: string | URL | Request,
-    args: RequestInit
+    args: RequestInit,
   ) => {
     return fetch(resource, {
       /* default args for fetch */
@@ -40,7 +40,7 @@ export const GetAllFiles = async (): Promise<any> => {
     // body: JSON.stringify({ url: link, title: "Textual content", isUrl: true }),
   }).then((e) => {
     console.log("completed request");
-    console.log(e)
+    console.log(e);
     if (e.status < 200 || e.status > 299) {
       console.log(`error adding links:\n${e}`);
       return "failed request";

@@ -30,13 +30,13 @@ import {
 } from "@saas-ui/react";
 import { FiArrowUpCircle } from "react-icons/fi";
 import { useState, useEffect } from "react";
-import Markdown from 'react-markdown'
+import Markdown from "react-markdown";
 import { message } from "antd";
 import { start } from "repl";
 import { initialState } from "node_modules/@clerk/nextjs/dist/types/app-router/server/auth";
-import { useColorMode } from '@chakra-ui/react';
+import { useColorMode } from "@chakra-ui/react";
 
-import MarkdownRenderer from "./MarkdownRenderer"
+import MarkdownRenderer from "./MarkdownRenderer";
 interface ChatAgent {
   role: boolean;
 }
@@ -128,7 +128,6 @@ interface Message {
   key: symbol;
 }
 
-
 interface MessageComponentProps {
   message: Message;
   editMessage: () => {};
@@ -147,9 +146,15 @@ function MessageComponent({
   return (
     <Box
       width="90%"
-      background={message.role === 'user'
-        ? (colorMode === 'light' ? 'aquamarine' : 'teal.600')
-        : (colorMode === 'light' ? 'antiquewhite' : 'gray.700')}
+      background={
+        message.role === "user"
+          ? colorMode === "light"
+            ? "aquamarine"
+            : "teal.600"
+          : colorMode === "light"
+            ? "antiquewhite"
+            : "gray.700"
+      }
       borderRadius="10px"
       // maxWidth="800px"
       height="auto"
@@ -165,10 +170,12 @@ function MessageComponent({
         // align="stretch"
         overflowY="scroll"
         justifyContent={message.role == "user" ? "right" : "left"}
-      // h="100vh"
+        // h="100vh"
       >
         {/* role message */}
-        <div><MarkdownRenderer>{message.content}</MarkdownRenderer></div>
+        <div>
+          <MarkdownRenderer>{message.content}</MarkdownRenderer>
+        </div>
         {/* <Box width="100%" height="50px">
           {!message.role && <div>Regenerate</div>}{" "}
           {message.role && <div>Edit</div>}
@@ -177,7 +184,13 @@ function MessageComponent({
     </Box>
   );
 }
-function ChatBox({ chatUrl, modelOptions }: { chatUrl: string, modelOptions: string[] }) {
+function ChatBox({
+  chatUrl,
+  modelOptions,
+}: {
+  chatUrl: string;
+  modelOptions: string[];
+}) {
   // const [messages, setMessages] = useState<Message[]>(startingMessages);
   const [messages, setMessages] = useState<Message[]>([]);
   const [needsResponse, setResponse] = useState(false);
@@ -285,15 +298,21 @@ function ChatBox({ chatUrl, modelOptions }: { chatUrl: string, modelOptions: str
       >
         {messages.length === 0 && (
           <Box p={5} textAlign="center" color="gray.500">
-            <Text fontSize="lg" fontWeight="bold">Welcome to the Chatbot!</Text>
-            <Text>Type your message in the input box below and press Enter to send.</Text>
+            <Text fontSize="lg" fontWeight="bold">
+              Welcome to the Chatbot!
+            </Text>
+            <Text>
+              Type your message in the input box below and press Enter to send.
+            </Text>
           </Box>
         )}
         {messages.map((m: Message) => {
-          return <MessageComponent
-            // key={m.key.toString()} 
-            message={m}
-          />;
+          return (
+            <MessageComponent
+              // key={m.key.toString()}
+              message={m}
+            />
+          );
         })}
         <Box minHeight="300px" width="100%" color="red" />
       </VStack>
@@ -356,13 +375,21 @@ function ChatBox({ chatUrl, modelOptions }: { chatUrl: string, modelOptions: str
             </Select>
           </Box>
         </FormLayout>
-      </Form >
+      </Form>
     </>
   );
 }
 /*
  */
-function ChatUI({ convoID = "", chatUrl, modelOptions }: { convoID?: string, chatUrl: string, modelOptions: string[] }) {
+function ChatUI({
+  convoID = "",
+  chatUrl,
+  modelOptions,
+}: {
+  convoID?: string;
+  chatUrl: string;
+  modelOptions: string[];
+}) {
   // convoId being empty is a new chat instance
 
   return (
@@ -387,10 +414,8 @@ function ChatUI({ convoID = "", chatUrl, modelOptions }: { convoID?: string, cha
             overflow="scroll clip"
             position="relative"
           >
-            <ChatBox
-              chatUrl={chatUrl}
-              modelOptions={modelOptions} />
-          </GridItem >
+            <ChatBox chatUrl={chatUrl} modelOptions={modelOptions} />
+          </GridItem>
 
           {/* <GridItem rowSpan={10} overflow="scroll clip">
             <ContextSources />

@@ -17,9 +17,9 @@ from pathlib import Path
 from typing import Union, Optional, Any, Tuple
 from typing import Callable
 
-def Maybe(func : Callable) -> Callable:
-    return lambda x : (None if x is None else func(x))
 
+def Maybe(func: Callable) -> Callable:
+    return lambda x: (None if x is None else func(x))
 
 
 def clean_and_empty_directory(dir: Path):

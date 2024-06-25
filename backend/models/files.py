@@ -11,8 +11,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from pydantic import Field, field_validator
 
+
 class FileModel(UUIDAuditBase):
     """Database representation of a file"""
+
     __tablename__ = "file"
     url: Mapped[str | None]
     doctype: Mapped[str | None]

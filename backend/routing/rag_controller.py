@@ -139,10 +139,14 @@ class RagController(Controller):
         assert validate_chat(chat_history), chat_history
         llama_chat_history = sanitzie_chathistory_llamaindex(chat_history)
         if model_name in ["llama3-70b-8192"]:
-            groq_llm = Groq(model=model_name, request_timeout=60.0, api_key=GROQ_API_KEY)
+            groq_llm = Groq(
+                model=model_name, request_timeout=60.0, api_key=GROQ_API_KEY
+            )
             response = groq_llm.chat(llama_chat_history)
         if model_name in ["gpt-4o"]:
-            openai_llm = OpenAI(model=model_name, request_timeout=60.0,api_key=OPENAI_API_KEY)
+            openai_llm = OpenAI(
+                model=model_name, request_timeout=60.0, api_key=OPENAI_API_KEY
+            )
             response = openai_llm.chat(llama_chat_history)
         str_response = str(response)
 

@@ -38,11 +38,11 @@ from models.utils import PydanticBaseModel as BaseModel
 #     provide_files_repo,
 # )
 from models.files import (
-     FileModel,
-     FileRepository,
-     FileSchema,
-     provide_files_repo,
- )
+    FileModel,
+    FileRepository,
+    FileSchema,
+    provide_files_repo,
+)
 
 from crawler.docingest import DocumentIngester
 from docprocessing.extractmarkdown import MarkdownExtractor
@@ -146,7 +146,6 @@ class FileController(Controller):
         logger.info(f"{len(results)} results")
         type_adapter = TypeAdapter(list[FileSchema])
         return type_adapter.validate_python(results)
-
 
     # TODO: replace this with a jobs endpoint
     # TODO : (Nic) Make function that can process uploaded files
