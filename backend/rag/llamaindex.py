@@ -33,9 +33,6 @@ from llama_index.core.retrievers import QueryFusionRetriever
 from llama_index.core.query_engine import RetrieverQueryEngine
 
 
-
-
-
 from llama_index.core import Document
 
 

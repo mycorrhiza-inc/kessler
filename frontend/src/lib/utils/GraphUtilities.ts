@@ -66,8 +66,7 @@ const UseGraphStore = createWithEqualityFn<
       // need to be able to run the sim on any set of nodes
       // NOTE: Should this be defined elsewhere and imported here, not sure about how the ideal structure of this should look? - Nic
       // Disabled for now to prevent some error that I think was caused by recursive imports.
-      nodeTypes: {
-      },
+      nodeTypes: {},
       onNodesChange: (changes: NodeChange[]) => {
         set({ nodes: applyNodeChanges(changes, get().nodes) });
       },

@@ -2,8 +2,8 @@ import { Theme, extendTheme, type ThemeConfig } from "@chakra-ui/react";
 import { theme as baseTheme } from "@saas-ui/react";
 
 const colors = {
-  "black": "#061e10",
-  "gray": {
+  black: "#061e10",
+  gray: {
     "50": "#f9faf9",
     "100": "#eff2f0",
     "200": "#e4e8e6",
@@ -15,7 +15,7 @@ const colors = {
     "800": "#082514",
     "900": "#061e10",
   },
-  "green": {
+  green: {
     "50": "#f5fdfa",
     "100": "#cbf4e2",
     "200": "#90e7c1",
@@ -27,7 +27,7 @@ const colors = {
     "800": "#0b5635",
     "900": "#09472c",
   },
-  "teal": {
+  teal: {
     "50": "#f2fcfc",
     "100": "#c6f0f3",
     "200": "#93e2e7",
@@ -39,7 +39,7 @@ const colors = {
     "800": "#0a5055",
     "900": "#084246",
   },
-  "cyan": {
+  cyan: {
     "50": "#f5fbfd",
     "100": "#d4eef6",
     "200": "#c0e6f1",
@@ -51,7 +51,7 @@ const colors = {
     "800": "#116e8a",
     "900": "#0d556b",
   },
-  "blue": {
+  blue: {
     "50": "#f2f6fc",
     "100": "#cfdff5",
     "200": "#acc8ed",
@@ -63,7 +63,7 @@ const colors = {
     "800": "#104181",
     "900": "#0d3569",
   },
-  "purple": {
+  purple: {
     "50": "#f9f6fd",
     "100": "#e5daf7",
     "200": "#d3bef1",
@@ -75,7 +75,7 @@ const colors = {
     "800": "#4f14a8",
     "900": "#3b0f7e",
   },
-  "pink": {
+  pink: {
     "50": "#fdf5f9",
     "100": "#f7d9e6",
     "200": "#f0bad2",
@@ -87,7 +87,7 @@ const colors = {
     "800": "#811041",
     "900": "#600c30",
   },
-  "red": {
+  red: {
     "50": "#fdf6f5",
     "100": "#f6dad8",
     "200": "#efb8b5",
@@ -99,7 +99,7 @@ const colors = {
     "800": "#8c1911",
     "900": "#67130d",
   },
-  "orange": {
+  orange: {
     "50": "#fdfaf6",
     "100": "#f7ebdc",
     "200": "#efd5b3",
@@ -111,7 +111,7 @@ const colors = {
     "800": "#69410d",
     "900": "#56350a",
   },
-  "yellow": {
+  yellow: {
     "50": "#fefefc",
     "100": "#fbf9ec",
     "200": "#f3eec7",
@@ -123,7 +123,7 @@ const colors = {
     "800": "#574f0b",
     "900": "#484109",
   },
-  "primary": {
+  primary: {
     "50": "#edfbee",
     "100": "#b3efb8",
     "200": "#66de70",
@@ -141,16 +141,14 @@ const config = {
   colors: {
     ...colors,
   },
-  initialColorMode: 'dark'
-}
+  initialColorMode: "dark",
+};
 
 const theme = extendTheme(
   {
-    config
+    config,
   },
-  baseTheme
+  baseTheme,
 );
-
-
 
 export default theme;

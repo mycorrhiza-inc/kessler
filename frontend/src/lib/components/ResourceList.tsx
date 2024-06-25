@@ -1,14 +1,14 @@
 // import axios from "axios";
 // import Layout from "./AppLayout";
 // import { useEffect } from "react";
-// 
+//
 // // FIXME : uncomment all getAllLinks once they can be properly exported
-// 
+//
 // type LinksViewProps = {
 //   links: any[];
 //   // getAllLinks: () => void;
 // };
-// 
+//
 // const LinksView = ({ links, getAllLinks }: LinksViewProps) => {
 //   useEffect(() => {
 //     // getAllLinks();
@@ -28,5 +28,5 @@
 //     </div>
 //   );
 // };
-// 
+//
 // export default LinksView;

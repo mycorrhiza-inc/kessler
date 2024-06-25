@@ -16,4 +16,3 @@ const ExperimentsView = () => {
 };
 
 export default ExperimentsView;
-

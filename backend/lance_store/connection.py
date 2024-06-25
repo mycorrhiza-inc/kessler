@@ -8,7 +8,7 @@ def get_lance_connection() -> DBConnection:
 
 
 def ensure_fts_index():
-    pass 
+    pass
 
     lanceconn = get_lance_connection()
 
@@ -21,6 +21,6 @@ def ensure_fts_index():
         # It should be possible to replace this entire try catch block w/ just this line. Doing this for now to avoid any uninentional changes in behavior if the table already exists.
 
     # if this errors then the FTS index is complete
-        # Nic: Quick question, is this code irrelavent since all it does is raise the exception that would have been raised if the code was outside of a try block.
+    # Nic: Quick question, is this code irrelavent since all it does is raise the exception that would have been raised if the code was outside of a try block.
     # except Exception as e:
     #    raise e

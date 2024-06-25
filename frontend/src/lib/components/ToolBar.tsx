@@ -44,7 +44,7 @@ const ToolBar = () => {
       router.push("/");
     }
     let path = Object.keys(pathval).find((key) => pathval[key] === value);
-    if (path === undefined) path = ""
+    if (path === undefined) path = "";
     router.push(`/${path}`);
   };
   useEffect(() => {
