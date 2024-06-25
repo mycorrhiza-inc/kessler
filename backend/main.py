@@ -36,10 +36,8 @@ def full_fts_reindex() -> None:
     if added_docs > 0 or added_docs == -1:
         ensure_fts_index()
         added_docs = 0
-        logger.info("reindexed FTS")
+        logger.info("detected new doc, successfully reindexed FTS")
         return
-
-    logger.info("no new docs to index")
 
 
 @listener("increment_processed_docs")

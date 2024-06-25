@@ -4,14 +4,14 @@ version: "3"
 services:
   frontend:
     build:
-      context: ./frontend
-      dockerfile: ./Dockerfile
+      context: ./
+      dockerfile: ./frontend/Dockerfile
     env_file:
-      - .env
+      - config/global.env
     volumes:
+      - ./config/frontend.env.local:/app.env.local
       # - ./frontend/src:/app/src
       # - ./frontend/public:/app/public
-      - ./frontend/.env.local:/app/.env.local
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
@@ -41,14 +41,13 @@ services:
       - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
       - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
 
-  # chroma is handled in process in the backend
   backend:
     build:
       context: ./backend
       # dockerfile: ./Dockerfile
       dockerfile: ./Dockerfile
     env_file:
-      - .env
+      - config/global.env
     volumes:
       - ./volumes/instance:/app/instance
       - ./volumes/files:/files
@@ -80,7 +79,7 @@ services:
     ports:
       - "6543:5432"
     env_file:
-      - .env
+      - config/global.env
     expose:
       - "5432"
     volumes:

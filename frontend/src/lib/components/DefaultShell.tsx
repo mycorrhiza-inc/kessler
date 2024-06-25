@@ -51,7 +51,7 @@ import {
 } from "react-icons/fi";
 
 import { usePathname } from "next/navigation";
-import ColorModeToggle from "./ColorModeToggle"
+import ColorModeToggle from "./ColorModeToggle";
 
 // import SearchDialog from "./SearchDialog";
 
@@ -115,15 +115,19 @@ export default function Page({ children }: { children: React.ReactNode }) {
 
           <SidebarSection flex="1" overflowY="auto" overflowX="hidden">
             <NavGroup>
-              <NavItem href="/" icon={<FiMessageCircle />} isActive={pathIs("")}>
+              <NavItem
+                href="/"
+                icon={<FiMessageCircle />}
+                isActive={pathIs("")}
+              >
                 Chat with Documents
               </NavItem>
               <NavItem
-                href="/projects"
+                href="/documents"
                 icon={<FiFeather />}
-                isActive={pathIs("projects")}
+                isActive={pathIs("documents")}
               >
-                Document Search (BROKEN)
+                Modify Document Database
               </NavItem>
               <NavItem
                 href="/basic-chat"

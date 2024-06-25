@@ -9,11 +9,6 @@ server.htpasswd
 # vscode
 .vscode
 
-# environment
-.env
-
-files
-
 # dependencies
 */node_modules
 /.pnp
@@ -39,8 +34,6 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# local env files
-.env
 
 # vercel
 .vercel
@@ -52,6 +45,7 @@ next-env.d.ts
 
 # backend data
 /volumes/
-.env
 
+# Configuration 
+config
 # frontend environment

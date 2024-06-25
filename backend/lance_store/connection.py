@@ -8,15 +8,19 @@ def get_lance_connection() -> DBConnection:
 
 
 def ensure_fts_index():
+    pass 
+
     lanceconn = get_lance_connection()
 
-    v = lanceconn.open_table("vectors")
-
     try:
+        v = lanceconn.open_table("vectors")
         v.cleanup_old_versions()
         v.create_fts_index("text", replace=True)
+    except FileNotFoundError as e:
+        print(f"Encountered FileNotFoundError: {e}")
+        # It should be possible to replace this entire try catch block w/ just this line. Doing this for now to avoid any uninentional changes in behavior if the table already exists.
 
     # if this errors then the FTS index is complete
-    except Exception as e:
-        raise e
-        pass
+        # Nic: Quick question, is this code irrelavent since all it does is raise the exception that would have been raised if the code was outside of a try block.
+    # except Exception as e:
+    #    raise e

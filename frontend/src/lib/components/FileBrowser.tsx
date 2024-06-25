@@ -30,6 +30,7 @@ import {
   FiDownload,
 } from "react-icons/fi";
 import { GetAllFiles } from "../requests";
+import FileUploadButton from "./FileUploader";
 
 enum sorts {
   none,
@@ -109,7 +110,6 @@ export default function FileExplorer() {
   const [state, setState] = useState<FileExploreState>(initState);
   const [loading, setLoading] = useState(true);
   const loadFiles = async () => {
-
     let files = await GetAllFiles();
     const stateFiles: RowData[] = files.map((f: FileType) => {
       return {
@@ -117,12 +117,12 @@ export default function FileExplorer() {
         data: f,
       };
     });
-		console.log(stateFiles);
+    console.log(stateFiles);
     setState({ ...state, files: stateFiles });
-		setLoading(false);
+    setLoading(false);
   };
   useEffect(() => {
-    if (loading) loadFiles()
+    if (loading) loadFiles();
   });
 
   const getSelectedIndex = (id: string) => {
@@ -269,6 +269,7 @@ export default function FileExplorer() {
             <Th width="10%"></Th>
             <Th width="10%"></Th> */}
             <Th width="2%">
+              <FileUploadButton />
               <Menu>
                 <MenuButton as={Button} rightIcon={<FiChevronDown />}>
                   Actions
