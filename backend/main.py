@@ -39,8 +39,6 @@ def full_fts_reindex() -> None:
         logger.info("detected new doc, successfully reindexed FTS")
         return
 
-    logger.debug("no new docs to index")
-
 
 @listener("increment_processed_docs")
 def increment_processed_docs(num: int) -> None:
