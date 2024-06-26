@@ -1,6 +1,4 @@
 # local development docker compose
-version: "3"
-
 services:
   frontend:
     build:
