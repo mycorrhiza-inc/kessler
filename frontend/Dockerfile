@@ -9,8 +9,6 @@ COPY config/frontend.env.local ./
 RUN mv /app/frontend.env.local /app/.env.local
 # build
 RUN npm run build
-# remove dev dependencies
-RUN npm prune --production
 FROM node:alpine
 WORKDIR /app
 # copy from build image
