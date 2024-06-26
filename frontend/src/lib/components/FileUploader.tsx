@@ -120,7 +120,7 @@ const UploadFileButton: React.FC = () => {
           <ModalBody>
             <Tabs>
               <TabList>
-                <Tab>Single File Upload</Tab>
+                <Tab>File Upload</Tab>
                 <Tab>Folder Upload</Tab>
               </TabList>
               <TabPanels>
@@ -131,8 +131,8 @@ const UploadFileButton: React.FC = () => {
                       <Input
                         type="file"
                         accept="*"
-                        onChange={onFileChange}
                         {...register("file")}
+                        onChange={onFileChange}
                       />
                     </FormControl>
                   </form>
@@ -143,10 +143,9 @@ const UploadFileButton: React.FC = () => {
                       <FormLabel>Folder</FormLabel>
                       <Input
                         type="file"
-                        webkitdirectory="true"
-                        directory="true"
-                        onChange={onFolderChange}
+                        accept="*"
                         {...register("folder")}
+                        onChange={onFolderChange}
                       />
                     </FormControl>
                   </form>
