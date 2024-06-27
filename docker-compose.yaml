@@ -13,6 +13,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.routers.frontend.tls.certresolver=myresolver"
       # - "traefik.http.routers.frontend.tls={}"
     expose:
       - "3000"
@@ -72,7 +74,9 @@ services:
       - ./volumes/tmp:/tmp/
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=PathPrefix(`/api`) && PathPrefix(`/schema`)"
+      - "traefik.http.routers.backend.rule=PathPrefix(`/api`) || PathPrefix(`/schema`)"
+      - "traefik.http.routers.backend.entrypoints=websecure"
+      - "traefik.http.routers.backend.tls.certresolver=myresolver"
       # - "traefik.http.routers.backend.tls={}"
       # - "traefik.http.middlewares.testheader.headers.accesscontrolalloworigin=*"
     command:
