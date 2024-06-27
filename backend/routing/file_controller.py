@@ -98,8 +98,6 @@ OS_GPU_COMPUTE_URL = os.environ["GPU_COMPUTE_URL"]
 OS_FILEDIR = Path("/files/")
 
 
-
-
 # import base64
 
 
@@ -308,17 +306,21 @@ class FileController(Controller):
 
         # text extraction
         def process_stage_one():
-            file_path = DocumentIngester(logger).get_default_filepath_from_hash(obj.hash)
+            file_path = DocumentIngester(logger).get_default_filepath_from_hash(
+                obj.hash
+            )
             # This process might spit out new metadata that was embedded in the document, ignoring for now
             processed_original_text = (
                 mdextract.process_raw_document_into_untranslated_text(
                     file_path, doc_metadata
                 )[0]
             )
-            logger.info(f"Successfully processed original text: {processed_original_text[0:20]}")
+            logger.info(
+                f"Successfully processed original text: {processed_original_text[0:20]}"
+            )
             # FIXME: We should probably come up with a better backup protocol then doing everything with hashes
             mdextract.backup_processed_text(
-                processed_original_text,obj.hash, doc_metadata, OS_BACKUP_FILEDIR
+                processed_original_text, obj.hash, doc_metadata, OS_BACKUP_FILEDIR
             )
             logger.info("Backed up markdown text")
             if obj.lang == "en":
@@ -383,7 +385,7 @@ class FileController(Controller):
                     "
                     )
                 # FIXME: The try catch exception code broke the plaintext error handling, since it still returns a 500 error, I removed it temporarially
-                #try:
+                # try:
                 #    match current_stage:
                 #        case "stage1":
                 #            current_stage = process_stage_one()
@@ -410,7 +412,7 @@ class FileController(Controller):
                 #            "
                 #            )
 
-                #except Exception as e:
+                # except Exception as e:
                 #    logger.error(e)
                 #    break
 

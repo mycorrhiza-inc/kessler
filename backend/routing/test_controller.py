@@ -1,4 +1,3 @@
-
 import os
 from pathlib import Path
 
@@ -10,7 +9,6 @@ from litestar.handlers.http_handlers.decorators import (
     delete,
     MediaType,
 )
-
 
 
 import json
@@ -27,16 +25,12 @@ class UUIDEncoder(json.JSONEncoder):
 # TODO : Create test that adds a file once we know what the file DB schema is going to look like
 
 
-
-
 # litestar only
 
 
 OS_TMPDIR = Path(os.environ["TMPDIR"])
 OS_GPU_COMPUTE_URL = os.environ["GPU_COMPUTE_URL"]
 OS_FILEDIR = Path("/files/")
-
-
 
 
 # import base64
@@ -55,7 +49,6 @@ OS_BACKUP_FILEDIR = OS_FILEDIR / Path("backup")
 
 class FileController(Controller):
     """File Controller"""
-
 
     @get(path="/test/run_suite")
     async def run_test_suite(self) -> str:

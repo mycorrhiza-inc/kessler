@@ -36,10 +36,14 @@ class MarkdownExtractor:
     def convert_text_into_eng(self, file_text: str, lang: str):
         if lang in ["en", "eng", "english", None]:
             return file_text
-        english_text = GPUComputeEndpoint(self.logger).translate_text(file_text, lang, "en")
+        english_text = GPUComputeEndpoint(self.logger).translate_text(
+            file_text, lang, "en"
+        )
         return english_text
 
-    def backup_processed_text(self, text: str,hash : str, metadata: dict, backupdir: Path) -> None:
+    def backup_processed_text(
+        self, text: str, hash: str, metadata: dict, backupdir: Path
+    ) -> None:
         savestring = create_markdown_string(
             text, metadata, include_previous_metadata=False
         )
@@ -56,7 +60,7 @@ class MarkdownExtractor:
 
     def process_raw_document_into_untranslated_text(
         self, file_loc: Path, metadata: dict, override_dir: Optional[Path] = None
-    ) -> Tuple[str,dict]:
+    ) -> Tuple[str, dict]:
         doctype = metadata["doctype"]
         lang = metadata["lang"]
 

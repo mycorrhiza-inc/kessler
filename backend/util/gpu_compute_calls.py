@@ -59,11 +59,11 @@ MARKER_ENDPOINT_URL = os.environ["MARKER_ENDPOINT_URL"]
 class GPUComputeEndpoint:
     def __init__(
         self,
-        logger : Any,
+        logger: Any,
         marker_endpoint_url: str = MARKER_ENDPOINT_URL,
         legacy_endpoint_url: str = "https://depricated-url.com",
     ):
-        self.logger=logger
+        self.logger = logger
         self.marker_endpoint_url = marker_endpoint_url
         self.endpoint_url = legacy_endpoint_url
 
@@ -80,7 +80,9 @@ class GPUComputeEndpoint:
                 "file": (filepath.name, file, "application/octet-stream"),
             }
             # Mke the POST request with files
-            self.logger.info(f"Contacting server at {self.marker_endpoint_url} to process pdf.")
+            self.logger.info(
+                f"Contacting server at {self.marker_endpoint_url} to process pdf."
+            )
             response = requests.post(url, files=files)
             print(f"Request Headers: response.request.headers")
             # Raise an exception if the request was unsuccessful
