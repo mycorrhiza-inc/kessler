@@ -45,10 +45,11 @@ export const GetAllFiles = async (): Promise<any> => {
       console.log(`error adding links:\n${e}`);
       return "failed request";
     }
-    return e.json();
+    let res_j = e.json();
+    if (res_j == undefined) { return [] }
+    else { return res_j }
   });
   if (result == undefined) return [];
-  console.log(result);
   let out = result.map((f: any) => {
     return {
       id: f.id.toString(),
@@ -59,4 +60,3 @@ export const GetAllFiles = async (): Promise<any> => {
   console.log(out);
   return out;
 };
-const RemoveLink = () => {};

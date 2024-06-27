@@ -1,6 +1,4 @@
 # local development docker compose
-version: "3"
-
 services:
   frontend:
     build:
@@ -54,7 +52,7 @@ services:
       - ./volumes/tmp:/tmp/
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=PathPrefix(`/api`)"
+      - "traefik.http.routers.backend.rule=PathPrefix(`/api`) && PathPrefix(`/schema`)"
       # - "traefik.http.middlewares.testheader.headers.accesscontrolalloworigin=*"
     command:
       # - "python"
