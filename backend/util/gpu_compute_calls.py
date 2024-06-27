@@ -71,7 +71,9 @@ class GPUComputeEndpoint:
         # The API endpoint you will be hitting
         # url = "http://api.mycor.io/v0/multimodal_asr/local-m4t"
         # FIXME : Work out what this url should fucking be
-        url = f"{self.marker_endpoint_url}"
+        # url = f"{self.marker_endpoint_url}"
+        # Hardcode now fix later 
+        url = "http://uttu-fedora:2718/process_pdf_upload"
         # url = "https://www.google.com/"
         # Open the file in binary mode
         with filepath.open("rb") as file:
@@ -88,15 +90,8 @@ class GPUComputeEndpoint:
             # Raise an exception if the request was unsuccessful
             response.raise_for_status()
 
-        # Parse the JSON response
-        assert False, str(response)
-        response_json = response.json()
-        # Extract the translated text from the JSON response
-        # translated_text = response_json["response"]
-
-        # Please forgive me lord
-        translated_text = str(response_json)
-        return translated_text
+        # Response for now returns just text, we can remove everything else
+        return str(response.text)
 
     def llm_nonlocal_raw_call(
         self, msg_history: list[dict], model_name: Optional[str]
