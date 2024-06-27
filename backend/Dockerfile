@@ -7,7 +7,7 @@ ENV VIRTUAL_ENV=/usr/local
 # RUN /install.sh && rm /install.sh
 
 WORKDIR /app
-RUN apt-get -y install pandoc
+RUN apt-get update && apt-get install -y pandoc
 COPY requirements.txt /app/requirements.txt
 # Uncomment for debugging python depenancy issue
 # COPY requirements-unlocked.txt /app/requirements.txt
