@@ -1,9 +1,7 @@
 from util.niclib import rand_string, rand_filepath
-import logging
 
 # Note: Refactoring imports.py
 
-import requests
 
 from typing import Optional, List, Union
 
@@ -38,7 +36,7 @@ class MarkdownExtractor:
     def convert_text_into_eng(self, file_text: str, lang: str):
         if lang in ["en", "eng", "english", None]:
             return file_text
-        english_text = GPUComputeEndpoint().translate_text(file_text, lang, "en")
+        english_text = GPUComputeEndpoint(self.logger).translate_text(file_text, lang, "en")
         return english_text
 
     def backup_processed_text(self, text: str, metadata: dict, backupdir: Path) -> None:
@@ -56,7 +54,8 @@ class MarkdownExtractor:
         lang = metadata["lang"]
 
         def process_pdf(filepath: Path) -> str:
-            return GPUComputeEndpoint().transcribe_pdf(filepath)
+            self.logger.info("processing pdf")
+            return GPUComputeEndpoint(self.logger).transcribe_pdf(filepath)
 
         # Take a file with a path of path and a pandoc type of doctype and convert it to pandoc markdown and return the output as a string.
         # TODO: Make it so that you dont need to run sudo apt install pandoc for it to work, and it bundles with the pandoc python library

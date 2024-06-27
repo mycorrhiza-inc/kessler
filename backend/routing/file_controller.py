@@ -98,6 +98,8 @@ OS_GPU_COMPUTE_URL = os.environ["GPU_COMPUTE_URL"]
 OS_FILEDIR = Path("/files/")
 
 
+
+
 # import base64
 
 
@@ -202,6 +204,8 @@ class FileController(Controller):
         tmpfile_cleanup()
 
         # NOTE: this is a dangeous query
+        # NOTE: Nicole- Also this doesnt allow for files with the same hash to have different metadata,
+        # Scrapping it is a good idea, it was designed to solve some issues I had during testing and adding the same dataset over and over
         # FIX: fix this to not allow for users to DOS files
         query = select(FileModel).where(FileModel.hash == filehash)
 
@@ -224,7 +228,7 @@ class FileController(Controller):
                 doctype=document_doctype,
                 lang=document_lang,
                 source=document_source,
-                metadata=metadata_str,
+                mdata=metadata_str,
                 stage="stage1",
                 hash=filehash,
                 summary=None,
@@ -288,10 +292,9 @@ class FileController(Controller):
         logger.info(type(obj))
         logger.info(obj)
         current_stage = obj.stage
-        doctype = obj.doctype
         logger.info(obj.doctype)
         mdextract = MarkdownExtractor(logger, OS_TMPDIR)
-        doc_metadata = json.loads(obj.metadata_str)
+        doc_metadata = json.loads(obj.mdata)
 
         response_code, response_message = (
             500,
@@ -303,12 +306,13 @@ class FileController(Controller):
 
         # text extraction
         def process_stage_one():
-
+            file_path = DocumentIngester(logger).get_default_filepath_from_hash(obj.hash)
             processed_original_text = (
                 mdextract.process_raw_document_into_untranslated_text(
-                    Path(obj.path), obj.doctype, obj.lang
+                    file_path, doc_metadata
                 )
             )
+            logger.info(f"Successfully processed original text: {processed_original_text[0:20]}")
             mdextract.backup_processed_text(
                 processed_original_text, doc_metadata, OS_BACKUP_FILEDIR
             )
@@ -324,28 +328,20 @@ class FileController(Controller):
 
         # text conversion
         def process_stage_two():
-            try:
-                if obj.lang == "en":
+            if obj.lang != "en":
+                try:
                     processed_english_text = mdextract.convert_text_into_eng(
                         obj.original_text, obj.lang
                     )
-                else:
+                    obj.english_text = processed_english_text
+                except Exception as e:
                     raise Exception(
                         "\
-                        Code is in an unreachable state, \
-                        this situation should have been caught \
-                        by an error in stage 1.\
-                    "
+                        failure in stage 2: \
+                        document was unable to be translated to english.\
+                    ",
+                        e,
                     )
-            except Exception as e:
-                obj.english_text = processed_english_text
-                raise Exception(
-                    "\
-                    failure in stage 2: \
-                    document was unable to be translated to english.\
-                ",
-                    e,
-                )
             return "stage3"
 
         # text commitment

@@ -11,7 +11,7 @@ import subprocess
 import requests
 import logging
 
-from typing import List, Optional
+from typing import List, Optional, Any
 
 from warnings import warn
 
@@ -20,7 +20,7 @@ import os
 OS_TMPDIR = Path(os.environ["TMPDIR"])
 
 
-# YOUR CPU SHALL BE SACRIFICED FOR OUR SERVER BANDWITH, MUAHAHAHAHAHA
+# Downsample audio before sending to server, human words dont convey that much information anyway
 def downsample_audio(
     filepath: Path, file_type: str, bitrate: int, tmpdir: Path
 ) -> Path:
@@ -59,9 +59,11 @@ MARKER_ENDPOINT_URL = os.environ["MARKER_ENDPOINT_URL"]
 class GPUComputeEndpoint:
     def __init__(
         self,
+        logger : Any,
         marker_endpoint_url: str = MARKER_ENDPOINT_URL,
         legacy_endpoint_url: str = "https://depricated-url.com",
     ):
+        self.logger=logger
         self.marker_endpoint_url = marker_endpoint_url
         self.endpoint_url = legacy_endpoint_url
 
@@ -78,6 +80,7 @@ class GPUComputeEndpoint:
                 "file": (filepath.name, file, "application/octet-stream"),
             }
             # Mke the POST request with files
+            self.logger.info(f"Contacting server at {self.marker_endpoint_url} to process pdf.")
             response = requests.post(url, files=files)
             print(f"Request Headers: response.request.headers")
             # Raise an exception if the request was unsuccessful
