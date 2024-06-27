@@ -3,6 +3,8 @@ llama-index-llms-groq
 llama-index-llms-openai
 llama-index-vector-stores-postgres
 
+lancedb-
+
 lancedb
 
 uvicorn
