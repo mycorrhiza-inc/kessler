@@ -306,6 +306,7 @@ class FileController(Controller):
 
         # text extraction
         def process_stage_one():
+            # FIXME: Change to deriving the filepath from the uri.
             file_path = DocumentIngester(logger).get_default_filepath_from_hash(
                 obj.hash
             )
