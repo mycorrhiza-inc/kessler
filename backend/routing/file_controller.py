@@ -168,6 +168,8 @@ class FileController(Controller):
 
         request.logger.info("DocumentIngester Created")
 
+        # tmpfile_path, metadata = (
+        # LSP is giving some kind of error, I am gonna worry about it later
         tmpfile_path, metadata, tmpfile_cleanup = (
             docingest.url_to_filepath_and_metadata(data.url)
         )
@@ -307,12 +309,14 @@ class FileController(Controller):
         # text extraction
         def process_stage_one():
             file_path = DocumentIngester(logger).get_default_filepath_from_hash(obj.hash)
+            # This process might spit out new metadata that was embedded in the document, ignoring for now
             processed_original_text = (
                 mdextract.process_raw_document_into_untranslated_text(
                     file_path, doc_metadata
-                )
+                )[0]
             )
             logger.info(f"Successfully processed original text: {processed_original_text[0:20]}")
+            # FIXME: We should probably come up with a better backup protocol then doing everything with hashes
             mdextract.backup_processed_text(
                 processed_original_text, doc_metadata, OS_BACKUP_FILEDIR
             )

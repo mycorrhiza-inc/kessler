@@ -3,7 +3,7 @@ from util.niclib import rand_string, rand_filepath
 # Note: Refactoring imports.py
 
 
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Tuple
 
 
 # from langchain.vectorstores import FAISS
@@ -44,12 +44,15 @@ class MarkdownExtractor:
             text, metadata, include_previous_metadata=False
         )
         backuppath = backupdir / Path(metadata["hash"] + ".md")
+        # FIXME: We should probably come up with a better backup protocol then doing everything with hashes
+        if backuppath.is_file():
+            backuppath.unlink(missing_ok=True)
         with open(backuppath, "w") as text_file:
             text_file.write(savestring)
 
     def process_raw_document_into_untranslated_text(
         self, file_loc: Path, metadata: dict, override_dir: Optional[Path] = None
-    ) -> str:
+    ) -> Tuple[str,dict]:
         doctype = metadata["doctype"]
         lang = metadata["lang"]
 
@@ -71,7 +74,7 @@ class MarkdownExtractor:
                 raise Exception(f"Error running pandoc command: {error_str}")
             return output_str
 
-        if not override_dir is None:
+        if override_dir is not None:
             hash = metadata["hash"]
             checkpath = override_dir / Path(f"{hash}/{hash}.md")
             # checkpath = override_dir / Path(hash + ".md")
