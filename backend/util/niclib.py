@@ -22,6 +22,19 @@ def Maybe(func: Callable) -> Callable:
     return lambda x: (None if x is None else func(x))
 
 
+def fizbuzz(maxiters: int) -> str:
+    loops = math.ceil(maxiters / 15)
+    return_str = ""
+    n = 0
+    for i in range(0, loops):
+        return_str = (
+            return_str
+            + f"FizzBuzz\n{n+1}\n{n+2}\nFizz\n{n+4}\nBuzz\nFizz\n{n+7}\n{n+8}\nFizz\nBuzz\n{n+11}\nFizz\n{n+13}\n{n+14}\n"
+        )
+        n += 15
+    return return_str
+
+
 def clean_and_empty_directory(dir: Path):
     files = glob.glob(str(dir / Path("*")))
     for f in files:

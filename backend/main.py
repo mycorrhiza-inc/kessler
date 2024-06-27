@@ -12,6 +12,7 @@ from litestar.di import Provide
 from litestar.contrib.sqlalchemy.base import UUIDBase
 
 from models import utils
+from routing.test_controller import TestController
 from util.logging import logging_config
 from routing.file_controller import FileController
 from routing.search_controller import SearchController
@@ -57,8 +58,8 @@ async def on_startup() -> None:
 def plain_text_exception_handler(request: Request, exc: Exception) -> Response:
     """Default handler for exceptions subclassed from HTTPException."""
     tb = traceback.format_exc()
-    logger.warn(f"exception: {exc}")
-    logger.warn(f"traceback:\n{tb}")
+    request.logger.warn(f"exception: {exc}")
+    request.logger.warn(f"traceback:\n{tb}")
     status_code = getattr(exc, "status_code", HTTP_500_INTERNAL_SERVER_ERROR)
     details = getattr(exc, "detail", "")
 
@@ -95,7 +96,7 @@ async def provide_limit_offset_pagination(
 cors_config = CORSConfig(allow_origins=["*"])
 
 api_router = Router(
-    path="/api", route_handlers=[FileController, SearchController, RagController]
+    path="/api", route_handlers=[FileController, SearchController, RagController, TestController]
 )
 
 app = Litestar(

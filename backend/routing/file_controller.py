@@ -166,6 +166,8 @@ class FileController(Controller):
 
         request.logger.info("DocumentIngester Created")
 
+        # tmpfile_path, metadata = (
+        # LSP is giving some kind of error, I am gonna worry about it later
         tmpfile_path, metadata, tmpfile_cleanup = (
             docingest.url_to_filepath_and_metadata(data.url)
         )
@@ -202,6 +204,8 @@ class FileController(Controller):
         tmpfile_cleanup()
 
         # NOTE: this is a dangeous query
+        # NOTE: Nicole- Also this doesnt allow for files with the same hash to have different metadata,
+        # Scrapping it is a good idea, it was designed to solve some issues I had during testing and adding the same dataset over and over
         # FIX: fix this to not allow for users to DOS files
         query = select(FileModel).where(FileModel.hash == filehash)
 
@@ -224,7 +228,7 @@ class FileController(Controller):
                 doctype=document_doctype,
                 lang=document_lang,
                 source=document_source,
-                metadata=metadata_str,
+                mdata=metadata_str,
                 stage="stage1",
                 hash=filehash,
                 summary=None,
@@ -288,10 +292,9 @@ class FileController(Controller):
         logger.info(type(obj))
         logger.info(obj)
         current_stage = obj.stage
-        doctype = obj.doctype
         logger.info(obj.doctype)
         mdextract = MarkdownExtractor(logger, OS_TMPDIR)
-        doc_metadata = json.loads(obj.metadata_str)
+        doc_metadata = json.loads(obj.mdata)
 
         response_code, response_message = (
             500,
@@ -303,15 +306,24 @@ class FileController(Controller):
 
         # text extraction
         def process_stage_one():
-
+            # FIXME: Change to deriving the filepath from the uri.
+            file_path = DocumentIngester(logger).get_default_filepath_from_hash(
+                obj.hash
+            )
+            # This process might spit out new metadata that was embedded in the document, ignoring for now
             processed_original_text = (
                 mdextract.process_raw_document_into_untranslated_text(
-                    Path(obj.path), obj.doctype, obj.lang
-                )
+                    file_path, doc_metadata
+                )[0]
             )
+            logger.info(
+                f"Successfully processed original text: {processed_original_text[0:20]}"
+            )
+            # FIXME: We should probably come up with a better backup protocol then doing everything with hashes
             mdextract.backup_processed_text(
-                processed_original_text, doc_metadata, OS_BACKUP_FILEDIR
+                processed_original_text, obj.hash, doc_metadata, OS_BACKUP_FILEDIR
             )
+            logger.info("Backed up markdown text")
             if obj.lang == "en":
                 # Write directly to the english text box if
                 # original text is identical to save space.
@@ -324,28 +336,20 @@ class FileController(Controller):
 
         # text conversion
         def process_stage_two():
-            try:
-                if obj.lang == "en":
+            if obj.lang != "en":
+                try:
                     processed_english_text = mdextract.convert_text_into_eng(
                         obj.original_text, obj.lang
                     )
-                else:
+                    obj.english_text = processed_english_text
+                except Exception as e:
                     raise Exception(
                         "\
-                        Code is in an unreachable state, \
-                        this situation should have been caught \
-                        by an error in stage 1.\
-                    "
+                        failure in stage 2: \
+                        document was unable to be translated to english.\
+                    ",
+                        e,
                     )
-            except Exception as e:
-                obj.english_text = processed_english_text
-                raise Exception(
-                    "\
-                    failure in stage 2: \
-                    document was unable to be translated to english.\
-                ",
-                    e,
-                )
             return "stage3"
 
         # text commitment
@@ -356,36 +360,62 @@ class FileController(Controller):
                 raise Exception("Failure in adding document to vector database", e)
 
         while True:
-            try:
-                match current_stage:
-                    case "stage1":
-                        current_stage = process_stage_one()
-                    case "stage2":
-                        current_stage = process_stage_two()
-                    case "stage3":
-                        current_stage = process_stage_three()
-                    case "completed":
-                        response_code, response_message = (
-                            200,
-                            "Document Fully Processed.",
-                        )
-                        logger.info(current_stage)
-                        obj.stage = current_stage
-                        logger.info(response_code)
-                        logger.info(response_message)
-                        _ = files_repo.update(obj)
-                        await files_repo.session.commit()
-                        break
-                    case _:
-                        raise Exception(
-                            "Document was incorrectly added to database, \
-                            try readding it again.\
-                        "
-                        )
+            match current_stage:
+                case "stage1":
+                    current_stage = process_stage_one()
+                case "stage2":
+                    current_stage = process_stage_two()
+                case "stage3":
+                    current_stage = process_stage_three()
+                case "completed":
+                    response_code, response_message = (
+                        200,
+                        "Document Fully Processed.",
+                    )
+                    logger.info(current_stage)
+                    obj.stage = current_stage
+                    logger.info(response_code)
+                    logger.info(response_message)
+                    _ = files_repo.update(obj)
+                    await files_repo.session.commit()
+                    break
+                case _:
+                    raise Exception(
+                        "Document was incorrectly added to database, \
+                        try readding it again.\
+                    "
+                    )
+                # FIXME: The try catch exception code broke the plaintext error handling, since it still returns a 500 error, I removed it temporarially
+                # try:
+                #    match current_stage:
+                #        case "stage1":
+                #            current_stage = process_stage_one()
+                #        case "stage2":
+                #            current_stage = process_stage_two()
+                #        case "stage3":
+                #            current_stage = process_stage_three()
+                #        case "completed":
+                #            response_code, response_message = (
+                #                200,
+                #                "Document Fully Processed.",
+                #            )
+                #            logger.info(current_stage)
+                #            obj.stage = current_stage
+                #            logger.info(response_code)
+                #            logger.info(response_message)
+                #            _ = files_repo.update(obj)
+                #            await files_repo.session.commit()
+                #            break
+                #        case _:
+                #            raise Exception(
+                #                "Document was incorrectly added to database, \
+                #                try readding it again.\
+                #            "
+                #            )
 
-            except Exception as e:
-                logger.error(e)
-                break
+                # except Exception as e:
+                #    logger.error(e)
+                #    break
 
     @post(path="/files/upload/from/md", media_type=MediaType.TEXT)
     async def upload_from_markdown(

@@ -20,6 +20,7 @@ import {
   Container,
   Text,
   Select,
+  SkeletonText,
 } from "@chakra-ui/react";
 import {
   Form,
@@ -133,6 +134,8 @@ interface MessageComponentProps {
   editMessage: () => {};
 }
 
+// FIX CODE TO MAKE THIS MORE DRY'Y
+
 function MessageComponent({
   message = {
     role: "user",
@@ -152,7 +155,7 @@ function MessageComponent({
             ? "aquamarine"
             : "teal.600"
           : colorMode === "light"
-            ? "antiquewhite"
+            ? "gray.200"
             : "gray.700"
       }
       borderRadius="10px"
@@ -160,7 +163,7 @@ function MessageComponent({
       height="auto"
       overflow="auto"
       minHeight="100px"
-      justifyContent={message.role ? "right" : "left"}
+      justifyContent={message.role == "user" ? "right" : "left"}
       padding="20px"
     >
       {/* enclosing the message */}
@@ -172,10 +175,7 @@ function MessageComponent({
         justifyContent={message.role == "user" ? "right" : "left"}
         // h="100vh"
       >
-        {/* role message */}
-        <div>
-          <MarkdownRenderer>{message.content}</MarkdownRenderer>
-        </div>
+        <MarkdownRenderer>{message.content}</MarkdownRenderer>
         {/* <Box width="100%" height="50px">
           {!message.role && <div>Regenerate</div>}{" "}
           {message.role && <div>Edit</div>}
@@ -184,6 +184,37 @@ function MessageComponent({
     </Box>
   );
 }
+
+function AwaitingMessageSkeleton({}: {}) {
+  const { colorMode } = useColorMode();
+  return (
+    <Box
+      width="90%"
+      background={colorMode === "light" ? "gray.200" : "gray.700"}
+      borderRadius="10px"
+      // maxWidth="800px"
+      height="auto"
+      overflow="auto"
+      minHeight="100px"
+      justifyContent={false ? "right" : "left"}
+      padding="20px"
+    >
+      <SkeletonText
+        startColor="pink.500"
+        endColor="orange.500"
+        mt="4"
+        noOfLines={4}
+        spacing="4"
+        skeletonHeight="2"
+      />
+      {/* <Box width="100%" height="50px">
+          {!message.role && <div>Regenerate</div>}{" "}
+          {message.role && <div>Edit</div>}
+        </Box> */}
+    </Box>
+  );
+}
+// <SkeletonText mt="4" noOfLines={4} spacing="4" skeletonHeight="2" />
 function ChatBox({
   chatUrl,
   modelOptions,
@@ -194,6 +225,7 @@ function ChatBox({
   // const [messages, setMessages] = useState<Message[]>(startingMessages);
   const [messages, setMessages] = useState<Message[]>([]);
   const [needsResponse, setResponse] = useState(false);
+  const [loadingResponse, setLoadingResponse] = useState(false);
   const [selectedModel, setSelectedModel] = useState("default");
   const [userChatbox, setUserChatbox] = useState("");
   // let messages: Message[] = [];
@@ -206,6 +238,7 @@ function ChatBox({
     console.log(`chat history`);
     console.log(chat_hist);
     const modelToSend = selectedModel === "default" ? undefined : selectedModel;
+    setLoadingResponse(true);
     let result = await fetch(
       // FIXME : Add the base url instead of localhost to make it more amenable to this stuff.
       // "http://localhost/api/rag/rag_chat",
@@ -227,6 +260,7 @@ function ChatBox({
     )
       .then((resp) => {
         console.log("completed request");
+        setLoadingResponse(false);
         console.log(resp);
         if (resp.status < 200 || resp.status > 299) {
           console.log(`error with request:\n${resp}`);
@@ -314,6 +348,7 @@ function ChatBox({
             />
           );
         })}
+        {loadingResponse && <AwaitingMessageSkeleton />}
         <Box minHeight="300px" width="100%" color="red" />
       </VStack>
       <Form onSubmit={sendMessage}>

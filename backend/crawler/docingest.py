@@ -213,10 +213,10 @@ class DocumentIngester:
         if hashpath is None:
             hashpath = self.rawfile_savedir
         filepath.parent.mkdir(exist_ok=True, parents=True)
-        self.logger.info(f"Getting hash")
+        self.logger.info("Getting hash")
         b264_hash = self.get_blake2_str(filepath)
         self.logger.info(f"Got hash {b264_hash}")
-        saveloc = hashpath / Path(b264_hash)
+        saveloc = self.get_default_filepath_from_hash(b264_hash, hashpath)
 
         self.logger.info(f"Saving file to {saveloc}")
         shutil.copyfile(filepath, saveloc)
@@ -225,6 +225,17 @@ class DocumentIngester:
         else:
             self.logger.error(f"File could not be saved to : {saveloc}")
         return (b264_hash, saveloc)
+
+    def get_default_filepath_from_hash(
+        self, hash: str, hashpath: Optional[Path] = None
+    ) -> Path:
+        if hashpath is None:
+            hashpath = self.rawfile_savedir
+        hashpath.parent.mkdir(exist_ok=True, parents=True)
+        saveloc = hashpath / Path(hash)
+        if saveloc.exists():
+            self.logger.info(f"File already at {saveloc}, do not copy any file to it.")
+        return saveloc
 
     def backup_metadata_to_hash(self, metadata: dict, hash: str) -> Path:
         def backup_metadata_to_filepath(metadata: dict, filepath: Path) -> Path:
