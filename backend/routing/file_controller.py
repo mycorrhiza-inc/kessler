@@ -318,8 +318,9 @@ class FileController(Controller):
             logger.info(f"Successfully processed original text: {processed_original_text[0:20]}")
             # FIXME: We should probably come up with a better backup protocol then doing everything with hashes
             mdextract.backup_processed_text(
-                processed_original_text, doc_metadata, OS_BACKUP_FILEDIR
+                processed_original_text,obj.hash, doc_metadata, OS_BACKUP_FILEDIR
             )
+            logger.info("Backed up markdown text")
             if obj.lang == "en":
                 # Write directly to the english text box if
                 # original text is identical to save space.
@@ -356,36 +357,62 @@ class FileController(Controller):
                 raise Exception("Failure in adding document to vector database", e)
 
         while True:
-            try:
-                match current_stage:
-                    case "stage1":
-                        current_stage = process_stage_one()
-                    case "stage2":
-                        current_stage = process_stage_two()
-                    case "stage3":
-                        current_stage = process_stage_three()
-                    case "completed":
-                        response_code, response_message = (
-                            200,
-                            "Document Fully Processed.",
-                        )
-                        logger.info(current_stage)
-                        obj.stage = current_stage
-                        logger.info(response_code)
-                        logger.info(response_message)
-                        _ = files_repo.update(obj)
-                        await files_repo.session.commit()
-                        break
-                    case _:
-                        raise Exception(
-                            "Document was incorrectly added to database, \
-                            try readding it again.\
-                        "
-                        )
+            match current_stage:
+                case "stage1":
+                    current_stage = process_stage_one()
+                case "stage2":
+                    current_stage = process_stage_two()
+                case "stage3":
+                    current_stage = process_stage_three()
+                case "completed":
+                    response_code, response_message = (
+                        200,
+                        "Document Fully Processed.",
+                    )
+                    logger.info(current_stage)
+                    obj.stage = current_stage
+                    logger.info(response_code)
+                    logger.info(response_message)
+                    _ = files_repo.update(obj)
+                    await files_repo.session.commit()
+                    break
+                case _:
+                    raise Exception(
+                        "Document was incorrectly added to database, \
+                        try readding it again.\
+                    "
+                    )
+                # FIXME: The try catch exception code broke the plaintext error handling, since it still returns a 500 error, I removed it temporarially
+                #try:
+                #    match current_stage:
+                #        case "stage1":
+                #            current_stage = process_stage_one()
+                #        case "stage2":
+                #            current_stage = process_stage_two()
+                #        case "stage3":
+                #            current_stage = process_stage_three()
+                #        case "completed":
+                #            response_code, response_message = (
+                #                200,
+                #                "Document Fully Processed.",
+                #            )
+                #            logger.info(current_stage)
+                #            obj.stage = current_stage
+                #            logger.info(response_code)
+                #            logger.info(response_message)
+                #            _ = files_repo.update(obj)
+                #            await files_repo.session.commit()
+                #            break
+                #        case _:
+                #            raise Exception(
+                #                "Document was incorrectly added to database, \
+                #                try readding it again.\
+                #            "
+                #            )
 
-            except Exception as e:
-                logger.error(e)
-                break
+                #except Exception as e:
+                #    logger.error(e)
+                #    break
 
     @post(path="/files/upload/from/md", media_type=MediaType.TEXT)
     async def upload_from_markdown(

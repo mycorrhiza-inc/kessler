@@ -39,11 +39,15 @@ class MarkdownExtractor:
         english_text = GPUComputeEndpoint(self.logger).translate_text(file_text, lang, "en")
         return english_text
 
-    def backup_processed_text(self, text: str, metadata: dict, backupdir: Path) -> None:
+    def backup_processed_text(self, text: str,hash : str, metadata: dict, backupdir: Path) -> None:
         savestring = create_markdown_string(
             text, metadata, include_previous_metadata=False
         )
-        backuppath = backupdir / Path(metadata["hash"] + ".md")
+        backuppath = backupdir / Path(hash + ".md")
+        # Seems slow to check every time a file is backed up
+        backuppath.parent.mkdir(parents=True, exist_ok=True)
+        if backuppath.exists():
+            backuppath.unlink(missing_ok=True)
         # FIXME: We should probably come up with a better backup protocol then doing everything with hashes
         if backuppath.is_file():
             backuppath.unlink(missing_ok=True)
