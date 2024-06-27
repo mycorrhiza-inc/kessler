@@ -12,10 +12,12 @@ services:
       # - ./frontend/public:/app/public
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.frontend.rule=Host(`app.kessler.xyz`) && PathPrefix(`/`)"
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.routers.frontend.tls.certresolver=myresolver"
-      # - "traefik.http.routers.frontend.tls={}"
+      - "traefik.http.routers.whoami.rule=Host(`app.kessler.xyz`)"
+      - "traefik.http.routers.whoami.entrypoints=websecure"
+      - "traefik.http.routers.whoami.tls.certresolver=myresolver"
     expose:
       - "3000"
     command:
@@ -44,14 +46,6 @@ services:
       - "./letsencrypt:/letsencrypt"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
 
-  whoami:
-    image: "traefik/whoami"
-    container_name: "simple-service"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.whoami.rule=Host(`app.kessler.xyz`)"
-      - "traefik.http.routers.whoami.entrypoints=websecure"
-      - "traefik.http.routers.whoami.tls.certresolver=myresolver"
 
   rabbitmq:
     image: rabbitmq:latest
@@ -74,7 +68,7 @@ services:
       - ./volumes/tmp:/tmp/
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=PathPrefix(`/api`) || PathPrefix(`/schema`)"
+      - "traefik.http.routers.backend.rule=Host(`app.kessler.xyz`) && PathPrefix(`/api`) || PathPrefix(`/schema`)"
       - "traefik.http.routers.backend.entrypoints=websecure"
       - "traefik.http.routers.backend.tls.certresolver=myresolver"
       # - "traefik.http.routers.backend.tls={}"
