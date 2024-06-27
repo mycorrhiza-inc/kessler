@@ -343,21 +343,19 @@ class FileController(Controller):
                     )
                     obj.english_text = processed_english_text
                 except Exception as e:
-                    raise Exception(
-                        "\
-                        failure in stage 2: \
-                        document was unable to be translated to english.\
-                    ",
-                        e,
-                    )
+                    raise Exception("failure in stage 2: \ndocument was unable to be translated to english.",e)
+            else:
+                raise ValueError("failure in stage 2: \n Code is in an unreachable state, a document cannot be english and not english",)
             return "stage3"
 
         # text commitment
         def process_stage_three():
+            logger.info("Adding Document to Vector Database")
             try:
                 add_document_to_db_from_text(obj.english_text, doc_metadata)
             except Exception as e:
                 raise Exception("Failure in adding document to vector database", e)
+            return "completed"
 
         while True:
             match current_stage:

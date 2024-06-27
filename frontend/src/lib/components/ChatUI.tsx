@@ -152,8 +152,8 @@ function MessageComponent({
       background={
         message.role === "user"
           ? colorMode === "light"
-            ? "aquamarine"
-            : "teal.600"
+            ? "teal.100"
+            : "teal.700"
           : colorMode === "light"
             ? "gray.200"
             : "gray.700"
