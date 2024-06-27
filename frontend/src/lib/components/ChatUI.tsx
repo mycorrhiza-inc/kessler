@@ -196,7 +196,7 @@ function AwaitingMessageSkeleton({}: {}) {
       height="auto"
       overflow="auto"
       minHeight="100px"
-      justifyContent={"assistant" == "user" ? "right" : "left"}
+      justifyContent={false ? "right" : "left"}
       padding="20px"
     >
       <SkeletonText
