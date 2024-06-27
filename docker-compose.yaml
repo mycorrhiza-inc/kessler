@@ -22,7 +22,7 @@ services:
 
   reverse-proxy:
     # official image
-    image: traefik:v2.11
+    image: traefik:v3.0
     command:
       - "--log.level=DEBUG"
       - "--api.insecure=true"
@@ -31,10 +31,11 @@ services:
       - "--entryPoints.websecure.address=:443"
       - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
       - "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
-      - "--certificatesresolvers.myresolver.acme.email=mbright@kessler.com"
+      - "--certificatesresolvers.myresolver.acme.email=mbright@kessler.xyz"
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
     ports:
       - "80:80"
+      - "443:443"
       - "8083:8080"
     volumes:
       - "./letsencrypt:/letsencrypt"
