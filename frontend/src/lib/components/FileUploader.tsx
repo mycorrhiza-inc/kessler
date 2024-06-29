@@ -71,10 +71,10 @@ const UploadFileButton: React.FC = () => {
   };
 
   const onSubmit = async () => {
-    if (!selectedFile) {
+    if (!selectedFile && !selectedFiles) {
       toast({
-        title: "No file selected",
-        description: "Please select a file to upload.",
+        title: "No file or folder selected",
+        description: "Please select a file or folder to upload.",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -82,30 +82,32 @@ const UploadFileButton: React.FC = () => {
       return;
     }
 
-    await uploadFile(selectedFile);
+    if (selectedFile) {
+      await uploadFile(selectedFile);
+    }
+
+    if (selectedFiles) {
+      for (let i = 0; i < selectedFiles.length; i++) {
+        await uploadFile(selectedFiles[i]);
+      }
+    }
+
     reset();
     setSelectedFile(null);
+    setSelectedFiles(null);
     onClose();
   };
 
-  const onFolderSubmit = async () => {
-    if (!selectedFiles) {
-      toast({
-        title: "No folder selected",
-        description: "Please select a folder to upload.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    for (let i = 0; i < selectedFiles.length; i++) {
-      await uploadFile(selectedFiles[i]);
-    }
-
+  const onUrlSubmit = (data: { url: string }) => {
+    // Dummy function to process URL
+    toast({
+      title: "URL processed",
+      description: `The URL ${data.url} has been processed.`,
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+    });
     reset();
-    setSelectedFiles(null);
     onClose();
   };
 
@@ -120,8 +122,8 @@ const UploadFileButton: React.FC = () => {
           <ModalBody>
             <Tabs>
               <TabList>
-                <Tab>File Upload</Tab>
-                <Tab>Folder Upload</Tab>
+                <Tab>File/Folder Upload</Tab>
+                <Tab>Process URL</Tab>
               </TabList>
               <TabPanels>
                 <TabPanel>
@@ -135,18 +137,23 @@ const UploadFileButton: React.FC = () => {
                         onChange={onFileChange}
                       />
                     </FormControl>
-                  </form>
-                </TabPanel>
-                <TabPanel>
-                  <form onSubmit={handleSubmit(onFolderSubmit)}>
-                    <FormControl>
+                    <FormControl mt={4}>
                       <FormLabel>Folder</FormLabel>
                       <Input
                         type="file"
                         accept="*"
+                        multiple
                         {...register("folder")}
                         onChange={onFolderChange}
                       />
+                    </FormControl>
+                  </form>
+                </TabPanel>
+                <TabPanel>
+                  <form onSubmit={handleSubmit(onUrlSubmit)}>
+                    <FormControl>
+                      <FormLabel>URL</FormLabel>
+                      <Input type="text" {...register("url")} />
                     </FormControl>
                   </form>
                 </TabPanel>
@@ -160,9 +167,9 @@ const UploadFileButton: React.FC = () => {
             <Button
               colorScheme="blue"
               mr={3}
-              onClick={handleSubmit(onFolderSubmit)}
+              onClick={handleSubmit(onUrlSubmit)}
             >
-              Upload Folder
+              Process URL
             </Button>
             <Button variant="ghost" onClick={onClose}>
               Close
@@ -173,5 +180,3 @@ const UploadFileButton: React.FC = () => {
     </>
   );
 };
-
-export default UploadFileButton;
