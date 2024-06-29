@@ -180,3 +180,5 @@ const UploadFileButton: React.FC = () => {
     </>
   );
 };
+
+export default UploadFileButton;
