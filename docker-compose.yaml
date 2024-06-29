@@ -19,7 +19,7 @@ services:
       - "traefik.http.routers.whoami.entrypoints=websecure"
       - "traefik.http.routers.whoami.tls.certresolver=myresolver"
     expose:
-      - "3000"
+      - 3000
     command:
       - "npm"
       - "run"
@@ -45,7 +45,6 @@ services:
     volumes:
       - "./letsencrypt:/letsencrypt"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
-
 
   rabbitmq:
     image: rabbitmq:latest
@@ -87,8 +86,6 @@ services:
       - "--reload"
     expose:
       - 5505
-    ports:
-      - "5505:5505"
 
   database:
     image: pgvector/pgvector:pg16
