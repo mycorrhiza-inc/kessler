@@ -69,7 +69,6 @@ const UploadFileButton: React.FC = () => {
       });
     }
   };
-
   const onSubmit = async () => {
     if (!selectedFile && !selectedFiles) {
       toast({
@@ -98,17 +97,42 @@ const UploadFileButton: React.FC = () => {
     onClose();
   };
 
-  const onUrlSubmit = (data: { url: string }) => {
-    // Dummy function to process URL
-    toast({
-      title: "URL processed",
-      description: `The URL ${data.url} has been processed.`,
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    });
-    reset();
-    onClose();
+  const onUrlSubmit = async (data: any) => {
+    try {
+      const response = await fetch(
+        "https://app.kessler.xyz/api/files/url_upload",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ url: data.url }),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+
+      toast({
+        title: "URL processed",
+        description: `The URL ${data.url} has been processed.`,
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      toast({
+        title: "Error processing URL",
+        description: `There was an error processing the URL`,
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      reset();
+      onClose();
+    }
   };
 
   return (
@@ -134,7 +158,9 @@ const UploadFileButton: React.FC = () => {
                         type="file"
                         accept="*"
                         {...register("file")}
-                        onChange={onFileChange}
+                        onChange={(e) =>
+                          setSelectedFile(e.target.files?.[0] || null)
+                        }
                       />
                     </FormControl>
                     <FormControl mt={4}>
@@ -144,9 +170,12 @@ const UploadFileButton: React.FC = () => {
                         accept="*"
                         multiple
                         {...register("folder")}
-                        onChange={onFolderChange}
+                        onChange={(e) =>
+                          setSelectedFiles(Array.from(e.target.files || []))
+                        }
                       />
                     </FormControl>
+                    <Button type="submit">Submit</Button>
                   </form>
                 </TabPanel>
                 <TabPanel>
@@ -155,6 +184,7 @@ const UploadFileButton: React.FC = () => {
                       <FormLabel>URL</FormLabel>
                       <Input type="text" {...register("url")} />
                     </FormControl>
+                    <Button type="submit">Process URL</Button>
                   </form>
                 </TabPanel>
               </TabPanels>
@@ -180,5 +210,4 @@ const UploadFileButton: React.FC = () => {
     </>
   );
 };
-
 export default UploadFileButton;
