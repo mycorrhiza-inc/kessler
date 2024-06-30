@@ -171,6 +171,8 @@ const UploadFileButton: React.FC = () => {
                         multiple
                         {...register("folder")}
                         onChange={(e) =>
+                          // FIXME: Figure out proper type before sumitting PR
+                          // @ts-ignore
                           setSelectedFiles(Array.from(e.target.files || []))
                         }
                       />
