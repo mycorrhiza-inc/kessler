@@ -190,6 +190,7 @@ function AwaitingMessageSkeleton({}: {}) {
   return (
     <Box
       width="90%"
+      // probably a good idea to use a hook like this useColorModeValue(lightModeValue, darkModeValue)
       background={colorMode === "light" ? "gray.200" : "gray.700"}
       borderRadius="10px"
       // maxWidth="800px"

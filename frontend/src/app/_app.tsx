@@ -9,10 +9,7 @@ import "../app/globals.css";
 function MyApp({ Component, pageProps }: AppProps) {
   return (
     <Chakra cookies={pageProps.cookies}>
-      <ChakraProvider theme={theme}>
-        <ColorModeScript initialColorMode={theme.config.initialColorMode} />
-        <Component {...pageProps} />
-      </ChakraProvider>
+      <Component {...pageProps} />
     </Chakra>
   );
 }
