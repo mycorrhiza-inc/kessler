@@ -2,14 +2,15 @@
 
 import { Chakra } from "../lib/Chakra";
 import { AppProps } from "next/app";
-import { ChakraProvider, ColorModeScript } from "@chakra-ui/react";
-import theme from "../app/theme";
 import "../app/globals.css";
+import { DarkMode } from "@chakra-ui/react";
 
 function MyApp({ Component, pageProps }: AppProps) {
   return (
     <Chakra cookies={pageProps.cookies}>
-      <Component {...pageProps} />
+      <DarkMode>
+        <Component {...pageProps} />
+      </DarkMode>
     </Chakra>
   );
 }
