@@ -25,7 +25,7 @@ export default function RootLayout({
       <html lang="en">
         <body>
           <ColorModeScript initialColorMode={theme.config.initialColorMode} />
-          <ChakraProvider theme={theme}>
+          <ChakraProvider>
             <DarkMode>
               <SaasProvider>{children}</SaasProvider>
             </DarkMode>
@@ -35,7 +35,6 @@ export default function RootLayout({
     </ClerkProvider>
   );
 }
-// <SaasProvider>{children}</SaasProvider>
 
 // import type { Metadata } from "next";
 // import { Inter } from "next/font/google";

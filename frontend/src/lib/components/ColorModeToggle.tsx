@@ -8,7 +8,7 @@ const ColorModeToggle = () => {
     <IconButton
       aria-label="Toggle color mode"
       icon={colorMode === "light" ? <FiMoon /> : <FiSun />}
-      // onClick={toggleColorMode}
+      onClick={toggleColorMode}
       variant="ghost"
     />
   );
