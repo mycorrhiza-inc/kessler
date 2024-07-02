@@ -1,4 +1,5 @@
 // layout.tsx
+// "use client";
 import { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
@@ -34,6 +35,7 @@ export default function RootLayout({
     </ClerkProvider>
   );
 }
+// <SaasProvider>{children}</SaasProvider>
 
 // import type { Metadata } from "next";
 // import { Inter } from "next/font/google";
