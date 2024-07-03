@@ -389,7 +389,7 @@ function ChatBox({
               }}
               value={userChatbox}
               // FIXME : Figure out the proper type for this
-              onChange={(e: any) => setUserChatbox(e.targetvalue)}
+              onChange={(e: any) => setUserChatbox(e.target.value)}
             />
             <Center padding="10px">
               <IconButton
