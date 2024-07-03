@@ -163,20 +163,6 @@ const UploadFileButton: React.FC = () => {
                         }
                       />
                     </FormControl>
-                    <FormControl mt={4}>
-                      <FormLabel>Folder</FormLabel>
-                      <Input
-                        type="file"
-                        accept="*"
-                        multiple
-                        {...register("folder")}
-                        onChange={(e) =>
-                          // FIXME: Figure out proper type before sumitting PR
-                          // @ts-ignore
-                          setSelectedFiles(Array.from(e.target.files || []))
-                        }
-                      />
-                    </FormControl>
                     <Button type="submit">Submit</Button>
                   </form>
                 </TabPanel>
@@ -213,3 +199,17 @@ const UploadFileButton: React.FC = () => {
   );
 };
 export default UploadFileButton;
+
+// <FormControl mt={4}>
+//   <FormLabel>Folder</FormLabel>
+//   <Input
+//     type="file"
+//     accept="*"
+//     multiple
+//     {...register("folder")}
+//     onChange={(e) =>
+//       // FIXME: Figure out proper type before sumitting PR
+//       setSelectedFiles(Array.from(e.target.files || []))
+//     }
+//   />
+// </FormControl>;

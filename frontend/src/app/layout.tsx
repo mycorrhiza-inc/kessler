@@ -26,9 +26,7 @@ export default function RootLayout({
         <body>
           <ColorModeScript initialColorMode={theme.config.initialColorMode} />
           <ChakraProvider>
-            <DarkMode>
-              <SaasProvider>{children}</SaasProvider>
-            </DarkMode>
+            <SaasProvider>{children}</SaasProvider>
           </ChakraProvider>
         </body>
       </html>

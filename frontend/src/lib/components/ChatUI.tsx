@@ -31,7 +31,7 @@ import {
   SubmitButton,
 } from "@saas-ui/react";
 import { FiArrowUpCircle } from "react-icons/fi";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { initialState } from "node_modules/@clerk/nextjs/dist/types/app-router/server/auth";
 import { useColorMode } from "@chakra-ui/react";
 
@@ -169,7 +169,7 @@ function MessageComponent({
         // divider={<StackDivider borderColor="gray.200" />}
         spacing={4}
         // align="stretch"
-        overflowY="scroll"
+        // overflowY="scroll"
         justifyContent={message.role == "user" ? "right" : "left"}
         // h="100vh"
       >
@@ -227,6 +227,7 @@ function ChatBox({
   const [loadingResponse, setLoadingResponse] = useState(false);
   const [selectedModel, setSelectedModel] = useState("default");
   const [userChatbox, setUserChatbox] = useState("");
+  const formRef = useRef<HTMLFormElement>(null);
   // let messages: Message[] = [];
 
   const getResponse = async () => {
@@ -326,7 +327,7 @@ function ChatBox({
         divider={<StackDivider borderColor="gray.200" />}
         spacing={4}
         flexDir="column"
-        overflow="scroll"
+        // overflow="scroll"
         h="100vh"
       >
         {messages.length === 0 && (
@@ -366,7 +367,7 @@ function ChatBox({
           >
             <Field
               name="messageInput"
-              type="text"
+              type="textarea"
               placeholder="chat..."
               // flex-grow="2"
               paddingLeft="20px"
@@ -374,12 +375,15 @@ function ChatBox({
               border="none"
               padding="10px"
               margin="10px"
-              // onKeyPress={(event) => {
-              //   if (event.key === 'Enter') {
-              //     event.preventDefault();
-              //     this.myFormRef.requestSubmit();
-              //   }
-              // }}
+              onKeyPress={(event) => {
+                if (event.key === "Enter" && !event.shiftKey) {
+                  event.preventDefault();
+                  console.log(
+                    "Detected enter press without shift, submitting form",
+                  );
+                  formRef.current?.requestSubmit();
+                }
+              }}
               value={userChatbox}
               // FIXME : Figure out the proper type for this
               onChange={(e: any) => setUserChatbox(e.targetvalue)}
