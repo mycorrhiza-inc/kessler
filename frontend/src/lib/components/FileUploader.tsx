@@ -179,16 +179,6 @@ const UploadFileButton: React.FC = () => {
             </Tabs>
           </ModalBody>
           <ModalFooter>
-            <Button colorScheme="blue" mr={3} onClick={handleSubmit(onSubmit)}>
-              Upload
-            </Button>
-            <Button
-              colorScheme="blue"
-              mr={3}
-              onClick={handleSubmit(onUrlSubmit)}
-            >
-              Process URL
-            </Button>
             <Button variant="ghost" onClick={onClose}>
               Close
             </Button>

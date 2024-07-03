@@ -287,11 +287,15 @@ function ChatBox({
   }
   // TODO : Fix Horrible Buggy passing the any function
   const sendMessage = async (params: msgSent) => {
+    const message_content = params.messageInput;
+    return sendMessageRaw(message_content);
+  };
+  const sendMessageRaw = async (message_content: string) => {
     console.log("sending message");
-    console.log(`msg: ${params.messageInput}`);
+    console.log(`msg: ${message_content}`);
     let m: Message = {
       role: "user",
-      content: params.messageInput,
+      content: message_content,
       key: Symbol(),
     };
     console.log(`appending message "${m.content}"`);
@@ -381,7 +385,7 @@ function ChatBox({
                   console.log(
                     "Detected enter press without shift, submitting form",
                   );
-                  formRef.current?.requestSubmit();
+                  sendMessageRaw(userChatbox);
                 }
               }}
               value={userChatbox}
