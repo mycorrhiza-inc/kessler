@@ -47,13 +47,13 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
 
 
-  rabbitmq:
-    image: rabbitmq:latest
-    ports:
-      - "5672:5672"
-    volumes:
-      - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
-      - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+  # rabbitmq:
+  #   image: rabbitmq:latest
+  #   ports:
+  #     - "5672:5672"
+  #   volumes:
+  #     - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+  #     - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
 
   backend:
     build:
