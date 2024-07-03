@@ -99,16 +99,19 @@ const UploadFileButton: React.FC = () => {
 
   const onUrlSubmit = async (data: any) => {
     try {
-      const response = await fetch(
-        "https://app.kessler.xyz/api/files/url_upload",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ url: data.url }),
+      const response = await fetch("/api/files/add_url?process=true", {
+        method: "POST",
+        headers: {
+          accept: "application/json",
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify({
+          url: data.url,
+          metadata: {
+            source: "Personal",
+          },
+        }),
+      });
 
       if (!response.ok) {
         throw new Error("Network response was not ok");
@@ -189,17 +192,3 @@ const UploadFileButton: React.FC = () => {
   );
 };
 export default UploadFileButton;
-
-// <FormControl mt={4}>
-//   <FormLabel>Folder</FormLabel>
-//   <Input
-//     type="file"
-//     accept="*"
-//     multiple
-//     {...register("folder")}
-//     onChange={(e) =>
-//       // FIXME: Figure out proper type before sumitting PR
-//       setSelectedFiles(Array.from(e.target.files || []))
-//     }
-//   />
-// </FormControl>;

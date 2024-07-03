@@ -227,7 +227,6 @@ function ChatBox({
   const [loadingResponse, setLoadingResponse] = useState(false);
   const [selectedModel, setSelectedModel] = useState("default");
   const [userChatbox, setUserChatbox] = useState("");
-  const formRef = useRef<HTMLFormElement>(null);
   // let messages: Message[] = [];
 
   const getResponse = async () => {
@@ -383,7 +382,7 @@ function ChatBox({
                 if (event.key === "Enter" && !event.shiftKey) {
                   event.preventDefault();
                   console.log(
-                    "Detected enter press without shift, submitting form",
+                    `Detected enter press without shift, submitting form "${userChatbox}"`,
                   );
                   sendMessageRaw(userChatbox);
                 }
