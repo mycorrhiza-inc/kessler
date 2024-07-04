@@ -1,8 +1,12 @@
-import type { Metadata } from "next";
+// layout.tsx
+// "use client";
+import { Metadata } from "next";
 import { Inter } from "next/font/google";
-import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { SaasProvider } from "@saas-ui/react";
+import { ChakraProvider, ColorModeScript, DarkMode } from "@chakra-ui/react";
+import theme from "../app/theme";
+import "../app/globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,7 +24,10 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body>
-          <SaasProvider>{children}</SaasProvider>
+          <ColorModeScript initialColorMode={theme.config.initialColorMode} />
+          <ChakraProvider>
+            <SaasProvider>{children}</SaasProvider>
+          </ChakraProvider>
         </body>
       </html>
     </ClerkProvider>
