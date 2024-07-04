@@ -20,6 +20,14 @@ import {
   ModalFooter,
   ModalBody,
   ModalCloseButton,
+  useToast,
+  useDisclosure,
+  CircularProgress,
+  Input,
+  VStack,
+  StackDivider,
+  Grid,
+  GridItem,
 } from "@chakra-ui/react";
 import {
   AppShell,
@@ -34,7 +42,7 @@ import {
   NavbarItem,
   SearchInput,
 } from "@saas-ui/react";
-import React, { useState } from "react";
+import React, { ChangeEvent, useEffect, useState } from "react";
 import { Node } from "reactflow";
 import {
   FiHome,
@@ -54,15 +62,11 @@ import { usePathname } from "next/navigation";
 import ColorModeToggle from "./ColorModeToggle";
 
 // import SearchDialog from "./SearchDialog";
+import { Center } from "@chakra-ui/react";
 
 export default function Page({ children }: { children: React.ReactNode }) {
-  const [isOpen, toggleOpen] = useState(true);
-  const [searchModal, changeSearchModal] = useState(false);
-
-  const toggleSearchModal = () => {
-    changeSearchModal(!searchModal);
-  };
-
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [sidebarIsOpen, toggleSidebar] = useState(true);
   const pathname = usePathname();
 
   function pathIs(name: string) {
@@ -72,6 +76,54 @@ export default function Page({ children }: { children: React.ReactNode }) {
     }
     return false;
   }
+
+  const toast = useToast();
+  const [searching, setSearching] = useState(false);
+  const [searchQuery, setQuery] = useState("");
+  const [searchResults, setResults] = useState([]);
+  const handleQueryChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    setResults([]);
+    setQuery(event.target.value);
+    setSearching(true);
+    await getSearchResults();
+  };
+
+
+  // search stuff
+
+  const getSearchResults = async () => {
+    let results = await fetch("/api/search", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ query: searchQuery }),
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          return response.json().then((err) => {
+            throw new Error(err.message);
+          });
+        }
+        return await response.json();
+      })
+      .then((data) => {
+        console.log("Success:", data);
+        return data;
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+        return Symbol("error");
+      });
+
+    setSearching(false);
+    if (results == Symbol("Error")) {
+      console.log("no search results");
+      return;
+    }
+    setResults(results);
+  };
+
   return (
     <AppShell
       variant="static"
@@ -79,10 +131,10 @@ export default function Page({ children }: { children: React.ReactNode }) {
       sidebar={
         <Sidebar
           toggleBreakpoint={false}
-          variant={isOpen ? "default" : "compact"}
+          variant={sidebarIsOpen ? "default" : "compact"}
           transition="width"
           transitionDuration="normal"
-          width={isOpen ? "280px" : "16"}
+          width={sidebarIsOpen ? "280px" : "16"}
           minWidth="auto"
         >
           <SidebarSection>
@@ -101,14 +153,14 @@ export default function Page({ children }: { children: React.ReactNode }) {
               </SignedIn> */}
             </NavItem>
           </SidebarSection>
-          <SidebarSection direction={isOpen ? "row" : "column"}>
+          <SidebarSection direction={sidebarIsOpen ? "row" : "column"}>
             <IconButton
               onClick={() => {
-                toggleOpen(!isOpen);
+                toggleSidebar(!sidebarIsOpen);
               }}
               variant="ghost"
               size="sm"
-              icon={isOpen ? <FiChevronsLeft /> : <FiChevronsRight />}
+              icon={sidebarIsOpen ? <FiChevronsLeft /> : <FiChevronsRight />}
               aria-label="Toggle Sidebar"
             />
           </SidebarSection>
@@ -136,12 +188,9 @@ export default function Page({ children }: { children: React.ReactNode }) {
               >
                 Basic LLM Chat
               </NavItem>
-              {
-                // <NavItem icon={<FiBookmark />} isActive={pathIs("saved")}>
-                //   Saved Documents (BROKEN)
-                // </NavItem>
-              }
-              {/* <SearchDialog /> */}
+              <NavItem icon={<FiSearch />} onClick={onOpen}>
+                Search
+              </NavItem>
             </NavGroup>
           </SidebarSection>
           <SidebarOverlay zIndex="1" />
@@ -152,11 +201,45 @@ export default function Page({ children }: { children: React.ReactNode }) {
       <Box as="main" flex="1" py="2" px="4">
         {children}
       </Box>
-      <Modal isOpen={searchModal} onClose={toggleSearchModal}>
+      <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent maxH="1500px" maxW="1500px" overflow="scroll">
           <ModalBody>
-            <SearchInput placeholder="Search" />
+            <VStack
+              divider={<StackDivider borderColor="gray.200" />}
+              spacing={4}
+              align="stretch"
+              overflowY="scroll"
+              minH="10vh"
+            >
+              <Grid templateColumns="repeat(20, 5%)">
+                <GridItem colSpan={1}>
+                  <Center justifySelf="center">
+                    <FiSearch />
+                  </Center>
+                </GridItem>
+                <GridItem colStart={2} colEnd={20} h="10">
+                  <Input
+                    value={searchQuery}
+                    placeholder="search"
+                    size="lg"
+                    onChange={handleQueryChange}
+                  />
+                </GridItem>
+              </Grid>
+              {searching && (
+                <CircularProgress isIndeterminate color="green.300" />
+              )}
+              {(searchResults.length > 0) && searchResults.map((item, index) => (
+                <div key={index} className="data-item">
+                    <p>ID: {item.id}</p>
+                    <p>Score: {item.score}</p>
+                    {/* Render other fields as needed */}
+                    <p>Author: {item.metadata.author}</p>
+                    <p>Title: {item.metadata.title}</p>
+                </div>
+            ))}
+            </VStack>
           </ModalBody>
         </ModalContent>
       </Modal>
