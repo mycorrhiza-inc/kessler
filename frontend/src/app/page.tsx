@@ -10,3 +10,4 @@ export default function Page() {
     </DefaultShell>
   );
 }
+// export { getServerSideProps } from "../lib/Chakra";

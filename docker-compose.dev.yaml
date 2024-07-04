@@ -14,7 +14,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
     expose:
-      - "3000"
+      - 3000
     command:
       - "npm"
       - "run"
@@ -69,8 +69,6 @@ services:
       - "--reload"
     expose:
       - 5505
-    ports:
-      - "5505:5505"
 
   database:
     image: pgvector/pgvector:pg16

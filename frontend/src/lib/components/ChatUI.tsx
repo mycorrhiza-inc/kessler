@@ -21,6 +21,7 @@ import {
   Text,
   Select,
   SkeletonText,
+  DarkMode,
 } from "@chakra-ui/react";
 import {
   Form,
@@ -31,9 +32,6 @@ import {
 } from "@saas-ui/react";
 import { FiArrowUpCircle } from "react-icons/fi";
 import { useState, useEffect } from "react";
-import Markdown from "react-markdown";
-import { message } from "antd";
-import { start } from "repl";
 import { initialState } from "node_modules/@clerk/nextjs/dist/types/app-router/server/auth";
 import { useColorMode } from "@chakra-ui/react";
 
@@ -42,86 +40,86 @@ interface ChatAgent {
   role: boolean;
 }
 
-function SourceModal() {
-  // full screen modal for a given source
-
-  // TODO: cache the sourceModal text in the zustand state manager
-  return (
-    <Box>
-      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur
-      ultricies vehicula velit, at condimentum diam tristique a. Sed commodo,
-      metus quis scelerisque porta, turpis libero placerat erat, quis semper
-      sapien nisi eu neque. Donec id maximus lacus. Proin dolor erat, tempus ac
-      scelerisque fringilla, imperdiet in orci. Curabitur egestas magna ut
-      mollis sollicitudin. Sed nec pulvinar eros. Donec porta tempor convallis.
-      Aliquam erat volutpat. Nulla facilisi. Aenean faucibus ipsum sit amet
-      dictum lobortis. Cras congue magna sapien, et facilisis arcu efficitur
-      vitae. Integer nec tellus nec lectus molestie tristique. Vestibulum a sem
-      aliquam, cursus erat ac, luctus lectus. Pellentesque et augue facilisis,
-      ullamcorper ante at, facilisis nibh. Mauris placerat ut sapien ac pretium.
-      Fusce maximus dignissim diam quis blandit. Aliquam eget ultrices velit.
-    </Box>
-  );
-}
-
-function SourceBox({ content }: { content: string }) {
-  // on click show modal of the document
-  const [openModal, changeModal] = useState(false);
-  const toggleModal = () => {
-    changeModal(!openModal);
-  };
-  return (
-    <>
-      <Modal isOpen={openModal} onClose={toggleModal}>
-        <ModalOverlay />
-        <ModalContent maxH="3000px" maxW="1500px" overflow="scroll">
-          <ModalHeader>Modal Title</ModalHeader>
-          <ModalCloseButton />
-          <ModalContent>
-            <SourceModal />
-          </ModalContent>
-
-          <ModalFooter>
-            <Button colorScheme="blue" mr={3} onClick={toggleModal}>
-              Close
-            </Button>
-            <Button variant="ghost">Secondary Action</Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-      <Box
-        width="95%"
-        margin="5px"
-        border="solid"
-        borderColor="oklch(92.83% 0.01 286.37)"
-        borderRadius="10px"
-        borderWidth="1px"
-        height="100px"
-        padding="10px"
-        onClick={toggleModal}
-      >
-        {content}
-      </Box>
-    </>
-  );
-}
-
-function ContextSources() {
-  // TODO: generate sources from some list of soruce objects
-  return (
-    <VStack
-      divider={<StackDivider borderColor="gray.200" />}
-      spacing={4}
-      align="stretch"
-      overflowY="scroll"
-      h="100vh"
-    >
-      <SourceBox content="Source" />
-      <SourceBox content="Overflow" />
-      <SourceBox content="Overflow" />
-    </VStack>
-  );
-}
+// Should this code get deleted, or should I just move it into another component? - Nic
+// function SourceModal() {
+//   // full screen modal for a given source
+//
+//   // TODO: cache the sourceModal text in the zustand state manager
+//   return (
+//     <Box>
+//       Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur
+//       ultricies vehicula velit, at condimentum diam tristique a. Sed commodo,
+//       metus quis scelerisque porta, turpis libero placerat erat, quis semper
+//       sapien nisi eu neque. Donec id maximus lacus. Proin dolor erat, tempus ac
+//       scelerisque fringilla, imperdiet in orci. Curabitur egestas magna ut
+//       mollis sollicitudin. Sed nec pulvinar eros. Donec porta tempor convallis.
+//       Aliquam erat volutpat. Nulla facilisi. Aenean faucibus ipsum sit amet
+//       dictum lobortis. Cras congue magna sapien, et facilisis arcu efficitur
+//       vitae. Integer nec tellus nec lectus molestie tristique. Vestibulum a sem
+//       aliquam, cursus erat ac, luctus lectus. Pellentesque et augue facilisis,
+//       ullamcorper ante at, facilisis nibh. Mauris placerat ut sapien ac pretium.
+//       Fusce maximus dignissim diam quis blandit. Aliquam eget ultrices velit.
+//     </Box>
+//   );
+// }
+//
+// function SourceBox({ content }: { content: string }) {
+//   // on click show modal of the document
+//   const [openModal, changeModal] = useState(false);
+//   const toggleModal = () => {
+//     changeModal(!openModal);
+//   };
+//   return (
+//     <>
+//       <Modal isOpen={openModal} onClose={toggleModal}>
+//         <ModalOverlay />
+//         <ModalContent maxH="3000px" maxW="1500px" overflow="scroll">
+//           <ModalHeader>Modal Title</ModalHeader>
+//           <ModalCloseButton />
+//           <ModalContent>
+//             <SourceModal />
+//           </ModalContent>
+//
+//           <ModalFooter>
+//             <Button colorScheme="blue" mr={3} onClick={toggleModal}>
+//               Close
+//             </Button>
+//             <Button variant="ghost">Secondary Action</Button>
+//           </ModalFooter>
+//         </ModalContent>
+//       </Modal>
+//       <Box
+//         width="95%"
+//         margin="5px"
+//         border="solid"
+//         borderColor="oklch(92.83% 0.01 286.37)"
+//         borderRadius="10px"
+//         borderWidth="1px"
+//         height="100px"
+//         padding="10px"
+//         onClick={toggleModal}
+//       >
+//         {content}
+//       </Box>
+//     </>
+//   );
+// }
+//function ContextSources() {
+//  // TODO: generate sources from some list of soruce objects
+//  return (
+//    <VStack
+//      divider={<StackDivider borderColor="gray.200" />}
+//      spacing={4}
+//      align="stretch"
+//      overflowY="scroll"
+//      h="100vh"
+//    >
+//      <SourceBox content="Source" />
+//      <SourceBox content="Overflow" />
+//      <SourceBox content="Overflow" />
+//    </VStack>
+//  );
+//}
 
 interface Message {
   role: string;
@@ -160,7 +158,7 @@ function MessageComponent({
       }
       borderRadius="10px"
       // maxWidth="800px"
-      height="auto"
+      // height="auto"
       overflow="auto"
       minHeight="100px"
       justifyContent={message.role == "user" ? "right" : "left"}
@@ -171,7 +169,7 @@ function MessageComponent({
         // divider={<StackDivider borderColor="gray.200" />}
         spacing={4}
         // align="stretch"
-        overflowY="scroll"
+        overflowY="visible"
         justifyContent={message.role == "user" ? "right" : "left"}
         // h="100vh"
       >
@@ -190,11 +188,12 @@ function AwaitingMessageSkeleton({}: {}) {
   return (
     <Box
       width="90%"
+      // probably a good idea to use a hook like this useColorModeValue(lightModeValue, darkModeValue)
       background={colorMode === "light" ? "gray.200" : "gray.700"}
       borderRadius="10px"
       // maxWidth="800px"
       height="auto"
-      overflow="auto"
+      // overflow="auto"
       minHeight="100px"
       justifyContent={false ? "right" : "left"}
       padding="20px"
@@ -287,11 +286,15 @@ function ChatBox({
   }
   // TODO : Fix Horrible Buggy passing the any function
   const sendMessage = async (params: msgSent) => {
+    const message_content = params.messageInput;
+    return sendMessageRaw(message_content);
+  };
+  const sendMessageRaw = async (message_content: string) => {
     console.log("sending message");
-    console.log(`msg: ${params.messageInput}`);
+    console.log(`msg: ${message_content}`);
     let m: Message = {
       role: "user",
-      content: params.messageInput,
+      content: message_content,
       key: Symbol(),
     };
     console.log(`appending message "${m.content}"`);
@@ -367,7 +370,7 @@ function ChatBox({
           >
             <Field
               name="messageInput"
-              type="text"
+              type="textarea"
               placeholder="chat..."
               // flex-grow="2"
               paddingLeft="20px"
@@ -375,15 +378,18 @@ function ChatBox({
               border="none"
               padding="10px"
               margin="10px"
-              // onKeyPress={(event) => {
-              //   if (event.key === 'Enter') {
-              //     event.preventDefault();
-              //     this.myFormRef.requestSubmit();
-              //   }
-              // }}
+              onKeyPress={(event) => {
+                if (event.key === "Enter" && !event.shiftKey) {
+                  event.preventDefault();
+                  console.log(
+                    `Detected enter press without shift, submitting form "${userChatbox}"`,
+                  );
+                  sendMessageRaw(userChatbox);
+                }
+              }}
               value={userChatbox}
               // FIXME : Figure out the proper type for this
-              onChange={(e: any) => setUserChatbox(e.targetvalue)}
+              onChange={(e: any) => setUserChatbox(e.target.value)}
             />
             <Center padding="10px">
               <IconButton
