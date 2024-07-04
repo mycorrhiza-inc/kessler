@@ -34,13 +34,13 @@ from models.utils import PydanticBaseModel as BaseModel
 #     FileModel,
 #     FileRepository,
 #     FileSchema,
-#     FileSchemaWithText,
 #     provide_files_repo,
 # )
 from models.files import (
     FileModel,
     FileRepository,
     FileSchema,
+    FileSchemaWithText,
     provide_files_repo,
 )
 
