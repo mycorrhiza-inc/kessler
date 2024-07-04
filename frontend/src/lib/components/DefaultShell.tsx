@@ -88,7 +88,6 @@ export default function Page({ children }: { children: React.ReactNode }) {
     await getSearchResults();
   };
 
-
   // search stuff
 
   const getSearchResults = async () => {
@@ -230,15 +229,16 @@ export default function Page({ children }: { children: React.ReactNode }) {
               {searching && (
                 <CircularProgress isIndeterminate color="green.300" />
               )}
-              {(searchResults.length > 0) && searchResults.map((item, index) => (
-                <div key={index} className="data-item">
+              {searchResults.length > 0 &&
+                searchResults.map((item: any, index) => (
+                  <div key={index} className="data-item">
                     <p>ID: {item.id}</p>
                     <p>Score: {item.score}</p>
                     {/* Render other fields as needed */}
                     <p>Author: {item.metadata.author}</p>
                     <p>Title: {item.metadata.title}</p>
-                </div>
-            ))}
+                  </div>
+                ))}
             </VStack>
           </ModalBody>
         </ModalContent>
