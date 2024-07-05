@@ -151,7 +151,7 @@ class FileController(Controller):
 
     # TODO: replace this with a jobs endpoint
 
-    @post(path="/", media_type=MediaType.TEXT)
+    @post(path="/files/upload_file", media_type=MediaType.TEXT)
     async def handle_file_upload(
         self,
         files_repo : FileRepository,
