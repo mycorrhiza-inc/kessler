@@ -55,7 +55,7 @@ class DocumentIngester:
             self.logger.info("Successfully got file and metadata")
         except Exception:
             self.logger.error("unable to get file and metadata")
-            pass
+            assert False
 
         if metadata.get("lang") == None:
             metadata["lang"] = "en"

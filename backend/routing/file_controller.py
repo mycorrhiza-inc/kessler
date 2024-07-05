@@ -52,6 +52,8 @@ from typing import List, Optional, Dict
 
 import json
 
+from util.niclib import rand_string
+
 
 class UUIDEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -148,6 +150,35 @@ class FileController(Controller):
         return type_adapter.validate_python(results)
 
     # TODO: replace this with a jobs endpoint
+
+    @post(path="/", media_type=MediaType.TEXT)
+    async def handle_file_upload(
+        self,
+        files_repo : FileRepository,
+        data: Annotated[UploadFile, Body(media_type=RequestEncodingType.MULTI_PART)], request : Request,
+        process: bool = False,
+        override_hash: bool = False,
+    ) -> Any:
+        supplemental_metadata = {
+            "source" : "personal"
+        }
+        logger = request.logger
+        docingest = DocumentIngester(logger)
+        input_directory = OS_TMPDIR / Path("formdata_uploads") / Path(rand_string())
+        # Ensure the directories exist
+        os.makedirs(input_directory, exist_ok=True)
+        # Save the PDF to the output directory
+        filename = data.filename
+        final_filepath = input_directory / Path(filename)
+        with open(final_filepath, "wb") as f:
+            f.write(data.file.read())
+        additional_metadata = docingest.infer_metadata_from_path(final_filepath)
+        additional_metadata.update(supplemental_metadata)
+        final_metadata = additional_metadata
+        return await self.add_file_raw(final_filepath,final_metadata,process,override_hash,files_repo,logger)
+        
+
+
     # TODO : (Nic) Make function that can process uploaded files
     @post(path="/files/add_url")
     async def add_url(
