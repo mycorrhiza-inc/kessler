@@ -71,21 +71,25 @@ class SearchController(Controller):
             return x["text"]
 
         res = v.search(data.query).to_list()
+
         # search all dockets for a given item
         def clean_data(data):
             # Make a deep copy of the data to avoid modifying the original data
             cleaned_data = copy.deepcopy(data)
-            
+
             # Remove the specified fields
-            if 'vector' in cleaned_data:
-                del cleaned_data['vector']
-            if 'text' in cleaned_data:
-                del cleaned_data['text']
-            if 'metadata' in cleaned_data and '_node_content' in cleaned_data['metadata']:
-                del cleaned_data['metadata']['_node_content']
-            
+            if "vector" in cleaned_data:
+                del cleaned_data["vector"]
+            if "text" in cleaned_data:
+                del cleaned_data["text"]
+            if (
+                "metadata" in cleaned_data
+                and "_node_content" in cleaned_data["metadata"]
+            ):
+                del cleaned_data["metadata"]["_node_content"]
+
             return cleaned_data
 
         # Apply the clean_data function to each item in search results
         filtered_data = [clean_data(item) for item in res]
-        return filtered_data 
+        return filtered_data

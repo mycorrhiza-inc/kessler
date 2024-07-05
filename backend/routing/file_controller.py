@@ -52,6 +52,8 @@ from typing import List, Optional, Dict
 
 import json
 
+from util.niclib import rand_string
+
 
 class UUIDEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -148,6 +150,34 @@ class FileController(Controller):
         return type_adapter.validate_python(results)
 
     # TODO: replace this with a jobs endpoint
+
+    @post(path="/files/upload_file", media_type=MediaType.TEXT)
+    async def handle_file_upload(
+        self,
+        files_repo: FileRepository,
+        data: Annotated[UploadFile, Body(media_type=RequestEncodingType.MULTI_PART)],
+        request: Request,
+        process: bool = False,
+        override_hash: bool = False,
+    ) -> Any:
+        supplemental_metadata = {"source": "personal"}
+        logger = request.logger
+        docingest = DocumentIngester(logger)
+        input_directory = OS_TMPDIR / Path("formdata_uploads") / Path(rand_string())
+        # Ensure the directories exist
+        os.makedirs(input_directory, exist_ok=True)
+        # Save the PDF to the output directory
+        filename = data.filename
+        final_filepath = input_directory / Path(filename)
+        with open(final_filepath, "wb") as f:
+            f.write(data.file.read())
+        additional_metadata = docingest.infer_metadata_from_path(final_filepath)
+        additional_metadata.update(supplemental_metadata)
+        final_metadata = additional_metadata
+        return await self.add_file_raw(
+            final_filepath, final_metadata, process, override_hash, files_repo, logger
+        )
+
     # TODO : (Nic) Make function that can process uploaded files
     @post(path="/files/add_url")
     async def add_url(
@@ -158,26 +188,38 @@ class FileController(Controller):
         process: bool = False,
         override_hash: bool = False,
     ) -> Any:
-        request.logger.info("adding files")
-        request.logger.info(data)
+        logger = request.logger
+        logger.info("adding files")
+        logger.info(data)
 
         # ------------------ here be a site for refactor --------------------
-        docingest = DocumentIngester(request.logger)
+        docingest = DocumentIngester(logger)
 
-        request.logger.info("DocumentIngester Created")
+        logger.info("DocumentIngester Created")
 
         # tmpfile_path, metadata = (
         # LSP is giving some kind of error, I am gonna worry about it later
-        tmpfile_path, metadata, tmpfile_cleanup = (
-            docingest.url_to_filepath_and_metadata(data.url)
-        )
+        tmpfile_path, metadata = docingest.url_to_filepath_and_metadata(data.url)
         new_metadata = data.metadata
 
         if new_metadata is not None:
             metadata.update(new_metadata)
 
         request.logger.info(f"Metadata Successfully Created with metadata {metadata}")
+        return await self.add_file_raw(
+            tmpfile_path, metadata, process, override_hash, files_repo, logger
+        )
 
+    async def add_file_raw(
+        self,
+        tmp_filepath: Path,
+        metadata: dict,
+        process: bool,
+        override_hash: bool,
+        files_repo: FileRepository,
+        logger: Any,
+    ) -> Any:
+        docingest = DocumentIngester(logger)
         document_title = metadata.get("title")
         document_doctype = metadata.get("doctype")
         document_lang = metadata.get("language")
@@ -187,21 +229,21 @@ class FileController(Controller):
             assert isinstance(document_doctype, str)
             assert isinstance(document_lang, str)
         except Exception:
-            request.logger.error("Illformed Metadata please fix")
+            logger.error("Illformed Metadata please fix")
 
         else:
-            request.logger.info("Title, Doctype and language successfully declared")
+            logger.info("Title, Doctype and language successfully declared")
 
         document_source = metadata.get("source")
         if document_source is None:
             document_source = "UNKNOWN"
             metadata["source"] = "UNKNOWN"
 
-        request.logger.info("Attempting to save data to file")
-        result = docingest.save_filepath_to_hash(tmpfile_path, OS_HASH_FILEDIR)
+        logger.info("Attempting to save data to file")
+        result = docingest.save_filepath_to_hash(tmp_filepath, OS_HASH_FILEDIR)
         (filehash, filepath) = result
 
-        tmpfile_cleanup()
+        os.remove(tmp_filepath)
 
         # NOTE: this is a dangeous query
         # NOTE: Nicole- Also this doesnt allow for files with the same hash to have different metadata,
@@ -223,7 +265,7 @@ class FileController(Controller):
             docingest.backup_metadata_to_hash(metadata, filehash)
             metadata_str = json.dumps(metadata)
             new_file = FileModel(
-                url=data.url,
+                url="N/A",
                 name=document_title,
                 doctype=document_doctype,
                 lang=document_lang,
@@ -234,30 +276,34 @@ class FileController(Controller):
                 summary=None,
                 short_summary=None,
             )
-            request.logger.info("new file:{file}".format(file=new_file.to_dict()))
+            logger.info("new file:{file}".format(file=new_file.to_dict()))
             try:
                 new_file = await files_repo.add(new_file)
             except Exception as e:
-                request.logger.info(e)
+                logger.info(e)
                 return e
-            request.logger.info("added file!~")
+            logger.info("added file!~")
             await files_repo.session.commit()
-            request.logger.info("commited file to DB")
+            logger.info("commited file to DB")
 
         else:
-            request.logger.info(type(duplicate_file_obj))
-            request.logger.info(
+            logger.info(type(duplicate_file_obj))
+            logger.info(
                 f"File with identical hash already exists in DB with uuid:\
                 {duplicate_file_obj.id}"
             )
             new_file = duplicate_file_obj
 
         if process:
-            request.logger.info("Processing File")
-            await self.process_file_raw(new_file, files_repo, request.logger, False)
+            logger.info("Processing File")
+            await self.process_file_raw(new_file, files_repo, logger, False)
 
         type_adapter = TypeAdapter(FileSchema)
-        return type_adapter.validate_python(new_file)
+        final_return = type_adapter.validate_python(new_file)
+
+        logger.info(final_return)
+        # return final_return
+        return "This should return the file, but serialization is broken, I hope this is string is a fair substitute."
 
     @post(path="/files/add_urls")
     async def add_urls(
@@ -343,9 +389,14 @@ class FileController(Controller):
                     )
                     obj.english_text = processed_english_text
                 except Exception as e:
-                    raise Exception("failure in stage 2: \ndocument was unable to be translated to english.",e)
+                    raise Exception(
+                        "failure in stage 2: \ndocument was unable to be translated to english.",
+                        e,
+                    )
             else:
-                raise ValueError("failure in stage 2: \n Code is in an unreachable state, a document cannot be english and not english",)
+                raise ValueError(
+                    "failure in stage 2: \n Code is in an unreachable state, a document cannot be english and not english",
+                )
             return "stage3"
 
         # text commitment
