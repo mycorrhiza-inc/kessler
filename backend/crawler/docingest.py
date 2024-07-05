@@ -64,10 +64,8 @@ class DocumentIngester:
         # FIXME :
         # metadata.update(file_metadata)
 
-        def cleanup():
-            os.remove(filepath)
 
-        return (filepath, metadata, cleanup)
+        return (filepath, metadata)
 
     def get_metada_from_url(self, url: str) -> dict:
         self.logger.info("Getting Metadata from Url")
