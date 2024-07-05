@@ -154,14 +154,13 @@ class FileController(Controller):
     @post(path="/files/upload_file", media_type=MediaType.TEXT)
     async def handle_file_upload(
         self,
-        files_repo : FileRepository,
-        data: Annotated[UploadFile, Body(media_type=RequestEncodingType.MULTI_PART)], request : Request,
+        files_repo: FileRepository,
+        data: Annotated[UploadFile, Body(media_type=RequestEncodingType.MULTI_PART)],
+        request: Request,
         process: bool = False,
         override_hash: bool = False,
     ) -> Any:
-        supplemental_metadata = {
-            "source" : "personal"
-        }
+        supplemental_metadata = {"source": "personal"}
         logger = request.logger
         docingest = DocumentIngester(logger)
         input_directory = OS_TMPDIR / Path("formdata_uploads") / Path(rand_string())
@@ -175,9 +174,9 @@ class FileController(Controller):
         additional_metadata = docingest.infer_metadata_from_path(final_filepath)
         additional_metadata.update(supplemental_metadata)
         final_metadata = additional_metadata
-        return await self.add_file_raw(final_filepath,final_metadata,process,override_hash,files_repo,logger)
-        
-
+        return await self.add_file_raw(
+            final_filepath, final_metadata, process, override_hash, files_repo, logger
+        )
 
     # TODO : (Nic) Make function that can process uploaded files
     @post(path="/files/add_url")
@@ -189,7 +188,7 @@ class FileController(Controller):
         process: bool = False,
         override_hash: bool = False,
     ) -> Any:
-        logger= request.logger
+        logger = request.logger
         logger.info("adding files")
         logger.info(data)
 
@@ -200,18 +199,26 @@ class FileController(Controller):
 
         # tmpfile_path, metadata = (
         # LSP is giving some kind of error, I am gonna worry about it later
-        tmpfile_path, metadata = (
-            docingest.url_to_filepath_and_metadata(data.url)
-        )
+        tmpfile_path, metadata = docingest.url_to_filepath_and_metadata(data.url)
         new_metadata = data.metadata
 
         if new_metadata is not None:
             metadata.update(new_metadata)
 
         request.logger.info(f"Metadata Successfully Created with metadata {metadata}")
-        return await self.add_file_raw(tmpfile_path,metadata,process,override_hash,files_repo,logger)
+        return await self.add_file_raw(
+            tmpfile_path, metadata, process, override_hash, files_repo, logger
+        )
 
-    async def add_file_raw(self, tmp_filepath : Path, metadata : dict, process: bool, override_hash: bool,files_repo : FileRepository, logger: Any) -> Any:
+    async def add_file_raw(
+        self,
+        tmp_filepath: Path,
+        metadata: dict,
+        process: bool,
+        override_hash: bool,
+        files_repo: FileRepository,
+        logger: Any,
+    ) -> Any:
         docingest = DocumentIngester(logger)
         document_title = metadata.get("title")
         document_doctype = metadata.get("doctype")
@@ -237,7 +244,6 @@ class FileController(Controller):
         (filehash, filepath) = result
 
         os.remove(tmp_filepath)
-
 
         # NOTE: this is a dangeous query
         # NOTE: Nicole- Also this doesnt allow for files with the same hash to have different metadata,
@@ -379,9 +385,14 @@ class FileController(Controller):
                     )
                     obj.english_text = processed_english_text
                 except Exception as e:
-                    raise Exception("failure in stage 2: \ndocument was unable to be translated to english.",e)
+                    raise Exception(
+                        "failure in stage 2: \ndocument was unable to be translated to english.",
+                        e,
+                    )
             else:
-                raise ValueError("failure in stage 2: \n Code is in an unreachable state, a document cannot be english and not english",)
+                raise ValueError(
+                    "failure in stage 2: \n Code is in an unreachable state, a document cannot be english and not english",
+                )
             return "stage3"
 
         # text commitment

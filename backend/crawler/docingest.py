@@ -64,7 +64,6 @@ class DocumentIngester:
         # FIXME :
         # metadata.update(file_metadata)
 
-
         return (filepath, metadata)
 
     def get_metada_from_url(self, url: str) -> dict:

@@ -72,7 +72,7 @@ class GPUComputeEndpoint:
         # url = "http://api.mycor.io/v0/multimodal_asr/local-m4t"
         # FIXME : Work out what this url should fucking be
         # url = f"{self.marker_endpoint_url}"
-        # Hardcode now fix later 
+        # Hardcode now fix later
         url = "http://uttu-fedora:2718/process_pdf_upload"
         # url = "https://www.google.com/"
         # Open the file in binary mode
