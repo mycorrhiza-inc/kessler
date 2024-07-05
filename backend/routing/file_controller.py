@@ -157,7 +157,7 @@ class FileController(Controller):
         files_repo: FileRepository,
         data: Annotated[UploadFile, Body(media_type=RequestEncodingType.MULTI_PART)],
         request: Request,
-        process: bool = False,
+        process: bool = True,
         override_hash: bool = False,
     ) -> Any:
         supplemental_metadata = {"source": "personal"}
@@ -185,7 +185,7 @@ class FileController(Controller):
         files_repo: FileRepository,
         data: UrlUpload,
         request: Request,
-        process: bool = False,
+        process: bool = True,
         override_hash: bool = False,
     ) -> Any:
         logger = request.logger
