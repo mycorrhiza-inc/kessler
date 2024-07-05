@@ -31,6 +31,7 @@ import {
 } from "react-icons/fi";
 import { GetAllFiles } from "../requests";
 import FileUploadButton from "./FileUploader";
+import DocumentViewer from "./DocumentViewer";
 
 enum sorts {
   none,
@@ -246,6 +247,9 @@ export default function FileExplorer() {
         </Td>
         {/* Filename */}
         <Td>{file.data.title}</Td>
+        <Td>
+          <DocumentViewer document_uuid={file.data.id}></DocumentViewer>
+        </Td>
         {/* <Td>{file.data.datePublished.toString()}</Td>
         <Td>{file.data.dateAdded.toString()}</Td>
         <Td>{file.data.dateModified.toString()}</Td> */}
