@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Button,
   Modal,
@@ -9,27 +9,19 @@ import {
   ModalBody,
   ModalCloseButton,
   useDisclosure,
-  Tabs,
-  TabList,
-  TabPanels,
-  Tab,
-  TabPanel,
-  Input,
-  FormControl,
-  FormLabel,
   useToast,
 } from "@chakra-ui/react";
-import { useForm } from "react-hook-form";
 import axios from "axios";
 import MarkdownRenderer from "./MarkdownRenderer";
 
-const ViewDocumentButton: any = ({
+const ViewDocumentButton: React.FC<{ document_uuid: string }> = ({
   document_uuid,
-}: {
-  document_uuid: string;
 }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
+  const [markdownContent, setMarkdownContent] = useState<string>(
+    "Loading Document Contents",
+  );
 
   const getMarkdownContent = async (document_uuid: string) => {
     try {
@@ -37,19 +29,27 @@ const ViewDocumentButton: any = ({
         method: "GET",
       });
 
-      return response.text;
+      return response.text();
     } catch (error) {
       toast({
         title: "No text found.",
-        description: `Could not get text from server`,
+        description: "Could not get text from server",
         status: "error",
         duration: 3000,
         isClosable: true,
       });
+      return "Error loading document";
     }
   };
-  // Fix async stuff
-  const markdown_content: string = await getMarkdownContent(document_uuid);
+
+  useEffect(() => {
+    if (isOpen) {
+      (async () => {
+        const content = await getMarkdownContent(document_uuid);
+        setMarkdownContent(content);
+      })();
+    }
+  }, [isOpen, document_uuid]);
 
   return (
     <>
@@ -60,7 +60,7 @@ const ViewDocumentButton: any = ({
           <ModalHeader>View Document</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <MarkdownRenderer>{markdown_content}</MarkdownRenderer>
+            <MarkdownRenderer>{markdownContent}</MarkdownRenderer>
           </ModalBody>
           <ModalFooter>
             <Button variant="ghost" onClick={onClose}>
@@ -72,4 +72,5 @@ const ViewDocumentButton: any = ({
     </>
   );
 };
+
 export default ViewDocumentButton;

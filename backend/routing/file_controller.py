@@ -125,18 +125,30 @@ class FileController(Controller):
     @get(path="/files/{file_id:uuid}")
     async def get_file(
         self,
-        withtext: bool,
         files_repo: FileRepository,
         file_id: UUID = Parameter(title="File ID", description="File to retieve"),
     ) -> FileSchema:
         obj = await files_repo.get(file_id)
 
-        if withtext:
-            type_adapter = TypeAdapter(FileSchemaWithText)
-        else:
-            type_adapter = TypeAdapter(FileSchema)
+        type_adapter = TypeAdapter(FileSchema)
 
         return type_adapter.validate_python(obj)
+
+    @get(path="/files/get_markdown/{file_id:uuid}")
+    async def get_markdown(
+        self,
+        withtext: bool,
+        files_repo: FileRepository,
+        file_id: UUID = Parameter(title="File ID", description="File to retieve"),
+    ) -> str:
+        obj = await files_repo.get(file_id)
+
+        type_adapter = TypeAdapter(FileSchemaWithText)
+
+        obj_with_text=type_adapter.validate_python(obj)
+
+        markdown_text = obj_with_text.english_text 
+        return markdown_text
 
     @get(path="/files/all")
     async def get_all_files(
