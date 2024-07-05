@@ -299,7 +299,11 @@ class FileController(Controller):
             await self.process_file_raw(new_file, files_repo, logger, False)
 
         type_adapter = TypeAdapter(FileSchema)
-        return type_adapter.validate_python(new_file)
+        final_return = type_adapter.validate_python(new_file)
+
+        logger.info(final_return)
+        # return final_return
+        return "This should return the file, but serialization is broken, I hope this is string is a fair substitute."
 
     @post(path="/files/add_urls")
     async def add_urls(
