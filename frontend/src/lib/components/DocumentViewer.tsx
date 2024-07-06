@@ -13,14 +13,24 @@ import {
 } from "@chakra-ui/react";
 import axios from "axios";
 import MarkdownRenderer from "./MarkdownRenderer";
+import { pdfjs } from "react-pdf";
+import { Document, Page } from "react-pdf";
+
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  "pdfjs-dist/build/pdf.worker.min.mjs",
+  import.meta.url,
+).toString();
 
 const ViewDocumentButton: React.FC<{ document_uuid: string }> = ({
   document_uuid,
 }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const [numPages, setNumPages] = useState<number>();
+  const [pageNumber, setPageNumber] = useState<number>(1);
+
   const toast = useToast();
   const [markdownContent, setMarkdownContent] = useState<string>(
-    "Loading Document Contents",
+    "# Loading Document Contents",
   );
 
   const getMarkdownContent = async (document_uuid: string) => {
@@ -42,6 +52,10 @@ const ViewDocumentButton: React.FC<{ document_uuid: string }> = ({
     }
   };
 
+  function onDocumentLoadSuccess({ numPages }: { numPages: number }): void {
+    setNumPages(numPages);
+  }
+
   useEffect(() => {
     if (isOpen) {
       (async () => {
@@ -53,13 +67,24 @@ const ViewDocumentButton: React.FC<{ document_uuid: string }> = ({
 
   return (
     <>
-      <Button onClick={onOpen}>Upload File</Button>
+      <Button onClick={onOpen}>View Document</Button>
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>View Document</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
+            <div>
+              <Document
+                file="https://raw.githubusercontent.com/mycorrhizainc/examples/main/CO%20Clean%20Energy%20Plan%20Info%20Sheet.pdf"
+                onLoadSuccess={onDocumentLoadSuccess}
+              >
+                <Page pageNumber={pageNumber} />
+              </Document>
+              <p>
+                Page {pageNumber} of {numPages}
+              </p>
+            </div>
             <MarkdownRenderer>{markdownContent}</MarkdownRenderer>
           </ModalBody>
           <ModalFooter>

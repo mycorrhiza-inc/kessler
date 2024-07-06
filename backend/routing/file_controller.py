@@ -137,7 +137,6 @@ class FileController(Controller):
     @get(path="/files/get_markdown/{file_id:uuid}")
     async def get_markdown(
         self,
-        withtext: bool,
         files_repo: FileRepository,
         file_id: UUID = Parameter(title="File ID", description="File to retieve"),
     ) -> str:
@@ -148,6 +147,8 @@ class FileController(Controller):
         obj_with_text=type_adapter.validate_python(obj)
 
         markdown_text = obj_with_text.english_text 
+        if markdown_text is "":
+            markdown_text="Could not find Document Markdown Text"
         return markdown_text
 
     @get(path="/files/all")
