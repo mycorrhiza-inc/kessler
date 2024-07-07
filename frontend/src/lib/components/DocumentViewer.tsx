@@ -8,9 +8,12 @@ import {
   ModalFooter,
   ModalBody,
   ModalCloseButton,
+  Grid,
+  GridItem,
   useDisclosure,
   useToast,
 } from "@chakra-ui/react";
+import ReactDOM from "react-dom";
 import axios from "axios";
 import MarkdownRenderer from "./MarkdownRenderer";
 import { pdfjs } from "react-pdf";
@@ -21,10 +24,15 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   import.meta.url,
 ).toString();
 
-const ViewDocumentButton: React.FC<{ document_uuid: string }> = ({
-  document_uuid,
-}) => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
+const DynamicModal: React.FC<{
+  document_uuid: string;
+  onClose: () => void;
+}> = ({ document_uuid, onClose }) => {
+  const {
+    isOpen,
+    onOpen,
+    onClose: closeModal,
+  } = useDisclosure({ defaultIsOpen: true });
   const [numPages, setNumPages] = useState<number>();
   const [pageNumber, setPageNumber] = useState<number>(1);
 
@@ -65,35 +73,65 @@ const ViewDocumentButton: React.FC<{ document_uuid: string }> = ({
     }
   }, [isOpen, document_uuid]);
 
-  return (
-    <>
-      <Button onClick={onOpen}>View Document</Button>
-      <Modal isOpen={isOpen} onClose={onClose}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>View Document</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <div>
+  const handleClose = () => {
+    closeModal();
+    onClose();
+  };
+
+  return ReactDOM.createPortal(
+    <Modal isOpen={isOpen} onClose={handleClose} size="6xl">
+      <ModalOverlay />
+      <ModalContent maxW="80%">
+        <ModalHeader>View Document</ModalHeader>
+        <ModalCloseButton />
+        <ModalBody>
+          <Grid templateColumns="repeat(2, 1fr)" gap={6}>
+            <GridItem>
               <Document
                 file="https://raw.githubusercontent.com/mycorrhizainc/examples/main/CO%20Clean%20Energy%20Plan%20Info%20Sheet.pdf"
                 onLoadSuccess={onDocumentLoadSuccess}
               >
                 <Page pageNumber={pageNumber} />
               </Document>
-              <p>
-                Page {pageNumber} of {numPages}
-              </p>
-            </div>
-            <MarkdownRenderer>{markdownContent}</MarkdownRenderer>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="ghost" onClick={onClose}>
-              Close
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+            </GridItem>
+            <GridItem>
+              <MarkdownRenderer>{markdownContent}</MarkdownRenderer>
+            </GridItem>
+          </Grid>
+        </ModalBody>
+        <ModalFooter>
+          <Button variant="ghost" onClick={handleClose}>
+            Close
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>,
+    document.body,
+  );
+};
+
+const ViewDocumentButton: React.FC<{ document_uuid: string }> = ({
+  document_uuid,
+}) => {
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
+
+  return (
+    <>
+      <Button onClick={handleOpenModal}>View Document</Button>
+      {isModalOpen && (
+        <DynamicModal
+          document_uuid={document_uuid}
+          onClose={handleCloseModal}
+        />
+      )}
     </>
   );
 };
