@@ -187,6 +187,8 @@ class FileController(Controller):
         additional_metadata = docingest.infer_metadata_from_path(final_filepath)
         additional_metadata.update(supplemental_metadata)
         final_metadata = additional_metadata
+        if final_metadata.get("lang") is None:
+            final_metadata["lang"]="en"
         return await self.add_file_raw(
             final_filepath, final_metadata, process, override_hash, files_repo, logger
         )
