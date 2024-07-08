@@ -238,11 +238,12 @@ class FileController(Controller):
         document_title = metadata.get("title")
         document_doctype = metadata.get("doctype")
         document_lang = metadata.get("language")
-
         try:
             assert isinstance(document_title, str)
             assert isinstance(document_doctype, str)
             assert isinstance(document_lang, str)
+            if document_doctype[0] == ".":
+                document_doctype = document_doctype[1:]
         except Exception:
             logger.error("Illformed Metadata please fix")
 
