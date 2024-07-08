@@ -14,15 +14,8 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import ReactDOM from "react-dom";
-import axios from "axios";
 import MarkdownRenderer from "./MarkdownRenderer";
-import { pdfjs } from "react-pdf";
-import { Document, Page } from "react-pdf";
 
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  "pdfjs-dist/build/pdf.worker.min.mjs",
-  import.meta.url,
-).toString();
 
 const DynamicModal: React.FC<{
   document_uuid: string;
@@ -87,12 +80,7 @@ const DynamicModal: React.FC<{
         <ModalBody>
           <Grid templateColumns="repeat(2, 1fr)" gap={6}>
             <GridItem>
-              <Document
-                file="https://raw.githubusercontent.com/mycorrhizainc/examples/main/CO%20Clean%20Energy%20Plan%20Info%20Sheet.pdf"
-                onLoadSuccess={onDocumentLoadSuccess}
-              >
-                <Page pageNumber={pageNumber} />
-              </Document>
+              <MarkdownRenderer># PDF Viewer Coming Soon!</MarkdownRenderer>
             </GridItem>
             <GridItem>
               <MarkdownRenderer>{markdownContent}</MarkdownRenderer>
@@ -136,4 +124,11 @@ const ViewDocumentButton: React.FC<{ document_uuid: string }> = ({
   );
 };
 
+// PDF Viewer Coming soon
+// <Document
+//   file="https://raw.githubusercontent.com/mycorrhizainc/examples/main/CO%20Clean%20Energy%20Plan%20Info%20Sheet.pdf"
+//   onLoadSuccess={onDocumentLoadSuccess}
+// >
+//   <Page pageNumber={pageNumber} />
+// </Document>
 export default ViewDocumentButton;
