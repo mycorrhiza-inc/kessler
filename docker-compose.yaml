@@ -12,10 +12,10 @@ services:
       # - ./frontend/public:/app/public
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`app.kessler.xyz`) && PathPrefix(`/`)"
+      - "traefik.http.routers.frontend.rule=Host(`${DOMAIN}`) && PathPrefix(`/`)"
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.routers.frontend.tls.certresolver=myresolver"
-      - "traefik.http.routers.whoami.rule=Host(`app.kessler.xyz`)"
+      - "traefik.http.routers.whoami.rule=Host(`${DOMAIN}`)"
       - "traefik.http.routers.whoami.entrypoints=websecure"
       - "traefik.http.routers.whoami.tls.certresolver=myresolver"
     expose:
@@ -43,7 +43,7 @@ services:
       - "443:443"
       - "8083:8080"
     volumes:
-      - "./letsencrypt:/letsencrypt"
+      - ".volumes/letsencrypt:/letsencrypt"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
 
 
@@ -68,7 +68,7 @@ services:
       - ./volumes/tmp:/tmp/
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`app.kessler.xyz`) && PathPrefix(`/api`) || PathPrefix(`/schema`)"
+      - "traefik.http.routers.backend.rule=Host(`${DOMAIN}`) && PathPrefix(`/api`) || PathPrefix(`/schema`)"
       - "traefik.http.routers.backend.entrypoints=websecure"
       - "traefik.http.routers.backend.tls.certresolver=myresolver"
       # - "traefik.http.routers.backend.tls={}"

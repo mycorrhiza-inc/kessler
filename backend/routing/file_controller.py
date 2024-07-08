@@ -324,8 +324,7 @@ class FileController(Controller):
 
         logger.info(final_return)
         # return final_return
-        return {"response": "This should return the file, but serialization is broken, I hope this is string is a fair substitute."}
-
+        return final_return
     @post(path="/files/add_urls")
     async def add_urls(
         self, files_repo: FileRepository, data: UrlUploadList, request: Request
