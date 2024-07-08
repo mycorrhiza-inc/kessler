@@ -156,8 +156,14 @@ def add_document_to_db(doc: Document) -> None:
 def add_document_to_db_from_text(text: str, metadata: Optional[dict] = None) -> None:
     if metadata is None:
         metadata = {}
-    document = Document(text=text, metadata=metadata)
-    add_document_to_db(document)
+    try:
+        document = Document(text=str(text), metadata=metadata)
+        add_document_to_db(document)
+    except Exception as e:
+        logger.error(f"Encountered error while adding document: {e}")
+        logger.error(f"Trying again with no metadata")
+        document = Document(text=str(text), metadata={})
+        add_document_to_db(document)
     return
 
 

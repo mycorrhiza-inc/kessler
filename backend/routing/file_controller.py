@@ -73,7 +73,7 @@ class FileUpdate(BaseModel):
 
 class UrlUpload(BaseModel):
     url: str
-    metadata: Dict[str, Any]
+    metadata: Dict[str, Any] = {}
 
 
 class UrlUploadList(BaseModel):
@@ -324,7 +324,7 @@ class FileController(Controller):
 
         logger.info(final_return)
         # return final_return
-        return "This should return the file, but serialization is broken, I hope this is string is a fair substitute."
+        return {"response": "This should return the file, but serialization is broken, I hope this is string is a fair substitute."}
 
     @post(path="/files/add_urls")
     async def add_urls(
