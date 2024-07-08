@@ -161,10 +161,10 @@ def add_document_to_db_from_text(text: str, metadata: Optional[dict] = None) -> 
         add_document_to_db(document)
     except Exception as e:
         logger.error(f"Encountered error while adding document: {e}")
-        logger.error(f"Trying again with no metadata")
-        document = Document(text=str(text), metadata={})
+        logger.error("Trying again with no metadata")
+        document = Document(text=str(text))
         add_document_to_db(document)
-    return
+    return None
 
 
 async def add_document_to_db_from_hash(hash_str: str) -> None:
