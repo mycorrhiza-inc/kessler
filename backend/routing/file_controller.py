@@ -390,6 +390,7 @@ class FileController(Controller):
             mdextract.backup_processed_text(
                 processed_original_text, obj.hash, doc_metadata, OS_BACKUP_FILEDIR
             )
+            assert isinstance(processed_original_text,str)
             logger.info("Backed up markdown text")
             if obj.lang == "en":
                 # Write directly to the english text box if
