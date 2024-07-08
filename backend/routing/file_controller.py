@@ -235,28 +235,30 @@ class FileController(Controller):
         logger: Any,
     ) -> Any:
         docingest = DocumentIngester(logger)
-        document_title = metadata.get("title")
-        document_doctype = metadata.get("doctype")
-        document_lang = metadata.get("language")
-        try:
-            assert isinstance(document_doctype, str)
-            if document_doctype[0] == ".":
-                document_doctype = document_doctype[1:]
-            assert isinstance(document_title, str)
-            assert isinstance(document_lang, str)
-        except Exception:
-            logger.error("Illformed Metadata please fix")
-            logger.error(f"Title: {document_title}")
-            logger.error(f"Doctype: {document_doctype}")
-            logger.error(f"Lang: {document_lang}")
+        def validate_metadata_mutable(metadata : dict):
+            if metadata.get("lang") is None:
+                metadata["lang"] = "en"
+            try:
+                assert isinstance(metadata.get("title"), str)
+                assert isinstance(metadata.get("doctype"), str)
+                assert isinstance(metadata.get("lang"), str)
+            except Exception:
+                logger.error("Illformed Metadata please fix")
+                logger.error(f"Title: {metadata.get("title")}")
+                logger.error(f"Doctype: {metadata.get("doctype")}")
+                logger.error(f"Lang: {metadata.get("title")}")
+                raise Exception("Metadata is illformed, this is likely an error in software, please submit a bug report.")
+            else:
+                logger.info("Title, Doctype and language successfully declared")
 
-        else:
-            logger.info("Title, Doctype and language successfully declared")
-
-        document_source = metadata.get("source")
-        if document_source is None:
-            document_source = "UNKNOWN"
-            metadata["source"] = "UNKNOWN"
+            if (metadata["doctype"])[0] == ".":
+                metadata["doctype"] = (metadata["doctype"])[1:]
+            if metadata.get("source") is None:
+                metadata["source"] = "unknown"
+            metadata["language"]=metadata["lang"]
+            return metadata
+        # This assignment shouldnt be necessary, but I hate mutating variable bugs.
+        metadata=validate_metadata_mutable(metadata)
 
         logger.info("Attempting to save data to file")
         result = docingest.save_filepath_to_hash(tmp_filepath, OS_HASH_FILEDIR)
@@ -285,10 +287,10 @@ class FileController(Controller):
             metadata_str = json.dumps(metadata)
             new_file = FileModel(
                 url="N/A",
-                name=document_title,
-                doctype=document_doctype,
-                lang=document_lang,
-                source=document_source,
+                name=metadata.get("title"),
+                doctype=metadata.get("doctype"),
+                lang=metadata.get("lang"),
+                source=metadata.get("source"),
                 mdata=metadata_str,
                 stage="stage1",
                 hash=filehash,
