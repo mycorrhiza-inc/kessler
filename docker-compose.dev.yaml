@@ -20,6 +20,9 @@ services:
       - "npm"
       - "run"
       - "dev"
+      #      - "--"
+      #      - "--hostname"
+      #      - "${domain:-127.0.0.1}"
 
   reverse-proxy:
     # official image
