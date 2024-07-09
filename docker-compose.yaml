@@ -12,10 +12,10 @@ services:
       # - ./frontend/public:/app/public
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`app.kessler.xyz`) && PathPrefix(`/`)"
+      - "traefik.http.routers.frontend.rule=Host(`${DOMAIN:?error}`) && PathPrefix(`/`)"
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.routers.frontend.tls.certresolver=myresolver"
-      - "traefik.http.routers.whoami.rule=Host(`app.kessler.xyz`)"
+      - "traefik.http.routers.whoami.rule=Host(`${DOMAIN:?error}`)"
       - "traefik.http.routers.whoami.entrypoints=websecure"
       - "traefik.http.routers.whoami.tls.certresolver=myresolver"
     expose:
@@ -41,9 +41,9 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      - "8083:8080"
+      - "${PROXY_UI_PORT:-8083}:8080"
     volumes:
-      - "./letsencrypt:/letsencrypt"
+      - "./volumes/letsencrypt:/letsencrypt"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
 
 
@@ -62,13 +62,16 @@ services:
       dockerfile: ./Dockerfile
     env_file:
       - config/global.env
+    environment:
+      - LANCEDB_CONFIG_DIR=/lancedb
     volumes:
       - ./volumes/instance:/app/instance
       - ./volumes/files:/files
       - ./volumes/tmp:/tmp/
+      - ./volumes/lancedb:/lancedb
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`app.kessler.xyz`) && PathPrefix(`/api`) || PathPrefix(`/schema`)"
+      - "traefik.http.routers.backend.rule=Host(`${DOMAIN:?error}`) && PathPrefix(`/api`) || PathPrefix(`/schema`)"
       - "traefik.http.routers.backend.entrypoints=websecure"
       - "traefik.http.routers.backend.tls.certresolver=myresolver"
       # - "traefik.http.routers.backend.tls={}"

@@ -73,7 +73,7 @@ class FileUpdate(BaseModel):
 
 class UrlUpload(BaseModel):
     url: str
-    metadata: Dict[str, Any]
+    metadata: Dict[str, Any] = {}
 
 
 class UrlUploadList(BaseModel):
@@ -125,18 +125,31 @@ class FileController(Controller):
     @get(path="/files/{file_id:uuid}")
     async def get_file(
         self,
-        withtext: bool,
         files_repo: FileRepository,
         file_id: UUID = Parameter(title="File ID", description="File to retieve"),
     ) -> FileSchema:
         obj = await files_repo.get(file_id)
 
-        if withtext:
-            type_adapter = TypeAdapter(FileSchemaWithText)
-        else:
-            type_adapter = TypeAdapter(FileSchema)
+        type_adapter = TypeAdapter(FileSchema)
 
         return type_adapter.validate_python(obj)
+
+    @get(path="/files/get_markdown/{file_id:uuid}")
+    async def get_markdown(
+        self,
+        files_repo: FileRepository,
+        file_id: UUID = Parameter(title="File ID", description="File to retieve"),
+    ) -> str:
+        obj = await files_repo.get(file_id)
+
+        type_adapter = TypeAdapter(FileSchemaWithText)
+
+        obj_with_text=type_adapter.validate_python(obj)
+
+        markdown_text = obj_with_text.english_text 
+        if markdown_text is "":
+            markdown_text="Could not find Document Markdown Text"
+        return markdown_text
 
     @get(path="/files/all")
     async def get_all_files(
@@ -159,7 +172,7 @@ class FileController(Controller):
         request: Request,
         process: bool = True,
         override_hash: bool = False,
-    ) -> Any:
+    ) -> str:
         supplemental_metadata = {"source": "personal"}
         logger = request.logger
         docingest = DocumentIngester(logger)
@@ -174,9 +187,12 @@ class FileController(Controller):
         additional_metadata = docingest.infer_metadata_from_path(final_filepath)
         additional_metadata.update(supplemental_metadata)
         final_metadata = additional_metadata
-        return await self.add_file_raw(
+        if final_metadata.get("lang") is None:
+            final_metadata["lang"]="en"
+        file_obj =  await self.add_file_raw(
             final_filepath, final_metadata, process, override_hash, files_repo, logger
         )
+        return "Successfully added document!"
 
     # TODO : (Nic) Make function that can process uploaded files
     @post(path="/files/add_url")
@@ -187,7 +203,7 @@ class FileController(Controller):
         request: Request,
         process: bool = True,
         override_hash: bool = False,
-    ) -> Any:
+    ) -> str:
         logger = request.logger
         logger.info("adding files")
         logger.info(data)
@@ -206,9 +222,13 @@ class FileController(Controller):
             metadata.update(new_metadata)
 
         request.logger.info(f"Metadata Successfully Created with metadata {metadata}")
-        return await self.add_file_raw(
+        file_obj =  await self.add_file_raw(
             tmpfile_path, metadata, process, override_hash, files_repo, logger
         )
+        # type_adapter = TypeAdapter(FileSchema)
+        # final_return = type_adapter.validate_python(new_file)
+        # logger.info(final_return)
+        return "Successfully added document!"
 
     async def add_file_raw(
         self,
@@ -218,26 +238,32 @@ class FileController(Controller):
         override_hash: bool,
         files_repo: FileRepository,
         logger: Any,
-    ) -> Any:
+    ) -> None:
         docingest = DocumentIngester(logger)
-        document_title = metadata.get("title")
-        document_doctype = metadata.get("doctype")
-        document_lang = metadata.get("language")
+        def validate_metadata_mutable(metadata : dict):
+            if metadata.get("lang") is None:
+                metadata["lang"] = "en"
+            try:
+                assert isinstance(metadata.get("title"), str)
+                assert isinstance(metadata.get("doctype"), str)
+                assert isinstance(metadata.get("lang"), str)
+            except Exception:
+                logger.error("Illformed Metadata please fix")
+                logger.error(f"Title: {metadata.get("title")}")
+                logger.error(f"Doctype: {metadata.get("doctype")}")
+                logger.error(f"Lang: {metadata.get("title")}")
+                raise Exception("Metadata is illformed, this is likely an error in software, please submit a bug report.")
+            else:
+                logger.info("Title, Doctype and language successfully declared")
 
-        try:
-            assert isinstance(document_title, str)
-            assert isinstance(document_doctype, str)
-            assert isinstance(document_lang, str)
-        except Exception:
-            logger.error("Illformed Metadata please fix")
-
-        else:
-            logger.info("Title, Doctype and language successfully declared")
-
-        document_source = metadata.get("source")
-        if document_source is None:
-            document_source = "UNKNOWN"
-            metadata["source"] = "UNKNOWN"
+            if (metadata["doctype"])[0] == ".":
+                metadata["doctype"] = (metadata["doctype"])[1:]
+            if metadata.get("source") is None:
+                metadata["source"] = "unknown"
+            metadata["language"]=metadata["lang"]
+            return metadata
+        # This assignment shouldnt be necessary, but I hate mutating variable bugs.
+        metadata=validate_metadata_mutable(metadata)
 
         logger.info("Attempting to save data to file")
         result = docingest.save_filepath_to_hash(tmp_filepath, OS_HASH_FILEDIR)
@@ -266,10 +292,10 @@ class FileController(Controller):
             metadata_str = json.dumps(metadata)
             new_file = FileModel(
                 url="N/A",
-                name=document_title,
-                doctype=document_doctype,
-                lang=document_lang,
-                source=document_source,
+                name=metadata.get("title"),
+                doctype=metadata.get("doctype"),
+                lang=metadata.get("lang"),
+                source=metadata.get("source"),
                 mdata=metadata_str,
                 stage="stage1",
                 hash=filehash,
@@ -298,12 +324,8 @@ class FileController(Controller):
             logger.info("Processing File")
             await self.process_file_raw(new_file, files_repo, logger, False)
 
-        type_adapter = TypeAdapter(FileSchema)
-        final_return = type_adapter.validate_python(new_file)
+        return None
 
-        logger.info(final_return)
-        # return final_return
-        return "This should return the file, but serialization is broken, I hope this is string is a fair substitute."
 
     @post(path="/files/add_urls")
     async def add_urls(
@@ -322,7 +344,7 @@ class FileController(Controller):
             title="File ID as hex string", description="File to retieve"
         ),
         regenerate: bool = True,  # Figure out how to pass in a boolean as a query paramater
-    ) -> FileSchema:
+    ) -> None:
         """Process a File."""
         file_id = UUID(file_id_str)
         request.logger.info(file_id)
@@ -349,6 +371,23 @@ class FileController(Controller):
 
         if regenerate:
             current_stage = "stage1"
+        # TODO: Replace with pydantic validation
+        def generate_searchable_metadata(initial_metadata : dict) -> dict:
+            return_metadata = {
+                "title"  : initial_metadata.get("title"),
+                "author" : initial_metadata.get("author"),
+                "source" : initial_metadata.get("source"),
+                "date" : initial_metadata.get("date"),
+            }
+            def guarentee_field(field: str, default_value : str = "unknown"):
+                if return_metadata.get(field) is None:
+                    return_metadata[field]=default_value
+            guarentee_field("title")
+            guarentee_field("author")
+            guarentee_field("source")
+            guarentee_field("date")
+            return return_metadata
+
 
         # text extraction
         def process_stage_one():
@@ -369,6 +408,7 @@ class FileController(Controller):
             mdextract.backup_processed_text(
                 processed_original_text, obj.hash, doc_metadata, OS_BACKUP_FILEDIR
             )
+            assert isinstance(processed_original_text,str)
             logger.info("Backed up markdown text")
             if obj.lang == "en":
                 # Write directly to the english text box if
@@ -402,8 +442,9 @@ class FileController(Controller):
         # text commitment
         def process_stage_three():
             logger.info("Adding Document to Vector Database")
+            searchable_metadata = generate_searchable_metadata(doc_metadata)
             try:
-                add_document_to_db_from_text(obj.english_text, doc_metadata)
+                add_document_to_db_from_text(obj.english_text, searchable_metadata)
             except Exception as e:
                 raise Exception("Failure in adding document to vector database", e)
             return "completed"
@@ -420,14 +461,16 @@ class FileController(Controller):
                     response_code, response_message = (
                         200,
                         "Document Fully Processed.",
-                    )
+                     )
                     logger.info(current_stage)
                     obj.stage = current_stage
                     logger.info(response_code)
                     logger.info(response_message)
                     _ = files_repo.update(obj)
                     await files_repo.session.commit()
-                    break
+                    type_adapter = TypeAdapter(FileSchema)
+                    final_return = type_adapter.validate_python(obj)
+                    return final_return
                 case _:
                     raise Exception(
                         "Document was incorrectly added to database, \
