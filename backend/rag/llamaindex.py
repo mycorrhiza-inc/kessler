@@ -43,6 +43,8 @@ logger.setLevel(logging.DEBUG)
 
 handler = logging.StreamHandler(sys.stderr)
 
+from llama_index.embeddings.octoai import OctoAIEmbedding
+
 
 # Uncomment to see debug logs
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
@@ -55,8 +57,10 @@ Settings.llm = Groq(
 )
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
+OCTOAI_API_KEY = os.environ["OCTOAI_API_KEY"]
 # TODO : Change embedding model to use not openai.
 # Settings.embed_model = OllamaEmbedding(model_name="nomic-embed-text")
+Settings.embed_model = OctoAIEmbedding(api_key=OCTOAI_API_KEY)
 
 connection_string_unknown = os.environ["DATABASE_CONNECTION_STRING"]
 
@@ -156,9 +160,15 @@ def add_document_to_db(doc: Document) -> None:
 def add_document_to_db_from_text(text: str, metadata: Optional[dict] = None) -> None:
     if metadata is None:
         metadata = {}
-    document = Document(text=text, metadata=metadata)
-    add_document_to_db(document)
-    return
+    try:
+        document = Document(text=str(text), metadata=metadata)
+        add_document_to_db(document)
+    except Exception as e:
+        logger.error(f"Encountered error while adding document: {e}")
+        logger.error("Trying again with no metadata")
+        document = Document(text=str(text))
+        add_document_to_db(document)
+    return None
 
 
 async def add_document_to_db_from_hash(hash_str: str) -> None:

@@ -290,4 +290,7 @@ class DocumentIngester:
         return "ErrorHashingFile" + rand_string()  # I am really sorry about this
 
     def infer_metadata_from_path(self, filepath: Path) -> dict:
+        return_doctype = filepath.suffix
+        if return_doctype[0] == ".":
+            return_doctype = return_doctype[1:]
         return {"title": filepath.stem, "doctype": filepath.suffix}

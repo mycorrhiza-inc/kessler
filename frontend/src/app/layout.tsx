@@ -21,7 +21,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ClerkProvider>
+    <ClerkProvider
+      // signInForceRedirectUrl = "https:app.kessler.xyz/"
+      // signUpForceRedirectUrl = "https:app.kessler.xyz/"
+    >
       <html lang="en">
         <body>
           <ColorModeScript initialColorMode={theme.config.initialColorMode} />
