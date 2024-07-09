@@ -202,7 +202,7 @@ class FileController(Controller):
         request: Request,
         process: bool = True,
         override_hash: bool = False,
-    ) -> Any:
+    ) -> FileSchema:
         logger = request.logger
         logger.info("adding files")
         logger.info(data)
@@ -233,7 +233,7 @@ class FileController(Controller):
         override_hash: bool,
         files_repo: FileRepository,
         logger: Any,
-    ) -> Any:
+    ) -> FileSchema:
         docingest = DocumentIngester(logger)
         def validate_metadata_mutable(metadata : dict):
             if metadata.get("lang") is None:
@@ -321,10 +321,10 @@ class FileController(Controller):
 
         type_adapter = TypeAdapter(FileSchema)
         final_return = type_adapter.validate_python(new_file)
-
         logger.info(final_return)
-        # return final_return
         return final_return
+
+    
     @post(path="/files/add_urls")
     async def add_urls(
         self, files_repo: FileRepository, data: UrlUploadList, request: Request
@@ -459,14 +459,16 @@ class FileController(Controller):
                     response_code, response_message = (
                         200,
                         "Document Fully Processed.",
-                    )
+                     )
                     logger.info(current_stage)
                     obj.stage = current_stage
                     logger.info(response_code)
                     logger.info(response_message)
                     _ = files_repo.update(obj)
                     await files_repo.session.commit()
-                    break
+                    type_adapter = TypeAdapter(FileSchema)
+                    final_return = type_adapter.validate_python(obj)
+                    return final_return
                 case _:
                     raise Exception(
                         "Document was incorrectly added to database, \
