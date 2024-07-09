@@ -1,22 +1,19 @@
 "use client";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { link } from "fs";
-import { stringify } from "querystring";
-import ToolBar from "../../lib/components/ToolBar";
 import Layout from "../../lib/components/AppLayout";
 
-type LinkData = {
-  date_created: string;
-  url: string;
-  id: string;
-  title: string;
-};
+// type LinkData = {
+//   date_created: string;
+//   url: string;
+//   id: string;
+//   title: string;
+// };
 
 const AddLink = ({ refreshList }: { refreshList: () => void }) => {
   const [link, setLink] = useState("");
 
-  const PostLink = async (formData: any) => {
+  const PostLink = async (_formData: any) => {
     console.log(`link:\n${link}`);
 
     await fetch("/api/files", {
@@ -55,10 +52,9 @@ const AddLink = ({ refreshList }: { refreshList: () => void }) => {
 };
 
 const LinksView = () => {
-  let ul: any[] = [];
   let [links, setLinks] = useState<any[]>([]);
   const getAllLinks = () => {
-    let l = axios
+    axios
       .get("/api/files/all")
       .then((e) => {
         setLinks(e.data);
