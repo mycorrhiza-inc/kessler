@@ -48,7 +48,7 @@ services:
     env_file:
       - config/global.env
     environment:
-      - LANCEDB_CONFIG_DIR="/lancedb"
+      - LANCEDB_CONFIG_DIR=/lancedb
     volumes:
       - ./backend:/app
       - ./volumes/instance:/app/instance
