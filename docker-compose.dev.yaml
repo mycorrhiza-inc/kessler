@@ -1,6 +1,7 @@
 # local development docker compose
 services:
   frontend:
+    hostname: "app.kessler.xyz"
     build:
       context: ./
       dockerfile: ./frontend/Dockerfile
@@ -27,7 +28,7 @@ services:
     command: --api.insecure=true --providers.docker
     ports:
       - "80:80"
-      - "8083:8080"
+      - "${PROXY_UI_PORT:-8083}:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 
@@ -46,11 +47,14 @@ services:
       dockerfile: ./Dockerfile
     env_file:
       - config/global.env
+    environment:
+      - LANCEDB_CONFIG_DIR="/lancedb"
     volumes:
       - ./backend:/app
       - ./volumes/instance:/app/instance
       - ./volumes/files:/files
       - ./volumes/tmp:/tmp/
+      - ./volumes/lancedb:/lancedb
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.backend.rule=PathPrefix(`/api/`) || PathPrefix(`/schema/`)"
