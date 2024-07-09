@@ -172,7 +172,7 @@ class FileController(Controller):
         request: Request,
         process: bool = True,
         override_hash: bool = False,
-    ) -> Any:
+    ) -> str:
         supplemental_metadata = {"source": "personal"}
         logger = request.logger
         docingest = DocumentIngester(logger)
@@ -189,9 +189,10 @@ class FileController(Controller):
         final_metadata = additional_metadata
         if final_metadata.get("lang") is None:
             final_metadata["lang"]="en"
-        return await self.add_file_raw(
+        file_obj =  await self.add_file_raw(
             final_filepath, final_metadata, process, override_hash, files_repo, logger
         )
+        return "Successfully added document!"
 
     # TODO : (Nic) Make function that can process uploaded files
     @post(path="/files/add_url")
@@ -202,7 +203,7 @@ class FileController(Controller):
         request: Request,
         process: bool = True,
         override_hash: bool = False,
-    ) -> FileSchema:
+    ) -> str:
         logger = request.logger
         logger.info("adding files")
         logger.info(data)
@@ -221,9 +222,13 @@ class FileController(Controller):
             metadata.update(new_metadata)
 
         request.logger.info(f"Metadata Successfully Created with metadata {metadata}")
-        return await self.add_file_raw(
+        file_obj =  await self.add_file_raw(
             tmpfile_path, metadata, process, override_hash, files_repo, logger
         )
+        # type_adapter = TypeAdapter(FileSchema)
+        # final_return = type_adapter.validate_python(new_file)
+        # logger.info(final_return)
+        return "Successfully added document!"
 
     async def add_file_raw(
         self,
@@ -233,7 +238,7 @@ class FileController(Controller):
         override_hash: bool,
         files_repo: FileRepository,
         logger: Any,
-    ) -> FileSchema:
+    ) -> None:
         docingest = DocumentIngester(logger)
         def validate_metadata_mutable(metadata : dict):
             if metadata.get("lang") is None:
@@ -319,12 +324,9 @@ class FileController(Controller):
             logger.info("Processing File")
             await self.process_file_raw(new_file, files_repo, logger, False)
 
-        type_adapter = TypeAdapter(FileSchema)
-        final_return = type_adapter.validate_python(new_file)
-        logger.info(final_return)
-        return final_return
+        return None
 
-    
+
     @post(path="/files/add_urls")
     async def add_urls(
         self, files_repo: FileRepository, data: UrlUploadList, request: Request
@@ -342,7 +344,7 @@ class FileController(Controller):
             title="File ID as hex string", description="File to retieve"
         ),
         regenerate: bool = True,  # Figure out how to pass in a boolean as a query paramater
-    ) -> FileSchema:
+    ) -> None:
         """Process a File."""
         file_id = UUID(file_id_str)
         request.logger.info(file_id)

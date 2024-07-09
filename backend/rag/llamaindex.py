@@ -43,6 +43,8 @@ logger.setLevel(logging.DEBUG)
 
 handler = logging.StreamHandler(sys.stderr)
 
+from llama_index.embeddings.octoai import OctoAIEmbedding
+
 
 # Uncomment to see debug logs
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
@@ -55,8 +57,10 @@ Settings.llm = Groq(
 )
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
+OCTOAI_API_KEY = os.environ["OCTOAI_API_KEY"]
 # TODO : Change embedding model to use not openai.
 # Settings.embed_model = OllamaEmbedding(model_name="nomic-embed-text")
+Settings.embed_model = OctoAIEmbedding(api_key=OCTOAI_API_KEY)
 
 connection_string_unknown = os.environ["DATABASE_CONNECTION_STRING"]
 
