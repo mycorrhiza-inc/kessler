@@ -46,6 +46,7 @@ class FileSchema(PydanticBaseModel):
 
     id: Annotated[Any, Field(validate_default=True)]
     url: str | None = None
+    hash: str | None = None
     doctype: str | None = None
     lang: str | None = None
     name: str | None = None
