@@ -36,7 +36,7 @@ const DynamicModal: React.FC<{
 
   const getMarkdownContent = async (document_uuid: string) => {
     try {
-      const response = await fetch("/api/files/get_markdown/" + document_uuid, {
+      const response = await fetch("/api/files/markdown/" + document_uuid, {
         method: "GET",
       });
 
