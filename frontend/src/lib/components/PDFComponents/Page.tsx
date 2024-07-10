@@ -1,8 +1,13 @@
 import React from "react";
 
-const Page = React.memo(props => {
+interface PageProps {
+  children: React.ReactNode;
+  style?: React.CSSProperties;
+}
+
+const Page = React.memo((props: PageProps) => {
   const { children, style } = props;
-  const internalStyle = {
+  const internalStyle: React.CSSProperties = {
     ...style,
     display: "flex",
     alignItems: "center",
@@ -13,3 +18,5 @@ const Page = React.memo(props => {
 });
 
 export default Page;
+
+

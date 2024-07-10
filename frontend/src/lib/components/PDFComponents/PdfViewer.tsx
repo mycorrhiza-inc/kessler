@@ -4,18 +4,21 @@ import useResizeObserver from "use-resize-observer";
 import PdfPage from "./PdfPage";
 import Page from "./Page";
 
+import { MutableRefObject } from "react";
+
+
 // Define the shape of the props
 interface PdfViewerProps {
-  width: number | string;
-  height: number | string;
+  width?: number | string;
+  height?: number | string;
   itemCount: number;
   getPdfPage: (index: number) => Promise<any>;
-  scale: number;
-  gap: number;
-  windowRef?: RefObject<VariableSizeList>;
+  scale?: number;
+  gap?: number;
+  windowRef: MutableRefObject<VariableSizeList | null>;
 }
 
-const PdfViewer: React.FC<PdfViewerProps> = ({
+function PdfViewer({
   width = "100%",
   height = "400px",
   itemCount,
@@ -23,11 +26,11 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
   scale = 1,
   gap = 40,
   windowRef
-}) => {
+} : PdfViewerProps) {
 
   const [pages, setPages] = useState<Array<any>>([]);
 
-  const listRef = useRef<VariableSizeList>(null);
+  const listRef = useRef<VariableSizeList | null>(null);
 
   const { ref, width: internalWidth = 400, height: internalHeight = 600 } = useResizeObserver<HTMLDivElement>();
 
@@ -61,9 +64,9 @@ const PdfViewer: React.FC<PdfViewerProps> = ({
   const handleListRef = useCallback(
     (elem: VariableSizeList | null) => {
       if (elem) {
-        listRef.current = elem;
+        (listRef as MutableRefObject<VariableSizeList | null>).current = elem;
         if (windowRef) {
-          windowRef.current = elem;
+          (windowRef as MutableRefObject<VariableSizeList | null>).current = elem;
         }
       }
     },

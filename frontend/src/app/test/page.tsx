@@ -5,6 +5,12 @@ import PDFApplet from "../../lib/components/PDFComponents/PDFApplet"
 
 
 
-const Page = () => <PDFApplet></PDFApplet>;
+const Page = () => 
+ <>
+    <Text>This is a test page</Text>
+    <PDFApplet></PDFApplet>
+ </>
+  ;
+
 
 export default Page;

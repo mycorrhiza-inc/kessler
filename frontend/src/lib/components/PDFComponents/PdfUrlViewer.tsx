@@ -1,19 +1,17 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useState, useCallback, useRef, RefObject } from "react";
 import PropTypes from "prop-types";
 import pdfjs from "pdfjs-dist";
 import PdfViewer from "./PdfViewer";
 
 interface PdfUrlViewerProps {
   url: string;
-  [key: string]: otherProps;
-}
-
-interface otherProps {
-  index : number
+  scale: number;
+  windowRef: RefObject<any>;
+  [key: string]: any;
 }
 
 const PdfUrlViewer: React.FC<PdfUrlViewerProps> = (props) => {
-  const { url, ...others } = props;
+  const { url, scale, windowRef, ...others } = props;
 
   const pdfRef = useRef<pdfjs.PDFDocumentProxy | null>(null);
 
@@ -24,7 +22,6 @@ const PdfUrlViewer: React.FC<PdfUrlViewerProps> = (props) => {
     loadingTask.promise.then(
       (pdf) => {
         pdfRef.current = pdf;
-
         setItemCount(pdf.numPages);
 
         // Fetch the first page
@@ -52,13 +49,18 @@ const PdfUrlViewer: React.FC<PdfUrlViewerProps> = (props) => {
       {...others}
       itemCount={itemCount}
       getPdfPage={handleGetPdfPage}
+      scale={scale}
+      windowRef={windowRef}
     />
   );
 };
 
-PdfUrlViewer.propTypes = {
-  url: PropTypes.string.isRequired,
-};
+//PdfUrlViewer.propTypes = {
+//  url: PropTypes.string.isRequired,
+//  scale: PropTypes.number.isRequired,
+//  windowRef: PropTypes.object.isRequired,
+//};
 
 export default PdfUrlViewer;
+
 

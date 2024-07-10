@@ -2,7 +2,7 @@
 import React, { useState, useRef } from "react";
 import PdfUrlViewer from "./PdfUrlViewer";
 
-const PDFApplet: React.FC = () => {
+function PDFApplet()  {
   const [scale, setScale] = useState<number>(1);
   const [page, setPage] = useState<number>(1);
   const windowRef = useRef<any>(null);
