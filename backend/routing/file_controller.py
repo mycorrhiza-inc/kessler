@@ -410,21 +410,6 @@ class FileController(Controller):
         if regenerate:
             current_stage = "stage1"
         # TODO: Replace with pydantic validation
-        def generate_searchable_metadata(initial_metadata : dict) -> dict:
-            return_metadata = {
-                "title"  : initial_metadata.get("title"),
-                "author" : initial_metadata.get("author"),
-                "source" : initial_metadata.get("source"),
-                "date" : initial_metadata.get("date"),
-            }
-            def guarentee_field(field: str, default_value : str = "unknown"):
-                if return_metadata.get(field) is None:
-                    return_metadata[field]=default_value
-            guarentee_field("title")
-            guarentee_field("author")
-            guarentee_field("source")
-            guarentee_field("date")
-            return return_metadata
 
 
         # text extraction
@@ -477,9 +462,26 @@ class FileController(Controller):
                 )
             return "stage3"
 
-        # text commitment
+        # TODO: Replace with pydantic validation
+
         def process_stage_three():
             logger.info("Adding Document to Vector Database")
+
+            def generate_searchable_metadata(initial_metadata : dict) -> dict:
+                return_metadata = {
+                    "title"  : initial_metadata.get("title"),
+                    "author" : initial_metadata.get("author"),
+                    "source" : initial_metadata.get("source"),
+                    "date" : initial_metadata.get("date"),
+                }
+                def guarentee_field(field: str, default_value : Any = "unknown"):
+                    if return_metadata.get(field) is None:
+                        return_metadata[field]=default_value
+                guarentee_field("title")
+                guarentee_field("author")
+                guarentee_field("source")
+                guarentee_field("date")
+                return return_metadata
             searchable_metadata = generate_searchable_metadata(doc_metadata)
             try:
                 add_document_to_db_from_text(obj.english_text, searchable_metadata)
