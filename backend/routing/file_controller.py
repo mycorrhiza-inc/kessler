@@ -164,6 +164,8 @@ class FileController(Controller):
     ) -> Response:
         logger = request.logger
         obj = await files_repo.get(file_id)
+        if obj is None:
+            return Response(content="ID does not exist", status_code=404)
 
         type_adapter = TypeAdapter(FileSchema)
         obj=type_adapter.validate_python(obj)
@@ -177,6 +179,11 @@ class FileController(Controller):
         # Read the file content
         with open(file_path, 'rb') as file:
             file_content = file.read()
+        # currently doesnt work unfortunately
+        # file_name = obj.name
+        # headers = {
+        #     "Content-Disposition": f'attachment; filename="{file_name}"'
+        # }
 
         return Response(content=file_content, media_type="application/octet-stream")
 

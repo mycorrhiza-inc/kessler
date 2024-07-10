@@ -1,8 +1,8 @@
+"use client"
 import React, { useState, useRef } from "react";
-import "./styles.css";
 import PdfUrlViewer from "./PdfUrlViewer";
 
-export default function App() {
+function PDFApplet() {
   const [scale, setScale] = useState(1);
   const [page, setPage] = useState(1);
   const windowRef = useRef();
@@ -37,3 +37,4 @@ export default function App() {
     </div>
   );
 }
+export default PDFApplet
