@@ -1,6 +1,5 @@
 "use client";
 import Layout from "../../lib/components/AppLayout";
-import ToolBar from "../../lib/components/ToolBar";
 import Box from "@mui/joy/Box";
 import Container from "@mui/joy/Container";
 
