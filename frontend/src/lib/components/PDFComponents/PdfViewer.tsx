@@ -1,41 +1,53 @@
-import React, { useState, useCallback, useRef, useEffect } from "react";
-import PropTypes from "prop-types";
+import React, { useState, useCallback, useRef, useEffect, RefObject } from "react";
 import { VariableSizeList } from "react-window";
 import useResizeObserver from "use-resize-observer";
 import PdfPage from "./PdfPage";
 import Page from "./Page";
 
-const PdfViewer = props => {
-  const { width, height, itemCount, getPdfPage, scale, gap, windowRef } = props;
+// Define the shape of the props
+interface PdfViewerProps {
+  width: number | string;
+  height: number | string;
+  itemCount: number;
+  getPdfPage: (index: number) => Promise<any>;
+  scale: number;
+  gap: number;
+  windowRef?: RefObject<VariableSizeList>;
+}
 
-  const [pages, setPages] = useState([]);
+const PdfViewer: React.FC<PdfViewerProps> = ({
+  width = "100%",
+  height = "400px",
+  itemCount,
+  getPdfPage,
+  scale = 1,
+  gap = 40,
+  windowRef
+}) => {
 
-  const listRef = useRef();
+  const [pages, setPages] = useState<Array<any>>([]);
 
-  const {
-    ref,
-    width: internalWidth = 400,
-    height: internalHeight = 600
-  } = useResizeObserver();
+  const listRef = useRef<VariableSizeList>(null);
+
+  const { ref, width: internalWidth = 400, height: internalHeight = 600 } = useResizeObserver<HTMLDivElement>();
 
   const fetchPage = useCallback(
-    index => {
+    async (index: number) => {
       if (!pages[index]) {
-        getPdfPage(index).then(page => {
-          setPages(prev => {
-            const next = [...prev];
-            next[index] = page;
-            return next;
-          });
-          listRef.current.resetAfterIndex(index);
+        const page = await getPdfPage(index);
+        setPages(prev => {
+          const next = [...prev];
+          next[index] = page;
+          return next;
         });
+        listRef.current?.resetAfterIndex(index);
       }
     },
     [getPdfPage, pages]
   );
 
   const handleItemSize = useCallback(
-    index => {
+    (index: number) => {
       const page = pages[index];
       if (page) {
         const viewport = page.getViewport({ scale });
@@ -47,20 +59,22 @@ const PdfViewer = props => {
   );
 
   const handleListRef = useCallback(
-    elem => {
-      listRef.current = elem;
-      if (windowRef) {
-        windowRef.current = elem;
+    (elem: VariableSizeList | null) => {
+      if (elem) {
+        listRef.current = elem;
+        if (windowRef) {
+          windowRef.current = elem;
+        }
       }
     },
     [windowRef]
   );
 
   useEffect(() => {
-    listRef.current.resetAfterIndex(0);
+    listRef.current?.resetAfterIndex(0);
   }, [scale]);
 
-  const style = {
+  const style: React.CSSProperties = {
     width,
     height,
     border: "1px solid #ccc",
@@ -89,21 +103,5 @@ const PdfViewer = props => {
   );
 };
 
-PdfViewer.propTypes = {
-  width: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
-  height: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
-  itemCount: PropTypes.number.isRequired,
-  getPdfPage: PropTypes.func.isRequired,
-  scale: PropTypes.number,
-  gap: PropTypes.number,
-  windowRef: PropTypes.object
-};
-
-PdfViewer.defaultProps = {
-  width: "100%",
-  height: "400px",
-  scale: 1,
-  gap: 40
-};
-
 export default PdfViewer;
+

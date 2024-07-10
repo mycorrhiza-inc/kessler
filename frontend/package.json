@@ -35,11 +35,13 @@
     "react-loader-spinner": "^6.1.6",
     "react-markdown": "^9.0.1",
     "react-syntax-highlighter": "^15.5.0",
+    "react-window": "^1.8.10",
     "reactflow": "^11.11.4",
     "rehype-katex": "^7.0.0",
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.0",
     "remark-math": "^6.0.0",
+    "use-resize-observer": "^9.1.0",
     "zustand": "^4.5.4"
   },
   "devDependencies": {
