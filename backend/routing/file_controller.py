@@ -272,7 +272,7 @@ class FileController(Controller):
         self,
         tmp_filepath: Path,
         metadata: dict,
-        process: bool,
+        process: bool ,  # Figure out how to pass in a boolean as a query paramater
         override_hash: bool,
         files_repo: FileRepository,
         logger: Any,
@@ -364,7 +364,7 @@ class FileController(Controller):
 
         if process:
             logger.info("Processing File")
-            await self.process_file_raw(new_file, files_repo, logger, False)
+            await self.process_file_raw(new_file, files_repo, logger, "")
 
         return None
 
@@ -384,7 +384,7 @@ class FileController(Controller):
         file_id_str: str = Parameter(
             title="File ID as hex string", description="File to retieve"
         ),
-        regenerate: bool = True,  # Figure out how to pass in a boolean as a query paramater
+        regenerate: str = "",  # Figure out how to pass in a boolean as a query paramater
     ) -> None:
         """Process a File."""
         file_id = UUID(file_id_str)
@@ -396,7 +396,7 @@ class FileController(Controller):
         return self.validate_and_jsonify(obj)
 
     async def process_file_raw(
-        self, obj: FileModel, files_repo: FileRepository, logger: Any, regenerate: bool
+        self, obj: FileModel, files_repo: FileRepository, logger: Any, regenerate: str = ""
     ):
         logger.info(type(obj))
         logger.info(obj)
@@ -410,8 +410,8 @@ class FileController(Controller):
             "Internal error somewhere in process.",
         )
 
-        if regenerate:
-            current_stage = "stage1"
+        if regenerate != "":
+            current_stage = regenerate
 
         # TODO: Replace with pydantic validation
 

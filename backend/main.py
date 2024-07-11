@@ -56,7 +56,8 @@ async def on_startup() -> None:
         initialize_db_table()
     except Exception as e:
         logger.error("catastrophic failure setting up lancedb")
-        raise e
+        # What if we didnt?
+        # raise e
 
     async with utils.sqlalchemy_config.get_engine().begin() as conn:
         # UUIDAuditBase extends UUIDBase so create_all should build both
