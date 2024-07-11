@@ -72,6 +72,9 @@ class SearchController(Controller):
 
         res = v.search(data.query).to_list()
 
+        # TODO: get the correct structure of the the search results for the
+        # search document viewer.
+
         # search all dockets for a given item
         def clean_data(data):
             # Make a deep copy of the data to avoid modifying the original data
@@ -92,4 +95,6 @@ class SearchController(Controller):
 
         # Apply the clean_data function to each item in search results
         filtered_data = [clean_data(item) for item in res]
-        return filtered_data
+
+        # return filtered_data
+        return res
