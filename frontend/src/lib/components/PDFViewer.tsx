@@ -5,6 +5,7 @@ import { useResizeObserver } from '@wojtekmaj/react-hooks';
 import { pdfjs, Document, Page } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
+import dynamic from 'next/dynamic'
 
 import './PDFViewer.css';
 
@@ -49,7 +50,7 @@ const maxWidth = 800;
 
 type PDFFile = string | File | null;
 
-function Sample() {
+function PDFTesting() {
   const [file, setFile] = useState<PDFFile>('./sample.pdf');
   const [numPages, setNumPages] = useState<number>();
   const [containerRef, setContainerRef] = useState<HTMLElement | null>(null);
@@ -104,4 +105,6 @@ function Sample() {
     </div>
   );
 }
-export default Sample;
+export default dynamic(() => Promise.resolve(PDFTesting), {
+  ssr: false
+})
