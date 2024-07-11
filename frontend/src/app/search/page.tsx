@@ -37,8 +37,6 @@ export default function SearchPage() {
   const handleQueryChange = async (event: ChangeEvent<HTMLInputElement>) => {
     setResults([]);
     setQuery(event.target.value);
-    setSearching(true);
-    await getSearchResults();
   };
 
   // search stuff
@@ -75,6 +73,12 @@ export default function SearchPage() {
     setResults(results);
   };
 
+  const handleEnter = async (event) => {
+    if (event.key === 'Enter') {
+      await getSearchResults()
+    }
+  }
+
   return <Box w='100vw' h='100vh' m='0' p='0'>
     <Flex direction="column" alignItems='center'>
       <Center>
@@ -92,6 +96,7 @@ export default function SearchPage() {
           minW="500px"
           value={searchQuery}
           onChange={handleQueryChange}
+          onKeyDown={handleEnter}
         />
       </Center>
       <Spacer />
