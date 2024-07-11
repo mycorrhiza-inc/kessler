@@ -22,6 +22,7 @@ from lance_store.connection import get_lance_connection
 
 from litestar.events import listener
 from lance_store.connection import ensure_fts_index
+from rag.llamaindex import initialize_db_table
 import threading
 
 
@@ -49,7 +50,14 @@ def increment_processed_docs(num: int) -> None:
 
 
 async def on_startup() -> None:
-    full_fts_reindex()
+    logger.debug("running startup")
+    logger.debug("ensuring tables exist")
+    try:
+        initialize_db_table()
+    except Exception as e:
+        logger.error("catastrophic failure setting up lancedb")
+        raise e
+
     async with utils.sqlalchemy_config.get_engine().begin() as conn:
         # UUIDAuditBase extends UUIDBase so create_all should build both
         await conn.run_sync(UUIDBase.metadata.create_all)

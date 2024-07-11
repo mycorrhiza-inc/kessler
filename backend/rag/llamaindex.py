@@ -1,3 +1,4 @@
+from llama_index.embeddings.octoai import OctoAIEmbedding
 from llama_index.core.llms import ChatMessage
 import logging
 import sys
@@ -35,6 +36,7 @@ from llama_index.core.query_engine import RetrieverQueryEngine
 
 from llama_index.core import Document
 
+from lance_store.connection import get_lance_connection
 
 logger = logging.getLogger()
 
@@ -42,8 +44,6 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 handler = logging.StreamHandler(sys.stderr)
-
-from llama_index.embeddings.octoai import OctoAIEmbedding
 
 
 # Uncomment to see debug logs
@@ -169,6 +169,26 @@ def add_document_to_db_from_text(text: str, metadata: Optional[dict] = None) -> 
         document = Document(text=str(text))
         add_document_to_db(document)
     return None
+
+
+def initialize_db_table() -> None:
+    lanceconn = get_lance_connection()
+
+    logger.info("validating lancedb vectors table")
+    try:
+        v = lanceconn.open_table("vectors")
+        v.cleanup_old_versions()
+    except Exception as e:
+        logger.warn("failed to open table 'vectors' ")
+        logger.debug("creating table vectors")
+        v = lanceconn.create_table("vectors")
+        add_document_to_db_from_text("")
+    try:
+        logger.info("ensuring fts index on 'vectors'")
+        v.create_fts_index("text", replace=True)
+    except Exception as e:
+        logger.error("unable to create vectors table")
+        logger.error(e)
 
 
 async def add_document_to_db_from_hash(hash_str: str) -> None:
