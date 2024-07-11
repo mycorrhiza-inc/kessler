@@ -1,39 +1,37 @@
-from llama_index.core.llms import ChatMessage
 import logging
 import sys
 import os
 
-import asyncio
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
-from typing import List, Dict, Tuple, Optional
+from typing import List, Tuple, Optional
 
 # Import the FileModel from file.py
 from models.files import FileModel, provide_files_repo
 
-from llama_index.core import StorageContext
-from llama_index.core import VectorStoreIndex
-from llama_index.core import Settings
-from llama_index.vector_stores.lancedb import LanceDBVectorStore
-
-from llama_index.core.node_parser import SentenceSplitter
 
 # from llama_index.vector_stores.postgres import PGVectorStore
 # import psycopg2
-import textwrap
 import openai
-from llama_index.llms.groq import Groq
 
 
 from sqlalchemy import make_url
-from llama_index.core.response_synthesizers import CompactAndRefine
+
+
+from llama_index.core import StorageContext
+from llama_index.core import VectorStoreIndex
+from llama_index.core import Settings
+from llama_index.core import Document
+from llama_index.core.node_parser import SentenceWindowNodeParser
+from llama_index.core.llms import ChatMessage
 from llama_index.core.retrievers import QueryFusionRetriever
 from llama_index.core.query_engine import RetrieverQueryEngine
+from llama_index.core.response_synthesizers import CompactAndRefine
 
-
-from llama_index.core import Document
+from llama_index.embeddings.octoai import OctoAIEmbedding
+from llama_index.vector_stores.lancedb import LanceDBVectorStore
+from llama_index.llms.groq import Groq
 
 
 logger = logging.getLogger()
@@ -42,9 +40,6 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 handler = logging.StreamHandler(sys.stderr)
-
-from llama_index.embeddings.octoai import OctoAIEmbedding
-
 
 # Uncomment to see debug logs
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
@@ -63,7 +58,6 @@ OCTOAI_API_KEY = os.environ["OCTOAI_API_KEY"]
 Settings.embed_model = OctoAIEmbedding(api_key=OCTOAI_API_KEY)
 
 connection_string_unknown = os.environ["DATABASE_CONNECTION_STRING"]
-
 # FIXME : Go ahead and try to figure out how to get this to work asynchronously assuming that is an important thing to do.
 if "postgresql+asyncpg://" in connection_string_unknown:
     sync_postgres_connection_string = connection_string_unknown.replace(
@@ -83,6 +77,7 @@ file_table_name = "file"
 
 
 url = make_url(sync_postgres_connection_string)
+
 
 hybrid_vector_store = LanceDBVectorStore(
     uri="/tmp/lancedb", mode="overwrite", query_type="hybrid"
@@ -152,7 +147,7 @@ async def get_document_list_from_file_table() -> list:
 
 def add_document_to_db(doc: Document) -> None:
     # split the document into sentences
-    parser = SentenceSplitter()
+    parser = SentenceWindowNodeParser()
     nodes = parser.get_nodes_from_documents([doc])
     hybrid_index.insert_nodes(nodes)
 
@@ -171,43 +166,45 @@ def add_document_to_db_from_text(text: str, metadata: Optional[dict] = None) -> 
     return None
 
 
-async def add_document_to_db_from_hash(hash_str: str) -> None:
-    async def query_file_table_for_hash(hash: str) -> Tuple[any, any]:
-        # Create an async engine and session
-        engine = create_async_engine(async_postgres_connection_string, echo=True)
-        async_session_maker = sessionmaker(
-            engine, expire_on_commit=False, class_=AsyncSession
-        )
-
-        async with async_session_maker() as session:
-            # Create a query to select the first row matching the given id
-            stmt = session.select(FileModel).where(FileModel.hash == hash)
-            result = await session.execute(stmt)
-            file_row = result.scalars().first()
-
-            if file_row:
-                english_text = file_row.english_text
-                document_metadata = file_row.doc_metadata
-            else:
-                english_text = None
-                document_metadata = None
-
-            return (english_text, document_metadata)
-
-    return_tuple = await query_file_table_for_hash(hash_str)
-    english_text = return_tuple[0]
-    doc_metadata = return_tuple[1]
-    if english_text is not None:
-        assert isinstance(english_text, str)
-        assert isinstance(doc_metadata, dict)
-        # TODO : Add support for metadata filtering
-        additional_document = Document(text=english_text, metadata=doc_metadata)
-        additional_document.doc_id = str(hash)
-        # FIXME : Make sure the UUID matches the other function, and dryify this entire fucking mess.
-        add_document_to_db(additional_document)
-    else:
-        assert False, "English text not present for document."
-    return None
+# async def add_document_to_db_from_hash(hash_str: str) -> None:
+#     async def query_file_table_for_hash(hash: str) -> Tuple[any, any]:
+#         # Create an async engine and session
+#         engine = create_async_engine(
+#             async_postgres_connection_string, echo=True)
+#         async_session_maker = sessionmaker(
+#             engine, expire_on_commit=False, class_=AsyncSession
+#         )
+#
+#         async with async_session_maker() as session:
+#             # Create a query to select the first row matching the given id
+#             stmt = session.select(FileModel).where(FileModel.hash == hash)
+#             result = await session.execute(stmt)
+#             file_row = result.scalars().first()
+#
+#             if file_row:
+#                 english_text = file_row.english_text
+#                 document_metadata = file_row.doc_metadata
+#             else:
+#                 english_text = None
+#                 document_metadata = None
+#
+#             return (english_text, document_metadata)
+#
+#     return_tuple = await query_file_table_for_hash(hash_str)
+#     english_text = return_tuple[0]
+#     doc_metadata = return_tuple[1]
+#     if english_text is not None:
+#         assert isinstance(english_text, str)
+#         assert isinstance(doc_metadata, dict)
+#         # TODO : Add support for metadata filtering
+#         additional_document = Document(
+#             text=english_text, metadata=doc_metadata)
+#         additional_document.doc_id = str(hash)
+#         # FIXME : Make sure the UUID matches the other function, and dryify this entire fucking mess.
+#         add_document_to_db(additional_document)
+#     else:
+#         assert False, "English text not present for document."
+#     return None
 
 
 async def regenerate_vector_database_from_file_table() -> None:
@@ -224,8 +221,6 @@ def create_rag_response_from_query(query: str):
 
 
 # Chat engine for rag
-
-
 def sanitzie_chathistory_llamaindex(chat_history: List[dict]) -> List[ChatMessage]:
     def sanitize_message(raw_message: dict) -> ChatMessage:
         return ChatMessage(role=raw_message["role"], content=raw_message["content"])

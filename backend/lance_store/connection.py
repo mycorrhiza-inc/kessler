@@ -18,9 +18,3 @@ def ensure_fts_index():
         v.create_fts_index("text", replace=True)
     except FileNotFoundError as e:
         print(f"Encountered FileNotFoundError: {e}")
-        # It should be possible to replace this entire try catch block w/ just this line. Doing this for now to avoid any uninentional changes in behavior if the table already exists.
-
-    # if this errors then the FTS index is complete
-    # Nic: Quick question, is this code irrelavent since all it does is raise the exception that would have been raised if the code was outside of a try block.
-    # except Exception as e:
-    #    raise e

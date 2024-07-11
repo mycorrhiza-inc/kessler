@@ -4,7 +4,6 @@ import { Container, Box, Input, Flex, CircularProgress, Spacer, Center } from '@
 import { ChangeEvent, useEffect, useState } from 'react';
 
 
-
 const ResultComponent = ({ item, index }: { item: any, index: number }) => {
   return <Container className='searchResult'>
     <div key={index} className="data-item">
@@ -79,7 +78,7 @@ export default function SearchPage() {
   return <Box w='100vw' h='100vh' m='0' p='0'>
     <Flex direction="column" alignItems='center'>
       <Center>
-        <TextArt label="Kessler" text="kess_logo" />
+        <h1>Kessler</h1>
       </Center>
       <Spacer />
       <Center
