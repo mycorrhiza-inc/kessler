@@ -6,7 +6,7 @@ from typing import Any
 from uuid import UUID
 from typing import Annotated
 
-from litestar import Controller, Request
+from litestar import Controller, Request, Response
 
 from litestar.handlers.http_handlers.decorators import (
     get,
@@ -134,12 +134,16 @@ class FileController(Controller):
 
         return type_adapter.validate_python(obj)
 
-    @get(path="/files/get_markdown/{file_id:uuid}")
+    @get(path="/files/markdown/{file_id:uuid}")
     async def get_markdown(
         self,
         files_repo: FileRepository,
         file_id: UUID = Parameter(title="File ID", description="File to retieve"),
+        original_lang: bool = False
     ) -> str:
+        # Yes I know this is a redundant if, this looks much more readable imo.
+        if original_lang == True:
+            return "Feature delayed due to only supporting english documents."
         obj = await files_repo.get(file_id)
 
         type_adapter = TypeAdapter(FileSchemaWithText)
@@ -150,6 +154,40 @@ class FileController(Controller):
         if markdown_text is "":
             markdown_text = "Could not find Document Markdown Text"
         return markdown_text
+
+    @get(path="/files/raw/{file_id:uuid}")
+    async def get_raw(
+        self,
+        files_repo: FileRepository,
+        request : Request,
+        file_id: UUID = Parameter(title="File ID", description="File to retieve"),
+    ) -> Response:
+        logger = request.logger
+        obj = await files_repo.get(file_id)
+        if obj is None:
+            return Response(content="ID does not exist", status_code=404)
+
+        type_adapter = TypeAdapter(FileSchema)
+        obj=type_adapter.validate_python(obj)
+        filehash = obj.hash
+
+        file_path = DocumentIngester(logger).get_default_filepath_from_hash(filehash)
+        
+        if not file_path.is_file():
+            return Response(content="File not found", status_code=404)
+        
+        # Read the file content
+        with open(file_path, 'rb') as file:
+            file_content = file.read()
+        # currently doesnt work unfortunately
+        # file_name = obj.name
+        # headers = {
+        #     "Content-Disposition": f'attachment; filename="{file_name}"'
+        # }
+
+        return Response(content=file_content, media_type="application/octet-stream")
+
+        # Return as a result of the get request, the file at file_path. Also make sure to include the correct return type.
 
     @get(path="/files/all")
     async def get_all_files(
@@ -376,23 +414,6 @@ class FileController(Controller):
             current_stage = "stage1"
 
         # TODO: Replace with pydantic validation
-        def generate_searchable_metadata(initial_metadata: dict) -> dict:
-            return_metadata = {
-                "title": initial_metadata.get("title"),
-                "author": initial_metadata.get("author"),
-                "source": initial_metadata.get("source"),
-                "date": initial_metadata.get("date"),
-            }
-
-            def guarentee_field(field: str, default_value: str = "unknown"):
-                if return_metadata.get(field) is None:
-                    return_metadata[field] = default_value
-
-            guarentee_field("title")
-            guarentee_field("author")
-            guarentee_field("source")
-            guarentee_field("date")
-            return return_metadata
 
         # text extraction
         def process_stage_one():
@@ -444,9 +465,26 @@ class FileController(Controller):
                 )
             return "stage3"
 
-        # text commitment
+        # TODO: Replace with pydantic validation
+
         def process_stage_three():
             logger.info("Adding Document to Vector Database")
+
+            def generate_searchable_metadata(initial_metadata : dict) -> dict:
+                return_metadata = {
+                    "title"  : initial_metadata.get("title"),
+                    "author" : initial_metadata.get("author"),
+                    "source" : initial_metadata.get("source"),
+                    "date" : initial_metadata.get("date"),
+                }
+                def guarentee_field(field: str, default_value : Any = "unknown"):
+                    if return_metadata.get(field) is None:
+                        return_metadata[field]=default_value
+                guarentee_field("title")
+                guarentee_field("author")
+                guarentee_field("source")
+                guarentee_field("date")
+                return return_metadata
             searchable_metadata = generate_searchable_metadata(doc_metadata)
             try:
                 add_document_to_db_from_text(obj.english_text, searchable_metadata)
