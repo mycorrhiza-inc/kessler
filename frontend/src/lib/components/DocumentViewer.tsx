@@ -16,7 +16,6 @@ import {
 import ReactDOM from "react-dom";
 import MarkdownRenderer from "./MarkdownRenderer";
 
-
 const DynamicModal: React.FC<{
   document_uuid: string;
   onClose: () => void;

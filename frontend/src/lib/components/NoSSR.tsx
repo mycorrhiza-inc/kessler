@@ -1,6 +1,4 @@
-
 import { useState, useEffect } from "react";
-
 
 const NoSSR = ({ children }: { children: React.ReactNode }) => {
   const [hasMounted, setHasMounted] = useState(false);
@@ -16,4 +14,4 @@ const NoSSR = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-export default NoSSR
+export default NoSSR;
