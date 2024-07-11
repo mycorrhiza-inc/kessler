@@ -87,14 +87,12 @@ url = make_url(sync_postgres_connection_string)
 hybrid_vector_store = LanceDBVectorStore(
     uri="/tmp/lancedb", mode="overwrite", query_type="hybrid"
 )
-storage_context = StorageContext.from_defaults(
-    vector_store=hybrid_vector_store)
+storage_context = StorageContext.from_defaults(vector_store=hybrid_vector_store)
 # initial_documents = asyncio.run(get_document_list_from_file())
 # initial_documents = await get_document_list_from_file()
 
 # hybrid_index = VectorStoreIndex.from_documents(example_documents + initial_documents, storage_context=storage_context)
-hybrid_index = VectorStoreIndex.from_vector_store(
-    vector_store=hybrid_vector_store)
+hybrid_index = VectorStoreIndex.from_vector_store(vector_store=hybrid_vector_store)
 
 vector_retriever = hybrid_index.as_retriever(
     vector_store_query_mode="default",
@@ -122,8 +120,7 @@ query_engine = RetrieverQueryEngine(
 async def get_document_list_from_file_table() -> list:
     async def query_file_table_for_all_rows() -> List[Tuple[str, dict]]:
         # Create an async engine and session
-        engine = create_async_engine(
-            async_postgres_connection_string, echo=True)
+        engine = create_async_engine(async_postgres_connection_string, echo=True)
         async_session_maker = sessionmaker(
             engine, expire_on_commit=False, class_=AsyncSession
         )
@@ -139,8 +136,7 @@ async def get_document_list_from_file_table() -> list:
                 if file_row.english_text is not None and isinstance(
                     file_row.doc_metadata, dict
                 ):
-                    documents.append(
-                        (file_row.english_text, file_row.doc_metadata))
+                    documents.append((file_row.english_text, file_row.doc_metadata))
 
             return documents
 
@@ -148,8 +144,7 @@ async def get_document_list_from_file_table() -> list:
     document_list = []
     for english_text, doc_metadata in documents:
         if english_text is not None:
-            additional_document = Document(
-                text=english_text, metadata=doc_metadata)
+            additional_document = Document(text=english_text, metadata=doc_metadata)
             additional_document.doc_id = str(doc_metadata.get("hash"))
             document_list.append(document_list)
     return document_list
@@ -199,8 +194,7 @@ def initialize_db_table() -> None:
 async def add_document_to_db_from_hash(hash_str: str) -> None:
     async def query_file_table_for_hash(hash: str) -> Tuple[any, any]:
         # Create an async engine and session
-        engine = create_async_engine(
-            async_postgres_connection_string, echo=True)
+        engine = create_async_engine(async_postgres_connection_string, echo=True)
         async_session_maker = sessionmaker(
             engine, expire_on_commit=False, class_=AsyncSession
         )
@@ -227,8 +221,7 @@ async def add_document_to_db_from_hash(hash_str: str) -> None:
         assert isinstance(english_text, str)
         assert isinstance(doc_metadata, dict)
         # TODO : Add support for metadata filtering
-        additional_document = Document(
-            text=english_text, metadata=doc_metadata)
+        additional_document = Document(text=english_text, metadata=doc_metadata)
         additional_document.doc_id = str(hash)
         # FIXME : Make sure the UUID matches the other function, and dryify this entire fucking mess.
         add_document_to_db(additional_document)
