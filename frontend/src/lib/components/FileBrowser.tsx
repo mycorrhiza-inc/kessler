@@ -29,7 +29,6 @@ import {
   FiChevronDown,
   FiDownload,
 } from "react-icons/fi";
-import { GetAllFiles } from "../requests";
 import FileUploadButton from "./FileUploader";
 import DocumentViewer from "./DocumentViewer";
 
@@ -107,11 +106,11 @@ interface RowProps {
   updateSelected: (id: string) => void;
 }
 
-export default function FileExplorer() {
+export default function FileExplorer({getFileFunc } : {getFileFunc : any}) {
   const [state, setState] = useState<FileExploreState>(initState);
   const [loading, setLoading] = useState(true);
   const loadFiles = async () => {
-    let files = await GetAllFiles();
+    let files = await getFileFunc();
     const stateFiles: RowData[] = files.map((f: FileType) => {
       return {
         selected: false,
