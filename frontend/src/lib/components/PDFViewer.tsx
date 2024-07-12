@@ -11,32 +11,9 @@ import "./PDFViewer.css";
 
 import type { PDFDocumentProxy } from "pdfjs-dist";
 
-if (typeof Promise.withResolvers === "undefined") {
-  if (window) {
-    // @ts-expect-error This does not exist outside of polyfill which this is doing
-    window.Promise.withResolvers = function () {
-      let resolve, reject;
-      const promise = new Promise((res, rej) => {
-        resolve = res;
-        reject = rej;
-      });
-      return { promise, resolve, reject };
-    };
-  } else {
-    // @ts-expect-error This does not exist outside of polyfill which this is doing
-    global.Promise.withResolvers = function () {
-      let resolve, reject;
-      const promise = new Promise((res, rej) => {
-        resolve = res;
-        reject = rej;
-      });
-      return { promise, resolve, reject };
-    };
-  }
-}
 
-pdfjs.GlobalWorkerOptions.workerSrc =
-  "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.6.347/pdf.worker.entry.min.js";
+// TODO : Inline at some point so we dont get screwed by a malicious cdn.
+pdfjs.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.4.168/build/pdf.worker.mjs" ;
 // pdfjs.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url, ).toString();
 
 const options = {
@@ -50,8 +27,7 @@ const maxWidth = 800;
 
 type PDFFile = string | File | null;
 
-function PDFTesting() {
-  const [file, setFile] = useState<PDFFile>("./sample.pdf");
+function PDFViewer({file} :{file : PDFFile}) {
   const [numPages, setNumPages] = useState<number>();
   const [containerRef, setContainerRef] = useState<HTMLElement | null>(null);
   const [containerWidth, setContainerWidth] = useState<number>();
@@ -66,15 +42,6 @@ function PDFTesting() {
 
   useResizeObserver(containerRef, resizeObserverOptions, onResize);
 
-  function onFileChange(event: React.ChangeEvent<HTMLInputElement>): void {
-    const { files } = event.target;
-
-    const nextFile = files?.[0];
-
-    if (nextFile) {
-      setFile(nextFile);
-    }
-  }
 
   function onDocumentLoadSuccess({
     numPages: nextNumPages,
@@ -84,19 +51,13 @@ function PDFTesting() {
 
   return (
     <div className="Example">
-      <header>
-        <h1>react-pdf sample page</h1>
-      </header>
       <div className="Example__container">
-        <div className="Example__container__load">
-          <label htmlFor="file">Load from file:</label>{" "}
-          <input onChange={onFileChange} type="file" />
-        </div>
         <div className="Example__container__document" ref={setContainerRef}>
           <Document
             file={file}
             onLoadSuccess={onDocumentLoadSuccess}
             options={options}
+            onLoadError={console.error}
           >
             {Array.from(new Array(numPages), (el, index) => (
               <Page
@@ -113,6 +74,6 @@ function PDFTesting() {
     </div>
   );
 }
-export default dynamic(() => Promise.resolve(PDFTesting), {
+export default dynamic(() => Promise.resolve(PDFViewer), {
   ssr: false,
 });
