@@ -146,7 +146,7 @@ async def process_file_raw(
 
     logger.info(type(obj))
     logger.info(obj)
-    current_stage = obj.stage
+    current_stage = DocumentStatus(obj.stage)
     logger.info(obj.doctype)
     mdextract = MarkdownExtractor(logger, OS_TMPDIR)
     doc_metadata = json.loads(obj.mdata)
@@ -239,7 +239,7 @@ async def process_file_raw(
         return DocumentStatus.completed
 
     while True:
-        if docstatus_index(current_stage) <= docstatus_index(stop_at):
+        if docstatus_index(current_stage) >= docstatus_index(stop_at):
             response_code, response_message = (
                 200,
                 "Document Fully Processed.",
