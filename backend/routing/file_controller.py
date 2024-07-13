@@ -17,6 +17,8 @@ from litestar.handlers.http_handlers.decorators import (
 )
 
 
+
+
 from sqlalchemy import select
 
 
@@ -43,6 +45,8 @@ from models.files import (
     FileSchema,
     FileSchemaWithText,
     provide_files_repo,
+    DocumentStatus,
+    docstatus_index
 )
 
 from crawler.docingest import DocumentIngester
@@ -95,27 +99,6 @@ class IndexFileRequest(BaseModel):
 
 
 
-class DocumentStatus(str, Enum): 
-    completed="completed"
-    stage3="stage3"
-    stage2="stage2"
-    stage1="stage1"
-
-document_statuses = list(DocumentStatus)
-
-
-# I am deeply sorry for not reading the python documentation ahead of time and storing the stage of processed strings instead of ints, hopefully this can atone for my mistakes
-
-def docstatus_index(docstatus : DocumentStatus) -> int:
-    match docstatus:
-        case DocumentStatus.stage1:
-            return 1
-        case DocumentStatus.stage2:
-            return 2
-        case DocumentStatus.stage3:
-            return 3
-        case DocumentStatus.completed:
-            return 1000
 
 
 OS_TMPDIR = Path(os.environ["TMPDIR"])
@@ -383,7 +366,7 @@ class FileController(Controller):
                 lang=metadata.get("lang"),
                 source=metadata.get("source"),
                 mdata=metadata_str,
-                stage="stage1",
+                stage=(DocumentStatus.stage1).value,
                 hash=filehash,
                 summary=None,
                 short_summary=None,
@@ -410,6 +393,7 @@ class FileController(Controller):
             logger.info("Processing File")
             # self.process_file_raw(new_file, files_repo, logger, "")
             # Removing the await here, SHOULD allow an instant return to the user, but also have python process the file in the background hopefully!
+            # TODO : It doesnt work, for now its fine and also doesnt compete with the daemon for resources. Fix later
             await self.process_file_raw(new_file, files_repo, logger, "")
 
         return new_file
