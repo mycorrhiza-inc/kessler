@@ -267,34 +267,3 @@ async def process_file_raw(
                     try readding it again.\
                 "
                 )
-            # FIXME: The try catch exception code broke the plaintext error handling, since it still returns a 500 error, I removed it temporarially
-            # try:
-            #    match current_stage:
-            #        case "stage1":
-            #            current_stage = process_stage_one()
-            #        case "stage2":
-            #            current_stage = process_stage_two()
-            #        case "stage3":
-            #            current_stage = process_stage_three()
-            #        case "completed":
-            #            response_code, response_message = (
-            #                200,
-            #                "Document Fully Processed.",
-            #            )
-            #            logger.info(current_stage)
-            #            obj.stage = current_stage
-            #            logger.info(response_code)
-            #            logger.info(response_message)
-            #            _ = files_repo.update(obj)
-            #            await files_repo.session.commit()
-            #            break
-            #        case _:
-            #            raise Exception(
-            #                "Document was incorrectly added to database, \
-            #                try readding it again.\
-            #            "
-            #            )
-
-            # except Exception as e:
-            #    logger.error(e)
-            #    break
