@@ -62,6 +62,7 @@ const initState: FileExploreState = {
     {
       selected: false,
       data: {
+        doctype : "pdf",
         id: "1",
         url: "",
         title: "",
@@ -70,6 +71,7 @@ const initState: FileExploreState = {
     {
       selected: false,
       data: {
+        doctype : "pdf",
         id: "2",
         url: "",
         title: "",
@@ -78,15 +80,8 @@ const initState: FileExploreState = {
     {
       selected: false,
       data: {
+        doctype : "pdf",
         id: "3",
-        url: "",
-        title: "",
-      },
-    },
-    {
-      selected: false,
-      data: {
-        id: "4",
         url: "",
         title: "",
       },
