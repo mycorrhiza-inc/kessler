@@ -1,3 +1,4 @@
+from typing_extensions import Doc
 from lance_store.connection import ensure_fts_index
 from rag.llamaindex import add_document_to_db_from_text
 import os
@@ -54,7 +55,7 @@ import json
 
 from util.niclib import rand_string
 
-
+from enum import Enum
 class UUIDEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, UUID):
@@ -92,7 +93,29 @@ class IndexFileRequest(BaseModel):
     id: UUID
 
 
-# litestar only
+
+
+class DocumentStatus(str, Enum): 
+    completed="completed"
+    stage3="stage3"
+    stage2="stage2"
+    stage1="stage1"
+
+document_statuses = list(DocumentStatus)
+
+
+# I am deeply sorry for not reading the python documentation ahead of time and storing the stage of processed strings instead of ints, hopefully this can atone for my mistakes
+
+def docstatus_index(docstatus : DocumentStatus) -> int:
+    match docstatus:
+        case DocumentStatus.stage1:
+            return 1
+        case DocumentStatus.stage2:
+            return 2
+        case DocumentStatus.stage3:
+            return 3
+        case DocumentStatus.completed:
+            return 1000
 
 
 OS_TMPDIR = Path(os.environ["TMPDIR"])
@@ -112,6 +135,9 @@ OS_BACKUP_FILEDIR = OS_FILEDIR / Path("backup")
 
 
 # import base64
+
+
+
 
 
 class FileController(Controller):
@@ -189,6 +215,24 @@ class FileController(Controller):
 
         # Return as a result of the get request, the file at file_path. Also make sure to include the correct return type.
 
+    @get(path="/files/metadata/{file_id:uuid}")
+    async def get_metadata(
+        self,
+        files_repo: FileRepository,
+        request : Request,
+        file_id: UUID = Parameter(title="File ID", description="File to retieve"),
+    ) -> dict:
+        logger = request.logger
+        obj = await files_repo.get(file_id)
+        if obj is None:
+            return Response(content="ID does not exist", status_code=404)
+
+        type_adapter = TypeAdapter(FileSchema)
+        obj=type_adapter.validate_python(obj)
+        metadata_str = obj.mdata
+        metadata_dict = json.loads(metadata_str)
+        return metadata_dict
+
     @get(path="/files/all")
     async def get_all_files(
         self, files_repo: FileRepository, limit_offset: LimitOffset, request: Request
@@ -230,7 +274,7 @@ class FileController(Controller):
         file_obj = await self.add_file_raw(
             final_filepath, final_metadata, process, override_hash, files_repo, logger
         )
-        return "Successfully added document!"
+        return f"Successfully added document with uuid: {file_obj.uuid}"
 
     # TODO : (Nic) Make function that can process uploaded files
     @post(path="/files/add_url")
@@ -266,7 +310,7 @@ class FileController(Controller):
         # type_adapter = TypeAdapter(FileSchema)
         # final_return = type_adapter.validate_python(new_file)
         # logger.info(final_return)
-        return "Successfully added document!"
+        return f"Successfully added document with uuid: {file_obj.uuid}"
 
     async def add_file_raw(
         self,
@@ -276,7 +320,7 @@ class FileController(Controller):
         override_hash: bool,
         files_repo: FileRepository,
         logger: Any,
-    ) -> None:
+    ) -> FileSchema:
         docingest = DocumentIngester(logger)
 
         def validate_metadata_mutable(metadata: dict):
@@ -364,9 +408,11 @@ class FileController(Controller):
 
         if process:
             logger.info("Processing File")
+            # self.process_file_raw(new_file, files_repo, logger, "")
+            # Removing the await here, SHOULD allow an instant return to the user, but also have python process the file in the background hopefully!
             await self.process_file_raw(new_file, files_repo, logger, "")
 
-        return None
+        return new_file
 
     @post(path="/files/add_urls")
     async def add_urls(
@@ -384,20 +430,30 @@ class FileController(Controller):
         file_id_str: str = Parameter(
             title="File ID as hex string", description="File to retieve"
         ),
-        regenerate: str = "",  # Figure out how to pass in a boolean as a query paramater
+        regenerate: Optional[str] = None ,  # Figure out how to pass in a boolean as a query paramater
+        stop_at: Optional[str] = None,  # Figure out how to pass in a boolean as a query paramater
     ) -> None:
         """Process a File."""
         file_id = UUID(file_id_str)
         request.logger.info(file_id)
         obj = await files_repo.get(file_id)
         # TODO : Add error for invalid document ID
-        await self.process_file_raw(obj, files_repo, request.logger, regenerate)
+        await self.process_file_raw(obj, files_repo, request.logger, regenerate, stop_at)
         # TODO : Return Response code and response message
         return self.validate_and_jsonify(obj)
 
     async def process_file_raw(
-        self, obj: FileModel, files_repo: FileRepository, logger: Any, regenerate: str = ""
+        self, obj: FileModel, files_repo: FileRepository, logger: Any, regenerate: Optional[str] = None, stop_at : Optional[str]= None
     ):
+        if stop_at is None:
+            stop_at = "completed"
+        if regenerate is None:
+            regenerate = "completed"
+        # TODO: Figure out error messaging for these
+        stop_at=DocumentStatus(stop_at)
+        regenerate=DocumentStatus(regenerate)
+
+
         logger.info(type(obj))
         logger.info(obj)
         current_stage = obj.stage
@@ -410,7 +466,7 @@ class FileController(Controller):
             "Internal error somewhere in process.",
         )
 
-        if regenerate != "":
+        if docstatus_index(current_stage) < docstatus_index(regenerate):
             current_stage = regenerate
 
         # TODO: Replace with pydantic validation
@@ -441,10 +497,10 @@ class FileController(Controller):
                 # original text is identical to save space.
                 obj.english_text = processed_original_text
                 # Skip translation stage if text already english.
-                return "stage3"
+                return DocumentStatus.stage3
             else:
                 obj.original_text = processed_original_text
-                return "stage2"
+                return DocumentStatus.stage2
 
         # text conversion
         def process_stage_two():
@@ -463,7 +519,7 @@ class FileController(Controller):
                 raise ValueError(
                     "failure in stage 2: \n Code is in an unreachable state, a document cannot be english and not english",
                 )
-            return "stage3"
+            return DocumentStatus.stage3
 
         # TODO: Replace with pydantic validation
 
@@ -490,30 +546,31 @@ class FileController(Controller):
                 add_document_to_db_from_text(obj.english_text, searchable_metadata)
             except Exception as e:
                 raise Exception("Failure in adding document to vector database", e)
-            return "completed"
+            return DocumentStatus.stage3
 
         while True:
+            if docstatus_index(current_stage) <= docstatus_index(stop_at):
+                response_code, response_message = (
+                    200,
+                    "Document Fully Processed.",
+                )
+                logger.info(current_stage.value)
+                obj.stage = current_stage.value
+                logger.info(response_code)
+                logger.info(response_message)
+                _ = files_repo.update(obj)
+                await files_repo.session.commit()
+                type_adapter = TypeAdapter(FileSchema)
+                final_return = type_adapter.validate_python(obj)
+                return final_return
+
             match current_stage:
-                case "stage1":
+                case DocumentStatus.stage1:
                     current_stage = process_stage_one()
-                case "stage2":
+                case DocumentStatus.stage2:
                     current_stage = process_stage_two()
-                case "stage3":
+                case DocumentStatus.stage3:
                     current_stage = process_stage_three()
-                case "completed":
-                    response_code, response_message = (
-                        200,
-                        "Document Fully Processed.",
-                    )
-                    logger.info(current_stage)
-                    obj.stage = current_stage
-                    logger.info(response_code)
-                    logger.info(response_message)
-                    _ = files_repo.update(obj)
-                    await files_repo.session.commit()
-                    type_adapter = TypeAdapter(FileSchema)
-                    final_return = type_adapter.validate_python(obj)
-                    return final_return
                 case _:
                     raise Exception(
                         "Document was incorrectly added to database, \
