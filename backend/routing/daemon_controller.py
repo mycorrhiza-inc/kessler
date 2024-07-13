@@ -49,8 +49,8 @@ from models.files import (
     docstatus_index
 )
 
-from crawler.docingest import DocumentIngester
-from docprocessing.extractmarkdown import MarkdownExtractor
+from logic.docingest import DocumentIngester
+from logic.extractmarkdown import MarkdownExtractor
 
 from typing import List, Optional, Dict
 

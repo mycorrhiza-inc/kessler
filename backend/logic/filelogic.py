@@ -9,12 +9,6 @@ from pydantic import TypeAdapter
 from models.utils import PydanticBaseModel as BaseModel
 
 
-# from models import (
-#     FileModel,
-#     FileRepository,
-#     FileSchema,
-#     provide_files_repo,
-# )
 from models.files import (
     FileModel,
     FileRepository,
@@ -243,7 +237,7 @@ async def process_file_raw(
             add_document_to_db_from_text(obj.english_text, searchable_metadata)
         except Exception as e:
             raise Exception("Failure in adding document to vector database", e)
-        return DocumentStatus.stage3
+        return DocumentStatus.completed
 
     while True:
         if docstatus_index(current_stage) <= docstatus_index(stop_at):

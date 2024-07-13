@@ -49,7 +49,7 @@ from models.files import (
     docstatus_index
 )
 
-from logic.documentingest import DocumentIngester
+from logic.docingest import DocumentIngester
 from logic.extractmarkdown import MarkdownExtractor
 
 from typing import List, Optional, Dict
