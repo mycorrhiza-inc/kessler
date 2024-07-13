@@ -55,6 +55,13 @@ from logic.extractmarkdown import MarkdownExtractor
 from typing import List, Optional, Dict
 
 
+from logic.filelogic import (
+    add_file_raw,
+    process_file_raw
+)
+
+
+
 import json
 
 from util.niclib import rand_string
@@ -254,7 +261,7 @@ class FileController(Controller):
         final_metadata = additional_metadata
         if final_metadata.get("lang") is None:
             final_metadata["lang"] = "en"
-        file_obj = await self.add_file_raw(
+        file_obj = await add_file_raw(
             final_filepath, final_metadata, process, override_hash, files_repo, logger
         )
         return f"Successfully added document with uuid: {file_obj.uuid}"
@@ -287,7 +294,7 @@ class FileController(Controller):
             metadata.update(new_metadata)
 
         request.logger.info(f"Metadata Successfully Created with metadata {metadata}")
-        file_obj = await self.add_file_raw(
+        file_obj = await add_file_raw(
             tmpfile_path, metadata, process, override_hash, files_repo, logger
         )
         # type_adapter = TypeAdapter(FileSchema)

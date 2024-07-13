@@ -125,7 +125,6 @@ async def add_file_raw(
 
     if process:
         logger.info("Processing File")
-        # self.process_file_raw(new_file, files_repo, logger, "")
         # Removing the await here, SHOULD allow an instant return to the user, but also have python process the file in the background hopefully!
         # TODO : It doesnt work, for now its fine and also doesnt compete with the daemon for resources. Fix later
         await process_file_raw(new_file, files_repo, logger, "")
@@ -134,7 +133,7 @@ async def add_file_raw(
 
 
 async def process_file_raw(
-    self, obj: FileModel, files_repo: FileRepository, logger: Any, regenerate: Optional[str] = None, stop_at : Optional[str]= None
+    obj: FileModel, files_repo: FileRepository, logger: Any, regenerate: Optional[str] = None, stop_at : Optional[str]= None
 ):
     if stop_at is None:
         stop_at = "completed"

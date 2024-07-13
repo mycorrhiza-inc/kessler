@@ -68,33 +68,6 @@ class UUIDEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-# TODO : Create test that adds a file once we know what the file DB schema is going to look like
-
-
-class FileUpdate(BaseModel):
-    message: str
-    metadata: Dict[str, Any]
-
-
-class UrlUpload(BaseModel):
-    url: str
-    metadata: Dict[str, Any] = {}
-
-
-class UrlUploadList(BaseModel):
-    url: List[str]
-
-
-class FileCreate(BaseModel):
-    message: str
-
-
-class FileUpload(BaseModel):
-    message: str
-
-
-class IndexFileRequest(BaseModel):
-    id: UUID
 
 
 
@@ -131,69 +104,30 @@ class DaemonController(Controller):
     # def jsonify_validate_return(self,):
     #     return None
 
-    @get(path="/daemon/start_docproc")
-    async def get_file(
-        self,
-        files_repo: FileRepository,
-        file_id: UUID = Parameter(title="File ID", description="File to retieve"),
-    ) -> FileSchema:
-        obj = await files_repo.get(file_id)
-
-        type_adapter = TypeAdapter(FileSchema)
-
-        return type_adapter.validate_python(obj)
-
-    @get(path="/files/markdown/{file_id:uuid}")
-    async def get_markdown(
-        self,
-        files_repo: FileRepository,
-        file_id: UUID = Parameter(title="File ID", description="File to retieve"),
-        original_lang: bool = False
-    ) -> str:
-        # Yes I know this is a redundant if, this looks much more readable imo.
-        if original_lang == True:
-            return "Feature delayed due to only supporting english documents."
-        obj = await files_repo.get(file_id)
-
-        type_adapter = TypeAdapter(FileSchemaWithText)
-
-        obj_with_text = type_adapter.validate_python(obj)
-
-        markdown_text = obj_with_text.english_text
-        if markdown_text is "":
-            markdown_text = "Could not find Document Markdown Text"
-        return markdown_text
-
-    @get(path="/files/raw/{file_id:uuid}")
-    async def get_raw(
+    @get(path="/daemon/docproc/start")
+    async def docproc_start(
         self,
         files_repo: FileRepository,
         request : Request,
-        file_id: UUID = Parameter(title="File ID", description="File to retieve"),
-    ) -> Response:
-        logger = request.logger
-        obj = await files_repo.get(file_id)
-        if obj is None:
-            return Response(content="ID does not exist", status_code=404)
+    ) -> str:
+        logger= request.logger
+        return "Sucessfully started daemon"
 
-        type_adapter = TypeAdapter(FileSchema)
-        obj=type_adapter.validate_python(obj)
-        filehash = obj.hash
+    @get(path="/daemon/docproc/status")
+    async def docproc_status(
+        self,
+        files_repo: FileRepository,
+        request : Request,
+    ) -> str:
+        logger= request.logger
+        return "Status of docproc daemon"
 
-        file_path = DocumentIngester(logger).get_default_filepath_from_hash(filehash)
-        
-        if not file_path.is_file():
-            return Response(content="File not found", status_code=404)
-        
-        # Read the file content
-        with open(file_path, 'rb') as file:
-            file_content = file.read()
-        # currently doesnt work unfortunately
-        # file_name = obj.name
-        # headers = {
-        #     "Content-Disposition": f'attachment; filename="{file_name}"'
-        # }
+    @get(path="/daemon/docproc/stop")
+    async def docproc_stop(
+        self,
+        files_repo: FileRepository,
+        request : Request,
+    ) -> str:
+        logger = request.logger 
+        return "docproc stopped"
 
-        return Response(content=file_content, media_type="application/octet-stream")
-
-        # Return as a result of the get request, the file at file_path. Also make sure to include the correct return type.
