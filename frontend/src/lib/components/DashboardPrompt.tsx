@@ -26,7 +26,6 @@ import {
 } from "@saas-ui/react";
 import React, { useState } from "react";
 import { Node } from "reactflow";
-import FileExplorer from "./FileBrowser";
 import {
   FiHome,
   FiUsers,
@@ -87,7 +86,11 @@ export default function DashboardFileBrowser() {
           margin="20px"
           justifySelf="center"
         >
-          <FileExplorer />
+          { 
+            // NOTE: Refactored file explorer so it broke this implementation, 
+            // it seems like this shouldnt be here. so I removed it
+            // <FileExplorer />
+          }
         </Box>
       </Center>
     </>
