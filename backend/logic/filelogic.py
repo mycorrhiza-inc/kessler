@@ -8,6 +8,7 @@ from sqlalchemy import select
 from pydantic import TypeAdapter
 from models.utils import PydanticBaseModel as BaseModel
 
+from uuid import UUID
 
 from models.files import (
     FileModel,
@@ -29,6 +30,21 @@ import json
 
 from util.niclib import rand_string
 
+
+OS_TMPDIR = Path(os.environ["TMPDIR"])
+OS_GPU_COMPUTE_URL = os.environ["GPU_COMPUTE_URL"]
+OS_FILEDIR = Path("/files/")
+
+
+# import base64
+
+
+OS_TMPDIR = Path(os.environ["TMPDIR"])
+OS_GPU_COMPUTE_URL = os.environ["GPU_COMPUTE_URL"]
+OS_FILEDIR = Path("/files/")
+OS_HASH_FILEDIR = OS_FILEDIR / Path("raw")
+OS_OVERRIDE_FILEDIR = OS_FILEDIR / Path("override")
+OS_BACKUP_FILEDIR = OS_FILEDIR / Path("backup")
 
 async def add_file_raw(
     tmp_filepath: Path,
@@ -132,18 +148,21 @@ async def add_file_raw(
     return new_file
 
 
+async def process_fileid_raw(
+    file_id_str: str, files_repo: FileRepository, logger: Any,  stop_at : Optional[DocumentStatus]= None
+):
+    file_uuid = UUID(file_id_str)
+    logger.info(file_uuid)
+    obj = await files_repo.get(file_uuid)
+    return await process_file_raw(obj,files_repo,logger,stop_at)
+
+
+
 async def process_file_raw(
-    obj: FileModel, files_repo: FileRepository, logger: Any, regenerate: Optional[str] = None, stop_at : Optional[str]= None
+    obj: FileModel, files_repo: FileRepository, logger: Any,  stop_at : Optional[DocumentStatus]= None
 ):
     if stop_at is None:
-        stop_at = "completed"
-    if regenerate is None:
-        regenerate = "completed"
-    # TODO: Figure out error messaging for these
-    stop_at=DocumentStatus(stop_at)
-    regenerate=DocumentStatus(regenerate)
-
-
+        stop_at = DocumentStatus.completed
     logger.info(type(obj))
     logger.info(obj)
     current_stage = DocumentStatus(obj.stage)
@@ -156,8 +175,6 @@ async def process_file_raw(
         "Internal error somewhere in process.",
     )
 
-    if docstatus_index(current_stage) < docstatus_index(regenerate):
-        current_stage = regenerate
 
     # TODO: Replace with pydantic validation
 
@@ -172,7 +189,7 @@ async def process_file_raw(
             mdextract.process_raw_document_into_untranslated_text(
                 file_path, doc_metadata
             )[0]
-        )
+        )grug try watch patiently as cut points emerge from code and slowly refactor, with code base taking shape over time along with experience. no hard/ fast rule for this: grug know cut point when grug see cut point, just take time to build skill in seeing, patience
         logger.info(
             f"Successfully processed original text: {processed_original_text[0:20]}"
         )

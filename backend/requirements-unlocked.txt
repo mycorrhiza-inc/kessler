@@ -17,3 +17,4 @@ haystack
 tokenizers
 
 
+celery

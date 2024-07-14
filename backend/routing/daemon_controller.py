@@ -15,6 +15,7 @@ from litestar.handlers.http_handlers.decorators import (
     delete,
     MediaType,
 )
+from litestar.events import listener
 
 
 
@@ -60,6 +61,8 @@ import json
 from util.niclib import rand_string
 
 from enum import Enum
+
+import logging
 class UUIDEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, UUID):
@@ -90,44 +93,23 @@ OS_OVERRIDE_FILEDIR = OS_FILEDIR / Path("override")
 OS_BACKUP_FILEDIR = OS_FILEDIR / Path("backup")
 
 
-# import base64
+logger = logging.getLogger(__name__)
+logging.info("Daemon logging works, and started successfully")
 
 
 
 
+# def jsonify_validate_return(self,):
+#     return None
+@listener("process_document")
+async def process_document(doc_id_str: str, stop_at : Optional[str]) -> None:
+    if stop_at is not None:
+        stop_at = DocumentStatus(stop_at)
 
-class DaemonController(Controller):
-    """File Controller"""
+    files_repo = "EXAMPLE"
 
-    dependencies = {"files_repo": Provide(provide_files_repo)}
+        
 
-    # def jsonify_validate_return(self,):
-    #     return None
 
-    @get(path="/daemon/docproc/start")
-    async def docproc_start(
-        self,
-        files_repo: FileRepository,
-        request : Request,
-    ) -> str:
-        logger= request.logger
-        return "Sucessfully started daemon"
 
-    @get(path="/daemon/docproc/status")
-    async def docproc_status(
-        self,
-        files_repo: FileRepository,
-        request : Request,
-    ) -> str:
-        logger= request.logger
-        return "Status of docproc daemon"
-
-    @get(path="/daemon/docproc/stop")
-    async def docproc_stop(
-        self,
-        files_repo: FileRepository,
-        request : Request,
-    ) -> str:
-        logger = request.logger 
-        return "docproc stopped"
 

@@ -319,15 +319,27 @@ class FileController(Controller):
         file_id_str: str = Parameter(
             title="File ID as hex string", description="File to retieve"
         ),
-        regenerate: Optional[str] = None ,  # Figure out how to pass in a boolean as a query paramater
+        regenerate_from: Optional[str] = None ,  # Figure out how to pass in a boolean as a query paramater
         stop_at: Optional[str] = None,  # Figure out how to pass in a boolean as a query paramater
     ) -> None:
         """Process a File."""
+        logger= request.logger
+        if stop_at is None:
+            stop_at = "completed"
+        if regenerate_from is None:
+            regenerate_from = "completed"
+        # TODO: Figure out error messaging for these
+        stop_at=DocumentStatus(stop_at)
+        regenerate_from=DocumentStatus(regenerate_from)
         file_id = UUID(file_id_str)
-        request.logger.info(file_id)
+        logger.info(file_id)
         obj = await files_repo.get(file_id)
+        if docstatus_index(DocumentStatus(obj.stage)) < docstatus_index(regenerate_from):
+            obj.stage = regenerate_from.value
+
+
         # TODO : Add error for invalid document ID
-        await self.process_file_raw(obj, files_repo, request.logger, regenerate, stop_at)
+        await self.process_file_raw(obj, files_repo, request.logger, stop_at)
         # TODO : Return Response code and response message
         return self.validate_and_jsonify(obj)
 
