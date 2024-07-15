@@ -64,7 +64,7 @@ class MarkdownExtractor:
         doctype = metadata["doctype"]
         lang = metadata["lang"]
 
-        def process_pdf(filepath: Path) -> str:
+        async def process_pdf(filepath: Path) -> str:
             self.logger.info("processing pdf")
             return_string = await GPUComputeEndpoint(self.logger).transcribe_pdf(filepath)
             return return_string
@@ -106,7 +106,7 @@ class MarkdownExtractor:
                 return (text, metadata)
 
         elif doctype == "pdf":
-            return (process_pdf(file_loc), metadata)
+            return (await process_pdf(file_loc), metadata)
         elif doctype in [
             "html",
             "doc",

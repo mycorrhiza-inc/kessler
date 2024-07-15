@@ -89,7 +89,7 @@ class GPUComputeEndpoint:
             )
 
             async with aiohttp.ClientSession() as session:
-                async with session.post(url, files=files) as response:
+                async with session.post(url, data={"file": file}) as response:
                     print(f"Request Headers: response.request.headers")
                     # Raise an exception if the request was unsuccessful
                     response.raise_for_status()

@@ -186,9 +186,9 @@ async def process_file_raw(
         )
         # This process might spit out new metadata that was embedded in the document, ignoring for now
         processed_original_text = (
-            await mdextract.process_raw_document_into_untranslated_text(
+            (await mdextract.process_raw_document_into_untranslated_text(
                 file_path, doc_metadata
-            )[0]
+            ))[0]
         )
         logger.info(
             f"Successfully processed original text: {processed_original_text[0:20]}"
