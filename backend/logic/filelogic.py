@@ -265,7 +265,7 @@ async def process_file_raw(
             obj.stage = current_stage.value
             logger.info(response_code)
             logger.info(response_message)
-            _ = files_repo.update(obj)
+            await files_repo.update(obj)
             await files_repo.session.commit()
             type_adapter = TypeAdapter(FileSchema)
             final_return = type_adapter.validate_python(obj)

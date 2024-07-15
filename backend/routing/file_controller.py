@@ -303,12 +303,6 @@ class FileController(Controller):
         return f"Successfully added document with uuid: {file_obj.uuid}"
 
 
-    @post(path="/files/add_urls")
-    async def add_urls(
-        self, files_repo: FileRepository, data: UrlUploadList, request: Request
-    ) -> None:
-        return None
-
     # TODO: anything but this
 
     @post(path="/process/{file_id_str:str}")
@@ -326,7 +320,7 @@ class FileController(Controller):
         logger= request.logger
         if stop_at is None:
             stop_at = "completed"
-        if regenerate_from is None:
+        if regenerate_from is Nosessionne:
             regenerate_from = "completed"
         # TODO: Figure out error messaging for these
         stop_at=DocumentStatus(stop_at)
@@ -406,8 +400,7 @@ class FileController(Controller):
     async def delete_file(
         self,
         files_repo: FileRepository,
-        file_id: UUID = Parameter(title="File ID", description="File to retieve"),
+        file_id: UUID = Parameter(title="File ID as hex string", description="File to delete"),
     ) -> None:
-        fid = UUID(file_id)
-        _ = await files_repo.delete(fid)
+        await files_repo.delete(file_id)
         await files_repo.session.commit()

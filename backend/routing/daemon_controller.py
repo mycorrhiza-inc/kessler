@@ -68,6 +68,7 @@ import asyncio
 from sqlalchemy.ext.asyncio import create_async_engine
 from litestar.contrib.sqlalchemy.base import UUIDBase
 
+from sqlalchemy.ext.asyncio import AsyncSession
 # class UUIDEncoder(json.JSONEncoder):
 #     def default(self, obj):
 #         if isinstance(obj, UUID):
@@ -121,17 +122,19 @@ async def create_global_connection():
 @listener("process_document")
 async def process_document(doc_id_str: str, stop_at : str, files_repo : FileRepository) -> None:
     logger = default_logger
+    logger.info(f"Executing background docproc on {doc_id_str} to {stop_at}")
+    stop_at = DocumentStatus(stop_at)
     # TODO:: Replace passthrough files repo with actual global repo
-    # conn = utils.sqlalchemy_config.get_engine() 
-    # await conn.begin().run_sync(UUIDBase.metadata.create_all)
+    engine = utils.sqlalchemy_config.get_engine() 
+    logger.info(engine) 
+    logger.info(type(engine)) 
     # # Maybe mirri is right and I should just use sql strings, but code reuse would make this hard
     # # Also this could potentially be a global, but I put it in here to reduce bugs
     # logger.info(f"Executing ackground process doc {doc_id_str} to stage {stop_at}")
     # # conn = utils.sqlalchemy_config.get_engine().begin() 
     # logger.info(str(conn))
     # logger.info(type(conn))
-    # files_repo = await provide_files_repo(conn)
-    stop_at = DocumentStatus(stop_at)
+    files_repo_2 = await provide_files_repo(AsyncSession(engine))
     await process_fileid_raw(doc_id_str,files_repo,logger,stop_at)
 
 
@@ -168,14 +171,12 @@ class DaemonController(Controller):
                 file_stage = regenerate_from
                 file.stage = regenerate_from.value 
                 await files_repo.update(file)
-                # It was previously this and it was working, but syntax seems to suggest that only the above will work
-                # _ = files_repo.update(file)
-
-                logger.info(f"updated fileid {file.id} with new stage {file.stage}")
                 await files_repo.session.commit()
+                logger.info(f"Reverting fileid {file.id} to stage {file.stage}")
             # Dont process the file if it is already processed beyond the stop point.
             if docstatus_index(file_stage) < docstatus_index(stop_at):
                 logger.info(f"Sending file {str(file.id)} to be processed in the background.")
+                # copy_files_repo = copy.deepcopy(files_repo)
                 passthrough_request.app.emit("process_document",doc_id_str=str(file.id), stop_at=stop_at.value, files_repo=files_repo)
 
     @get(path="/daemon/process_file/{file_id:uuid}")
