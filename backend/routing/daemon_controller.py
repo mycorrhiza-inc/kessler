@@ -42,6 +42,7 @@ from models.utils import PydanticBaseModel as BaseModel
 # )
 from models.files import (
     FileSchema,
+    FileModel,
     provide_files_repo,
     DocumentStatus,
     docstatus_index,
@@ -118,17 +119,18 @@ async def create_global_connection():
 # def jsonify_validate_return(self,):
 #     return None
 @listener("process_document")
-async def process_document(doc_id_str: str, stop_at : str) -> None:
+async def process_document(doc_id_str: str, stop_at : str, files_repo : FileRepository) -> None:
     logger = default_logger
-    conn = utils.sqlalchemy_config.get_engine() 
-    await conn.begin().run_sync(UUIDBase.metadata.create_all)
-    # Maybe mirri is right and I should just use sql strings, but code reuse would make this hard
-    # Also this could potentially be a global, but I put it in here to reduce bugs
-    logger.info(f"Executing ackground process doc {doc_id_str} to stage {stop_at}")
-    # conn = utils.sqlalchemy_config.get_engine().begin() 
-    logger.info(str(conn))
-    logger.info(type(conn))
-    files_repo = await provide_files_repo(conn)
+    # TODO:: Replace passthrough files repo with actual global repo
+    # conn = utils.sqlalchemy_config.get_engine() 
+    # await conn.begin().run_sync(UUIDBase.metadata.create_all)
+    # # Maybe mirri is right and I should just use sql strings, but code reuse would make this hard
+    # # Also this could potentially be a global, but I put it in here to reduce bugs
+    # logger.info(f"Executing ackground process doc {doc_id_str} to stage {stop_at}")
+    # # conn = utils.sqlalchemy_config.get_engine().begin() 
+    # logger.info(str(conn))
+    # logger.info(type(conn))
+    # files_repo = await provide_files_repo(conn)
     stop_at = DocumentStatus(stop_at)
     await process_fileid_raw(doc_id_str,files_repo,logger,stop_at)
 
@@ -148,7 +150,7 @@ class DaemonController(Controller):
         self,
         files_repo: FileRepository,
         passthrough_request : Request,
-        files: List[FileSchema],
+        files: List[FileModel],
         stop_at : Optional[str] = None,
         regenerate_from : Optional[str] = None
         ) -> None:
@@ -174,7 +176,7 @@ class DaemonController(Controller):
             # Dont process the file if it is already processed beyond the stop point.
             if docstatus_index(file_stage) < docstatus_index(stop_at):
                 logger.info(f"Sending file {str(file.id)} to be processed in the background.")
-                passthrough_request.app.emit("process_document",doc_id_str=str(file.id), stop_at=stop_at.value)
+                passthrough_request.app.emit("process_document",doc_id_str=str(file.id), stop_at=stop_at.value, files_repo=files_repo)
 
     @get(path="/daemon/process_file/{file_id:uuid}")
     async def process_file_background(
@@ -201,9 +203,9 @@ class DaemonController(Controller):
             logger.info("Beginning to process all files.")
             results = await files_repo.list()
             logger.info(f"{len(results)} results")
-            type_adapter = TypeAdapter(list[FileSchema])
-            validated_results = type_adapter.validate_python(results)
-            return await self.bulk_process_file_background(files_repo = files_repo, passthrough_request=request, files = validated_results, stop_at = stop_at, regenerate_from=regenerate_from)
+            # type_adapter = TypeAdapter(list[FileSchema])
+            # validated_results = type_adapter.validate_python(results)
+            return await self.bulk_process_file_background(files_repo = files_repo, passthrough_request=request, files = results, stop_at = stop_at, regenerate_from=regenerate_from)
 
 
 
