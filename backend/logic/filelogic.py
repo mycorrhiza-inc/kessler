@@ -189,7 +189,7 @@ async def process_file_raw(
             mdextract.process_raw_document_into_untranslated_text(
                 file_path, doc_metadata
             )[0]
-        )grug try watch patiently as cut points emerge from code and slowly refactor, with code base taking shape over time along with experience. no hard/ fast rule for this: grug know cut point when grug see cut point, just take time to build skill in seeing, patience
+        )
         logger.info(
             f"Successfully processed original text: {processed_original_text[0:20]}"
         )

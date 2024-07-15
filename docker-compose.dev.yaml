@@ -35,12 +35,6 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 
-  rabbitmq:
-    image: rabbitmq:latest
-    expose:
-      - 5672
-    volumes:
-      - ~/volumes/rabbitmq:/var/lib/rabbitmq
 
   backend:
     build:
