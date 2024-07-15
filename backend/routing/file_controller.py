@@ -17,8 +17,6 @@ from litestar.handlers.http_handlers.decorators import (
 )
 
 
-
-
 from sqlalchemy import select
 
 
@@ -46,7 +44,7 @@ from models.files import (
     FileSchemaWithText,
     provide_files_repo,
     DocumentStatus,
-    docstatus_index
+    docstatus_index,
 )
 
 from logic.docingest import DocumentIngester
@@ -55,11 +53,7 @@ from logic.extractmarkdown import MarkdownExtractor
 from typing import List, Optional, Dict
 
 
-from logic.filelogic import (
-    add_file_raw,
-    process_file_raw
-)
-
+from logic.filelogic import add_file_raw, process_file_raw
 
 
 import json
@@ -67,6 +61,8 @@ import json
 from util.niclib import rand_string
 
 from enum import Enum
+
+
 class UUIDEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, UUID):
@@ -104,10 +100,6 @@ class IndexFileRequest(BaseModel):
     id: UUID
 
 
-
-
-
-
 OS_TMPDIR = Path(os.environ["TMPDIR"])
 OS_GPU_COMPUTE_URL = os.environ["GPU_COMPUTE_URL"]
 OS_FILEDIR = Path("/files/")
@@ -125,9 +117,6 @@ OS_BACKUP_FILEDIR = OS_FILEDIR / Path("backup")
 
 
 # import base64
-
-
-
 
 
 class FileController(Controller):
@@ -155,7 +144,7 @@ class FileController(Controller):
         self,
         files_repo: FileRepository,
         file_id: UUID = Parameter(title="File ID", description="File to retieve"),
-        original_lang: bool = False
+        original_lang: bool = False,
     ) -> str:
         # Yes I know this is a redundant if, this looks much more readable imo.
         if original_lang == True:
@@ -175,7 +164,7 @@ class FileController(Controller):
     async def get_raw(
         self,
         files_repo: FileRepository,
-        request : Request,
+        request: Request,
         file_id: UUID = Parameter(title="File ID", description="File to retieve"),
     ) -> Response:
         logger = request.logger
@@ -184,16 +173,16 @@ class FileController(Controller):
             return Response(content="ID does not exist", status_code=404)
 
         type_adapter = TypeAdapter(FileSchema)
-        obj=type_adapter.validate_python(obj)
+        obj = type_adapter.validate_python(obj)
         filehash = obj.hash
 
         file_path = DocumentIngester(logger).get_default_filepath_from_hash(filehash)
-        
+
         if not file_path.is_file():
             return Response(content="File not found", status_code=404)
-        
+
         # Read the file content
-        with open(file_path, 'rb') as file:
+        with open(file_path, "rb") as file:
             file_content = file.read()
         # currently doesnt work unfortunately
         # file_name = obj.name
@@ -209,7 +198,7 @@ class FileController(Controller):
     async def get_metadata(
         self,
         files_repo: FileRepository,
-        request : Request,
+        request: Request,
         file_id: UUID = Parameter(title="File ID", description="File to retieve"),
     ) -> dict:
         logger = request.logger
@@ -218,7 +207,7 @@ class FileController(Controller):
             return Response(content="ID does not exist", status_code=404)
 
         type_adapter = TypeAdapter(FileSchema)
-        obj=type_adapter.validate_python(obj)
+        obj = type_adapter.validate_python(obj)
         metadata_str = obj.mdata
         metadata_dict = json.loads(metadata_str)
         return metadata_dict
@@ -302,7 +291,6 @@ class FileController(Controller):
         # logger.info(final_return)
         return f"Successfully added document with uuid: {file_obj.uuid}"
 
-
     # TODO: anything but this
 
     @post(path="/process/{file_id_str:str}")
@@ -313,30 +301,35 @@ class FileController(Controller):
         file_id_str: str = Parameter(
             title="File ID as hex string", description="File to retieve"
         ),
-        regenerate_from: Optional[str] = None ,  # Figure out how to pass in a boolean as a query paramater
-        stop_at: Optional[str] = None,  # Figure out how to pass in a boolean as a query paramater
+        regenerate_from: Optional[
+            str
+        ] = None,  # Figure out how to pass in a boolean as a query paramater
+        stop_at: Optional[
+            str
+        ] = None,  # Figure out how to pass in a boolean as a query paramater
     ) -> None:
         """Process a File."""
-        logger= request.logger
+        logger = request.logger
         if stop_at is None:
             stop_at = "completed"
         if regenerate_from is Nosessionne:
             regenerate_from = "completed"
         # TODO: Figure out error messaging for these
-        stop_at=DocumentStatus(stop_at)
-        regenerate_from=DocumentStatus(regenerate_from)
+        stop_at = DocumentStatus(stop_at)
+        regenerate_from = DocumentStatus(regenerate_from)
         # TODO : Add error for invalid document ID
         file_id = UUID(file_id_str)
         logger.info(file_id)
         obj = await files_repo.get(file_id)
-        if docstatus_index(DocumentStatus(obj.stage)) < docstatus_index(regenerate_from):
+        if docstatus_index(DocumentStatus(obj.stage)) < docstatus_index(
+            regenerate_from
+        ):
             obj.stage = regenerate_from.value
 
         if docstatus_index(DocumentStatus(obj.stage)) < docstatus_index(stop_at):
             await self.process_file_raw(obj, files_repo, request.logger, stop_at)
         # TODO : Return Response code and response message
         return self.validate_and_jsonify(obj)
-
 
     @post(path="/files/upload/from/md", media_type=MediaType.TEXT)
     async def upload_from_markdown(
@@ -400,7 +393,9 @@ class FileController(Controller):
     async def delete_file(
         self,
         files_repo: FileRepository,
-        file_id: UUID = Parameter(title="File ID as hex string", description="File to delete"),
+        file_id: UUID = Parameter(
+            title="File ID as hex string", description="File to delete"
+        ),
     ) -> None:
         await files_repo.delete(file_id)
         await files_repo.session.commit()

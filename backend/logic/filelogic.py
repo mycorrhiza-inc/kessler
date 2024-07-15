@@ -17,7 +17,7 @@ from models.files import (
     FileSchemaWithText,
     provide_files_repo,
     DocumentStatus,
-    docstatus_index
+    docstatus_index,
 )
 
 from logic.docingest import DocumentIngester
@@ -46,10 +46,11 @@ OS_HASH_FILEDIR = OS_FILEDIR / Path("raw")
 OS_OVERRIDE_FILEDIR = OS_FILEDIR / Path("override")
 OS_BACKUP_FILEDIR = OS_FILEDIR / Path("backup")
 
+
 async def add_file_raw(
     tmp_filepath: Path,
     metadata: dict,
-    process: bool ,  # Figure out how to pass in a boolean as a query paramater
+    process: bool,  # Figure out how to pass in a boolean as a query paramater
     override_hash: bool,
     files_repo: FileRepository,
     logger: Any,
@@ -65,9 +66,9 @@ async def add_file_raw(
             assert isinstance(metadata.get("lang"), str)
         except Exception:
             logger.error("Illformed Metadata please fix")
-            logger.error(f"Title: {metadata.get("title")}")
-            logger.error(f"Doctype: {metadata.get("doctype")}")
-            logger.error(f"Lang: {metadata.get("title")}")
+            # logger.error(f"Title: {metadata.get("title")}")
+            # logger.error(f"Doctype: {metadata.get("doctype")}")
+            # logger.error(f"Lang: {metadata.get("title")}")
             raise Exception(
                 "Metadata is illformed, this is likely an error in software, please submit a bug report."
             )
@@ -149,17 +150,22 @@ async def add_file_raw(
 
 
 async def process_fileid_raw(
-    file_id_str: str, files_repo: FileRepository, logger: Any,  stop_at : Optional[DocumentStatus]= None
+    file_id_str: str,
+    files_repo: FileRepository,
+    logger: Any,
+    stop_at: Optional[DocumentStatus] = None,
 ):
     file_uuid = UUID(file_id_str)
     logger.info(file_uuid)
     obj = await files_repo.get(file_uuid)
-    return await process_file_raw(obj,files_repo,logger,stop_at)
-
+    return await process_file_raw(obj, files_repo, logger, stop_at)
 
 
 async def process_file_raw(
-    obj: FileModel, files_repo: FileRepository, logger: Any,  stop_at : Optional[DocumentStatus]= None
+    obj: FileModel,
+    files_repo: FileRepository,
+    logger: Any,
+    stop_at: Optional[DocumentStatus] = None,
 ):
     if stop_at is None:
         stop_at = DocumentStatus.completed
@@ -175,21 +181,18 @@ async def process_file_raw(
         "Internal error somewhere in process.",
     )
 
-
     # TODO: Replace with pydantic validation
 
     # text extraction
     async def process_stage_one():
         # FIXME: Change to deriving the filepath from the uri.
-        file_path = DocumentIngester(logger).get_default_filepath_from_hash(
-            obj.hash
-        )
+        file_path = DocumentIngester(logger).get_default_filepath_from_hash(obj.hash)
         # This process might spit out new metadata that was embedded in the document, ignoring for now
         processed_original_text = (
-            (await mdextract.process_raw_document_into_untranslated_text(
+            await mdextract.process_raw_document_into_untranslated_text(
                 file_path, doc_metadata
-            ))[0]
-        )
+            )
+        )[0]
         logger.info(
             f"Successfully processed original text: {processed_original_text[0:20]}"
         )
@@ -233,21 +236,24 @@ async def process_file_raw(
     async def process_stage_three():
         logger.info("Adding Document to Vector Database")
 
-        def generate_searchable_metadata(initial_metadata : dict) -> dict:
+        def generate_searchable_metadata(initial_metadata: dict) -> dict:
             return_metadata = {
-                "title"  : initial_metadata.get("title"),
-                "author" : initial_metadata.get("author"),
-                "source" : initial_metadata.get("source"),
-                "date" : initial_metadata.get("date"),
+                "title": initial_metadata.get("title"),
+                "author": initial_metadata.get("author"),
+                "source": initial_metadata.get("source"),
+                "date": initial_metadata.get("date"),
             }
-            def guarentee_field(field: str, default_value : Any = "unknown"):
+
+            def guarentee_field(field: str, default_value: Any = "unknown"):
                 if return_metadata.get(field) is None:
-                    return_metadata[field]=default_value
+                    return_metadata[field] = default_value
+
             guarentee_field("title")
             guarentee_field("author")
             guarentee_field("source")
             guarentee_field("date")
             return return_metadata
+
         searchable_metadata = generate_searchable_metadata(doc_metadata)
         try:
             add_document_to_db_from_text(obj.english_text, searchable_metadata)

@@ -108,7 +108,13 @@ cors_config = CORSConfig(allow_origins=["*"])
 
 api_router = Router(
     path="/api",
-    route_handlers=[FileController, SearchController, RagController, TestController, DaemonController],
+    route_handlers=[
+        FileController,
+        SearchController,
+        RagController,
+        TestController,
+        DaemonController,
+    ],
 )
 
 app = Litestar(

@@ -15,6 +15,7 @@ import logging
 
 from enum import Enum
 
+
 class FileModel(UUIDAuditBase):
     """Database representation of a file"""
 
@@ -38,14 +39,16 @@ class FileRepository(SQLAlchemyAsyncRepository[FileModel]):
 
     model_type = FileModel
 
+
 default_logger = logging.getLogger(__name__)
+
 
 async def provide_files_repo(db_session: AsyncSession) -> FileRepository:
     """This provides the default Authors repository."""
     default_logger.info(db_session)
     default_logger.info(type(db_session))
-    assert isinstance(db_session,AsyncSession ), f"Type is : {type(db_session)}"
-    file_repo =FileRepository(session=db_session)
+    assert isinstance(db_session, AsyncSession), f"Type is : {type(db_session)}"
+    file_repo = FileRepository(session=db_session)
     default_logger.info(file_repo)
     default_logger.info(type(file_repo))
     return file_repo
@@ -79,19 +82,18 @@ class FileSchemaWithText(FileSchema):
     english_text: str | None = None
 
 
-
-
-class DocumentStatus(str, Enum): 
-    completed="completed"
-    stage3="stage3"
-    stage2="stage2"
-    stage1="stage1"
+class DocumentStatus(str, Enum):
+    completed = "completed"
+    stage3 = "stage3"
+    stage2 = "stage2"
+    stage1 = "stage1"
 
 
 # I am deeply sorry for not reading the python documentation ahead of time and storing the stage of processed strings instead of ints, hopefully this can atone for my mistakes
 
+
 # This should probably be a method on documentstatus, but I dont want to fuck around with it for now
-def docstatus_index(docstatus : DocumentStatus) -> int:
+def docstatus_index(docstatus: DocumentStatus) -> int:
     match docstatus:
         case DocumentStatus.stage1:
             return 1
