@@ -109,6 +109,7 @@ async def process_document(doc_id_str: str, stop_at : str) -> None:
     # Maybe mirri is right and I should just use sql strings, but code reuse would make this hard
     # Also this could potentially be a global, but I put it in here to reduce bugs
     files_repo = await FileRepository(session=provide_files_repo(conn))
+    stop_at = DocumentStatus(stop_at)
     await process_fileid_raw(doc_id_str,files_repo,logger,stop_at)
 
 
@@ -131,6 +132,10 @@ class DaemonController(Controller):
         stop_at : Optional[str] = None,
         regenerate_from : Optional[str] = None
         ) -> None:
+        if stop_at is None:
+            stop_at = "completed"
+        if regenerate_from is None:
+            regenerate_from = "completed"
         stop_at = DocumentStatus(stop_at)
         regenerate_from= DocumentStatus(regenerate_from)
         for file in files:
@@ -142,6 +147,7 @@ class DaemonController(Controller):
                 await files_repo.session.commit()
             # Dont process the file if it is already processed beyond the stop point.
             if docstatus_index(file_stage) < docstatus_index(stop_at):
+                passthrough_request.logger.info(f"Sending file {str(file.id)} to be processed in the background.")
                 passthrough_request.app.emit("process_document",doc_id_str=str(file.id), stop_at=stop_at.value)
 
     @get(path="/daemon/process_fileid/{file_id:uuid}")
