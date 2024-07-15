@@ -26,6 +26,8 @@ from rag.llamaindex import initialize_db_table
 import threading
 
 
+from routing.daemon_controller import DaemonController, process_document
+
 logger = logging.getLogger(__name__)
 
 
@@ -106,7 +108,7 @@ cors_config = CORSConfig(allow_origins=["*"])
 
 api_router = Router(
     path="/api",
-    route_handlers=[FileController, SearchController, RagController, TestController],
+    route_handlers=[FileController, SearchController, RagController, TestController, DaemonController],
 )
 
 app = Litestar(
@@ -121,5 +123,5 @@ app = Litestar(
     cors_config=cors_config,
     logging_config=logging_config,
     exception_handlers={Exception: plain_text_exception_handler},
-    listeners=[increment_processed_docs],
+    listeners=[increment_processed_docs, process_document],
 )
