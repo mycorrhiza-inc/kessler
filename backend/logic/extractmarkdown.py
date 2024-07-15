@@ -28,7 +28,7 @@ class MarkdownExtractor:
         self.logger = logger
         # TODO : Add database connection.
 
-    def process_raw_document_into_english_text(self, file_loc: Path, metadata: str):
+    def process_raw_document_into_english_text(self, file_loc: Path, metadata: dict):
         lang = metadata.get("lang")
         raw_text = self.process_raw_document_into_untranslated_text(file_loc, metadata)
         return self.convert_text_into_eng(raw_text, lang)
@@ -58,7 +58,7 @@ class MarkdownExtractor:
         with open(backuppath, "w") as text_file:
             text_file.write(savestring)
 
-    def process_raw_document_into_untranslated_text(
+    async def process_raw_document_into_untranslated_text(
         self, file_loc: Path, metadata: dict, override_dir: Optional[Path] = None
     ) -> Tuple[str, dict]:
         doctype = metadata["doctype"]
@@ -66,7 +66,9 @@ class MarkdownExtractor:
 
         def process_pdf(filepath: Path) -> str:
             self.logger.info("processing pdf")
-            return GPUComputeEndpoint(self.logger).transcribe_pdf(filepath)
+            return_string = await GPUComputeEndpoint(self.logger).transcribe_pdf(filepath)
+            return return_string
+
 
         # Take a file with a path of path and a pandoc type of doctype and convert it to pandoc markdown and return the output as a string.
         # TODO: Make it so that you dont need to run sudo apt install pandoc for it to work, and it bundles with the pandoc python library

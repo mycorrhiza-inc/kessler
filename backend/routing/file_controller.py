@@ -264,7 +264,7 @@ class FileController(Controller):
         file_obj = await add_file_raw(
             final_filepath, final_metadata, process, override_hash, files_repo, logger
         )
-        return f"Successfully added document with uuid: {file_obj.uuid}"
+        return f"Successfully added document with uuid: {file_obj.id}"
 
     # TODO : (Nic) Make function that can process uploaded files
     @post(path="/files/add_url")

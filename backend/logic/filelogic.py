@@ -179,14 +179,14 @@ async def process_file_raw(
     # TODO: Replace with pydantic validation
 
     # text extraction
-    def process_stage_one():
+    async def process_stage_one():
         # FIXME: Change to deriving the filepath from the uri.
         file_path = DocumentIngester(logger).get_default_filepath_from_hash(
             obj.hash
         )
         # This process might spit out new metadata that was embedded in the document, ignoring for now
         processed_original_text = (
-            mdextract.process_raw_document_into_untranslated_text(
+            await mdextract.process_raw_document_into_untranslated_text(
                 file_path, doc_metadata
             )[0]
         )
@@ -210,7 +210,7 @@ async def process_file_raw(
             return DocumentStatus.stage2
 
     # text conversion
-    def process_stage_two():
+    async def process_stage_two():
         if obj.lang != "en":
             try:
                 processed_english_text = mdextract.convert_text_into_eng(
@@ -230,7 +230,7 @@ async def process_file_raw(
 
     # TODO: Replace with pydantic validation
 
-    def process_stage_three():
+    async def process_stage_three():
         logger.info("Adding Document to Vector Database")
 
         def generate_searchable_metadata(initial_metadata : dict) -> dict:
@@ -273,11 +273,11 @@ async def process_file_raw(
 
         match current_stage:
             case DocumentStatus.stage1:
-                current_stage = process_stage_one()
+                current_stage = await process_stage_one()
             case DocumentStatus.stage2:
-                current_stage = process_stage_two()
+                current_stage = await process_stage_two()
             case DocumentStatus.stage3:
-                current_stage = process_stage_three()
+                current_stage = await process_stage_three()
             case _:
                 raise Exception(
                     "Document was incorrectly added to database, \

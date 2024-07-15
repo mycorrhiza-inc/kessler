@@ -17,4 +17,4 @@ haystack
 tokenizers
 
 
-celery
+aiohttp[speedups]
