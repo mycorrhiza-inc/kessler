@@ -57,7 +57,7 @@ async def on_startup() -> None:
     try:
         initialize_db_table()
     except Exception as e:
-        logger.error("catastrophic failure setting up lancedb")
+        logger.error(f"catastrophic failure setting up lancedb: {e}")
         # What if we didnt?
         # raise e
 

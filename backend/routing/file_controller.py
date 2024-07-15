@@ -331,15 +331,15 @@ class FileController(Controller):
         # TODO: Figure out error messaging for these
         stop_at=DocumentStatus(stop_at)
         regenerate_from=DocumentStatus(regenerate_from)
+        # TODO : Add error for invalid document ID
         file_id = UUID(file_id_str)
         logger.info(file_id)
         obj = await files_repo.get(file_id)
         if docstatus_index(DocumentStatus(obj.stage)) < docstatus_index(regenerate_from):
             obj.stage = regenerate_from.value
 
-
-        # TODO : Add error for invalid document ID
-        await self.process_file_raw(obj, files_repo, request.logger, stop_at)
+        if docstatus_index(DocumentStatus(obj.stage)) < docstatus_index(stop_at):
+            await self.process_file_raw(obj, files_repo, request.logger, stop_at)
         # TODO : Return Response code and response message
         return self.validate_and_jsonify(obj)
 

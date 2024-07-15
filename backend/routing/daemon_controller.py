@@ -64,13 +64,15 @@ import logging
 from models import utils
 from logic.filelogic import process_fileid_raw
 import asyncio
+from sqlalchemy.ext.asyncio import create_async_engine
+from litestar.contrib.sqlalchemy.base import UUIDBase
 
-class UUIDEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, UUID):
-            # if the obj is uuid, we simply return the value of uuid
-            return obj.hex
-        return json.JSONEncoder.default(self, obj)
+# class UUIDEncoder(json.JSONEncoder):
+#     def default(self, obj):
+#         if isinstance(obj, UUID):
+#             # if the obj is uuid, we simply return the value of uuid
+#             return obj.hex
+#         return json.JSONEncoder.default(self, obj)
 
 
 
@@ -83,8 +85,6 @@ OS_TMPDIR = Path(os.environ["TMPDIR"])
 OS_GPU_COMPUTE_URL = os.environ["GPU_COMPUTE_URL"]
 OS_FILEDIR = Path("/files/")
 
-
-# import base64
 
 
 OS_TMPDIR = Path(os.environ["TMPDIR"])
@@ -95,20 +95,40 @@ OS_OVERRIDE_FILEDIR = OS_FILEDIR / Path("override")
 OS_BACKUP_FILEDIR = OS_FILEDIR / Path("backup")
 
 
-logger = logging.getLogger(__name__)
+default_logger = logging.getLogger(__name__)
 logging.info("Daemon logging works, and started successfully")
 
 
+# postgres_connection_string = os.environ["DATABASE_CONNECTION_STRING"]
+# if "postgresql://" in postgres_connection_string:
+#     postgres_connection_string = postgres_connection_string.replace(
+#         "postgresql://", "postgresql+asyncpg://"
+#     )
+# engine = create_async_engine(
+#         "postgresql+asyncpg://scott:tiger@localhost/test",
+#         echo=True,
+#     )
 
-conn = utils.sqlalchemy_config.get_engine().begin() 
+async def create_global_connection():
+    global conn
+    conn = utils.sqlalchemy_config.get_engine() 
+    await conn.run_sync(UUIDBase.metadata.create_all)
+
 
 # def jsonify_validate_return(self,):
 #     return None
 @listener("process_document")
 async def process_document(doc_id_str: str, stop_at : str) -> None:
+    logger = default_logger
+    conn = utils.sqlalchemy_config.get_engine() 
+    await conn.begin().run_sync(UUIDBase.metadata.create_all)
     # Maybe mirri is right and I should just use sql strings, but code reuse would make this hard
     # Also this could potentially be a global, but I put it in here to reduce bugs
-    files_repo = await FileRepository(session=provide_files_repo(conn))
+    logger.info(f"Executing ackground process doc {doc_id_str} to stage {stop_at}")
+    # conn = utils.sqlalchemy_config.get_engine().begin() 
+    logger.info(str(conn))
+    logger.info(type(conn))
+    files_repo = await provide_files_repo(conn)
     stop_at = DocumentStatus(stop_at)
     await process_fileid_raw(doc_id_str,files_repo,logger,stop_at)
 
@@ -132,6 +152,7 @@ class DaemonController(Controller):
         stop_at : Optional[str] = None,
         regenerate_from : Optional[str] = None
         ) -> None:
+        logger = passthrough_request.logger
         if stop_at is None:
             stop_at = "completed"
         if regenerate_from is None:
@@ -139,18 +160,23 @@ class DaemonController(Controller):
         stop_at = DocumentStatus(stop_at)
         regenerate_from= DocumentStatus(regenerate_from)
         for file in files:
+            logger.info(f"Validating file {str(file.id)} for processing.")
             file_stage=DocumentStatus(file.stage)
             if docstatus_index(file_stage) > docstatus_index(regenerate_from):
                 file_stage = regenerate_from
-                file.state = regenerate_from.value 
-                files_repo.update(file)
+                file.stage = regenerate_from.value 
+                await files_repo.update(file)
+                # It was previously this and it was working, but syntax seems to suggest that only the above will work
+                # _ = files_repo.update(file)
+
+                logger.info(f"updated fileid {file.id} with new stage {file.stage}")
                 await files_repo.session.commit()
             # Dont process the file if it is already processed beyond the stop point.
             if docstatus_index(file_stage) < docstatus_index(stop_at):
-                passthrough_request.logger.info(f"Sending file {str(file.id)} to be processed in the background.")
+                logger.info(f"Sending file {str(file.id)} to be processed in the background.")
                 passthrough_request.app.emit("process_document",doc_id_str=str(file.id), stop_at=stop_at.value)
 
-    @get(path="/daemon/process_fileid/{file_id:uuid}")
+    @get(path="/daemon/process_file/{file_id:uuid}")
     async def process_file_background(
         self,
         files_repo: FileRepository,
@@ -163,7 +189,7 @@ class DaemonController(Controller):
             type_adapter = TypeAdapter(FileSchema)
             validated_obj = type_adapter.validate_python(obj)
             return await self.bulk_process_file_background(files_repo = files_repo, passthrough_request=request, files = [validated_obj], stop_at = stop_at, regenerate_from=regenerate_from)
-    @get(path="/daemon/process_all")
+    @get(path="/daemon/process_all_files")
     async def process_all_background(
         self,
         files_repo: FileRepository,
@@ -171,8 +197,9 @@ class DaemonController(Controller):
         stop_at : Optional[str] = None,
         regenerate_from : Optional[str] = None
         )-> None:
-            results = await files_repo.list()
             logger = request.logger
+            logger.info("Beginning to process all files.")
+            results = await files_repo.list()
             logger.info(f"{len(results)} results")
             type_adapter = TypeAdapter(list[FileSchema])
             validated_results = type_adapter.validate_python(results)
