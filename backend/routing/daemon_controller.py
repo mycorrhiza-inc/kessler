@@ -15,6 +15,7 @@ from litestar.handlers.http_handlers.decorators import (
     delete,
     MediaType,
 )
+from litestar.events import listener
 
 
 
@@ -40,13 +41,12 @@ from models.utils import PydanticBaseModel as BaseModel
 #     provide_files_repo,
 # )
 from models.files import (
-    FileModel,
-    FileRepository,
     FileSchema,
-    FileSchemaWithText,
+    FileModel,
     provide_files_repo,
     DocumentStatus,
-    docstatus_index
+    docstatus_index,
+    FileRepository
 )
 
 from logic.docingest import DocumentIngester
@@ -60,12 +60,21 @@ import json
 from util.niclib import rand_string
 
 from enum import Enum
-class UUIDEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, UUID):
-            # if the obj is uuid, we simply return the value of uuid
-            return obj.hex
-        return json.JSONEncoder.default(self, obj)
+
+import logging
+from models import utils
+from logic.filelogic import process_fileid_raw
+import asyncio
+from sqlalchemy.ext.asyncio import create_async_engine
+from litestar.contrib.sqlalchemy.base import UUIDBase
+
+from sqlalchemy.ext.asyncio import AsyncSession
+# class UUIDEncoder(json.JSONEncoder):
+#     def default(self, obj):
+#         if isinstance(obj, UUID):
+#             # if the obj is uuid, we simply return the value of uuid
+#             return obj.hex
+#         return json.JSONEncoder.default(self, obj)
 
 
 
@@ -78,8 +87,6 @@ OS_TMPDIR = Path(os.environ["TMPDIR"])
 OS_GPU_COMPUTE_URL = os.environ["GPU_COMPUTE_URL"]
 OS_FILEDIR = Path("/files/")
 
-
-# import base64
 
 
 OS_TMPDIR = Path(os.environ["TMPDIR"])
@@ -90,44 +97,121 @@ OS_OVERRIDE_FILEDIR = OS_FILEDIR / Path("override")
 OS_BACKUP_FILEDIR = OS_FILEDIR / Path("backup")
 
 
-# import base64
+default_logger = logging.getLogger(__name__)
+logging.info("Daemon logging works, and started successfully")
+
+
+# postgres_connection_string = os.environ["DATABASE_CONNECTION_STRING"]
+# if "postgresql://" in postgres_connection_string:
+#     postgres_connection_string = postgres_connection_string.replace(
+#         "postgresql://", "postgresql+asyncpg://"
+#     )
+# engine = create_async_engine(
+#         "postgresql+asyncpg://scott:tiger@localhost/test",
+#         echo=True,
+#     )
+
+async def create_global_connection():
+    global conn
+    conn = utils.sqlalchemy_config.get_engine() 
+    await conn.run_sync(UUIDBase.metadata.create_all)
+
+
+# def jsonify_validate_return(self,):
+#     return None
+@listener("process_document")
+async def process_document(doc_id_str: str, stop_at : str, files_repo : FileRepository) -> None:
+    logger = default_logger
+    logger.info(f"Executing background docproc on {doc_id_str} to {stop_at}")
+    stop_at = DocumentStatus(stop_at)
+    # TODO:: Replace passthrough files repo with actual global repo
+    engine = utils.sqlalchemy_config.get_engine() 
+    logger.info(engine) 
+    logger.info(type(engine)) 
+    # # Maybe mirri is right and I should just use sql strings, but code reuse would make this hard
+    # # Also this could potentially be a global, but I put it in here to reduce bugs
+    # logger.info(f"Executing ackground process doc {doc_id_str} to stage {stop_at}")
+    # # conn = utils.sqlalchemy_config.get_engine().begin() 
+    # logger.info(str(conn))
+    # logger.info(type(conn))
+    files_repo_2 = await provide_files_repo(AsyncSession(engine))
+    await process_fileid_raw(doc_id_str,files_repo,logger,stop_at)
+
 
 
 
 
 
 class DaemonController(Controller):
-    """File Controller"""
 
     dependencies = {"files_repo": Provide(provide_files_repo)}
 
     # def jsonify_validate_return(self,):
     #     return None
+    #
+    async def bulk_process_file_background(
+        self,
+        files_repo: FileRepository,
+        passthrough_request : Request,
+        files: List[FileModel],
+        stop_at : Optional[str] = None,
+        regenerate_from : Optional[str] = None
+        ) -> None:
+        logger = passthrough_request.logger
+        if stop_at is None:
+            stop_at = "completed"
+        if regenerate_from is None:
+            regenerate_from = "completed"
+        stop_at = DocumentStatus(stop_at)
+        regenerate_from= DocumentStatus(regenerate_from)
+        for file in files:
+            logger.info(f"Validating file {str(file.id)} for processing.")
+            file_stage=DocumentStatus(file.stage)
+            if docstatus_index(file_stage) > docstatus_index(regenerate_from):
+                file_stage = regenerate_from
+                file.stage = regenerate_from.value 
+                await files_repo.update(file)
+                await files_repo.session.commit()
+                logger.info(f"Reverting fileid {file.id} to stage {file.stage}")
+            # Dont process the file if it is already processed beyond the stop point.
+            if docstatus_index(file_stage) < docstatus_index(stop_at):
+                logger.info(f"Sending file {str(file.id)} to be processed in the background.")
+                # copy_files_repo = copy.deepcopy(files_repo)
+                passthrough_request.app.emit("process_document",doc_id_str=str(file.id), stop_at=stop_at.value, files_repo=files_repo)
 
-    @get(path="/daemon/docproc/start")
-    async def docproc_start(
+    @get(path="/daemon/process_file/{file_id:uuid}")
+    async def process_file_background(
         self,
         files_repo: FileRepository,
         request : Request,
-    ) -> str:
-        logger= request.logger
-        return "Sucessfully started daemon"
-
-    @get(path="/daemon/docproc/status")
-    async def docproc_status(
+        file_id: UUID = Parameter(title="File ID", description="File to retieve"),
+        stop_at : Optional[str] = None,
+        regenerate_from : Optional[str] = None
+        ) -> None:
+            obj = await files_repo.get(file_id)
+            type_adapter = TypeAdapter(FileSchema)
+            validated_obj = type_adapter.validate_python(obj)
+            return await self.bulk_process_file_background(files_repo = files_repo, passthrough_request=request, files = [validated_obj], stop_at = stop_at, regenerate_from=regenerate_from)
+    @get(path="/daemon/process_all_files")
+    async def process_all_background(
         self,
         files_repo: FileRepository,
         request : Request,
-    ) -> str:
-        logger= request.logger
-        return "Status of docproc daemon"
+        stop_at : Optional[str] = None,
+        regenerate_from : Optional[str] = None
+        )-> None:
+            logger = request.logger
+            logger.info("Beginning to process all files.")
+            results = await files_repo.list()
+            logger.info(f"{len(results)} results")
+            # type_adapter = TypeAdapter(list[FileSchema])
+            # validated_results = type_adapter.validate_python(results)
+            return await self.bulk_process_file_background(files_repo = files_repo, passthrough_request=request, files = results, stop_at = stop_at, regenerate_from=regenerate_from)
 
-    @get(path="/daemon/docproc/stop")
-    async def docproc_stop(
-        self,
-        files_repo: FileRepository,
-        request : Request,
-    ) -> str:
-        logger = request.logger 
-        return "docproc stopped"
+
+
+        
+
+
+
 

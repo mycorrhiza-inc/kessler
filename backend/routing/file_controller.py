@@ -264,7 +264,7 @@ class FileController(Controller):
         file_obj = await add_file_raw(
             final_filepath, final_metadata, process, override_hash, files_repo, logger
         )
-        return f"Successfully added document with uuid: {file_obj.uuid}"
+        return f"Successfully added document with uuid: {file_obj.id}"
 
     # TODO : (Nic) Make function that can process uploaded files
     @post(path="/files/add_url")
@@ -303,12 +303,6 @@ class FileController(Controller):
         return f"Successfully added document with uuid: {file_obj.uuid}"
 
 
-    @post(path="/files/add_urls")
-    async def add_urls(
-        self, files_repo: FileRepository, data: UrlUploadList, request: Request
-    ) -> None:
-        return None
-
     # TODO: anything but this
 
     @post(path="/process/{file_id_str:str}")
@@ -319,15 +313,27 @@ class FileController(Controller):
         file_id_str: str = Parameter(
             title="File ID as hex string", description="File to retieve"
         ),
-        regenerate: Optional[str] = None ,  # Figure out how to pass in a boolean as a query paramater
+        regenerate_from: Optional[str] = None ,  # Figure out how to pass in a boolean as a query paramater
         stop_at: Optional[str] = None,  # Figure out how to pass in a boolean as a query paramater
     ) -> None:
         """Process a File."""
-        file_id = UUID(file_id_str)
-        request.logger.info(file_id)
-        obj = await files_repo.get(file_id)
+        logger= request.logger
+        if stop_at is None:
+            stop_at = "completed"
+        if regenerate_from is Nosessionne:
+            regenerate_from = "completed"
+        # TODO: Figure out error messaging for these
+        stop_at=DocumentStatus(stop_at)
+        regenerate_from=DocumentStatus(regenerate_from)
         # TODO : Add error for invalid document ID
-        await self.process_file_raw(obj, files_repo, request.logger, regenerate, stop_at)
+        file_id = UUID(file_id_str)
+        logger.info(file_id)
+        obj = await files_repo.get(file_id)
+        if docstatus_index(DocumentStatus(obj.stage)) < docstatus_index(regenerate_from):
+            obj.stage = regenerate_from.value
+
+        if docstatus_index(DocumentStatus(obj.stage)) < docstatus_index(stop_at):
+            await self.process_file_raw(obj, files_repo, request.logger, stop_at)
         # TODO : Return Response code and response message
         return self.validate_and_jsonify(obj)
 
@@ -394,8 +400,7 @@ class FileController(Controller):
     async def delete_file(
         self,
         files_repo: FileRepository,
-        file_id: UUID = Parameter(title="File ID", description="File to retieve"),
+        file_id: UUID = Parameter(title="File ID as hex string", description="File to delete"),
     ) -> None:
-        fid = UUID(file_id)
-        _ = await files_repo.delete(fid)
+        await files_repo.delete(file_id)
         await files_repo.session.commit()

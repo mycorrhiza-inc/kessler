@@ -17,6 +17,8 @@ from warnings import warn
 
 import os
 
+import aiohttp
+import asyncio
 OS_TMPDIR = Path(os.environ["TMPDIR"])
 
 
@@ -67,7 +69,7 @@ class GPUComputeEndpoint:
         self.marker_endpoint_url = marker_endpoint_url
         self.endpoint_url = legacy_endpoint_url
 
-    def transcribe_pdf(self, filepath: Path) -> str:
+    async def transcribe_pdf(self, filepath: Path) -> str:
         # The API endpoint you will be hitting
         # url = "http://api.mycor.io/v0/multimodal_asr/local-m4t"
         # FIXME : Work out what this url should fucking be
@@ -85,13 +87,14 @@ class GPUComputeEndpoint:
             self.logger.info(
                 f"Contacting server at {self.marker_endpoint_url} to process pdf."
             )
-            response = requests.post(url, files=files)
-            print(f"Request Headers: response.request.headers")
-            # Raise an exception if the request was unsuccessful
-            response.raise_for_status()
 
-        # Response for now returns just text, we can remove everything else
-        return str(response.text)
+            async with aiohttp.ClientSession() as session:
+                async with session.post(url, data={"file": file}) as response:
+                    print(f"Request Headers: response.request.headers")
+                    # Raise an exception if the request was unsuccessful
+                    response.raise_for_status()
+                    # Response for now returns just text, we can remove everything else
+                    return str(response.text)
 
     def llm_nonlocal_raw_call(
         self, msg_history: list[dict], model_name: Optional[str]

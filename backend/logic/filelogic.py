@@ -8,6 +8,7 @@ from sqlalchemy import select
 from pydantic import TypeAdapter
 from models.utils import PydanticBaseModel as BaseModel
 
+from uuid import UUID
 
 from models.files import (
     FileModel,
@@ -29,6 +30,21 @@ import json
 
 from util.niclib import rand_string
 
+
+OS_TMPDIR = Path(os.environ["TMPDIR"])
+OS_GPU_COMPUTE_URL = os.environ["GPU_COMPUTE_URL"]
+OS_FILEDIR = Path("/files/")
+
+
+# import base64
+
+
+OS_TMPDIR = Path(os.environ["TMPDIR"])
+OS_GPU_COMPUTE_URL = os.environ["GPU_COMPUTE_URL"]
+OS_FILEDIR = Path("/files/")
+OS_HASH_FILEDIR = OS_FILEDIR / Path("raw")
+OS_OVERRIDE_FILEDIR = OS_FILEDIR / Path("override")
+OS_BACKUP_FILEDIR = OS_FILEDIR / Path("backup")
 
 async def add_file_raw(
     tmp_filepath: Path,
@@ -132,18 +148,21 @@ async def add_file_raw(
     return new_file
 
 
+async def process_fileid_raw(
+    file_id_str: str, files_repo: FileRepository, logger: Any,  stop_at : Optional[DocumentStatus]= None
+):
+    file_uuid = UUID(file_id_str)
+    logger.info(file_uuid)
+    obj = await files_repo.get(file_uuid)
+    return await process_file_raw(obj,files_repo,logger,stop_at)
+
+
+
 async def process_file_raw(
-    obj: FileModel, files_repo: FileRepository, logger: Any, regenerate: Optional[str] = None, stop_at : Optional[str]= None
+    obj: FileModel, files_repo: FileRepository, logger: Any,  stop_at : Optional[DocumentStatus]= None
 ):
     if stop_at is None:
-        stop_at = "completed"
-    if regenerate is None:
-        regenerate = "completed"
-    # TODO: Figure out error messaging for these
-    stop_at=DocumentStatus(stop_at)
-    regenerate=DocumentStatus(regenerate)
-
-
+        stop_at = DocumentStatus.completed
     logger.info(type(obj))
     logger.info(obj)
     current_stage = DocumentStatus(obj.stage)
@@ -156,22 +175,20 @@ async def process_file_raw(
         "Internal error somewhere in process.",
     )
 
-    if docstatus_index(current_stage) < docstatus_index(regenerate):
-        current_stage = regenerate
 
     # TODO: Replace with pydantic validation
 
     # text extraction
-    def process_stage_one():
+    async def process_stage_one():
         # FIXME: Change to deriving the filepath from the uri.
         file_path = DocumentIngester(logger).get_default_filepath_from_hash(
             obj.hash
         )
         # This process might spit out new metadata that was embedded in the document, ignoring for now
         processed_original_text = (
-            mdextract.process_raw_document_into_untranslated_text(
+            (await mdextract.process_raw_document_into_untranslated_text(
                 file_path, doc_metadata
-            )[0]
+            ))[0]
         )
         logger.info(
             f"Successfully processed original text: {processed_original_text[0:20]}"
@@ -193,7 +210,7 @@ async def process_file_raw(
             return DocumentStatus.stage2
 
     # text conversion
-    def process_stage_two():
+    async def process_stage_two():
         if obj.lang != "en":
             try:
                 processed_english_text = mdextract.convert_text_into_eng(
@@ -213,7 +230,7 @@ async def process_file_raw(
 
     # TODO: Replace with pydantic validation
 
-    def process_stage_three():
+    async def process_stage_three():
         logger.info("Adding Document to Vector Database")
 
         def generate_searchable_metadata(initial_metadata : dict) -> dict:
@@ -248,7 +265,7 @@ async def process_file_raw(
             obj.stage = current_stage.value
             logger.info(response_code)
             logger.info(response_message)
-            _ = files_repo.update(obj)
+            await files_repo.update(obj)
             await files_repo.session.commit()
             type_adapter = TypeAdapter(FileSchema)
             final_return = type_adapter.validate_python(obj)
@@ -256,11 +273,11 @@ async def process_file_raw(
 
         match current_stage:
             case DocumentStatus.stage1:
-                current_stage = process_stage_one()
+                current_stage = await process_stage_one()
             case DocumentStatus.stage2:
-                current_stage = process_stage_two()
+                current_stage = await process_stage_two()
             case DocumentStatus.stage3:
-                current_stage = process_stage_three()
+                current_stage = await process_stage_three()
             case _:
                 raise Exception(
                     "Document was incorrectly added to database, \
