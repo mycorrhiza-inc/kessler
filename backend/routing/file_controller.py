@@ -156,7 +156,7 @@ class FileController(Controller):
         obj_with_text = type_adapter.validate_python(obj)
 
         markdown_text = obj_with_text.english_text
-        if markdown_text is "":
+        if markdown_text == "":
             markdown_text = "Could not find Document Markdown Text"
         return markdown_text
 
@@ -312,7 +312,7 @@ class FileController(Controller):
         logger = request.logger
         if stop_at is None:
             stop_at = "completed"
-        if regenerate_from is Nosessionne:
+        if regenerate_from is None:
             regenerate_from = "completed"
         # TODO: Figure out error messaging for these
         stop_at = DocumentStatus(stop_at)
@@ -363,7 +363,7 @@ class FileController(Controller):
                 lang="english",
                 source="markdown",
                 metadata=m_text,
-                stage="completed",
+                stage=DocumentStatus.completed.value,
                 hash="None",
                 summary=None,
                 short_summary=None,

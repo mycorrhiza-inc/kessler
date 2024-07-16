@@ -93,11 +93,11 @@ default_logger = logging.getLogger(__name__)
 logging.info("Daemon logging works, and started successfully")
 
 
-# postgres_connection_string = os.environ["DATABASE_CONNECTION_STRING"]
-# if "postgresql://" in postgres_connection_string:
-#     postgres_connection_string = postgres_connection_string.replace(
-#         "postgresql://", "postgresql+asyncpg://"
-#     )
+postgres_connection_string = os.environ["DATABASE_CONNECTION_STRING"]
+if "postgresql://" in postgres_connection_string:
+    postgres_connection_string = postgres_connection_string.replace(
+        "postgresql://", "postgresql+asyncpg://"
+    )
 # engine = create_async_engine(
 #         "postgresql+asyncpg://scott:tiger@localhost/test",
 #         echo=True,
@@ -113,16 +113,20 @@ async def create_global_connection():
 # def jsonify_validate_return(self,):
 #     return None
 @listener("process_document")
-async def process_document(
-    doc_id_str: str, stop_at: str, files_repo: FileRepository
-) -> None:
+async def process_document(doc_id_str: str, stop_at: str) -> None:
     logger = default_logger
     logger.info(f"Executing background docproc on {doc_id_str} to {stop_at}")
     stop_at = DocumentStatus(stop_at)
     # TODO:: Replace passthrough files repo with actual global repo
+    # engine = create_async_engine(
+    #     postgres_connection_string,
+    #     echo=True,
+    # )
     engine = utils.sqlalchemy_config.get_engine()
     logger.info(engine)
     logger.info(type(engine))
+    async with engine.begin() as conn:
+        await conn.run_sync(UUIDBase.metadata.create_all)
     # # Maybe mirri is right and I should just use sql strings, but code reuse would make this hard
     # # Also this could potentially be a global, but I put it in here to reduce bugs
     # logger.info(f"Executing ackground process doc {doc_id_str} to stage {stop_at}")
@@ -130,11 +134,10 @@ async def process_document(
     # logger.info(str(conn))
     # logger.info(type(conn))
     files_repo_2 = await provide_files_repo(AsyncSession(engine))
-    await process_fileid_raw(doc_id_str, files_repo, logger, stop_at)
+    await process_fileid_raw(doc_id_str, files_repo_2, logger, stop_at)
 
 
 class DaemonController(Controller):
-
     dependencies = {"files_repo": Provide(provide_files_repo)}
 
     # def jsonify_validate_return(self,):
@@ -147,6 +150,7 @@ class DaemonController(Controller):
         files: List[FileModel],
         stop_at: Optional[str] = None,
         regenerate_from: Optional[str] = None,
+        max_documents: Optional[int] = None,
     ) -> None:
         logger = passthrough_request.logger
         if stop_at is None:
@@ -155,7 +159,12 @@ class DaemonController(Controller):
             regenerate_from = "completed"
         stop_at = DocumentStatus(stop_at)
         regenerate_from = DocumentStatus(regenerate_from)
+        if max_documents is None:
+            max_documents = -1
         for file in files:
+            if max_documents == 0:
+                logger.info("Reached maxiumum file limit, exiting.")
+                return None
             logger.info(f"Validating file {str(file.id)} for processing.")
             file_stage = DocumentStatus(file.stage)
             if docstatus_index(file_stage) > docstatus_index(regenerate_from):
@@ -170,11 +179,11 @@ class DaemonController(Controller):
                     f"Sending file {str(file.id)} to be processed in the background."
                 )
                 # copy_files_repo = copy.deepcopy(files_repo)
+                max_documents += -1
                 passthrough_request.app.emit(
                     "process_document",
                     doc_id_str=str(file.id),
                     stop_at=stop_at.value,
-                    files_repo=files_repo,
                 )
 
     @get(path="/daemon/process_file/{file_id:uuid}")
@@ -204,6 +213,7 @@ class DaemonController(Controller):
         request: Request,
         stop_at: Optional[str] = None,
         regenerate_from: Optional[str] = None,
+        max_documents: Optional[int] = None,
     ) -> None:
         logger = request.logger
         logger.info("Beginning to process all files.")
@@ -217,4 +227,5 @@ class DaemonController(Controller):
             files=results,
             stop_at=stop_at,
             regenerate_from=regenerate_from,
+            max_documents=max_documents,
         )

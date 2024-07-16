@@ -188,6 +188,7 @@ async def process_file_raw(
         # FIXME: Change to deriving the filepath from the uri.
         file_path = DocumentIngester(logger).get_default_filepath_from_hash(obj.hash)
         # This process might spit out new metadata that was embedded in the document, ignoring for now
+        logger.info("Sending async request to pdf file.")
         processed_original_text = (
             await mdextract.process_raw_document_into_untranslated_text(
                 file_path, doc_metadata
@@ -273,10 +274,7 @@ async def process_file_raw(
             logger.info(response_message)
             await files_repo.update(obj)
             await files_repo.session.commit()
-            type_adapter = TypeAdapter(FileSchema)
-            final_return = type_adapter.validate_python(obj)
-            return final_return
-
+            return None
         match current_stage:
             case DocumentStatus.stage1:
                 current_stage = await process_stage_one()
