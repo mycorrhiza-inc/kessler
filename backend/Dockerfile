@@ -13,7 +13,6 @@ COPY requirements.txt /app/requirements.txt
 # COPY requirements-unlocked.txt /app/requirements.txt
 
 RUN pip install --no-cache -r requirements.txt 
-RUN pip install uvicorn
 COPY . . 
 
 # expose to docker network
