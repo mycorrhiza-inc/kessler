@@ -10,10 +10,10 @@ services:
       - ./config/frontend.env.local:/app.env.local
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`${DOMAIN:?error}`) && PathPrefix(`/`)"
+      - "traefik.http.routers.frontend.rule=Host(`${DOMAIN:-app.kessler.xyz}`) && PathPrefix(`/`)"
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.routers.frontend.tls.certresolver=myresolver"
-      - "traefik.http.routers.whoami.rule=Host(`${DOMAIN:?error}`)"
+      - "traefik.http.routers.whoami.rule=Host(`${DOMAIN:-app.kessler.xyz}`)"
       - "traefik.http.routers.whoami.entrypoints=websecure"
       - "traefik.http.routers.whoami.tls.certresolver=myresolver"
     expose:
@@ -49,7 +49,6 @@ services:
   backend:
     build:
       context: ./backend
-      # dockerfile: ./Dockerfile
       dockerfile: ./Dockerfile
     env_file:
       - config/global.env
@@ -62,7 +61,7 @@ services:
       - ./volumes/lancedb:/lancedb
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`${DOMAIN:?error}`) && PathPrefix(`/api`) || PathPrefix(`/schema`)"
+      - "traefik.http.routers.backend.rule=Host(`${DOMAIN:-app.kessler.xyz}`) && PathPrefix(`/api`) || PathPrefix(`/schema`)"
       - "traefik.http.routers.backend.entrypoints=websecure"
       - "traefik.http.routers.backend.tls.certresolver=myresolver"
       # - "traefik.http.routers.backend.tls={}"

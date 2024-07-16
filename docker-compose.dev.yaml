@@ -39,7 +39,6 @@ services:
   backend:
     build:
       context: ./backend
-      # dockerfile: ./Dockerfile
       dockerfile: ./Dockerfile
     env_file:
       - config/global.env
@@ -54,7 +53,6 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.backend.rule=PathPrefix(`/api/`) || PathPrefix(`/schema/`)"
-      # - "traefik.http.middlewares.testheader.headers.accesscontrolalloworigin=*"
     command:
       # - "python"
       # - "rag/postgres_example.py"
