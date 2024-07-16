@@ -1,3 +1,4 @@
+from llama_index.embeddings.octoai import OctoAIEmbedding
 from llama_index.core.llms import ChatMessage
 import logging
 import sys
@@ -42,8 +43,6 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 handler = logging.StreamHandler(sys.stderr)
-
-from llama_index.embeddings.octoai import OctoAIEmbedding
 
 
 # Uncomment to see debug logs
