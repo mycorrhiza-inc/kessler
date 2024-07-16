@@ -1,6 +1,11 @@
 hidden_service
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+
+# Sentry Config File
+frontend/.env.sentry-build-plugin
+
+
 server.htpasswd
 # Pycache and .pyc files 
 **/__pycache__

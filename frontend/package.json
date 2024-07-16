@@ -21,6 +21,7 @@
     "@saas-ui/command-bar": "^0.4.3",
     "@saas-ui/react": "^2.8.7",
     "@saas-ui/theme": "^2.4.1",
+    "@sentry/nextjs": "^8.18.0",
     "@wojtekmaj/react-hooks": "^1.21.0",
     "antd": "^5.18.3",
     "axios": "^1.7.2",
