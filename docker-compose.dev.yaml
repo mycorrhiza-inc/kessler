@@ -51,13 +51,13 @@ services:
     env_file:
       - config/global.env
     environment:
-      - LANCEDB_CONFIG_DIR=/lancedb
+      - MILVUS_DEV_DIR=/tmp/milvus/
     volumes:
       - ./backend:/app
       - ./volumes/instance:/app/instance
       - ./volumes/files:/files
       - ./volumes/tmp:/tmp/
-      - ./volumes/lancedb:/lancedb
+      - ./volumes/milvus:/tmp/milvus/
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.backend.rule=PathPrefix(`/api/`) || PathPrefix(`/schema/`)"
