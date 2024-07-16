@@ -65,7 +65,7 @@ export default function Page() {
 
         <p>
           Next, look for the error on the{" "}
-          <a href="https://glitchtip.mycor.io/organizations/mycorrhiza/issues/?project=1">Issues Page</a>.
+          <a href="https://glitchtip.mycor.io/organizations/mycorrhiza/issues/?project=2">Issues Page</a>.
         </p>
         <p style={{ marginTop: "24px" }}>
           For more information, see{" "}
