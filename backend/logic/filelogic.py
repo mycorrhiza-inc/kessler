@@ -66,9 +66,9 @@ async def add_file_raw(
             assert isinstance(metadata.get("lang"), str)
         except Exception:
             logger.error("Illformed Metadata please fix")
-            # logger.error(f"Title: {metadata.get("title")}")
-            # logger.error(f"Doctype: {metadata.get("doctype")}")
-            # logger.error(f"Lang: {metadata.get("title")}")
+            logger.error(f"Title: {metadata.get('title')}")
+            logger.error(f"Doctype: {metadata.get('doctype')}")
+            logger.error(f"Lang: {metadata.get('title')}")
             raise Exception(
                 "Metadata is illformed, this is likely an error in software, please submit a bug report."
             )
