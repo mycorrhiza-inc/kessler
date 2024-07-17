@@ -256,7 +256,7 @@ class FileController(Controller):
         valid_results = type_adapter.validate_python(results)
         return valid_results
 
-    @get(path="/files/query")
+    @post(path="/files/query")
     async def query_all_files(
         self,
         files_repo: FileRepository,
@@ -266,7 +266,7 @@ class FileController(Controller):
         """List files."""
         return await self.query_all_files_raw(files_repo, data, request.logger)
 
-    @get(path="/files/query/paginate")
+    @post(path="/files/query/paginate")
     async def query_all_files_paginated(
         self,
         files_repo: FileRepository,
