@@ -16,20 +16,21 @@ import FileTable from "./FileTable";
 import { FileType } from "../interfaces/file";
 
 interface FilePageBrowserProps {
-  baseUrl: string;
+  fileUrl: string;
   data: any;
 }
 
-const FilePageBrowser: React.FC<FilePageBrowserProps> = ({ baseUrl, data }) => {
+const FilePageBrowser: React.FC<FilePageBrowserProps> = ({ fileUrl, data }) => {
   const [files, setFiles] = useState<FileType[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
+  const [maxPage, setMaxPage] = useState(1);
   const [numResults, setNumResults] = useState(10);
 
   const fetchFiles = async () => {
     setLoading(true);
     const response = await fetch(
-      `${baseUrl}?num_results=${numResults}&page=${page}`,
+      `${fileUrl}?num_results=${numResults}&page=${page}`,
       {
         method: "POST",
         headers: {
@@ -39,7 +40,9 @@ const FilePageBrowser: React.FC<FilePageBrowserProps> = ({ baseUrl, data }) => {
       },
     );
     const result = await response.json();
-    setFiles(result);
+    console.log(result);
+    setFiles(result[0]);
+    setMaxPage(result[1]);
     setLoading(false);
   };
 

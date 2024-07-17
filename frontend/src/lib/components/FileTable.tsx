@@ -70,7 +70,7 @@ const FileTable: React.FC<FileTableProps> = ({ files }) => {
                     />
                   </Box>
                 </Td>
-                <Td>{file.data.title}</Td>
+                <Td>{file.data.name}</Td>
                 <Td>
                   <DocumentViewer document_uuid={file.data.id} />
                 </Td>

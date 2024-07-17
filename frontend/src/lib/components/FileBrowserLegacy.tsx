@@ -65,7 +65,7 @@ const initState: FileExploreState = {
         doctype: "pdf",
         id: "1",
         url: "",
-        title: "",
+        name: "",
       },
     },
     {
@@ -74,7 +74,7 @@ const initState: FileExploreState = {
         doctype: "pdf",
         id: "2",
         url: "",
-        title: "",
+        name: "",
       },
     },
     {
@@ -83,7 +83,7 @@ const initState: FileExploreState = {
         doctype: "pdf",
         id: "3",
         url: "",
-        title: "",
+        name: "",
       },
     },
   ],

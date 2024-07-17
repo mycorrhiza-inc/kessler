@@ -74,7 +74,7 @@ const QueryBrowser: React.FC = () => {
         </VStack>
       </form>
       {queryData && (
-        <FilePageBrowser baseUrl="/api/files/query/paginate" data={queryData} />
+        <FilePageBrowser fileUrl="/api/files/query/paginate" data={queryData} />
       )}
     </Box>
   );
