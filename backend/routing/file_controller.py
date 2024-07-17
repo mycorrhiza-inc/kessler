@@ -101,6 +101,7 @@ class QueryData(BaseModel):
     match_name: Optional[str]
     match_source: Optional[str]
     match_doctype: Optional[str]
+    match_stage: Optional[str]
 
 
 class IndexFileRequest(BaseModel):
@@ -260,6 +261,8 @@ class FileController(Controller):
             filters["source"] = query.match_source
         if query.match_doctype is not None:
             filters["doctype"] = query.match_doctype
+        if query.match_stage is not None:
+            filters["stage"] = query.match_stage
 
         results = await files_repo.list(**filters)
         # assert isinstance(results, List[FileModel])

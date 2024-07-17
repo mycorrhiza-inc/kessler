@@ -101,6 +101,30 @@ interface RowProps {
   updateSelected: (id: string) => void;
 }
 
+export const GetAllFiles = async (): Promise<any> => {
+  let result = await fetch("/api/files/all", {
+    method: "GET",
+    headers: {
+      // "Content-Type": "application/json",
+      Accept: "application/json",
+      "Access-Control-Allow-Origin": "*",
+    },
+    // body: JSON.stringify({ url: link, title: "Textual content", isUrl: true }),
+  });
+  let files = await result.json();
+  console.log(files);
+  let out = files.map((f: any) => {
+    return {
+      id: f.id.toString(),
+      url: "",
+      title: f.name,
+      doctype: f.doctype,
+    };
+  });
+  console.log(out);
+  return out;
+};
+
 export default function FileExplorer({ getFileFunc }: { getFileFunc: any }) {
   const [state, setState] = useState<FileExploreState>(initState);
   const [loading, setLoading] = useState(true);
