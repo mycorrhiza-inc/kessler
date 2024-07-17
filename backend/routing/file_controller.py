@@ -61,6 +61,8 @@ from util.niclib import rand_string, paginate_results
 
 from enum import Enum
 
+from sqlalchemy import and_
+
 
 class UUIDEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -96,8 +98,9 @@ class FileUpload(BaseModel):
 
 
 class QueryData(BaseModel):
-    match_title: Optional[str]
+    match_name: Optional[str]
     match_source: Optional[str]
+    match_doctype: Optional[str]
 
 
 class IndexFileRequest(BaseModel):
@@ -151,7 +154,7 @@ class FileController(Controller):
         original_lang: bool = False,
     ) -> str:
         # Yes I know this is a redundant if, this looks much more readable imo.
-        if original_lang == True:
+        if original_lang is True:
             return "Feature delayed due to only supporting english documents."
         obj = await files_repo.get(file_id)
 
@@ -249,8 +252,18 @@ class FileController(Controller):
 
     async def query_all_files_raw(
         self, files_repo: FileRepository, query: QueryData, logger: Any
-    ) -> list[FileSchema]:
-        results = await files_repo.list()
+    ) -> List[FileSchema]:
+        filters = {}
+        if query.match_name is not None:
+            filters["name"] = query.match_name
+        if query.match_source is not None:
+            filters["source"] = query.match_source
+        if query.match_doctype is not None:
+            filters["doctype"] = query.match_doctype
+
+        results = await files_repo.list(**filters)
+        # assert isinstance(results, List[FileModel])
+        # Turns the file model in sqlalchemy into an easy to understand return type
         logger.info(f"{len(results)} results")
         type_adapter = TypeAdapter(list[FileSchema])
         valid_results = type_adapter.validate_python(results)
