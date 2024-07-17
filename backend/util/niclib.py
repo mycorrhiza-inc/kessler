@@ -18,6 +18,22 @@ from typing import Union, Optional, Any, Tuple
 from typing import Callable
 
 
+def paginate_results(
+    results: list, num_results: Optional[int], page: Optional[int]
+) -> Tuple[list, int]:
+    if num_results is None:
+        return (results, 1)
+    if page is None or page < 1:
+        page = 1
+    rectify = lambda x: max(0, min(x, len(results) - 1))
+    avalible_pages = math.ceil(len(results) // num_results)
+    if page > avalible_pages:
+        page = avalible_pages
+    start_page_index = rectify((page - 1) * num_results)
+    end_page_index = rectify((page) * num_results - 1)
+    return (results[start_page_index:end_page_index], avalible_pages)
+
+
 def Maybe(func: Callable) -> Callable:
     return lambda x: (None if x is None else func(x))
 

@@ -1,11 +1,10 @@
 from typing_extensions import Doc
 from lance_store.connection import ensure_fts_index
+from models import files
 from rag.llamaindex import add_document_to_db_from_text
 import os
 from pathlib import Path
-from typing import Any
 from uuid import UUID
-from typing import Annotated
 
 from litestar import Controller, Request, Response
 
@@ -50,7 +49,7 @@ from models.files import (
 from logic.docingest import DocumentIngester
 from logic.extractmarkdown import MarkdownExtractor
 
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Annotated, Tuple, Any
 
 
 from logic.filelogic import add_file_raw, process_file_raw
@@ -58,7 +57,7 @@ from logic.filelogic import add_file_raw, process_file_raw
 
 import json
 
-from util.niclib import rand_string
+from util.niclib import rand_string, paginate_results
 
 from enum import Enum
 
@@ -94,6 +93,11 @@ class FileCreate(BaseModel):
 
 class FileUpload(BaseModel):
     message: str
+
+
+class QueryData(BaseModel):
+    match_title: Optional[str]
+    match_source: Optional[str]
 
 
 class IndexFileRequest(BaseModel):
@@ -212,16 +216,67 @@ class FileController(Controller):
         metadata_dict = json.loads(metadata_str)
         return metadata_dict
 
-    @get(path="/files/all")
-    async def get_all_files(
-        self, files_repo: FileRepository, limit_offset: LimitOffset, request: Request
+    async def get_all_files_raw(
+        self, files_repo: FileRepository, logger: Any
     ) -> list[FileSchema]:
-        """List files."""
         results = await files_repo.list()
-        logger = request.logger
         logger.info(f"{len(results)} results")
         type_adapter = TypeAdapter(list[FileSchema])
-        return type_adapter.validate_python(results)
+        valid_results = type_adapter.validate_python(results)
+        return valid_results
+
+    @get(path="/files/all")
+    async def get_all_files(
+        self,
+        files_repo: FileRepository,
+        request: Request,
+    ) -> list[FileSchema]:
+        """List files."""
+        valid_results = await self.get_all_files_raw(files_repo, request.logger)
+        return valid_results
+
+    @get(path="/files/all/paginate")
+    async def get_all_files_paginated(
+        self,
+        files_repo: FileRepository,
+        request: Request,
+        num_results: Optional[int],
+        page: Optional[int],
+    ) -> Tuple[list[FileSchema], int]:
+        """List files."""
+        valid_results = await self.get_all_files_raw(files_repo, request.logger)
+        return paginate_results(valid_results, num_results, page)
+
+    async def query_all_files_raw(
+        self, files_repo: FileRepository, query: QueryData, logger: Any
+    ) -> list[FileSchema]:
+        results = await files_repo.list()
+        logger.info(f"{len(results)} results")
+        type_adapter = TypeAdapter(list[FileSchema])
+        valid_results = type_adapter.validate_python(results)
+        return valid_results
+
+    @get(path="/files/query")
+    async def query_all_files(
+        self,
+        files_repo: FileRepository,
+        data: QueryData,
+        request: Request,
+    ) -> list[FileSchema]:
+        """List files."""
+        return await self.query_all_files_raw(files_repo, data, request.logger)
+
+    @get(path="/files/query/paginate")
+    async def query_all_files_paginated(
+        self,
+        files_repo: FileRepository,
+        data: QueryData,
+        request: Request,
+        num_results: Optional[int],
+        page: Optional[int],
+    ) -> Tuple[list[FileSchema], int]:
+        valid_results = await self.query_all_files_raw(files_repo, data, request.logger)
+        return paginate_results(valid_results, num_results, page)
 
     # TODO: replace this with a jobs endpoint
 
