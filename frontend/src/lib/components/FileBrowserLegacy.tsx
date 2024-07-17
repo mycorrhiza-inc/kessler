@@ -62,7 +62,7 @@ const initState: FileExploreState = {
     {
       selected: false,
       data: {
-        doctype : "pdf",
+        doctype: "pdf",
         id: "1",
         url: "",
         title: "",
@@ -71,7 +71,7 @@ const initState: FileExploreState = {
     {
       selected: false,
       data: {
-        doctype : "pdf",
+        doctype: "pdf",
         id: "2",
         url: "",
         title: "",
@@ -80,7 +80,7 @@ const initState: FileExploreState = {
     {
       selected: false,
       data: {
-        doctype : "pdf",
+        doctype: "pdf",
         id: "3",
         url: "",
         title: "",
@@ -101,7 +101,7 @@ interface RowProps {
   updateSelected: (id: string) => void;
 }
 
-export default function FileExplorer({getFileFunc } : {getFileFunc : any}) {
+export default function FileExplorer({ getFileFunc }: { getFileFunc: any }) {
   const [state, setState] = useState<FileExploreState>(initState);
   const [loading, setLoading] = useState(true);
   const loadFiles = async () => {
@@ -169,7 +169,6 @@ export default function FileExplorer({getFileFunc } : {getFileFunc : any}) {
   };
 
   function ExplorerRow({ file, updateSelected }: RowProps) {
-    const [loading, setLoading] = useState(false);
     return (
       <Tr key={file.data.id}>
         {/* Select */}
@@ -249,8 +248,7 @@ export default function FileExplorer({getFileFunc } : {getFileFunc : any}) {
         <Td>{file.data.dateModified.toString()}</Td> */}
         {/* Status */}
         <Td>
-          {loading && <LoadingSpinner />}
-          {!loading && <FiInfo />}
+          <FiInfo />
         </Td>
       </Tr>
     );
