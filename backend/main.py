@@ -44,8 +44,7 @@ def plain_text_exception_handler(request: Request, exc: Exception) -> Response:
 
 
 async def provide_limit_offset_pagination(
-    current_page: int = Parameter(
-        ge=1, query="currentPage", default=1, required=False),
+    current_page: int = Parameter(ge=1, query="currentPage", default=1, required=False),
     page_size: int = Parameter(
         query="pageSize",
         ge=1,
@@ -71,8 +70,7 @@ cors_config = CORSConfig(allow_origins=["*"])
 
 api_router = Router(
     path="/api",
-    route_handlers=[FileController, SearchController,
-                    RagController, TestController],
+    route_handlers=[FileController, SearchController, RagController, TestController],
 )
 
 app = Litestar(

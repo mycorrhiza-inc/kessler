@@ -153,7 +153,7 @@ class RagController(Controller):
             for prefix in prefixes:
                 if input_string.startswith(prefix):
                     input_string = input_string[
-                        len(prefix):
+                        len(prefix) :
                     ]  # 10 is the length of "assistant: "
             return input_string
 

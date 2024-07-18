@@ -14,6 +14,6 @@ def search(query, collection_name=collection_name, limit=10, filter=""):
         limit=limit,  # number of returned entities
         filter=filter,
         # specifies fields to be returned
-        output_fields=['*']
+        output_fields=["*"],
     )
     return res

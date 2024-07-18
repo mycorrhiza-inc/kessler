@@ -54,9 +54,7 @@ logging.getLogger().addHandler(logging.StreamHandler(stream=sys.stdout))
 
 GROQ_API_KEY = os.environ["GROQ_API_KEY"]
 Settings.llm = Groq(
-    model="llama3-70b-8192",
-    request_timeout=360.0,
-    api_key=GROQ_API_KEY
+    model="llama3-70b-8192", request_timeout=360.0, api_key=GROQ_API_KEY
 )
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
@@ -101,25 +99,21 @@ def get_hybrid_vector_store() -> MilvusVectorStore:
         overwrite=False,
         # TODO: Change collection name for prod
         collection_name=collection_name,
-        token=f'{milvus_user}:{milvus_pass}'
+        token=f"{milvus_user}:{milvus_pass}",
     )
     return hybrid_vector_store
 
 
 def get_storage_context() -> StorageContext:
     hybrid_vector_store = get_hybrid_vector_store()
-    storage_context = StorageContext.from_defaults(
-        vector_store=hybrid_vector_store
-    )
+    storage_context = StorageContext.from_defaults(vector_store=hybrid_vector_store)
     return storage_context
 
 
 def create_hybrid_index() -> VectorStoreIndex:
     hybrid_vector_store = get_hybrid_vector_store()
 
-    hybrid_index = VectorStoreIndex.from_vector_store(
-        vector_store=hybrid_vector_store
-    )
+    hybrid_index = VectorStoreIndex.from_vector_store(vector_store=hybrid_vector_store)
 
     return hybrid_index
 
@@ -162,8 +156,7 @@ query_engine = create_query_engine(retriever)
 async def get_document_list_from_file_table() -> list:
     async def query_file_table_for_all_rows() -> List[Tuple[str, dict]]:
         # Create an async engine and session
-        engine = create_async_engine(
-            async_postgres_connection_string, echo=True)
+        engine = create_async_engine(async_postgres_connection_string, echo=True)
         async_session_maker = sessionmaker(
             engine, expire_on_commit=False, class_=AsyncSession
         )
@@ -179,8 +172,7 @@ async def get_document_list_from_file_table() -> list:
                 if file_row.english_text is not None and isinstance(
                     file_row.doc_metadata, dict
                 ):
-                    documents.append(
-                        (file_row.english_text, file_row.doc_metadata))
+                    documents.append((file_row.english_text, file_row.doc_metadata))
 
             return documents
 
@@ -188,8 +180,7 @@ async def get_document_list_from_file_table() -> list:
     document_list = []
     for english_text, doc_metadata in documents:
         if english_text is not None:
-            additional_document = Document(
-                text=english_text, metadata=doc_metadata)
+            additional_document = Document(text=english_text, metadata=doc_metadata)
             additional_document.doc_id = str(doc_metadata.get("hash"))
             document_list.append(document_list)
     return document_list
@@ -219,8 +210,7 @@ def add_document_to_db_from_text(text: str, metadata: Optional[dict] = None) -> 
 async def add_document_to_db_from_hash(hash_str: str) -> None:
     async def query_file_table_for_hash(hash: str) -> Tuple[any, any]:
         # Create an async engine and session
-        engine = create_async_engine(
-            async_postgres_connection_string, echo=True)
+        engine = create_async_engine(async_postgres_connection_string, echo=True)
         async_session_maker = sessionmaker(
             engine, expire_on_commit=False, class_=AsyncSession
         )
@@ -247,8 +237,7 @@ async def add_document_to_db_from_hash(hash_str: str) -> None:
         assert isinstance(english_text, str)
         assert isinstance(doc_metadata, dict)
         # TODO : Add support for metadata filtering
-        additional_document = Document(
-            text=english_text, metadata=doc_metadata)
+        additional_document = Document(text=english_text, metadata=doc_metadata)
         additional_document.doc_id = str(hash)
         # FIXME : Make sure the UUID matches the other function, and dryify this entire fucking mess.
         add_document_to_db(additional_document)

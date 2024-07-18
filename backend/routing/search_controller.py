@@ -59,9 +59,7 @@ class SearchController(Controller):
         return "failure"
 
     @post(path="/search")
-    async def search(
-        self, data: SearchQuery,  request: Request
-    ) -> SearchResponse:
+    async def search(self, data: SearchQuery, request: Request) -> SearchResponse:
         query = data.query
         res = search(query=query)
         ids = []
