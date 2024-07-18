@@ -46,8 +46,7 @@ export const GetAllFiles = async (): Promise<any> => {
       id: f.id.toString(),
       url: "",
       title: f.name,
-      doctype: f.doctype
-
+      doctype: f.doctype,
     };
   });
   console.log(out);

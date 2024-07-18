@@ -33,11 +33,10 @@ const DynamicModal: React.FC<{
   const [markdownContent, setMarkdownContent] = useState<string>(
     "# Loading Document Contents",
   );
-  const [pdfURL, setPdfURL] = useState<string>(
-    "",
-  );
+  const [pdfURL, setPdfURL] = useState<string>("");
 
-  const getPDFURL = (document_uuid : string ) => "/api/files/raw/"+ document_uuid
+  const getPDFURL = (document_uuid: string) =>
+    "/api/files/raw/" + document_uuid;
 
   const getMarkdownContent = async (document_uuid: string) => {
     try {
@@ -65,7 +64,7 @@ const DynamicModal: React.FC<{
   useEffect(() => {
     if (isOpen) {
       (async () => {
-        setPdfURL(getPDFURL(document_uuid))
+        setPdfURL(getPDFURL(document_uuid));
         const content = await getMarkdownContent(document_uuid);
         setMarkdownContent(content);
       })();
@@ -86,7 +85,7 @@ const DynamicModal: React.FC<{
         <ModalBody>
           <Grid templateColumns="repeat(2, 1fr)" gap={6}>
             <GridItem>
-              <PDFViewer file = {pdfURL}></PDFViewer>
+              <PDFViewer file={pdfURL}></PDFViewer>
             </GridItem>
             <GridItem>
               <MarkdownRenderer>{markdownContent}</MarkdownRenderer>

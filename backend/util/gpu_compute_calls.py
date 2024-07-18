@@ -21,6 +21,7 @@ import aiohttp
 import asyncio
 
 OS_TMPDIR = Path(os.environ["TMPDIR"])
+DATALAB_API_KEY = os.environ["DATALAB_API_KEY"]
 
 
 # Downsample audio before sending to server, human words dont convey that much information anyway
@@ -65,37 +66,67 @@ class GPUComputeEndpoint:
         logger: Any,
         marker_endpoint_url: str = MARKER_ENDPOINT_URL,
         legacy_endpoint_url: str = "https://depricated-url.com",
+        datalab_api_key: str = DATALAB_API_KEY,
     ):
         self.logger = logger
         self.marker_endpoint_url = marker_endpoint_url
         self.endpoint_url = legacy_endpoint_url
+        self.datalab_api_key = datalab_api_key
 
-    async def transcribe_pdf(self, filepath: Path) -> str:
-        # The API endpoint you will be hitting
-        # url = "http://api.mycor.io/v0/multimodal_asr/local-m4t"
-        # FIXME : Work out what this url should fucking be
-        # url = f"{self.marker_endpoint_url}"
-        # Hardcode now fix later
-        url = "http://uttu-fedora:2718/process_pdf_upload"
-        # url = "https://www.google.com/"
-        # Open the file in binary mode
-        with filepath.open("rb") as file:
-            # Define the multipart/form-data payload
-            files = {
-                "file": (filepath.name, file, "application/octet-stream"),
+    async def transcribe_pdf(
+        self, filepath: Path, external_process: bool = True
+    ) -> str:
+        if external_process:
+            url = self.marker_endpoint_url
+            headers = {"X-Api-Key": self.datalab_api_key}
+            form_data = {
+                "file": (filepath.name, filepath.open("rb"), "application/pdf"),
+                "langs": (None, "en"),
+                "force_ocr": (None, False),
+                "paginate": (None, False),
             }
-            # Mke the POST request with files
-            self.logger.info(
-                f"Contacting server at {self.marker_endpoint_url} to process pdf."
-            )
 
             async with aiohttp.ClientSession() as session:
-                async with session.post(url, data={"file": file}) as response:
-                    print(f"Request Headers: response.request.headers")
-                    # Raise an exception if the request was unsuccessful
+                async with session.post(
+                    url, data=form_data, headers=headers
+                ) as response:
                     response.raise_for_status()
-                    # Response for now returns just text, we can remove everything else
-                    return str(response.text)
+                    data = await response.json()
+                    request_check_url = data.get("request_check_url")
+
+                    if not request_check_url:
+                        raise Exception(
+                            "Failed to get request_check_url from marker API response"
+                        )
+
+                    # Polling for the result
+                    max_polls = 300
+                    for _ in range(max_polls):
+                        await asyncio.sleep(2)
+                        async with session.get(
+                            request_check_url, headers=headers
+                        ) as poll_response:
+                            poll_response.raise_for_status()
+                            poll_data = await poll_response.json()
+
+                            if poll_data["status"] == "complete":
+                                return poll_data["markdown"]
+
+                    raise TimeoutError("Polling for marker API result timed out")
+        else:
+            url = self.marker_endpoint_url + "/process_pdf_upload"
+            with filepath.open("rb") as file:
+                files = {
+                    "file": (filepath.name, file, "application/octet-stream"),
+                }
+                self.logger.info(
+                    f"Contacting server at {self.marker_endpoint_url} to process pdf."
+                )
+
+                async with aiohttp.ClientSession() as session:
+                    async with session.post(url, data={"file": file}) as response:
+                        response.raise_for_status()
+                        return await response.text()
 
     def llm_nonlocal_raw_call(
         self, msg_history: list[dict], model_name: Optional[str]

@@ -11,9 +11,9 @@ import "./PDFViewer.css";
 
 import type { PDFDocumentProxy } from "pdfjs-dist";
 
-
 // TODO : Inline at some point so we dont get screwed by a malicious cdn.
-pdfjs.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.4.168/build/pdf.worker.mjs" ;
+pdfjs.GlobalWorkerOptions.workerSrc =
+  "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.4.168/build/pdf.worker.mjs";
 // pdfjs.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url, ).toString();
 
 const options = {
@@ -27,7 +27,7 @@ const maxWidth = 800;
 
 type PDFFile = string | File | null;
 
-function PDFViewer({file} :{file : PDFFile}) {
+function PDFViewer({ file }: { file: PDFFile }) {
   const [numPages, setNumPages] = useState<number>();
   const [containerRef, setContainerRef] = useState<HTMLElement | null>(null);
   const [containerWidth, setContainerWidth] = useState<number>();
@@ -41,7 +41,6 @@ function PDFViewer({file} :{file : PDFFile}) {
   }, []);
 
   useResizeObserver(containerRef, resizeObserverOptions, onResize);
-
 
   function onDocumentLoadSuccess({
     numPages: nextNumPages,

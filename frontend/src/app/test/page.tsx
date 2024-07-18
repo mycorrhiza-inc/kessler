@@ -11,7 +11,7 @@ const Page = () => (
   <>
     <Text>This is a test page</Text>
     <NoSSR>
-      <PDFTesting file = "https://raw.githubusercontent.com/mycorrhizainc/examples/main/CO%20Clean%20Energy%20Plan%20Info%20Sheet.pdf"></PDFTesting>
+      <PDFTesting file="https://raw.githubusercontent.com/mycorrhizainc/examples/main/CO%20Clean%20Energy%20Plan%20Info%20Sheet.pdf"></PDFTesting>
     </NoSSR>
   </>
 );

@@ -86,8 +86,8 @@ export default function DashboardFileBrowser() {
           margin="20px"
           justifySelf="center"
         >
-          { 
-            // NOTE: Refactored file explorer so it broke this implementation, 
+          {
+            // NOTE: Refactored file explorer so it broke this implementation,
             // it seems like this shouldnt be here. so I removed it
             // <FileExplorer />
           }
