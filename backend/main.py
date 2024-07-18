@@ -87,7 +87,6 @@ app = Litestar(
     route_handlers=[api_router],
     dependencies={
         "limit_offset": Provide(provide_limit_offset_pagination),
-        # do a lance connections for each request
     },
     cors_config=cors_config,
     logging_config=logging_config,

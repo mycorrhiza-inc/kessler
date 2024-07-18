@@ -401,6 +401,7 @@ class FileController(Controller):
             await self.process_file_raw(obj, files_repo, request.logger, stop_at)
         # TODO : Return Response code and response message
         return self.validate_and_jsonify(obj)
+
     @post(path="/files/upload/from/md", media_type=MediaType.TEXT)
     async def upload_from_markdown(
         self,

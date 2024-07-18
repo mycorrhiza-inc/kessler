@@ -1,5 +1,4 @@
 from typing_extensions import Doc
-from lance_store.connection import ensure_fts_index
 from rag.llamaindex import add_document_to_db_from_text
 import os
 from pathlib import Path
@@ -172,11 +171,15 @@ class DaemonController(Controller):
                 file.stage = regenerate_from.value
                 await files_repo.update(file)
                 await files_repo.session.commit()
-                logger.info(f"Reverting fileid {file.id} to stage {file.stage}")
+                logger.info(
+                    f"Reverting fileid {
+                            file.id} to stage {file.stage}"
+                )
             # Dont process the file if it is already processed beyond the stop point.
             if docstatus_index(file_stage) < docstatus_index(stop_at):
                 logger.info(
-                    f"Sending file {str(file.id)} to be processed in the background."
+                    f"Sending file {
+                        str(file.id)} to be processed in the background."
                 )
                 # copy_files_repo = copy.deepcopy(files_repo)
                 max_documents += -1
