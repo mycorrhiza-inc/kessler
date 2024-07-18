@@ -15,10 +15,8 @@ from litestar.handlers.http_handlers.decorators import get, post
 from pydantic import TypeAdapter
 from models.utils import PydanticBaseModel as BaseModel
 
-import lancedb
-from lancedb import DBConnection
 
-from lance_store.connection import ensure_fts_index
+from vecstore import search
 
 from typing import List
 
@@ -61,35 +59,10 @@ class SearchController(Controller):
         return "failure"
 
     @post(path="/search")
-    async def search(
-        self, data: SearchQuery, lanceconn: DBConnection, request: Request
-    ) -> SearchResponse:
-
-        v = lanceconn.open_table("vectors")
-
-        def get_text(x):
-            return x["text"]
-
-        res = v.search(data.query).to_list()
-
-        # search all dockets for a given item
-        def clean_data(data):
-            # Make a deep copy of the data to avoid modifying the original data
-            cleaned_data = copy.deepcopy(data)
-
-            # Remove the specified fields
-            if "vector" in cleaned_data:
-                del cleaned_data["vector"]
-            if "text" in cleaned_data:
-                del cleaned_data["text"]
-            if (
-                "metadata" in cleaned_data
-                and "_node_content" in cleaned_data["metadata"]
-            ):
-                del cleaned_data["metadata"]["_node_content"]
-
-            return cleaned_data
-
-        # Apply the clean_data function to each item in search results
-        filtered_data = [clean_data(item) for item in res]
-        return filtered_data
+    async def search(self, data: SearchQuery, request: Request) -> SearchResponse:
+        query = data.query
+        res = search(query=query)
+        ids = []
+        for r in res:
+            ids.append({"uuid": r[0]["entity"]["uid"]})
+        return ids

@@ -17,7 +17,6 @@ from models.files import FileModel, provide_files_repo
 from llama_index.core import StorageContext
 from llama_index.core import VectorStoreIndex
 from llama_index.core import Settings
-from llama_index.vector_stores.lancedb import LanceDBVectorStore
 
 from llama_index.core.node_parser import SentenceSplitter
 
@@ -32,6 +31,9 @@ from sqlalchemy import make_url
 from llama_index.core.response_synthesizers import CompactAndRefine
 from llama_index.core.retrievers import QueryFusionRetriever
 from llama_index.core.query_engine import RetrieverQueryEngine
+
+# import MilvusVectorStore
+from llama_index.vector_stores.milvus import MilvusVectorStore
 
 
 from llama_index.core import Document
@@ -84,37 +86,72 @@ file_table_name = "file"
 
 url = make_url(sync_postgres_connection_string)
 
-hybrid_vector_store = LanceDBVectorStore(
-    uri="/tmp/lancedb", mode="overwrite", query_type="hybrid"
-)
-storage_context = StorageContext.from_defaults(vector_store=hybrid_vector_store)
-# initial_documents = asyncio.run(get_document_list_from_file())
-# initial_documents = await get_document_list_from_file()
 
-# hybrid_index = VectorStoreIndex.from_documents(example_documents + initial_documents, storage_context=storage_context)
-hybrid_index = VectorStoreIndex.from_vector_store(vector_store=hybrid_vector_store)
+def get_hybrid_vector_store() -> MilvusVectorStore:
+    milvus_user = os.environ.get("MILVUS_VEC_USER")
+    milvus_pass = os.environ.get("MILVUS_VEC_PASS")
+    milvus_host = os.environ.get("MILVUS_HOST")
 
-vector_retriever = hybrid_index.as_retriever(
-    vector_store_query_mode="default",
-    similarity_top_k=5,
-)
-text_retriever = hybrid_index.as_retriever(
-    vector_store_query_mode="sparse",
-    similarity_top_k=5,  # interchangeable with sparse_top_k in this context
-)
-retriever = QueryFusionRetriever(
-    [vector_retriever, text_retriever],
-    similarity_top_k=5,
-    num_queries=1,  # set this to 1 to disable query generation
-    mode="relative_score",
-    use_async=False,
-)
+    from vecstore.search import collection_name
 
-response_synthesizer = CompactAndRefine()
-query_engine = RetrieverQueryEngine(
-    retriever=retriever,
-    response_synthesizer=response_synthesizer,
-)
+    hybrid_vector_store = MilvusVectorStore(
+        uri=milvus_host,
+        dim=1024,
+        overwrite=False,
+        # TODO: Change collection name for prod
+        collection_name=collection_name,
+        token=f"{milvus_user}:{milvus_pass}",
+    )
+    return hybrid_vector_store
+
+
+def get_storage_context() -> StorageContext:
+    hybrid_vector_store = get_hybrid_vector_store()
+    storage_context = StorageContext.from_defaults(vector_store=hybrid_vector_store)
+    return storage_context
+
+
+def create_hybrid_index() -> VectorStoreIndex:
+    hybrid_vector_store = get_hybrid_vector_store()
+
+    hybrid_index = VectorStoreIndex.from_vector_store(vector_store=hybrid_vector_store)
+
+    return hybrid_index
+
+
+def create_retriever(hybrid_index: VectorStoreIndex) -> QueryFusionRetriever:
+    vector_retriever = hybrid_index.as_retriever(
+        vector_store_query_mode="default",
+        similarity_top_k=5,
+    )
+    text_retriever = hybrid_index.as_retriever(
+        vector_store_query_mode="sparse",
+        similarity_top_k=5,
+    )
+    retriever = QueryFusionRetriever(
+        [vector_retriever, text_retriever],
+        similarity_top_k=5,
+        num_queries=1,
+        mode="relative_score",
+        use_async=False,
+    )
+
+    return retriever
+
+
+def create_query_engine(retriever: QueryFusionRetriever) -> RetrieverQueryEngine:
+    response_synthesizer = CompactAndRefine()
+    query_engine = RetrieverQueryEngine(
+        retriever=retriever,
+        response_synthesizer=response_synthesizer,
+    )
+
+    return query_engine
+
+
+hybrid_index = create_hybrid_index()
+retriever = create_retriever(hybrid_index)
+query_engine = create_query_engine(retriever)
 
 
 async def get_document_list_from_file_table() -> list:
@@ -232,18 +269,17 @@ async def add_document_to_db_from_hash(hash_str: str) -> None:
 
 async def regenerate_vector_database_from_file_table() -> None:
     document_list = await get_document_list_from_file_table()
-    # TODO : Try to get this to set the global VAR
+    storage_context = get_storage_context()
     global hybrid_index
     hybrid_index = VectorStoreIndex.from_documents(
         document_list, storage_context=storage_context
     )
 
 
+# Chat engine for rag
+#
 def create_rag_response_from_query(query: str):
     return str(query_engine.query(query))
-
-
-# Chat engine for rag
 
 
 def sanitzie_chathistory_llamaindex(chat_history: List[dict]) -> List[ChatMessage]:
