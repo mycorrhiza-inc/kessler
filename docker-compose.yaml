@@ -41,7 +41,7 @@ services:
       - "443:443"
       - "${PROXY_UI_PORT:-8083}:8080"
     volumes:
-      - "./volumes/letsencrypt:/letsencrypt"
+      - "${VOLUMES_DIRECTORY:-./volumes}/letsencrypt:/letsencrypt"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
 
 
@@ -55,10 +55,10 @@ services:
     environment:
       - LANCEDB_CONFIG_DIR=/lancedb
     volumes:
-      - ./volumes/instance:/app/instance
-      - ./volumes/files:/files
-      - ./volumes/tmp:/tmp/
-      - ./volumes/lancedb:/lancedb
+      - ${VOLUMES_DIRECTORY:-./volumes}/instance:/app/instance
+      - ${VOLUMES_DIRECTORY:-./volumes}/files:/files
+      - ${VOLUMES_DIRECTORY:-./volumes}/tmp:/tmp/
+      - ${VOLUMES_DIRECTORY:-./volumes}/lancedb:/lancedb
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.backend.rule=Host(`${DOMAIN:-app.kessler.xyz}`) && PathPrefix(`/api`) || PathPrefix(`/schema`)"
@@ -91,4 +91,4 @@ services:
     expose:
       - "5432"
     volumes:
-      - ./volumes/pgdata:/var/lib/postgresql/data
+      - ${VOLUMES_DIRECTORY:-./volumes}/pgdata:/var/lib/postgresql/data

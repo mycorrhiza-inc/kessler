@@ -46,10 +46,10 @@ services:
       - LANCEDB_CONFIG_DIR=/lancedb
     volumes:
       - ./backend:/app
-      - ./volumes/instance:/app/instance
-      - ./volumes/files:/files
-      - ./volumes/tmp:/tmp/
-      - ./volumes/lancedb:/lancedb
+      - ${VOLUMES_DIRECTORY:-./volumes}/instance:/app/instance
+      - ${VOLUMES_DIRECTORY:-./volumes}/files:/files
+      - ${VOLUMES_DIRECTORY:-./volumes}/tmp:/tmp/
+      - ${VOLUMES_DIRECTORY:-./volumes}/lancedb:/lancedb
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.backend.rule=PathPrefix(`/api/`) || PathPrefix(`/schema/`)"
@@ -78,4 +78,4 @@ services:
     expose:
       - "5432"
     volumes:
-      - ./volumes/pgdata:/var/lib/postgresql/data
+      - ${VOLUMES_DIRECTORY:-./volumes}/pgdata:/var/lib/postgresql/data
