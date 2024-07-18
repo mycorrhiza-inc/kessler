@@ -17,6 +17,29 @@ from pathlib import Path
 from typing import Union, Optional, Any, Tuple
 from typing import Callable
 
+import logging
+
+default_logger = logging.getLogger(__name__)
+
+
+def paginate_results(
+    results: list, num_results: Optional[int], page: Optional[int]
+) -> Tuple[list, int]:
+    if num_results is None:
+        return (results, 1)
+    if page is None or page < 1:
+        page = 1
+    rectify = lambda x: max(0, min(x, len(results)))
+    avalible_pages = math.ceil(len(results) / num_results)
+    default_logger.info(f"Length of Results: {len(results)}")
+    if page > avalible_pages:
+        page = avalible_pages
+    start_page_index = rectify((page - 1) * num_results)
+    end_page_index = rectify((page) * num_results)
+    default_logger.info(f"Start Pagination index: {start_page_index}")
+    default_logger.info(f"End Pagination index: {end_page_index}")
+    return (results[start_page_index:end_page_index], avalible_pages)
+
 
 def Maybe(func: Callable) -> Callable:
     return lambda x: (None if x is None else func(x))

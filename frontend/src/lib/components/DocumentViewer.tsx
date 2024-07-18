@@ -15,7 +15,7 @@ import {
 } from "@chakra-ui/react";
 import ReactDOM from "react-dom";
 import MarkdownRenderer from "./MarkdownRenderer";
-
+import PDFViewer from "./PDFViewer";
 
 const DynamicModal: React.FC<{
   document_uuid: string;
@@ -33,10 +33,15 @@ const DynamicModal: React.FC<{
   const [markdownContent, setMarkdownContent] = useState<string>(
     "# Loading Document Contents",
   );
+  const [pdfURL, setPdfURL] = useState<string>(
+    "",
+  );
+
+  const getPDFURL = (document_uuid : string ) => "/api/files/raw/"+ document_uuid
 
   const getMarkdownContent = async (document_uuid: string) => {
     try {
-      const response = await fetch("/api/files/get_markdown/" + document_uuid, {
+      const response = await fetch("/api/files/markdown/" + document_uuid, {
         method: "GET",
       });
 
@@ -60,6 +65,7 @@ const DynamicModal: React.FC<{
   useEffect(() => {
     if (isOpen) {
       (async () => {
+        setPdfURL(getPDFURL(document_uuid))
         const content = await getMarkdownContent(document_uuid);
         setMarkdownContent(content);
       })();
@@ -80,7 +86,7 @@ const DynamicModal: React.FC<{
         <ModalBody>
           <Grid templateColumns="repeat(2, 1fr)" gap={6}>
             <GridItem>
-              <MarkdownRenderer># PDF Viewer Coming Soon!</MarkdownRenderer>
+              <PDFViewer file = {pdfURL}></PDFViewer>
             </GridItem>
             <GridItem>
               <MarkdownRenderer>{markdownContent}</MarkdownRenderer>

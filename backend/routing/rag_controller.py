@@ -47,8 +47,8 @@ from models.utils import PydanticBaseModel as BaseModel
 from models.files import FileModel, FileRepository, FileSchema, provide_files_repo
 
 
-from crawler.docingest import DocumentIngester
-from docprocessing.extractmarkdown import MarkdownExtractor
+from logic.docingest import DocumentIngester
+from logic.extractmarkdown import MarkdownExtractor
 
 from typing import List, Optional, Union, Any, Dict
 

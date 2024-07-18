@@ -8,14 +8,12 @@ services:
       - config/global.env
     volumes:
       - ./config/frontend.env.local:/app.env.local
-      # - ./frontend/src:/app/src
-      # - ./frontend/public:/app/public
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`${DOMAIN:?error}`) && PathPrefix(`/`)"
+      - "traefik.http.routers.frontend.rule=Host(`${DOMAIN:-app.kessler.xyz}`) && PathPrefix(`/`)"
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.routers.frontend.tls.certresolver=myresolver"
-      - "traefik.http.routers.whoami.rule=Host(`${DOMAIN:?error}`)"
+      - "traefik.http.routers.whoami.rule=Host(`${DOMAIN:-app.kessler.xyz}`)"
       - "traefik.http.routers.whoami.entrypoints=websecure"
       - "traefik.http.routers.whoami.tls.certresolver=myresolver"
     expose:
@@ -43,22 +41,14 @@ services:
       - "443:443"
       - "${PROXY_UI_PORT:-8083}:8080"
     volumes:
-      - "./volumes/letsencrypt:/letsencrypt"
+      - "${VOLUMES_DIRECTORY:-./volumes}/letsencrypt:/letsencrypt"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
 
 
-  # rabbitmq:
-  #   image: rabbitmq:latest
-  #   ports:
-  #     - "5672:5672"
-  #   volumes:
-  #     - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
-  #     - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
 
   backend:
     build:
       context: ./backend
-      # dockerfile: ./Dockerfile
       dockerfile: ./Dockerfile
     env_file:
       - config/global.env
@@ -66,9 +56,10 @@ services:
       - ./volumes/instance:/app/instance
       - ./volumes/files:/files
       - ./volumes/tmp:/tmp/
+
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`${DOMAIN:?error}`) && PathPrefix(`/api`) || PathPrefix(`/schema`)"
+      - "traefik.http.routers.backend.rule=Host(`${DOMAIN:-app.kessler.xyz}`) && PathPrefix(`/api`) || PathPrefix(`/schema`)"
       - "traefik.http.routers.backend.entrypoints=websecure"
       - "traefik.http.routers.backend.tls.certresolver=myresolver"
       # - "traefik.http.routers.backend.tls={}"
@@ -98,4 +89,4 @@ services:
     expose:
       - "5432"
     volumes:
-      - ./volumes/pgdata:/var/lib/postgresql/data
+      - ${VOLUMES_DIRECTORY:-./volumes}/pgdata:/var/lib/postgresql/data

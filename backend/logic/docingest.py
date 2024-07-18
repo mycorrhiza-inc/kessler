@@ -53,9 +53,9 @@ class DocumentIngester:
         try:
             filepath, metadata = self.add_file_from_url_nocall(url)
             self.logger.info("Successfully got file and metadata")
-        except Exception:
-            self.logger.error("unable to get file and metadata")
-            assert False
+        except Exception as e:
+            self.logger.error(f"unable to get file and metadata from url: {url}")
+            raise e
 
         if metadata.get("lang") == None:
             metadata["lang"] = "en"

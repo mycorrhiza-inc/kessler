@@ -35,18 +35,10 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 
-  # rabbitmq:
-  #   image: rabbitmq:latest
-  #   ports:
-  #     - "5672:5672"
-  #   volumes:
-  #     - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
-  #     - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
 
   backend:
     build:
       context: ./backend
-      # dockerfile: ./Dockerfile
       dockerfile: ./Dockerfile
     env_file:
       - config/global.env
@@ -54,14 +46,12 @@ services:
       - MILVUS_DEV_DIR=/tmp/milvus/
     volumes:
       - ./backend:/app
-      - ./volumes/instance:/app/instance
-      - ./volumes/files:/files
-      - ./volumes/tmp:/tmp/
-      - ./volumes/milvus:/tmp/milvus/
+      - ${VOLUMES_DIRECTORY:-./volumes}/instance:/app/instance
+      - ${VOLUMES_DIRECTORY:-./volumes}/files:/files
+      - ${VOLUMES_DIRECTORY:-./volumes}/tmp:/tmp/
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.backend.rule=PathPrefix(`/api/`) || PathPrefix(`/schema/`)"
-      # - "traefik.http.middlewares.testheader.headers.accesscontrolalloworigin=*"
     command:
       # - "python"
       # - "rag/postgres_example.py"
@@ -87,4 +77,4 @@ services:
     expose:
       - "5432"
     volumes:
-      - ./volumes/pgdata:/var/lib/postgresql/data
+      - ${VOLUMES_DIRECTORY:-./volumes}/pgdata:/var/lib/postgresql/data

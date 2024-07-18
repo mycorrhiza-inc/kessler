@@ -19,6 +19,8 @@ from routing.search_controller import SearchController
 from routing.rag_controller import RagController
 
 
+from routing.daemon_controller import DaemonController, process_document
+
 logger = logging.getLogger(__name__)
 
 
@@ -70,7 +72,13 @@ cors_config = CORSConfig(allow_origins=["*"])
 
 api_router = Router(
     path="/api",
-    route_handlers=[FileController, SearchController, RagController, TestController],
+    route_handlers=[
+        FileController,
+        SearchController,
+        RagController,
+        TestController,
+        DaemonController,
+    ],
 )
 
 app = Litestar(
@@ -84,4 +92,5 @@ app = Litestar(
     cors_config=cors_config,
     logging_config=logging_config,
     exception_handlers={Exception: plain_text_exception_handler},
+    listeners=[process_document],
 )

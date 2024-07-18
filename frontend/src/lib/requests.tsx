@@ -38,16 +38,18 @@ export const GetAllFiles = async (): Promise<any> => {
       "Access-Control-Allow-Origin": "*",
     },
     // body: JSON.stringify({ url: link, title: "Textual content", isUrl: true }),
-  })
+  });
   let files = await result.json();
-  console.log(files)
+  console.log(files);
   let out = files.map((f: any) => {
     return {
       id: f.id.toString(),
       url: "",
       title: f.name,
+      doctype: f.doctype
+
     };
   });
   console.log(out);
-  return out
+  return out;
 };
