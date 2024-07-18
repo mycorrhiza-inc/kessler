@@ -101,6 +101,7 @@ class QueryData(BaseModel):
     match_name: Optional[str]
     match_source: Optional[str]
     match_doctype: Optional[str]
+    match_stage: Optional[str]
 
 
 class IndexFileRequest(BaseModel):
@@ -228,7 +229,7 @@ class FileController(Controller):
         valid_results = type_adapter.validate_python(results)
         return valid_results
 
-    @get(path="/files/all")
+    @post(path="/files/all")
     async def get_all_files(
         self,
         files_repo: FileRepository,
@@ -238,7 +239,7 @@ class FileController(Controller):
         valid_results = await self.get_all_files_raw(files_repo, request.logger)
         return valid_results
 
-    @get(path="/files/all/paginate")
+    @post(path="/files/all/paginate")
     async def get_all_files_paginated(
         self,
         files_repo: FileRepository,
@@ -260,6 +261,8 @@ class FileController(Controller):
             filters["source"] = query.match_source
         if query.match_doctype is not None:
             filters["doctype"] = query.match_doctype
+        if query.match_stage is not None:
+            filters["stage"] = query.match_stage
 
         results = await files_repo.list(**filters)
         # assert isinstance(results, List[FileModel])

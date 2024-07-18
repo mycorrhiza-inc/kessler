@@ -62,28 +62,28 @@ const initState: FileExploreState = {
     {
       selected: false,
       data: {
-        doctype : "pdf",
+        doctype: "pdf",
         id: "1",
         url: "",
-        title: "",
+        name: "",
       },
     },
     {
       selected: false,
       data: {
-        doctype : "pdf",
+        doctype: "pdf",
         id: "2",
         url: "",
-        title: "",
+        name: "",
       },
     },
     {
       selected: false,
       data: {
-        doctype : "pdf",
+        doctype: "pdf",
         id: "3",
         url: "",
-        title: "",
+        name: "",
       },
     },
   ],
@@ -101,7 +101,31 @@ interface RowProps {
   updateSelected: (id: string) => void;
 }
 
-export default function FileExplorer({getFileFunc } : {getFileFunc : any}) {
+export const GetAllFiles = async (): Promise<any> => {
+  let result = await fetch("/api/files/all", {
+    method: "GET",
+    headers: {
+      // "Content-Type": "application/json",
+      Accept: "application/json",
+      "Access-Control-Allow-Origin": "*",
+    },
+    // body: JSON.stringify({ url: link, title: "Textual content", isUrl: true }),
+  });
+  let files = await result.json();
+  console.log(files);
+  let out = files.map((f: any) => {
+    return {
+      id: f.id.toString(),
+      url: "",
+      title: f.name,
+      doctype: f.doctype,
+    };
+  });
+  console.log(out);
+  return out;
+};
+
+export default function FileExplorer({ getFileFunc }: { getFileFunc: any }) {
   const [state, setState] = useState<FileExploreState>(initState);
   const [loading, setLoading] = useState(true);
   const loadFiles = async () => {
@@ -169,7 +193,6 @@ export default function FileExplorer({getFileFunc } : {getFileFunc : any}) {
   };
 
   function ExplorerRow({ file, updateSelected }: RowProps) {
-    const [loading, setLoading] = useState(false);
     return (
       <Tr key={file.data.id}>
         {/* Select */}
@@ -249,8 +272,7 @@ export default function FileExplorer({getFileFunc } : {getFileFunc : any}) {
         <Td>{file.data.dateModified.toString()}</Td> */}
         {/* Status */}
         <Td>
-          {loading && <LoadingSpinner />}
-          {!loading && <FiInfo />}
+          <FiInfo />
         </Td>
       </Tr>
     );
