@@ -44,8 +44,6 @@ services:
       - "${VOLUMES_DIRECTORY:-./volumes}/letsencrypt:/letsencrypt"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
 
-
-
   backend:
     build:
       context: ./backend
@@ -53,10 +51,9 @@ services:
     env_file:
       - config/global.env
     volumes:
-      - ./volumes/instance:/app/instance
-      - ./volumes/files:/files
-      - ./volumes/tmp:/tmp/
-
+      - ${VOLUMES_DIRECTORY:-./volumes}/instance:/app/instance
+      - ${VOLUMES_DIRECTORY:-./volumes}/files:/files
+      - ${VOLUMES_DIRECTORY:-./volumes}/tmp:/tmp/
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.backend.rule=Host(`${DOMAIN:-app.kessler.xyz}`) && PathPrefix(`/api`) || PathPrefix(`/schema`)"
