@@ -1,4 +1,3 @@
-from lance_store.connection import ensure_fts_index
 from rag.llamaindex import add_document_to_db_from_text
 import os
 from pathlib import Path
@@ -126,7 +125,8 @@ class FileController(Controller):
     async def get_file(
         self,
         files_repo: FileRepository,
-        file_id: UUID = Parameter(title="File ID", description="File to retieve"),
+        file_id: UUID = Parameter(
+            title="File ID", description="File to retieve"),
     ) -> FileSchema:
         obj = await files_repo.get(file_id)
 
@@ -138,7 +138,8 @@ class FileController(Controller):
     async def get_markdown(
         self,
         files_repo: FileRepository,
-        file_id: UUID = Parameter(title="File ID", description="File to retieve"),
+        file_id: UUID = Parameter(
+            title="File ID", description="File to retieve"),
     ) -> str:
         obj = await files_repo.get(file_id)
 
@@ -176,7 +177,8 @@ class FileController(Controller):
         supplemental_metadata = {"source": "personal"}
         logger = request.logger
         docingest = DocumentIngester(logger)
-        input_directory = OS_TMPDIR / Path("formdata_uploads") / Path(rand_string())
+        input_directory = OS_TMPDIR / \
+            Path("formdata_uploads") / Path(rand_string())
         # Ensure the directories exist
         os.makedirs(input_directory, exist_ok=True)
         # Save the PDF to the output directory
@@ -184,7 +186,8 @@ class FileController(Controller):
         final_filepath = input_directory / Path(filename)
         with open(final_filepath, "wb") as f:
             f.write(data.file.read())
-        additional_metadata = docingest.infer_metadata_from_path(final_filepath)
+        additional_metadata = docingest.infer_metadata_from_path(
+            final_filepath)
         additional_metadata.update(supplemental_metadata)
         final_metadata = additional_metadata
         if final_metadata.get("lang") is None:
@@ -215,13 +218,15 @@ class FileController(Controller):
 
         # tmpfile_path, metadata = (
         # LSP is giving some kind of error, I am gonna worry about it later
-        tmpfile_path, metadata = docingest.url_to_filepath_and_metadata(data.url)
+        tmpfile_path, metadata = docingest.url_to_filepath_and_metadata(
+            data.url)
         new_metadata = data.metadata
 
         if new_metadata is not None:
             metadata.update(new_metadata)
 
-        request.logger.info(f"Metadata Successfully Created with metadata {metadata}")
+        request.logger.info(
+            f"Metadata Successfully Created with metadata {metadata}")
         file_obj = await self.add_file_raw(
             tmpfile_path, metadata, process, override_hash, files_repo, logger
         )
@@ -257,7 +262,8 @@ class FileController(Controller):
                     "Metadata is illformed, this is likely an error in software, please submit a bug report."
                 )
             else:
-                logger.info("Title, Doctype and language successfully declared")
+                logger.info(
+                    "Title, Doctype and language successfully declared")
 
             if (metadata["doctype"])[0] == ".":
                 metadata["doctype"] = (metadata["doctype"])[1:]
@@ -407,7 +413,8 @@ class FileController(Controller):
                 )[0]
             )
             logger.info(
-                f"Successfully processed original text: {processed_original_text[0:20]}"
+                f"Successfully processed original text: {
+                    processed_original_text[0:20]}"
             )
             # FIXME: We should probably come up with a better backup protocol then doing everything with hashes
             mdextract.backup_processed_text(
@@ -449,9 +456,11 @@ class FileController(Controller):
             logger.info("Adding Document to Vector Database")
             searchable_metadata = generate_searchable_metadata(doc_metadata)
             try:
-                add_document_to_db_from_text(obj.english_text, searchable_metadata)
+                add_document_to_db_from_text(
+                    obj.english_text, searchable_metadata)
             except Exception as e:
-                raise Exception("Failure in adding document to vector database", e)
+                raise Exception(
+                    "Failure in adding document to vector database", e)
             return "completed"
 
         while True:
@@ -562,8 +571,6 @@ class FileController(Controller):
             try:
                 meta["uid"] = str(new_file.id)
                 add_document_to_db_from_text(text=restfile, metadata=meta)
-                request.app.emit("increment_processed_docs", num=1)
-                request.logger.info("added a document to the db")
             except Exception as e:
                 request.logger.error(e)
                 return "issue indexing file"
@@ -576,7 +583,8 @@ class FileController(Controller):
     async def delete_file(
         self,
         files_repo: FileRepository,
-        file_id: UUID = Parameter(title="File ID", description="File to retieve"),
+        file_id: UUID = Parameter(
+            title="File ID", description="File to retieve"),
     ) -> None:
         fid = UUID(file_id)
         _ = await files_repo.delete(fid)

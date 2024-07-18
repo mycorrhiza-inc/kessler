@@ -62,13 +62,10 @@ services:
       dockerfile: ./Dockerfile
     env_file:
       - config/global.env
-    environment:
-      - LANCEDB_CONFIG_DIR=/lancedb
     volumes:
       - ./volumes/instance:/app/instance
       - ./volumes/files:/files
       - ./volumes/tmp:/tmp/
-      - ./volumes/lancedb:/lancedb
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.backend.rule=Host(`${DOMAIN:?error}`) && PathPrefix(`/api`) || PathPrefix(`/schema`)"

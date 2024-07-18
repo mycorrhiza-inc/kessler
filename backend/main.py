@@ -18,38 +18,11 @@ from routing.file_controller import FileController
 from routing.search_controller import SearchController
 from routing.rag_controller import RagController
 
-from lance_store.connection import get_lance_connection
-
-from litestar.events import listener
-from lance_store.connection import ensure_fts_index
-import threading
-
 
 logger = logging.getLogger(__name__)
 
 
-added_docs = -1
-
-
-def full_fts_reindex() -> None:
-    threading.Timer(10.0, full_fts_reindex).start()
-    global added_docs
-    if added_docs > 0 or added_docs == -1:
-        ensure_fts_index()
-        added_docs = 0
-        logger.info("detected new doc, successfully reindexed FTS")
-        return
-
-
-@listener("increment_processed_docs")
-def increment_processed_docs(num: int) -> None:
-    if num > 0:
-        global added_docs
-        added_docs += num
-
-
 async def on_startup() -> None:
-    full_fts_reindex()
     async with utils.sqlalchemy_config.get_engine().begin() as conn:
         # UUIDAuditBase extends UUIDBase so create_all should build both
         await conn.run_sync(UUIDBase.metadata.create_all)
@@ -71,7 +44,8 @@ def plain_text_exception_handler(request: Request, exc: Exception) -> Response:
 
 
 async def provide_limit_offset_pagination(
-    current_page: int = Parameter(ge=1, query="currentPage", default=1, required=False),
+    current_page: int = Parameter(
+        ge=1, query="currentPage", default=1, required=False),
     page_size: int = Parameter(
         query="pageSize",
         ge=1,
@@ -97,7 +71,8 @@ cors_config = CORSConfig(allow_origins=["*"])
 
 api_router = Router(
     path="/api",
-    route_handlers=[FileController, SearchController, RagController, TestController],
+    route_handlers=[FileController, SearchController,
+                    RagController, TestController],
 )
 
 app = Litestar(
@@ -107,10 +82,8 @@ app = Litestar(
     dependencies={
         "limit_offset": Provide(provide_limit_offset_pagination),
         # do a lance connections for each request
-        "lanceconn": Provide(get_lance_connection, sync_to_thread=True),
     },
     cors_config=cors_config,
     logging_config=logging_config,
     exception_handlers={Exception: plain_text_exception_handler},
-    listeners=[increment_processed_docs],
 )

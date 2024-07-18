@@ -1,8 +1,13 @@
 import os
-import pymilvus
+from pymilvus import MilvusClient
 
-milvus_url = os.environ.get("MILVUS_DB_URL")
+milvus_user = os.environ.get("MILVUS_VEC_USER")
+milvus_pass = os.environ.get("MILVUS_VEC_PASS")
+milvus_host = os.environ.get("MILVUS_HOST")
 
 
-def get_milvus_conn(url: str = milvus_url):
-    pass
+def get_milvus_conn(uri: str = milvus_host):
+    return MilvusClient(
+        uri=uri,
+        token=f'{milvus_user}:{milvus_pass}'
+    )
