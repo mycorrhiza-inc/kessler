@@ -8,6 +8,7 @@ import {
 } from "@chakra-ui/react";
 import { useState } from "react";
 import FilePageBrowser from "./FilePageBrowser";
+import UploadFileButton from "./FileUploader";
 
 const QueryBrowser: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -36,6 +37,7 @@ const QueryBrowser: React.FC = () => {
 
   return (
     <Box>
+      <UploadFileButton></UploadFileButton>
       <form onSubmit={handleSubmit}>
         <VStack spacing={4}>
           <FormControl>

@@ -49,8 +49,9 @@ const FileTable: React.FC<FileTableProps> = ({ files }) => {
         <Thead>
           <Tr>
             <Th width="2%">Select</Th>
-            <Th width="96%">Filename</Th>
-            <Th width="2%">View</Th>
+            <Th width="70%">Filename</Th>
+            <Th width="20%">Source</Th>
+            <Th width="6%">View</Th>
             <Th width="2%">Status</Th>
           </Tr>
         </Thead>
@@ -77,6 +78,7 @@ const FileTable: React.FC<FileTableProps> = ({ files }) => {
                   </Box>
                 </Td>
                 <Td>{truncateString(file.data.name)}</Td>
+                <Td>{truncateString(file.data.source)}</Td>
                 <Td>
                   <DocumentViewer document_uuid={file.data.id} />
                 </Td>
