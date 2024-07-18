@@ -49,7 +49,7 @@ const FilePageBrowser: React.FC<FilePageBrowserProps> = ({ fileUrl, data }) => {
       )}
       <Box mt={4} display="flex" justifyContent="space-between">
         <Paginator page={page} setPage={setPage} maxPage={maxPage} />
-        <br />
+
         <NumResultsSelector
           numResults={numResults}
           setNumResults={setNumResults}
@@ -79,6 +79,7 @@ const NumResultsSelector: React.FC<NumResultsSelectorProps> = ({
         setPage(1);
       }}
     >
+      <option value={1}>1</option>
       <option value={10}>10</option>
       <option value={25}>25</option>
       <option value={50}>50</option>

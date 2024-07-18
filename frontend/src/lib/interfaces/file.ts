@@ -3,4 +3,5 @@ export interface FileType {
   url: string;
   name: string;
   doctype: string;
+  stage: string;
 }

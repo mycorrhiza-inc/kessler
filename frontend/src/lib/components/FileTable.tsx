@@ -14,7 +14,8 @@ import { useState } from "react";
 import { FileType } from "../interfaces/file";
 import { LoadingSpinner } from "@saas-ui/react";
 import DocumentViewer from "./DocumentViewer";
-
+import { IoMdCheckmarkCircleOutline } from "react-icons/io";
+import { ImCross } from "react-icons/im";
 interface RowData {
   selected: boolean;
   data: FileType;
@@ -37,6 +38,10 @@ const FileTable: React.FC<FileTableProps> = ({ files }) => {
       ),
     );
   };
+  function truncateString(str: string) {
+    const length = 60;
+    return str.length < length ? str : str.slice(0, length - 3) + "...";
+  }
 
   return (
     <TableContainer>
@@ -45,6 +50,7 @@ const FileTable: React.FC<FileTableProps> = ({ files }) => {
           <Tr>
             <Th width="2%">Select</Th>
             <Th width="96%">Filename</Th>
+            <Th width="2%">View</Th>
             <Th width="2%">Status</Th>
           </Tr>
         </Thead>
@@ -70,9 +76,16 @@ const FileTable: React.FC<FileTableProps> = ({ files }) => {
                     />
                   </Box>
                 </Td>
-                <Td>{file.data.name}</Td>
+                <Td>{truncateString(file.data.name)}</Td>
                 <Td>
                   <DocumentViewer document_uuid={file.data.id} />
+                </Td>
+                <Td>
+                  {file.data.stage == "completed" ? (
+                    <IoMdCheckmarkCircleOutline />
+                  ) : (
+                    <ImCross />
+                  )}
                 </Td>
               </Tr>
             ))}
