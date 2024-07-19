@@ -85,24 +85,30 @@ class GPUComputeEndpoint:
             headers = {"X-Api-Key": self.datalab_api_key}
 
             async with aiohttp.ClientSession() as session:
-                with aiohttp.MultipartWriter() as mpwriter:
-                    # Append the file
-                    file_part = mpwriter.append(filepath.open("rb"))
-                    file_part.set_content_disposition(
-                        "attachment", filename=filepath.name + ".pdf"
-                    )
-                    file_part.headers[aiohttp.hdrs.CONTENT_TYPE] = "application/pdf"
+                # with aiohttp.MultipartWriter() as mpwriter:
+                with open(filepath, "rb") as file:
+                    # # Append the file
+                    # file_part = mpwriter.append(filepath.open("rb"))
+                    # file_part.set_content_disposition(
+                    #     "attachment", filename=filepath.name + ".pdf"
+                    # )
+                    # file_part.headers[aiohttp.hdrs.CONTENT_TYPE] = "application/pdf"
 
-                    # Append other form data
-                    mpwriter.append_form(
-                        [("langs", "en"), ("force_ocr", "false"), ("paginate", "true")]
-                    )
+                    # # Append other form data
+                    # mpwriter.append_form(
+                    #     [("langs", "en"), ("force_ocr", "false"), ("paginate", "true")]
+                    # )
 
-                    async with session.post(
-                        url, data=mpwriter, headers=headers
-                    ) as response:
+                    # async with session.post(url, data=mpwriter, headers=headers) as response:
+                    files = {
+                        "file": (filepath.name + ".pdf", file, "application/pdf"),
+                        "paginate": (None, True),
+                    }
+                    # data = {"langs": "en", "force_ocr": "false", "paginate": "true"}
+                    with requests.post(url, files=files, headers=headers) as response:
                         response.raise_for_status()
-                        data = await response.json()
+                        # await the json if async
+                        data = response.json()
                         request_check_url = data.get("request_check_url")
 
                         if request_check_url is None:
