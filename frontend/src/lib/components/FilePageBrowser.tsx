@@ -2,6 +2,7 @@ import { Box, Button, Center, Select, Spinner } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import FileTable from "./FileTable";
 import { FileType } from "../interfaces/file";
+import { Text } from "@chakra-ui/react";
 
 interface FilePageBrowserProps {
   fileUrl: string;
@@ -49,7 +50,12 @@ const FilePageBrowser: React.FC<FilePageBrowserProps> = ({ fileUrl, data }) => {
       )}
       <Box mt={4} display="flex" justifyContent="space-between">
         <Paginator page={page} setPage={setPage} maxPage={maxPage} />
-
+      </Box>
+      <Box>
+        <Text>
+          <br />
+          Select Number of Results
+        </Text>
         <NumResultsSelector
           numResults={numResults}
           setNumResults={setNumResults}

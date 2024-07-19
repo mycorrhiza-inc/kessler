@@ -10,7 +10,7 @@ import {
   Box,
   Center,
 } from "@chakra-ui/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FileType } from "../interfaces/file";
 import { LoadingSpinner } from "@saas-ui/react";
 import DocumentViewer from "./DocumentViewer";
@@ -80,7 +80,7 @@ const FileTable: React.FC<FileTableProps> = ({ files }) => {
                 <Td>{truncateString(file.data.name)}</Td>
                 <Td>{truncateString(file.data.source)}</Td>
                 <Td>
-                  <DocumentViewer document_uuid={file.data.id} />
+                  <DocumentViewer document_object={file.data} />
                 </Td>
                 <Td>
                   {file.data.stage == "completed" ? (

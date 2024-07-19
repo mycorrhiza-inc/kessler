@@ -64,5 +64,5 @@ class SearchController(Controller):
         res = search(query=query)
         ids = []
         for r in res:
-            ids.append({"uuid": r[0]["entity"]["uid"]})
+            ids.append({"uuid": r[0]["entity"]["id"]})
         return ids

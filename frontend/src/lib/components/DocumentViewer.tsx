@@ -16,16 +16,19 @@ import {
 import ReactDOM from "react-dom";
 import MarkdownRenderer from "./MarkdownRenderer";
 import PDFViewer from "./PDFViewer";
+import { FileType } from "../interfaces";
 
 const DynamicModal: React.FC<{
-  document_uuid: string;
+  document_object: FileType;
   onClose: () => void;
-}> = ({ document_uuid, onClose }) => {
+}> = ({ document_object, onClose }) => {
+  const document_uuid = document_object.id;
   const {
     isOpen,
     onOpen,
     onClose: closeModal,
   } = useDisclosure({ defaultIsOpen: true });
+  const isPDF = document_object.doctype == "pdf";
   const [numPages, setNumPages] = useState<number>();
   const [pageNumber, setPageNumber] = useState<number>(1);
 
@@ -80,14 +83,22 @@ const DynamicModal: React.FC<{
     <Modal isOpen={isOpen} onClose={handleClose} size="6xl">
       <ModalOverlay />
       <ModalContent maxW="80%">
-        <ModalHeader>View Document</ModalHeader>
+        <ModalHeader>Viewing Document: {document_object.name}</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
           <Grid templateColumns="repeat(2, 1fr)" gap={6}>
+            {isPDF && (
+              <GridItem>
+                <a href={pdfURL} target="_blank">
+                  <Button>Download PDF</Button>
+                </a>
+                <PDFViewer file={pdfURL}></PDFViewer>
+              </GridItem>
+            )}
             <GridItem>
-              <PDFViewer file={pdfURL}></PDFViewer>
-            </GridItem>
-            <GridItem>
+              <a href={"/api/files/markdown/" + document_uuid} target="_blank">
+                <Button>Get Raw Text</Button>
+              </a>
               <MarkdownRenderer>{markdownContent}</MarkdownRenderer>
             </GridItem>
           </Grid>
@@ -103,8 +114,8 @@ const DynamicModal: React.FC<{
   );
 };
 
-const ViewDocumentButton: React.FC<{ document_uuid: string }> = ({
-  document_uuid,
+const ViewDocumentButton: React.FC<{ document_object: FileType }> = ({
+  document_object,
 }) => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
@@ -121,7 +132,7 @@ const ViewDocumentButton: React.FC<{ document_uuid: string }> = ({
       <Button onClick={handleOpenModal}>View Document</Button>
       {isModalOpen && (
         <DynamicModal
-          document_uuid={document_uuid}
+          document_object={document_object}
           onClose={handleCloseModal}
         />
       )}
