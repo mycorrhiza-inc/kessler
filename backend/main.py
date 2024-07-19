@@ -18,49 +18,13 @@ from routing.file_controller import FileController
 from routing.search_controller import SearchController
 from routing.rag_controller import RagController
 
-from lance_store.connection import get_lance_connection
-
-from litestar.events import listener
-from lance_store.connection import ensure_fts_index
-from rag.llamaindex import initialize_db_table
-import threading
-
 
 from routing.daemon_controller import DaemonController, process_document
 
 logger = logging.getLogger(__name__)
 
 
-added_docs = -1
-
-
-def full_fts_reindex() -> None:
-    threading.Timer(10.0, full_fts_reindex).start()
-    global added_docs
-    if added_docs > 0 or added_docs == -1:
-        ensure_fts_index()
-        added_docs = 0
-        logger.info("detected new doc, successfully reindexed FTS")
-        return
-
-
-@listener("increment_processed_docs")
-def increment_processed_docs(num: int) -> None:
-    if num > 0:
-        global added_docs
-        added_docs += num
-
-
 async def on_startup() -> None:
-    logger.debug("running startup")
-    logger.debug("ensuring tables exist")
-    try:
-        initialize_db_table()
-    except Exception as e:
-        logger.error(f"catastrophic failure setting up lancedb: {e}")
-        # What if we didnt?
-        # raise e
-
     async with utils.sqlalchemy_config.get_engine().begin() as conn:
         # UUIDAuditBase extends UUIDBase so create_all should build both
         await conn.run_sync(UUIDBase.metadata.create_all)
@@ -123,11 +87,9 @@ app = Litestar(
     route_handlers=[api_router],
     dependencies={
         "limit_offset": Provide(provide_limit_offset_pagination),
-        # do a lance connections for each request
-        "lanceconn": Provide(get_lance_connection, sync_to_thread=True),
     },
     cors_config=cors_config,
     logging_config=logging_config,
     exception_handlers={Exception: plain_text_exception_handler},
-    listeners=[increment_processed_docs, process_document],
+    listeners=[process_document],
 )

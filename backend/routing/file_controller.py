@@ -1,6 +1,3 @@
-from typing_extensions import Doc
-from lance_store.connection import ensure_fts_index
-from models import files
 from rag.llamaindex import add_document_to_db_from_text
 import os
 from pathlib import Path
@@ -164,6 +161,7 @@ class FileController(Controller):
         obj_with_text = type_adapter.validate_python(obj)
 
         markdown_text = obj_with_text.english_text
+
         if markdown_text == "":
             markdown_text = "Could not find Document Markdown Text"
         return markdown_text
@@ -321,6 +319,7 @@ class FileController(Controller):
         final_metadata = additional_metadata
         if final_metadata.get("lang") is None:
             final_metadata["lang"] = "en"
+
         file_obj = await add_file_raw(
             final_filepath, final_metadata, process, override_hash, files_repo, logger
         )
@@ -354,6 +353,7 @@ class FileController(Controller):
             metadata.update(new_metadata)
 
         request.logger.info(f"Metadata Successfully Created with metadata {metadata}")
+
         file_obj = await add_file_raw(
             tmpfile_path, metadata, process, override_hash, files_repo, logger
         )
@@ -450,8 +450,6 @@ class FileController(Controller):
             try:
                 meta["uid"] = str(new_file.id)
                 add_document_to_db_from_text(text=restfile, metadata=meta)
-                request.app.emit("increment_processed_docs", num=1)
-                request.logger.info("added a document to the db")
             except Exception as e:
                 request.logger.error(e)
                 return "issue indexing file"

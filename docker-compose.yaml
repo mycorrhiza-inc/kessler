@@ -19,6 +19,8 @@ services:
     expose:
       - 3000
     command:
+      # - "sleep"
+      # - "9999999999d"
       - "npm"
       - "run"
       - "start"
@@ -44,21 +46,16 @@ services:
       - "${VOLUMES_DIRECTORY:-./volumes}/letsencrypt:/letsencrypt"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
 
-
-
   backend:
     build:
       context: ./backend
       dockerfile: ./Dockerfile
     env_file:
       - config/global.env
-    environment:
-      - LANCEDB_CONFIG_DIR=/lancedb
     volumes:
       - ${VOLUMES_DIRECTORY:-./volumes}/instance:/app/instance
       - ${VOLUMES_DIRECTORY:-./volumes}/files:/files
       - ${VOLUMES_DIRECTORY:-./volumes}/tmp:/tmp/
-      - ${VOLUMES_DIRECTORY:-./volumes}/lancedb:/lancedb
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.backend.rule=Host(`${DOMAIN:-app.kessler.xyz}`) && PathPrefix(`/api`) || PathPrefix(`/schema`)"

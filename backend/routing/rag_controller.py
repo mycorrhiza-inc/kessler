@@ -1,3 +1,12 @@
+from rag.llamaindex import (
+    create_rag_response_from_query,
+    regenerate_vector_database_from_file_table,
+    add_document_to_db_from_text,
+    generate_chat_completion,
+    sanitzie_chathistory_llamaindex,
+)
+from llama_index.llms.openai import OpenAI
+from llama_index.llms.groq import Groq
 from hashlib import blake2b
 import os
 from pathlib import Path
@@ -80,20 +89,9 @@ OS_TMPDIR = Path(os.environ["TMPDIR"])
 OS_GPU_COMPUTE_URL = os.environ["GPU_COMPUTE_URL"]
 OS_FILEDIR = Path("/files/")
 
-from llama_index.llms.groq import Groq
-from llama_index.llms.openai import OpenAI
 
 GROQ_API_KEY = os.environ["GROQ_API_KEY"]
 OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
-
-
-from rag.llamaindex import (
-    create_rag_response_from_query,
-    regenerate_vector_database_from_file_table,
-    add_document_to_db_from_text,
-    generate_chat_completion,
-    sanitzie_chathistory_llamaindex,
-)
 
 
 def validate_chat(chat_history: List[Dict[str, str]]) -> bool:
@@ -199,4 +197,4 @@ class RagController(Controller):
         files_repo: FileRepository,
     ) -> str:
         regenerate_vector_database_from_file_table()
-        return response
+        return ""
