@@ -78,41 +78,96 @@ class GPUComputeEndpoint:
     ) -> str:
         if external_process:
             url = "https://www.datalab.to/api/v1/marker"
+            self.logger.info(
+                "Calling datalab api with key beginning with"
+                + self.datalab_api_key[0 : (len(self.datalab_api_key) // 5)]
+            )
             headers = {"X-Api-Key": self.datalab_api_key}
-            form_data = {
-                "file": (filepath.name, filepath.open("rb"), "application/pdf"),
-                "langs": (None, "en"),
-                "force_ocr": (None, False),
-                "paginate": (None, True),
-            }
 
             async with aiohttp.ClientSession() as session:
-                async with session.post(
-                    url, data=form_data, headers=headers
-                ) as response:
-                    response.raise_for_status()
-                    data = await response.json()
-                    request_check_url = data.get("request_check_url")
+                with aiohttp.MultipartWriter() as mpwriter:
+                    # Append the file
+                    file_part = mpwriter.append(filepath.open("rb"))
+                    file_part.set_content_disposition(
+                        "attachment", filename=filepath.name + ".pdf"
+                    )
+                    file_part.headers[aiohttp.hdrs.CONTENT_TYPE] = "application/pdf"
 
-                    if request_check_url is None:
-                        raise Exception(
-                            "Failed to get request_check_url from marker API response"
-                        )
+                    # Append other form data
+                    mpwriter.append_form(
+                        [("langs", "en"), ("force_ocr", "false"), ("paginate", "true")]
+                    )
 
-                    # Polling for the result
-                    max_polls = 300
-                    for _ in range(max_polls):
-                        await asyncio.sleep(2)
-                        async with session.get(
-                            request_check_url, headers=headers
-                        ) as poll_response:
-                            poll_response.raise_for_status()
-                            poll_data = await poll_response.json()
+                    async with session.post(
+                        url, data=mpwriter, headers=headers
+                    ) as response:
+                        response.raise_for_status()
+                        data = await response.json()
+                        request_check_url = data.get("request_check_url")
 
-                            if poll_data["status"] == "complete":
-                                return poll_data["markdown"]
+                        if request_check_url is None:
+                            raise Exception(
+                                "Failed to get request_check_url from marker API response"
+                            )
 
-                    raise TimeoutError("Polling for marker API result timed out")
+                        # Polling for the result
+                        max_polls = 300
+                        for _ in range(max_polls):
+                            await asyncio.sleep(2)
+                            async with session.get(
+                                request_check_url, headers=headers
+                            ) as poll_response:
+                                poll_response.raise_for_status()
+                                poll_data = await poll_response.json()
+
+                                if poll_data["status"] == "complete":
+                                    return poll_data["markdown"]
+
+                        raise TimeoutError("Polling for marker API result timed out")
+            # url = "https://www.datalab.to/api/v1/marker"
+            # self.logger.info(
+            #     "Calling datalab api with key beginning with"
+            #     + self.datalab_api_key[0 : (len(self.datalab_api_key) // 5)]
+            # )
+            # headers = {"X-Api-Key": self.datalab_api_key}
+            # form_data = {
+            #     "file": (
+            #         filepath.name + ".pdf",
+            #         filepath.open("rb"),
+            #         "application/pdf",
+            #     ),
+            #     "langs": (None, "en"),
+            #     "force_ocr": (None, False),
+            #     "paginate": (None, False),
+            # }
+
+            # async with aiohttp.ClientSession() as session:
+            #     async with session.post(
+            #         url, data=form_data, headers=headers
+            #     ) as response:
+            #         response.raise_for_status()
+            #         data = await response.json()
+            #         request_check_url = data.get("request_check_url")
+
+            #         if request_check_url is None:
+            #             raise Exception(
+            #                 "Failed to get request_check_url from marker API response"
+            #             )
+
+            #         # Polling for the result
+            #         max_polls = 300
+            #         for _ in range(max_polls):
+            #             await asyncio.sleep(2)
+            #             async with session.get(
+            #                 request_check_url, headers=headers
+            #             ) as poll_response:
+            #                 poll_response.raise_for_status()
+            #                 poll_data = await poll_response.json()
+
+            #                 if poll_data["status"] == "complete":
+            #                     return poll_data["markdown"]
+
+            #         raise TimeoutError("Polling for marker API result timed out")
         else:
             url = self.marker_endpoint_url + "/process_pdf_upload"
             with filepath.open("rb") as file:

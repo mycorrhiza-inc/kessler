@@ -130,7 +130,7 @@ async def process_document(doc_id_str: str, stop_at: str) -> None:
     session = AsyncSession(engine)
     files_repo_2 = await provide_files_repo(session)
     await process_fileid_raw(doc_id_str, files_repo_2, logger, stop_at)
-    session.close()
+    await session.close()
 
 
 class DaemonController(Controller):
