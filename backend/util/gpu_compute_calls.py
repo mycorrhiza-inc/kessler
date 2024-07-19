@@ -77,13 +77,13 @@ class GPUComputeEndpoint:
         self, filepath: Path, external_process: bool = True
     ) -> str:
         if external_process:
-            url = self.marker_endpoint_url
+            url = "https://www.datalab.to/api/v1/marker"
             headers = {"X-Api-Key": self.datalab_api_key}
             form_data = {
                 "file": (filepath.name, filepath.open("rb"), "application/pdf"),
                 "langs": (None, "en"),
                 "force_ocr": (None, False),
-                "paginate": (None, False),
+                "paginate": (None, True),
             }
 
             async with aiohttp.ClientSession() as session:
@@ -94,7 +94,7 @@ class GPUComputeEndpoint:
                     data = await response.json()
                     request_check_url = data.get("request_check_url")
 
-                    if not request_check_url:
+                    if request_check_url is None:
                         raise Exception(
                             "Failed to get request_check_url from marker API response"
                         )
@@ -138,7 +138,7 @@ class GPUComputeEndpoint:
         if model_name == "large":
             model_name = "meta-llama-3-70b-instruct"
         # The API endpoint you will be hitting
-        url = f"{self.endpoint_urll}/v0/chat_completion/external_api"
+        url = f"{self.endpoint_url}/v0/chat_completion/external_api"
         jsonpayload = {
             "messages": msg_history,
             "model_name": model_name,

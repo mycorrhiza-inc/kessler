@@ -121,20 +121,16 @@ async def process_document(doc_id_str: str, stop_at: str) -> None:
     # engine = create_async_engine(
     #     postgres_connection_string,
     #     echo=True,
-    # )
+    #
     engine = utils.sqlalchemy_config.get_engine()
     logger.info(engine)
     logger.info(type(engine))
     async with engine.begin() as conn:
         await conn.run_sync(UUIDBase.metadata.create_all)
-    # # Maybe mirri is right and I should just use sql strings, but code reuse would make this hard
-    # # Also this could potentially be a global, but I put it in here to reduce bugs
-    # logger.info(f"Executing ackground process doc {doc_id_str} to stage {stop_at}")
-    # # conn = utils.sqlalchemy_config.get_engine().begin()
-    # logger.info(str(conn))
-    # logger.info(type(conn))
-    files_repo_2 = await provide_files_repo(AsyncSession(engine))
+    session = AsyncSession(engine)
+    files_repo_2 = await provide_files_repo(session)
     await process_fileid_raw(doc_id_str, files_repo_2, logger, stop_at)
+    session.close()
 
 
 class DaemonController(Controller):
