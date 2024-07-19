@@ -67,6 +67,8 @@ from litestar.contrib.sqlalchemy.base import UUIDBase
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from routing.file_controller import QueryData
+
 # class UUIDEncoder(json.JSONEncoder):
 #     def default(self, obj):
 #         if isinstance(obj, UUID):
@@ -185,7 +187,7 @@ class DaemonController(Controller):
                     stop_at=stop_at.value,
                 )
 
-    @get(path="/daemon/process_file/{file_id:uuid}")
+    @post(path="/daemon/process_file/{file_id:uuid}")
     async def process_file_background(
         self,
         files_repo: FileRepository,
@@ -203,18 +205,31 @@ class DaemonController(Controller):
             regenerate_from=regenerate_from,
         )
 
-    @get(path="/daemon/process_all_files")
+    @post(path="/daemon/process_all_files")
     async def process_all_background(
         self,
         files_repo: FileRepository,
         request: Request,
+        data : QueryData,
         stop_at: Optional[str] = None,
         regenerate_from: Optional[str] = None,
         max_documents: Optional[int] = None,
     ) -> None:
         logger = request.logger
         logger.info("Beginning to process all files.")
-        results = await files_repo.list()
+        query = data
+        # TODO: Dryify with query code from file_controller
+        filters = {}
+        if query.match_name is not None:
+            filters["name"] = query.match_name
+        if query.match_source is not None:
+            filters["source"] = query.match_source
+        if query.match_doctype is not None:
+            filters["doctype"] = query.match_doctype
+        if query.match_stage is not None:
+            filters["stage"] = query.match_stage
+
+        results = await files_repo.list(**filters)
         logger.info(f"{len(results)} results")
         # type_adapter = TypeAdapter(list[FileSchema])
         # validated_results = type_adapter.validate_python(results)

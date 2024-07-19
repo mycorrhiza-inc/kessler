@@ -26,6 +26,8 @@ from logic.extractmarkdown import MarkdownExtractor
 from typing import List, Optional, Dict
 
 
+# from routing.file_controller import QueryData
+
 import json
 
 from util.niclib import rand_string
@@ -288,3 +290,27 @@ async def process_file_raw(
                     try readding it again.\
                 "
                 )
+
+
+# Redifine function here and use it for stuff.
+# FIXME: Define network types in seperate file to avoid circular imports
+# async def query_all_files_raw(
+#     files_repo: FileRepository, query: QueryData, logger: Any
+# ) -> List[FileSchema]:
+#     filters = {}
+#     if query.match_name is not None:
+#         filters["name"] = query.match_name
+#     if query.match_source is not None:
+#         filters["source"] = query.match_source
+#     if query.match_doctype is not None:
+#         filters["doctype"] = query.match_doctype
+#     if query.match_stage is not None:
+#         filters["stage"] = query.match_stage
+#
+#     results = await files_repo.list(**filters)
+#     # assert isinstance(results, List[FileModel])
+#     # Turns the file model in sqlalchemy into an easy to understand return type
+#     logger.info(f"{len(results)} results")
+#     type_adapter = TypeAdapter(list[FileSchema])
+#     valid_results = type_adapter.validate_python(results)
+#     return valid_results
