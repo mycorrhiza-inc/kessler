@@ -303,8 +303,10 @@ class FileController(Controller):
         process: bool = True,
         override_hash: bool = False,
     ) -> str:
-        supplemental_metadata = {"source": "personal"}
         logger = request.logger
+        logger.info("Process initiated.")
+        supplemental_metadata = {"source": "personal"}
+
         docingest = DocumentIngester(logger)
         input_directory = OS_TMPDIR / Path("formdata_uploads") / Path(rand_string())
         # Ensure the directories exist
@@ -398,7 +400,7 @@ class FileController(Controller):
             obj.stage = regenerate_from.value
 
         if docstatus_index(DocumentStatus(obj.stage)) < docstatus_index(stop_at):
-            await self.process_file_raw(obj, files_repo, request.logger, stop_at)
+            await process_file_raw(obj, files_repo, request.logger, stop_at)
         # TODO : Return Response code and response message
         return self.validate_and_jsonify(obj)
 

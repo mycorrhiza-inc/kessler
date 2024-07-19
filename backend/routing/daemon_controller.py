@@ -195,12 +195,10 @@ class DaemonController(Controller):
         regenerate_from: Optional[str] = None,
     ) -> None:
         obj = await files_repo.get(file_id)
-        type_adapter = TypeAdapter(FileSchema)
-        validated_obj = type_adapter.validate_python(obj)
         return await self.bulk_process_file_background(
             files_repo=files_repo,
             passthrough_request=request,
-            files=[validated_obj],
+            files=[obj],
             stop_at=stop_at,
             regenerate_from=regenerate_from,
         )
