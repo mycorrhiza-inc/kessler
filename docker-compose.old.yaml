@@ -1,0 +1,91 @@
+# local development docker compose
+services:
+  frontend:
+    build:
+      context: ./
+      dockerfile: ./frontend/Dockerfile
+    env_file:
+      - config/global.env
+    volumes:
+      - ./config/frontend.env.local:/app.env.local
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`${DOMAIN:-app.kessler.xyz}`) && PathPrefix(`/`)"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.routers.frontend.tls.certresolver=myresolver"
+      - "traefik.http.routers.whoami.rule=Host(`${DOMAIN:-app.kessler.xyz}`)"
+      - "traefik.http.routers.whoami.entrypoints=websecure"
+      - "traefik.http.routers.whoami.tls.certresolver=myresolver"
+    expose:
+      - 3000
+    command:
+      # - "sleep"
+      # - "9999999999d"
+      - "npm"
+      - "run"
+      - "start"
+
+  reverse-proxy:
+    # official image
+    image: traefik:v3.0
+    command:
+      # - "--log.level=DEBUG"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entryPoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      # - "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+      - "--certificatesresolvers.myresolver.acme.email=mbright@kessler.xyz"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "${PROXY_UI_PORT:-8083}:8080"
+    volumes:
+      - "${VOLUMES_DIRECTORY:-./volumes}/letsencrypt:/letsencrypt"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ./Dockerfile
+    env_file:
+      - config/global.env
+    volumes:
+      - ${VOLUMES_DIRECTORY:-./volumes}/instance:/app/instance
+      - ${VOLUMES_DIRECTORY:-./volumes}/files:/files
+      - ${VOLUMES_DIRECTORY:-./volumes}/tmp:/tmp/
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`${DOMAIN:-app.kessler.xyz}`) && PathPrefix(`/api`) || PathPrefix(`/schema`)"
+      - "traefik.http.routers.backend.entrypoints=websecure"
+      - "traefik.http.routers.backend.tls.certresolver=myresolver"
+      # - "traefik.http.routers.backend.tls={}"
+      # - "traefik.http.middlewares.testheader.headers.accesscontrolalloworigin=*"
+    command:
+      # - "python"
+      # - "rag/postgres_example.py"
+      - "uvicorn"
+      - "main:app"
+      - "--host"
+      - "0.0.0.0"
+      - "--port"
+      - "5505"
+      - "--workers"
+      - "4"
+      - "--reload"
+    expose:
+      - 5505
+
+  database:
+    image: pgvector/pgvector:pg16
+    restart: always
+    ports:
+      - "6543:5432"
+    env_file:
+      - config/global.env
+    expose:
+      - "5432"
+    volumes:
+      - ${VOLUMES_DIRECTORY:-./volumes}/pgdata:/var/lib/postgresql/data
