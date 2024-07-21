@@ -21,8 +21,6 @@ services:
       dockerfile: ./Dockerfile
     env_file:
       - config/global.env
-    volumes:
-      - ${VOLUMES_DIRECTORY:-./volumes}/files:/files
     command:
       # - "python"
       # - "rag/postgres_example.py"
