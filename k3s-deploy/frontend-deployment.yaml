@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    kompose.cmd: kompose --file docker-compose.yaml convert
+    kompose.cmd: kompose convert -f template.docker-compose.yaml
     kompose.version: 1.32.0 (HEAD)
   labels:
     io.kompose.service: frontend
@@ -15,10 +15,10 @@ spec:
   template:
     metadata:
       annotations:
-        kompose.cmd: kompose --file docker-compose.yaml convert
+        kompose.cmd: kompose convert -f template.docker-compose.yaml
         kompose.version: 1.32.0 (HEAD)
       labels:
-        io.kompose.network/kessler-default: "true"
+        io.kompose.network/k3s-deploy-default: "true"
         io.kompose.service: frontend
     spec:
       containers:
@@ -112,7 +112,7 @@ spec:
                 configMapKeyRef:
                   key: TMPDIR
                   name: global-env
-          image: frontend
+          image: fractalhuman1/kessler-frontend:latest
           name: frontend
           ports:
             - containerPort: 3000
