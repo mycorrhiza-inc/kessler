@@ -6,6 +6,7 @@ import copy
 
 from litestar.params import Parameter
 from litestar import Controller, Request
+from litestar.di import Provide
 
 # from util.haystack import query_chroma, get_indexed_by_id
 
@@ -19,6 +20,18 @@ from models.utils import PydanticBaseModel as BaseModel
 from vecstore import search
 
 from typing import List
+
+# from asyncstdlib import amap
+
+from models.files import (
+    FileModel,
+    FileRepository,
+    FileSchema,
+    FileSchemaWithText,
+    provide_files_repo,
+    DocumentStatus,
+    docstatus_index,
+)
 
 
 class SearchQuery(BaseModel):
@@ -47,6 +60,8 @@ class IndexFileResponse(BaseModel):
 class SearchController(Controller):
     """Search Controller"""
 
+    dependencies = {"files_repo": Provide(provide_files_repo)}
+
     @post(path="/search/{fid:uuid}")
     async def search_collection_by_id(
         self,
@@ -59,10 +74,38 @@ class SearchController(Controller):
         return "failure"
 
     @post(path="/search")
-    async def search(self, data: SearchQuery, request: Request) -> SearchResponse:
+    async def search(
+        self,
+        files_repo: FileRepository,
+        data: SearchQuery,
+        request: Request,
+        only_uuid: bool = False,
+    ) -> Any:
+        logger = request.logger
         query = data.query
         res = search(query=query)
+        # TODO: Become more functional
+        # ids = map(lambda r: {"uuid": r[0]["entity"]["id"]}, res)
+
         ids = []
         for r in res:
             ids.append({"uuid": r[0]["entity"]["id"]})
-        return ids
+        if only_uuid:
+            return ids
+
+        # TODO: Use an async map for this as soon as python gets that functionality or use an import
+        async def get_file(uuid_str: str):
+            uuid = UUID(uuid_str)
+            logger.info(uuid)
+            obj = await files_repo.get(uuid)
+
+            type_adapter = TypeAdapter(FileSchema)
+
+            return type_adapter.validate_python(obj)
+
+        files = []
+        for id in ids:
+            logger.info(id)
+            uuid_str = id["uuid"]
+            files.append(await get_file(uuid_str))
+        return files
