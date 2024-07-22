@@ -37,7 +37,7 @@ import {
 import { usePathname } from "next/navigation";
 import ColorModeToggle from "./ColorModeToggle";
 
-import FileTableUUIDOnly from "./FileTableUUIDOnly";
+import FileTable from "./FileTable";
 // import SearchDialog from "./SearchDialog";
 import { Center } from "@chakra-ui/react";
 function SearchBox() {
@@ -106,13 +106,9 @@ function SearchBox() {
         </GridItem>
       </Grid>
       {searching && <CircularProgress isIndeterminate color="green.300" />}
-      {
-        // searchResults.length > 0 && (
-        //   <FileTableUUIDOnly
-        //     uuid_list={searchResults}
-        //   ></FileTableUUIDOnly>
-        // )
-      }
+      {searchResults.length > 0 && (
+        <FileTable files={searchResults}></FileTable>
+      )}
     </VStack>
   );
 }
