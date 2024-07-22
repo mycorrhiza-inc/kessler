@@ -47,7 +47,6 @@ services:
       - ./backend:/app
       - ${VOLUMES_DIRECTORY:-./volumes}/instance:/app/instance
       - ${VOLUMES_DIRECTORY:-./volumes}/files:/files
-      - ${VOLUMES_DIRECTORY:-./volumes}/tmp:/tmp/
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.backend.rule=PathPrefix(`/api/`) || PathPrefix(`/schema/`)"
