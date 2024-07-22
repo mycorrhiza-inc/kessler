@@ -1,9 +1,7 @@
 # local development docker compose
 services:
   frontend:
-    build:
-      context: ./
-      dockerfile: ./frontend/Dockerfile
+    image: fractalhuman1/kessler-frontend:latest
     env_file:
       - config/global.env
     expose:
@@ -16,9 +14,7 @@ services:
       - "start"
 
   backend:
-    build:
-      context: ./backend
-      dockerfile: ./Dockerfile
+    image: fractalhuman1/kessler-backend:latest
     env_file:
       - config/global.env
     command:
