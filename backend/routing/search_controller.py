@@ -107,5 +107,11 @@ class SearchController(Controller):
         for id in ids:
             logger.info(id)
             uuid_str = id["uuid"]
-            files.append(await get_file(uuid_str))
+            try:
+                file_result = await get_file(uuid_str)
+                files.append(file_result)
+            except Exception as e:
+                logger.error(
+                    f"Encountered an error while attempting to get file {uuid_str} : {e}"
+                )
         return files
