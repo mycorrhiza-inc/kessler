@@ -1,0 +1,33 @@
+# local development docker compose
+services:
+  frontend:
+    image: fractalhuman1/kessler-frontend:latest
+    env_file:
+      - ../config/global.env
+    expose:
+      - 3000
+    command:
+      # - "sleep"
+      # - "9999999999d"
+      - "npm"
+      - "run"
+      - "start"
+
+  backend:
+    image: fractalhuman1/kessler-backend:latest
+    env_file:
+      - ../config/global.env
+    command:
+      # - "python"
+      # - "rag/postgres_example.py"
+      - "uvicorn"
+      - "main:app"
+      - "--host"
+      - "0.0.0.0"
+      - "--port"
+      - "5505"
+      - "--workers"
+      - "4"
+      - "--reload"
+    expose:
+      - 5505

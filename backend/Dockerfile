@@ -1,4 +1,4 @@
-FROM python:3.12
+FROM python:3.12.4-bookworm
 
 
 ENV VIRTUAL_ENV=/usr/local
@@ -7,7 +7,8 @@ ENV VIRTUAL_ENV=/usr/local
 # RUN /install.sh && rm /install.sh
 
 WORKDIR /app
-RUN apt-get update && apt-get install -y pandoc
+RUN apt-get update 
+RUN apt-get install -y pandoc=2.17.1.1-2~deb12u1 --no-install-recommends
 COPY requirements.txt /app/requirements.txt
 # Uncomment for debugging python depenancy issue
 # COPY requirements-unlocked.txt /app/requirements.txt

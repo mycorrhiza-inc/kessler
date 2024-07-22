@@ -1,0 +1,126 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f kessler-helm.yaml -c
+    kompose.version: 1.32.0 (HEAD)
+  labels:
+    io.kompose.service: backend
+  name: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: backend
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f kessler-helm.yaml -c
+        kompose.version: 1.32.0 (HEAD)
+      labels:
+        io.kompose.network/k3s-deploy-default: "true"
+        io.kompose.service: backend
+    spec:
+      containers:
+        - args:
+            - uvicorn
+            - main:app
+            - --host
+            - 0.0.0.0
+            - --port
+            - "5505"
+            - --workers
+            - "4"
+            - --reload
+          env:
+            - name: CLERK_PUBLIC_KEY
+              valueFrom:
+                configMapKeyRef:
+                  key: CLERK_PUBLIC_KEY
+                  name: global-env
+            - name: CLERK_SECRET_KEY
+              valueFrom:
+                configMapKeyRef:
+                  key: CLERK_SECRET_KEY
+                  name: global-env
+            - name: DATABASE_CONNECTION_STRING
+              valueFrom:
+                configMapKeyRef:
+                  key: DATABASE_CONNECTION_STRING
+                  name: global-env
+            - name: DATALAB_API_KEY
+              valueFrom:
+                configMapKeyRef:
+                  key: DATALAB_API_KEY
+                  name: global-env
+            - name: DOMAIN
+              valueFrom:
+                configMapKeyRef:
+                  key: DOMAIN
+                  name: global-env
+            - name: GPU_COMPUTE_URL
+              valueFrom:
+                configMapKeyRef:
+                  key: GPU_COMPUTE_URL
+                  name: global-env
+            - name: GROQ_API_KEY
+              valueFrom:
+                configMapKeyRef:
+                  key: GROQ_API_KEY
+                  name: global-env
+            - name: MARKER_ENDPOINT_URL
+              valueFrom:
+                configMapKeyRef:
+                  key: MARKER_ENDPOINT_URL
+                  name: global-env
+            - name: MILVUS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  key: MILVUS_HOST
+                  name: global-env
+            - name: MILVUS_VEC_PASS
+              valueFrom:
+                configMapKeyRef:
+                  key: MILVUS_VEC_PASS
+                  name: global-env
+            - name: MILVUS_VEC_USER
+              valueFrom:
+                configMapKeyRef:
+                  key: MILVUS_VEC_USER
+                  name: global-env
+            - name: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+              valueFrom:
+                configMapKeyRef:
+                  key: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+                  name: global-env
+            - name: OCTOAI_API_KEY
+              valueFrom:
+                configMapKeyRef:
+                  key: OCTOAI_API_KEY
+                  name: global-env
+            - name: OPENAI_API_KEY
+              valueFrom:
+                configMapKeyRef:
+                  key: OPENAI_API_KEY
+                  name: global-env
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  key: POSTGRES_PASSWORD
+                  name: global-env
+            - name: PROXY_UI_PORT
+              valueFrom:
+                configMapKeyRef:
+                  key: PROXY_UI_PORT
+                  name: global-env
+            - name: TMPDIR
+              valueFrom:
+                configMapKeyRef:
+                  key: TMPDIR
+                  name: global-env
+          image: fractalhuman1/kessler-backend:latest
+          name: backend
+          ports:
+            - containerPort: 5505
+              protocol: TCP
+      restartPolicy: Always
