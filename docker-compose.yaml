@@ -1,9 +1,7 @@
 # local development docker compose
 services:
   frontend:
-    build:
-      context: ./frontend/
-      dockerfile: ./Dockerfile
+    image: fractalhuman1/kessler-frontend:latest
     env_file:
       - config/global.env
     volumes:
@@ -47,13 +45,10 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
 
   backend:
-    build:
-      context: ./backend
-      dockerfile: ./Dockerfile
+    image: fractalhuman1/kessler-backend:latest
     env_file:
       - config/global.env
     volumes:
-      - ${VOLUMES_DIRECTORY:-./volumes}/instance:/app/instance
       - ${VOLUMES_DIRECTORY:-./volumes}/files:/files
     labels:
       - "traefik.enable=true"
