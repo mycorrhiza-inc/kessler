@@ -18,7 +18,7 @@ from llama_index.core import StorageContext
 from llama_index.core import VectorStoreIndex
 from llama_index.core import Settings
 
-from llama_index.core.node_parser import SentenceSplitter
+from llama_index.core.node_parser import SentenceWindowNodeParser
 
 # from llama_index.vector_stores.postgres import PGVectorStore
 # import psycopg2
@@ -188,7 +188,7 @@ async def get_document_list_from_file_table() -> list:
 
 def add_document_to_db(doc: Document) -> None:
     # split the document into sentences
-    parser = SentenceSplitter()
+    parser = SentenceWindowNodeParser(include_metadata=True)
     nodes = parser.get_nodes_from_documents([doc])
     hybrid_index.insert_nodes(nodes)
 
