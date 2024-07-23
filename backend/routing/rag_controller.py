@@ -131,14 +131,27 @@ class RagController(Controller):
         if model_name == "":
             model_name = None
         if model_name is None:
-            model_name = "llama3-70b-8192"
+            model_name = "llama-70b"
         chat_history = data.chat_history
         chat_history = force_conform_chat(chat_history)
         assert validate_chat(chat_history), chat_history
         llama_chat_history = sanitzie_chathistory_llamaindex(chat_history)
-        if model_name in ["llama3-70b-8192"]:
+        if model_name in ["llama-8b", "llama-3.1-8b-instant"]:
+            actual_name = "llama-3.1-8b-instant"
             groq_llm = Groq(
-                model=model_name, request_timeout=60.0, api_key=GROQ_API_KEY
+                model=actual_name, request_timeout=60.0, api_key=GROQ_API_KEY
+            )
+            response = groq_llm.chat(llama_chat_history)
+        if model_name in ["llama-70b", "llama3-70b-8192", "llama-3.1-70b-versatile"]:
+            actual_name = "llama3.1-70b-versatile"
+            groq_llm = Groq(
+                model=actual_name, request_timeout=60.0, api_key=GROQ_API_KEY
+            )
+            response = groq_llm.chat(llama_chat_history)
+        if model_name in ["llama-405b", "llama-3.1-405b-reasoning"]:
+            actual_name = "llama-3.1-405b-reasoning"
+            groq_llm = Groq(
+                model=actual_name, request_timeout=60.0, api_key=GROQ_API_KEY
             )
             response = groq_llm.chat(llama_chat_history)
         if model_name in ["gpt-4o"]:

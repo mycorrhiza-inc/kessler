@@ -6,7 +6,7 @@ export default function Page() {
     <DefaultShell>
       <ChatUI
         chatUrl="/api/rag/basic_chat"
-        modelOptions={["llama3-70b-8192", "gpt-4o"]}
+        modelOptions={["llama-70b", "llama-405b", "gpt-4o", "llama-8b"]}
       />
     </DefaultShell>
   );
