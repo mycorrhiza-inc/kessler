@@ -210,7 +210,7 @@ class DaemonController(Controller):
         self,
         files_repo: FileRepository,
         request: Request,
-        data : QueryData,
+        data: QueryData,
         stop_at: Optional[str] = None,
         regenerate_from: Optional[str] = None,
         max_documents: Optional[int] = None,
