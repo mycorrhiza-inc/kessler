@@ -1,18 +1,15 @@
 from llama_index.embeddings.octoai import OctoAIEmbedding
-from llama_index.core.llms import ChatMessage
 import logging
 import sys
 import os
 
-import asyncio
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
-from typing import List, Dict, Tuple, Optional
+from typing import List, Tuple, Optional
 
 # Import the FileModel from file.py
-from models.files import FileModel, provide_files_repo
+from models.files import FileModel
 
 from llama_index.core import StorageContext
 from llama_index.core import VectorStoreIndex
@@ -22,7 +19,6 @@ from llama_index.core.node_parser import SentenceWindowNodeParser
 
 # from llama_index.vector_stores.postgres import PGVectorStore
 # import psycopg2
-import textwrap
 import openai
 from llama_index.llms.groq import Groq
 
@@ -193,9 +189,21 @@ def add_document_to_db(doc: Document) -> None:
     hybrid_index.insert_nodes(nodes)
 
 
+def vecstore_metadata_error():
+    logger.error("No metadata found for document. Skipping.")
+    raise ValueError("No metadata found for document. Must include a kessler_pg_id.")
+
+
+# WARN: DANGEROUS
+
+
 def add_document_to_db_from_text(text: str, metadata: Optional[dict] = None) -> None:
-    if metadata is None:
-        metadata = {}
+    if metadata is None or metadata.get("kessler_pg_id") is None:
+        logger.error("No metadata found for document. Skipping.")
+        raise ValueError(
+            "No metadata found for document. Must include a kessler_pg_id."
+        )
+
     try:
         document = Document(text=str(text), metadata=metadata)
         add_document_to_db(document)
@@ -210,6 +218,7 @@ def add_document_to_db_from_text(text: str, metadata: Optional[dict] = None) -> 
 async def add_document_to_db_from_hash(hash_str: str) -> None:
     async def query_file_table_for_hash(hash: str) -> Tuple[any, any]:
         # Create an async engine and session
+        # TODO: Refactor this to use the same session or common interface
         engine = create_async_engine(async_postgres_connection_string, echo=True)
         async_session_maker = sessionmaker(
             engine, expire_on_commit=False, class_=AsyncSession
@@ -224,9 +233,9 @@ async def add_document_to_db_from_hash(hash_str: str) -> None:
             if file_row:
                 english_text = file_row.english_text
                 document_metadata = file_row.doc_metadata
+                document_metadata["kessler_pg_id"] = str(file_row.id)
             else:
-                english_text = None
-                document_metadata = None
+                vecstore_metadata_error()
 
             return (english_text, document_metadata)
 
