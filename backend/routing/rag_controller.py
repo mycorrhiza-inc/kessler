@@ -91,10 +91,6 @@ OS_GPU_COMPUTE_URL = os.environ["GPU_COMPUTE_URL"]
 OS_FILEDIR = Path("/files/")
 
 
-GROQ_API_KEY = os.environ["GROQ_API_KEY"]
-OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
-
-
 def validate_chat(chat_history: List[Dict[str, str]]) -> bool:
     if not isinstance(chat_history, list):
         return False
@@ -166,8 +162,9 @@ class RagController(Controller):
         self, files_repo: FileRepository, data: RAGQueryResponse
     ) -> str:
         model_name = data.model
+        # Doesnt Do anything atm
         if model_name is None:
-            model_name = "llama3-70b-8192"
+            model_name = "llama-70b"
         # TODO : Add support for custom model stuff.
         query = data.prompt
         response = create_rag_response_from_query(query)
@@ -189,5 +186,5 @@ class RagController(Controller):
         self,
         files_repo: FileRepository,
     ) -> str:
-        regenerate_vector_database_from_file_table()
+        await regenerate_vector_database_from_file_table()
         return ""
