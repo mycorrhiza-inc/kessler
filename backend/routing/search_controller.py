@@ -33,6 +33,8 @@ from models.files import (
     docstatus_index,
 )
 
+import json
+
 
 class SearchQuery(BaseModel):
     query: str
@@ -89,6 +91,12 @@ class SearchController(Controller):
 
         ids = []
         for r in res:
+            logger.info(r[0]["entity"]["_node_content"])
+            logger.info(type(r[0]["entity"]["_node_content"]))
+            test_dict = json.loads(r[0]["entity"]["_node_content"])
+            logger.info(test_dict)
+            logger.info(type(test_dict))
+            logger.info(test_dict["hash"])
             ids.append({"uuid": r[0]["entity"]["id"]})
         if only_uuid:
             return ids
@@ -114,4 +122,5 @@ class SearchController(Controller):
                 logger.error(
                     f"Encountered an error while attempting to get file {uuid_str} : {e}"
                 )
+
         return files
