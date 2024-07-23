@@ -103,7 +103,7 @@ class SearchController(Controller):
         # TODO: Use an async map for this as soon as python gets that functionality or use an import
         async def get_file(uuid_str: str):
             uuid = UUID(uuid_str)
-            logger.info(uuid)
+            # logger.info(uuid)
             obj = await files_repo.get(uuid)
 
             type_adapter = TypeAdapter(FileSchema)
