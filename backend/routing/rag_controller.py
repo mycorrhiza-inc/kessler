@@ -1,4 +1,5 @@
 from rag.llamaindex import (
+    get_llm_from_model_str,
     create_rag_response_from_query,
     regenerate_vector_database_from_file_table,
     add_document_to_db_from_text,
@@ -136,29 +137,8 @@ class RagController(Controller):
         chat_history = force_conform_chat(chat_history)
         assert validate_chat(chat_history), chat_history
         llama_chat_history = sanitzie_chathistory_llamaindex(chat_history)
-        if model_name in ["llama-8b", "llama-3.1-8b-instant"]:
-            actual_name = "llama-3.1-8b-instant"
-            groq_llm = Groq(
-                model=actual_name, request_timeout=60.0, api_key=GROQ_API_KEY
-            )
-            response = groq_llm.chat(llama_chat_history)
-        if model_name in ["llama-70b", "llama3-70b-8192", "llama-3.1-70b-versatile"]:
-            actual_name = "llama3.1-70b-versatile"
-            groq_llm = Groq(
-                model=actual_name, request_timeout=60.0, api_key=GROQ_API_KEY
-            )
-            response = groq_llm.chat(llama_chat_history)
-        if model_name in ["llama-405b", "llama-3.1-405b-reasoning"]:
-            actual_name = "llama-3.1-405b-reasoning"
-            groq_llm = Groq(
-                model=actual_name, request_timeout=60.0, api_key=GROQ_API_KEY
-            )
-            response = groq_llm.chat(llama_chat_history)
-        if model_name in ["gpt-4o"]:
-            openai_llm = OpenAI(
-                model=model_name, request_timeout=60.0, api_key=OPENAI_API_KEY
-            )
-            response = openai_llm.chat(llama_chat_history)
+        chosen_llm = get_llm_from_model_str(model_name)
+        response = chosen_llm.chat(llama_chat_history)
         str_response = str(response)
 
         def remove_prefixes(input_string: str) -> str:
