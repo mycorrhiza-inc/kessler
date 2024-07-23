@@ -1,6 +1,8 @@
 from typing import Tuple
 from pathlib import Path
 
+from yaml import Mark
+
 
 from .niclib import rand_string
 
@@ -19,6 +21,8 @@ import os
 
 import aiohttp
 import asyncio
+
+from pydantic import BaseModel
 
 OS_TMPDIR = Path(os.environ["TMPDIR"])
 DATALAB_API_KEY = os.environ["DATALAB_API_KEY"]
@@ -58,6 +62,41 @@ def downsample_audio(
 
 
 MARKER_ENDPOINT_URL = os.environ["MARKER_ENDPOINT_URL"]
+
+
+global_marker_server_urls = [MARKER_ENDPOINT_URL]
+
+
+class MarkerServer(BaseModel):
+    url: str
+    connections: int = 0
+
+
+def create_server_list(urls: List[str]) -> List[MarkerServer]:
+    return_servers = []
+    for url in urls:
+        return_servers.append(MarkerServer(url=url, connections=0))
+    return return_servers
+
+
+global_marker_servers = create_server_list(global_marker_server_urls)
+
+
+def get_least_connection() -> MarkerServer:
+
+    def least_connection_list(marker_servers: List[MarkerServer]) -> MarkerServer:
+        min_conns = 999999
+        min_conn_server = None
+        for marker_server in marker_servers:
+            if marker_server.connections < min_conns:
+                min_conn_server = marker_server
+                min_conns = marker_server.min_conns
+        if min_conn_server is None:
+            raise Exception("Marker Server Not Found in List")
+        return min_conn_server
+
+    global global_marker_servers
+    return least_connection_list(global_marker_servers)
 
 
 class GPUComputeEndpoint:
@@ -138,7 +177,9 @@ class GPUComputeEndpoint:
                                 "Polling for marker API result timed out"
                             )
         else:
-            url = self.marker_endpoint_url + "/api/v1/marker"
+            server = get_least_connection()
+            base_url = server.url
+            marker_url_endpoint = base_url + "/api/v1/marker"
 
             async with aiohttp.ClientSession() as session:
                 with aiohttp.MultipartWriter() as mpwriter:
@@ -161,7 +202,9 @@ class GPUComputeEndpoint:
                             "paginate": (None, True),
                         }
                         # data = {"langs": "en", "force_ocr": "false", "paginate": "true"}
-                        with requests.post(url, files=files) as response:
+                        with requests.post(
+                            marker_url_endpoint, files=files
+                        ) as response:
                             response.raise_for_status()
                             # await the json if async
                             data = response.json()
@@ -180,6 +223,7 @@ class GPUComputeEndpoint:
 
                             # Polling for the result
                             max_polls = 300
+                            server.connections = server.connections + 1
                             for _ in range(max_polls):
                                 await asyncio.sleep(2)
                                 async with session.get(
@@ -189,8 +233,9 @@ class GPUComputeEndpoint:
                                     poll_data = await poll_response.json()
 
                                     if poll_data["status"] == "complete":
+                                        server.connections = server.connections - 1
                                         return poll_data["markdown"]
-
+                            server.connections = server.connections - 1
                             raise TimeoutError(
                                 "Polling for marker API result timed out"
                             )
