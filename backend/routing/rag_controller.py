@@ -1,4 +1,5 @@
 from rag.llamaindex import (
+    get_llm_from_model_str,
     create_rag_response_from_query,
     regenerate_vector_database_from_file_table,
     add_document_to_db_from_text,
@@ -90,10 +91,6 @@ OS_GPU_COMPUTE_URL = os.environ["GPU_COMPUTE_URL"]
 OS_FILEDIR = Path("/files/")
 
 
-GROQ_API_KEY = os.environ["GROQ_API_KEY"]
-OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
-
-
 def validate_chat(chat_history: List[Dict[str, str]]) -> bool:
     if not isinstance(chat_history, list):
         return False
@@ -131,21 +128,13 @@ class RagController(Controller):
         if model_name == "":
             model_name = None
         if model_name is None:
-            model_name = "llama3-70b-8192"
+            model_name = "llama-70b"
         chat_history = data.chat_history
         chat_history = force_conform_chat(chat_history)
         assert validate_chat(chat_history), chat_history
         llama_chat_history = sanitzie_chathistory_llamaindex(chat_history)
-        if model_name in ["llama3-70b-8192"]:
-            groq_llm = Groq(
-                model=model_name, request_timeout=60.0, api_key=GROQ_API_KEY
-            )
-            response = groq_llm.chat(llama_chat_history)
-        if model_name in ["gpt-4o"]:
-            openai_llm = OpenAI(
-                model=model_name, request_timeout=60.0, api_key=OPENAI_API_KEY
-            )
-            response = openai_llm.chat(llama_chat_history)
+        chosen_llm = get_llm_from_model_str(model_name)
+        response = chosen_llm.chat(llama_chat_history)
         str_response = str(response)
 
         def remove_prefixes(input_string: str) -> str:
@@ -173,8 +162,9 @@ class RagController(Controller):
         self, files_repo: FileRepository, data: RAGQueryResponse
     ) -> str:
         model_name = data.model
+        # Doesnt Do anything atm
         if model_name is None:
-            model_name = "llama3-70b-8192"
+            model_name = "llama-70b"
         # TODO : Add support for custom model stuff.
         query = data.prompt
         response = create_rag_response_from_query(query)
@@ -196,5 +186,5 @@ class RagController(Controller):
         self,
         files_repo: FileRepository,
     ) -> str:
-        regenerate_vector_database_from_file_table()
+        await regenerate_vector_database_from_file_table()
         return ""

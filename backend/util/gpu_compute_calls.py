@@ -1,8 +1,10 @@
 from typing import Tuple
 from pathlib import Path
 
+from yaml import Mark
 
-from .niclib import *
+
+from .niclib import rand_string
 
 from .llm_prompts import LLM
 
@@ -19,6 +21,8 @@ import os
 
 import aiohttp
 import asyncio
+
+from pydantic import BaseModel
 
 OS_TMPDIR = Path(os.environ["TMPDIR"])
 DATALAB_API_KEY = os.environ["DATALAB_API_KEY"]
@@ -60,6 +64,51 @@ def downsample_audio(
 MARKER_ENDPOINT_URL = os.environ["MARKER_ENDPOINT_URL"]
 
 
+global_marker_server_urls = ["http://uttu-fedora.tail4a273.ts.net:2718"]
+
+
+class MarkerServer(BaseModel):
+    url: str
+    connections: int = 0
+
+
+def create_server_list(urls: List[str]) -> List[MarkerServer]:
+    return_servers = []
+    for url in urls:
+        return_servers.append(MarkerServer(url=url, connections=0))
+    return return_servers
+
+
+global_marker_servers = create_server_list(global_marker_server_urls)
+
+
+def get_total_connections() -> int:
+    def total_connections_list(marker_servers: List[MarkerServer]) -> int:
+        total = 0
+        for marker_server in marker_servers:
+            total = total + marker_server.connections
+        return total
+
+    global global_marker_servers
+    return total_connections_list(global_marker_servers)
+
+
+def get_least_connection() -> MarkerServer:
+    def least_connection_list(marker_servers: List[MarkerServer]) -> MarkerServer:
+        min_conns = 999999
+        min_conn_server = None
+        for marker_server in marker_servers:
+            if marker_server.connections < min_conns:
+                min_conn_server = marker_server
+                min_conns = marker_server.min_conns
+        if min_conn_server is None:
+            raise Exception("Marker Server Not Found in List")
+        return min_conn_server
+
+    global global_marker_servers
+    return least_connection_list(global_marker_servers)
+
+
 class GPUComputeEndpoint:
     def __init__(
         self,
@@ -76,7 +125,7 @@ class GPUComputeEndpoint:
     async def transcribe_pdf(
         self, filepath: Path, external_process: bool = True
     ) -> str:
-        if external_process:
+        if False:
             url = "https://www.datalab.to/api/v1/marker"
             self.logger.info(
                 "Calling datalab api with key beginning with"
@@ -138,19 +187,71 @@ class GPUComputeEndpoint:
                                 "Polling for marker API result timed out"
                             )
         else:
-            url = self.marker_endpoint_url + "/process_pdf_upload"
-            with filepath.open("rb") as file:
-                files = {
-                    "file": (filepath.name, file, "application/octet-stream"),
-                }
-                self.logger.info(
-                    f"Contacting server at {self.marker_endpoint_url} to process pdf."
-                )
+            server = get_least_connection()
+            base_url = server.url
+            marker_url_endpoint = base_url + "/api/v1/marker"
 
-                async with aiohttp.ClientSession() as session:
-                    async with session.post(url, data={"file": file}) as response:
-                        response.raise_for_status()
-                        return await response.text()
+            async with aiohttp.ClientSession() as session:
+                with aiohttp.MultipartWriter() as mpwriter:
+                    with open(filepath, "rb") as file:
+                        # # Append the file
+                        # file_part = mpwriter.append(file)
+                        # file_part.set_content_disposition(
+                        #     "attachment", filename=filepath.name + ".pdf"
+                        # )
+                        # file_part.headers[aiohttp.hdrs.CONTENT_TYPE] = "application/pdf"
+
+                        # # Append other form data
+                        # mpwriter.append_form(
+                        #     [("langs", "en"), ("force_ocr", "false"), ("paginate", "true")]
+                        # )
+
+                        # async with session.post(url, data=mpwriter, headers=headers) as response:
+                        files = {
+                            "file": (filepath.name + ".pdf", file, "application/pdf"),
+                            # "paginate": (None, True),
+                        }
+                        # data = {"langs": "en", "force_ocr": "false", "paginate": "true"}
+                        with requests.post(
+                            marker_url_endpoint, files=files
+                        ) as response:
+                            response.raise_for_status()
+                            # await the json if async
+                            data = response.json()
+                            request_check_url_leaf = data.get("request_check_url_leaf")
+
+                            if request_check_url_leaf is None:
+                                raise Exception(
+                                    "Failed to get request_check_url from marker API response"
+                                )
+                            request_check_url = (
+                                self.marker_endpoint_url + request_check_url_leaf
+                            )
+                            self.logger.info(
+                                "Got response from marker server, polling to see when file is finished processing."
+                            )
+
+                            # Polling for the result
+                            max_polls = 300
+                            server.connections = server.connections + 1
+                            for _ in range(max_polls):
+                                await asyncio.sleep(2)
+                                async with session.get(
+                                    request_check_url
+                                ) as poll_response:
+                                    try:
+                                        poll_response.raise_for_status()
+                                        poll_data = await poll_response.json()
+                                        if poll_data["status"] == "complete":
+                                            server.connections = server.connections - 1
+                                            return poll_data["markdown"]
+                                    except Exception as e:
+                                        server.connections = server.connections - 1
+                                        raise e
+                            server.connections = server.connections - 1
+                            raise TimeoutError(
+                                "Polling for marker API result timed out"
+                            )
 
     def llm_nonlocal_raw_call(
         self, msg_history: list[dict], model_name: Optional[str]

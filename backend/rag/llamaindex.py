@@ -21,6 +21,7 @@ from llama_index.core.node_parser import SentenceWindowNodeParser
 # import psycopg2
 import openai
 from llama_index.llms.groq import Groq
+from llama_index.llms.openai import OpenAI
 
 
 from sqlalchemy import make_url
@@ -35,6 +36,8 @@ from llama_index.vector_stores.milvus import MilvusVectorStore
 from llama_index.core import Document
 
 
+from constants import OPENAI_API_KEY, OCTOAI_API_KEY, GROQ_API_KEY
+
 logger = logging.getLogger()
 
 
@@ -43,22 +46,39 @@ logger.setLevel(logging.DEBUG)
 handler = logging.StreamHandler(sys.stderr)
 
 
+def get_llm_from_model_str(model_name: str):
+    if model_name in ["llama-8b", "llama-3.1-8b-instant"]:
+        actual_name = "llama-3.1-8b-instant"
+        return Groq(model=actual_name, request_timeout=60.0, api_key=GROQ_API_KEY)
+    if model_name in [
+        "llama-70b",
+        "llama3-70b-8192",
+        "llama-3.1-70b-versatile",
+    ]:
+        actual_name = "llama3.1-70b-versatile"
+        return Groq(model=actual_name, request_timeout=60.0, api_key=GROQ_API_KEY)
+    if model_name in ["llama-405b", "llama-3.1-405b-reasoning"]:
+        actual_name = "llama-3.1-405b-reasoning"
+        return Groq(model=actual_name, request_timeout=60.0, api_key=GROQ_API_KEY)
+    if model_name in ["gpt-4o"]:
+        return OpenAI(model=model_name, request_timeout=60.0, api_key=OPENAI_API_KEY)
+    else:
+        raise Exception("Model String Invalid or Not Supported")
+
+
 # Uncomment to see debug logs
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 logging.getLogger().addHandler(logging.StreamHandler(stream=sys.stdout))
 
 
-GROQ_API_KEY = os.environ["GROQ_API_KEY"]
-Settings.llm = Groq(
-    model="llama3-70b-8192", request_timeout=360.0, api_key=GROQ_API_KEY
-)
+openai.api_key = OPENAI_API_KEY
 
-openai.api_key = os.environ["OPENAI_API_KEY"]
-OCTOAI_API_KEY = os.environ["OCTOAI_API_KEY"]
+
 # TODO : Change embedding model to use not openai.
 # Settings.embed_model = OllamaEmbedding(model_name="nomic-embed-text")
 Settings.embed_model = OctoAIEmbedding(api_key=OCTOAI_API_KEY)
-
+Settings.llm = get_llm_from_model_str("gpt-4o")
+# Settings.llm = get_llm_from_model_str("llama-70b")
 connection_string_unknown = os.environ["DATABASE_CONNECTION_STRING"]
 
 # FIXME : Go ahead and try to figure out how to get this to work asynchronously assuming that is an important thing to do.
