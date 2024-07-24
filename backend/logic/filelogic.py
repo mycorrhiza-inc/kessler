@@ -171,6 +171,7 @@ async def process_file_raw(
 ):
     if stop_at is None:
         stop_at = DocumentStatus.completed
+    kessler_pg_id = obj.id
     logger.info(type(obj))
     logger.info(obj)
     current_stage = DocumentStatus(obj.stage)
@@ -197,7 +198,8 @@ async def process_file_raw(
             )
         )[0]
         logger.info(
-            f"Successfully processed original text: {processed_original_text[0:20]}"
+            f"Successfully processed original text: {
+                processed_original_text[0:20]}"
         )
         # FIXME: We should probably come up with a better backup protocol then doing everything with hashes
         mdextract.backup_processed_text(
@@ -258,6 +260,7 @@ async def process_file_raw(
             return return_metadata
 
         searchable_metadata = generate_searchable_metadata(doc_metadata)
+        searchable_metadata["kessler_pg_id"] = kessler_pg_id
         try:
             add_document_to_db_from_text(obj.english_text, searchable_metadata)
         except Exception as e:

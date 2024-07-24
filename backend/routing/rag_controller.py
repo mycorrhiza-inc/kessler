@@ -180,7 +180,7 @@ class RagController(Controller):
         response = create_rag_response_from_query(query)
         return response
 
-    @post(path="/rag/manaul_add_doc_to_vecdb")
+    @post(path="/dangerous/rag/manaul_add_doc_to_vecdb")
     async def manual_add_doc_vecdb(
         self, files_repo: FileRepository, data: ManualDocument
     ) -> None:

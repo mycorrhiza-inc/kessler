@@ -450,7 +450,7 @@ class FileController(Controller):
             except Exception as e:
                 return f"issue: \n{e}"
             try:
-                meta["uid"] = str(new_file.id)
+                meta["kessler_pg_id"] = str(new_file.id)
                 add_document_to_db_from_text(text=restfile, metadata=meta)
             except Exception as e:
                 request.logger.error(e)
