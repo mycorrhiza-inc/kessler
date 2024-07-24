@@ -64,7 +64,7 @@ def downsample_audio(
 MARKER_ENDPOINT_URL = os.environ["MARKER_ENDPOINT_URL"]
 
 
-global_marker_server_urls = [MARKER_ENDPOINT_URL]
+global_marker_server_urls = ["http://uttu-fedora.tail4a273.ts.net:2718"]
 
 
 class MarkerServer(BaseModel):
@@ -82,8 +82,18 @@ def create_server_list(urls: List[str]) -> List[MarkerServer]:
 global_marker_servers = create_server_list(global_marker_server_urls)
 
 
-def get_least_connection() -> MarkerServer:
+def get_total_connections() -> int:
+    def total_connections_list(marker_servers: List[MarkerServer]) -> int:
+        total = 0
+        for marker_server in marker_servers:
+            total = total + marker_server.connections
+        return total
 
+    global global_marker_servers
+    return total_connections_list(global_marker_servers)
+
+
+def get_least_connection() -> MarkerServer:
     def least_connection_list(marker_servers: List[MarkerServer]) -> MarkerServer:
         min_conns = 999999
         min_conn_server = None
@@ -199,7 +209,7 @@ class GPUComputeEndpoint:
                         # async with session.post(url, data=mpwriter, headers=headers) as response:
                         files = {
                             "file": (filepath.name + ".pdf", file, "application/pdf"),
-                            "paginate": (None, True),
+                            # "paginate": (None, True),
                         }
                         # data = {"langs": "en", "force_ocr": "false", "paginate": "true"}
                         with requests.post(
@@ -229,12 +239,15 @@ class GPUComputeEndpoint:
                                 async with session.get(
                                     request_check_url
                                 ) as poll_response:
-                                    poll_response.raise_for_status()
-                                    poll_data = await poll_response.json()
-
-                                    if poll_data["status"] == "complete":
+                                    try:
+                                        poll_response.raise_for_status()
+                                        poll_data = await poll_response.json()
+                                        if poll_data["status"] == "complete":
+                                            server.connections = server.connections - 1
+                                            return poll_data["markdown"]
+                                    except Exception as e:
                                         server.connections = server.connections - 1
-                                        return poll_data["markdown"]
+                                        raise e
                             server.connections = server.connections - 1
                             raise TimeoutError(
                                 "Polling for marker API result timed out"
