@@ -100,7 +100,7 @@ def get_least_connection() -> MarkerServer:
         for marker_server in marker_servers:
             if marker_server.connections < min_conns:
                 min_conn_server = marker_server
-                min_conns = marker_server.min_conns
+                min_conns = marker_server.connections
         if min_conn_server is None:
             raise Exception("Marker Server Not Found in List")
         return min_conn_server
@@ -224,30 +224,33 @@ class GPUComputeEndpoint:
                                 raise Exception(
                                     "Failed to get request_check_url from marker API response"
                                 )
-                            request_check_url = (
-                                self.marker_endpoint_url + request_check_url_leaf
-                            )
+                            request_check_url = base_url + request_check_url_leaf
                             self.logger.info(
-                                "Got response from marker server, polling to see when file is finished processing."
+                                f"Got response from marker server, polling to see when file is finished processing at url: {request_check_url}"
                             )
 
                             # Polling for the result
-                            max_polls = 300
+                            max_polls = 200
                             server.connections = server.connections + 1
                             for _ in range(max_polls):
-                                await asyncio.sleep(2)
-                                async with session.get(
-                                    request_check_url
-                                ) as poll_response:
-                                    try:
+                                try:
+                                    await asyncio.sleep(4)
+                                    async with session.get(
+                                        request_check_url
+                                    ) as poll_response:
                                         poll_response.raise_for_status()
                                         poll_data = await poll_response.json()
+                                        self.logger.info(poll_data)
                                         if poll_data["status"] == "complete":
                                             server.connections = server.connections - 1
                                             return poll_data["markdown"]
-                                    except Exception as e:
-                                        server.connections = server.connections - 1
-                                        raise e
+                                        if poll_data["status"] != "processing":
+                                            raise ValueError(
+                                                f"PDF Processing Failed. Status was unrecognized {poll_data['status']}"
+                                            )
+                                except Exception as e:
+                                    server.connections = server.connections - 1
+                                    raise e
                             server.connections = server.connections - 1
                             raise TimeoutError(
                                 "Polling for marker API result timed out"

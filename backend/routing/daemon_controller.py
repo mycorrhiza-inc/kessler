@@ -206,18 +206,17 @@ class DaemonController(Controller):
             stop_at=stop_at,
             regenerate_from=regenerate_from,
         )
-
-    @post(path="/daemon/process_all_files")
-    async def process_all_background(
+    async def process_query_background_raw(
         self,
         files_repo: FileRepository,
-        request: Request,
+        passthrough_request: Request,
         data: QueryData,
         stop_at: Optional[str] = None,
         regenerate_from: Optional[str] = None,
         max_documents: Optional[int] = None,
+        randomize: bool = False
     ) -> None:
-        logger = request.logger
+        logger = passthrough_request.logger
         logger.info("Beginning to process all files.")
         query = data
         # TODO: Dryify with query code from file_controller
@@ -235,22 +234,52 @@ class DaemonController(Controller):
         logger.info(f"{len(results)} results")
         # type_adapter = TypeAdapter(list[FileSchema])
         # validated_results = type_adapter.validate_python(results)
+        if randomize:
+            results.shuffle()
         return await self.bulk_process_file_background(
             files_repo=files_repo,
-            passthrough_request=request,
+            passthrough_request=passthrough_request,
             files=results,
             stop_at=stop_at,
             regenerate_from=regenerate_from,
             max_documents=max_documents,
         )
+    @post(path="/daemon/process_all_files")
+    async def process_all_background(
+        self,
+        files_repo: FileRepository,
+        request: Request,
+        data: QueryData,
+        stop_at: Optional[str] = None,
+        regenerate_from: Optional[str] = None,
+        max_documents: Optional[int] = None,
+        randomize: bool = False
+    ) -> None:
+        return await self.process_query_background_raw( 
+            files_repo=files_repo,
+            passthrough_request=request,
+            data=data,
+            stop_at=stop_at,
+            regenerate_from=regenerate_from,
+            max_documents=max_documents,
+            randomize=randomize 
+        )
 
+    # TODO: Refactor so you dont have an open connection all the time.
     @post(path="/dangerous/daemon/start_background_processing_daemon")
     async def start_background_processing_daemon(
         self,
         files_repo: FileRepository,
         request: Request,
+        stop_at : Optional[str],
+        documents_per_run : Optional[int],
+        document_threshold : Optional[int]
             ) -> str:
         logger = request.logger
+        if documents_per_run is None:
+            documents_per_run = 10
+        if document_threshold is None:
+            document_threshold = 10
         global is_daemon_running
         if is_daemon_running:
             return "Daemon is already running, please restart to cease operation."
@@ -258,19 +287,15 @@ class DaemonController(Controller):
         while True:
             try:
                 await asyncio.sleep(30)
-                if get_total_connections() < 10:
-                    results = await files_repo.list()
-                    # type_adapter = TypeAdapter(list[FileSchema])
-                    # validated_results = type_adapter.validate_python(results)
-                    await self.bulk_process_file_background(
+                if get_total_connections() < document_threshold:
+                    await self.process_query_background_raw( 
                         files_repo=files_repo,
                         passthrough_request=request,
-                        files=results,
-                        stop_at="stage3",
-                        max_documents=10,
+                        data=QueryData(),
+                        stop_at=stop_at,
+                        max_documents=documents_per_run,
+                        randomize=True
                     )
-
-
             except Exception as e:
                 is_daemon_running = False
                 raise e
