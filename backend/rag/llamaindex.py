@@ -14,6 +14,7 @@ from models.files import FileModel
 from llama_index.core import StorageContext
 from llama_index.core import VectorStoreIndex
 from llama_index.core import Settings
+from llama_index.core.llms import ChatMessage
 
 from llama_index.core.node_parser import SentenceWindowNodeParser
 

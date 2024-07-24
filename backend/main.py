@@ -19,6 +19,8 @@ from routing.search_controller import SearchController
 from routing.rag_controller import RagController
 
 
+from util.gpu_compute_calls import get_total_connections
+
 from routing.daemon_controller import DaemonController, process_document
 
 logger = logging.getLogger(__name__)

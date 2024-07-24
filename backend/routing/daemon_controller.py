@@ -69,6 +69,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from routing.file_controller import QueryData
 
+from util.gpu_compute_calls import get_total_connections
+
 # class UUIDEncoder(json.JSONEncoder):
 #     def default(self, obj):
 #         if isinstance(obj, UUID):
@@ -103,7 +105,7 @@ if "postgresql://" in postgres_connection_string:
 #         "postgresql+asyncpg://scott:tiger@localhost/test",
 #         echo=True,
 #     )
-
+is_daemon_running = False
 
 async def create_global_connection():
     global conn
@@ -241,3 +243,38 @@ class DaemonController(Controller):
             regenerate_from=regenerate_from,
             max_documents=max_documents,
         )
+
+    @post(path="/dangerous/daemon/start_background_processing_daemon")
+    async def start_background_processing_daemon(
+        self,
+        files_repo: FileRepository,
+        request: Request,
+            ) -> str:
+        logger = request.logger
+        global is_daemon_running
+        if is_daemon_running:
+            return "Daemon is already running, please restart to cease operation."
+        is_daemon_running = True
+        while True:
+            try:
+                await asyncio.sleep(30)
+                if get_total_connections() < 10:
+                    results = await files_repo.list()
+                    # type_adapter = TypeAdapter(list[FileSchema])
+                    # validated_results = type_adapter.validate_python(results)
+                    await self.bulk_process_file_background(
+                        files_repo=files_repo,
+                        passthrough_request=request,
+                        files=results,
+                        stop_at="stage3",
+                        max_documents=10,
+                    )
+
+
+            except Exception as e:
+                is_daemon_running = False
+                raise e
+
+        return "Code is in an unreachable state."
+
+
