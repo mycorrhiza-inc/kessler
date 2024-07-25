@@ -386,7 +386,9 @@ class FileController(Controller):
             obj.stage = regenerate_from.value
 
         if docstatus_index(DocumentStatus(obj.stage)) < docstatus_index(stop_at):
-            await process_file_raw(obj, files_repo, request.logger, stop_at)
+            await process_file_raw(
+                obj, files_repo, request.logger, stop_at, priority=True
+            )
         # TODO : Return Response code and response message
         return self.validate_and_jsonify(obj)
 

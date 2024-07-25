@@ -106,7 +106,7 @@ async def process_document(doc_id_str: str, stop_at: str) -> None:
         await conn.run_sync(UUIDBase.metadata.create_all)
     session = AsyncSession(engine)
     files_repo_2 = await provide_files_repo(session)
-    await process_fileid_raw(doc_id_str, files_repo_2, logger, stop_at)
+    await process_fileid_raw(doc_id_str, files_repo_2, logger, stop_at,priority=False)
     await session.close()
 
 

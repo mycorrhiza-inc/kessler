@@ -125,11 +125,7 @@ async def add_file_raw(
             short_summary=None,
         )
         logger.info("new file:{file}".format(file=new_file.to_dict()))
-        try:
-            new_file = await files_repo.add(new_file)
-        except Exception as e:
-            logger.info(e)
-            return e
+        new_file = await files_repo.add(new_file)
         logger.info("added file!~")
         await files_repo.session.commit()
         logger.info("commited file to DB")
@@ -146,7 +142,9 @@ async def add_file_raw(
         logger.info("Processing File")
         # Removing the await here, SHOULD allow an instant return to the user, but also have python process the file in the background hopefully!
         # TODO : It doesnt work, for now its fine and also doesnt compete with the daemon for resources. Fix later
-        await process_file_raw(new_file, files_repo, logger, "")
+        # TODO : Add passthrough for low priority file processing with a daemon in the background
+        # since this is a sync main thread call, give it priority
+        await process_file_raw(new_file, files_repo, logger, None, True)
 
     return new_file
 
@@ -156,11 +154,12 @@ async def process_fileid_raw(
     files_repo: FileRepository,
     logger: Any,
     stop_at: Optional[DocumentStatus] = None,
+    priority : bool = True,
 ):
     file_uuid = UUID(file_id_str)
     logger.info(file_uuid)
     obj = await files_repo.get(file_uuid)
-    return await process_file_raw(obj, files_repo, logger, stop_at)
+    return await process_file_raw(obj, files_repo, logger=logger, stop_at=stop_at, priority=priority)
 
 
 async def process_file_raw(
@@ -168,6 +167,7 @@ async def process_file_raw(
     files_repo: FileRepository,
     logger: Any,
     stop_at: Optional[DocumentStatus] = None,
+    priority : bool = True,
 ):
     if stop_at is None:
         stop_at = DocumentStatus.completed
@@ -176,7 +176,7 @@ async def process_file_raw(
     logger.info(obj)
     current_stage = DocumentStatus(obj.stage)
     logger.info(obj.doctype)
-    mdextract = MarkdownExtractor(logger, OS_TMPDIR)
+    mdextract = MarkdownExtractor(logger, OS_TMPDIR, priority=priority)
     doc_metadata = json.loads(obj.mdata)
 
     response_code, response_message = (
