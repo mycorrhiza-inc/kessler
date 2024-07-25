@@ -67,7 +67,7 @@ from litestar.contrib.sqlalchemy.base import UUIDBase
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from logic.databaselogic import QueryData, querydata_to_filters
+from logic.databaselogic import QueryData, querydata_to_filters_kwargs
 
 from util.gpu_compute_calls import get_total_connections
 
@@ -218,7 +218,7 @@ class DaemonController(Controller):
     ) -> None:
         logger = passthrough_request.logger
         logger.info("Beginning to process all files.")
-        query = data
+        filters = querydata_to_filters_kwargs(data)
 
         results = await files_repo.list(**filters)
         logger.info(f"{len(results)} results")

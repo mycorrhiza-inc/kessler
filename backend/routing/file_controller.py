@@ -60,7 +60,7 @@ from enum import Enum
 
 from sqlalchemy import and_
 
-from logic.databaselogic import QueryData
+from logic.databaselogic import QueryData, querydata_to_filters
 
 
 class UUIDEncoder(json.JSONEncoder):
@@ -247,17 +247,8 @@ class FileController(Controller):
     async def query_all_files_raw(
         self, files_repo: FileRepository, query: QueryData, logger: Any
     ) -> List[FileSchema]:
-        filters = {}
-        if query.match_name is not None:
-            filters["name"] = query.match_name
-        if query.match_source is not None:
-            filters["source"] = query.match_source
-        if query.match_doctype is not None:
-            filters["doctype"] = query.match_doctype
-        if query.match_stage is not None:
-            filters["stage"] = query.match_stage
-
-        results = await files_repo.list(**filters)
+        filters = querydata_to_filters(query)
+        results = await files_repo.list(*filters)
         # assert isinstance(results, List[FileModel])
         # Turns the file model in sqlalchemy into an easy to understand return type
         logger.info(f"{len(results)} results")
