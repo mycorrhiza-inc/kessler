@@ -71,4 +71,4 @@ def filters_docstatus_processing(
         ):
             valid_values.append(status.value)
 
-    return [CollectionFilter(field_name="source", values=valid_values)]
+    return [CollectionFilter(field_name="stage", values=valid_values)]

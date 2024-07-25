@@ -128,6 +128,12 @@ class DaemonController(Controller):
         logger = passthrough_request.logger
         if max_documents is None:
             max_documents = -1
+        if files is None:
+            logger.info("List of files to process was empty")
+            return None
+        if len(files) == 0:
+            logger.info("List of files to process was empty")
+            return None
         for file in files:
             if max_documents == 0:
                 logger.info("Reached maxiumum file limit, exiting.")
@@ -199,13 +205,14 @@ class DaemonController(Controller):
         stop_at = DocumentStatus(stop_at)
         regenerate_from = DocumentStatus(regenerate_from)
         filters = querydata_to_filters_strict(data) + filters_docstatus_processing(stop_at=stop_at,regenerate_from=regenerate_from)
+        logger.info(filters)
 
         results = await files_repo.list(*filters)
-        logger.info(f"{len(results)} results")
         # type_adapter = TypeAdapter(list[FileSchema])
         # validated_results = type_adapter.validate_python(results)
         if randomize:
-            results = random.shuffle(results)
+            random.shuffle(results)
+        logger.info(f"{len(results)} results")
         return await self.bulk_process_file_background(
             files_repo=files_repo,
             passthrough_request=passthrough_request,
