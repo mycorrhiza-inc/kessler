@@ -70,6 +70,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from logic.databaselogic import QueryData, querydata_to_filters_kwargs
 
 from util.gpu_compute_calls import get_total_connections
+import random
 
 # class UUIDEncoder(json.JSONEncoder):
 #     def default(self, obj):
@@ -225,7 +226,7 @@ class DaemonController(Controller):
         # type_adapter = TypeAdapter(list[FileSchema])
         # validated_results = type_adapter.validate_python(results)
         if randomize:
-            results.shuffle()
+            results = random.shuffle(results)
         return await self.bulk_process_file_background(
             files_repo=files_repo,
             passthrough_request=passthrough_request,
