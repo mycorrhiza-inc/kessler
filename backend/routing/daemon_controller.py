@@ -67,7 +67,7 @@ from litestar.contrib.sqlalchemy.base import UUIDBase
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from routing.file_controller import QueryData
+from logic.databaselogic import QueryData, querydata_to_filters
 
 from util.gpu_compute_calls import get_total_connections
 
@@ -219,16 +219,6 @@ class DaemonController(Controller):
         logger = passthrough_request.logger
         logger.info("Beginning to process all files.")
         query = data
-        # TODO: Dryify with query code from file_controller
-        filters = {}
-        if query.match_name is not None:
-            filters["name"] = query.match_name
-        if query.match_source is not None:
-            filters["source"] = query.match_source
-        if query.match_doctype is not None:
-            filters["doctype"] = query.match_doctype
-        if query.match_stage is not None:
-            filters["stage"] = query.match_stage
 
         results = await files_repo.list(**filters)
         logger.info(f"{len(results)} results")
@@ -265,7 +255,26 @@ class DaemonController(Controller):
             randomize=randomize 
         )
 
-    # TODO: Refactor so you dont have an open connection all the time.
+    # # TODO: Refactor so you dont have an open connection all the time.
+    # async def background_daemon():
+    #     global is_daemon_running
+    #     is_daemon_running = True
+    #     while True:
+    #         try:
+    #             await asyncio.sleep(30)
+    #             if get_total_connections() < document_threshold:
+    #                 await self.process_query_background_raw( 
+    #                     files_repo=files_repo,
+    #                     passthrough_request=request,
+    #                     data=QueryData(),
+    #                     stop_at=stop_at,
+    #                     max_documents=documents_per_run,
+    #                     randomize=True
+    #                 )
+    #         except Exception as e:
+    #             is_daemon_running = False
+    #             raise e
+
     @post(path="/dangerous/daemon/start_background_processing_daemon")
     async def start_background_processing_daemon(
         self,
@@ -283,7 +292,6 @@ class DaemonController(Controller):
         global is_daemon_running
         if is_daemon_running:
             return "Daemon is already running, please restart to cease operation."
-        is_daemon_running = True
         while True:
             try:
                 await asyncio.sleep(30)

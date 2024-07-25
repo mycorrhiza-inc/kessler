@@ -60,6 +60,8 @@ from enum import Enum
 
 from sqlalchemy import and_
 
+from logic.databaselogic import QueryData
+
 
 class UUIDEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -92,13 +94,6 @@ class FileCreate(BaseModel):
 
 class FileUpload(BaseModel):
     message: str
-
-
-class QueryData(BaseModel):
-    match_name: Optional[str] = None
-    match_source: Optional[str] = None
-    match_doctype: Optional[str] = None
-    match_stage: Optional[str] = None
 
 
 class IndexFileRequest(BaseModel):
