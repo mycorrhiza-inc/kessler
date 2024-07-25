@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional, Any
 from advanced_alchemy.filters import SearchFilter, CollectionFilter
+from models.files import DocumentStatus, docstatus_index
 
 
 class QueryData(BaseModel):
@@ -10,7 +11,7 @@ class QueryData(BaseModel):
     match_stage: Optional[str] = None
 
 
-def querydata_to_filters(query: QueryData) -> Any:
+def querydata_to_filters(query: QueryData) -> list:
     filters = []
     if query.match_name is not None:
         filters.append(SearchFilter(field_name="name", value=query.match_name))
@@ -27,14 +28,47 @@ def querydata_to_filters(query: QueryData) -> Any:
     return filters
 
 
-def querydata_to_filters_kwargs(query: QueryData) -> dict:
-    filters = {}
+def querydata_to_filters_strict(query: QueryData) -> list:
+    filters = []
     if query.match_name is not None:
-        filters["name"] = query.match_name
+        filters.append(CollectionFilter(field_name="name", values=[query.match_name]))
     if query.match_source is not None:
-        filters["source"] = query.match_source
+        filters.append(
+            CollectionFilter(field_name="source", values=[query.match_source])
+        )
     if query.match_doctype is not None:
-        filters["doctype"] = query.match_doctype
+        filters.append(
+            CollectionFilter(field_name="doctype", values=[query.match_doctype])
+        )
     if query.match_stage is not None:
-        filters["stage"] = query.match_stage
+        filters.append(CollectionFilter(field_name="stage", values=[query.match_stage]))
     return filters
+
+
+# def querydata_to_filters_kwargs(query: QueryData) -> dict:
+#     filters = {}
+#     if query.match_name is not None:
+#         filters["name"] = query.match_name
+#     if query.match_source is not None:
+#         filters["source"] = query.match_source
+#     if query.match_doctype is not None:
+#         filters["doctype"] = query.match_doctype
+#     if query.match_stage is not None:
+#         filters["stage"] = query.match_stage
+#     return filters
+
+
+def filters_docstatus_processing(
+    stop_at: DocumentStatus, regenerate_from: DocumentStatus
+) -> list:
+    stop_index = docstatus_index(stop_at)
+    regen_index = docstatus_index(regenerate_from)
+    valid_values = []
+    for status in DocumentStatus:
+        istatus = docstatus_index(status)
+        if (istatus < stop_index) or (
+            stop_index > regen_index and istatus > regen_index
+        ):
+            valid_values.append(status.value)
+
+    return [CollectionFilter(field_name="source", values=valid_values)]

@@ -67,7 +67,7 @@ from litestar.contrib.sqlalchemy.base import UUIDBase
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from logic.databaselogic import QueryData, querydata_to_filters_kwargs
+from logic.databaselogic import QueryData, querydata_to_filters_strict , filters_docstatus_processing
 
 from util.gpu_compute_calls import get_total_connections
 import random
@@ -148,17 +148,11 @@ class DaemonController(Controller):
         files_repo: FileRepository,
         passthrough_request: Request,
         files: List[FileModel],
-        stop_at: Optional[str] = None,
-        regenerate_from: Optional[str] = None,
+        stop_at: DocumentStatus,
+        regenerate_from: DocumentStatus ,
         max_documents: Optional[int] = None,
     ) -> None:
         logger = passthrough_request.logger
-        if stop_at is None:
-            stop_at = "completed"
-        if regenerate_from is None:
-            regenerate_from = "completed"
-        stop_at = DocumentStatus(stop_at)
-        regenerate_from = DocumentStatus(regenerate_from)
         if max_documents is None:
             max_documents = -1
         for file in files:
@@ -200,6 +194,12 @@ class DaemonController(Controller):
         regenerate_from: Optional[str] = None,
     ) -> None:
         obj = await files_repo.get(file_id)
+        if stop_at is None:
+            stop_at = "completed"
+        if regenerate_from is None:
+            regenerate_from = "completed"
+        stop_at = DocumentStatus(stop_at)
+        regenerate_from = DocumentStatus(regenerate_from)
         return await self.bulk_process_file_background(
             files_repo=files_repo,
             passthrough_request=request,
@@ -219,9 +219,15 @@ class DaemonController(Controller):
     ) -> None:
         logger = passthrough_request.logger
         logger.info("Beginning to process all files.")
-        filters = querydata_to_filters_kwargs(data)
+        if stop_at is None:
+            stop_at = "completed"
+        if regenerate_from is None:
+            regenerate_from = "completed"
+        stop_at = DocumentStatus(stop_at)
+        regenerate_from = DocumentStatus(regenerate_from)
+        filters = querydata_to_filters_strict(data) + filters_docstatus_processing(stop_at=stop_at,regenerate_from=regenerate_from)
 
-        results = await files_repo.list(**filters)
+        results = await files_repo.list(*filters)
         logger.info(f"{len(results)} results")
         # type_adapter = TypeAdapter(list[FileSchema])
         # validated_results = type_adapter.validate_python(results)
