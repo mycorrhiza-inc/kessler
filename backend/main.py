@@ -12,7 +12,7 @@ from litestar.di import Provide
 from litestar.contrib.sqlalchemy.base import UUIDBase
 
 from models import utils
-from routing.test_controller import TestController
+from routing.misc_controller import MiscController
 from util.logging import logging_config
 from routing.file_controller import FileController
 from routing.search_controller import SearchController
@@ -78,8 +78,8 @@ api_router = Router(
         FileController,
         SearchController,
         RagController,
-        TestController,
         DaemonController,
+        MiscController,
     ],
 )
 

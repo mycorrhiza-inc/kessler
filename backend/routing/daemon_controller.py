@@ -1,32 +1,19 @@
-from typing_extensions import Doc
-from rag.llamaindex import add_document_to_db_from_text
 import os
 from pathlib import Path
-from typing import Any
 from uuid import UUID
-from typing import Annotated
 
 from litestar import Controller, Request, Response
 
 from litestar.handlers.http_handlers.decorators import (
-    get,
     post,
-    delete,
-    MediaType,
 )
 from litestar.events import listener
 
 
-from sqlalchemy import select
 
 
 from litestar.params import Parameter
 from litestar.di import Provide
-from litestar.repository.filters import LimitOffset
-from litestar.datastructures import UploadFile
-from litestar.enums import RequestEncodingType
-from litestar.params import Body
-
 from pydantic import TypeAdapter
 from models.utils import PydanticBaseModel as BaseModel
 
@@ -46,23 +33,15 @@ from models.files import (
     FileRepository,
 )
 
-from logic.docingest import DocumentIngester
-from logic.extractmarkdown import MarkdownExtractor
 
 from typing import List, Optional, Dict
 
 
-import json
-
-from util.niclib import rand_string
-
-from enum import Enum
 
 import logging
 from models import utils
 from logic.filelogic import process_fileid_raw
 import asyncio
-from sqlalchemy.ext.asyncio import create_async_engine
 from litestar.contrib.sqlalchemy.base import UUIDBase
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -72,12 +51,6 @@ from logic.databaselogic import QueryData, querydata_to_filters_strict , filters
 from util.gpu_compute_calls import get_total_connections
 import random
 
-# class UUIDEncoder(json.JSONEncoder):
-#     def default(self, obj):
-#         if isinstance(obj, UUID):
-#             # if the obj is uuid, we simply return the value of uuid
-#             return obj.hex
-#         return json.JSONEncoder.default(self, obj)
 
 
 OS_TMPDIR = Path(os.environ["TMPDIR"])
