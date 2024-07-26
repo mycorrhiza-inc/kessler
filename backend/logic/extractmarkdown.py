@@ -23,9 +23,10 @@ from util.niclib import create_markdown_string, seperate_markdown_string
 
 
 class MarkdownExtractor:
-    def __init__(self, logger, tmpdir: Path):
+    def __init__(self, logger, tmpdir: Path, priority: bool = True):
         self.tmpdir = tmpdir
         self.logger = logger
+        self.priority = priority
         # TODO : Add database connection.
 
     def process_raw_document_into_english_text(self, file_loc: Path, metadata: dict):
@@ -67,7 +68,7 @@ class MarkdownExtractor:
         async def process_pdf(filepath: Path) -> str:
             self.logger.info("processing pdf")
             return_string = await GPUComputeEndpoint(self.logger).transcribe_pdf(
-                filepath
+                filepath, priority=self.priority
             )
             return return_string
 

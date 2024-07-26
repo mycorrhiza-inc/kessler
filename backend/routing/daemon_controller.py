@@ -1,32 +1,19 @@
-from typing_extensions import Doc
-from rag.llamaindex import add_document_to_db_from_text
 import os
 from pathlib import Path
-from typing import Any
 from uuid import UUID
-from typing import Annotated
 
 from litestar import Controller, Request, Response
 
 from litestar.handlers.http_handlers.decorators import (
-    get,
     post,
-    delete,
-    MediaType,
 )
 from litestar.events import listener
 
 
-from sqlalchemy import select
 
 
 from litestar.params import Parameter
 from litestar.di import Provide
-from litestar.repository.filters import LimitOffset
-from litestar.datastructures import UploadFile
-from litestar.enums import RequestEncodingType
-from litestar.params import Body
-
 from pydantic import TypeAdapter
 from models.utils import PydanticBaseModel as BaseModel
 
@@ -46,37 +33,24 @@ from models.files import (
     FileRepository,
 )
 
-from logic.docingest import DocumentIngester
-from logic.extractmarkdown import MarkdownExtractor
 
 from typing import List, Optional, Dict
 
 
-import json
-
-from util.niclib import rand_string
-
-from enum import Enum
 
 import logging
 from models import utils
 from logic.filelogic import process_fileid_raw
 import asyncio
-from sqlalchemy.ext.asyncio import create_async_engine
 from litestar.contrib.sqlalchemy.base import UUIDBase
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from routing.file_controller import QueryData
+from logic.databaselogic import QueryData, querydata_to_filters_strict , filters_docstatus_processing
 
 from util.gpu_compute_calls import get_total_connections
+import random
 
-# class UUIDEncoder(json.JSONEncoder):
-#     def default(self, obj):
-#         if isinstance(obj, UUID):
-#             # if the obj is uuid, we simply return the value of uuid
-#             return obj.hex
-#         return json.JSONEncoder.default(self, obj)
 
 
 OS_TMPDIR = Path(os.environ["TMPDIR"])
@@ -132,7 +106,7 @@ async def process_document(doc_id_str: str, stop_at: str) -> None:
         await conn.run_sync(UUIDBase.metadata.create_all)
     session = AsyncSession(engine)
     files_repo_2 = await provide_files_repo(session)
-    await process_fileid_raw(doc_id_str, files_repo_2, logger, stop_at)
+    await process_fileid_raw(doc_id_str, files_repo_2, logger, stop_at,priority=False)
     await session.close()
 
 
@@ -147,19 +121,19 @@ class DaemonController(Controller):
         files_repo: FileRepository,
         passthrough_request: Request,
         files: List[FileModel],
-        stop_at: Optional[str] = None,
-        regenerate_from: Optional[str] = None,
+        stop_at: DocumentStatus,
+        regenerate_from: DocumentStatus ,
         max_documents: Optional[int] = None,
     ) -> None:
         logger = passthrough_request.logger
-        if stop_at is None:
-            stop_at = "completed"
-        if regenerate_from is None:
-            regenerate_from = "completed"
-        stop_at = DocumentStatus(stop_at)
-        regenerate_from = DocumentStatus(regenerate_from)
         if max_documents is None:
             max_documents = -1
+        if files is None:
+            logger.info("List of files to process was empty")
+            return None
+        if len(files) == 0:
+            logger.info("List of files to process was empty")
+            return None
         for file in files:
             if max_documents == 0:
                 logger.info("Reached maxiumum file limit, exiting.")
@@ -199,6 +173,12 @@ class DaemonController(Controller):
         regenerate_from: Optional[str] = None,
     ) -> None:
         obj = await files_repo.get(file_id)
+        if stop_at is None:
+            stop_at = "completed"
+        if regenerate_from is None:
+            regenerate_from = "completed"
+        stop_at = DocumentStatus(stop_at)
+        regenerate_from = DocumentStatus(regenerate_from)
         return await self.bulk_process_file_background(
             files_repo=files_repo,
             passthrough_request=request,
@@ -206,7 +186,41 @@ class DaemonController(Controller):
             stop_at=stop_at,
             regenerate_from=regenerate_from,
         )
+    async def process_query_background_raw(
+        self,
+        files_repo: FileRepository,
+        passthrough_request: Request,
+        data: QueryData,
+        stop_at: Optional[str] = None,
+        regenerate_from: Optional[str] = None,
+        max_documents: Optional[int] = None,
+        randomize: bool = False
+    ) -> None:
+        logger = passthrough_request.logger
+        logger.info("Beginning to process all files.")
+        if stop_at is None:
+            stop_at = "completed"
+        if regenerate_from is None:
+            regenerate_from = "completed"
+        stop_at = DocumentStatus(stop_at)
+        regenerate_from = DocumentStatus(regenerate_from)
+        filters = querydata_to_filters_strict(data) + filters_docstatus_processing(stop_at=stop_at,regenerate_from=regenerate_from)
+        logger.info(filters)
 
+        results = await files_repo.list(*filters)
+        # type_adapter = TypeAdapter(list[FileSchema])
+        # validated_results = type_adapter.validate_python(results)
+        if randomize:
+            random.shuffle(results)
+        logger.info(f"{len(results)} results")
+        return await self.bulk_process_file_background(
+            files_repo=files_repo,
+            passthrough_request=passthrough_request,
+            files=results,
+            stop_at=stop_at,
+            regenerate_from=regenerate_from,
+            max_documents=max_documents,
+        )
     @post(path="/daemon/process_all_files")
     async def process_all_background(
         self,
@@ -216,61 +230,67 @@ class DaemonController(Controller):
         stop_at: Optional[str] = None,
         regenerate_from: Optional[str] = None,
         max_documents: Optional[int] = None,
+        randomize: bool = False
     ) -> None:
-        logger = request.logger
-        logger.info("Beginning to process all files.")
-        query = data
-        # TODO: Dryify with query code from file_controller
-        filters = {}
-        if query.match_name is not None:
-            filters["name"] = query.match_name
-        if query.match_source is not None:
-            filters["source"] = query.match_source
-        if query.match_doctype is not None:
-            filters["doctype"] = query.match_doctype
-        if query.match_stage is not None:
-            filters["stage"] = query.match_stage
-
-        results = await files_repo.list(**filters)
-        logger.info(f"{len(results)} results")
-        # type_adapter = TypeAdapter(list[FileSchema])
-        # validated_results = type_adapter.validate_python(results)
-        return await self.bulk_process_file_background(
+        return await self.process_query_background_raw( 
             files_repo=files_repo,
             passthrough_request=request,
-            files=results,
+            data=data,
             stop_at=stop_at,
             regenerate_from=regenerate_from,
             max_documents=max_documents,
+            randomize=randomize 
         )
+
+    # # TODO: Refactor so you dont have an open connection all the time.
+    # async def background_daemon():
+    #     global is_daemon_running
+    #     is_daemon_running = True
+    #     while True:
+    #         try:
+    #             await asyncio.sleep(30)
+    #             if get_total_connections() < document_threshold:
+    #                 await self.process_query_background_raw( 
+    #                     files_repo=files_repo,
+    #                     passthrough_request=request,
+    #                     data=QueryData(),
+    #                     stop_at=stop_at,
+    #                     max_documents=documents_per_run,
+    #                     randomize=True
+    #                 )
+    #         except Exception as e:
+    #             is_daemon_running = False
+    #             raise e
 
     @post(path="/dangerous/daemon/start_background_processing_daemon")
     async def start_background_processing_daemon(
         self,
         files_repo: FileRepository,
         request: Request,
+        stop_at : Optional[str],
+        documents_per_run : Optional[int],
+        document_threshold : Optional[int]
             ) -> str:
         logger = request.logger
+        if documents_per_run is None:
+            documents_per_run = 10
+        if document_threshold is None:
+            document_threshold = 10
         global is_daemon_running
         if is_daemon_running:
             return "Daemon is already running, please restart to cease operation."
-        is_daemon_running = True
         while True:
             try:
                 await asyncio.sleep(30)
-                if get_total_connections() < 10:
-                    results = await files_repo.list()
-                    # type_adapter = TypeAdapter(list[FileSchema])
-                    # validated_results = type_adapter.validate_python(results)
-                    await self.bulk_process_file_background(
+                if get_total_connections() < document_threshold:
+                    await self.process_query_background_raw( 
                         files_repo=files_repo,
                         passthrough_request=request,
-                        files=results,
-                        stop_at="stage3",
-                        max_documents=10,
+                        data=QueryData(),
+                        stop_at=stop_at,
+                        max_documents=documents_per_run,
+                        randomize=True
                     )
-
-
             except Exception as e:
                 is_daemon_running = False
                 raise e
