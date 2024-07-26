@@ -1,5 +1,9 @@
-from embeddings import embed, batch_embed, cos_similarity
-from typing import List, Callable
+from embeddings import cos_similarity, get_batch_embeddings, embed
+from typing import List, Callable, TypedDict
+
+from vecstore.util import MilvusNode
+
+import numpy as np
 
 
 class SentenceCombination(TypedDict):
@@ -9,30 +13,32 @@ class SentenceCombination(TypedDict):
     combined_sentence_embedding: List[float]
 
 
-class MilvusNode:
-    def __init__(self, text: str, index: int):
-        self.text = text
-        self.index = index
+def build_block_nodes(blocks: List[MilvusNode], docid) -> List[MilvusNode]:
+    for n in blocks:
+        n.root_id = docid
+    return [MilvusNode(text, docid) for index, text in enumerate(blocks)]
 
 
 class SemanticSplitter:
     """Adapted from the LLamaIndex SemanticSplitter"""
 
-    def __init__(self, text: str):
-        self.text = text
-        self.sentences = []
+    def __init__(self):
+        self.buffer_size = 1
 
-    def process(self) -> List[str]:
-        splits = self.split_sentences(self.text)
+    def process(self, text: str, docid: str) -> List[str]:
+        splits = self.split_sentences(text)
 
         sentences = self._build_sentence_groups(splits)
-
-        combined_sentence_embeddings = batch_embed(
+        combined_sentence_embeddings = get_batch_embeddings(
             [s["combined_sentence"] for s in sentences]
         )
 
         for i, embedding in enumerate(combined_sentence_embeddings):
             sentences[i]["combined_sentence_embedding"] = embedding
+        distances = self._calculate_distances_between_sentence_groups(sentences)
+
+        blocks = self.build_blocks(sentences, distances)
+        build_block_nodes(blocks, docid)
 
     def _calculate_distances_between_sentence_groups(
         self, sentences: List[SentenceCombination]
@@ -42,13 +48,46 @@ class SemanticSplitter:
             embedding_current = sentences[i]["combined_sentence_embedding"]
             embedding_next = sentences[i + 1]["combined_sentence_embedding"]
 
-        similarity = cos_similarity(embedding_current, embedding_next)
+            similarity = cos_similarity(embedding_current, embedding_next)
 
-        distance = 1 - similarity
+            distance = 1 - similarity
 
-        distances.append(distance)
+            distances.append(distance)
 
         return distances
+
+    def build_blocks(
+        self, sentences: List[SentenceCombination], distances: List[float]
+    ) -> List[MilvusNode]:
+        blocks = []
+        if len(distances) <= 0:
+            breakpoint_distance_threshold = np.percentile(distances, 90)
+
+            indices_above_threshold = [
+                i for i, x in enumerate(distances) if x > breakpoint_distance_threshold
+            ]
+
+            start_index = 0
+
+            for index in indices_above_threshold:
+                group = sentences[start_index : index + 1]
+                combined_text = "".join([d["sentence"] for d in group])
+                combined_embeddings = embed(text=combined_text)
+                m = MilvusNode(text=combined_text, embedding=combined_embeddings)
+                blocks.append(m)
+
+                start_index = index + 1
+
+            if start_index < len(sentences):
+                combined_text = "".join(
+                    [d["sentence"] for d in sentences[start_index:]]
+                )
+                blocks.append(combined_text)
+
+        else:
+            blocks = [" ".join([s["sentence"] for s in sentences])]
+
+        return blocks
 
     def _build_sentence_groups(
         self, text_splits: List[str]
@@ -84,20 +123,13 @@ class SemanticSplitter:
     def _build_chunks(self) -> List[str]:
         pass
 
-    def _split_sentences(self) -> List[str]:
-        pass
-
-    def calculate_similarity(self, sentence1: str, sentence2: str) -> float:
-        a = embed(sentence1)
-        b = embed(sentence2)
-
-    def split_sentences(self, text: str) -> Callable[[str], List[str]]:
+    def split_sentences(self, text: str) -> List[str]:
         import nltk
 
         tokenizer = nltk.tokenize.PunktSentenceTokenizer()
-        return lambda text: self.split_by_sentence_tokenizer_ld(text, tokenizer)
+        return self.split_by_sentence_tokenizer(text, tokenizer)
 
-    def split_by_sentence_tokenizer_ld(text: str, tokenizer) -> List[str]:
+    def split_by_sentence_tokenizer(self, text: str, tokenizer) -> List[str]:
         """
         Get the spans and then return the sentences.
 
