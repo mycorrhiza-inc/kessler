@@ -244,7 +244,7 @@ class GPUComputeEndpoint:
                                     if priority:
                                         await asyncio.sleep(3)
                                     else:
-                                        await asyncio.sleep(180)
+                                        await asyncio.sleep(60)
                                     async with session.get(
                                         request_check_url
                                     ) as poll_response:
@@ -257,6 +257,15 @@ class GPUComputeEndpoint:
                                                 f"Processed document after {polls} polls."
                                             )
                                             return poll_data["markdown"]
+                                        if poll_data["status"] == "error":
+                                            server.connections = server.connections - 1
+                                            e = poll_data["error"]
+                                            self.logger.error(
+                                                f"Pdf server encountered an error after {polls} : {e}"
+                                            )
+                                            raise Exception(
+                                                f"Pdf server encountered an error after {polls} : {e}"
+                                            )
                                         if poll_data["status"] != "processing":
                                             raise ValueError(
                                                 f"PDF Processing Failed. Status was unrecognized {poll_data['status']} after {polls} polls."
