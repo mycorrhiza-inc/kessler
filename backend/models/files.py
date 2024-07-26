@@ -9,7 +9,11 @@ from sqlalchemy.orm import Mapped
 from .utils import PydanticBaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, TypeAdapter
+
+
+import json
+
 
 import logging
 
@@ -66,7 +70,7 @@ class FileSchema(PydanticBaseModel):
     source: str | None = None
     stage: str | None = None
     summary: str | None = None
-    mdata: str | None = None
+    mdata: dict | None = None
     short_summary: str | None = None
     original_text: str | None = None
     english_text: str | None = None
@@ -75,6 +79,13 @@ class FileSchema(PydanticBaseModel):
     @classmethod
     def stringify_id(cls, id: any) -> str:
         return str(id)
+
+
+def model_to_schema(model: FileModel) -> FileSchema:
+    type_adapter = TypeAdapter(FileSchema)
+    schema = type_adapter.validate_python(model)
+    schema.mdata = json.load(model.mdata)
+    return schema
 
 
 class FileSchemaWithText(FileSchema):

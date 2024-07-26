@@ -31,6 +31,7 @@ from models.files import (
     provide_files_repo,
     DocumentStatus,
     docstatus_index,
+    model_to_schema,
 )
 
 import json
@@ -105,10 +106,7 @@ class SearchController(Controller):
             uuid = UUID(uuid_str)
             # logger.info(uuid)
             obj = await files_repo.get(uuid)
-
-            type_adapter = TypeAdapter(FileSchema)
-
-            return type_adapter.validate_python(obj)
+            return model_to_schema(obj)
 
         files = []
         for id in ids:

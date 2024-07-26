@@ -209,7 +209,7 @@ class DaemonController(Controller):
 
         results = await files_repo.list(*filters)
         # type_adapter = TypeAdapter(list[FileSchema])
-        # validated_results = type_adapter.validate_python(results)
+        # validated_results = model_to_schema(results)
         if randomize:
             random.shuffle(results)
         logger.info(f"{len(results)} results")

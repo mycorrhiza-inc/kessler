@@ -41,6 +41,7 @@ from models.files import (
     provide_files_repo,
     DocumentStatus,
     docstatus_index,
+    model_to_schema,
 )
 
 from logic.docingest import DocumentIngester
@@ -137,7 +138,7 @@ class FileController(Controller):
 
         type_adapter = TypeAdapter(FileSchema)
 
-        return type_adapter.validate_python(obj)
+        return model_to_schema(obj)
 
     @get(path="/files/markdown/{file_id:uuid}")
     async def get_markdown(
@@ -151,9 +152,7 @@ class FileController(Controller):
             return "Feature delayed due to only supporting english documents."
         obj = await files_repo.get(file_id)
 
-        type_adapter = TypeAdapter(FileSchemaWithText)
-
-        obj_with_text = type_adapter.validate_python(obj)
+        obj_with_text = model_to_schema(obj)
 
         markdown_text = obj_with_text.english_text
 
@@ -174,7 +173,7 @@ class FileController(Controller):
             return Response(content="ID does not exist", status_code=404)
 
         type_adapter = TypeAdapter(FileSchema)
-        obj = type_adapter.validate_python(obj)
+        obj = model_to_schema(obj)
         filehash = obj.hash
 
         file_path = DocumentIngester(logger).get_default_filepath_from_hash(filehash)
@@ -207,8 +206,7 @@ class FileController(Controller):
         if obj is None:
             return Response(content="ID does not exist", status_code=404)
 
-        type_adapter = TypeAdapter(FileSchema)
-        obj = type_adapter.validate_python(obj)
+        obj = model_to_schema(obj)
         metadata_str = obj.mdata
         metadata_dict = json.loads(metadata_str)
         return metadata_dict
@@ -218,8 +216,7 @@ class FileController(Controller):
     ) -> list[FileSchema]:
         results = await files_repo.list()
         logger.info(f"{len(results)} results")
-        type_adapter = TypeAdapter(list[FileSchema])
-        valid_results = type_adapter.validate_python(results)
+        valid_results = model_to_schema(results)
         return valid_results
 
     @post(path="/files/all")
@@ -252,8 +249,7 @@ class FileController(Controller):
         # assert isinstance(results, List[FileModel])
         # Turns the file model in sqlalchemy into an easy to understand return type
         logger.info(f"{len(results)} results")
-        type_adapter = TypeAdapter(list[FileSchema])
-        valid_results = type_adapter.validate_python(results)
+        valid_results = model_to_schema(results)
         return valid_results
 
     @post(path="/files/query")
@@ -346,7 +342,7 @@ class FileController(Controller):
             tmpfile_path, metadata, process, override_hash, files_repo, logger
         )
         # type_adapter = TypeAdapter(FileSchema)
-        # final_return = type_adapter.validate_python(new_file)
+        # final_return = model_to_schema(new_file)
         # logger.info(final_return)
         return f"Successfully added document with uuid: {file_obj.uuid}"
 
