@@ -64,11 +64,13 @@ def get_llm_from_model_str(model_name: Optional[str]):
     if model_name in ["llama-405b", "llama-3.1-405b-reasoning"]:
 
         # actual_name = "llama-3.1-405b-reasoning"
-        return OctoAI(
-            model="meta-llama-3.1-405b-instruct",
-            request_timeout=60.0,
-            api_key=OCTOAI_API_KEY,
-        )
+        # return OctoAI(
+        #     model="meta-llama-3.1-405b-instruct",
+        #     token=OCTOAI_API_KEY,
+        # )
+        # Currently broken, fix by using together or something similar, fall back on 70b until then
+        actual_name = "llama-3.1-70b-versatile"
+        return Groq(model=actual_name, request_timeout=60.0, api_key=GROQ_API_KEY)
     if model_name in ["gpt-4o"]:
         return OpenAI(model=model_name, request_timeout=60.0, api_key=OPENAI_API_KEY)
     else:
