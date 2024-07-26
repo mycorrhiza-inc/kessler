@@ -20,7 +20,6 @@ class MilvusRow:
         self.doc_type = "node"
         self.embeddings = None
 
-
 class MilvusDoc(MilvusRow):
     def __init__(self, text: str, k_uuid: str):
         super().__init__(text=text, k_uuid=k_uuid)
@@ -36,12 +35,10 @@ class MilvusNode(MilvusRow):
 def get_milvus_conn(uri: str = milvus_host):
     return MilvusClient(uri=uri, token=f"{milvus_user}:{milvus_pass}")
 
-
 def drop_collection(collection_name=str):
     conn = get_milvus_conn()
     conn.drop_collection(collection_name=collection_name, timeout=10)
     pass
-
 
 def check_collction_exists(collection_name=str) -> bool:
     conn = get_milvus_conn()
@@ -49,7 +46,6 @@ def check_collction_exists(collection_name=str) -> bool:
     if collection_name in conn.list_collections():
         return True
     return False
-
 
 def create_doc_node_schema() -> CollectionSchema:
     id_field = FieldSchema(
@@ -137,7 +133,6 @@ def create_document_collection(collection_name=str, dimension=1024):
         index_params=None,  # Used for index specific pareams
     )
 
-
 # TODO: test this
 #
 # def add_new_filter_field(index_fields: Union[str, List[str]], collection_name=str):
@@ -171,19 +166,22 @@ def reindex_collection(collection_name=str):
     )
 
 
-def add_nodes(nodes: Union[MilvusNode, List[MilvusNode]], collection_name=str):
+def add_nodes(nodes: Union[MilvusNode, List[MilvusNode]], collection_name:str, metadata:dict):
     if isinstance(nodes, MilvusNode):
         nodes = [nodes]
 
     conn = get_milvus_conn()
     nodes = [node.__dict__ for node in nodes]
-    for node in nodes:
-        conn.insert(
-            collection_name=collection_name,
-            data=node,
-            timeout=10,
-        )
+    # add the same metadata to all nodes
+    for i, node in enumerate(node):
+        nodes[i].update(metadata)
 
+    conn.insert(
+        collection_name=collection_name,
+        data=nodes,
+        timeout=10,
+    )
 
-def add_document_to_db(text: str, metadata=dict):
-    nodes =
+def add_document_to_db(text: str, metadata:dict, collection_name: str):
+    nodes = SemanticSplitter().process(text)
+    add_nodes(nodes, collection_name="documents", metadata=metadata)
