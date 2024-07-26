@@ -100,7 +100,7 @@ def get_least_connection() -> MarkerServer:
         for marker_server in marker_servers:
             if marker_server.connections < min_conns:
                 min_conn_server = marker_server
-                min_conns = marker_server.min_conns
+                min_conns = marker_server.connections
         if min_conn_server is None:
             raise Exception("Marker Server Not Found in List")
         return min_conn_server
@@ -123,9 +123,12 @@ class GPUComputeEndpoint:
         self.datalab_api_key = datalab_api_key
 
     async def transcribe_pdf(
-        self, filepath: Path, external_process: bool = True
+        self,
+        filepath: Path,
+        external_process: bool = False,
+        priority=True,
     ) -> str:
-        if False:
+        if external_process:
             url = "https://www.datalab.to/api/v1/marker"
             self.logger.info(
                 "Calling datalab api with key beginning with"
@@ -189,7 +192,11 @@ class GPUComputeEndpoint:
         else:
             server = get_least_connection()
             base_url = server.url
-            marker_url_endpoint = base_url + "/api/v1/marker"
+            if priority:
+                query_str = "?priority=true"
+            else:
+                query_str = "?priority=false"
+            marker_url_endpoint = base_url + "/api/v1/marker" + query_str
 
             async with aiohttp.ClientSession() as session:
                 with aiohttp.MultipartWriter() as mpwriter:
@@ -224,62 +231,52 @@ class GPUComputeEndpoint:
                                 raise Exception(
                                     "Failed to get request_check_url from marker API response"
                                 )
-                            request_check_url = (
-                                self.marker_endpoint_url + request_check_url_leaf
-                            )
+                            request_check_url = base_url + request_check_url_leaf
                             self.logger.info(
-                                "Got response from marker server, polling to see when file is finished processing."
+                                f"Got response from marker server, polling to see when file is finished processing at url: {request_check_url}"
                             )
 
                             # Polling for the result
-                            max_polls = 300
+                            max_polls = 200
                             server.connections = server.connections + 1
-                            for _ in range(max_polls):
-                                await asyncio.sleep(2)
-                                async with session.get(
-                                    request_check_url
-                                ) as poll_response:
-                                    try:
+                            for polls in range(max_polls):
+                                try:
+                                    if priority:
+                                        await asyncio.sleep(3)
+                                    else:
+                                        await asyncio.sleep(60)
+                                    async with session.get(
+                                        request_check_url
+                                    ) as poll_response:
                                         poll_response.raise_for_status()
                                         poll_data = await poll_response.json()
+                                        # self.logger.info(poll_data)
                                         if poll_data["status"] == "complete":
                                             server.connections = server.connections - 1
+                                            self.logger.info(
+                                                f"Processed document after {polls} polls."
+                                            )
                                             return poll_data["markdown"]
-                                    except Exception as e:
-                                        server.connections = server.connections - 1
-                                        raise e
+                                        if poll_data["status"] == "error":
+                                            server.connections = server.connections - 1
+                                            e = poll_data["error"]
+                                            self.logger.error(
+                                                f"Pdf server encountered an error after {polls} : {e}"
+                                            )
+                                            raise Exception(
+                                                f"Pdf server encountered an error after {polls} : {e}"
+                                            )
+                                        if poll_data["status"] != "processing":
+                                            raise ValueError(
+                                                f"PDF Processing Failed. Status was unrecognized {poll_data['status']} after {polls} polls."
+                                            )
+                                except Exception as e:
+                                    server.connections = server.connections - 1
+                                    raise e
                             server.connections = server.connections - 1
                             raise TimeoutError(
                                 "Polling for marker API result timed out"
                             )
-
-    def llm_nonlocal_raw_call(
-        self, msg_history: list[dict], model_name: Optional[str]
-    ) -> dict:
-        if model_name == None:
-            model_name = "meta-llama-3-8b-instruct"
-        if model_name == "small":
-            model_name = "meta-llama-3-8b-instruct"
-        if model_name == "large":
-            model_name = "meta-llama-3-70b-instruct"
-        # The API endpoint you will be hitting
-        url = f"{self.endpoint_url}/v0/chat_completion/external_api"
-        jsonpayload = {
-            "messages": msg_history,
-            "model_name": model_name,
-        }
-        print(f"Calling external endpoint: {self.endpoint_url}")
-        # Make the POST request with files
-        response = requests.post(url, json=jsonpayload)
-        # Raise an exception if the request was unsuccessful
-        response.raise_for_status()
-        # Parse the JSON response
-        response_json = response.json()
-        # Extract the translated text from the JSON response
-        return response_json["message"]
-
-    def llm_from_model_name(self, model_name: Optional[str] = None):
-        return LLM(lambda messages: self.llm_nonlocal_raw_call(messages, model_name))
 
     def audio_to_text_raw(
         self, filepath: Path, source_lang: str, target_lang: str, file_type: str
@@ -319,34 +316,6 @@ class GPUComputeEndpoint:
         if downsampled == filepath:
             return self.audio_to_text_raw(filepath, source_lang, target_lang, file_type)
         return self.audio_to_text_raw(downsampled, source_lang, target_lang, "opus")
-
-    def embed_raw_dicts(self, text_list: List[dict], model_name: str) -> list:
-        if not model_name in ["mistral7b-sfr"]:
-            raise Exception("Invalid Model ID")
-        if len(text_list) == 0:
-            return []
-        url = f"{self.endpoint_url}/v0/embedding/{model_name}"
-        payload = {"embeddable": text_list, "model_name": model_name}
-        response = requests.post(url, json=payload)
-        response.raise_for_status()
-        embeddings = response.json().get("embeddings", [])
-        print(embeddings)
-        return embeddings
-
-    def embed_queries_and_texts(
-        self, query_list: List[str], text_list: List[str]
-    ) -> Tuple[list, list]:
-        query_dict_list = map(lambda x: {"text": x, "query": True}, query_list)
-        text_dict_list = map(lambda x: {"text": x, "query": False}, text_list)
-
-        raw_list = list(query_dict_list) + list(text_dict_list)
-        embeddings = self.embed_raw_dicts(raw_list, "mistral7b-sfr")
-        query_embeddings = embeddings[: len(query_list)]
-        text_embeddings = embeddings[len(query_list) :]
-        return (query_embeddings, text_embeddings)
-
-    def embedding_query(self, embedding: str):
-        return (self.embed_queries_and_texts([embedding], [])[0])[0]
 
     def translate_text(
         self, doctext: str, source_lang: Optional[str], target_lang: str

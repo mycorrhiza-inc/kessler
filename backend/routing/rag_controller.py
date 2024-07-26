@@ -6,40 +6,19 @@ from rag.llamaindex import (
     generate_chat_completion,
     sanitzie_chathistory_llamaindex,
 )
-from llama_index.llms.openai import OpenAI
-from llama_index.llms.groq import Groq
-from hashlib import blake2b
 import os
 from pathlib import Path
-from typing import Any
 from uuid import UUID
-from typing import Annotated, assert_type
 import logging
 
 from litestar import Controller, Request
 
 from litestar.handlers.http_handlers.decorators import (
-    get,
     post,
-    delete,
-    patch,
-    MediaType,
 )
 
 
-from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError, NoResultFound
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-
-
-from litestar.params import Parameter
 from litestar.di import Provide
-from litestar.repository.filters import LimitOffset
-from litestar.datastructures import UploadFile
-from litestar.enums import RequestEncodingType
-from litestar.params import Body
-from litestar.logging import LoggingConfig
 
 from pydantic import TypeAdapter
 from models.utils import PydanticBaseModel as BaseModel
@@ -48,12 +27,8 @@ from models.utils import PydanticBaseModel as BaseModel
 from models.files import FileModel, FileRepository, FileSchema, provide_files_repo
 
 
-from logic.docingest import DocumentIngester
-from logic.extractmarkdown import MarkdownExtractor
-
 from typing import List, Optional, Union, Any, Dict
 
-from util.niclib import get_blake2
 
 import json
 
@@ -116,7 +91,7 @@ def force_conform_chat(chat_history: List[Dict[str, str]]) -> List[Dict[str, str
 
 
 class RagController(Controller):
-    """File Controller"""
+    """Rag Controller"""
 
     dependencies = {"files_repo": Provide(provide_files_repo)}
 

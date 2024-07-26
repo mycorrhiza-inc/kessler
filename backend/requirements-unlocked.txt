@@ -1,8 +1,10 @@
 llama-index
 llama-index-llms-groq
 llama-index-llms-openai
+llama-index-llms-octoai
+
 llama-index-vector-stores-postgres
-llama-index-vector-stores-lancedb
+llama_index.vector_stores.milvus
 llama-index-embeddings-octoai
 
 
