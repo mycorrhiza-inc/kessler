@@ -16,7 +16,7 @@ import {
   FormLabel,
   IconButton,
 } from "@chakra-ui/react";
-import { CloseIcon } from "@chakra-ui/icons";
+import { FaWindowClose } from "react-icons/fa";
 import {
   DndContext,
   closestCenter,
@@ -186,7 +186,7 @@ const CustomizeFileTableButton: React.FC<CustomizeFileTableButtonProps> = ({
                         </FormControl>
                         <IconButton
                           aria-label="Delete"
-                          icon={<CloseIcon />}
+                          icon={<Faw />}
                           size="sm"
                           onClick={() => onRemoveColumn(index)}
                         />
