@@ -15,8 +15,8 @@ class SentenceCombination(TypedDict):
 
 def build_block_nodes(blocks: List[MilvusNode], docid) -> List[MilvusNode]:
     for n in blocks:
-        n.root_id = docid
-    return [MilvusNode(text, docid) for index, text in enumerate(blocks)]
+        n.source_id = docid
+    return [MilvusNode(text, docid) for text in enumerate(blocks)]
 
 
 class SemanticSplitter:
@@ -82,6 +82,9 @@ class SemanticSplitter:
                 combined_text = "".join(
                     [d["sentence"] for d in sentences[start_index:]]
                 )
+                combined_embeddings = embed(text=combined_text)
+                m = MilvusNode(text=combined_text, embedding=combined_embeddings)
+                blocks.append(m)
                 blocks.append(combined_text)
 
         else:

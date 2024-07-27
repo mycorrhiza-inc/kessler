@@ -171,7 +171,7 @@ async def process_file_raw(
 ):
     if stop_at is None:
         stop_at = DocumentStatus.completed
-    kessler_pg_id = obj.id
+    source_id = obj.id
     logger.info(type(obj))
     logger.info(obj)
     current_stage = DocumentStatus(obj.stage)
@@ -260,7 +260,7 @@ async def process_file_raw(
             return return_metadata
 
         searchable_metadata = generate_searchable_metadata(doc_metadata)
-        searchable_metadata["kessler_pg_id"] = kessler_pg_id
+        searchable_metadata["source_id"] = source_id
         try:
             add_document_to_db_from_text(obj.english_text, searchable_metadata)
         except Exception as e:
