@@ -77,18 +77,6 @@ const CustomizeFileTableButton = ({ layout, setLayout }) => {
                       )
                     }
                   />
-                  <Checkbox
-                    isChecked={column.truncate}
-                    onChange={(e) =>
-                      onChangeColumnWidthAndLabel(
-                        index,
-                        "truncate",
-                        e.target.checked,
-                      )
-                    }
-                  >
-                    Truncate
-                  </Checkbox>
                 </FormControl>
               ))}
               <Checkbox
