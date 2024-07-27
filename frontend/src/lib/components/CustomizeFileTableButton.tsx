@@ -217,7 +217,12 @@ const CustomizeFileTableButton: React.FC<CustomizeFileTableButtonProps> = ({
   );
 };
 
-const SortableItem: React.FC<{ id: string }> = ({ id, children }) => {
+type SortableItemProps = {
+  id: string;
+  children: React.ReactNode;
+};
+
+const SortableItem: React.FC<SortableItemProps> = ({ id, children }) => {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id });
 
