@@ -34,7 +34,7 @@ import {
 
 import { usePathname } from "next/navigation";
 import ColorModeToggle from "./ColorModeToggle";
-
+import CustomizeFileTableButton from "./CustomizeFileTableButton";
 import FileTable from "./FileTable";
 // import SearchDialog from "./SearchDialog";
 import { Center } from "@chakra-ui/react";
@@ -48,6 +48,13 @@ function SearchBox() {
     setSearching(true);
     await getSearchResults();
   };
+  const [layout, setLayout] = useState({
+    columns: [
+      { key: "name", label: "Filename", width: "80%", enabled: true },
+      { key: "source", label: "Source", width: "20%", enabled: true },
+    ],
+    showExtraFeatures: true,
+  });
   const getSearchResults = async () => {
     let results = await fetch("/api/search", {
       method: "POST",
@@ -105,7 +112,10 @@ function SearchBox() {
       </Grid>
       {searching && <CircularProgress isIndeterminate color="green.300" />}
       {searchResults.length > 0 && (
-        <FileTable files={searchResults}></FileTable>
+        <>
+          <FileTable files={searchResults} layout={layout}></FileTable>
+          <CustomizeFileTableButton layout={layout} setLayout={setLayout} />
+        </>
       )}
     </VStack>
   );
