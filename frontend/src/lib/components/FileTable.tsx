@@ -11,21 +11,31 @@ import {
   Center,
 } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
-import { FileType } from "../interfaces/file";
-import { LoadingSpinner } from "@saas-ui/react";
 import DocumentViewer from "./DocumentViewer";
 import { IoMdCheckmarkCircleOutline } from "react-icons/io";
 import { ImCross } from "react-icons/im";
+
 interface RowData {
   selected: boolean;
   data: FileType;
 }
 
-interface FileTableProps {
-  files: FileType[];
+interface Layout {
+  columns: {
+    key: string;
+    label: string;
+    width: string;
+    truncate: boolean;
+  }[];
+  showExtraFeatures: boolean;
 }
 
-const FileTable: React.FC<FileTableProps> = ({ files }) => {
+interface FileTableProps {
+  files: FileType[];
+  layout: Layout;
+}
+
+const FileTable: React.FC<FileTableProps> = ({ files, layout }) => {
   const [fileState, setFileState] = useState<RowData[]>(
     files.map((file) => ({ selected: false, data: file })),
   );
@@ -38,6 +48,7 @@ const FileTable: React.FC<FileTableProps> = ({ files }) => {
       ),
     );
   };
+
   function truncateString(str: string) {
     const length = 60;
     return str.length < length ? str : str.slice(0, length - 3) + "...";
@@ -49,9 +60,12 @@ const FileTable: React.FC<FileTableProps> = ({ files }) => {
         <Thead>
           <Tr>
             <Th width="2%">Select</Th>
-            <Th width="70%">Filename</Th>
-            <Th width="20%">Source</Th>
-            <Th width="6%">View</Th>
+            {layout.columns.map((col) => (
+              <Th key={col.key} width={col.width}>
+                {col.label}
+              </Th>
+            ))}
+            {layout.showExtraFeatures && <Th width="6%">View</Th>}
             <Th width="2%">Status</Th>
           </Tr>
         </Thead>
@@ -77,13 +91,26 @@ const FileTable: React.FC<FileTableProps> = ({ files }) => {
                     />
                   </Box>
                 </Td>
-                <Td>{truncateString(file.data.name)}</Td>
-                <Td>{truncateString(file.data.source)}</Td>
+                {layout.columns.map((col) =>
+                  col.key in file.data ? (
+                    <Td key={col.key}>
+                      {col.truncate
+                        ? truncateString(String(file.data[col.key]))
+                        : String(file.data[col.key])}
+                    </Td>
+                  ) : (
+                    <Td key={col.key}>
+                      {col.truncate ? "Unknown" : "Unknown"}
+                    </Td>
+                  ),
+                )}
+                {layout.showExtraFeatures && (
+                  <Td>
+                    <DocumentViewer document_object={file.data} />
+                  </Td>
+                )}
                 <Td>
-                  <DocumentViewer document_object={file.data} />
-                </Td>
-                <Td>
-                  {file.data.stage == "completed" ? (
+                  {file.data.stage === "completed" ? (
                     <IoMdCheckmarkCircleOutline />
                   ) : (
                     <ImCross />
