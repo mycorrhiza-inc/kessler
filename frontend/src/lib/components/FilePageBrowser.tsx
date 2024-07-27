@@ -17,8 +17,8 @@ const FilePageBrowser: React.FC<FilePageBrowserProps> = ({ fileUrl, data }) => {
   const [numResults, setNumResults] = useState(10);
   const [layout, setLayout] = useState({
     columns: [
-      { key: "name", label: "Filename", width: "70%", truncate: true },
-      { key: "source", label: "Source", width: "20%", truncate: true },
+      { key: "name", label: "Filename", width: "70%", enabled: true },
+      { key: "source", label: "Source", width: "20%", enabled: true },
     ],
     showExtraFeatures: true,
   });

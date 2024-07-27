@@ -5,4 +5,5 @@ export interface FileType {
   doctype: string;
   stage: string;
   source: string;
+  mdata: Object;
 }

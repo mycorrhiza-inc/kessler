@@ -14,6 +14,8 @@ import { useState, useEffect } from "react";
 import DocumentViewer from "./DocumentViewer";
 import { IoMdCheckmarkCircleOutline } from "react-icons/io";
 import { ImCross } from "react-icons/im";
+import { FileType } from "../interfaces/file";
+
 interface RowData {
   selected: boolean;
   data: FileType;
@@ -24,7 +26,7 @@ interface Layout {
     key: string;
     label: string;
     width: string;
-    truncate: boolean;
+    enabled: boolean;
   }[];
   showExtraFeatures: boolean;
 }
@@ -50,6 +52,19 @@ const FileTable: React.FC<FileTableProps> = ({ files, layout }) => {
   function truncateString(str: string) {
     const length = 60;
     return str.length < length ? str : str.slice(0, length - 3) + "...";
+  }
+  function getFieldFromFile(key: string, file: FileType): string {
+    // Please shut up, I know what Im doing
+    // @ts-ignore
+    var result = file[key];
+    if (result == undefined) {
+      // @ts-ignore
+      result = file.mdata[key];
+    }
+    if (result != undefined) {
+      return String(result);
+    }
+    return "Unknown";
   }
 
   return (
@@ -85,9 +100,7 @@ const FileTable: React.FC<FileTableProps> = ({ files, layout }) => {
               {layout.columns.map((col) =>
                 col.key in file.data ? (
                   <Td key={col.key}>
-                    {col.truncate
-                      ? truncateString(String(file.data[col.key]))
-                      : String(file.data[col.key])}
+                    {truncateString(getFieldFromFile(col.key, file.data))}
                   </Td>
                 ) : (
                   <Td key={col.key}>{col.truncate ? "Unknown" : "Unknown"}</Td>
