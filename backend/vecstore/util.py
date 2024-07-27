@@ -45,7 +45,7 @@ def check_collction_exists(collection_name=str) -> bool:
     return False
 
 
-def describe_collection_schema(collection_name: str) -> Dict[any]:
+def describe_collection_schema(collection_name: str) -> Dict[str,any]:
     conn = get_milvus_conn()
     return conn.describe_collection(
         collection_name=collection_name, timeout=10
