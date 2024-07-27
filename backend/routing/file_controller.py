@@ -136,8 +136,6 @@ class FileController(Controller):
     ) -> FileSchema:
         obj = await files_repo.get(file_id)
 
-        type_adapter = TypeAdapter(FileSchema)
-
         return model_to_schema(obj)
 
     @get(path="/files/markdown/{file_id:uuid}")
@@ -207,16 +205,14 @@ class FileController(Controller):
             return Response(content="ID does not exist", status_code=404)
 
         obj = model_to_schema(obj)
-        metadata_str = obj.mdata
-        metadata_dict = json.loads(metadata_str)
-        return metadata_dict
+        return obj.mdata
 
     async def get_all_files_raw(
         self, files_repo: FileRepository, logger: Any
     ) -> list[FileSchema]:
         results = await files_repo.list()
         logger.info(f"{len(results)} results")
-        valid_results = model_to_schema(results)
+        valid_results = list(map(model_to_schema, results))
         return valid_results
 
     @post(path="/files/all")
@@ -246,10 +242,8 @@ class FileController(Controller):
     ) -> List[FileSchema]:
         filters = querydata_to_filters(query)
         results = await files_repo.list(*filters)
-        # assert isinstance(results, List[FileModel])
-        # Turns the file model in sqlalchemy into an easy to understand return type
         logger.info(f"{len(results)} results")
-        valid_results = model_to_schema(results)
+        valid_results = list(map(model_to_schema, results))
         return valid_results
 
     @post(path="/files/query")
