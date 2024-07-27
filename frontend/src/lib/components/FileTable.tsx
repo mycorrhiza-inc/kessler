@@ -97,15 +97,11 @@ const FileTable: React.FC<FileTableProps> = ({ files, layout }) => {
                   />
                 </Box>
               </Td>
-              {layout.columns.map((col) =>
-                col.key in file.data ? (
-                  <Td key={col.key}>
-                    {truncateString(getFieldFromFile(col.key, file.data))}
-                  </Td>
-                ) : (
-                  <Td key={col.key}>{col.truncate ? "Unknown" : "Unknown"}</Td>
-                ),
-              )}
+              {layout.columns.map((col) => (
+                <Td key={col.key}>
+                  {truncateString(getFieldFromFile(col.key, file.data))}
+                </Td>
+              ))}
               {layout.showExtraFeatures && (
                 <>
                   <Td>
