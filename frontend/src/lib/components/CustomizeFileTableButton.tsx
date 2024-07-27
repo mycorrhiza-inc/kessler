@@ -186,7 +186,7 @@ const CustomizeFileTableButton: React.FC<CustomizeFileTableButtonProps> = ({
                         </FormControl>
                         <IconButton
                           aria-label="Delete"
-                          icon={<Faw />}
+                          icon={<FaWindowClose />}
                           size="sm"
                           onClick={() => onRemoveColumn(index)}
                         />
