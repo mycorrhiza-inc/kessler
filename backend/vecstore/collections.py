@@ -1,4 +1,3 @@
-
 from pymilvus import MilvusClient
 from models import utils
 
@@ -51,23 +50,26 @@ async def add_file_to_collection(file_id, collection_id):
                         INSERT INTO file_milvus_collection (file_id, collection_id)
                         VALUES (:file_id, :collection_id);
                         """
-        await conn.execute(insert_statement, file_id=file_id, collection_id=collection_id)
+        await conn.execute(
+            insert_statement, file_id=file_id, collection_id=collection_id
+        )
         await conn.commit()
 
 
 async def remove_file_from_collection(file_id, collection_id):
-	async with utils.sqlalchemy_config.get_engine().begin() as conn:
-		# remove the file from the collection in the SQL database
-		delete_statement = """
+    async with utils.sqlalchemy_config.get_engine().begin() as conn:
+        # remove the file from the collection in the SQL database
+        delete_statement = """
 			DELETE FROM file_milvus_collection
 			WHERE file_id = :file_id AND collection_id = :collection_id;
 			"""
-		await conn.execute(delete_statement, file_id=file_id, collection_id=collection_id)
-		await conn.commit()
-  
-		# remove the file from the collection in the Milvus database
-		milvus_conn: MilvusClient= utils.get_milvus_conn()
-		milvus_conn.delete(
-			collection_name=collection_id,
-			filter=f'source_id = "{file_id}"'
-		)
+        await conn.execute(
+            delete_statement, file_id=file_id, collection_id=collection_id
+        )
+        await conn.commit()
+
+        # remove the file from the collection in the Milvus database
+        milvus_conn: MilvusClient = utils.get_milvus_conn()
+        milvus_conn.delete(
+            collection_name=collection_id, filter=f'source_id = "{file_id}"'
+        )
