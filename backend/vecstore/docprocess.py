@@ -6,7 +6,7 @@ def add_document_to_db(
     text: str, metadata: dict[str, str], collection_name: str = collection_name
 ):
     source_id = metadata.get("source_id")
-    nodes = SemanticSplitter().process(text, source_id=source_id)
+    nodes = SemanticSplitter().process(text, source_id=str(source_id))
     add_nodes(nodes, collection_name=collection_name, metadata=metadata)
 
 

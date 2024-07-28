@@ -177,12 +177,10 @@ def add_nodes(
     nodes = [node.__dict__ for node in nodes]
     # add the same metadata to all nodes
     for i, node in enumerate(nodes):
-        logger.debug(f"node: {node}")
         # add the metadata to the node dict
         nodes[i].update(metadata)
 
-    logger.debug(f"node: {nodes}\n\n")
-    print(f"nodes: {nodes}")
+    print(f"nodes inserted: {nodes}")
 
     conn.insert(
         collection_name=collection_name,

@@ -1,9 +1,13 @@
 from embeddings import cos_similarity, get_batch_embeddings, embed
 from typing import List, Callable, TypedDict
 
-from vecstore.util import MilvusNode
+from vecstore.util import MilvusNode, MilvusRow
 
 import numpy as np
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class SentenceCombination(TypedDict):
@@ -13,19 +17,14 @@ class SentenceCombination(TypedDict):
     combined_sentence_embedding: List[float]
 
 
-def build_block_nodes(blocks: List[MilvusNode], docid) -> List[MilvusNode]:
-    for n in blocks:
-        n.source_id = docid
-    return [MilvusNode(text, docid) for text in enumerate(blocks)]
-
-
 class SemanticSplitter:
     """Adapted from the LLamaIndex SemanticSplitter"""
 
     def __init__(self):
         self.buffer_size = 1
 
-    def process(self, text: str, docid: str) -> List[str]:
+    def process(self, text: str, source_id: str) -> List[MilvusRow]:
+        self.source_id = source_id
         splits = self.split_sentences(text)
 
         sentences = self._build_sentence_groups(splits)
@@ -37,8 +36,10 @@ class SemanticSplitter:
             sentences[i]["combined_sentence_embedding"] = embedding
         distances = self._calculate_distances_between_sentence_groups(sentences)
 
-        blocks = self.build_blocks(sentences, distances)
-        build_block_nodes(blocks, docid)
+        chunks = self.build_chunks(sentences, distances)
+        blocks = self.build_blocks_from_chunks(chunks)
+
+        return blocks
 
     def _calculate_distances_between_sentence_groups(
         self, sentences: List[SentenceCombination]
@@ -56,10 +57,22 @@ class SemanticSplitter:
 
         return distances
 
-    def build_blocks(
-        self, sentences: List[SentenceCombination], distances: List[float]
-    ) -> List[MilvusNode]:
+    def build_blocks_from_chunks(self, chunks: List[str]) -> List[MilvusRow]:
         blocks = []
+        for i, chunk in enumerate(chunks):
+            blocks.append(
+                MilvusRow(
+                    text=chunk,
+                    source_id=self.source_id,
+                    embedding=embed(chunk),
+                )
+            )
+        return blocks
+
+    def build_chunks(
+        self, sentences: List[SentenceCombination], distances: List[float]
+    ) -> List[str]:
+        chunks = []
         if len(distances) <= 0:
             breakpoint_distance_threshold = np.percentile(distances, 90)
 
@@ -69,12 +82,11 @@ class SemanticSplitter:
 
             start_index = 0
 
+            # combine sentences into blocks if they are abouve threshold
             for index in indices_above_threshold:
                 group = sentences[start_index : index + 1]
                 combined_text = "".join([d["sentence"] for d in group])
-                combined_embeddings = embed(text=combined_text)
-                m = MilvusNode(text=combined_text, embedding=combined_embeddings)
-                blocks.append(m)
+                chunks.append(combined_text)
 
                 start_index = index + 1
 
@@ -82,15 +94,13 @@ class SemanticSplitter:
                 combined_text = "".join(
                     [d["sentence"] for d in sentences[start_index:]]
                 )
-                combined_embeddings = embed(text=combined_text)
-                m = MilvusNode(text=combined_text, embedding=combined_embeddings)
-                blocks.append(m)
-                blocks.append(combined_text)
+                chunks.append(combined_text)
 
         else:
-            blocks = [" ".join([s["sentence"] for s in sentences])]
+            combined_text = " ".join([s["sentence"] for s in sentences])
+            chunks.append(combined_text)
 
-        return blocks
+        return chunks
 
     def _build_sentence_groups(
         self, text_splits: List[str]

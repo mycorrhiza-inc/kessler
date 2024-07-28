@@ -30,4 +30,5 @@ def search(
         # specifies fields to be returned
         output_fields=output_fields,
     )
+    print(f"res: {res}")
     return res
