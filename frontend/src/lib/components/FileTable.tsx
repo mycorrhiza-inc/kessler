@@ -38,9 +38,10 @@ interface FileTableProps {
 
 export const defaultLayout: Layout = {
   columns: [
-    { key: "name", label: "Filename", width: "80%", enabled: true },
+    { key: "name", label: "Filename", width: "60%", enabled: true },
     { key: "source", label: "Source", width: "20%", enabled: true },
-    { key: "author", label: "Author", width: "20%", enabled: true },
+    { key: "author", label: "Author", width: "20%", enabled: false },
+    { key: "docket_id", label: "Docket ID", width: "20%", enabled: false },
   ],
   showExtraFeatures: true,
 };

@@ -15,6 +15,7 @@ import {
   FormControl,
   FormLabel,
   IconButton,
+  Text,
 } from "@chakra-ui/react";
 import { FaWindowClose } from "react-icons/fa";
 import {
@@ -134,6 +135,7 @@ const CustomizeFileTableButton: React.FC<CustomizeFileTableButtonProps> = ({
                 <Stack>
                   {tempLayout.columns.map((column, index) => (
                     <SortableItem key={column.key} id={column.key}>
+                      <Text>{column.label}</Text>
                       <Box
                         p={4}
                         shadow="md"
@@ -145,19 +147,6 @@ const CustomizeFileTableButton: React.FC<CustomizeFileTableButtonProps> = ({
                         justifyContent="space-between"
                       >
                         <FormControl>
-                          <FormLabel>Column Label</FormLabel>
-                          <Input
-                            type="text"
-                            placeholder="Column Label"
-                            value={column.label}
-                            onChange={(e) =>
-                              onChangeColumnWidthAndLabel(
-                                index,
-                                "label",
-                                e.target.value,
-                              )
-                            }
-                          />
                           <FormLabel>Column Width</FormLabel>
                           <Input
                             type="text"
@@ -239,3 +228,17 @@ const SortableItem: React.FC<SortableItemProps> = ({ id, children }) => {
 };
 
 export default CustomizeFileTableButton;
+
+//   <FormLabel>Column Label</FormLabel>
+//   <Input
+//     type="text"
+//     placeholder="Column Label"
+//     value={column.label}
+//     onChange={(e) =>
+//       onChangeColumnWidthAndLabel(
+//         index,
+//         "label",
+//         e.target.value,
+//       )
+//     }
+//   />
