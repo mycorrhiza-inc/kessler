@@ -42,23 +42,6 @@ class MarkdownExtractor:
         )
         return english_text
 
-    def backup_processed_text(
-        self, text: str, hash: str, metadata: dict, backupdir: Path
-    ) -> None:
-        savestring = create_markdown_string(
-            text, metadata, include_previous_metadata=False
-        )
-        backuppath = backupdir / Path(hash + ".md")
-        # Seems slow to check every time a file is backed up
-        backuppath.parent.mkdir(parents=True, exist_ok=True)
-        if backuppath.exists():
-            backuppath.unlink(missing_ok=True)
-        # FIXME: We should probably come up with a better backup protocol then doing everything with hashes
-        if backuppath.is_file():
-            backuppath.unlink(missing_ok=True)
-        with open(backuppath, "w") as text_file:
-            text_file.write(savestring)
-
     async def process_raw_document_into_untranslated_text(
         self, file_loc: Path, metadata: dict, override_dir: Optional[Path] = None
     ) -> Tuple[str, dict]:

@@ -59,7 +59,7 @@ class DocumentIngester:
 
         if metadata.get("lang") == None:
             metadata["lang"] = "en"
-        file_metadata = self.get_metadata_from_file(filepath, metadata.get("doctype"))
+        file_metadata = get_metadata_from_file_obj(filepath, metadata.get("doctype"))
         self.logger.info("Attempted to get metadata from file, adding to main source.")
         # FIXME :
         # metadata.update(file_metadata)
@@ -127,10 +127,9 @@ class DocumentIngester:
             with open(path, "r") as file:
                 result = file.read()
                 text, metadata = seperate_markdown_string(result)
-                metadata["doctype"] = (
-                    # Make sure that the doc doesnt set the source type to something else, causing a crash when processing docs.
-                    doctype
-                )
+                # Make sure that the doc doesnt set the source type to something else
+                # causing a crash when processing docs.
+                metadata["doctype"] = doctype
             return metadata
 
         return {}
@@ -203,91 +202,6 @@ class DocumentIngester:
         tmpfile = self.download_file_to_file_in_tmpdir(url)
         self.logger.info("Successfully downloaded file from url")
         return (tmpfile, metadata)
-
-    def save_filepath_to_hash(
-        self, filepath: Path, hashpath: Optional[Path] = None
-    ) -> tuple[str, Path]:
-        if hashpath is None:
-            hashpath = self.rawfile_savedir
-        filepath.parent.mkdir(exist_ok=True, parents=True)
-        self.logger.info("Getting hash")
-        b264_hash = self.get_blake2_str(filepath)
-        self.logger.info(f"Got hash {b264_hash}")
-        saveloc = self.get_default_filepath_from_hash(b264_hash, hashpath)
-
-        self.logger.info(f"Saving file to {saveloc}")
-        shutil.copyfile(filepath, saveloc)
-        if saveloc.exists():
-            self.logger.info(f"Successfully Saved File to: {saveloc}")
-        else:
-            self.logger.error(f"File could not be saved to : {saveloc}")
-        return (b264_hash, saveloc)
-
-    def get_default_filepath_from_hash(
-        self, hash: str, hashpath: Optional[Path] = None
-    ) -> Path:
-        if hashpath is None:
-            hashpath = self.rawfile_savedir
-        hashpath.parent.mkdir(exist_ok=True, parents=True)
-        saveloc = hashpath / Path(hash)
-        if saveloc.exists():
-            self.logger.info(f"File already at {saveloc}, do not copy any file to it.")
-        return saveloc
-
-    def backup_metadata_to_hash(self, metadata: dict, hash: str) -> Path:
-        def backup_metadata_to_filepath(metadata: dict, filepath: Path) -> Path:
-            with open(filepath, "w+") as ff:
-                yaml.dump(metadata, ff)
-            return filepath
-
-        savedir = self.metadata_backupdir / Path(str(hash) + ".yaml")
-        self.logger.info(f"Backing up metadata to: {savedir}")
-        return backup_metadata_to_filepath(metadata, savedir)
-
-    def write_tmpfile_to_path(self, tmp: Any, path: Path):
-        path.parent.mkdir(exist_ok=True, parents=True)
-        self.logger.info("Seeking to beginning of file")
-        # Seek to the beginning of the file
-        tmp.seek(0)
-        self.logger.info("Attempting to read file contents")
-        # Read the file contents
-        try:
-            file_contents = tmp.read()
-        except Exception as e:
-            self.logger.info(f"The error is: {e}")
-        self.logger.info("Attempting to write contents to permanent file")
-        # Write the file contents to the desired path
-        with open(path, "wb") as dest_file:
-            dest_file.write(file_contents)
-
-    def get_blake2_str(
-        self, file_input: Any
-    ) -> str:  # TODO: Figure out how df file types work
-        self.logger.info("Setting Blake2b as the hash method of choice")
-        hasher = hashlib.blake2b
-        hash_object = hasher()
-        self.logger.info("Created Hash object and initialized hash.")
-        if isinstance(file_input, Path):
-            f = open(file_input, "rb")
-            buf = f.read(65536)
-            # self.logger.info(buf)
-            while len(buf) > 0:
-                hash_object.update(buf)
-                buf = f.read(65536)
-            return base64.urlsafe_b64encode(hash_object.digest()).decode()
-        if isinstance(file_input, File):  # FIXME : Solve hashing for temporary files
-            self.logger.info("Hashing from Temporary File")
-            # Read the file in chunks and update the hash object
-            buf = file_input.read(65536)
-            self.logger.info("buf once")
-            while len(buf) > 0:
-                hash_object.update(buf)
-                buf = file_input.read(65536)
-
-            self.logger.info("Hashed file")
-            return base64.url_safe_b64encode(hash_object.digest())
-        self.logger.error("Failed to hash file")
-        return "ErrorHashingFile" + rand_string()  # I am really sorry about this
 
     def infer_metadata_from_path(self, filepath: Path) -> dict:
         return_doctype = filepath.suffix

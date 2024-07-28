@@ -295,26 +295,3 @@ async def process_file_raw(
                 "
                 )
 
-
-# Redifine function here and use it for stuff.
-# FIXME: Define network types in seperate file to avoid circular imports
-# async def query_all_files_raw(
-#     files_repo: FileRepository, query: QueryData, logger: Any
-# ) -> List[FileSchema]:
-#     filters = {}
-#     if query.match_name is not None:
-#         filters["name"] = query.match_name
-#     if query.match_source is not None:
-#         filters["source"] = query.match_source
-#     if query.match_doctype is not None:
-#         filters["doctype"] = query.match_doctype
-#     if query.match_stage is not None:
-#         filters["stage"] = query.match_stage
-#
-#     results = await files_repo.list(**filters)
-#     # assert isinstance(results, List[FileModel])
-#     # Turns the file model in sqlalchemy into an easy to understand return type
-#     logger.info(f"{len(results)} results")
-#     type_adapter = TypeAdapter(list[FileSchema])
-#     valid_results = model_to_schema(results)
-#     return valid_results
