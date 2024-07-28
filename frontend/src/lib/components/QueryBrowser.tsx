@@ -68,22 +68,14 @@ const QueryBrowser: React.FC = () => {
             <FormLabel>Author</FormLabel>
             <Input
               name="match_author"
-              value={formData.match_source}
-              onChange={handleChange}
-            />
-          </FormControl>
-          <FormControl>
-            <FormLabel>Docket ID</FormLabel>
-            <Input
-              name="match_docket_id"
-              value={formData.match_source}
+              value={formData.match_author}
               onChange={handleChange}
             />
           </FormControl>
           <FormControl>
             <FormLabel>Document Class (Public Comment/Decision)</FormLabel>
             <Input
-              name="match_source"
+              name="match_document_class"
               value={formData.match_document_class}
               onChange={handleChange}
             />
