@@ -3,7 +3,12 @@ from .util import get_milvus_conn
 import os
 from typing import List
 
-collection_name = os.environ.get("MILVUS_COLLECTION_NAME", "PUC_dockets_prod")
+from .util import collection_name
+
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 def search(
@@ -13,8 +18,10 @@ def search(
     filter="",
     output_fields: List[str] = ["*"],
 ) -> List[any]:
+    logger.debug(f"searching for {query}")
     client = get_milvus_conn()
-    query_vector = embed(query=query).data[0].embedding
+    client.load_collection(collection_name)
+    query_vector = embed(query=query)
     res = client.search(
         collection_name=collection_name,  # target collection
         data=[query_vector],  # query vector

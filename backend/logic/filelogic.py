@@ -1,4 +1,4 @@
-from rag.llamaindex import add_document_to_db_from_text
+from vecstore.docprocess import add_document_to_db
 import os
 from pathlib import Path
 from typing import Any
@@ -247,6 +247,7 @@ async def process_file_raw(
                 "author": initial_metadata.get("author"),
                 "source": initial_metadata.get("source"),
                 "date": initial_metadata.get("date"),
+                "source_id": source_id
             }
 
             def guarentee_field(field: str, default_value: Any = "unknown"):
@@ -260,9 +261,8 @@ async def process_file_raw(
             return return_metadata
 
         searchable_metadata = generate_searchable_metadata(doc_metadata)
-        searchable_metadata["source_id"] = source_id
         try:
-            add_document_to_db_from_text(obj.english_text, searchable_metadata)
+            add_document_to_db(obj.english_text, metadata=searchable_metadata)
         except Exception as e:
             raise Exception("Failure in adding document to vector database", e)
         return DocumentStatus.completed

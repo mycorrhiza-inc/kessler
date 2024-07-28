@@ -2,6 +2,12 @@ import os
 from typing import Dict, List, Union
 from pymilvus import MilvusClient, FieldSchema, CollectionSchema, DataType
 
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+collection_name = os.environ.get("MILVUS_COLLECTION_NAME", "PUC_dockets_prod")
 milvus_user = os.environ.get("MILVUS_VEC_USER")
 milvus_pass = os.environ.get("MILVUS_VEC_PASS")
 milvus_host = os.environ.get("MILVUS_HOST")
@@ -20,14 +26,14 @@ class MilvusRow:
 
 
 class MilvusDoc(MilvusRow):
-    def __init__(self, text: str, k_uuid: str):
-        super().__init__(text=text, k_uuid=k_uuid)
+    def __init__(self, text: str, source_id: str, embedding: List[float]):
+        super().__init__(text=text, source_id=source_id, embedding=embedding)
         self.doc_type = "doc"
 
 
 class MilvusNode(MilvusRow):
-    def __init__(self, text: str, k_uuid: str):
-        super().__init__(text=text, k_uuid=k_uuid)
+    def __init__(self, text: str, source_id: str, embedding: List[float]):
+        super().__init__(text=text, source_id=source_id, embedding=embedding)
         self.doc_type = "node"
 
 
@@ -45,7 +51,7 @@ def check_collction_exists(collection_name=str) -> bool:
     return False
 
 
-def describe_collection_schema(collection_name: str) -> Dict[str,any]:
+def describe_collection_schema(collection_name: str) -> Dict[str, any]:
     conn = get_milvus_conn()
     return conn.describe_collection(
         collection_name=collection_name, timeout=10
@@ -85,7 +91,10 @@ def create_doc_node_schema() -> CollectionSchema:
         max_length=256,  # allow the max length of a text field
     )
     embedding_field = FieldSchema(
-        name="embedding", dtype=DataType.FLOAT_VECTOR, dim=1024, description="vector"
+        name="embedding",
+        dtype=DataType.FLOAT_VECTOR,
+        dim=1024,
+        description="embedding vector",
     )
 
     # Enable partition key on a field if you need to implement multi-tenancy based on the partition-key field
@@ -111,7 +120,7 @@ def create_doc_node_schema() -> CollectionSchema:
         enable_dynamic_field=True,
         description="a collecton of documents and nodes",
     )
-    schema.validate()
+    schema.verify()
 
     return schema
 
@@ -132,9 +141,12 @@ def create_document_collection(collection_name=str, dimension=1024):
     )
 
 
-def reindex_document_chunks(docids: List[dict], collection_name=str):
+def reindex_document_chunks(source_id: Union[List[str], str], collection_name=str):
+    if isinstance(source_id, str):
+        source_id = [source_id]
+
     conn = get_milvus_conn()
-    for doc in docids:
+    for doc in source_id:
         conn.delete(
             collection_name=collection_name,
             filter=f'source_id like "{doc}" AND doc_type not like "doc"',
@@ -157,15 +169,20 @@ def reindex_collection(collection_name=str):
 def add_nodes(
     nodes: Union[MilvusRow, List[MilvusRow]], collection_name: str, metadata: dict
 ):
+    logger.debug(f"asdfasdfd: {nodes}")
     if isinstance(nodes, MilvusRow):
         nodes = [nodes]
 
     conn = get_milvus_conn()
     nodes = [node.__dict__ for node in nodes]
     # add the same metadata to all nodes
-    for i, node in enumerate(node):
+    for i, node in enumerate(nodes):
+        logger.debug(f"node: {node}")
         # add the metadata to the node dict
         nodes[i].update(metadata)
+
+    logger.debug(f"node: {nodes}\n\n")
+    print(f"nodes: {nodes}")
 
     conn.insert(
         collection_name=collection_name,
