@@ -1,7 +1,7 @@
 from pydantic import BaseModel
-from typing import Optional, Any
+from typing import Optional, Any, List
 from advanced_alchemy.filters import SearchFilter, CollectionFilter
-from models.files import DocumentStatus, docstatus_index
+from models.files import DocumentStatus, docstatus_index, FileSchema
 
 
 class QueryData(BaseModel):
@@ -9,6 +9,7 @@ class QueryData(BaseModel):
     match_source: Optional[str] = None
     match_doctype: Optional[str] = None
     match_stage: Optional[str] = None
+    match_metadata: Optional[dict] = None
 
 
 def querydata_to_filters(query: QueryData) -> list:
@@ -43,6 +44,21 @@ def querydata_to_filters_strict(query: QueryData) -> list:
     if query.match_stage is not None:
         filters.append(CollectionFilter(field_name="stage", values=[query.match_stage]))
     return filters
+
+
+def filter_list_mdata(
+    schema_list: List[FileSchema], mdata_match: dict
+) -> List[FileSchema]:
+
+    def is_valid(item: FileSchema) -> bool:
+        if item.mdata is None:
+            return False
+        for key in mdata_match:
+            if item.mdata[key] != mdata_match["key"]:
+                return False
+        return True
+
+    return list(filter(is_valid, schema_list))
 
 
 # def querydata_to_filters_kwargs(query: QueryData) -> dict:

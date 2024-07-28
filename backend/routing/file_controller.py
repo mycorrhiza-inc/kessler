@@ -61,7 +61,7 @@ from enum import Enum
 
 from sqlalchemy import and_
 
-from logic.databaselogic import QueryData, querydata_to_filters
+from logic.databaselogic import QueryData, filter_list_mdata, querydata_to_filters
 
 
 class UUIDEncoder(json.JSONEncoder):
@@ -150,9 +150,7 @@ class FileController(Controller):
             return "Feature delayed due to only supporting english documents."
         obj = await files_repo.get(file_id)
 
-        obj_with_text = model_to_schema(obj)
-
-        markdown_text = obj_with_text.english_text
+        markdown_text = obj.english_text
 
         if markdown_text == "":
             markdown_text = "Could not find Document Markdown Text"
@@ -244,7 +242,10 @@ class FileController(Controller):
         results = await files_repo.list(*filters)
         logger.info(f"{len(results)} results")
         valid_results = list(map(model_to_schema, results))
-        return valid_results
+        if query.match_metadata is None or query.match_metadata == {}:
+            return valid_results
+        filtered_valid_results = filter_list_mdata(valid_results, query.match_metadata)
+        return filtered_valid_results
 
     @post(path="/files/query")
     async def query_all_files(
