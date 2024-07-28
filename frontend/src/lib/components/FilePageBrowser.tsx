@@ -4,6 +4,8 @@ import FileTable from "./FileTable";
 import CustomizeFileTableButton from "./CustomizeFileTableButton";
 import { FileType } from "../interfaces/file";
 
+import { defaultLayout } from "./FileTable";
+
 interface FilePageBrowserProps {
   fileUrl: string;
   data: any;
@@ -15,14 +17,7 @@ const FilePageBrowser: React.FC<FilePageBrowserProps> = ({ fileUrl, data }) => {
   const [page, setPage] = useState(1);
   const [maxPage, setMaxPage] = useState(1);
   const [numResults, setNumResults] = useState(10);
-  const [layout, setLayout] = useState({
-    columns: [
-      { key: "name", label: "Filename", width: "80%", enabled: true },
-      { key: "source", label: "Source", width: "20%", enabled: true },
-    ],
-    showExtraFeatures: true,
-  });
-
+  const [layout, setLayout] = useState(defaultLayout);
   const fetchFiles = async () => {
     setLoading(true);
     const response = await fetch(

@@ -32,6 +32,7 @@ import {
   FiFeather,
 } from "react-icons/fi";
 
+import { defaultLayout } from "./FileTable";
 import { usePathname } from "next/navigation";
 import ColorModeToggle from "./ColorModeToggle";
 import CustomizeFileTableButton from "./CustomizeFileTableButton";
@@ -48,13 +49,7 @@ function SearchBox() {
     setSearching(true);
     await getSearchResults();
   };
-  const [layout, setLayout] = useState({
-    columns: [
-      { key: "name", label: "Filename", width: "80%", enabled: true },
-      { key: "source", label: "Source", width: "20%", enabled: true },
-    ],
-    showExtraFeatures: true,
-  });
+  const [layout, setLayout] = useState(defaultLayout);
   const getSearchResults = async () => {
     let results = await fetch("/api/search", {
       method: "POST",

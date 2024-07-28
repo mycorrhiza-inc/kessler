@@ -36,6 +36,15 @@ interface FileTableProps {
   layout: Layout;
 }
 
+export const defaultLayout: Layout = {
+  columns: [
+    { key: "name", label: "Filename", width: "80%", enabled: true },
+    { key: "source", label: "Source", width: "20%", enabled: true },
+    { key: "author", label: "Author", width: "20%", enabled: true },
+  ],
+  showExtraFeatures: true,
+};
+
 const FileTable: React.FC<FileTableProps> = ({ files, layout }) => {
   const [fileState, setFileState] = useState<RowData[]>(
     files.map((file) => ({ selected: false, data: file })),
@@ -66,6 +75,10 @@ const FileTable: React.FC<FileTableProps> = ({ files, layout }) => {
     }
     return "Unknown";
   }
+  const layoutFiltered: Layout = {
+    ...layout,
+    columns: layout.columns.filter((column) => column.enabled),
+  };
 
   return (
     <TableContainer>
@@ -73,12 +86,12 @@ const FileTable: React.FC<FileTableProps> = ({ files, layout }) => {
         <Thead>
           <Tr>
             <Th width="2%">Select</Th>
-            {layout.columns.map((col) => (
+            {layoutFiltered.columns.map((col) => (
               <Th key={col.key} width={col.width}>
                 {col.label}
               </Th>
             ))}
-            {layout.showExtraFeatures && (
+            {layoutFiltered.showExtraFeatures && (
               <>
                 <Th width="6%">View</Th>
                 <Th width="2%">Status</Th>{" "}
@@ -97,12 +110,12 @@ const FileTable: React.FC<FileTableProps> = ({ files, layout }) => {
                   />
                 </Box>
               </Td>
-              {layout.columns.map((col) => (
+              {layoutFiltered.columns.map((col) => (
                 <Td key={col.key}>
                   {truncateString(getFieldFromFile(col.key, file.data))}
                 </Td>
               ))}
-              {layout.showExtraFeatures && (
+              {layoutFiltered.showExtraFeatures && (
                 <>
                   <Td>
                     <DocumentViewer document_object={file.data} />
