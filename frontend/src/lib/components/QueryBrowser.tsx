@@ -18,6 +18,7 @@ const QueryBrowser: React.FC = () => {
     match_stage: "",
     match_docket_id: "",
     match_document_class: "",
+    match_author: "",
   });
   const [queryData, setQueryData] = useState<any | null>(null);
 
@@ -36,6 +37,7 @@ const QueryBrowser: React.FC = () => {
       match_mdata: {
         docket_id: formData.match_docket_id || null,
         document_class: formData.match_document_class || null,
+        author: formData.match_author || null,
       },
     };
     setQueryData(data);
@@ -58,6 +60,14 @@ const QueryBrowser: React.FC = () => {
             <FormLabel>Source</FormLabel>
             <Input
               name="match_source"
+              value={formData.match_source}
+              onChange={handleChange}
+            />
+          </FormControl>
+          <FormControl>
+            <FormLabel>Author</FormLabel>
+            <Input
+              name="match_author"
               value={formData.match_source}
               onChange={handleChange}
             />
