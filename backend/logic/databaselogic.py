@@ -54,11 +54,7 @@ def filter_list_mdata(
         if item.mdata is None:
             return False
         for key in mdata_match:
-            if (
-                item.mdata[key] != mdata_match["key"]
-                and mdata_match["key"] is not None
-                and mdata_match != ""
-            ):
+            if item.mdata[key] != mdata_match["key"] or mdata_match["key"] is None:
                 return False
         return True
 
