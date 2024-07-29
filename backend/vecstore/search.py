@@ -16,9 +16,9 @@ def search(
     collection_name=collection_name,
     limit=10,
     filter="",
-    output_fields: List[str] = ["*"],
+    output_fields: List[str] = ["source_id"],
 ) -> List[any]:
-    logger.debug(f"searching for {query}")
+    print(f"searching for '{query}'")
     client = get_milvus_conn()
     client.load_collection(collection_name)
     query_vector = embed(query=query)

@@ -1,4 +1,5 @@
 import os
+import uuid
 from typing import Dict, List, Union
 from pymilvus import MilvusClient, FieldSchema, CollectionSchema, DataType
 
@@ -18,23 +19,23 @@ def get_milvus_conn(uri: str = milvus_host) -> MilvusClient:
 
 
 class MilvusRow:
-    def __init__(self, text: str, source_id: str = None, embedding: List[float] = None):
+    def __init__(self, text: str, source_id: str, embedding: List[float] = None):
         self.text = text
         self.source_id = source_id
-        self.doc_type = "node"
+        self.rowtype = "node"
         self.embedding = embedding
 
 
 class MilvusDoc(MilvusRow):
     def __init__(self, text: str, source_id: str, embedding: List[float]):
         super().__init__(text=text, source_id=source_id, embedding=embedding)
-        self.doc_type = "doc"
+        self.rowtype = "doc"
 
 
 class MilvusNode(MilvusRow):
     def __init__(self, text: str, source_id: str, embedding: List[float]):
         super().__init__(text=text, source_id=source_id, embedding=embedding)
-        self.doc_type = "node"
+        self.rowtype = "node"
 
 
 def drop_collection(collection_name=str):
@@ -59,38 +60,39 @@ def describe_collection_schema(collection_name: str) -> Dict[str, any]:
 
 
 def create_doc_node_schema() -> CollectionSchema:
-    id_field = FieldSchema(
+    id_filed = FieldSchema(
         name="id",
         dtype=DataType.INT64,
         is_primary=True,
         auto_id=True,
         description="primary id",
     )
-    chunk_id_field = FieldSchema(
+    chunk_id_filed = FieldSchema(
         name="chunk_id",
         dtype=DataType.INT64,
         descriptioin="id of the chunk, should typically be 0 for a docucment",
         defaault_value=0,
     )
-    text_filed = FieldSchema(
+    text_field = FieldSchema(
         name="text",
         dtype=DataType.VARCHAR,
         description="text",
         max_length=65535,  # allow the max length of a text field
     )
-    source_id_filed = FieldSchema(
+
+    source_id_field = FieldSchema(
         name="source_id",
         dtype=DataType.VARCHAR,
         description="the source document id",
         max_length=256,  # allow the max length of a text field
     )
-    rowtype_filed = FieldSchema(
+    rowtype_field = FieldSchema(
         name="rowtype",
         dtype=DataType.VARCHAR,
-        description="texte",
+        description="text",
         max_length=256,  # allow the max length of a text field
     )
-    embedding_field = FieldSchema(
+    embedding_filed = FieldSchema(
         name="embedding",
         dtype=DataType.FLOAT_VECTOR,
         dim=1024,
@@ -98,28 +100,27 @@ def create_doc_node_schema() -> CollectionSchema:
     )
 
     # Enable partition key on a field if you need to implement multi-tenancy based on the partition-key field
-    partition_field = FieldSchema(
-        name="tenant",
-        dtype=DataType.VARCHAR,
-        max_length=256,  # uuid of the group of allowed users
-        is_partition_key=True,
-        defaultv_value="public",
-    )
-
+    # _partition_filed = FieldSchema(
+    #     name="tenant",
+    #     dtype=DataType.VARCHAR,
+    #     max_length=256,  # uuid of the group of allowed users
+    #     is_partition_key=True,
+    #     defaultv_value="public",
+    # )
     schema = CollectionSchema(
         fields=[
-            id_field,
-            rowtype_filed,
-            text_filed,
-            source_id_filed,
-            chunk_id_field,
-            embedding_field,
-            partition_field,
+            id_filed,
+            chunk_id_filed,
+            text_field,
+            source_id_field,
+            rowtype_field,
+            embedding_filed,
         ],
         auto_id=True,
         enable_dynamic_field=True,
         description="a collecton of documents and nodes",
     )
+
     schema.verify()
 
     return schema
@@ -149,7 +150,7 @@ def reindex_document_chunks(source_id: Union[List[str], str], collection_name=st
     for doc in source_id:
         conn.delete(
             collection_name=collection_name,
-            filter=f'source_id like "{doc}" AND doc_type not like "doc"',
+            filter=f'source_id like "{doc}" AND rowtype not like "doc"',
         )
     # get all rows from a collection as an iterator
 
@@ -169,18 +170,26 @@ def reindex_collection(collection_name=str):
 def add_nodes(
     nodes: Union[MilvusRow, List[MilvusRow]], collection_name: str, metadata: dict
 ):
-    logger.debug(f"asdfasdfd: {nodes}")
     if isinstance(nodes, MilvusRow):
         nodes = [nodes]
+    print(f"asdfasdfd: {nodes}")
 
     conn = get_milvus_conn()
+    print(f"collection_name: {collection_name}")
+    schema = conn.describe_collection(collection_name)
+    print(f"collection schema: {schema}")
     nodes = [node.__dict__ for node in nodes]
+    toadd = []
+    print(f"there are {len(nodes)} nodes to add")
     # add the same metadata to all nodes
-    for i, node in enumerate(nodes):
+    for node in nodes:
         # add the metadata to the node dict
-        nodes[i].update(metadata)
-
-    print(f"nodes inserted: {nodes}")
+        node.update(metadata)
+        # TODO: set this somewhere else
+        node.update({"source_id": str(node["source_id"])})
+        node.update({"chunk_id": 0})
+        print(f"node: {node}")
+        toadd.append(node)
 
     conn.insert(
         collection_name=collection_name,

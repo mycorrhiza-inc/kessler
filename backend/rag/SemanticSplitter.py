@@ -24,7 +24,6 @@ class SemanticSplitter:
         self.buffer_size = 1
 
     def process(self, text: str, source_id: str) -> List[MilvusRow]:
-        self.source_id = source_id
         splits = self.split_sentences(text)
 
         sentences = self._build_sentence_groups(splits)
@@ -37,7 +36,7 @@ class SemanticSplitter:
         distances = self._calculate_distances_between_sentence_groups(sentences)
 
         chunks = self.build_chunks(sentences, distances)
-        blocks = self.build_blocks_from_chunks(chunks)
+        blocks = self.build_blocks_from_chunks(chunks, source_id=source_id)
 
         return blocks
 
@@ -57,13 +56,15 @@ class SemanticSplitter:
 
         return distances
 
-    def build_blocks_from_chunks(self, chunks: List[str]) -> List[MilvusRow]:
+    def build_blocks_from_chunks(
+        self, chunks: List[str], source_id: str
+    ) -> List[MilvusRow]:
         blocks = []
         for i, chunk in enumerate(chunks):
             blocks.append(
                 MilvusRow(
                     text=chunk,
-                    source_id=self.source_id,
+                    source_id=str(source_id),
                     embedding=embed(chunk),
                 )
             )

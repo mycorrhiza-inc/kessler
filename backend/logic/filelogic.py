@@ -247,7 +247,7 @@ async def process_file_raw(
                 "author": initial_metadata.get("author"),
                 "source": initial_metadata.get("source"),
                 "date": initial_metadata.get("date"),
-                "source_id": source_id
+                "source_id": source_id,
             }
 
             def guarentee_field(field: str, default_value: Any = "unknown"):
