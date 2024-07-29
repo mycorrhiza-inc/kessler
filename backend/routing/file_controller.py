@@ -1,4 +1,4 @@
-from rag.llamaindex import add_document_to_db_from_text
+from vecstore.docprocess import add_document_to_db
 import os
 from pathlib import Path
 from uuid import UUID
@@ -429,8 +429,8 @@ class FileController(Controller):
             except Exception as e:
                 return f"issue: \n{e}"
             try:
-                meta["kessler_pg_id"] = str(new_file.id)
-                add_document_to_db_from_text(text=restfile, metadata=meta)
+                meta["source_id"] = str(new_file.id)
+                add_document_to_db(text=restfile, metadata=meta)
             except Exception as e:
                 request.logger.error(e)
                 return "issue indexing file"

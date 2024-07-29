@@ -87,37 +87,5 @@ class SearchController(Controller):
         logger = request.logger
         query = data.query
         res = search(query=query)
-        # TODO: Become more functional
-        # ids = map(lambda r: {"uuid": r[0]["entity"]["id"]}, res)
+        return res
 
-        ids = []
-        for r in res:
-            # logger.info(r[0]["entity"])
-            # logger.info(type(r[0]["entity"]))
-            # logger.info(r[0]["entity"].keys())
-            # test_dict = json.loads(r[0]["entity"]["_node_content"])
-            ids.append(r[0]["entity"])
-        if only_uuid:
-            # Fix later
-            return []
-
-        # TODO: Use an async map for this as soon as python gets that functionality or use an import
-        async def get_file(uuid_str: str):
-            uuid = UUID(uuid_str)
-            # logger.info(uuid)
-            obj = await files_repo.get(uuid)
-            return model_to_schema(obj)
-
-        files = []
-        for id in ids:
-            for field in ["document_id", "doc_id", "ref_doc_id", "id"]:
-                try:
-                    uuid_str = id[field]
-                    file_result = await get_file(uuid_str)
-                    files.append(file_result)
-                    logger.info("Success on" + field)
-                except Exception as e:
-                    pass
-                    # logger.error(f"Encountered an error while attempting to get file {uuid_str} : {e}")
-
-        return files
