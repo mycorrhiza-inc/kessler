@@ -225,18 +225,16 @@ def add_document_to_db(doc: Document) -> None:
 
 def vecstore_metadata_error():
     logger.error("No metadata found for document. Skipping.")
-    raise ValueError("No metadata found for document. Must include a kessler_pg_id.")
+    raise ValueError("No metadata found for document. Must include a source_id.")
 
 
 # WARN: DANGEROUS
 
 
 def add_document_to_db_from_text(text: str, metadata: Optional[dict] = None) -> None:
-    if metadata is None or metadata.get("kessler_pg_id") is None:
+    if metadata is None or metadata.get("source_id") is None:
         logger.error("No metadata found for document. Skipping.")
-        raise ValueError(
-            "No metadata found for document. Must include a kessler_pg_id."
-        )
+        raise ValueError("No metadata found for document. Must include a source_id.")
 
     try:
         document = Document(text=str(text), metadata=metadata)
@@ -267,7 +265,7 @@ async def add_document_to_db_from_hash(hash_str: str) -> None:
             if file_row:
                 english_text = file_row.english_text
                 document_metadata = file_row.doc_metadata
-                document_metadata["kessler_pg_id"] = str(file_row.id)
+                document_metadata["source_id"] = str(file_row.id)
             else:
                 vecstore_metadata_error()
 

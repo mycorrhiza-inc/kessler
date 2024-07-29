@@ -78,6 +78,7 @@ if "postgresql://" in postgres_connection_string:
 #     )
 is_daemon_running = False
 
+
 async def create_global_connection():
     global conn
     conn = utils.sqlalchemy_config.get_engine()
@@ -288,10 +289,9 @@ class DaemonController(Controller):
                         max_documents=documents_per_run,
                         randomize=True
                     )
+
             except Exception as e:
                 is_daemon_running = False
                 raise e
 
         return "Code is in an unreachable state."
-
-
