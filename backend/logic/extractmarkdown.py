@@ -29,11 +29,6 @@ class MarkdownExtractor:
         self.priority = priority
         # TODO : Add database connection.
 
-    def process_raw_document_into_english_text(self, file_loc: Path, metadata: dict):
-        lang = metadata.get("lang")
-        raw_text = self.process_raw_document_into_untranslated_text(file_loc, metadata)
-        return self.convert_text_into_eng(raw_text, lang)
-
     def convert_text_into_eng(self, file_text: str, lang: str):
         if lang in ["en", "eng", "english", None]:
             return file_text

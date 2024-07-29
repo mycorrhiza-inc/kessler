@@ -34,20 +34,17 @@ import json
 from util.niclib import rand_string
 
 
-OS_TMPDIR = Path(os.environ["TMPDIR"])
-OS_GPU_COMPUTE_URL = os.environ["GPU_COMPUTE_URL"]
-OS_FILEDIR = Path("/files/")
-
 
 # import base64
 
-
-OS_TMPDIR = Path(os.environ["TMPDIR"])
-OS_GPU_COMPUTE_URL = os.environ["GPU_COMPUTE_URL"]
-OS_FILEDIR = Path("/files/")
-OS_HASH_FILEDIR = OS_FILEDIR / Path("raw")
-OS_OVERRIDE_FILEDIR = OS_FILEDIR / Path("override")
-OS_BACKUP_FILEDIR = OS_FILEDIR / Path("backup")
+from constants import (
+    OS_TMPDIR ,
+    OS_GPU_COMPUTE_URL,
+    OS_FILEDIR,  
+    OS_HASH_FILEDIR,
+    OS_OVERRIDE_FILEDIR,
+    OS_BACKUP_FILEDIR
+)
 
 
 async def add_file_raw(
