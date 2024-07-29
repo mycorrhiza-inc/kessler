@@ -24,6 +24,7 @@ import openai
 from llama_index.llms.groq import Groq
 from llama_index.llms.openai import OpenAI
 from llama_index.llms.octoai import OctoAI
+from llamaindex.llms.fireowrks import Fireworks
 
 
 from sqlalchemy import make_url
@@ -38,7 +39,7 @@ from llama_index.vector_stores.milvus import MilvusVectorStore
 from llama_index.core import Document
 
 
-from constants import OPENAI_API_KEY, OCTOAI_API_KEY, GROQ_API_KEY
+from constants import OPENAI_API_KEY, OCTOAI_API_KEY, GROQ_API_KEY, FIREWORKS_API_KEY
 
 logger = logging.getLogger()
 
@@ -69,8 +70,10 @@ def get_llm_from_model_str(model_name: Optional[str]):
         #     token=OCTOAI_API_KEY,
         # )
         # Currently broken, fix by using together or something similar, fall back on 70b until then
-        actual_name = "llama-3.1-70b-versatile"
-        return Groq(model=actual_name, request_timeout=60.0, api_key=GROQ_API_KEY)
+        actual_name = "accounts/fireworks/models/llama-v3p1-405b-instruct"
+        return Fireworks(
+            model=actual_name, request_timeout=60.0, api_key=FIREWORKS_API_KEY
+        )
     if model_name in ["gpt-4o"]:
         return OpenAI(model=model_name, request_timeout=60.0, api_key=OPENAI_API_KEY)
     else:
