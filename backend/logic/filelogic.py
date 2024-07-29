@@ -40,10 +40,7 @@ from util.file_io import S3FileManager
 
 from constants import (
     OS_TMPDIR ,
-    OS_GPU_COMPUTE_URL,
-    OS_FILEDIR,  
     OS_HASH_FILEDIR,
-    OS_OVERRIDE_FILEDIR,
     OS_BACKUP_FILEDIR
 )
 

@@ -27,8 +27,8 @@ import hashlib
 import base64
 from util.file_io import S3FileManager
 
-OS_TMPDIR = Path(os.environ["TMPDIR"])
-OS_FILEDIR = Path("/files/")
+
+from constants import OS_TMPDIR, OS_FILEDIR
 
 
 class DocumentIngester:
