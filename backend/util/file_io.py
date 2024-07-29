@@ -46,6 +46,7 @@ class S3FileManager:
     def __init__(self, logger: Optional[Any] = None) -> None:
         if logger is None:
             logger = default_logger
+        self.tmpdir = OS_TMPDIR
         self.rawfile_savedir = OS_HASH_FILEDIR
         self.metadata_backupdir = OS_BACKUP_FILEDIR
 
@@ -141,3 +142,35 @@ class S3FileManager:
             backuppath.unlink(missing_ok=True)
         with open(backuppath, "w") as text_file:
             text_file.write(savestring)
+
+    def download_file_to_path(self, url: str, savepath: Path) -> Path:
+        savepath.parent.mkdir(exist_ok=True, parents=True)
+        self.logger.info(f"Downloading file to dir: {savepath}")
+        with requests.get(url, stream=True) as r:
+            r.raise_for_status()
+            with open(savepath, "wb") as f:
+                for chunk in r.iter_content(chunk_size=8192):
+                    # If you have chunk encoded response uncomment if
+                    # and set chunk_size parameter to None.
+                    # if chunk:
+                    f.write(chunk)
+        return savepath
+
+    # TODO : Get types for temporary file
+    def download_file_to_tmpfile(self, url: str) -> Any:
+        self.logger.info(f"Downloading file to temporary file")
+        with requests.get(url, stream=True) as r:
+            r.raise_for_status()
+            with TemporaryFile("wb") as f:
+                for chunk in r.iter_content(chunk_size=8192):
+                    # If you have chunk encoded response uncomment if
+                    # and set chunk_size parameter to None.
+                    # if chunk:
+                    f.write(chunk)
+                return f
+
+    def download_file_to_file_in_tmpdir(
+        self, url: str
+    ) -> Any:  # TODO : Get types for temporary file
+        savedir = self.tmpdir / Path(rand_string())
+        return self.download_file_to_path(url, savedir)

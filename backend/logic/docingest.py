@@ -136,32 +136,6 @@ class DocumentIngester:
 
         return {}
 
-    def download_file_to_path(self, url: str, savepath: Path) -> Path:
-        savepath.parent.mkdir(exist_ok=True, parents=True)
-        self.logger.info(f"Downloading file to dir: {savepath}")
-        with requests.get(url, stream=True) as r:
-            r.raise_for_status()
-            with open(savepath, "wb") as f:
-                for chunk in r.iter_content(chunk_size=8192):
-                    # If you have chunk encoded response uncomment if
-                    # and set chunk_size parameter to None.
-                    # if chunk:
-                    f.write(chunk)
-        return savepath
-
-    # TODO : Get types for temporary file
-    def download_file_to_tmpfile(self, url: str) -> Any:
-        self.logger.info(f"Downloading file to temporary file")
-        with requests.get(url, stream=True) as r:
-            r.raise_for_status()
-            with TemporaryFile("wb") as f:
-                for chunk in r.iter_content(chunk_size=8192):
-                    # If you have chunk encoded response uncomment if
-                    # and set chunk_size parameter to None.
-                    # if chunk:
-                    f.write(chunk)
-                return f
-
     def rectify_unknown_metadata(self, metadata: dict):
         assert metadata.get("doctype") != None
 
@@ -175,12 +149,6 @@ class DocumentIngester:
         metadata = mut_rectify_empty_field(metadata, "author", "unknown")
         metadata = mut_rectify_empty_field(metadata, "language", "en")
         return metadata
-
-    def download_file_to_file_in_tmpdir(
-        self, url: str
-    ) -> Any:  # TODO : Get types for temporary file
-        savedir = self.tmpdir / Path(rand_string())
-        return self.download_file_to_path(url, savedir)
 
     def add_file_from_url_nocall(self, url: str) -> tuple[Any, dict]:
         def rectify_unknown_metadata(metadata: dict):
