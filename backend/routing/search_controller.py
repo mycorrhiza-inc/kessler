@@ -31,6 +31,7 @@ from models.files import (
     provide_files_repo,
     DocumentStatus,
     docstatus_index,
+    model_to_schema,
 )
 
 import json
@@ -87,3 +88,4 @@ class SearchController(Controller):
         query = data.query
         res = search(query=query)
         return res
+

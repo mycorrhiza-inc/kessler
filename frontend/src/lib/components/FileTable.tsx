@@ -11,25 +11,45 @@ import {
   Center,
 } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
-import { FileType } from "../interfaces/file";
-import { LoadingSpinner } from "@saas-ui/react";
 import DocumentViewer from "./DocumentViewer";
 import { IoMdCheckmarkCircleOutline } from "react-icons/io";
 import { ImCross } from "react-icons/im";
+import { FileType } from "../interfaces/file";
+
 interface RowData {
   selected: boolean;
   data: FileType;
 }
 
-interface FileTableProps {
-  files: FileType[];
+interface Layout {
+  columns: {
+    key: string;
+    label: string;
+    width: string;
+    enabled: boolean;
+  }[];
+  showExtraFeatures: boolean;
 }
 
-const FileTable: React.FC<FileTableProps> = ({ files }) => {
+interface FileTableProps {
+  files: FileType[];
+  layout: Layout;
+}
+
+export const defaultLayout: Layout = {
+  columns: [
+    { key: "name", label: "Filename", width: "60%", enabled: true },
+    { key: "source", label: "Source", width: "20%", enabled: true },
+    { key: "author", label: "Author", width: "20%", enabled: false },
+    { key: "docket_id", label: "Docket ID", width: "20%", enabled: false },
+  ],
+  showExtraFeatures: true,
+};
+
+const FileTable: React.FC<FileTableProps> = ({ files, layout }) => {
   const [fileState, setFileState] = useState<RowData[]>(
     files.map((file) => ({ selected: false, data: file })),
   );
-  const [loading, setLoading] = useState(false);
 
   const updateSelected = (id: string) => {
     setFileState((prevState) =>
@@ -38,10 +58,28 @@ const FileTable: React.FC<FileTableProps> = ({ files }) => {
       ),
     );
   };
+
   function truncateString(str: string) {
     const length = 60;
     return str.length < length ? str : str.slice(0, length - 3) + "...";
   }
+  function getFieldFromFile(key: string, file: FileType): string {
+    // Please shut up, I know what Im doing
+    // @ts-ignore
+    var result = file[key];
+    if (result == undefined) {
+      // @ts-ignore
+      result = file.mdata[key];
+    }
+    if (result != undefined) {
+      return String(result);
+    }
+    return "Unknown";
+  }
+  const layoutFiltered: Layout = {
+    ...layout,
+    columns: layout.columns.filter((column) => column.enabled),
+  };
 
   return (
     <TableContainer>
@@ -49,48 +87,51 @@ const FileTable: React.FC<FileTableProps> = ({ files }) => {
         <Thead>
           <Tr>
             <Th width="2%">Select</Th>
-            <Th width="70%">Filename</Th>
-            <Th width="20%">Source</Th>
-            <Th width="6%">View</Th>
-            <Th width="2%">Status</Th>
+            {layoutFiltered.columns.map((col) => (
+              <Th key={col.key} width={col.width}>
+                {col.label}
+              </Th>
+            ))}
+            {layoutFiltered.showExtraFeatures && (
+              <>
+                <Th width="6%">View</Th>
+                <Th width="2%">Status</Th>{" "}
+              </>
+            )}
           </Tr>
         </Thead>
         <Tbody>
-          {loading && (
-            <Tr>
-              <Td></Td>
+          {fileState.map((file) => (
+            <Tr key={file.data.id}>
               <Td>
-                <Center>
-                  <LoadingSpinner />
-                </Center>
+                <Box>
+                  <Checkbox
+                    isChecked={file.selected}
+                    onChange={() => updateSelected(file.data.id)}
+                  />
+                </Box>
               </Td>
+              {layoutFiltered.columns.map((col) => (
+                <Td key={col.key}>
+                  {truncateString(getFieldFromFile(col.key, file.data))}
+                </Td>
+              ))}
+              {layoutFiltered.showExtraFeatures && (
+                <>
+                  <Td>
+                    <DocumentViewer document_object={file.data} />
+                  </Td>
+                  <Td>
+                    {file.data.stage === "completed" ? (
+                      <IoMdCheckmarkCircleOutline />
+                    ) : (
+                      <ImCross />
+                    )}
+                  </Td>
+                </>
+              )}
             </Tr>
-          )}
-          {!loading &&
-            fileState.map((file) => (
-              <Tr key={file.data.id}>
-                <Td>
-                  <Box>
-                    <Checkbox
-                      isChecked={file.selected}
-                      onChange={() => updateSelected(file.data.id)}
-                    />
-                  </Box>
-                </Td>
-                <Td>{truncateString(file.data.name)}</Td>
-                <Td>{truncateString(file.data.source)}</Td>
-                <Td>
-                  <DocumentViewer document_object={file.data} />
-                </Td>
-                <Td>
-                  {file.data.stage == "completed" ? (
-                    <IoMdCheckmarkCircleOutline />
-                  ) : (
-                    <ImCross />
-                  )}
-                </Td>
-              </Tr>
-            ))}
+          ))}
         </Tbody>
       </Table>
     </TableContainer>

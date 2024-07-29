@@ -9,7 +9,11 @@ from sqlalchemy.orm import Mapped
 from .utils import PydanticBaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, TypeAdapter
+
+
+import json
+
 
 import logging
 
@@ -65,19 +69,28 @@ class FileSchema(PydanticBaseModel):
     name: str | None = None
     source: str | None = None
     stage: str | None = None
-    summary: str | None = None
-    mdata: str | None = None
     short_summary: str | None = None
-    original_text: str | None = None
-    english_text: str | None = None
+    summary: str | None = None
+    mdata: dict | None = None
 
+    # Good idea to do this for dict based mdata, instead wrote a custom function for it
     @field_validator("id")
     @classmethod
     def stringify_id(cls, id: any) -> str:
         return str(id)
 
 
+def model_to_schema(model: FileModel) -> FileSchema:
+    metadata_str = model.mdata
+    model.mdata = None
+    type_adapter = TypeAdapter(FileSchema)
+    schema = type_adapter.validate_python(model)
+    schema.mdata = json.loads(metadata_str)
+    return schema
+
+
 class FileSchemaWithText(FileSchema):
+    id: Annotated[Any, Field(validate_default=True)]
     original_text: str | None = None
     english_text: str | None = None
 

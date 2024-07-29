@@ -61,7 +61,6 @@ import {
 import { usePathname } from "next/navigation";
 import ColorModeToggle from "./ColorModeToggle";
 
-import FileTableUUIDOnly from "./FileTableUUIDOnly";
 // import SearchDialog from "./SearchDialog";
 import { Center } from "@chakra-ui/react";
 import SearchBox from "./SearchBox";
@@ -78,8 +77,6 @@ export default function Page({ children }: { children: React.ReactNode }) {
     }
     return false;
   }
-
-  const toast = useToast();
 
   return (
     <AppShell

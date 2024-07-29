@@ -41,6 +41,7 @@ from models.files import (
     provide_files_repo,
     DocumentStatus,
     docstatus_index,
+    model_to_schema,
 )
 
 from logic.docingest import DocumentIngester
@@ -59,6 +60,8 @@ from util.niclib import rand_string, paginate_results
 from enum import Enum
 
 from sqlalchemy import and_
+
+from logic.databaselogic import QueryData, filter_list_mdata, querydata_to_filters
 
 
 class UUIDEncoder(json.JSONEncoder):
@@ -92,13 +95,6 @@ class FileCreate(BaseModel):
 
 class FileUpload(BaseModel):
     message: str
-
-
-class QueryData(BaseModel):
-    match_name: Optional[str] = None
-    match_source: Optional[str] = None
-    match_doctype: Optional[str] = None
-    match_stage: Optional[str] = None
 
 
 class IndexFileRequest(BaseModel):
@@ -140,9 +136,7 @@ class FileController(Controller):
     ) -> FileSchema:
         obj = await files_repo.get(file_id)
 
-        type_adapter = TypeAdapter(FileSchema)
-
-        return type_adapter.validate_python(obj)
+        return model_to_schema(obj)
 
     @get(path="/files/markdown/{file_id:uuid}")
     async def get_markdown(
@@ -156,11 +150,7 @@ class FileController(Controller):
             return "Feature delayed due to only supporting english documents."
         obj = await files_repo.get(file_id)
 
-        type_adapter = TypeAdapter(FileSchemaWithText)
-
-        obj_with_text = type_adapter.validate_python(obj)
-
-        markdown_text = obj_with_text.english_text
+        markdown_text = obj.english_text
 
         if markdown_text == "":
             markdown_text = "Could not find Document Markdown Text"
@@ -179,7 +169,7 @@ class FileController(Controller):
             return Response(content="ID does not exist", status_code=404)
 
         type_adapter = TypeAdapter(FileSchema)
-        obj = type_adapter.validate_python(obj)
+        obj = model_to_schema(obj)
         filehash = obj.hash
 
         file_path = DocumentIngester(logger).get_default_filepath_from_hash(filehash)
@@ -212,19 +202,15 @@ class FileController(Controller):
         if obj is None:
             return Response(content="ID does not exist", status_code=404)
 
-        type_adapter = TypeAdapter(FileSchema)
-        obj = type_adapter.validate_python(obj)
-        metadata_str = obj.mdata
-        metadata_dict = json.loads(metadata_str)
-        return metadata_dict
+        obj = model_to_schema(obj)
+        return obj.mdata
 
     async def get_all_files_raw(
         self, files_repo: FileRepository, logger: Any
     ) -> list[FileSchema]:
         results = await files_repo.list()
         logger.info(f"{len(results)} results")
-        type_adapter = TypeAdapter(list[FileSchema])
-        valid_results = type_adapter.validate_python(results)
+        valid_results = list(map(model_to_schema, results))
         return valid_results
 
     @post(path="/files/all")
@@ -252,23 +238,14 @@ class FileController(Controller):
     async def query_all_files_raw(
         self, files_repo: FileRepository, query: QueryData, logger: Any
     ) -> List[FileSchema]:
-        filters = {}
-        if query.match_name is not None:
-            filters["name"] = query.match_name
-        if query.match_source is not None:
-            filters["source"] = query.match_source
-        if query.match_doctype is not None:
-            filters["doctype"] = query.match_doctype
-        if query.match_stage is not None:
-            filters["stage"] = query.match_stage
-
-        results = await files_repo.list(**filters)
-        # assert isinstance(results, List[FileModel])
-        # Turns the file model in sqlalchemy into an easy to understand return type
+        filters = querydata_to_filters(query)
+        results = await files_repo.list(*filters)
         logger.info(f"{len(results)} results")
-        type_adapter = TypeAdapter(list[FileSchema])
-        valid_results = type_adapter.validate_python(results)
-        return valid_results
+        valid_results = list(map(model_to_schema, results))
+        if query.match_metadata is None or query.match_metadata == {}:
+            return valid_results
+        filtered_valid_results = filter_list_mdata(valid_results, query.match_metadata)
+        return filtered_valid_results
 
     @post(path="/files/query")
     async def query_all_files(
@@ -360,7 +337,7 @@ class FileController(Controller):
             tmpfile_path, metadata, process, override_hash, files_repo, logger
         )
         # type_adapter = TypeAdapter(FileSchema)
-        # final_return = type_adapter.validate_python(new_file)
+        # final_return = model_to_schema(new_file)
         # logger.info(final_return)
         return f"Successfully added document with uuid: {file_obj.uuid}"
 
@@ -400,7 +377,9 @@ class FileController(Controller):
             obj.stage = regenerate_from.value
 
         if docstatus_index(DocumentStatus(obj.stage)) < docstatus_index(stop_at):
-            await process_file_raw(obj, files_repo, request.logger, stop_at)
+            await process_file_raw(
+                obj, files_repo, request.logger, stop_at, priority=True
+            )
         # TODO : Return Response code and response message
         return self.validate_and_jsonify(obj)
 
