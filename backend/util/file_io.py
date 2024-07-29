@@ -29,6 +29,7 @@ import hashlib
 import base64
 
 
+from util.niclib import create_markdown_string, seperate_markdown_string
 from constants import (
     OS_TMPDIR,
     OS_GPU_COMPUTE_URL,
@@ -45,6 +46,9 @@ class S3FileManager:
     def __init__(self, logger: Optional[Any] = None) -> None:
         if logger is None:
             logger = default_logger
+        self.rawfile_savedir = OS_HASH_FILEDIR
+        self.metadata_backupdir = OS_BACKUP_FILEDIR
+
         self.logger = logger
 
     def save_filepath_to_hash(
@@ -96,12 +100,12 @@ class S3FileManager:
         # Read the file contents
         try:
             file_contents = tmp.read()
+            self.logger.info("Attempting to write contents to permanent file")
+            # Write the file contents to the desired path
+            with open(path, "wb") as dest_file:
+                dest_file.write(file_contents)
         except Exception as e:
             self.logger.info(f"The error is: {e}")
-        self.logger.info("Attempting to write contents to permanent file")
-        # Write the file contents to the desired path
-        with open(path, "wb") as dest_file:
-            dest_file.write(file_contents)
 
     def get_blake2_str(
         self, file_input: Any
@@ -118,17 +122,6 @@ class S3FileManager:
                 hash_object.update(buf)
                 buf = f.read(65536)
             return base64.urlsafe_b64encode(hash_object.digest()).decode()
-        if isinstance(file_input, File):  # FIXME : Solve hashing for temporary files
-            self.logger.info("Hashing from Temporary File")
-            # Read the file in chunks and update the hash object
-            buf = file_input.read(65536)
-            self.logger.info("buf once")
-            while len(buf) > 0:
-                hash_object.update(buf)
-                buf = file_input.read(65536)
-
-            self.logger.info("Hashed file")
-            return base64.url_safe_b64encode(hash_object.digest())
         self.logger.error("Failed to hash file")
         return "ErrorHashingFile" + rand_string()  # I am really sorry about this
 

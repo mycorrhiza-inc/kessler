@@ -25,6 +25,7 @@ from io import BufferedWriter
 import shutil
 import hashlib
 import base64
+from util.file_io import S3FileManager
 
 OS_TMPDIR = Path(os.environ["TMPDIR"])
 OS_FILEDIR = Path("/files/")
@@ -46,6 +47,7 @@ class DocumentIngester:
         self.proctext_backupdir = savedir / Path("processed_text")
         # Make sure the different directories always exist
         self.proctext_backupdir.mkdir(exist_ok=True, parents=True)
+        self.file_manager = S3FileManager()
 
     def url_to_filepath_and_metadata(self, url: str) -> tuple[Path, dict]:
         self.logger.info("collecting filepath metadata")
@@ -59,7 +61,7 @@ class DocumentIngester:
 
         if metadata.get("lang") == None:
             metadata["lang"] = "en"
-        file_metadata = get_metadata_from_file_obj(filepath, metadata.get("doctype"))
+        # file_metadata = self.file_manager.get_metadata_from_file_obj(filepath, metadata.get("doctype"))
         self.logger.info("Attempted to get metadata from file, adding to main source.")
         # FIXME :
         # metadata.update(file_metadata)
