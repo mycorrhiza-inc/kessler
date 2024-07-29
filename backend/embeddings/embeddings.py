@@ -2,7 +2,8 @@ import os
 from openai import OpenAI
 
 
-OCTOAI_API_KEY = os.environ.get("OCTOAI_API_KEY")
+from constants import OCTOAI_API_KEY
+
 OCTOAI_URL = "https://text.octoai.run/v1"
 
 
