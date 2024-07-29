@@ -24,7 +24,7 @@ import openai
 from llama_index.llms.groq import Groq
 from llama_index.llms.openai import OpenAI
 from llama_index.llms.octoai import OctoAI
-from llamaindex.llms.fireowrks import Fireworks
+from llama_index.llms.fireworks import Fireworks
 
 
 from sqlalchemy import make_url
