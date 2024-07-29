@@ -18,6 +18,7 @@ from models.files import (
     provide_files_repo,
     DocumentStatus,
     docstatus_index,
+    model_to_schema
 )
 
 from logic.docingest import DocumentIngester
@@ -315,5 +316,5 @@ async def process_file_raw(
 #     # Turns the file model in sqlalchemy into an easy to understand return type
 #     logger.info(f"{len(results)} results")
 #     type_adapter = TypeAdapter(list[FileSchema])
-#     valid_results = type_adapter.validate_python(results)
+#     valid_results = model_to_schema(results)
 #     return valid_results

@@ -16,6 +16,9 @@ const QueryBrowser: React.FC = () => {
     match_source: "",
     match_doctype: "",
     match_stage: "",
+    match_docket_id: "",
+    match_document_class: "",
+    match_author: "",
   });
   const [queryData, setQueryData] = useState<any | null>(null);
 
@@ -31,6 +34,11 @@ const QueryBrowser: React.FC = () => {
       match_source: formData.match_source || null,
       match_doctype: formData.match_doctype || null,
       match_stage: formData.match_stage || null,
+      match_mdata: {
+        docket_id: formData.match_docket_id || null,
+        document_class: formData.match_document_class || null,
+        author: formData.match_author || null,
+      },
     };
     setQueryData(data);
   };
@@ -57,7 +65,23 @@ const QueryBrowser: React.FC = () => {
             />
           </FormControl>
           <FormControl>
-            <FormLabel>Document Type</FormLabel>
+            <FormLabel>Author</FormLabel>
+            <Input
+              name="match_author"
+              value={formData.match_author}
+              onChange={handleChange}
+            />
+          </FormControl>
+          <FormControl>
+            <FormLabel>Document Class (Public Comment/Decision)</FormLabel>
+            <Input
+              name="match_document_class"
+              value={formData.match_document_class}
+              onChange={handleChange}
+            />
+          </FormControl>
+          <FormControl>
+            <FormLabel>File Extension</FormLabel>
             <Input
               name="match_doctype"
               value={formData.match_doctype}
@@ -65,7 +89,7 @@ const QueryBrowser: React.FC = () => {
             />
           </FormControl>
           <FormControl>
-            <FormLabel>Stage</FormLabel>
+            <FormLabel>Procesing Stage</FormLabel>
             <Input
               name="match_stage"
               value={formData.match_stage}

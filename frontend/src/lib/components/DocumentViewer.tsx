@@ -18,6 +18,7 @@ import MarkdownRenderer from "./MarkdownRenderer";
 import PDFViewer from "./PDFViewer";
 import { FileType } from "../interfaces";
 
+import { Table, Thead, Tbody, Tr, Th, Td } from "@chakra-ui/react";
 const DynamicModal: React.FC<{
   document_object: FileType;
   onClose: () => void;
@@ -60,6 +61,35 @@ const DynamicModal: React.FC<{
     }
   };
 
+  const MetadataTable = ({ mdata }: { mdata: Object }) => {
+    return (
+      <Table variant="simple" border="1px" borderColor="gray.200">
+        <Thead>
+          <Tr>
+            <Th border="1px" borderColor="gray.200">
+              Key
+            </Th>
+            <Th border="1px" borderColor="gray.200">
+              Value
+            </Th>
+          </Tr>
+        </Thead>
+        <Tbody>
+          {Object.entries(mdata).map(([key, value]) => (
+            <Tr key={key}>
+              <Td border="1px" borderColor="gray.200">
+                {key}
+              </Td>
+              <Td border="1px" borderColor="gray.200">
+                {value}
+              </Td>
+            </Tr>
+          ))}
+        </Tbody>
+      </Table>
+    );
+  };
+
   function onDocumentLoadSuccess({ numPages }: { numPages: number }): void {
     setNumPages(numPages);
   }
@@ -85,6 +115,7 @@ const DynamicModal: React.FC<{
       <ModalContent maxW="80%">
         <ModalHeader>Viewing Document: {document_object.name}</ModalHeader>
         <ModalCloseButton />
+        <MetadataTable mdata={document_object.mdata}></MetadataTable>
         <ModalBody>
           <Grid templateColumns="repeat(2, 1fr)" gap={6}>
             {isPDF && (

@@ -1,8 +1,10 @@
-import { Box, Button, Center, Select, Spinner } from "@chakra-ui/react";
+import { Box, Button, Center, Select, Spinner, Text } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import FileTable from "./FileTable";
+import CustomizeFileTableButton from "./CustomizeFileTableButton";
 import { FileType } from "../interfaces/file";
-import { Text } from "@chakra-ui/react";
+
+import { defaultLayout } from "./FileTable";
 
 interface FilePageBrowserProps {
   fileUrl: string;
@@ -15,7 +17,7 @@ const FilePageBrowser: React.FC<FilePageBrowserProps> = ({ fileUrl, data }) => {
   const [page, setPage] = useState(1);
   const [maxPage, setMaxPage] = useState(1);
   const [numResults, setNumResults] = useState(10);
-
+  const [layout, setLayout] = useState(defaultLayout);
   const fetchFiles = async () => {
     setLoading(true);
     const response = await fetch(
@@ -41,12 +43,13 @@ const FilePageBrowser: React.FC<FilePageBrowserProps> = ({ fileUrl, data }) => {
 
   return (
     <Box>
+      <CustomizeFileTableButton layout={layout} setLayout={setLayout} />
       {loading ? (
         <Center>
           <Spinner />
         </Center>
       ) : (
-        <FileTable files={files} />
+        <FileTable files={files} layout={layout} />
       )}
       <Box mt={4} display="flex" justifyContent="space-between">
         <Paginator page={page} setPage={setPage} maxPage={maxPage} />
