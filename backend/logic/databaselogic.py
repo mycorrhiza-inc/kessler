@@ -54,28 +54,11 @@ def filter_list_mdata(
         if item.mdata is None:
             return False
         for key in mdata_match:
-            if (
-                item.mdata[key] != mdata_match["key"]
-                and mdata_match["key"] is not None
-                and mdata_match != ""
-            ):
+            if item.mdata[key] != mdata_match["key"] and mdata_match["key"] is not None:
                 return False
         return True
 
     return list(filter(is_valid, schema_list))
-
-
-# def querydata_to_filters_kwargs(query: QueryData) -> dict:
-#     filters = {}
-#     if query.match_name is not None:
-#         filters["name"] = query.match_name
-#     if query.match_source is not None:
-#         filters["source"] = query.match_source
-#     if query.match_doctype is not None:
-#         filters["doctype"] = query.match_doctype
-#     if query.match_stage is not None:
-#         filters["stage"] = query.match_stage
-#     return filters
 
 
 def filters_docstatus_processing(

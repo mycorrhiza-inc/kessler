@@ -61,9 +61,14 @@ class ManualDocument(BaseModel):
     metadata: Optional[dict]
 
 
-OS_TMPDIR = Path(os.environ["TMPDIR"])
-OS_GPU_COMPUTE_URL = os.environ["GPU_COMPUTE_URL"]
-OS_FILEDIR = Path("/files/")
+from constants import (
+    OS_TMPDIR,
+    OS_GPU_COMPUTE_URL,
+    OS_FILEDIR,
+    OS_HASH_FILEDIR,
+    OS_OVERRIDE_FILEDIR,
+    OS_BACKUP_FILEDIR,
+)
 
 
 def validate_chat(chat_history: List[Dict[str, str]]) -> bool:

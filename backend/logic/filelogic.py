@@ -34,20 +34,15 @@ import json
 from util.niclib import rand_string
 
 
-OS_TMPDIR = Path(os.environ["TMPDIR"])
-OS_GPU_COMPUTE_URL = os.environ["GPU_COMPUTE_URL"]
-OS_FILEDIR = Path("/files/")
-
+from util.file_io import S3FileManager
 
 # import base64
 
-
-OS_TMPDIR = Path(os.environ["TMPDIR"])
-OS_GPU_COMPUTE_URL = os.environ["GPU_COMPUTE_URL"]
-OS_FILEDIR = Path("/files/")
-OS_HASH_FILEDIR = OS_FILEDIR / Path("raw")
-OS_OVERRIDE_FILEDIR = OS_FILEDIR / Path("override")
-OS_BACKUP_FILEDIR = OS_FILEDIR / Path("backup")
+from constants import (
+    OS_TMPDIR ,
+    OS_HASH_FILEDIR,
+    OS_BACKUP_FILEDIR
+)
 
 
 async def add_file_raw(
@@ -59,6 +54,7 @@ async def add_file_raw(
     logger: Any,
 ) -> FileSchema:
     docingest = DocumentIngester(logger)
+    file_manager = S3FileManager(logger=logger)
 
     def validate_metadata_mutable(metadata: dict):
         if metadata.get("lang") is None:
@@ -89,7 +85,7 @@ async def add_file_raw(
     metadata = validate_metadata_mutable(metadata)
 
     logger.info("Attempting to save data to file")
-    result = docingest.save_filepath_to_hash(tmp_filepath, OS_HASH_FILEDIR)
+    result = file_manager.save_filepath_to_hash(tmp_filepath, OS_HASH_FILEDIR)
     (filehash, filepath) = result
 
     os.remove(tmp_filepath)
@@ -111,7 +107,7 @@ async def add_file_raw(
         duplicate_file_obj = None
 
     if duplicate_file_obj is None:
-        docingest.backup_metadata_to_hash(metadata, filehash)
+        file_manager.backup_metadata_to_hash(metadata, filehash)
         metadata_str = json.dumps(metadata)
         new_file = FileModel(
             url="N/A",
@@ -178,6 +174,7 @@ async def process_file_raw(
     current_stage = DocumentStatus(obj.stage)
     logger.info(obj.doctype)
     mdextract = MarkdownExtractor(logger, OS_TMPDIR, priority=priority)
+    file_manager = S3FileManager(logger=logger)
     doc_metadata = json.loads(obj.mdata)
 
     response_code, response_message = (
@@ -190,7 +187,7 @@ async def process_file_raw(
     # text extraction
     async def process_stage_one():
         # FIXME: Change to deriving the filepath from the uri.
-        file_path = DocumentIngester(logger).get_default_filepath_from_hash(obj.hash)
+        file_path = file_manager.get_default_filepath_from_hash(obj.hash)
         # This process might spit out new metadata that was embedded in the document, ignoring for now
         logger.info("Sending async request to pdf file.")
         processed_original_text = (
@@ -203,7 +200,7 @@ async def process_file_raw(
                 processed_original_text[0:20]}"
         )
         # FIXME: We should probably come up with a better backup protocol then doing everything with hashes
-        mdextract.backup_processed_text(
+        file_manager.backup_processed_text(
             processed_original_text, obj.hash, doc_metadata, OS_BACKUP_FILEDIR
         )
         assert isinstance(processed_original_text, str)
@@ -295,26 +292,3 @@ async def process_file_raw(
                 "
                 )
 
-
-# Redifine function here and use it for stuff.
-# FIXME: Define network types in seperate file to avoid circular imports
-# async def query_all_files_raw(
-#     files_repo: FileRepository, query: QueryData, logger: Any
-# ) -> List[FileSchema]:
-#     filters = {}
-#     if query.match_name is not None:
-#         filters["name"] = query.match_name
-#     if query.match_source is not None:
-#         filters["source"] = query.match_source
-#     if query.match_doctype is not None:
-#         filters["doctype"] = query.match_doctype
-#     if query.match_stage is not None:
-#         filters["stage"] = query.match_stage
-#
-#     results = await files_repo.list(**filters)
-#     # assert isinstance(results, List[FileModel])
-#     # Turns the file model in sqlalchemy into an easy to understand return type
-#     logger.info(f"{len(results)} results")
-#     type_adapter = TypeAdapter(list[FileSchema])
-#     valid_results = model_to_schema(results)
-#     return valid_results

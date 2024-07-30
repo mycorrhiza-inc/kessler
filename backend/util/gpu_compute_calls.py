@@ -24,8 +24,16 @@ import asyncio
 
 from pydantic import BaseModel
 
-OS_TMPDIR = Path(os.environ["TMPDIR"])
-DATALAB_API_KEY = os.environ["DATALAB_API_KEY"]
+from constants import (
+    OS_TMPDIR,
+    OS_GPU_COMPUTE_URL,
+    OS_FILEDIR,
+    OS_HASH_FILEDIR,
+    OS_OVERRIDE_FILEDIR,
+    OS_BACKUP_FILEDIR,
+    DATALAB_API_KEY,
+    MARKER_ENDPOINT_URL,
+)
 
 
 # Downsample audio before sending to server, human words dont convey that much information anyway
@@ -59,9 +67,6 @@ def downsample_audio(
         )
         return filepath
     return outfile
-
-
-MARKER_ENDPOINT_URL = os.environ["MARKER_ENDPOINT_URL"]
 
 
 global_marker_server_urls = ["http://uttu-fedora.tail4a273.ts.net:2718"]

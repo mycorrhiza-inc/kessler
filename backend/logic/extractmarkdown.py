@@ -29,11 +29,6 @@ class MarkdownExtractor:
         self.priority = priority
         # TODO : Add database connection.
 
-    def process_raw_document_into_english_text(self, file_loc: Path, metadata: dict):
-        lang = metadata.get("lang")
-        raw_text = self.process_raw_document_into_untranslated_text(file_loc, metadata)
-        return self.convert_text_into_eng(raw_text, lang)
-
     def convert_text_into_eng(self, file_text: str, lang: str):
         if lang in ["en", "eng", "english", None]:
             return file_text
@@ -41,23 +36,6 @@ class MarkdownExtractor:
             file_text, lang, "en"
         )
         return english_text
-
-    def backup_processed_text(
-        self, text: str, hash: str, metadata: dict, backupdir: Path
-    ) -> None:
-        savestring = create_markdown_string(
-            text, metadata, include_previous_metadata=False
-        )
-        backuppath = backupdir / Path(hash + ".md")
-        # Seems slow to check every time a file is backed up
-        backuppath.parent.mkdir(parents=True, exist_ok=True)
-        if backuppath.exists():
-            backuppath.unlink(missing_ok=True)
-        # FIXME: We should probably come up with a better backup protocol then doing everything with hashes
-        if backuppath.is_file():
-            backuppath.unlink(missing_ok=True)
-        with open(backuppath, "w") as text_file:
-            text_file.write(savestring)
 
     async def process_raw_document_into_untranslated_text(
         self, file_loc: Path, metadata: dict, override_dir: Optional[Path] = None

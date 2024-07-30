@@ -6,7 +6,8 @@ from numpy.linalg import norm
 from numpy import dot
 
 
-OCTOAI_API_KEY = os.environ.get("OCTOAI_API_KEY")
+from constants import OCTOAI_API_KEY
+
 OCTOAI_URL = "https://text.octoai.run/v1"
 
 
