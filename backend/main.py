@@ -15,7 +15,6 @@ from models import utils
 from routing.misc_controller import MiscController
 from util.logging import logging_config
 from routing.file_controller import FileController
-from routing.search_controller import SearchController
 from routing.rag_controller import RagController
 
 
@@ -76,7 +75,6 @@ api_router = Router(
     path="/api",
     route_handlers=[
         FileController,
-        SearchController,
         RagController,
         DaemonController,
         MiscController,

@@ -32,11 +32,12 @@ import base64
 from util.niclib import create_markdown_string, seperate_markdown_string
 from constants import (
     OS_TMPDIR,
-    OS_GPU_COMPUTE_URL,
-    OS_FILEDIR,
     OS_HASH_FILEDIR,
-    OS_OVERRIDE_FILEDIR,
     OS_BACKUP_FILEDIR,
+    CLOUD_REGION,
+    S3_SECRET_KEY,
+    S3_ACCESS_KEY,
+    S3_ENDPOINT
 )
 
 default_logger = logging.getLogger(__name__)
@@ -49,8 +50,15 @@ class S3FileManager:
         self.tmpdir = OS_TMPDIR
         self.rawfile_savedir = OS_HASH_FILEDIR
         self.metadata_backupdir = OS_BACKUP_FILEDIR
-
         self.logger = logger
+        self.s3 = boto3.client(
+            "s3",
+            endpoint_url=S3_ENDPOINT,
+            aws_access_key_id=S3_ACCESS_KEY,
+            aws_secret_access_key=S3_SECRET_KEY,
+            region_name=CLOUD_REGION,
+        )
+
 
     def save_filepath_to_hash(
         self, filepath: Path, hashpath: Optional[Path] = None
@@ -109,7 +117,7 @@ class S3FileManager:
             self.logger.info(f"The error is: {e}")
 
     def get_blake2_str(
-        self, file_input: Any
+        self, file_input: Path
     ) -> str:  # TODO: Figure out how df file types work
         self.logger.info("Setting Blake2b as the hash method of choice")
         hasher = hashlib.blake2b
@@ -124,7 +132,7 @@ class S3FileManager:
                 buf = f.read(65536)
             return base64.urlsafe_b64encode(hash_object.digest()).decode()
         self.logger.error("Failed to hash file")
-        return "ErrorHashingFile" + rand_string()  # I am really sorry about this
+        raise Exception("ErrorHashingFile")  # I am really sorry about this
 
     def backup_processed_text(
         self, text: str, hash: str, metadata: dict, backupdir: Path
@@ -169,8 +177,34 @@ class S3FileManager:
                     f.write(chunk)
                 return f
 
+    def check_s3_for_filehash(self, filehash : str) -> Optional[str]:
+        
+
     def download_file_to_file_in_tmpdir(
         self, url: str
     ) -> Any:  # TODO : Get types for temporary file
         savedir = self.tmpdir / Path(rand_string())
         return self.download_file_to_path(url, savedir)
+
+    def create_s3_uri(self, file_name: str, s3_credentials: Optional[Any] = None) -> str:
+        return "test"
+
+    def push_file_to_s3(self, filepath: Path, file_upload_name: str) -> str:
+        return self.create_s3_uri("test")
+
+    def push_raw_file_to_s3_novalid(self, filepath: Path, hash: str) -> str:
+        if not filepath.is_file():
+            raise Exception("File does not exist")
+        filename = f"raw/{hash}"
+        return self.push_file_to_s3(filepath, filename)
+
+    def push_raw_file_to_s3(self, filepath: Path, hash: Optional[str] = None) -> str:
+        if not filepath.is_file():
+            raise Exception("File does not exist")
+        actual_hash = self.get_blake2_str(filepath)
+        if hash is not None and actual_hash != hash:
+            raise Exception("Hashes did not match, erroring out")
+        check_for_exisiting = self.check_s3_for_filehash(actual_hash)
+        if check_for_exisiting is None:
+            return self.push_raw_file_to_s3_novalid(filepath, actual_hash)
+        return check_for_exisiting
