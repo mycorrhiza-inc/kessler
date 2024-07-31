@@ -66,7 +66,7 @@ class S3FileManager:
         self.s3_raw_directory = "raw/"
 
     def save_filepath_to_hash(
-        self, filepath: Path, hashpath: Optional[Path] = None
+        self, filepath: Path, hashpath: Optional[Path] = None, network: bool = True
     ) -> tuple[str, Path]:
         if hashpath is None:
             hashpath = self.rawfile_savedir
@@ -82,6 +82,8 @@ class S3FileManager:
             self.logger.info(f"Successfully Saved File to: {saveloc}")
         else:
             self.logger.error(f"File could not be saved to : {saveloc}")
+        if network:
+
         return (b264_hash, saveloc)
 
     def get_default_filepath_from_hash(
@@ -222,12 +224,19 @@ class S3FileManager:
                     f.write(chunk)
                 return f
 
-    def check_s3_for_filehash(self, filehash: str) -> Optional[str]:
+    def hash_to_fileid(self,hash : str) ->str:
+        return self.s3_raw_directory + hash
+
+    def check_s3_for_filehash(self, filehash: str, bucket : Optional[str] = None) -> Optional[str]:
+        if bucket is None:
+            bucket = self.bucket
         return None
 
     def does_file_exist_s3(self, key: str, bucket: Optional[str] = None) -> bool:
+        if bucket is None:
+            bucket = self.bucket
         try:
-            self.s3.Object("my-bucket", "dootdoot.jpg").load()
+            self.s3.Object(bucket, key).load()
         except botocore.exceptions.ClientError as e:
             if e.response["Error"]["Code"] == "404":
                 return False
@@ -236,6 +245,13 @@ class S3FileManager:
                 raise e
         else:
             return True
+    def does_hash_exist_s3(self, hash : str, bucket : Optional[str] = None) -> bool:
+        if bucket is None:
+            bucket = self.bucket
+        fileid = self.hash_to_fileid(hash)
+        return self.does_file_exist_s3(fileid, bucket)
+
+
 
     def download_file_to_file_in_tmpdir(
         self, url: str
@@ -253,7 +269,7 @@ class S3FileManager:
     def push_raw_file_to_s3_novalid(self, filepath: Path, hash: str) -> str:
         if not filepath.is_file():
             raise Exception("File does not exist")
-        filename = f"raw/{hash}"
+        filename = self.hash_to_fileid(hash)
         return self.push_file_to_s3(filepath, filename)
 
     def push_raw_file_to_s3(self, filepath: Path, hash: Optional[str] = None) -> str:
@@ -262,7 +278,7 @@ class S3FileManager:
         actual_hash = self.get_blake2_str(filepath)
         if hash is not None and actual_hash != hash:
             raise Exception("Hashes did not match, erroring out")
-        check_for_exisiting = self.check_s3_for_filehash(actual_hash)
-        if check_for_exisiting is None:
+        
+        if not self.does_hash_exist_s3(actual_hash):
             return self.push_raw_file_to_s3_novalid(filepath, actual_hash)
-        return check_for_exisiting
+        return self.hash_to_fileid(actual_hash)
