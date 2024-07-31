@@ -21,7 +21,7 @@ OS_BACKUP_FILEDIR = OS_FILEDIR / Path("backup")
 
 CLOUD_REGION = "sfo3"
 S3_ENDPOINT = "https://sfo3.digitaloceanspaces.com"
-S3_BUCKET = "kesslerproddocs"
+S3_FILE_BUCKET = "kesslerproddocs"
 
 S3_ACCESS_KEY = os.environ["S3_ACCESS_KEY"]
 S3_SECRET_KEY = os.environ["S3_SECRET_KEY"]

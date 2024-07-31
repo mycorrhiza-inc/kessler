@@ -28,6 +28,9 @@ import shutil
 import hashlib
 import base64
 
+import botocore
+
+from urllib.parse import urlparse
 
 from util.niclib import create_markdown_string, seperate_markdown_string
 from constants import (
@@ -37,7 +40,8 @@ from constants import (
     CLOUD_REGION,
     S3_SECRET_KEY,
     S3_ACCESS_KEY,
-    S3_ENDPOINT
+    S3_ENDPOINT,
+    S3_FILE_BUCKET,
 )
 
 default_logger = logging.getLogger(__name__)
@@ -58,7 +62,8 @@ class S3FileManager:
             aws_secret_access_key=S3_SECRET_KEY,
             region_name=CLOUD_REGION,
         )
-
+        self.bucket = S3_FILE_BUCKET
+        self.s3_raw_directory = "raw/"
 
     def save_filepath_to_hash(
         self, filepath: Path, hashpath: Optional[Path] = None
@@ -134,6 +139,46 @@ class S3FileManager:
         self.logger.error("Failed to hash file")
         raise Exception("ErrorHashingFile")  # I am really sorry about this
 
+    def generate_local_filepath_from_hash(
+        self, hash: str, ensure_network: bool = True
+    ) -> Optional[Path]:
+        local_filepath = self.get_default_filepath_from_hash(hash)
+        if local_filepath.is_file():
+            if ensure_network:
+                if self.check_s3_for_filehash(hash) is None:
+                    self.push_raw_file_to_s3(local_filepath, hash)
+            return local_filepath
+        s3_hash_name = self.s3_raw_directory + hash
+        return self.download_s3_file_to_path(s3_hash_name, local_filepath)
+
+    def download_s3_file_to_path(
+        self, file_name: str, file_path: Path, bucket: Optional[str] = None
+    ) -> Optional[Path]:
+        if bucket is None:
+            bucket = self.bucket
+        if file_path.is_file():
+            raise Exception("File Already Present at Path, not downloading")
+        try:
+            self.s3.download_file(bucket, file_name, str(file_path))
+            return file_path
+        except Exception as e:
+            self.logger.error(
+                f"Something whent wrong when downloading s3, is the file missing, raised error {e}"
+            )
+            return None
+
+    def download_file_from_s3_url(
+        self, s3_url: str, local_path: Path
+    ) -> Optional[Path]:
+        domain = urlparse(s3_url).hostname
+        s3_key = urlparse(s3_url).path
+        if domain is None or s3_key is None:
+            raise ValueError("Invalid URL")
+        s3_bucket = domain.split(".")[0]
+        return self.download_s3_file_to_path(
+            file_name=s3_key, file_path=local_path, bucket=s3_bucket
+        )
+
     def backup_processed_text(
         self, text: str, hash: str, metadata: dict, backupdir: Path
     ) -> None:
@@ -177,8 +222,20 @@ class S3FileManager:
                     f.write(chunk)
                 return f
 
-    def check_s3_for_filehash(self, filehash : str) -> Optional[str]:
-        
+    def check_s3_for_filehash(self, filehash: str) -> Optional[str]:
+        return None
+
+    def does_file_exist_s3(self, key: str, bucket: Optional[str] = None) -> bool:
+        try:
+            self.s3.Object("my-bucket", "dootdoot.jpg").load()
+        except botocore.exceptions.ClientError as e:
+            if e.response["Error"]["Code"] == "404":
+                return False
+            else:
+                # Something else has gone wrong.
+                raise e
+        else:
+            return True
 
     def download_file_to_file_in_tmpdir(
         self, url: str
@@ -186,11 +243,12 @@ class S3FileManager:
         savedir = self.tmpdir / Path(rand_string())
         return self.download_file_to_path(url, savedir)
 
-    def create_s3_uri(self, file_name: str, s3_credentials: Optional[Any] = None) -> str:
-        return "test"
-
-    def push_file_to_s3(self, filepath: Path, file_upload_name: str) -> str:
-        return self.create_s3_uri("test")
+    def push_file_to_s3(
+        self, filepath: Path, file_upload_name: str, bucket: Optional[str] = None
+    ) -> str:
+        if bucket is None:
+            bucket = self.bucket
+        return self.s3.upload_file(str(filepath), bucket, file_upload_name)
 
     def push_raw_file_to_s3_novalid(self, filepath: Path, hash: str) -> str:
         if not filepath.is_file():
