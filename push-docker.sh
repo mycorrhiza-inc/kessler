@@ -1,4 +1,4 @@
-#! /usr/bin/fish
+#! /usr/bin/bash
 docker build -t fractalhuman1/kessler-frontend:latest ./frontend/
 docker build -t fractalhuman1/kessler-backend:latest ./backend/
 
