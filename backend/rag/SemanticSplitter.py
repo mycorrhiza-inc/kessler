@@ -27,12 +27,11 @@ class SemanticSplitter:
         splits = self.split_sentences(text)
 
         sentences = self._build_sentence_groups(splits)
-        combined_sentence_embeddings = embed(
-            [s["combined_sentence"] for s in sentences]
-        )
+        combined_embedding_pairs = embed([s["combined_sentence"] for s in sentences])
+        combined_sentence_embeddings = [e.embedding for e in combined_embedding_pairs]
 
         for i, embedding in enumerate(combined_sentence_embeddings):
-            sentences[i]["combined_sentence_embedding"] = embedding
+            sentences[i]["combined_sentence_embedding"] = embedding.embedding
         distances = self._calculate_distances_between_sentence_groups(sentences)
 
         chunks = self.build_chunks(sentences, distances)
@@ -45,8 +44,8 @@ class SemanticSplitter:
     ) -> List[float]:
         distances = []
         for i in range(len(sentences) - 1):
-            embedding_current = sentences[i]["combined_sentence_embedding"]
-            embedding_next = sentences[i + 1]["combined_sentence_embedding"]
+            sentences[i]["combined_sentence_embedding"].embedding
+            embedding_next = sentences[i + 1]["combined_sentence_embedding"].embedding
 
             similarity = cos_similarity(embedding_current, embedding_next)
 
@@ -61,11 +60,12 @@ class SemanticSplitter:
     ) -> List[MilvusRow]:
         blocks = []
         for i, chunk in enumerate(chunks):
+            chuk_embedding = embed(chunk)[0].embedding
             blocks.append(
                 MilvusRow(
                     text=chunk,
                     source_id=str(source_id),
-                    embedding=embed(chunk),
+                    embedding=chuk_embedding,
                 )
             )
         return blocks
