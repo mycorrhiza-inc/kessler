@@ -13,6 +13,9 @@ import logging
 
 from litestar import Controller, Request
 
+
+from litestar.params import Parameter
+
 from litestar.handlers.http_handlers.decorators import (
     post,
 )
