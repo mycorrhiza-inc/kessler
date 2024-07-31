@@ -142,7 +142,7 @@ class S3FileManager:
         raise Exception("ErrorHashingFile")  # I am really sorry about this
 
     def generate_local_filepath_from_hash(
-        self, hash: str, ensure_network: bool = True
+        self, hash: str, ensure_network: bool = True, download_local: bool = True
     ) -> Optional[Path]:
         local_filepath = self.get_default_filepath_from_hash(hash)
         if local_filepath.is_file():
@@ -150,6 +150,8 @@ class S3FileManager:
                 if not self.does_hash_exist_s3(hash):
                     self.push_raw_file_to_s3(local_filepath, hash)
             return local_filepath
+        if not download_local:
+            return None
         s3_hash_name = self.s3_raw_directory + hash
         return self.download_s3_file_to_path(s3_hash_name, local_filepath)
 

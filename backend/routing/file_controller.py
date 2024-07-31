@@ -1,3 +1,4 @@
+from util.file_io import S3FileManager
 from vecstore.docprocess import add_document_to_db
 import os
 from pathlib import Path
@@ -215,9 +216,18 @@ class FileController(Controller):
         self,
         files_repo: FileRepository,
         request: Request,
+        ensure_all_on_s3: bool = False,
     ) -> list[FileSchema]:
         """List files."""
         valid_results = await self.get_all_files_raw(files_repo, request.logger)
+        s3 = S3FileManager()
+        if ensure_all_on_s3:
+            for result in valid_results:
+                hash = result.hash
+                if hash is not None:
+                    s3.generate_local_filepath_from_hash(
+                        hash, ensure_network=True, download_local=False
+                    )
         return valid_results
 
     @post(path="/files/all/paginate")
