@@ -174,6 +174,10 @@ async def process_file_raw(
     mdextract = MarkdownExtractor(logger, OS_TMPDIR, priority=priority)
     file_manager = S3FileManager(logger=logger)
     doc_metadata = json.loads(obj.mdata)
+    # Move back to stage 1 after all files are in s3 to save bandwith
+    file_path = file_manager.generate_local_filepath_from_hash(obj.hash)
+    if file_path is None:
+        raise Exception(f"File Must Not exist for hash {obj.hash}")
 
     response_code, response_message = (
         500,
@@ -185,7 +189,6 @@ async def process_file_raw(
     # text extraction
     async def process_stage_one():
         # FIXME: Change to deriving the filepath from the uri.
-        file_path = file_manager.get_default_filepath_from_hash(obj.hash)
         # This process might spit out new metadata that was embedded in the document, ignoring for now
         logger.info("Sending async request to pdf file.")
         processed_original_text = (

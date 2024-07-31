@@ -13,6 +13,9 @@ import logging
 
 from litestar import Controller, Request
 
+
+from litestar.params import Parameter
+
 from litestar.handlers.http_handlers.decorators import (
     post,
 )
@@ -30,6 +33,8 @@ from models.files import FileModel, FileRepository, FileSchema, provide_files_re
 from typing import List, Optional, Union, Any, Dict
 
 
+from vecstore import search
+
 import json
 
 
@@ -39,6 +44,29 @@ class UUIDEncoder(json.JSONEncoder):
             # if the obj is uuid, we simply return the value of uuid
             return obj.hex
         return json.JSONEncoder.default(self, obj)
+
+
+class SearchQuery(BaseModel):
+    query: str
+
+
+class SearchResult(BaseModel):
+    ids: List[str]
+    result: List[str] | None = None
+
+
+class SearchResponse(BaseModel):
+    status: str
+    message: str | None
+    results: List[SearchResult] | None
+
+
+class IndexFileRequest(BaseModel):
+    id: UUID
+
+
+class IndexFileResponse(BaseModel):
+    message: str
 
 
 class SimpleChatCompletion(BaseModel):
@@ -168,3 +196,43 @@ class RagController(Controller):
     ) -> str:
         await regenerate_vector_database_from_file_table()
         return ""
+
+    @post(path="/search/{fid:uuid}")
+    async def search_collection_by_id(
+        self,
+        request: Request,
+        data: SearchQuery,
+        fid: UUID = Parameter(
+            title="File ID as hex string", description="File to retieve"
+        ),
+    ) -> Any:
+        return "failure"
+
+    @post(path="/search")
+    async def search(
+        self,
+        files_repo: FileRepository,
+        data: SearchQuery,
+        request: Request,
+        only_uuid: bool = False,
+    ) -> Any:
+        logger = request.logger
+        query = data.query
+        res = search(query=query)
+
+        def create_file_schema_from_search_result(search_result: Any) -> FileSchema:
+            return FileSchema()
+
+        # return list(map(create_rag_response_from_query, res))
+        return res
+
+    # @post(path="/search/{fid:uuid}")
+    # async def search_collection_by_id(
+    #     self,
+    #     request: Request,
+    #     data: SearchQuery,
+    #     fid: UUID = Parameter(
+    #         title="File ID as hex string", description="File to retieve"
+    #     ),
+    # ) -> Any:
+    #     return "failure"

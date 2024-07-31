@@ -28,15 +28,20 @@ import shutil
 import hashlib
 import base64
 
+import botocore
+
+from urllib.parse import urlparse
 
 from util.niclib import create_markdown_string, seperate_markdown_string
 from constants import (
     OS_TMPDIR,
-    OS_GPU_COMPUTE_URL,
-    OS_FILEDIR,
     OS_HASH_FILEDIR,
-    OS_OVERRIDE_FILEDIR,
     OS_BACKUP_FILEDIR,
+    CLOUD_REGION,
+    S3_SECRET_KEY,
+    S3_ACCESS_KEY,
+    S3_ENDPOINT,
+    S3_FILE_BUCKET,
 )
 
 default_logger = logging.getLogger(__name__)
@@ -49,11 +54,19 @@ class S3FileManager:
         self.tmpdir = OS_TMPDIR
         self.rawfile_savedir = OS_HASH_FILEDIR
         self.metadata_backupdir = OS_BACKUP_FILEDIR
-
         self.logger = logger
+        self.s3 = boto3.client(
+            "s3",
+            endpoint_url=S3_ENDPOINT,
+            aws_access_key_id=S3_ACCESS_KEY,
+            aws_secret_access_key=S3_SECRET_KEY,
+            region_name=CLOUD_REGION,
+        )
+        self.bucket = S3_FILE_BUCKET
+        self.s3_raw_directory = "raw/"
 
     def save_filepath_to_hash(
-        self, filepath: Path, hashpath: Optional[Path] = None
+        self, filepath: Path, hashpath: Optional[Path] = None, network: bool = True
     ) -> tuple[str, Path]:
         if hashpath is None:
             hashpath = self.rawfile_savedir
@@ -69,6 +82,8 @@ class S3FileManager:
             self.logger.info(f"Successfully Saved File to: {saveloc}")
         else:
             self.logger.error(f"File could not be saved to : {saveloc}")
+        if network:
+            self.push_raw_file_to_s3(saveloc, b264_hash)
         return (b264_hash, saveloc)
 
     def get_default_filepath_from_hash(
@@ -109,7 +124,7 @@ class S3FileManager:
             self.logger.info(f"The error is: {e}")
 
     def get_blake2_str(
-        self, file_input: Any
+        self, file_input: Path
     ) -> str:  # TODO: Figure out how df file types work
         self.logger.info("Setting Blake2b as the hash method of choice")
         hasher = hashlib.blake2b
@@ -124,7 +139,47 @@ class S3FileManager:
                 buf = f.read(65536)
             return base64.urlsafe_b64encode(hash_object.digest()).decode()
         self.logger.error("Failed to hash file")
-        return "ErrorHashingFile" + rand_string()  # I am really sorry about this
+        raise Exception("ErrorHashingFile")  # I am really sorry about this
+
+    def generate_local_filepath_from_hash(
+        self, hash: str, ensure_network: bool = True
+    ) -> Optional[Path]:
+        local_filepath = self.get_default_filepath_from_hash(hash)
+        if local_filepath.is_file():
+            if ensure_network:
+                if not self.does_hash_exist_s3(hash):
+                    self.push_raw_file_to_s3(local_filepath, hash)
+            return local_filepath
+        s3_hash_name = self.s3_raw_directory + hash
+        return self.download_s3_file_to_path(s3_hash_name, local_filepath)
+
+    def download_s3_file_to_path(
+        self, file_name: str, file_path: Path, bucket: Optional[str] = None
+    ) -> Optional[Path]:
+        if bucket is None:
+            bucket = self.bucket
+        if file_path.is_file():
+            raise Exception("File Already Present at Path, not downloading")
+        try:
+            self.s3.download_file(bucket, file_name, str(file_path))
+            return file_path
+        except Exception as e:
+            self.logger.error(
+                f"Something whent wrong when downloading s3, is the file missing, raised error {e}"
+            )
+            return None
+
+    def download_file_from_s3_url(
+        self, s3_url: str, local_path: Path
+    ) -> Optional[Path]:
+        domain = urlparse(s3_url).hostname
+        s3_key = urlparse(s3_url).path
+        if domain is None or s3_key is None:
+            raise ValueError("Invalid URL")
+        s3_bucket = domain.split(".")[0]
+        return self.download_s3_file_to_path(
+            file_name=s3_key, file_path=local_path, bucket=s3_bucket
+        )
 
     def backup_processed_text(
         self, text: str, hash: str, metadata: dict, backupdir: Path
@@ -169,8 +224,54 @@ class S3FileManager:
                     f.write(chunk)
                 return f
 
+    def hash_to_fileid(self, hash: str) -> str:
+        return self.s3_raw_directory + hash
+
+    def does_file_exist_s3(self, key: str, bucket: Optional[str] = None) -> bool:
+        if bucket is None:
+            bucket = self.bucket
+
+        try:
+            self.s3.get_object(
+                Bucket=bucket,
+                Key=key,
+            )
+            return True
+        except self.s3.exceptions.NoSuchKey:
+            return False
+
+    def does_hash_exist_s3(self, hash: str, bucket: Optional[str] = None) -> bool:
+        if bucket is None:
+            bucket = self.bucket
+        fileid = self.hash_to_fileid(hash)
+        return self.does_file_exist_s3(fileid, bucket)
+
     def download_file_to_file_in_tmpdir(
         self, url: str
     ) -> Any:  # TODO : Get types for temporary file
         savedir = self.tmpdir / Path(rand_string())
         return self.download_file_to_path(url, savedir)
+
+    def push_file_to_s3(
+        self, filepath: Path, file_upload_name: str, bucket: Optional[str] = None
+    ) -> str:
+        if bucket is None:
+            bucket = self.bucket
+        return self.s3.upload_file(str(filepath), bucket, file_upload_name)
+
+    def push_raw_file_to_s3_novalid(self, filepath: Path, hash: str) -> str:
+        if not filepath.is_file():
+            raise Exception("File does not exist")
+        filename = self.hash_to_fileid(hash)
+        return self.push_file_to_s3(filepath, filename)
+
+    def push_raw_file_to_s3(self, filepath: Path, hash: Optional[str] = None) -> str:
+        if not filepath.is_file():
+            raise Exception("File does not exist")
+        actual_hash = self.get_blake2_str(filepath)
+        if hash is not None and actual_hash != hash:
+            raise Exception("Hashes did not match, erroring out")
+
+        if not self.does_hash_exist_s3(actual_hash):
+            return self.push_raw_file_to_s3_novalid(filepath, actual_hash)
+        return self.hash_to_fileid(actual_hash)
