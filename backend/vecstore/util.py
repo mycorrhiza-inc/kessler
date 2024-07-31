@@ -95,7 +95,7 @@ def create_doc_node_schema() -> CollectionSchema:
     embedding_filed = FieldSchema(
         name="embedding",
         dtype=DataType.FLOAT_VECTOR,
-        dim=1024,
+        dim=768,
         description="embedding vector",
     )
 
