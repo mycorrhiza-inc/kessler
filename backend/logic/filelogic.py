@@ -176,6 +176,7 @@ async def process_file_raw(
     mdextract = MarkdownExtractor(logger, OS_TMPDIR, priority=priority)
     file_manager = S3FileManager(logger=logger)
     doc_metadata = json.loads(obj.mdata)
+    # Move back to stage 1 after all files are in s3 to save bandwith
     file_path = file_manager.generate_local_filepath_from_hash(obj.hash)
     if file_path is None:
         raise Exception(f"File Must Not exist for hash {obj.hash}")

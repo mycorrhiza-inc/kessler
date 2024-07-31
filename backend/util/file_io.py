@@ -230,16 +230,15 @@ class S3FileManager:
     def does_file_exist_s3(self, key: str, bucket: Optional[str] = None) -> bool:
         if bucket is None:
             bucket = self.bucket
+
         try:
-            self.s3.Object(bucket, key).load()
-        except botocore.exceptions.ClientError as e:
-            if e.response["Error"]["Code"] == "404":
-                return False
-            else:
-                # Something else has gone wrong.
-                raise e
-        else:
+            self.s3.get_object(
+                Bucket=bucket,
+                Key=key,
+            )
             return True
+        except self.s3.exceptions.NoSuchKey:
+            return False
 
     def does_hash_exist_s3(self, hash: str, bucket: Optional[str] = None) -> bool:
         if bucket is None:
