@@ -27,12 +27,15 @@ class SemanticSplitter:
         splits = self.split_sentences(text)
 
         sentences = self._build_sentence_groups(splits)
-        combined_embedding_pairs = embed([s["combined_sentence"] for s in sentences])
-        combined_sentence_embeddings = [e.embedding for e in combined_embedding_pairs]
+        combined_embedding_pairs = embed(
+            [s["combined_sentence"] for s in sentences])
+        combined_sentence_embeddings = [
+            e.embedding for e in combined_embedding_pairs]
 
         for i, embedding in enumerate(combined_sentence_embeddings):
             sentences[i]["combined_sentence_embedding"] = embedding.embedding
-        distances = self._calculate_distances_between_sentence_groups(sentences)
+        distances = self._calculate_distances_between_sentence_groups(
+            sentences)
 
         chunks = self.build_chunks(sentences, distances)
         blocks = self.build_blocks_from_chunks(chunks, source_id=source_id)
@@ -44,8 +47,9 @@ class SemanticSplitter:
     ) -> List[float]:
         distances = []
         for i in range(len(sentences) - 1):
-            sentences[i]["combined_sentence_embedding"].embedding
-            embedding_next = sentences[i + 1]["combined_sentence_embedding"].embedding
+            embedding_current = sentences[i]["combined_sentence_embedding"].embedding
+            embedding_next = sentences[i +
+                                       1]["combined_sentence_embedding"].embedding
 
             similarity = cos_similarity(embedding_current, embedding_next)
 
@@ -85,7 +89,7 @@ class SemanticSplitter:
 
             # combine sentences into blocks if they are abouve threshold
             for index in indices_above_threshold:
-                group = sentences[start_index : index + 1]
+                group = sentences[start_index: index + 1]
                 combined_text = "".join([d["sentence"] for d in group])
                 chunks.append(combined_text)
 
