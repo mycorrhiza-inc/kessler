@@ -47,7 +47,7 @@ const UploadFileButton: React.FC = () => {
     formData.append("file", file);
 
     try {
-      await axios.post("/api/upload_file?process=true", formData, {
+      await axios.post("/api/files/upload_file?process=true", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
