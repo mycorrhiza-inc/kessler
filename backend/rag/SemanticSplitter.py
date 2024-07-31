@@ -1,4 +1,4 @@
-from embeddings import cos_similarity, get_batch_embeddings, embed
+from embeddings import cos_similarity, embed
 from typing import List, Callable, TypedDict
 
 from vecstore.util import MilvusNode, MilvusRow
@@ -27,7 +27,7 @@ class SemanticSplitter:
         splits = self.split_sentences(text)
 
         sentences = self._build_sentence_groups(splits)
-        combined_sentence_embeddings = get_batch_embeddings(
+        combined_sentence_embeddings = embed(
             [s["combined_sentence"] for s in sentences]
         )
 

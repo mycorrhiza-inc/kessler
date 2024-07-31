@@ -18,7 +18,7 @@ from models.files import (
     provide_files_repo,
     DocumentStatus,
     docstatus_index,
-    model_to_schema
+    model_to_schema,
 )
 
 from logic.docingest import DocumentIngester
@@ -38,11 +38,7 @@ from util.file_io import S3FileManager
 
 # import base64
 
-from constants import (
-    OS_TMPDIR ,
-    OS_HASH_FILEDIR,
-    OS_BACKUP_FILEDIR
-)
+from constants import OS_TMPDIR, OS_HASH_FILEDIR, OS_BACKUP_FILEDIR
 
 
 async def add_file_raw(
@@ -151,12 +147,14 @@ async def process_fileid_raw(
     files_repo: FileRepository,
     logger: Any,
     stop_at: Optional[DocumentStatus] = None,
-    priority : bool = True,
+    priority: bool = True,
 ):
     file_uuid = UUID(file_id_str)
     logger.info(file_uuid)
     obj = await files_repo.get(file_uuid)
-    return await process_file_raw(obj, files_repo, logger=logger, stop_at=stop_at, priority=priority)
+    return await process_file_raw(
+        obj, files_repo, logger=logger, stop_at=stop_at, priority=priority
+    )
 
 
 async def process_file_raw(
@@ -164,7 +162,7 @@ async def process_file_raw(
     files_repo: FileRepository,
     logger: Any,
     stop_at: Optional[DocumentStatus] = None,
-    priority : bool = True,
+    priority: bool = True,
 ):
     if stop_at is None:
         stop_at = DocumentStatus.completed
@@ -291,4 +289,3 @@ async def process_file_raw(
                     try readding it again.\
                 "
                 )
-

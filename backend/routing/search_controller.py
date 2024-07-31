@@ -88,4 +88,3 @@ class SearchController(Controller):
         query = data.query
         res = search(query=query)
         return res
-

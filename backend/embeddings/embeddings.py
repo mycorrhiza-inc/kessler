@@ -1,43 +1,39 @@
 import os
+from typing import Union, List
+
 from typing import List
 from openai import OpenAI
 
 from numpy.linalg import norm
 from numpy import dot
 
-
-from constants import OCTOAI_API_KEY
-
-OCTOAI_URL = "https://text.octoai.run/v1"
+from constants import FIREWORKS_API_KEY, FIREWORKS_EMBEDDING_URL
 
 
-def embed(query: str, model="thenlper/gte-large") -> List[float]:
-    client = OpenAI(api_key=OCTOAI_API_KEY, base_url=OCTOAI_URL)
+class TextEmbedding:
+    def __init__(self, text: str, embedding: List[float]):
+        self.text = text
+        self.embedding = embedding
+
+
+def embed(
+    query: Union[str, List[str]], model="nomic-ai/nomic-embed-text-v1.5"
+) -> List[float]:
+    if isinstance(query, str):
+        query = [query]
+
+    client = OpenAI(api_key=FIREWORKS_API_KEY, base_url=FIREWORKS_EMBEDDING_URL)
+
     try:
-        response = client.embeddings.create(
-            model=model,
-            input=[query],
-        )
-        return response.data[0].embedding
+        response = client.embeddings.create(model=model, input=query)
+        out = []
+        for i, embedding in enumerate(response.data):
+            out.extend([TextEmbedding(text=query[i], embedding=embedding)])
+        return out
+
     except Exception as e:
         print(e)
         return []
-
-
-def get_batch_embeddings(
-    queries: List[str], model="thenlper/gte-large"
-) -> List[List[float]]:
-    client = OpenAI(api_key=OCTOAI_API_KEY, base_url=OCTOAI_URL)
-
-    responses = client.embeddings.create(
-        model=model,
-        input=queries,
-    )
-    embeddings = []
-    for r in responses.data:
-        embeddings.append(r.embedding)
-
-    return embeddings
 
 
 def cos_similarity(
