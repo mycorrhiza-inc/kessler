@@ -10,8 +10,6 @@ from litestar.handlers.http_handlers.decorators import (
 from litestar.events import listener
 
 
-
-
 from litestar.params import Parameter
 from litestar.di import Provide
 from pydantic import TypeAdapter
@@ -37,7 +35,6 @@ from models.files import (
 from typing import List, Optional, Dict
 
 
-
 import logging
 from models import utils
 from logic.filelogic import process_fileid_raw
@@ -46,21 +43,23 @@ from litestar.contrib.sqlalchemy.base import UUIDBase
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from logic.databaselogic import QueryData, querydata_to_filters_strict , filters_docstatus_processing
+from logic.databaselogic import (
+    QueryData,
+    querydata_to_filters_strict,
+    filters_docstatus_processing,
+)
 
 from util.gpu_compute_calls import get_total_connections
 import random
 
 from constants import (
-    OS_TMPDIR ,
+    OS_TMPDIR,
     OS_GPU_COMPUTE_URL,
-    OS_FILEDIR,  
+    OS_FILEDIR,
     OS_HASH_FILEDIR,
     OS_OVERRIDE_FILEDIR,
-    OS_BACKUP_FILEDIR
+    OS_BACKUP_FILEDIR,
 )
-
-
 
 
 default_logger = logging.getLogger(__name__)
@@ -104,7 +103,7 @@ async def process_document(doc_id_str: str, stop_at: str) -> None:
         await conn.run_sync(UUIDBase.metadata.create_all)
     session = AsyncSession(engine)
     files_repo_2 = await provide_files_repo(session)
-    await process_fileid_raw(doc_id_str, files_repo_2, logger, stop_at,priority=False)
+    await process_fileid_raw(doc_id_str, files_repo_2, logger, stop_at, priority=False)
     await session.close()
 
 
@@ -120,7 +119,7 @@ class DaemonController(Controller):
         passthrough_request: Request,
         files: List[FileModel],
         stop_at: DocumentStatus,
-        regenerate_from: DocumentStatus ,
+        regenerate_from: DocumentStatus,
         max_documents: Optional[int] = None,
     ) -> None:
         logger = passthrough_request.logger
@@ -184,6 +183,7 @@ class DaemonController(Controller):
             stop_at=stop_at,
             regenerate_from=regenerate_from,
         )
+
     async def process_query_background_raw(
         self,
         files_repo: FileRepository,
@@ -192,7 +192,7 @@ class DaemonController(Controller):
         stop_at: Optional[str] = None,
         regenerate_from: Optional[str] = None,
         max_documents: Optional[int] = None,
-        randomize: bool = False
+        randomize: bool = False,
     ) -> None:
         logger = passthrough_request.logger
         logger.info("Beginning to process all files.")
@@ -202,7 +202,9 @@ class DaemonController(Controller):
             regenerate_from = "completed"
         stop_at = DocumentStatus(stop_at)
         regenerate_from = DocumentStatus(regenerate_from)
-        filters = querydata_to_filters_strict(data) + filters_docstatus_processing(stop_at=stop_at,regenerate_from=regenerate_from)
+        filters = querydata_to_filters_strict(data) + filters_docstatus_processing(
+            stop_at=stop_at, regenerate_from=regenerate_from
+        )
         logger.info(filters)
 
         results = await files_repo.list(*filters)
@@ -219,6 +221,7 @@ class DaemonController(Controller):
             regenerate_from=regenerate_from,
             max_documents=max_documents,
         )
+
     @post(path="/daemon/process_all_files")
     async def process_all_background(
         self,
@@ -228,16 +231,16 @@ class DaemonController(Controller):
         stop_at: Optional[str] = None,
         regenerate_from: Optional[str] = None,
         max_documents: Optional[int] = None,
-        randomize: bool = False
+        randomize: bool = False,
     ) -> None:
-        return await self.process_query_background_raw( 
+        return await self.process_query_background_raw(
             files_repo=files_repo,
             passthrough_request=request,
             data=data,
             stop_at=stop_at,
             regenerate_from=regenerate_from,
             max_documents=max_documents,
-            randomize=randomize 
+            randomize=randomize,
         )
 
     # # TODO: Refactor so you dont have an open connection all the time.
@@ -248,7 +251,7 @@ class DaemonController(Controller):
     #         try:
     #             await asyncio.sleep(30)
     #             if get_total_connections() < document_threshold:
-    #                 await self.process_query_background_raw( 
+    #                 await self.process_query_background_raw(
     #                     files_repo=files_repo,
     #                     passthrough_request=request,
     #                     data=QueryData(),
@@ -265,10 +268,10 @@ class DaemonController(Controller):
         self,
         files_repo: FileRepository,
         request: Request,
-        stop_at : Optional[str],
-        documents_per_run : Optional[int],
-        document_threshold : Optional[int]
-            ) -> str:
+        stop_at: Optional[str],
+        documents_per_run: Optional[int],
+        document_threshold: Optional[int],
+    ) -> str:
         logger = request.logger
         if documents_per_run is None:
             documents_per_run = 10
@@ -281,13 +284,13 @@ class DaemonController(Controller):
             try:
                 await asyncio.sleep(30)
                 if get_total_connections() < document_threshold:
-                    await self.process_query_background_raw( 
+                    await self.process_query_background_raw(
                         files_repo=files_repo,
                         passthrough_request=request,
                         data=QueryData(),
                         stop_at=stop_at,
                         max_documents=documents_per_run,
-                        randomize=True
+                        randomize=True,
                     )
 
             except Exception as e:
