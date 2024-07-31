@@ -194,6 +194,17 @@ class RagController(Controller):
         await regenerate_vector_database_from_file_table()
         return ""
 
+    @post(path="/search/{fid:uuid}")
+    async def search_collection_by_id(
+        self,
+        request: Request,
+        data: SearchQuery,
+        fid: UUID = Parameter(
+            title="File ID as hex string", description="File to retieve"
+        ),
+    ) -> Any:
+        return "failure"
+
     @post(path="/search")
     async def search(
         self,
@@ -201,7 +212,7 @@ class RagController(Controller):
         data: SearchQuery,
         request: Request,
         only_uuid: bool = False,
-    ) -> List[FileSchema]:
+    ) -> Any:
         logger = request.logger
         query = data.query
         res = search(query=query)
@@ -209,7 +220,8 @@ class RagController(Controller):
         def create_file_schema_from_search_result(search_result: Any) -> FileSchema:
             return FileSchema()
 
-        return list(map(create_rag_response_from_query, res))
+        # return list(map(create_rag_response_from_query, res))
+        return res
 
     # @post(path="/search/{fid:uuid}")
     # async def search_collection_by_id(
