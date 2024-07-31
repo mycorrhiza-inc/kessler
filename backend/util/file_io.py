@@ -83,7 +83,7 @@ class S3FileManager:
         else:
             self.logger.error(f"File could not be saved to : {saveloc}")
         if network:
-
+            self.push_raw_file_to_s3(saveloc, b264_hash)
         return (b264_hash, saveloc)
 
     def get_default_filepath_from_hash(
@@ -147,7 +147,7 @@ class S3FileManager:
         local_filepath = self.get_default_filepath_from_hash(hash)
         if local_filepath.is_file():
             if ensure_network:
-                if self.check_s3_for_filehash(hash) is None:
+                if not self.does_hash_exist_s3(hash):
                     self.push_raw_file_to_s3(local_filepath, hash)
             return local_filepath
         s3_hash_name = self.s3_raw_directory + hash
@@ -224,13 +224,8 @@ class S3FileManager:
                     f.write(chunk)
                 return f
 
-    def hash_to_fileid(self,hash : str) ->str:
+    def hash_to_fileid(self, hash: str) -> str:
         return self.s3_raw_directory + hash
-
-    def check_s3_for_filehash(self, filehash: str, bucket : Optional[str] = None) -> Optional[str]:
-        if bucket is None:
-            bucket = self.bucket
-        return None
 
     def does_file_exist_s3(self, key: str, bucket: Optional[str] = None) -> bool:
         if bucket is None:
@@ -245,13 +240,12 @@ class S3FileManager:
                 raise e
         else:
             return True
-    def does_hash_exist_s3(self, hash : str, bucket : Optional[str] = None) -> bool:
+
+    def does_hash_exist_s3(self, hash: str, bucket: Optional[str] = None) -> bool:
         if bucket is None:
             bucket = self.bucket
         fileid = self.hash_to_fileid(hash)
         return self.does_file_exist_s3(fileid, bucket)
-
-
 
     def download_file_to_file_in_tmpdir(
         self, url: str
@@ -278,7 +272,7 @@ class S3FileManager:
         actual_hash = self.get_blake2_str(filepath)
         if hash is not None and actual_hash != hash:
             raise Exception("Hashes did not match, erroring out")
-        
+
         if not self.does_hash_exist_s3(actual_hash):
             return self.push_raw_file_to_s3_novalid(filepath, actual_hash)
         return self.hash_to_fileid(actual_hash)
