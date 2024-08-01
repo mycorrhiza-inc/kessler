@@ -166,13 +166,12 @@ class FileController(Controller):
         if obj is None:
             return Response(content="ID does not exist", status_code=404)
 
-        type_adapter = TypeAdapter(FileSchema)
-        obj = model_to_schema(obj)
         filehash = obj.hash
 
-        file_path = DocumentIngester(logger).get_default_filepath_from_hash(filehash)
-
-        if not file_path.is_file():
+        file_path = S3FileManager(logger=logger).generate_local_filepath_from_hash(
+            filehash, ensure_network=False
+        )
+        if file_path is None or not file_path.is_file():
             return Response(content="File not found", status_code=404)
 
         # Read the file content

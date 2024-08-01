@@ -51,7 +51,7 @@ function SearchBox() {
   };
   const [layout, setLayout] = useState(defaultLayout);
   const getSearchResults = async () => {
-    let results = await fetch("/api/search", {
+    let results = await fetch("/api/search?only_fileobj=true", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

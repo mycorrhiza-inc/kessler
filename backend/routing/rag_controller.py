@@ -225,8 +225,11 @@ class RagController(Controller):
         logger = request.logger
         query = data.query
         res = search(query=query)
+        res = res[0]
         for result in res:
-            uuid = UUID((result["entity"])["uuid"])
+            logger.info(result["entity"])
+            uuid = UUID((result["entity"]["source_id"]))
+            logger.info(f"Asking PG for data on file: {uuid}")
             schema = model_to_schema(await files_repo.get(uuid))
             result["file"] = schema
         if only_fileobj:
