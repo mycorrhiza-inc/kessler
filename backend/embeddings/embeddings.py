@@ -20,10 +20,8 @@ def embed(
 
     try:
         response = client.embeddings.create(model=model, input=query)
-        out = []
-        for i, r in enumerate(response.data):
-            out.append(r.embedding)
-        return out
+        embeddings = [r.embedding for r in response.data]
+        return embeddings
 
     except Exception as e:
         print(e)

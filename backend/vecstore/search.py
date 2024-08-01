@@ -20,8 +20,7 @@ def search(
 ) -> List[any]:
     print(f"searching for '{query}'")
     client = get_milvus_conn()
-    client.load_collection(collection_name)
-    query_vector = embed(query=query)[0].embedding
+    query_vector = embed(query=query)[0]
     res = client.search(
         collection_name=collection_name,  # target collection
         data=[query_vector],  # query vector

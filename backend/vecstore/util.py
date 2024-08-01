@@ -130,6 +130,16 @@ def create_document_collection(collection_name=str, dimension=1024):
     # using the defaults of the octo embedding
     conn = get_milvus_conn()
     schema = create_doc_node_schema()
+
+    index_params = conn.prepare_index_params()
+    index_params.add_index(
+        field_name="embedding",
+        metric_type="COSINE",
+        index_type="IVF_FLAT",
+        index_name="embedding_vector_index",
+        params={"nlist": 128},
+    )
+
     conn.create_collection(
         collection_name=collection_name,
         dimension=dimension,
@@ -138,7 +148,7 @@ def create_document_collection(collection_name=str, dimension=1024):
         timeout=10,
         primary_field_name="id",
         schema=schema,
-        index_params=None,  # Used for index specific pareams
+        index_params=index_params,
     )
 
 
