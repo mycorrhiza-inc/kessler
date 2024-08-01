@@ -10,12 +10,6 @@ from numpy import dot
 from constants import FIREWORKS_API_KEY, FIREWORKS_EMBEDDING_URL
 
 
-class TextEmbedding:
-    def __init__(self, text: str, embedding: List[float]):
-        self.text = text
-        self.embedding = embedding
-
-
 def embed(
     query: Union[str, List[str]], model="nomic-ai/nomic-embed-text-v1.5"
 ) -> List[float]:
@@ -27,8 +21,8 @@ def embed(
     try:
         response = client.embeddings.create(model=model, input=query)
         out = []
-        for i, embedding in enumerate(response.data):
-            out.extend([TextEmbedding(text=query[i], embedding=embedding)])
+        for i, r in enumerate(response.data):
+            out.append(r.embedding)
         return out
 
     except Exception as e:
