@@ -113,6 +113,49 @@ class DaemonController(Controller):
     # def jsonify_validate_return(self,):
     #     return None
     #
+    async def process_force_downgrade_raw(
+        self,
+        files_repo: FileRepository,
+        passthrough_request: Request,
+        data: QueryData,
+        regenerate_from: Optional[str] = None,
+    ) -> None:
+        logger = passthrough_request.logger
+        logger.info("Beginning to process all files.")
+        if regenerate_from is None:
+            regenerate_from = "completed"
+        regenerate_from = DocumentStatus(regenerate_from)
+        filters = querydata_to_filters_strict(data)         
+        logger.info(filters)
+        results = await files_repo.list(*filters)
+
+        for file in results:
+            file_stage = DocumentStatus(file.stage)
+            if docstatus_index(file_stage) > docstatus_index(regenerate_from):
+                file_stage = regenerate_from
+                file.stage = regenerate_from.value
+                await files_repo.update(file)
+                logger.info(
+                    f"Reverting fileid {
+                            file.id} to stage {file.stage}"
+                )
+
+        await files_repo.session.commit()
+
+    @post(path="/daemon/force_downgrade")
+    async def force_downgrade(
+        self,
+        files_repo: FileRepository,
+        request: Request,
+        data: QueryData,
+        regenerate_from: Optional[str] = None,
+    ) -> None:
+        return await self.process_force_downgrade_raw(
+            files_repo=files_repo,
+            passthrough_request=request,
+            data=data,
+            regenerate_from=regenerate_from,
+        )
     async def bulk_process_file_background(
         self,
         files_repo: FileRepository,
