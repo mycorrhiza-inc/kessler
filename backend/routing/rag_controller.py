@@ -27,7 +27,13 @@ from pydantic import TypeAdapter
 from models.utils import PydanticBaseModel as BaseModel
 
 
-from models.files import FileModel, FileRepository, FileSchema, provide_files_repo
+from models.files import (
+    FileModel,
+    FileRepository,
+    FileSchema,
+    model_to_schema,
+    provide_files_repo,
+)
 
 
 from typing import List, Optional, Union, Any, Dict
@@ -136,7 +142,7 @@ class RagController(Controller):
         if model_name == "":
             model_name = None
         if model_name is None:
-            model_name = "llama-70b"
+            model_name = "llama-405b"
         chat_history = data.chat_history
         chat_history = force_conform_chat(chat_history)
         assert validate_chat(chat_history), chat_history
@@ -214,17 +220,20 @@ class RagController(Controller):
         files_repo: FileRepository,
         data: SearchQuery,
         request: Request,
-        only_uuid: bool = False,
+        only_fileobj: bool = False,
     ) -> Any:
         logger = request.logger
         query = data.query
         res = search(query=query)
-
-        def create_file_schema_from_search_result(search_result: Any) -> FileSchema:
-            return FileSchema()
+        for result in res:
+            uuid = UUID((result["entity"])["uuid"])
+            schema = model_to_schema(await files_repo.get(uuid))
+            result["file"] = schema
+        if only_fileobj:
+            return list(map(lambda r: r["file"], res))
+        return res
 
         # return list(map(create_rag_response_from_query, res))
-        return res
 
     # @post(path="/search/{fid:uuid}")
     # async def search_collection_by_id(
