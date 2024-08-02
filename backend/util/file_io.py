@@ -54,10 +54,11 @@ class S3FileManager:
         self.tmpdir = OS_TMPDIR
         self.rawfile_savedir = OS_HASH_FILEDIR
         self.metadata_backupdir = OS_BACKUP_FILEDIR
+        self.endpoint = S3_ENDPOINT
         self.logger = logger
         self.s3 = boto3.client(
             "s3",
-            endpoint_url=S3_ENDPOINT,
+            endpoint_url=self.endpoint,
             aws_access_key_id=S3_ACCESS_KEY,
             aws_secret_access_key=S3_SECRET_KEY,
             region_name=CLOUD_REGION,
@@ -155,34 +156,6 @@ class S3FileManager:
         s3_hash_name = self.s3_raw_directory + hash
         return self.download_s3_file_to_path(s3_hash_name, local_filepath)
 
-    def download_s3_file_to_path(
-        self, file_name: str, file_path: Path, bucket: Optional[str] = None
-    ) -> Optional[Path]:
-        if bucket is None:
-            bucket = self.bucket
-        if file_path.is_file():
-            raise Exception("File Already Present at Path, not downloading")
-        try:
-            self.s3.download_file(bucket, file_name, str(file_path))
-            return file_path
-        except Exception as e:
-            self.logger.error(
-                f"Something whent wrong when downloading s3, is the file missing, raised error {e}"
-            )
-            return None
-
-    def download_file_from_s3_url(
-        self, s3_url: str, local_path: Path
-    ) -> Optional[Path]:
-        domain = urlparse(s3_url).hostname
-        s3_key = urlparse(s3_url).path
-        if domain is None or s3_key is None:
-            raise ValueError("Invalid URL")
-        s3_bucket = domain.split(".")[0]
-        return self.download_s3_file_to_path(
-            file_name=s3_key, file_path=local_path, bucket=s3_bucket
-        )
-
     def backup_processed_text(
         self, text: str, hash: str, metadata: dict, backupdir: Path
     ) -> None:
@@ -228,6 +201,59 @@ class S3FileManager:
 
     def hash_to_fileid(self, hash: str) -> str:
         return self.s3_raw_directory + hash
+
+    # S3 Stuff Below this point
+
+    def download_s3_file_to_path(
+        self, file_name: str, file_path: Path, bucket: Optional[str] = None
+    ) -> Optional[Path]:
+        if bucket is None:
+            bucket = self.bucket
+        if file_path.is_file():
+            raise Exception("File Already Present at Path, not downloading")
+        try:
+            self.s3.download_file(bucket, file_name, str(file_path))
+            return file_path
+        except Exception as e:
+            self.logger.error(
+                f"Something whent wrong when downloading s3, is the file missing, raised error {e}"
+            )
+            return None
+
+    def download_file_from_s3_url(
+        self, s3_url: str, local_path: Path
+    ) -> Optional[Path]:
+        domain = urlparse(s3_url).hostname
+        s3_key = urlparse(s3_url).path
+        if domain is None or s3_key is None:
+            raise ValueError("Invalid URL")
+        s3_bucket = domain.split(".")[0]
+        return self.download_s3_file_to_path(
+            file_name=s3_key, file_path=local_path, bucket=s3_bucket
+        )
+
+    def generate_s3_uri(
+        self,
+        file_name: str,
+        bucket: Optional[str] = None,
+        s3_endpoint: Optional[str] = None,
+    ) -> str:
+        if s3_endpoint is None:
+            s3_endpoint = self.endpoint
+
+        if bucket is None:
+            bucket = S3_BUCKET_NAME
+
+        # Remove any trailing slashes from the S3 endpoint
+        s3_endpoint = s3_endpoint.rstrip("/")
+
+        # Extract the base endpoint (e.g., sfo3.digitaloceanspaces.com)
+        base_endpoint = s3_endpoint.split("//")[-1]
+
+        # Construct the S3 URI
+        s3_uri = f"https://{bucket}.{base_endpoint}/{file_name}"
+
+        return s3_uri
 
     def does_file_exist_s3(self, key: str, bucket: Optional[str] = None) -> bool:
         if bucket is None:
