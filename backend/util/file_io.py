@@ -142,20 +142,6 @@ class S3FileManager:
         self.logger.error("Failed to hash file")
         raise Exception("ErrorHashingFile")  # I am really sorry about this
 
-    def generate_local_filepath_from_hash(
-        self, hash: str, ensure_network: bool = True, download_local: bool = True
-    ) -> Optional[Path]:
-        local_filepath = self.get_default_filepath_from_hash(hash)
-        if local_filepath.is_file():
-            if ensure_network:
-                if not self.does_hash_exist_s3(hash):
-                    self.push_raw_file_to_s3(local_filepath, hash)
-            return local_filepath
-        if not download_local:
-            return None
-        s3_hash_name = self.s3_raw_directory + hash
-        return self.download_s3_file_to_path(s3_hash_name, local_filepath)
-
     def backup_processed_text(
         self, text: str, hash: str, metadata: dict, backupdir: Path
     ) -> None:
@@ -199,10 +185,37 @@ class S3FileManager:
                     f.write(chunk)
                 return f
 
+    # S3 Stuff Below this point
+
     def hash_to_fileid(self, hash: str) -> str:
         return self.s3_raw_directory + hash
 
-    # S3 Stuff Below this point
+    def generate_local_filepath_from_hash(
+        self, hash: str, ensure_network: bool = True, download_local: bool = True
+    ) -> Optional[Path]:
+        local_filepath = self.get_default_filepath_from_hash(hash)
+        if local_filepath.is_file():
+            if ensure_network:
+                if not self.does_hash_exist_s3(hash):
+                    self.push_raw_file_to_s3(local_filepath, hash)
+            return local_filepath
+        # TODO:  Remove assurance on s3 functionality now that other function exists
+        if not download_local:
+            return None
+        s3_hash_name = self.s3_raw_directory + hash
+        return self.download_s3_file_to_path(s3_hash_name, local_filepath)
+
+    def generate_s3_uri_from_hash(
+        self, hash: str, upload_local: bool = True
+    ) -> Optional[str]:
+        fileid = self.hash_to_fileid(hash)
+        if self.does_file_exist_s3(fileid):
+            return self.generate_s3_uri(fileid)
+        if upload_local:
+            local_filepath = self.get_default_filepath_from_hash(hash)
+            if local_filepath.is_file():
+                self.push_raw_file_to_s3(local_filepath, hash)
+                return self.generate_s3_uri(fileid)
 
     def download_s3_file_to_path(
         self, file_name: str, file_path: Path, bucket: Optional[str] = None
@@ -242,7 +255,7 @@ class S3FileManager:
             s3_endpoint = self.endpoint
 
         if bucket is None:
-            bucket = S3_BUCKET_NAME
+            bucket = self.bucket
 
         # Remove any trailing slashes from the S3 endpoint
         s3_endpoint = s3_endpoint.rstrip("/")

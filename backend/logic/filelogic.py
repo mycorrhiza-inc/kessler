@@ -191,9 +191,10 @@ async def process_file_raw(
         # FIXME: Change to deriving the filepath from the uri.
         # This process might spit out new metadata that was embedded in the document, ignoring for now
         logger.info("Sending async request to pdf file.")
+        hash = obj.hash
         processed_original_text = (
-            await mdextract.process_raw_document_into_untranslated_text(
-                file_path, doc_metadata
+            await mdextract.process_raw_document_into_untranslated_text_from_hash(
+                hash, doc_metadata
             )
         )[0]
         logger.info(
