@@ -83,3 +83,18 @@ services:
       - "5432"
     volumes:
       - ${VOLUMES_DIRECTORY:-./volumes}/pgdata:/var/lib/postgresql/data
+  valkey:
+    container_name: valkey
+    hostname: valkey
+    image: valkey/valkey:7.2.5
+    volumes:
+      - ${VOLUMES_DIRECTORY:-./volumes}/valkey.conf:/etc/valkey/valkey.conf
+      - ${VOLUMES_DIRECTORY:-./volumes}/valkey-data:/data
+    command: valkey-server /etc/valkey/valkey.conf
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 1s
+      timeout: 3s
+      retries: 5
+    expose:
+      - 6379
