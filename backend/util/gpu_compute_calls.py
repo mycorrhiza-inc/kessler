@@ -183,7 +183,7 @@ class GPUComputeEndpoint:
 
             data = {"s3_url": s3_uri}
             # data = {"langs": "en", "force_ocr": "false", "paginate": "true"}
-            with requests.post(marker_url_endpoint, data=data) as response:
+            with requests.post(marker_url_endpoint, json=data) as response:
                 response.raise_for_status()
                 # await the json if async
                 data = response.json()

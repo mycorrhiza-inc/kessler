@@ -84,7 +84,6 @@ services:
     volumes:
       - ${VOLUMES_DIRECTORY:-./volumes}/pgdata:/var/lib/postgresql/data
   valkey:
-    container_name: valkey
     hostname: valkey
     image: valkey/valkey:7.2.5
     volumes:
