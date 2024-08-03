@@ -177,7 +177,9 @@ class GPUComputeEndpoint:
                 query_str = "?priority=true"
             else:
                 query_str = "?priority=false"
-            marker_url_endpoint = base_url + "/api/v1/marker" + query_str
+            marker_url_endpoint = (
+                base_url + "/api/v1/marker/direct_s3_url_upload" + query_str
+            )
 
             data = {"s3_url": s3_uri}
             # data = {"langs": "en", "force_ocr": "false", "paginate": "true"}
