@@ -16,12 +16,6 @@ from pydantic import TypeAdapter
 from models.utils import PydanticBaseModel as BaseModel
 
 
-# from models import (
-#     FileModel,
-#     FileRepository,
-#     FileSchema,
-#     provide_files_repo,
-# )
 from models.files import (
     FileSchema,
     FileModel,
@@ -32,7 +26,7 @@ from models.files import (
 )
 
 
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Any
 
 
 import logging
@@ -51,15 +45,18 @@ from logic.databaselogic import (
 
 from util.gpu_compute_calls import get_total_connections
 import random
+import redis
+
+from util.niclib import rand_string
 
 from constants import (
-    OS_TMPDIR,
-    OS_GPU_COMPUTE_URL,
-    OS_FILEDIR,
-    OS_HASH_FILEDIR,
-    OS_OVERRIDE_FILEDIR,
-    OS_BACKUP_FILEDIR,
+    REDIS_HOST,
+    REDIS_PORT,
+    REDIS_PRIORITY_DOCPROC_KEY,
+    REDIS_BACKGROUND_DOCPROC_KEY,
 )
+
+redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
 
 
 default_logger = logging.getLogger(__name__)
@@ -75,7 +72,6 @@ if "postgresql://" in postgres_connection_string:
 #         "postgresql+asyncpg://scott:tiger@localhost/test",
 #         echo=True,
 #     )
-is_daemon_running = False
 
 
 async def create_global_connection():
@@ -84,27 +80,12 @@ async def create_global_connection():
     await conn.run_sync(UUIDBase.metadata.create_all)
 
 
-# def jsonify_validate_return(self,):
-#     return None
-@listener("process_document")
-async def process_document(doc_id_str: str, stop_at: str) -> None:
-    logger = default_logger
-    logger.info(f"Executing background docproc on {doc_id_str} to {stop_at}")
-    stop_at = DocumentStatus(stop_at)
-    # TODO:: Replace passthrough files repo with actual global repo
-    # engine = create_async_engine(
-    #     postgres_connection_string,
-    #     echo=True,
-    #
-    engine = utils.sqlalchemy_config.get_engine()
-    logger.info(engine)
-    logger.info(type(engine))
-    async with engine.begin() as conn:
-        await conn.run_sync(UUIDBase.metadata.create_all)
-    session = AsyncSession(engine)
-    files_repo_2 = await provide_files_repo(session)
-    await process_fileid_raw(doc_id_str, files_repo_2, logger, stop_at, priority=False)
-    await session.close()
+def push_to_queue(request: str, priority: bool):
+    if priority:
+        pushkey = REDIS_PRIORITY_DOCPROC_KEY
+    else:
+        pushkey = REDIS_BACKGROUND_DOCPROC_KEY
+    redis_client.rpush(pushkey, request_id)
 
 
 class DaemonController(Controller):
@@ -116,11 +97,12 @@ class DaemonController(Controller):
     async def process_force_downgrade_raw(
         self,
         files_repo: FileRepository,
-        passthrough_request: Request,
         data: QueryData,
+        logger: Optional[Any],
         regenerate_from: Optional[str] = None,
     ) -> None:
-        logger = passthrough_request.logger
+        if logger is None:
+            logger= default_logger
         logger.info("Beginning to process all files.")
         if regenerate_from is None:
             regenerate_from = "completed"
@@ -152,20 +134,21 @@ class DaemonController(Controller):
     ) -> None:
         return await self.process_force_downgrade_raw(
             files_repo=files_repo,
-            passthrough_request=request,
             data=data,
+            logger=request.logger,
             regenerate_from=regenerate_from,
         )
     async def bulk_process_file_background(
         self,
         files_repo: FileRepository,
-        passthrough_request: Request,
         files: List[FileModel],
         stop_at: DocumentStatus,
         regenerate_from: DocumentStatus,
         max_documents: Optional[int] = None,
+        logger: Optional[Any] = None,
     ) -> None:
-        logger = passthrough_request.logger
+        if logger is None:
+            logger= default_logger
         if max_documents is None:
             max_documents = -1
         if files is None:
@@ -197,6 +180,7 @@ class DaemonController(Controller):
                 )
                 # copy_files_repo = copy.deepcopy(files_repo)
                 max_documents += -1
+                request_id = ra
                 passthrough_request.app.emit(
                     "process_document",
                     doc_id_str=str(file.id),
