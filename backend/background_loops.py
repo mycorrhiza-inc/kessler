@@ -1,3 +1,4 @@
+from logic.databaselogic import QueryData, querydata_to_filters_strict
 from models.files import (
     FileSchema,
     FileModel,
@@ -8,7 +9,7 @@ from models.files import (
 )
 
 
-from typing import Optional, Dict
+from typing import Optional, Dict, Tuple, List
 import logging
 from models import utils
 from logic.filelogic import process_fileid_raw
@@ -17,6 +18,7 @@ from litestar.contrib.sqlalchemy.base import UUIDBase
 
 from sqlalchemy.ext.asyncio import AsyncSession
 import redis
+from random import shuffle
 
 from constants import (
     REDIS_BACKGROUND_DAEMON_TOGGLE,
@@ -36,12 +38,51 @@ async def background_processing_loop() -> None:
         if redis_client.get(REDIS_BACKGROUND_DAEMON_TOGGLE) == 0:
             await asyncio.sleep(300)
             return None
-        
 
     # Logic to force it to process each loop sequentially
     result = None
     while result is None:
         result = await activity()
+
+
+# Returns a bool depending on if it was actually able to add numdocs
+async def add_bulk_background_docs(numdocs: int, stop_at: str ="completed") -> bool:
+    logger= default_logger
+    def convert_schema_to_results(schemas : List[FileSchema]) -> Tuple[dict, list]:
+        return_dict = {}
+        return_list = []
+        for schema in schemas:
+            str_id = str(schema.id)
+            return_dict[str_id] = {"doc_id_str" : str_id, "stop_at" : stop_at}
+            # Order doesnt matter since the list is shuffled anyway
+            return_list.append(str_id)
+        return (return_dict,return_list)
+    engine = utils.sqlalchemy_config.get_engine()
+    # Maybe Remove for better perf?
+    async with engine.begin() as conn:
+        await conn.run_sync(UUIDBase.metadata.create_all)
+    session = AsyncSession(engine)
+    with await provide_files_repo(session) as files_repo:
+        try:
+            data = QueryData(
+                    match_stage= "unprocessed"
+            )
+            filters = querydata_to_filters_strict(data)        
+
+            file_results = await files_repo.list(*filters)
+            shuffle(file_results) 
+            return_boolean = len(file_results) >=numdocs
+            truncated_results = file_results[:numdocs]
+            data_dictionary,id_list = convert_schema_to_results(truncated_results)
+            redis_client.mset(data_dictionary)
+            redis_client.rpush(REDIS_BACKGROUND_DOCPROC_KEY,id_list)
+        except Exception as e:
+            engine.dispose()
+            session.close()
+            raise e
+    session.close()
+    engine.dispose()
+    return return_boolean
 
 
 async def main_processing_loop() -> None:
@@ -57,35 +98,19 @@ async def main_processing_loop() -> None:
         if pull_docid is None:
             await asyncio.sleep(2)
             return None
-        pull_docinfo =  redis_client.hgetall(pull_docid)
+        pull_docinfo = redis_client.hgetall(pull_docid)
         await process_document(pull_docinfo**)
         return None
-
-        
 
     # Logic to force it to process each loop sequentially
     result = None
     while result is None:
         result = await activity()
 
+
 async def initialize_background_loops() -> None:
     asyncio.create_task(main_processing_loop())
     asyncio.create_task(background_processing_loop())
-
-# get type info for this
-async def create_async_session() -> Any:
-    engine = utils.sqlalchemy_config.get_engine()
-    # Maybe Remove for better perf?
-    async with engine.begin() as conn:
-        await conn.run_sync(UUIDBase.metadata.create_all)
-    session = AsyncSession(engine)
-    return session
-
-
-async def create_file_repository() -> FileRepository:
-    session = await create_async_session()
-    files_repo = await provide_files_repo(session)
-    return files_repo
 
 
 def update_status_in_redis(request_id: int, status: Dict[str, str]) -> None:
@@ -112,13 +137,19 @@ async def process_document(doc_id_str: str, stop_at: str) -> None:
     # TODO:: Replace passthrough files repo with actual global repo
     # engine = create_async_engine(
     #     postgres_connection_string,
-    with await create_async_session() as session:
-        with await provide_files_repo(session) as files_repo:
-            try:
-                await process_fileid_raw(
-                    doc_id_str, files_repo, logger, stop_at, priority=False
-                )
-            except Exception as e:
-                session.close()
-                raise e
-        session.close()
+    engine = utils.sqlalchemy_config.get_engine()
+    # Maybe Remove for better perf?
+    async with engine.begin() as conn:
+        await conn.run_sync(UUIDBase.metadata.create_all)
+    session = AsyncSession(engine)
+    with await provide_files_repo(session) as files_repo:
+        try:
+            await process_fileid_raw(
+                doc_id_str, files_repo, logger, stop_at, priority=False
+            )
+        except Exception as e:
+            engine.dispose()
+            session.close()
+            raise e
+    session.close()
+    engine.dispose()
