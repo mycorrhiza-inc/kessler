@@ -23,6 +23,7 @@ from util.redis_utils import (
     convert_model_to_results_and_push,
     pop_from_queue,
 )
+import traceback
 
 from constants import (
     REDIS_BACKGROUND_DAEMON_TOGGLE,
@@ -51,7 +52,14 @@ async def background_processing_loop() -> None:
     # Logic to force it to process each loop sequentially
     result = None
     while result is None:
-        result = await activity()
+        try:
+            result = await activity()
+        except Exception as e:
+            tb = traceback.format_exc()
+            default_logger.error("Encountered error while processing a document")
+            default_logger.error(e)
+            default_logger.error(tb)
+            result = None
 
 
 # Returns a bool depending on if it was actually able to add numdocs
@@ -107,7 +115,14 @@ async def main_processing_loop() -> None:
     # Logic to force it to process each loop sequentially
     result = None
     while result is None:
-        result = await activity()
+        try:
+            result = await activity()
+        except Exception as e:
+            tb = traceback.format_exc()
+            default_logger.error("Encountered error while processing a document")
+            default_logger.error(e)
+            default_logger.error(tb)
+            result = None
 
 
 async def initialize_background_loops() -> None:
