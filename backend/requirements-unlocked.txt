@@ -21,5 +21,6 @@ tokenizers
 
 aiohttp[speedups]
 
-asyncio
 nest-asyncio
+
+redis
