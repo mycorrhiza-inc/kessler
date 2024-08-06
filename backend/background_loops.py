@@ -39,6 +39,9 @@ async def background_processing_loop() -> None:
     await asyncio.sleep(
         30
     )  # Wait 30 seconds until application has finished loading to start processing background docs
+    default_logger.info(
+        "Starting the daemon that adds more background documents to process."
+    )
 
     async def activity():
         if redis_client.get(REDIS_BACKGROUND_DAEMON_TOGGLE) == 0:
@@ -86,6 +89,7 @@ async def main_processing_loop() -> None:
     )  # Wait 10 seconds until application has finished loading to do anything
     max_concurrent_docs = 30
     redis_client.set(REDIS_CURRENTLY_PROCESSING_DOCS, 0)
+    default_logger.info("Starting the daemon processes docs in the queue.")
 
     async def activity():
         concurrent_docs = int(redis_client.get(REDIS_CURRENTLY_PROCESSING_DOCS))
