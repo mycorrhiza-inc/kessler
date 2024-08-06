@@ -1,3 +1,4 @@
+import structlog
 from typing import Annotated, Any, List
 
 from litestar.contrib.sqlalchemy.base import UUIDAuditBase
@@ -44,14 +45,17 @@ class FileRepository(SQLAlchemyAsyncRepository[FileModel]):
     model_type = FileModel
 
 
-default_logger = logging.getLogger(__name__)
+default_logger = structlog.get_logger()
 
 
 async def provide_files_repo(db_session: AsyncSession) -> FileRepository:
     """This provides the default Authors repository."""
     default_logger.info(db_session)
     default_logger.info(type(db_session))
-    assert isinstance(db_session, AsyncSession), f"Type is : {type(db_session)}"
+    assert isinstance(
+        db_session, AsyncSession
+    ), f"Type is : {
+        type(db_session)}"
     file_repo = FileRepository(session=db_session)
     default_logger.info(file_repo)
     default_logger.info(type(file_repo))

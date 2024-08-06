@@ -1,4 +1,3 @@
-import logging
 import traceback
 
 from litestar import Litestar, Router
@@ -13,16 +12,23 @@ from litestar.contrib.sqlalchemy.base import UUIDBase
 
 from models import utils
 from routing.misc_controller import MiscController
-from util.logging import logging_config
 from routing.file_controller import FileController
 from routing.rag_controller import RagController
 
+from litestar.plugins.structlog import StructlogPlugin, StructlogConfig
+from litestar.logging.config import StructLoggingConfig
 
 from util.gpu_compute_calls import get_total_connections
 
 from routing.daemon_controller import DaemonController, process_document
 
-logger = logging.getLogger(__name__)
+
+sl_config = StructlogConfig()
+sl_config.struct_logging_config = StructLoggingConfig(
+    traceback_line_limit=20, pretty_print_tty=True
+)
+
+struct_log_pluging = StructlogPlugin(sl_config)
 
 
 async def on_startup() -> None:
@@ -83,13 +89,15 @@ api_router = Router(
 
 app = Litestar(
     on_startup=[on_startup],
-    plugins=[utils.sqlalchemy_plugin],
+    plugins=[
+        utils.sqlalchemy_plugin,
+        struct_log_pluging,
+    ],
     route_handlers=[api_router],
     dependencies={
         "limit_offset": Provide(provide_limit_offset_pagination),
     },
     cors_config=cors_config,
-    logging_config=logging_config,
     exception_handlers={Exception: plain_text_exception_handler},
     listeners=[process_document],
 )

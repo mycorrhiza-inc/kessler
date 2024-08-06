@@ -17,9 +17,9 @@ from pathlib import Path
 from typing import Union, Optional, Any, Tuple
 from typing import Callable
 
-import logging
+import structlog
 
-default_logger = logging.getLogger(__name__)
+default_logger = structlog.get_logger()
 
 
 def paginate_results(
@@ -29,7 +29,10 @@ def paginate_results(
         return (results, 1)
     if page is None or page < 1:
         page = 1
-    rectify = lambda x: max(0, min(x, len(results)))
+
+    def rectify(x):
+        return max(0, min(x, len(results)))
+
     avalible_pages = math.ceil(len(results) / num_results)
     default_logger.info(f"Length of Results: {len(results)}")
     if page > avalible_pages:
@@ -52,7 +55,8 @@ def fizbuzz(maxiters: int) -> str:
     for i in range(0, loops):
         return_str = (
             return_str
-            + f"FizzBuzz\n{n+1}\n{n+2}\nFizz\n{n+4}\nBuzz\nFizz\n{n+7}\n{n+8}\nFizz\nBuzz\n{n+11}\nFizz\n{n+13}\n{n+14}\n"
+            + f"FizzBuzz\n{n+1}\n{n+2}\nFizz\n{n+4}\nBuzz\nFizz\n{n +
+                                                                  7}\n{n+8}\nFizz\nBuzz\n{n+11}\nFizz\n{n+13}\n{n+14}\n"
         )
         n += 15
     return return_str
@@ -73,7 +77,8 @@ def create_markdown_string(
     yaml_metadata = yaml.safe_dump(metadata, default_flow_style=False)
 
     # Construct the markdown string with front matter
-    markdown_with_frontmatter = f"---\n{yaml_metadata}\n---\n{text_without_metadata}"
+    markdown_with_frontmatter = f"---\n{
+        yaml_metadata}\n---\n{text_without_metadata}"
     return markdown_with_frontmatter
 
 
@@ -119,8 +124,12 @@ def get_hash_str(
     return "ERROR Hashing File"
 
 
-get_blake2 = lambda filepath: get_hash_str(filepath, hashlib.blake2b)
-get_sha256 = lambda filepath: get_hash_str(filepath, hashlib.sha256)
+def get_blake2(filepath):
+    return get_hash_str(filepath, hashlib.blake2b)
+
+
+def get_sha256(filepath):
+    return get_hash_str(filepath, hashlib.sha256)
 
 
 def rand_string() -> str:

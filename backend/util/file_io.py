@@ -44,7 +44,9 @@ from constants import (
     S3_FILE_BUCKET,
 )
 
-default_logger = logging.getLogger(__name__)
+import structlog
+
+default_logger = structlog.get_logger()
 
 
 class S3FileManager:
@@ -94,7 +96,10 @@ class S3FileManager:
         hashpath.parent.mkdir(exist_ok=True, parents=True)
         saveloc = hashpath / Path(hash)
         if saveloc.exists():
-            self.logger.info(f"File already at {saveloc}, do not copy any file to it.")
+            self.logger.info(
+                f"File already at {
+                             saveloc}, do not copy any file to it."
+            )
         return saveloc
 
     def backup_metadata_to_hash(self, metadata: dict, hash: str) -> Path:
@@ -167,7 +172,8 @@ class S3FileManager:
             return file_path
         except Exception as e:
             self.logger.error(
-                f"Something whent wrong when downloading s3, is the file missing, raised error {e}"
+                f"Something whent wrong when downloading s3, is the file missing, raised error {
+                    e}"
             )
             return None
 

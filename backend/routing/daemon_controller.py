@@ -62,7 +62,10 @@ from constants import (
 )
 
 
-default_logger = logging.getLogger(__name__)
+import structlog
+
+default_logger = structlog.get_logger()
+
 logging.info("Daemon logging works, and started successfully")
 
 
@@ -125,7 +128,7 @@ class DaemonController(Controller):
         if regenerate_from is None:
             regenerate_from = "completed"
         regenerate_from = DocumentStatus(regenerate_from)
-        filters = querydata_to_filters_strict(data)         
+        filters = querydata_to_filters_strict(data)
         logger.info(filters)
         results = await files_repo.list(*filters)
 
@@ -137,7 +140,7 @@ class DaemonController(Controller):
                 await files_repo.update(file)
                 logger.info(
                     f"Reverting fileid {
-                            file.id} to stage {file.stage}"
+                        file.id} to stage {file.stage}"
                 )
 
         await files_repo.session.commit()
@@ -156,6 +159,7 @@ class DaemonController(Controller):
             data=data,
             regenerate_from=regenerate_from,
         )
+
     async def bulk_process_file_background(
         self,
         files_repo: FileRepository,
@@ -187,7 +191,7 @@ class DaemonController(Controller):
                 await files_repo.session.commit()
                 logger.info(
                     f"Reverting fileid {
-                            file.id} to stage {file.stage}"
+                        file.id} to stage {file.stage}"
                 )
             # Dont process the file if it is already processed beyond the stop point.
             if docstatus_index(file_stage) < docstatus_index(stop_at):

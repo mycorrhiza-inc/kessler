@@ -1,5 +1,6 @@
 # logging configuration
 from litestar.logging import LoggingConfig
+from litestar.plugins.structlog import StructlogConfig
 import logging
 
 logging_config = LoggingConfig(
@@ -8,3 +9,5 @@ logging_config = LoggingConfig(
         "standard": {"format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"}
     },
 )
+
+structlog_config = StructlogConfig(middleware_logging_config=logging_config)
