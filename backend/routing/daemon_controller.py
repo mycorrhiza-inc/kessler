@@ -208,6 +208,27 @@ class DaemonController(Controller):
             stop_at=stop_at,
             regenerate_from=regenerate_from,
         )
+    @post(path="/daemon/process_all_files")
+    async def process_all_background(
+        self,
+        files_repo: FileRepository,
+        request: Request,
+        data: QueryData,
+        stop_at: Optional[str] = None,
+        regenerate_from: Optional[str] = None,
+        max_documents: Optional[int] = None,
+        randomize: bool = False,
+    ) -> None:
+        return await self.process_query_background_raw(
+            files_repo=files_repo,
+            data=data,
+            stop_at=stop_at,
+            regenerate_from=regenerate_from,
+            max_documents=max_documents,
+            randomize=randomize,
+            logger=request.logger,
+        )
+
 
     async def process_query_background_raw(
         self,
