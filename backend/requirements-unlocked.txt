@@ -20,7 +20,7 @@ tokenizers
 
 
 aiohttp[speedups]
-
 nest-asyncio
+asyncstdlib
 
 redis

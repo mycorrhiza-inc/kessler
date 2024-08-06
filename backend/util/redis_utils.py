@@ -3,9 +3,10 @@ from constants import (
     REDIS_CURRENTLY_PROCESSING_DOCS,
     REDIS_HOST,
     REDIS_PORT,
+    REDIS_PRIORITY_DOCPROC_KEY,
 )
 from models.files import FileModel
-from typing import List, Tuple, Any, Union, Optional
+from typing import List, Tuple, Any, Union, Optional, Dict
 import redis
 
 # TODO : Mabye asycnify all the redis calls
@@ -13,6 +14,25 @@ import redis
 default_redis_client = redis.Redis(
     host=REDIS_HOST, port=REDIS_PORT, decode_responses=True
 )
+
+
+def pop_from_queue(redis_client: Optional[Any]) -> Optional[str]:
+    if redis_client is None:
+        redis_client = default_redis_client
+    # TODO : Clean up code logic
+    request_id = redis_client.lpop(REDIS_PRIORITY_DOCPROC_KEY)
+    if request_id is None:
+        request_id = redis_client.lpop(REDIS_BACKGROUND_DOCPROC_KEY)
+    if isinstance(request_id, str) or request_id is None:
+        return request_id
+    default_logger.error(type(request_id))
+    raise Exception(
+        f"Request id is not string or none and is {type(request_id)} instead."
+    )
+
+
+def update_status_in_redis(request_id: int, status: Dict[str, str]) -> None:
+    redis_client.hmset(str(request_id), status)
 
 
 def increment_doc_counter(

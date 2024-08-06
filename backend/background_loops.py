@@ -21,14 +21,13 @@ import redis
 from random import shuffle
 from util.redis_utils import (
     convert_model_to_results_and_push,
+    pop_from_queue,
 )
 
 from constants import (
     REDIS_BACKGROUND_DAEMON_TOGGLE,
     REDIS_HOST,
     REDIS_PORT,
-    REDIS_PRIORITY_DOCPROC_KEY,
-    REDIS_BACKGROUND_DOCPROC_KEY,
     REDIS_CURRENTLY_PROCESSING_DOCS,
 )
 
@@ -110,23 +109,6 @@ async def main_processing_loop() -> None:
 async def initialize_background_loops() -> None:
     asyncio.create_task(main_processing_loop())
     asyncio.create_task(background_processing_loop())
-
-
-def update_status_in_redis(request_id: int, status: Dict[str, str]) -> None:
-    redis_client.hmset(str(request_id), status)
-
-
-def pop_from_queue() -> Optional[str]:
-    # TODO : Clean up code logic
-    request_id = redis_client.lpop(REDIS_PRIORITY_DOCPROC_KEY)
-    if request_id is None:
-        request_id = redis_client.lpop(REDIS_BACKGROUND_DOCPROC_KEY)
-    if isinstance(request_id, str):
-        return request_id
-    default_logger.error(type(request_id))
-    raise Exception(
-        f"Request id is not string or none and is {type(request_id)} instead."
-    )
 
 
 async def process_document(doc_id_str: str, stop_at: str) -> None:

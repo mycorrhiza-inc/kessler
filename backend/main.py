@@ -19,9 +19,7 @@ from routing.file_controller import FileController
 from routing.rag_controller import RagController
 
 
-from util.gpu_compute_calls import get_total_connections
-
-from routing.daemon_controller import DaemonController, process_document
+from routing.daemon_controller import DaemonController
 
 logger = logging.getLogger(__name__)
 
@@ -93,5 +91,4 @@ app = Litestar(
     cors_config=cors_config,
     logging_config=logging_config,
     exception_handlers={Exception: plain_text_exception_handler},
-    listeners=[process_document],
 )

@@ -15,6 +15,7 @@ from litestar.di import Provide
 from pydantic import TypeAdapter
 from models.utils import PydanticBaseModel as BaseModel
 
+from asyncstdlib import amap
 
 from models.files import (
     FileSchema,
@@ -158,28 +159,24 @@ class DaemonController(Controller):
         if len(files) == 0:
             logger.info("List of files to process was empty")
             return None
-        for file in files:
-            if max_documents == 0:
-                logger.info("Reached maxiumum file limit, exiting.")
-                return None
-            logger.info(f"Validating file {str(file.id)} for processing.")
+
+        async def revert_file(file : FileModel) -> FileModel:
             file_stage = DocumentStatus(file.stage)
             if docstatus_index(file_stage) > docstatus_index(regenerate_from):
                 file_stage = regenerate_from
                 file.stage = regenerate_from.value
                 await files_repo.update(file)
-                await files_repo.session.commit()
-                logger.info(
-                    f"Reverting fileid {
-                            file.id} to stage {file.stage}"
-                )
-            # Dont process the file if it is already processed beyond the stop point.
-            if docstatus_index(file_stage) < docstatus_index(stop_at):
-                logger.info(
-                    f"Sending file {
-                        str(file.id)} to be processed in the background."
-                )
-                convert_model_to_results_and_push(schemas = file, stop_at = stop_at)
+                logger.info(f"Reverting fileid {file.id} to stage {file.stage}")
+            return file
+
+        def should_process(file: FileModel) -> bool:
+            return docstatus_index(file.id) < docstatus_index(stop_at)
+
+        reverted_files = list(await amap(revert_file, files))
+        await files_repo.session.commit()
+        files_to_convert = list(filter(should_process, reverted_files))
+
+        convert_model_to_results_and_push(schemas = files_to_convert, stop_at = stop_at)
                 
 
     @post(path="/daemon/process_file/{file_id:uuid}")
