@@ -15,7 +15,8 @@ from litestar.di import Provide
 from pydantic import TypeAdapter
 from models.utils import PydanticBaseModel as BaseModel
 
-from asyncstdlib import amap
+# from asyncstdlib import map
+
 
 from models.files import (
     FileSchema,
@@ -48,9 +49,10 @@ from util.gpu_compute_calls import get_total_connections
 import random
 import redis
 
-from util.niclib import rand_string
+from util.niclib import amap, rand_string
 
 from constants import (
+    REDIS_BACKGROUND_DAEMON_TOGGLE,
     REDIS_HOST,
     REDIS_PORT,
     REDIS_PRIORITY_DOCPROC_KEY,
@@ -89,6 +91,10 @@ def push_to_queue(request: str, priority: bool):
         pushkey = REDIS_BACKGROUND_DOCPROC_KEY
     redis_client.rpush(pushkey, request_id)
 
+
+
+class DaemonState(BaseModel):
+    enable_background_processing: Optional[bool] = None
 
 class DaemonController(Controller):
     dependencies = {"files_repo": Provide(provide_files_repo)}
@@ -240,79 +246,12 @@ class DaemonController(Controller):
             logger=logger,
         )
 
-    @post(path="/daemon/process_all_files")
-    async def process_all_background(
-        self,
-        files_repo: FileRepository,
-        request: Request,
-        data: QueryData,
-        stop_at: Optional[str] = None,
-        regenerate_from: Optional[str] = None,
-        max_documents: Optional[int] = None,
-        randomize: bool = False,
-    ) -> None:
-        return await self.process_query_background_raw(
-            files_repo=files_repo,
-            data=data,
-            stop_at=stop_at,
-            regenerate_from=regenerate_from,
-            max_documents=max_documents,
-            randomize=randomize,
-            logger=request.logger,
-        )
 
-    # # TODO: Refactor so you dont have an open connection all the time.
-    # async def background_daemon():
-    #     global is_daemon_running
-    #     is_daemon_running = True
-    #     while True:
-    #         try:
-    #             await asyncio.sleep(30)
-    #             if get_total_connections() < document_threshold:
-    #                 await self.process_query_background_raw(
-    #                     files_repo=files_repo,
-    #                     passthrough_request=request,
-    #                     data=QueryData(),
-    #                     stop_at=stop_at,
-    #                     max_documents=documents_per_run,
-    #                     randomize=True
-    #                 )
-    #         except Exception as e:
-    #             is_daemon_running = False
-    #             raise e
-
-    @post(path="/dangerous/daemon/start_background_processing_daemon")
-    async def start_background_processing_daemon(
+    @post(path="/dangerous/daemon/control_background_processing_daemon")
+    async def control_background_processing_daemon(
         self,
-        files_repo: FileRepository,
-        request: Request,
-        stop_at: Optional[str],
-        documents_per_run: Optional[int],
-        document_threshold: Optional[int],
+        data : DaemonState
     ) -> str:
-        logger = request.logger
-        if documents_per_run is None:
-            documents_per_run = 10
-        if document_threshold is None:
-            document_threshold = 10
-        global is_daemon_running
-        if is_daemon_running:
-            return "Daemon is already running, please restart to cease operation."
-        while True:
-            try:
-                await asyncio.sleep(30)
-                if get_total_connections() < document_threshold:
-                    await self.process_query_background_raw(
-                        files_repo=files_repo,
-                        passthrough_request=request,
-                        data=QueryData(),
-                        stop_at=stop_at,
-                        max_documents=documents_per_run,
-                        randomize=True,
-                    )
-
-            except Exception as e:
-                is_daemon_running = False
-                raise e
-
-        return "Code is in an unreachable state."
+        daemon_toggle = data.enable_background_processing
+        if daemon_toggle is not None:
+            redis_client.set(REDIS_BACKGROUND_DAEMON_TOGGLE,int(daemon_toggle))

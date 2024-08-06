@@ -92,7 +92,7 @@ async def main_processing_loop() -> None:
         if concurrent_docs >= max_concurrent_docs:
             await asyncio.sleep(2)
             return None
-        pull_docid = pop_from_queue()
+        pull_docid = pop_from_queue(redis_client=redis_client)
         if pull_docid is None:
             await asyncio.sleep(2)
             return None

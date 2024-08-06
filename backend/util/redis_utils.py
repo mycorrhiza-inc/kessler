@@ -16,7 +16,7 @@ default_redis_client = redis.Redis(
 )
 
 
-def pop_from_queue(redis_client: Optional[Any]) -> Optional[str]:
+def pop_from_queue(redis_client: Optional[Any] = None) -> Optional[str]:
     if redis_client is None:
         redis_client = default_redis_client
     # TODO : Clean up code logic
