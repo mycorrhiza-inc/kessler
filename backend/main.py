@@ -1,6 +1,7 @@
 import logging
 import traceback
 
+from background_loops import initialize_background_loops
 from litestar import Litestar, Router
 from litestar.config.cors import CORSConfig
 from litestar.repository.filters import LimitOffset
@@ -29,6 +30,7 @@ async def on_startup() -> None:
     async with utils.sqlalchemy_config.get_engine().begin() as conn:
         # UUIDAuditBase extends UUIDBase so create_all should build both
         await conn.run_sync(UUIDBase.metadata.create_all)
+    await initialize_background_loops()
 
 
 def plain_text_exception_handler(request: Request, exc: Exception) -> Response:

@@ -55,6 +55,7 @@ from constants import (
     REDIS_PRIORITY_DOCPROC_KEY,
     REDIS_BACKGROUND_DOCPROC_KEY,
 )
+from util.redis_utils import convert_model_to_results_and_push
 
 redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
 
@@ -178,14 +179,8 @@ class DaemonController(Controller):
                     f"Sending file {
                         str(file.id)} to be processed in the background."
                 )
-                # copy_files_repo = copy.deepcopy(files_repo)
-                max_documents += -1
-                request_id = ra
-                passthrough_request.app.emit(
-                    "process_document",
-                    doc_id_str=str(file.id),
-                    stop_at=stop_at.value,
-                )
+                convert_model_to_results_and_push(schemas = file, stop_at = stop_at)
+                
 
     @post(path="/daemon/process_file/{file_id:uuid}")
     async def process_file_background(
@@ -205,7 +200,7 @@ class DaemonController(Controller):
         regenerate_from = DocumentStatus(regenerate_from)
         return await self.bulk_process_file_background(
             files_repo=files_repo,
-            passthrough_request=request,
+            logger=request.logger,
             files=[obj],
             stop_at=stop_at,
             regenerate_from=regenerate_from,
@@ -214,14 +209,13 @@ class DaemonController(Controller):
     async def process_query_background_raw(
         self,
         files_repo: FileRepository,
-        passthrough_request: Request,
         data: QueryData,
         stop_at: Optional[str] = None,
         regenerate_from: Optional[str] = None,
         max_documents: Optional[int] = None,
         randomize: bool = False,
+        logger: Any = default_logger
     ) -> None:
-        logger = passthrough_request.logger
         logger.info("Beginning to process all files.")
         if stop_at is None:
             stop_at = "completed"
@@ -242,11 +236,11 @@ class DaemonController(Controller):
         logger.info(f"{len(results)} results")
         return await self.bulk_process_file_background(
             files_repo=files_repo,
-            passthrough_request=passthrough_request,
             files=results,
             stop_at=stop_at,
             regenerate_from=regenerate_from,
             max_documents=max_documents,
+            logger=logger,
         )
 
     @post(path="/daemon/process_all_files")
@@ -262,12 +256,12 @@ class DaemonController(Controller):
     ) -> None:
         return await self.process_query_background_raw(
             files_repo=files_repo,
-            passthrough_request=request,
             data=data,
             stop_at=stop_at,
             regenerate_from=regenerate_from,
             max_documents=max_documents,
             randomize=randomize,
+            logger=request.logger,
         )
 
     # # TODO: Refactor so you dont have an open connection all the time.
