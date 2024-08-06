@@ -44,10 +44,14 @@ async def background_processing_loop() -> None:
         "Starting the daemon that adds more background documents to process."
     )
 
+    redis_client.set(REDIS_BACKGROUND_DAEMON_TOGGLE, 0)
+
     async def activity():
         if redis_client.get(REDIS_BACKGROUND_DAEMON_TOGGLE) == 0:
             await asyncio.sleep(300)
             return None
+        else:
+            await asyncio.sleep(300)
 
     # Logic to force it to process each loop sequentially
     result = None
@@ -116,6 +120,7 @@ async def main_processing_loop() -> None:
     result = None
     while result is None:
         try:
+            default_logger.info("Testing for new doc")
             result = await activity()
         except Exception as e:
             tb = traceback.format_exc()
