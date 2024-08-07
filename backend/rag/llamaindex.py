@@ -71,9 +71,7 @@ def get_llm_from_model_str(model_name: Optional[str]):
         # )
         # Currently broken, fix by using together or something similar, fall back on 70b until then
         actual_name = "accounts/fireworks/models/llama-v3p1-405b-instruct"
-        return Fireworks(
-            model=actual_name, request_timeout=60.0, api_key=FIREWORKS_API_KEY
-        )
+        return Fireworks(model=actual_name, api_key=FIREWORKS_API_KEY)
     if model_name in ["gpt-4o"]:
         return OpenAI(model=model_name, request_timeout=60.0, api_key=OPENAI_API_KEY)
     else:
