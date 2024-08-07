@@ -117,6 +117,7 @@ async def main_processing_loop() -> None:
         if pull_docid is None:
             await asyncio.sleep(2)
             return None
+        increment_doc_counter(1, redis_client=redis_client)
         asyncio.create_task(
             process_document(doc_id_str=pull_docid, stop_at=current_stop_at)
         )
@@ -147,14 +148,13 @@ async def process_document(doc_id_str: str, stop_at: str) -> None:
     # TODO:: Replace passthrough files repo with actual global repo
     # engine = create_async_engine(
     #     postgres_connection_string,
-    increment_doc_counter(1, redis_client=redis_client)
     engine = utils.sqlalchemy_config.get_engine()
     # Maybe Remove for better perf?
     async with engine.begin() as conn:
         await conn.run_sync(UUIDBase.metadata.create_all)
     session = AsyncSession(engine)
-    files_repo = await provide_files_repo(session)
     try:
+        files_repo = await provide_files_repo(session)
         await process_fileid_raw(
             doc_id_str, files_repo, logger, stop_at, priority=False
         )
