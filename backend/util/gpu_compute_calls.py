@@ -69,7 +69,7 @@ def downsample_audio(
     return outfile
 
 
-global_marker_server_urls = ["http://uttu-fedora.tail4a273.ts.net:2718"]
+global_marker_server_urls = ["https://marker.kessler.xyz"]
 
 
 class MarkerServer(BaseModel):
