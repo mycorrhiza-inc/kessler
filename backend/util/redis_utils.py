@@ -69,6 +69,15 @@ def convert_model_to_results_and_push(
     redis_client.rpush(REDIS_BACKGROUND_DOCPROC_KEY, *id_list)
 
 
+def clear_file_queue(
+    redis_client: Optional[Any] = None,
+) -> None:
+    if redis_client is None:
+        redis_client = default_redis_client
+    redis_client.ltrim(REDIS_PRIORITY_DOCPROC_KEY, 0, 0)
+    redis_client.ltrim(REDIS_BACKGROUND_DOCPROC_KEY, 0, 0)
+
+
 async def bulk_process_file_background(
     files_repo: FileRepository,
     files: List[FileModel],

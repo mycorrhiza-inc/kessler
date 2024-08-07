@@ -1,3 +1,4 @@
+import re
 from logic.databaselogic import QueryData, querydata_to_filters_strict
 from models.files import (
     FileSchema,
@@ -20,6 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import redis
 from random import shuffle
 from util.redis_utils import (
+    clear_file_queue,
     convert_model_to_results_and_push,
     increment_doc_counter,
     pop_from_queue,
@@ -108,8 +110,7 @@ async def main_processing_loop() -> None:
     redis_client.set(REDIS_BACKGROUND_PROCESSING_STOPS_AT, "completed")
     # REMOVE FOR PERSIST QUEUES ACROSS RESTARTS:
     #
-    redis_client.ltrim(REDIS_PRIORITY_DOCPROC_KEY, 0, -1)
-    redis_client.ltrim(REDIS_BACKGROUND_DOCPROC_KEY, 0, -1)
+    clear_file_queue(redis_client=redis_client)
     default_logger.info("Starting the daemon processes docs in the queue.")
 
     async def activity():

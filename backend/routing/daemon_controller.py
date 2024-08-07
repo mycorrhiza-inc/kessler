@@ -59,7 +59,7 @@ from constants import (
     REDIS_PRIORITY_DOCPROC_KEY,
     REDIS_BACKGROUND_DOCPROC_KEY,
 )
-from util.redis_utils import bulk_process_file_background, convert_model_to_results_and_push
+from util.redis_utils import bulk_process_file_background, clear_file_queue, convert_model_to_results_and_push
 
 redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
 
@@ -241,6 +241,5 @@ class DaemonController(Controller):
             redis_client.set(REDIS_BACKGROUND_PROCESSING_STOPS_AT,target )
         if clear_queue is not None:
             if clear_queue:
-                redis_client.ltrim(REDIS_PRIORITY_DOCPROC_KEY,0,-1)
-                redis_client.ltrim(REDIS_BACKGROUND_DOCPROC_KEY,0,-1)
+                clear_file_queue()
         return "Success!"
