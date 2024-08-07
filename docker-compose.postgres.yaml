@@ -4,7 +4,7 @@ services:
     image: pgvector/pgvector:pg16
     restart: always
     ports:
-      - "6543:5432"
+      - "5432:5432"
     env_file:
       - config/global.env
     expose:
