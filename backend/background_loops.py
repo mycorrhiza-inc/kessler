@@ -89,11 +89,11 @@ async def add_bulk_background_docs(numdocs: int, stop_at: str = "completed") -> 
             schemas=truncated_results, redis_client=redis_client
         )
     except Exception as e:
-        engine.dispose()
-        session.close()
+        await engine.dispose()
+        await session.close()
         raise e
-    session.close()
-    engine.dispose()
+    await session.close()
+    await engine.dispose()
     return return_boolean
 
 
@@ -117,7 +117,9 @@ async def main_processing_loop() -> None:
         if pull_docid is None:
             await asyncio.sleep(2)
             return None
-        await process_document(doc_id_str=pull_docid, stop_at=current_stop_at)
+        asyncio.create_task(
+            process_document(doc_id_str=pull_docid, stop_at=current_stop_at)
+        )
         return None
 
     # Logic to force it to process each loop sequentially
@@ -158,9 +160,9 @@ async def process_document(doc_id_str: str, stop_at: str) -> None:
         )
     except Exception as e:
         increment_doc_counter(-1, redis_client=redis_client)
-        engine.dispose()
-        session.close()
+        await engine.dispose()
+        await session.close()
         raise e
     increment_doc_counter(-1, redis_client=redis_client)
-    session.close()
-    engine.dispose()
+    await session.close()
+    await engine.dispose()

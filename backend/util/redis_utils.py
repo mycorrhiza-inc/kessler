@@ -45,7 +45,8 @@ def increment_doc_counter(
     if redis_client is None:
         redis_client = default_redis_client
     counter = redis_client.get(REDIS_CURRENTLY_PROCESSING_DOCS)
-    redis_client.set(REDIS_CURRENTLY_PROCESSING_DOCS, counter + increment)
+    default_logger.info(counter)
+    redis_client.set(REDIS_CURRENTLY_PROCESSING_DOCS, int(counter) + increment)
 
 
 def convert_model_to_results_and_push(
