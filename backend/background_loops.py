@@ -21,6 +21,7 @@ import redis
 from random import shuffle
 from util.redis_utils import (
     convert_model_to_results_and_push,
+    increment_doc_counter,
     pop_from_queue,
 )
 import traceback
@@ -123,7 +124,6 @@ async def main_processing_loop() -> None:
     result = None
     while result is None:
         try:
-            default_logger.info("Testing for new doc")
             result = await activity()
         except Exception as e:
             tb = traceback.format_exc()
@@ -145,7 +145,7 @@ async def process_document(doc_id_str: str, stop_at: str) -> None:
     # TODO:: Replace passthrough files repo with actual global repo
     # engine = create_async_engine(
     #     postgres_connection_string,
-    redis_client.get(REDIS_CURRENTLY_PROCESSING_DOCS)
+    increment_doc_counter(1, redis_client=redis_client)
     engine = utils.sqlalchemy_config.get_engine()
     # Maybe Remove for better perf?
     async with engine.begin() as conn:
@@ -157,8 +157,10 @@ async def process_document(doc_id_str: str, stop_at: str) -> None:
             doc_id_str, files_repo, logger, stop_at, priority=False
         )
     except Exception as e:
+        increment_doc_counter(-1, redis_client=redis_client)
         engine.dispose()
         session.close()
         raise e
+    increment_doc_counter(-1, redis_client=redis_client)
     session.close()
     engine.dispose()
