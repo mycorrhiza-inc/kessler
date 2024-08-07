@@ -97,6 +97,7 @@ def push_to_queue(request: str, priority: bool):
 class DaemonState(BaseModel):
     enable_background_processing: Optional[bool] = None
     stop_at_background_docprocessing : Optional[str] = None
+    clear_queue: Optional[bool] = None
 
 class DaemonController(Controller):
     dependencies = {"files_repo": Provide(provide_files_repo)}
@@ -232,9 +233,14 @@ class DaemonController(Controller):
     ) -> str:
         daemon_toggle = data.enable_background_processing
         stop_at = data.stop_at_background_docprocessing
+        clear_queue = data.clear_queue
         if daemon_toggle is not None:
             redis_client.set(REDIS_BACKGROUND_DAEMON_TOGGLE,int(daemon_toggle))
         if stop_at is not None:
             target = DocumentStatus(stop_at).value
             redis_client.set(REDIS_BACKGROUND_PROCESSING_STOPS_AT,target )
+        if clear_queue is not None:
+            if clear_queue:
+                redis_client.ltrim(REDIS_PRIORITY_DOCPROC_KEY,0,-1)
+                redis_client.ltrim(REDIS_BACKGROUND_DOCPROC_KEY,0,-1)
         return "Success!"

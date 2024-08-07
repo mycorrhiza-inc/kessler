@@ -28,10 +28,12 @@ import traceback
 
 from constants import (
     REDIS_BACKGROUND_DAEMON_TOGGLE,
+    REDIS_BACKGROUND_DOCPROC_KEY,
     REDIS_HOST,
     REDIS_PORT,
     REDIS_CURRENTLY_PROCESSING_DOCS,
     REDIS_BACKGROUND_PROCESSING_STOPS_AT,
+    REDIS_PRIORITY_DOCPROC_KEY,
 )
 
 redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
@@ -104,6 +106,10 @@ async def main_processing_loop() -> None:
     max_concurrent_docs = 30
     redis_client.set(REDIS_CURRENTLY_PROCESSING_DOCS, 0)
     redis_client.set(REDIS_BACKGROUND_PROCESSING_STOPS_AT, "completed")
+    # REMOVE FOR PERSIST QUEUES ACROSS RESTARTS:
+    #
+    redis_client.ltrim(REDIS_PRIORITY_DOCPROC_KEY, 0, -1)
+    redis_client.ltrim(REDIS_BACKGROUND_DOCPROC_KEY, 0, -1)
     default_logger.info("Starting the daemon processes docs in the queue.")
 
     async def activity():
