@@ -93,8 +93,8 @@ async def bulk_process_file_background(
         return list(x)
 
     currently_processing_docs = sanitize(
-        redis_client.get(REDIS_BACKGROUND_DOCPROC_KEY)
-    ) + sanitize(redis_client.get(REDIS_PRIORITY_DOCPROC_KEY))
+        redis_client.lrange(REDIS_BACKGROUND_DOCPROC_KEY, 0, -1)
+    ) + sanitize(redis_client.lrange(REDIS_PRIORITY_DOCPROC_KEY, 0, -1))
 
     def should_process(file: FileModel) -> bool:
         if not docstatus_index(file.stage) < docstatus_index(stop_at):
