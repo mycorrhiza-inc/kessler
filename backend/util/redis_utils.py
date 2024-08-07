@@ -65,7 +65,7 @@ def convert_model_to_results_and_push(
     if isinstance(schemas, FileModel):
         schemas = [schemas]
     id_list = convert_model_to_results(schemas)
-    redis_client.rpush(REDIS_BACKGROUND_DOCPROC_KEY, id_list)
+    redis_client.rpush(REDIS_BACKGROUND_DOCPROC_KEY, *id_list)
 
 
 async def bulk_process_file_background(

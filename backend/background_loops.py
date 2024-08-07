@@ -75,22 +75,22 @@ async def add_bulk_background_docs(numdocs: int, stop_at: str = "completed") -> 
     async with engine.begin() as conn:
         await conn.run_sync(UUIDBase.metadata.create_all)
     session = AsyncSession(engine)
-    with await provide_files_repo(session) as files_repo:
-        try:
-            data = QueryData(match_stage="unprocessed")
-            filters = querydata_to_filters_strict(data)
+    files_repo = await provide_files_repo(session)
+    try:
+        data = QueryData(match_stage="unprocessed")
+        filters = querydata_to_filters_strict(data)
 
-            file_results = await files_repo.list(*filters)
-            shuffle(file_results)
-            return_boolean = len(file_results) >= numdocs
-            truncated_results = file_results[:numdocs]
-            convert_model_to_results_and_push(
-                schemas=truncated_results, redis_client=redis_client
-            )
-        except Exception as e:
-            engine.dispose()
-            session.close()
-            raise e
+        file_results = await files_repo.list(*filters)
+        shuffle(file_results)
+        return_boolean = len(file_results) >= numdocs
+        truncated_results = file_results[:numdocs]
+        convert_model_to_results_and_push(
+            schemas=truncated_results, redis_client=redis_client
+        )
+    except Exception as e:
+        engine.dispose()
+        session.close()
+        raise e
     session.close()
     engine.dispose()
     return return_boolean
@@ -151,14 +151,14 @@ async def process_document(doc_id_str: str, stop_at: str) -> None:
     async with engine.begin() as conn:
         await conn.run_sync(UUIDBase.metadata.create_all)
     session = AsyncSession(engine)
-    with await provide_files_repo(session) as files_repo:
-        try:
-            await process_fileid_raw(
-                doc_id_str, files_repo, logger, stop_at, priority=False
-            )
-        except Exception as e:
-            engine.dispose()
-            session.close()
-            raise e
+    files_repo = await provide_files_repo(session)
+    try:
+        await process_fileid_raw(
+            doc_id_str, files_repo, logger, stop_at, priority=False
+        )
+    except Exception as e:
+        engine.dispose()
+        session.close()
+        raise e
     session.close()
     engine.dispose()
