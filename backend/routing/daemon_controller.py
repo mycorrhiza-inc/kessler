@@ -58,7 +58,7 @@ from constants import (
     REDIS_PRIORITY_DOCPROC_KEY,
     REDIS_BACKGROUND_DOCPROC_KEY,
 )
-from util.redis_utils import convert_model_to_results_and_push
+from util.redis_utils import bulk_process_file_background, convert_model_to_results_and_push
 
 redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
 
@@ -89,7 +89,7 @@ def push_to_queue(request: str, priority: bool):
         pushkey = REDIS_PRIORITY_DOCPROC_KEY
     else:
         pushkey = REDIS_BACKGROUND_DOCPROC_KEY
-    redis_client.rpush(pushkey, request_id)
+    redis_client.rpush(pushkey, request)
 
 
 
@@ -146,43 +146,6 @@ class DaemonController(Controller):
             logger=request.logger,
             regenerate_from=regenerate_from,
         )
-    async def bulk_process_file_background(
-        self,
-        files_repo: FileRepository,
-        files: List[FileModel],
-        stop_at: DocumentStatus,
-        regenerate_from: DocumentStatus,
-        max_documents: Optional[int] = None,
-        logger: Optional[Any] = None,
-    ) -> None:
-        if logger is None:
-            logger= default_logger
-        if max_documents is None:
-            max_documents = -1
-        if files is None:
-            logger.info("List of files to process was empty")
-            return None
-        if len(files) == 0:
-            logger.info("List of files to process was empty")
-            return None
-
-        async def revert_file(file : FileModel) -> FileModel:
-            file_stage = DocumentStatus(file.stage)
-            if docstatus_index(file_stage) > docstatus_index(regenerate_from):
-                file_stage = regenerate_from
-                file.stage = regenerate_from.value
-                await files_repo.update(file)
-                logger.info(f"Reverting fileid {file.id} to stage {file.stage}")
-            return file
-
-        def should_process(file: FileModel) -> bool:
-            return docstatus_index(file.id) < docstatus_index(stop_at)
-
-        reverted_files = list(await amap(revert_file, files))
-        await files_repo.session.commit()
-        files_to_convert = list(filter(should_process, reverted_files))
-
-        convert_model_to_results_and_push(schemas = files_to_convert, stop_at = stop_at)
                 
 
     @post(path="/daemon/process_file/{file_id:uuid}")
@@ -197,16 +160,12 @@ class DaemonController(Controller):
         obj = await files_repo.get(file_id)
         if stop_at is None:
             stop_at = "completed"
-        if regenerate_from is None:
-            regenerate_from = "completed"
         stop_at = DocumentStatus(stop_at)
-        regenerate_from = DocumentStatus(regenerate_from)
-        return await self.bulk_process_file_background(
+        await bulk_process_file_background(
             files_repo=files_repo,
             logger=request.logger,
             files=[obj],
             stop_at=stop_at,
-            regenerate_from=regenerate_from,
         )
     @post(path="/daemon/process_all_files")
     async def process_all_background(
@@ -243,12 +202,9 @@ class DaemonController(Controller):
         logger.info("Beginning to process all files.")
         if stop_at is None:
             stop_at = "completed"
-        if regenerate_from is None:
-            regenerate_from = "completed"
         stop_at = DocumentStatus(stop_at)
-        regenerate_from = DocumentStatus(regenerate_from)
         filters = querydata_to_filters_strict(data) + filters_docstatus_processing(
-            stop_at=stop_at, regenerate_from=regenerate_from
+            stop_at=stop_at
         )
         logger.info(filters)
 
@@ -258,11 +214,10 @@ class DaemonController(Controller):
         if randomize:
             random.shuffle(results)
         logger.info(f"{len(results)} results")
-        return await self.bulk_process_file_background(
+        await bulk_process_file_background(
             files_repo=files_repo,
             files=results,
             stop_at=stop_at,
-            regenerate_from=regenerate_from,
             max_documents=max_documents,
             logger=logger,
         )
@@ -276,3 +231,4 @@ class DaemonController(Controller):
         daemon_toggle = data.enable_background_processing
         if daemon_toggle is not None:
             redis_client.set(REDIS_BACKGROUND_DAEMON_TOGGLE,int(daemon_toggle))
+        return "Success!"

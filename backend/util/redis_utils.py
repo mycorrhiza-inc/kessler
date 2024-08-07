@@ -5,15 +5,18 @@ from constants import (
     REDIS_PORT,
     REDIS_PRIORITY_DOCPROC_KEY,
 )
-from models.files import FileModel
+from models.files import DocumentStatus, FileModel, FileRepository, docstatus_index
 from typing import List, Tuple, Any, Union, Optional, Dict
 import redis
+import logging
+import sys
 
 # TODO : Mabye asycnify all the redis calls
 
 default_redis_client = redis.Redis(
     host=REDIS_HOST, port=REDIS_PORT, decode_responses=True
 )
+default_logger = logging.getLogger(__name__)
 
 
 def pop_from_queue(redis_client: Optional[Any] = None) -> Optional[str]:
@@ -70,3 +73,39 @@ def convert_model_to_results_and_push(
     data_dictionary, id_list = convert_model_to_results(schemas, stop_at)
     redis_client.mset(data_dictionary)
     redis_client.rpush(REDIS_BACKGROUND_DOCPROC_KEY, id_list)
+
+
+async def bulk_process_file_background(
+    files_repo: FileRepository,
+    files: List[FileModel],
+    stop_at: DocumentStatus,
+    max_documents: Optional[int] = None,
+    logger: Optional[Any] = None,
+    redis_client: Optional[Any] = None,
+) -> bool:
+    if redis_client is None:
+        redis_client = default_redis_client
+    if logger is None:
+        logger = default_logger
+    if max_documents is None:
+        max_documents = 1000  # Default to prevent server from crashing by accidentially not including a value
+    if files is None or len(files) == 0:
+        logger.info("List of files to process was empty")
+        return max_documents == 0
+    currently_processing_docs = redis_client.get(
+        REDIS_BACKGROUND_DOCPROC_KEY
+    ) + redis_client.get(REDIS_PRIORITY_DOCPROC_KEY)
+
+    def should_process(file: FileModel) -> bool:
+        if not docstatus_index(file.stage) < docstatus_index(stop_at):
+            return False
+        # Set up a toggle for this at some point in time
+        if file.id in currently_processing_docs:
+            return False
+        return True
+
+    await files_repo.session.commit()
+    files_to_convert = list(filter(should_process, files))[:max_documents]
+
+    convert_model_to_results_and_push(schemas=files_to_convert, stop_at=stop_at)
+    return len(files_to_convert) == max_documents
