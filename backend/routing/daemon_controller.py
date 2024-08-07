@@ -53,6 +53,7 @@ from util.niclib import amap, rand_string
 
 from constants import (
     REDIS_BACKGROUND_DAEMON_TOGGLE,
+    REDIS_BACKGROUND_PROCESSING_STOPS_AT,
     REDIS_HOST,
     REDIS_PORT,
     REDIS_PRIORITY_DOCPROC_KEY,
@@ -95,6 +96,7 @@ def push_to_queue(request: str, priority: bool):
 
 class DaemonState(BaseModel):
     enable_background_processing: Optional[bool] = None
+    stop_at_background_docprocessing : Optional[str] = None
 
 class DaemonController(Controller):
     dependencies = {"files_repo": Provide(provide_files_repo)}
@@ -229,6 +231,10 @@ class DaemonController(Controller):
         data : DaemonState
     ) -> str:
         daemon_toggle = data.enable_background_processing
+        stop_at = data.stop_at_background_docprocessing
         if daemon_toggle is not None:
             redis_client.set(REDIS_BACKGROUND_DAEMON_TOGGLE,int(daemon_toggle))
+        if stop_at is not None:
+            target = DocumentStatus(stop_at).value
+            redis_client.set(REDIS_BACKGROUND_PROCESSING_STOPS_AT,target )
         return "Success!"

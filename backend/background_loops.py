@@ -30,6 +30,7 @@ from constants import (
     REDIS_HOST,
     REDIS_PORT,
     REDIS_CURRENTLY_PROCESSING_DOCS,
+    REDIS_BACKGROUND_PROCESSING_STOPS_AT,
 )
 
 redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
@@ -84,7 +85,7 @@ async def add_bulk_background_docs(numdocs: int, stop_at: str = "completed") -> 
             return_boolean = len(file_results) >= numdocs
             truncated_results = file_results[:numdocs]
             convert_model_to_results_and_push(
-                schemas=truncated_results, stop_at=stop_at, redis_client=redis_client
+                schemas=truncated_results, redis_client=redis_client
             )
         except Exception as e:
             engine.dispose()
@@ -101,9 +102,12 @@ async def main_processing_loop() -> None:
     )  # Wait 10 seconds until application has finished loading to do anything
     max_concurrent_docs = 30
     redis_client.set(REDIS_CURRENTLY_PROCESSING_DOCS, 0)
+    redis_client.set(REDIS_BACKGROUND_PROCESSING_STOPS_AT, "completed")
     default_logger.info("Starting the daemon processes docs in the queue.")
 
     async def activity():
+        current_stop_at = redis_client.get(REDIS_BACKGROUND_PROCESSING_STOPS_AT)
+
         concurrent_docs = int(redis_client.get(REDIS_CURRENTLY_PROCESSING_DOCS))
         if concurrent_docs >= max_concurrent_docs:
             await asyncio.sleep(2)
@@ -112,8 +116,7 @@ async def main_processing_loop() -> None:
         if pull_docid is None:
             await asyncio.sleep(2)
             return None
-        pull_docinfo = redis_client.hgetall(pull_docid)
-        await process_document(**pull_docinfo)
+        await process_document(doc_id_str=pull_docid, stop_at=current_stop_at)
         return None
 
     # Logic to force it to process each loop sequentially

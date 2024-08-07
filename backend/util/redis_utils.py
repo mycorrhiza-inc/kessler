@@ -48,30 +48,23 @@ def increment_doc_counter(
     redis_client.set(REDIS_CURRENTLY_PROCESSING_DOCS, counter + increment)
 
 
-def convert_model_to_results(
-    schemas: List[FileModel], stop_at: str
-) -> Tuple[dict, list]:
-    return_dict = {}
-    return_list = []
-    for schema in schemas:
-        str_id = str(schema.id)
-        return_dict[str_id] = {"doc_id_str": str_id, "stop_at": stop_at}
-        # Order doesnt matter since the list is shuffled anyway
-        return_list.append(str_id)
-    return (return_dict, return_list)
-
-
 def convert_model_to_results_and_push(
     schemas: Union[FileModel, List[FileModel]],
-    stop_at: str,
     redis_client: Optional[Any] = None,
 ) -> None:
+    def convert_model_to_results(schemas: List[FileModel]) -> list:
+        return_list = []
+        for schema in schemas:
+            str_id = str(schema.id)
+            # Order doesnt matter since the list is shuffled anyway
+            return_list.append(str_id)
+        return return_list
+
     if redis_client is None:
         redis_client = default_redis_client
     if isinstance(schemas, FileModel):
         schemas = [schemas]
-    data_dictionary, id_list = convert_model_to_results(schemas, stop_at)
-    redis_client.mset(data_dictionary)
+    id_list = convert_model_to_results(schemas)
     redis_client.rpush(REDIS_BACKGROUND_DOCPROC_KEY, id_list)
 
 
@@ -92,20 +85,24 @@ async def bulk_process_file_background(
     if files is None or len(files) == 0:
         logger.info("List of files to process was empty")
         return max_documents == 0
-    currently_processing_docs = redis_client.get(
-        REDIS_BACKGROUND_DOCPROC_KEY
-    ) + redis_client.get(REDIS_PRIORITY_DOCPROC_KEY)
+
+    def sanitize(x: Any) -> list:
+        if x is None:
+            return []
+        return list(x)
+
+    currently_processing_docs = sanitize(
+        redis_client.get(REDIS_BACKGROUND_DOCPROC_KEY)
+    ) + sanitize(redis_client.get(REDIS_PRIORITY_DOCPROC_KEY))
 
     def should_process(file: FileModel) -> bool:
         if not docstatus_index(file.stage) < docstatus_index(stop_at):
             return False
         # Set up a toggle for this at some point in time
-        if file.id in currently_processing_docs:
-            return False
-        return True
+        return file.id not in currently_processing_docs
 
     await files_repo.session.commit()
     files_to_convert = list(filter(should_process, files))[:max_documents]
 
-    convert_model_to_results_and_push(schemas=files_to_convert, stop_at=stop_at)
+    convert_model_to_results_and_push(schemas=files_to_convert)
     return len(files_to_convert) == max_documents

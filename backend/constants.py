@@ -37,4 +37,5 @@ REDIS_BACKGROUND_DOCPROC_KEY = "docproc_queue_background"
 REDIS_DOCPROC_INFORMATION = "docproc_information"
 
 REDIS_BACKGROUND_DAEMON_TOGGLE = "background_daemon"
+REDIS_BACKGROUND_PROCESSING_STOPS_AT = "background_stop_at"
 REDIS_CURRENTLY_PROCESSING_DOCS = "currently_processing_docs"
