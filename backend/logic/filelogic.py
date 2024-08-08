@@ -280,19 +280,26 @@ async def process_file_raw(
             await files_repo.update(obj)
             await files_repo.session.commit()
             return None
-        match current_stage:
-            case DocumentStatus.unprocessed:
-                # Mark that an attempt to process the document starting at stage 1
-                current_stage = DocumentStatus.stage1
-            case DocumentStatus.stage1:
-                current_stage = await process_stage_one()
-            case DocumentStatus.stage2:
-                current_stage = await process_stage_two()
-            case DocumentStatus.stage3:
-                current_stage = await process_stage_three()
-            case _:
-                raise Exception(
-                    "Document was incorrectly added to database, \
-                    try readding it again.\
-                "
-                )
+        try:
+            match current_stage:
+                case DocumentStatus.unprocessed:
+                    # Mark that an attempt to process the document starting at stage 1
+                    current_stage = DocumentStatus.stage1
+                case DocumentStatus.stage1:
+                    current_stage = await process_stage_one()
+                case DocumentStatus.stage2:
+                    current_stage = await process_stage_two()
+                case DocumentStatus.stage3:
+                    current_stage = await process_stage_three()
+                case _:
+                    raise Exception(
+                        "Document was incorrectly added to database, \
+                        try readding it again.\
+                    "
+                    )
+        except Exception as e:
+            logger.error(f"Document errored out while processing stage: {current_stage.value}")
+            obj.stage = current_stage.value
+            await files_repo.update(obj)
+            await files_repo.session.commit()
+            raise e
