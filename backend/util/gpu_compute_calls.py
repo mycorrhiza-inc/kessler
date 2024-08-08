@@ -69,7 +69,7 @@ def downsample_audio(
     return outfile
 
 
-global_marker_server_urls = ["http://uttu-fedora.tail4a273.ts.net:2718"]
+global_marker_server_urls = ["https://marker.kessler.xyz"]
 
 
 class MarkerServer(BaseModel):
@@ -127,7 +127,84 @@ class GPUComputeEndpoint:
         self.endpoint_url = legacy_endpoint_url
         self.datalab_api_key = datalab_api_key
 
-    async def transcribe_pdf(
+    async def pull_marker_endpoint_for_response(
+        self, request_check_url: str, max_polls: int, poll_wait: int, server: Any
+    ) -> str:
+        async with aiohttp.ClientSession() as session:
+            server.connections = server.connections + 1
+            for polls in range(max_polls):
+                try:
+                    await asyncio.sleep(poll_wait)
+                    async with session.get(request_check_url) as poll_response:
+                        poll_response.raise_for_status()
+                        poll_data = await poll_response.json()
+                        # self.logger.info(poll_data)
+                        if poll_data["status"] == "complete":
+                            server.connections = server.connections - 1
+                            self.logger.info(f"Processed document after {polls} polls.")
+                            return poll_data["markdown"]
+                        if poll_data["status"] == "error":
+                            server.connections = server.connections - 1
+                            e = poll_data["error"]
+                            self.logger.error(
+                                f"Pdf server encountered an error after {polls} : {e}"
+                            )
+                            raise Exception(
+                                f"Pdf server encountered an error after {polls} : {e}"
+                            )
+                        if poll_data["status"] != "processing":
+                            raise ValueError(
+                                f"PDF Processing Failed. Status was unrecognized {poll_data['status']} after {polls} polls."
+                            )
+                except Exception as e:
+                    server.connections = server.connections - 1
+                    raise e
+            server.connections = server.connections - 1
+            raise TimeoutError("Polling for marker API result timed out")
+
+    async def transcribe_pdf_s3_uri(
+        self, s3_uri: str, external_process: bool = False, priority: bool = True
+    ) -> str:
+        if external_process:
+            # TODO : Make it so that it downloads the s3_uri onto local then uploads it to external process.
+            raise Exception(
+                "s3 uploads not supported with external process equaling true."
+            )
+        else:
+            server = get_least_connection()
+            base_url = server.url
+            if priority:
+                query_str = "?priority=true"
+            else:
+                query_str = "?priority=false"
+            marker_url_endpoint = (
+                base_url + "/api/v1/marker/direct_s3_url_upload" + query_str
+            )
+
+            data = {"s3_url": s3_uri}
+            # data = {"langs": "en", "force_ocr": "false", "paginate": "true"}
+            with requests.post(marker_url_endpoint, json=data) as response:
+                response.raise_for_status()
+                # await the json if async
+                data = response.json()
+                request_check_url_leaf = data.get("request_check_url_leaf")
+
+                if request_check_url_leaf is None:
+                    raise Exception(
+                        "Failed to get request_check_url from marker API response"
+                    )
+                request_check_url = base_url + request_check_url_leaf
+                self.logger.info(
+                    f"Got response from marker server, polling to see when file is finished processing at url: {request_check_url}"
+                )
+                return await self.pull_marker_endpoint_for_response(
+                    request_check_url=request_check_url,
+                    max_polls=200,
+                    poll_wait=3 + 57 * int(not priority),
+                    server=server,
+                )
+
+    async def transcribe_pdf_filepath(
         self,
         filepath: Path,
         external_process: bool = False,
@@ -141,59 +218,31 @@ class GPUComputeEndpoint:
             )
             headers = {"X-Api-Key": self.datalab_api_key}
 
-            async with aiohttp.ClientSession() as session:
-                with aiohttp.MultipartWriter() as mpwriter:
-                    with open(filepath, "rb") as file:
-                        # # Append the file
-                        # file_part = mpwriter.append(file)
-                        # file_part.set_content_disposition(
-                        #     "attachment", filename=filepath.name + ".pdf"
-                        # )
-                        # file_part.headers[aiohttp.hdrs.CONTENT_TYPE] = "application/pdf"
+            with open(filepath, "rb") as file:
+                files = {
+                    "file": (filepath.name + ".pdf", file, "application/pdf"),
+                    "paginate": (None, True),
+                }
+                # data = {"langs": "en", "force_ocr": "false", "paginate": "true"}
+                with requests.post(url, files=files, headers=headers) as response:
+                    response.raise_for_status()
+                    # await the json if async
+                    data = response.json()
+                    request_check_url = data.get("request_check_url")
 
-                        # # Append other form data
-                        # mpwriter.append_form(
-                        #     [("langs", "en"), ("force_ocr", "false"), ("paginate", "true")]
-                        # )
-
-                        # async with session.post(url, data=mpwriter, headers=headers) as response:
-                        files = {
-                            "file": (filepath.name + ".pdf", file, "application/pdf"),
-                            "paginate": (None, True),
-                        }
-                        # data = {"langs": "en", "force_ocr": "false", "paginate": "true"}
-                        with requests.post(
-                            url, files=files, headers=headers
-                        ) as response:
-                            response.raise_for_status()
-                            # await the json if async
-                            data = response.json()
-                            request_check_url = data.get("request_check_url")
-
-                            if request_check_url is None:
-                                raise Exception(
-                                    "Failed to get request_check_url from marker API response"
-                                )
-                            self.logger.info(
-                                "Got response from marker server, polling to see when file is finished processing."
-                            )
-
-                            # Polling for the result
-                            max_polls = 300
-                            for _ in range(max_polls):
-                                await asyncio.sleep(2)
-                                async with session.get(
-                                    request_check_url, headers=headers
-                                ) as poll_response:
-                                    poll_response.raise_for_status()
-                                    poll_data = await poll_response.json()
-
-                                    if poll_data["status"] == "complete":
-                                        return poll_data["markdown"]
-
-                            raise TimeoutError(
-                                "Polling for marker API result timed out"
-                            )
+                    if request_check_url is None:
+                        raise Exception(
+                            "Failed to get request_check_url from marker API response"
+                        )
+                    self.logger.info(
+                        "Got response from marker server, polling to see when file is finished processing."
+                    )
+                    return await self.pull_marker_endpoint_for_response(
+                        request_check_url=request_check_url,
+                        max_polls=200,
+                        poll_wait=3 + 57 * int(not priority),
+                        server=MarkerServer("void", 0),
+                    )
         else:
             server = get_least_connection()
             base_url = server.url
@@ -203,85 +252,32 @@ class GPUComputeEndpoint:
                 query_str = "?priority=false"
             marker_url_endpoint = base_url + "/api/v1/marker" + query_str
 
-            async with aiohttp.ClientSession() as session:
-                with aiohttp.MultipartWriter() as mpwriter:
-                    with open(filepath, "rb") as file:
-                        # # Append the file
-                        # file_part = mpwriter.append(file)
-                        # file_part.set_content_disposition(
-                        #     "attachment", filename=filepath.name + ".pdf"
-                        # )
-                        # file_part.headers[aiohttp.hdrs.CONTENT_TYPE] = "application/pdf"
+            with open(filepath, "rb") as file:
+                files = {
+                    "file": (filepath.name + ".pdf", file, "application/pdf"),
+                    # "paginate": (None, True),
+                }
+                # data = {"langs": "en", "force_ocr": "false", "paginate": "true"}
+                with requests.post(marker_url_endpoint, files=files) as response:
+                    response.raise_for_status()
+                    # await the json if async
+                    data = response.json()
+                    request_check_url_leaf = data.get("request_check_url_leaf")
 
-                        # # Append other form data
-                        # mpwriter.append_form(
-                        #     [("langs", "en"), ("force_ocr", "false"), ("paginate", "true")]
-                        # )
-
-                        # async with session.post(url, data=mpwriter, headers=headers) as response:
-                        files = {
-                            "file": (filepath.name + ".pdf", file, "application/pdf"),
-                            # "paginate": (None, True),
-                        }
-                        # data = {"langs": "en", "force_ocr": "false", "paginate": "true"}
-                        with requests.post(
-                            marker_url_endpoint, files=files
-                        ) as response:
-                            response.raise_for_status()
-                            # await the json if async
-                            data = response.json()
-                            request_check_url_leaf = data.get("request_check_url_leaf")
-
-                            if request_check_url_leaf is None:
-                                raise Exception(
-                                    "Failed to get request_check_url from marker API response"
-                                )
-                            request_check_url = base_url + request_check_url_leaf
-                            self.logger.info(
-                                f"Got response from marker server, polling to see when file is finished processing at url: {request_check_url}"
-                            )
-
-                            # Polling for the result
-                            max_polls = 200
-                            server.connections = server.connections + 1
-                            for polls in range(max_polls):
-                                try:
-                                    if priority:
-                                        await asyncio.sleep(3)
-                                    else:
-                                        await asyncio.sleep(60)
-                                    async with session.get(
-                                        request_check_url
-                                    ) as poll_response:
-                                        poll_response.raise_for_status()
-                                        poll_data = await poll_response.json()
-                                        # self.logger.info(poll_data)
-                                        if poll_data["status"] == "complete":
-                                            server.connections = server.connections - 1
-                                            self.logger.info(
-                                                f"Processed document after {polls} polls."
-                                            )
-                                            return poll_data["markdown"]
-                                        if poll_data["status"] == "error":
-                                            server.connections = server.connections - 1
-                                            e = poll_data["error"]
-                                            self.logger.error(
-                                                f"Pdf server encountered an error after {polls} : {e}"
-                                            )
-                                            raise Exception(
-                                                f"Pdf server encountered an error after {polls} : {e}"
-                                            )
-                                        if poll_data["status"] != "processing":
-                                            raise ValueError(
-                                                f"PDF Processing Failed. Status was unrecognized {poll_data['status']} after {polls} polls."
-                                            )
-                                except Exception as e:
-                                    server.connections = server.connections - 1
-                                    raise e
-                            server.connections = server.connections - 1
-                            raise TimeoutError(
-                                "Polling for marker API result timed out"
-                            )
+                    if request_check_url_leaf is None:
+                        raise Exception(
+                            "Failed to get request_check_url from marker API response"
+                        )
+                    request_check_url = base_url + request_check_url_leaf
+                    self.logger.info(
+                        f"Got response from marker server, polling to see when file is finished processing at url: {request_check_url}"
+                    )
+                    return await self.pull_marker_endpoint_for_response(
+                        request_check_url=request_check_url,
+                        max_polls=200,
+                        poll_wait=3 + 57 * int(not priority),
+                        server=server,
+                    )
 
     def audio_to_text_raw(
         self, filepath: Path, source_lang: str, target_lang: str, file_type: str

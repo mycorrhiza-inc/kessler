@@ -16,6 +16,7 @@ from pathlib import Path
 
 from util.gpu_compute_calls import GPUComputeEndpoint
 
+from util.file_io import S3FileManager
 
 import yaml
 
@@ -23,10 +24,12 @@ from util.niclib import create_markdown_string, seperate_markdown_string
 
 
 class MarkdownExtractor:
+    # TODO : Plug this into the constant system and elimate tmpdir stuff if possible
     def __init__(self, logger, tmpdir: Path, priority: bool = True):
         self.tmpdir = tmpdir
         self.logger = logger
         self.priority = priority
+        self.s3_client = S3FileManager(logger=self.logger)
         # TODO : Add database connection.
 
     def convert_text_into_eng(self, file_text: str, lang: str):
@@ -37,16 +40,16 @@ class MarkdownExtractor:
         )
         return english_text
 
-    async def process_raw_document_into_untranslated_text(
-        self, file_loc: Path, metadata: dict, override_dir: Optional[Path] = None
+    async def process_raw_document_into_untranslated_text_from_hash(
+        self, hash: str, metadata: dict, override_dir: Optional[Path] = None
     ) -> Tuple[str, dict]:
         doctype = metadata["doctype"]
         lang = metadata["lang"]
 
-        async def process_pdf(filepath: Path) -> str:
+        async def process_pdf(s3_uri: str) -> str:
             self.logger.info("processing pdf")
-            return_string = await GPUComputeEndpoint(self.logger).transcribe_pdf(
-                filepath, priority=self.priority
+            return_string = await GPUComputeEndpoint(self.logger).transcribe_pdf_s3_uri(
+                s3_uri, priority=self.priority
             )
             return return_string
 
@@ -74,6 +77,12 @@ class MarkdownExtractor:
                     text, new_metadata = seperate_markdown_string(data)
                     metadata.update(new_metadata)
                     return (text, metadata)
+        if doctype == "pdf":
+            s3_uri = self.s3_client.generate_s3_uri_from_hash(hash)
+            return (await process_pdf(s3_uri), metadata)
+        file_loc = self.s3_client.generate_local_filepath_from_hash(hash)
+        if file_loc is None:
+            raise Exception("File Not Found")
 
         if not os.path.isfile(file_loc):
             raise Exception("A document with that hash is not present")
@@ -85,9 +94,7 @@ class MarkdownExtractor:
                 # metadata.update(new_metadata)
                 return (text, metadata)
 
-        elif doctype == "pdf":
-            return (await process_pdf(file_loc), metadata)
-        elif doctype in [
+        if doctype in [
             "html",
             "doc",
             "docx",
@@ -97,11 +104,10 @@ class MarkdownExtractor:
             "rtf",
         ]:
             return (process_pandoc(file_loc, doctype), metadata)
-        elif doctype == "tex":
+        if doctype == "tex":
             return (process_pandoc(file_loc, "latex"), metadata)
-        elif doctype in ["mp3", "opus", "mkv"]:
-            assert False
-            return ""
+        if doctype in ["mp3", "opus", "mkv"]:
+            raise Exception("Processing of Audio Files Not Supported")
         else:
             raise ValueError(
                 f'Improper File Type, processing Failed with doctype: "{doctype}"'

@@ -158,3 +158,12 @@ def file2string(path: Path) -> str:
 
 def concatlist(list_of_lists: list) -> list:
     return list(itertools.chain.from_iterable(list_of_lists))
+
+
+# Yes I should use a library for this but I really just need this to work for now
+async def amap(function: Any, iterable: list) -> list:
+    return_list = []
+    for iter in iterable:
+        return_list.append(await function(iter))
+
+    return return_list

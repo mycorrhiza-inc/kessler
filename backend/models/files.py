@@ -96,6 +96,7 @@ class FileSchemaWithText(FileSchema):
 
 
 class DocumentStatus(str, Enum):
+    unprocessed = "unprocessed"
     completed = "completed"
     stage3 = "stage3"
     stage2 = "stage2"
@@ -108,6 +109,8 @@ class DocumentStatus(str, Enum):
 # This should probably be a method on documentstatus, but I dont want to fuck around with it for now
 def docstatus_index(docstatus: DocumentStatus) -> int:
     match docstatus:
+        case DocumentStatus.unprocessed:
+            return 0
         case DocumentStatus.stage1:
             return 1
         case DocumentStatus.stage2:

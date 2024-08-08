@@ -18,6 +18,5 @@ COPY --from=BUILD_IMAGE /app/public ./public
 # COPY --from=BUILD_IMAGE tailwind.config.js ./
 COPY ./tailwind.config.js ./
 COPY ./postcss.config.js ./
-RUN ls -l /app/.next
 
 EXPOSE 3000

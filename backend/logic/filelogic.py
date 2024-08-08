@@ -1,3 +1,4 @@
+from typing_extensions import Doc
 from vecstore.docprocess import add_document_to_db
 import os
 from pathlib import Path
@@ -112,7 +113,7 @@ async def add_file_raw(
             lang=metadata.get("lang"),
             source=metadata.get("source"),
             mdata=metadata_str,
-            stage=(DocumentStatus.stage1).value,
+            stage=(DocumentStatus.unprocessed).value,
             hash=filehash,
             summary=None,
             short_summary=None,
@@ -186,14 +187,14 @@ async def process_file_raw(
 
     # TODO: Replace with pydantic validation
 
-    # text extraction
     async def process_stage_one():
         # FIXME: Change to deriving the filepath from the uri.
         # This process might spit out new metadata that was embedded in the document, ignoring for now
         logger.info("Sending async request to pdf file.")
+        hash = obj.hash
         processed_original_text = (
-            await mdextract.process_raw_document_into_untranslated_text(
-                file_path, doc_metadata
+            await mdextract.process_raw_document_into_untranslated_text_from_hash(
+                hash, doc_metadata
             )
         )[0]
         logger.info(
@@ -279,16 +280,26 @@ async def process_file_raw(
             await files_repo.update(obj)
             await files_repo.session.commit()
             return None
-        match current_stage:
-            case DocumentStatus.stage1:
-                current_stage = await process_stage_one()
-            case DocumentStatus.stage2:
-                current_stage = await process_stage_two()
-            case DocumentStatus.stage3:
-                current_stage = await process_stage_three()
-            case _:
-                raise Exception(
-                    "Document was incorrectly added to database, \
-                    try readding it again.\
-                "
-                )
+        try:
+            match current_stage:
+                case DocumentStatus.unprocessed:
+                    # Mark that an attempt to process the document starting at stage 1
+                    current_stage = DocumentStatus.stage1
+                case DocumentStatus.stage1:
+                    current_stage = await process_stage_one()
+                case DocumentStatus.stage2:
+                    current_stage = await process_stage_two()
+                case DocumentStatus.stage3:
+                    current_stage = await process_stage_three()
+                case _:
+                    raise Exception(
+                        "Document was incorrectly added to database, \
+                        try readding it again.\
+                    "
+                    )
+        except Exception as e:
+            logger.error(f"Document errored out while processing stage: {current_stage.value}")
+            obj.stage = current_stage.value
+            await files_repo.update(obj)
+            await files_repo.session.commit()
+            raise e

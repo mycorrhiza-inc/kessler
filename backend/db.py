@@ -1,3 +1,4 @@
+from models.files import FileRepository
 from sqlalchemy.orm import DeclarativeBase
 from pydantic import BaseModel as _BaseModel
 
