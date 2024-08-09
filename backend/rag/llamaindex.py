@@ -14,7 +14,6 @@ from models.files import FileModel
 from llama_index.core import StorageContext
 from llama_index.core import VectorStoreIndex
 from llama_index.core import Settings
-from llama_index.core.llms import ChatMessage
 
 from llama_index.core.node_parser import SentenceWindowNodeParser
 
@@ -291,13 +290,6 @@ async def regenerate_vector_database_from_file_table() -> None:
 #
 def create_rag_response_from_query(query: str):
     return str(query_engine.query(query))
-
-
-def sanitzie_chathistory_llamaindex(chat_history: List[dict]) -> List[ChatMessage]:
-    def sanitize_message(raw_message: dict) -> ChatMessage:
-        return ChatMessage(role=raw_message["role"], content=raw_message["content"])
-
-    return list(map(sanitize_message, chat_history))
 
 
 def generate_chat_completion(chat_history: List[dict]) -> dict:

@@ -1,11 +1,12 @@
+from models.chats import sanitzie_chathistory_llamaindex, validate_chat
 from rag.llamaindex import (
     get_llm_from_model_str,
     create_rag_response_from_query,
     regenerate_vector_database_from_file_table,
     add_document_to_db_from_text,
     generate_chat_completion,
-    sanitzie_chathistory_llamaindex,
 )
+
 import os
 from pathlib import Path
 from uuid import UUID
@@ -113,8 +114,7 @@ class RagController(Controller):
         if model_name is None:
             model_name = "llama-405b"
         chat_history = data.chat_history
-        chat_history = force_conform_chat(chat_history)
-        assert validate_chat(chat_history), chat_history
+        chat_history = validate_chat(chat_history)
         llama_chat_history = sanitzie_chathistory_llamaindex(chat_history)
         chosen_llm = get_llm_from_model_str(model_name)
         response = await chosen_llm.achat(llama_chat_history)

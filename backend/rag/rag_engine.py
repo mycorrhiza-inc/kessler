@@ -9,6 +9,7 @@ from typing import Optional, List
 import nest_asyncio
 import asyncio
 
+from models.chats import KeChatMessage
 nest_asyncio.apply()
 
 qa_prompt = PromptTemplate(
@@ -28,7 +29,9 @@ query_str = (
     " human-based evaluation?"
 )
 
-async def generate_query_from_chat_history(chat_history : List[ChatMessage])
+async def generate_query_from_chat_history(chat_history : List[KeChatMessage]) -> str:
+    
+
 
 
 def generate_response(retrieved_nodes, query_str, qa_prompt, llm):
