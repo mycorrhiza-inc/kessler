@@ -80,11 +80,6 @@ class SimpleChatCompletion(BaseModel):
     chat_history: List[Dict[str, str]]
 
 
-class RAGChat(BaseModel):
-    model: Optional[str] = None
-    chat_history: List[Dict[str, str]]
-
-
 class RAGQueryResponse(BaseModel):
     model: Optional[str] = None
     prompt: str
@@ -105,39 +100,13 @@ from constants import (
 )
 
 
-def validate_chat(chat_history: List[Dict[str, str]]) -> bool:
-    if not isinstance(chat_history, list):
-        return False
-    found_problem = False
-    for chat in chat_history:
-        if not isinstance(chat, dict):
-            found_problem = True
-        if not chat.get("role") in ["user", "system", "assistant"]:
-            found_problem = True
-        if not isinstance(chat.get("message"), str):
-            found_problem = True
-    return not found_problem
-
-
-def force_conform_chat(chat_history: List[Dict[str, str]]) -> List[Dict[str, str]]:
-    chat_history = list(chat_history)
-    for chat in chat_history:
-        if not chat.get("role") in ["user", "system", "assistant"]:
-            chat["role"] = "system"
-        if not isinstance(chat.get("message"), str):
-            chat["message"] = str(chat.get("message"))
-    return chat_history
-
-
 class RagController(Controller):
     """Rag Controller"""
 
     dependencies = {"files_repo": Provide(provide_files_repo)}
 
     @post(path="/rag/basic_chat")
-    async def basic_chat_no_rag(
-        self, files_repo: FileRepository, data: SimpleChatCompletion
-    ) -> dict:
+    async def basic_chat_no_rag(self, data: SimpleChatCompletion) -> dict:
         model_name = data.model
         if model_name == "":
             model_name = None
@@ -148,7 +117,7 @@ class RagController(Controller):
         assert validate_chat(chat_history), chat_history
         llama_chat_history = sanitzie_chathistory_llamaindex(chat_history)
         chosen_llm = get_llm_from_model_str(model_name)
-        response = chosen_llm.chat(llama_chat_history)
+        response = await chosen_llm.achat(llama_chat_history)
         str_response = str(response)
 
         def remove_prefixes(input_string: str) -> str:
@@ -164,9 +133,7 @@ class RagController(Controller):
         return {"role": "assistant", "content": str_response}
 
     @post(path="/rag/rag_chat")
-    async def rag_chat(
-        self, files_repo: FileRepository, data: SimpleChatCompletion
-    ) -> dict:
+    async def rag_chat(self, data: SimpleChatCompletion) -> dict:
         chat_history = data.chat_history
         ai_message_response = generate_chat_completion(chat_history)
         return ai_message_response
