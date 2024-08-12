@@ -9,13 +9,10 @@ ENV VIRTUAL_ENV=/usr/local
 WORKDIR /app
 RUN apt-get update 
 RUN apt-get install -y pandoc=2.17.1.1-2~deb12u1 --no-install-recommends
-# Install vector
-RUN apt-get install curl bash && \ 
-    curl --proto '=https' --tlsv1.2 -sSfL https://sh.vector.dev | bash -s -- -y --prefix /usr/local
-
 
 COPY requirements.txt /app/requirements.txt
-# Uncomment for debugging python depenancy issue
+
+# Uncomment for debugging python dependency issue
 # COPY requirements-unlocked.txt /app/requirements.txt
 
 RUN pip install --no-cache -r requirements.txt 
@@ -25,4 +22,4 @@ COPY . .
 EXPOSE 5555
 
 # Command should be in dockerfile
-CMD ["uvicorn","main:app", "--host", "0.0.0.0", "5555", "--workers", "4" , "|", "vector", "sink" , "--config", "/app/vector.toml"]
+CMD ["uvicorn","main:app", "--host", "0.0.0.0", "5555", "--workers", "4" ]
