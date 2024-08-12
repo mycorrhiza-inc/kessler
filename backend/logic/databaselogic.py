@@ -62,8 +62,10 @@ def filter_list_mdata(
 
 
 def filters_docstatus_processing(
-    stop_at: DocumentStatus, regenerate_from: DocumentStatus
+    stop_at: DocumentStatus, regenerate_from: Optional[DocumentStatus] = None
 ) -> list:
+    if regenerate_from is None:
+        regenerate_from = DocumentStatus.unprocessed
     stop_index = docstatus_index(stop_at)
     regen_index = docstatus_index(regenerate_from)
     valid_values = []

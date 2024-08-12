@@ -1,0 +1,5 @@
+# Index config file for logging
+version: 0.7
+index_id: my_dynamic_index
+doc_mapping:
+  mode: dynamic

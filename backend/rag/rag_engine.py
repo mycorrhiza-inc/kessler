@@ -115,18 +115,6 @@ class MyQueryEngine:
         self._llm = llm
         self._num_children = num_children
 
-    def query(self, query_str: str):
-        retrieved_nodes = self._retriever.retrieve(query_str)
-        response_txt, _ = generate_response_hs(
-            retrieved_nodes,
-            query_str,
-            self._qa_prompt,
-            self._llm,
-            num_children=self._num_children,
-        )
-        response = Response(response_txt, source_nodes=retrieved_nodes)
-        return response
-
     async def aquery(self, query_str: str):
         retrieved_nodes = await self._retriever.aretrieve(query_str)
         response_txt, _ = await agenerate_response_hs(

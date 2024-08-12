@@ -56,10 +56,11 @@ class S3FileManager:
         self.tmpdir = OS_TMPDIR
         self.rawfile_savedir = OS_HASH_FILEDIR
         self.metadata_backupdir = OS_BACKUP_FILEDIR
+        self.endpoint = S3_ENDPOINT
         self.logger = logger
         self.s3 = boto3.client(
             "s3",
-            endpoint_url=S3_ENDPOINT,
+            endpoint_url=self.endpoint,
             aws_access_key_id=S3_ACCESS_KEY,
             aws_secret_access_key=S3_SECRET_KEY,
             region_name=CLOUD_REGION,
@@ -98,7 +99,7 @@ class S3FileManager:
         if saveloc.exists():
             self.logger.info(
                 f"File already at {
-                             saveloc}, do not copy any file to it."
+                    saveloc}, do not copy any file to it."
             )
         return saveloc
 
@@ -232,8 +233,89 @@ class S3FileManager:
                     f.write(chunk)
                 return f
 
+    # S3 Stuff Below this point
+
     def hash_to_fileid(self, hash: str) -> str:
         return self.s3_raw_directory + hash
+
+    def generate_local_filepath_from_hash(
+        self, hash: str, ensure_network: bool = True, download_local: bool = True
+    ) -> Optional[Path]:
+        local_filepath = self.get_default_filepath_from_hash(hash)
+        if local_filepath.is_file():
+            if ensure_network:
+                if not self.does_hash_exist_s3(hash):
+                    self.push_raw_file_to_s3(local_filepath, hash)
+            return local_filepath
+        # TODO:  Remove assurance on s3 functionality now that other function exists
+        if not download_local:
+            return None
+        s3_hash_name = self.s3_raw_directory + hash
+        return self.download_s3_file_to_path(s3_hash_name, local_filepath)
+
+    def generate_s3_uri_from_hash(
+        self, hash: str, upload_local: bool = True
+    ) -> Optional[str]:
+        fileid = self.hash_to_fileid(hash)
+        if self.does_file_exist_s3(fileid):
+            return self.generate_s3_uri(fileid)
+        if upload_local:
+            local_filepath = self.get_default_filepath_from_hash(hash)
+            if local_filepath.is_file():
+                self.push_raw_file_to_s3(local_filepath, hash)
+                return self.generate_s3_uri(fileid)
+
+    def download_s3_file_to_path(
+        self, file_name: str, file_path: Path, bucket: Optional[str] = None
+    ) -> Optional[Path]:
+        if bucket is None:
+            bucket = self.bucket
+        if file_path.is_file():
+            raise Exception("File Already Present at Path, not downloading")
+        try:
+            self.s3.download_file(bucket, file_name, str(file_path))
+            return file_path
+        except Exception as e:
+            self.logger.error(
+                f"Something whent wrong when downloading s3, is the file missing, raised error {
+                    e}"
+            )
+            return None
+
+    def download_file_from_s3_url(
+        self, s3_url: str, local_path: Path
+    ) -> Optional[Path]:
+        domain = urlparse(s3_url).hostname
+        s3_key = urlparse(s3_url).path
+        if domain is None or s3_key is None:
+            raise ValueError("Invalid URL")
+        s3_bucket = domain.split(".")[0]
+        return self.download_s3_file_to_path(
+            file_name=s3_key, file_path=local_path, bucket=s3_bucket
+        )
+
+    def generate_s3_uri(
+        self,
+        file_name: str,
+        bucket: Optional[str] = None,
+        s3_endpoint: Optional[str] = None,
+    ) -> str:
+        if s3_endpoint is None:
+            s3_endpoint = self.endpoint
+
+        if bucket is None:
+            bucket = self.bucket
+
+        # Remove any trailing slashes from the S3 endpoint
+        s3_endpoint = s3_endpoint.rstrip("/")
+
+        # Extract the base endpoint (e.g., sfo3.digitaloceanspaces.com)
+        base_endpoint = s3_endpoint.split("//")[-1]
+
+        # Construct the S3 URI
+        s3_uri = f"https://{bucket}.{base_endpoint}/{file_name}"
+
+        return s3_uri
 
     def does_file_exist_s3(self, key: str, bucket: Optional[str] = None) -> bool:
         if bucket is None:

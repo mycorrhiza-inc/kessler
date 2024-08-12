@@ -114,3 +114,20 @@ services:
         GF_AUTH_DISABLE_LOGIN_FORM: "true"
         GF_AUTH_ANONYMOUS_ENABLED: "true"
         GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+  valkey:
+    container_name: valkey
+    hostname: valkey
+    image: valkey/valkey:7.2.5
+    volumes:
+      - ./volumes/valkey.conf:/etc/valkey/valkey.conf
+      - ./volumes/valkey-data:/data
+    command: valkey-server /etc/valkey/valkey.conf
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 1s
+      timeout: 3s
+      retries: 5
+    expose:
+      - 6379
+    ports:
+      - 6379:6379

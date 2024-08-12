@@ -1,5 +1,6 @@
 import traceback
 
+from background_loops import initialize_background_loops
 from litestar import Litestar, Router
 from litestar.config.cors import CORSConfig
 from litestar.repository.filters import LimitOffset
@@ -18,9 +19,7 @@ from routing.rag_controller import RagController
 from litestar.plugins.structlog import StructlogPlugin, StructlogConfig
 from litestar.logging.config import StructLoggingConfig
 
-from util.gpu_compute_calls import get_total_connections
-
-from routing.daemon_controller import DaemonController, process_document
+from routing.daemon_controller import DaemonController
 
 from util.logging import struct_logging_config
 
@@ -35,6 +34,7 @@ async def on_startup() -> None:
     async with utils.sqlalchemy_config.get_engine().begin() as conn:
         # UUIDAuditBase extends UUIDBase so create_all should build both
         await conn.run_sync(UUIDBase.metadata.create_all)
+    await initialize_background_loops()
 
 
 def plain_text_exception_handler(request: Request, exc: Exception) -> Response:
@@ -53,8 +53,7 @@ def plain_text_exception_handler(request: Request, exc: Exception) -> Response:
 
 
 async def provide_limit_offset_pagination(
-    current_page: int = Parameter(
-        ge=1, query="currentPage", default=1, required=False),
+    current_page: int = Parameter(ge=1, query="currentPage", default=1, required=False),
     page_size: int = Parameter(
         query="pageSize",
         ge=1,
@@ -100,5 +99,4 @@ app = Litestar(
     },
     cors_config=cors_config,
     exception_handlers={Exception: plain_text_exception_handler},
-    listeners=[process_document],
 )

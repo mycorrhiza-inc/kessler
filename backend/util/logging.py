@@ -11,13 +11,9 @@ import logging
 timestamper = structlog.processors.TimeStamper(fmt="iso")
 
 logging_config = LoggingConfig(
-    root={"level": logging.getLevelName(
-        logging.INFO), "handlers": ["console"]},
+    root={"level": logging.getLevelName(logging.INFO), "handlers": ["console"]},
     formatters={
-        "standard": {
-            "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-        },
-
+        "standard": {"format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"},
     },
     handlers={
         "default": {
@@ -35,14 +31,14 @@ logging_config = LoggingConfig(
         "litestar": {
             "level": "INFO",
             "handlers": ["queue_listener", "file"],
-            "propagate": False
+            "propagate": False,
         },
-    }
+    },
 )
 
 
 struct_logging_config = StructLoggingConfig(
     standard_lib_logging_config=logging_config,
     traceback_line_limit=10,
-    pretty_print_tty=True
+    pretty_print_tty=True,
 )
