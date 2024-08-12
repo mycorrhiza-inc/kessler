@@ -43,7 +43,9 @@ def sanitzie_chathistory_llamaindex(chat_history: List) -> List[LlamaChatMessage
     return list(map(sanitize_message, chat_history))
 
 
-def dict_to_cm(input_dict: dict) -> KeChatMessage:
+def dict_to_cm(input_dict: Union[dict, KeChatMessage]) -> KeChatMessage:
+    if isinstance(input_dict, KeChatMessage):
+        return input_dict
     return KeChatMessage(
         content=input_dict["content"], role=ChatRole(input_dict["role"])
     )

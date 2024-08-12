@@ -1,4 +1,9 @@
-from models.chats import sanitzie_chathistory_llamaindex, validate_chat
+from models.chats import (
+    cm_to_dict,
+    sanitzie_chathistory_llamaindex,
+    unvalidate_chat,
+    validate_chat,
+)
 from rag.llamaindex import (
     get_llm_from_model_str,
     create_rag_response_from_query,
@@ -40,6 +45,7 @@ from models.files import (
 from typing import List, Optional, Union, Any, Dict
 
 
+from rag.rag_engine import KeRagEngine
 from vecstore import search
 
 import json
@@ -91,16 +97,6 @@ class ManualDocument(BaseModel):
     metadata: Optional[dict]
 
 
-from constants import (
-    OS_TMPDIR,
-    OS_GPU_COMPUTE_URL,
-    OS_FILEDIR,
-    OS_HASH_FILEDIR,
-    OS_OVERRIDE_FILEDIR,
-    OS_BACKUP_FILEDIR,
-)
-
-
 class RagController(Controller):
     """Rag Controller"""
 
@@ -109,28 +105,10 @@ class RagController(Controller):
     @post(path="/rag/basic_chat")
     async def basic_chat_no_rag(self, data: SimpleChatCompletion) -> dict:
         model_name = data.model
-        if model_name == "":
-            model_name = None
-        if model_name is None:
-            model_name = "llama-405b"
-        chat_history = data.chat_history
-        chat_history = validate_chat(chat_history)
-        llama_chat_history = sanitzie_chathistory_llamaindex(chat_history)
-        chosen_llm = get_llm_from_model_str(model_name)
-        response = await chosen_llm.achat(llama_chat_history)
-        str_response = str(response)
-
-        def remove_prefixes(input_string: str) -> str:
-            prefixes = ["assistant: "]
-            for prefix in prefixes:
-                if input_string.startswith(prefix):
-                    input_string = input_string[
-                        len(prefix) :
-                    ]  # 10 is the length of "assistant: "
-            return input_string
-
-        str_response = remove_prefixes(str_response)
-        return {"role": "assistant", "content": str_response}
+        validated_chat_history = validate_chat(data.chat_history)
+        rag_engine = KeRagEngine(model_name)
+        result = await rag_engine.achat_basic(validated_chat_history)
+        return cm_to_dict(result)
 
     @post(path="/rag/rag_chat")
     async def rag_chat(self, data: SimpleChatCompletion) -> dict:
