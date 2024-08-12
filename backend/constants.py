@@ -26,3 +26,5 @@ S3_FILE_BUCKET = "kesslerproddocs"
 
 S3_ACCESS_KEY = os.environ["S3_ACCESS_KEY"]
 S3_SECRET_KEY = os.environ["S3_SECRET_KEY"]
+
+KESSLER_LOG_DIR = Path("/logs/")

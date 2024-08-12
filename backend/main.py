@@ -22,11 +22,11 @@ from util.gpu_compute_calls import get_total_connections
 
 from routing.daemon_controller import DaemonController, process_document
 
+from util.logging import struct_logging_config
+
 
 sl_config = StructlogConfig()
-sl_config.struct_logging_config = StructLoggingConfig(
-    traceback_line_limit=20, pretty_print_tty=True
-)
+sl_config.struct_logging_config = struct_logging_config
 
 struct_log_pluging = StructlogPlugin(sl_config)
 
@@ -53,7 +53,8 @@ def plain_text_exception_handler(request: Request, exc: Exception) -> Response:
 
 
 async def provide_limit_offset_pagination(
-    current_page: int = Parameter(ge=1, query="currentPage", default=1, required=False),
+    current_page: int = Parameter(
+        ge=1, query="currentPage", default=1, required=False),
     page_size: int = Parameter(
         query="pageSize",
         ge=1,

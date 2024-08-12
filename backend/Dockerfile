@@ -15,7 +15,6 @@ RUN apt-get install curl bash && \
 
 
 COPY requirements.txt /app/requirements.txt
-COPY vector.toml /app/vector.toml
 # Uncomment for debugging python depenancy issue
 # COPY requirements-unlocked.txt /app/requirements.txt
 
