@@ -28,12 +28,19 @@ services:
     # official image
     image: traefik:v2.11
     # eable web ui, listen to docker
-    command: --api.insecure=true --providers.docker
+    command: 
+      - "--api.insecure=true"
+      - "--providers.docker"
+      - "--accesslog=true"
+      # funnel the logs
+      - "--accesslog.filePath=/logs/access.log"
+
     ports:
       - "80:80"
       - "${PROXY_UI_PORT:-8083}:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - ${VOLUMES_DIRECTORY:-./volumes}/logs/proxy:/logs/
 
   backend:
     build:
@@ -47,6 +54,8 @@ services:
       - ./backend:/app
       - ${VOLUMES_DIRECTORY:-./volumes}/instance:/app/instance
       - ${VOLUMES_DIRECTORY:-./volumes}/files:/files
+      - ${VOLUMES_DIRECTORY:-./volumes}/logs/api:/logs/
+
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.backend.rule=PathPrefix(`/api/`) || PathPrefix(`/schema/`)"
@@ -76,3 +85,32 @@ services:
       - "5432"
     volumes:
       - ${VOLUMES_DIRECTORY:-./volumes}/pgdata:/var/lib/postgresql/data
+      - ${VOLUMES_DIRECTORY:-./volumes}/logs/db:/logs/
+
+  vector:
+    image: timberio/vector:0.40.0-debian
+    ports: 
+      - "8686:8686"
+    volumes:
+      - ${VOLUMES_DIRECTORY:-./volumes}/logs/:/var/logs/
+      - ./vector.yaml:/etc/vector/vector.yaml:ro 
+
+  quickwit:
+      image: quickwit/quickwit
+      environment:
+        QW_ENABLE_OPENTELEMETRY_OTLP_EXPORTER: "true"
+        OTEL_EXPORTER_OTLP_ENDPOINT: "http://localhost:7281"
+      ports:
+        - 7280:7280
+      command: ["run"]
+
+  grafana:
+      image: grafana/grafana-oss
+      container_name: grafana
+      ports:
+        - "${MAP_HOST_GRAFANA:-127.0.0.1}:3000:3000"
+      environment:
+        GF_INSTALL_PLUGINS: https://github.com/quickwit-oss/quickwit-datasource/releases/download/v0.4.6/quickwit-quickwit-datasource-0.4.6.zip;quickwit-quickwit-datasource
+        GF_AUTH_DISABLE_LOGIN_FORM: "true"
+        GF_AUTH_ANONYMOUS_ENABLED: "true"
+        GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
