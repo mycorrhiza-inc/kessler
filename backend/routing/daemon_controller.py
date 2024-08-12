@@ -1,3 +1,4 @@
+import structlog
 import os
 from pathlib import Path
 from uuid import UUID
@@ -59,12 +60,17 @@ from constants import (
     REDIS_PRIORITY_DOCPROC_KEY,
     REDIS_BACKGROUND_DOCPROC_KEY,
 )
-from util.redis_utils import bulk_process_file_background, clear_file_queue, convert_model_to_results_and_push
+from util.redis_utils import (
+    bulk_process_file_background,
+    clear_file_queue,
+    convert_model_to_results_and_push,
+)
 
 redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
 
 
-default_logger = logging.getLogger(__name__)
+default_logger = structlog.get_logger()
+
 logging.info("Daemon logging works, and started successfully")
 
 
@@ -93,11 +99,11 @@ def push_to_queue(request: str, priority: bool):
     redis_client.rpush(pushkey, request)
 
 
-
 class DaemonState(BaseModel):
     enable_background_processing: Optional[bool] = None
-    stop_at_background_docprocessing : Optional[str] = None
+    stop_at_background_docprocessing: Optional[str] = None
     clear_queue: Optional[bool] = None
+
 
 class DaemonController(Controller):
     dependencies = {"files_repo": Provide(provide_files_repo)}
@@ -113,12 +119,12 @@ class DaemonController(Controller):
         regenerate_from: Optional[str] = None,
     ) -> None:
         if logger is None:
-            logger= default_logger
+            logger = default_logger
         logger.info("Beginning to process all files.")
         if regenerate_from is None:
             regenerate_from = "completed"
         regenerate_from = DocumentStatus(regenerate_from)
-        filters = querydata_to_filters_strict(data)         
+        filters = querydata_to_filters_strict(data)
         logger.info(filters)
         results = await files_repo.list(*filters)
 
@@ -130,7 +136,7 @@ class DaemonController(Controller):
                 await files_repo.update(file)
                 logger.info(
                     f"Reverting fileid {
-                            file.id} to stage {file.stage}"
+                        file.id} to stage {file.stage}"
                 )
 
         await files_repo.session.commit()
@@ -149,7 +155,53 @@ class DaemonController(Controller):
             logger=request.logger,
             regenerate_from=regenerate_from,
         )
-                
+
+    async def bulk_process_file_background(
+        self,
+        files_repo: FileRepository,
+        passthrough_request: Request,
+        files: List[FileModel],
+        stop_at: DocumentStatus,
+        regenerate_from: DocumentStatus,
+        max_documents: Optional[int] = None,
+    ) -> None:
+        logger = passthrough_request.logger
+        if max_documents is None:
+            max_documents = -1
+        if files is None:
+            logger.info("List of files to process was empty")
+            return None
+        if len(files) == 0:
+            logger.info("List of files to process was empty")
+            return None
+        for file in files:
+            if max_documents == 0:
+                logger.info("Reached maxiumum file limit, exiting.")
+                return None
+            logger.info(f"Validating file {str(file.id)} for processing.")
+            file_stage = DocumentStatus(file.stage)
+            if docstatus_index(file_stage) > docstatus_index(regenerate_from):
+                file_stage = regenerate_from
+                file.stage = regenerate_from.value
+                await files_repo.update(file)
+                await files_repo.session.commit()
+                logger.info(
+                    f"Reverting fileid {
+                        file.id} to stage {file.stage}"
+                )
+            # Dont process the file if it is already processed beyond the stop point.
+            if docstatus_index(file_stage) < docstatus_index(stop_at):
+                logger.info(
+                    f"Sending file {
+                        str(file.id)} to be processed in the background."
+                )
+                # copy_files_repo = copy.deepcopy(files_repo)
+                max_documents += -1
+                passthrough_request.app.emit(
+                    "process_document",
+                    doc_id_str=str(file.id),
+                    stop_at=stop_at.value,
+                )
 
     @post(path="/daemon/process_file/{file_id:uuid}")
     async def process_file_background(
@@ -170,6 +222,7 @@ class DaemonController(Controller):
             files=[obj],
             stop_at=stop_at,
         )
+
     @post(path="/daemon/process_all_files")
     async def process_all_background(
         self,
@@ -191,7 +244,6 @@ class DaemonController(Controller):
             logger=request.logger,
         )
 
-
     async def process_query_background_raw(
         self,
         files_repo: FileRepository,
@@ -200,7 +252,7 @@ class DaemonController(Controller):
         regenerate_from: Optional[str] = None,
         max_documents: Optional[int] = None,
         randomize: bool = False,
-        logger: Any = default_logger
+        logger: Any = default_logger,
     ) -> None:
         logger.info("Beginning to process all files.")
         if stop_at is None:
@@ -225,20 +277,16 @@ class DaemonController(Controller):
             logger=logger,
         )
 
-
     @post(path="/dangerous/daemon/control_background_processing_daemon")
-    async def control_background_processing_daemon(
-        self,
-        data : DaemonState
-    ) -> str:
+    async def control_background_processing_daemon(self, data: DaemonState) -> str:
         daemon_toggle = data.enable_background_processing
         stop_at = data.stop_at_background_docprocessing
         clear_queue = data.clear_queue
         if daemon_toggle is not None:
-            redis_client.set(REDIS_BACKGROUND_DAEMON_TOGGLE,int(daemon_toggle))
+            redis_client.set(REDIS_BACKGROUND_DAEMON_TOGGLE, int(daemon_toggle))
         if stop_at is not None:
             target = DocumentStatus(stop_at).value
-            redis_client.set(REDIS_BACKGROUND_PROCESSING_STOPS_AT,target )
+            redis_client.set(REDIS_BACKGROUND_PROCESSING_STOPS_AT, target)
         if clear_queue is not None:
             if clear_queue:
                 clear_file_queue()

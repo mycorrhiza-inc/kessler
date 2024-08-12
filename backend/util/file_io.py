@@ -44,7 +44,9 @@ from constants import (
     S3_FILE_BUCKET,
 )
 
-default_logger = logging.getLogger(__name__)
+import structlog
+
+default_logger = structlog.get_logger()
 
 
 class S3FileManager:
@@ -95,7 +97,10 @@ class S3FileManager:
         hashpath.parent.mkdir(exist_ok=True, parents=True)
         saveloc = hashpath / Path(hash)
         if saveloc.exists():
-            self.logger.info(f"File already at {saveloc}, do not copy any file to it.")
+            self.logger.info(
+                f"File already at {
+                    saveloc}, do not copy any file to it."
+            )
         return saveloc
 
     def backup_metadata_to_hash(self, metadata: dict, hash: str) -> Path:
@@ -141,6 +146,49 @@ class S3FileManager:
             return base64.urlsafe_b64encode(hash_object.digest()).decode()
         self.logger.error("Failed to hash file")
         raise Exception("ErrorHashingFile")  # I am really sorry about this
+
+    def generate_local_filepath_from_hash(
+        self, hash: str, ensure_network: bool = True, download_local: bool = True
+    ) -> Optional[Path]:
+        local_filepath = self.get_default_filepath_from_hash(hash)
+        if local_filepath.is_file():
+            if ensure_network:
+                if not self.does_hash_exist_s3(hash):
+                    self.push_raw_file_to_s3(local_filepath, hash)
+            return local_filepath
+        if not download_local:
+            return None
+        s3_hash_name = self.s3_raw_directory + hash
+        return self.download_s3_file_to_path(s3_hash_name, local_filepath)
+
+    def download_s3_file_to_path(
+        self, file_name: str, file_path: Path, bucket: Optional[str] = None
+    ) -> Optional[Path]:
+        if bucket is None:
+            bucket = self.bucket
+        if file_path.is_file():
+            raise Exception("File Already Present at Path, not downloading")
+        try:
+            self.s3.download_file(bucket, file_name, str(file_path))
+            return file_path
+        except Exception as e:
+            self.logger.error(
+                f"Something whent wrong when downloading s3, is the file missing, raised error {
+                    e}"
+            )
+            return None
+
+    def download_file_from_s3_url(
+        self, s3_url: str, local_path: Path
+    ) -> Optional[Path]:
+        domain = urlparse(s3_url).hostname
+        s3_key = urlparse(s3_url).path
+        if domain is None or s3_key is None:
+            raise ValueError("Invalid URL")
+        s3_bucket = domain.split(".")[0]
+        return self.download_s3_file_to_path(
+            file_name=s3_key, file_path=local_path, bucket=s3_bucket
+        )
 
     def backup_processed_text(
         self, text: str, hash: str, metadata: dict, backupdir: Path
@@ -229,7 +277,8 @@ class S3FileManager:
             return file_path
         except Exception as e:
             self.logger.error(
-                f"Something whent wrong when downloading s3, is the file missing, raised error {e}"
+                f"Something whent wrong when downloading s3, is the file missing, raised error {
+                    e}"
             )
             return None
 
