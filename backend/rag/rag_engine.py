@@ -15,19 +15,16 @@ from vecstore.search import search
 
 import logging
 
-nest_asyncio.apply()
 
-qa_prompt = PromptTemplate(
-    """\
-Context information is below.
+qa_prompt = (
+    lambda context_str: f"""
+The following documents should be relevant to the conversation:
 ---------------------
 {context_str}
 ---------------------
-Given the context information and not prior knowledge, answer the query.
-Query: {query_str}
-Answer: \
 """
 )
+
 
 generate_query_from_chat_history_prompt = "Please disregard all instructions and generate a query that could be used to search a vector database for relevant information. The query should capture the main topic or question being discussed in the chat. Please output the query as a string, using a format suitable for a vector database search (e.g. a natural language query or a set of keywords)."
 
@@ -38,7 +35,7 @@ Chat history: User: "I'm looking for a new phone. What are some good options?" A
 Example output: "Query: 'best phones under $500'"
 """
 
-does_chat_need_query = "Please determine if you need to query a vector database of relevant documents to answer the user. Answer with only a yes or no."
+does_chat_need_query = 'Please determine if you need to query a vector database of relevant documents to answer the user. Answer with only a "yes" or "no".'
 
 query_str = (
     "Can you tell me about results from RLHF using both model-based and"
@@ -76,22 +73,24 @@ class KeRagEngine:
         return KeChatMessage(role=ChatRole.assistant, content=str_response)
 
     async def does_chat_need_query(self, chat_history: List[KeChatMessage]) -> bool:
+        does_chat_need_query = 'Please determine if you need to query a vector database of relevant documents to answer the user. Answer with only a "yes" or "no".'
         check_message = KeChatMessage(
             role=ChatRole.assistant, content=does_chat_need_query
         )
 
         def check_yes_no(test_str: str) -> bool:
-            if test_str == "yes":
+            test_str = test_str.lower()
+            if test_str.startswith("yes"):
                 return True
-            if test_str == "no":
+            if test_str.startswith("no"):
                 return False
-            raise ValueError("Expected yes or no")
+            raise ValueError("Expected yes or no got: " + test_str)
 
-        return not check_yes_no(
+        return check_yes_no(
             (await self.achat_basic(chat_history + [check_message])).content
         )
 
-    async def rag_chat(
+    async def rag_achat(
         self, chat_history: List[KeChatMessage], logger: Optional[logging.Logger] = None
     ) -> KeChatMessage:
         if logger is None:
@@ -114,9 +113,3 @@ class KeRagEngine:
         final_result = "rag functionality not implemented yet"
         chat = KeChatMessage(role=ChatRole.assistant, content=final_result)
         return chat
-
-    def generate_response(self, retrieved_nodes, query_str, qa_prompt, llm):
-        context_str = "\n\n".join([r.get_content() for r in retrieved_nodes])
-        fmt_qa_prompt = qa_prompt.format(context_str=context_str, query_str=query_str)
-        response = llm.complete(fmt_qa_prompt)
-        return str(response), fmt_qa_prompt

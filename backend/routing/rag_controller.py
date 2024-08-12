@@ -112,9 +112,11 @@ class RagController(Controller):
 
     @post(path="/rag/rag_chat")
     async def rag_chat(self, data: SimpleChatCompletion) -> dict:
-        chat_history = data.chat_history
-        ai_message_response = generate_chat_completion(chat_history)
-        return ai_message_response
+        model_name = data.model
+        validated_chat_history = validate_chat(data.chat_history)
+        rag_engine = KeRagEngine(model_name)
+        result = await rag_engine.rag_achat(validated_chat_history)
+        return cm_to_dict(result)
 
     @post(path="/rag/rag_query")
     async def rag_query(

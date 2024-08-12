@@ -69,6 +69,7 @@ async def background_processing_loop() -> None:
             default_logger.error("Encountered error while processing a document")
             default_logger.error(e)
             default_logger.error(tb)
+            await asyncio.sleep(2)
             result = None
 
 
@@ -140,6 +141,7 @@ async def main_processing_loop() -> None:
             default_logger.error("Encountered error while processing a document")
             default_logger.error(e)
             default_logger.error(tb)
+            await asyncio.sleep(2)
             result = None
 
 
