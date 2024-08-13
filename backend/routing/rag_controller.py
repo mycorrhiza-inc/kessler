@@ -116,12 +116,16 @@ class RagController(Controller):
         return cm_to_dict(result)
 
     @post(path="/rag/rag_chat")
-    async def rag_chat(self, data: SimpleChatCompletion) -> dict:
+    async def rag_chat(
+        self, data: SimpleChatCompletion, files_repo: FileRepository
+    ) -> dict:
         model_name = data.model
         validated_chat_history = validate_chat(data.chat_history)
         rag_engine = KeRagEngine(model_name)
-        result = await rag_engine.rag_achat(validated_chat_history)
-        return cm_to_dict(result)
+        result_message, file_schema_citations = await rag_engine.rag_achat(
+            validated_chat_history, files_repo
+        )
+        return {"message": cm_to_dict(result), "citations": file_schema_citations}
 
     @post(path="/rag/rag_query")
     async def rag_query(
@@ -146,25 +150,6 @@ class RagController(Controller):
             doc_text = lemon_text
         add_document_to_db_from_text(doc_text, doc_metadata)
 
-    # @post(path="/dangerous/rag/regenerate_vector_database")
-    # async def regen_vecdb(
-    #     self,
-    #     files_repo: FileRepository,
-    # ) -> str:
-    #     await regenerate_vector_database_from_file_table()
-    #     return ""
-
-    # @post(path="/search/{fid:uuid}")
-    # async def search_collection_by_id(
-    #     self,
-    #     request: Request,
-    #     data: SearchQuery,
-    #     fid: UUID = Parameter(
-    #         title="File ID as hex string", description="File to retieve"
-    #     ),
-    # ) -> Any:
-    #     return "failure"
-
     @post(path="/search")
     async def search(
         self,
@@ -187,6 +172,25 @@ class RagController(Controller):
             max_results=max_results,
             include_text=True,
         )
+
+    # @post(path="/search/{fid:uuid}")
+    # async def search_collection_by_id(
+    #     self,
+    #     request: Request,
+    #     data: SearchQuery,
+    #     fid: UUID = Parameter(
+    #         title="File ID as hex string", description="File to retieve"
+    #     ),
+    # ) -> Any:
+    #     return "failure"
+
+    # @post(path="/dangerous/rag/regenerate_vector_database")
+    # async def regen_vecdb(
+    #     self,
+    #     files_repo: FileRepository,
+    # ) -> str:
+    #     await regenerate_vector_database_from_file_table()
+    #     return ""
 
     # @post(path="/search/{fid:uuid}")
     # async def search_collection_by_id(
