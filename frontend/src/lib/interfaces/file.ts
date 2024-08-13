@@ -6,4 +6,5 @@ export interface FileType {
   stage: string;
   source: string;
   mdata: Object;
+  display_text: string;
 }

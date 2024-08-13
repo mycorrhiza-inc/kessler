@@ -45,10 +45,15 @@ from models.files import (
 from typing import List, Optional, Union, Any, Dict
 
 
-from rag.rag_engine import KeRagEngine
+from rag.rag_engine import KeRagEngine, convert_search_results_to_frontend_table
 from vecstore import search
 
 import json
+import asyncio
+
+from constants import lemon_text
+
+from advanced_alchemy.filters import SearchFilter, CollectionFilter
 
 
 class UUIDEncoder(json.JSONEncoder):
@@ -138,28 +143,27 @@ class RagController(Controller):
         doc_metadata = data.metadata
         doc_text = data.text
         if doc_text == "":
-            # Congrats for finding the portal easter egg!
-            doc_text = "This is the cannonical example document with the following advice for dealing with adversity in life: All right, I've been thinking, when life gives you lemons, don't make lemonade! Make life take the lemons back! Get mad! I don't want your damn lemons! What am I supposed to do with these? Demand to see life's manager! Make life rue the day it thought it could give Cave Johnson lemons! Do you know who I am? I'm the man whose gonna burn your house down - with the lemons!"
+            doc_text = lemon_text
         add_document_to_db_from_text(doc_text, doc_metadata)
 
-    @post(path="/dangerous/rag/regenerate_vector_database")
-    async def regen_vecdb(
-        self,
-        files_repo: FileRepository,
-    ) -> str:
-        await regenerate_vector_database_from_file_table()
-        return ""
+    # @post(path="/dangerous/rag/regenerate_vector_database")
+    # async def regen_vecdb(
+    #     self,
+    #     files_repo: FileRepository,
+    # ) -> str:
+    #     await regenerate_vector_database_from_file_table()
+    #     return ""
 
-    @post(path="/search/{fid:uuid}")
-    async def search_collection_by_id(
-        self,
-        request: Request,
-        data: SearchQuery,
-        fid: UUID = Parameter(
-            title="File ID as hex string", description="File to retieve"
-        ),
-    ) -> Any:
-        return "failure"
+    # @post(path="/search/{fid:uuid}")
+    # async def search_collection_by_id(
+    #     self,
+    #     request: Request,
+    #     data: SearchQuery,
+    #     fid: UUID = Parameter(
+    #         title="File ID as hex string", description="File to retieve"
+    #     ),
+    # ) -> Any:
+    #     return "failure"
 
     @post(path="/search")
     async def search(
@@ -168,22 +172,21 @@ class RagController(Controller):
         data: SearchQuery,
         request: Request,
         only_fileobj: bool = False,
-    ) -> Any:
+        max_results: int = 10,
+    ) -> list:
         logger = request.logger
         query = data.query
-        res = search(query=query)
-        res = res[0]
-        for result in res:
-            logger.info(result["entity"])
-            uuid = UUID((result["entity"]["source_id"]))
-            logger.info(f"Asking PG for data on file: {uuid}")
-            schema = model_to_schema(await files_repo.get(uuid))
-            result["file"] = schema
-        if only_fileobj:
-            return list(map(lambda r: r["file"], res))
-        return res
-
-        # return list(map(create_rag_response_from_query, res))
+        # FIXME: Speed up search so its less slow
+        if len(query) <= 3:
+            return []
+        res = search(query=query, output_fields=["source_id", "text"])
+        logger.info(res)
+        return await convert_search_results_to_frontend_table(
+            search_results=res,
+            files_repo=files_repo,
+            max_results=max_results,
+            include_text=True,
+        )
 
     # @post(path="/search/{fid:uuid}")
     # async def search_collection_by_id(

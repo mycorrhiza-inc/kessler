@@ -72,6 +72,7 @@ class FileSchema(PydanticBaseModel):
     short_summary: str | None = None
     summary: str | None = None
     mdata: dict | None = None
+    display_text: str | None = None
 
     # Good idea to do this for dict based mdata, instead wrote a custom function for it
     @field_validator("id")

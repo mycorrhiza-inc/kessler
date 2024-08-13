@@ -16,6 +16,18 @@ from vecstore.search import search
 import logging
 
 
+from models.files import FileRepository, model_to_schema
+
+from vecstore import search
+
+
+from uuid import UUID
+
+from advanced_alchemy.filters import SearchFilter, CollectionFilter
+
+
+from constants import lemon_text
+
 qa_prompt = (
     lambda context_str: f"""
 The following documents should be relevant to the conversation:
@@ -42,7 +54,38 @@ query_str = (
     " human-based evaluation?"
 )
 
+
 default_logger = logging.getLogger(__name__)
+
+
+async def convert_search_results_to_frontend_table(
+    search_results: List[Any],
+    files_repo: FileRepository,
+    max_results: int = 10,
+    include_text: bool = True,
+):
+    logger = default_logger
+    res = search_results[0]
+    res = res[:max_results]
+    uuid_list = []
+    text_list = []
+    # TODO: Refactor for less checks and ugliness
+    for result in res:
+        logger.info(result)
+        logger.info(result["entity"])
+        uuid = UUID(result["entity"]["source_id"])
+        uuid_list.append(uuid)
+        if include_text:
+            text_list.append(result["entity"]["text"])
+            # text_list.append(lemon_text)
+    uuid_filter = CollectionFilter(field_name="id", values=uuid_list)
+    file_models = await files_repo.list(uuid_filter)
+    file_results = list(map(model_to_schema, file_models))
+    if include_text:
+        for index in range(len(file_results)):
+            file_results[index].display_text = text_list[index]
+
+    return file_results
 
 
 class KeRagEngine:
