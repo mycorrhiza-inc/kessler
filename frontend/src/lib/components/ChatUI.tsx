@@ -218,7 +218,7 @@ function ChatMessages({
         </Box>
       )}
       {messages.map((m: Message) => (
-        <MessageComponent key={m.key.toString()} message={m} />
+        <MessageComponent message={m} />
       ))}
       {loading && <AwaitingMessageSkeleton />}
       <Box minHeight="300px" width="100%" color="red" />
@@ -273,7 +273,7 @@ function ChatContainer({
         console.log(JSON.stringify(e));
       });
 
-    setMessages([...messages, result]);
+    setMessages([...messages, result.message]);
   };
 
   const sendMessage = async (message_content: string) => {
