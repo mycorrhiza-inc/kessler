@@ -4,7 +4,7 @@ from llama_index.core import PromptTemplate
 from llama_index.core.retrievers import BaseRetriever
 from llama_index.core.llms import LLM
 from dataclasses import dataclass
-from typing import Optional, List, Union, Any
+from typing import Optional, List, Union, Any, Tuple
 
 import nest_asyncio
 import asyncio
@@ -16,7 +16,7 @@ from vecstore.search import search
 import logging
 
 
-from models.files import FileRepository, model_to_schema
+from models.files import FileRepository, FileSchema, model_to_schema
 
 from vecstore import search
 
@@ -134,8 +134,11 @@ class KeRagEngine:
         )
 
     async def rag_achat(
-        self, chat_history: List[KeChatMessage], logger: Optional[logging.Logger] = None
-    ) -> KeChatMessage:
+        self,
+        chat_history: List[KeChatMessage],
+        files_repo: FileRepository,
+        logger: Optional[logging.Logger] = None,
+    ) -> Tuple[KeChatMessage, List[FileSchema]]:
         if logger is None:
             logger = default_logger
         if not await self.does_chat_need_query(chat_history):
@@ -150,9 +153,26 @@ class KeRagEngine:
             completion = await self.achat_basic(chat_history + [querygen_addendum])
             return completion
 
+        def generate_context_msg_from_search_results(
+            search_results: List[Any], max_results: int = 3
+        ) -> KeChatMessage:
+            logger = default_logger
+            res = search_results[0]
+            res = res[:max_results]
+            return_prompt = "Here is a list of documents that might be relevant to the following chat:"
+            # TODO: Refactor for less checks and ugliness
+            for result in res:
+                uuid_str = result["entity"]["source_id"]
+                text = result["entity"]["text"]
+                return_prompt += f"\n\n{uuid_str}:\n{text}"
+            return KeChatMessage(role=ChatRole.assistant, content=return_prompt)
+
         query = await generate_query_from_chat_history(chat_history)
         res = search(query=query)
         logger.info(res)
-        final_result = "rag functionality not implemented yet"
-        chat = KeChatMessage(role=ChatRole.assistant, content=final_result)
-        return chat
+        context_msg = generate_context_msg_from_search_results(res)
+        # TODO: Get these 2 async func calls to happen simultaneously
+        final_message = await self.achat_basic([context_msg] + chat_history)
+        return_schemas = await convert_search_results_to_frontend_table(res, files_repo)
+
+        return (final_message, return_schemas)
