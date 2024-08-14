@@ -1,4 +1,5 @@
 from models.chats import (
+    KeChatMessage,
     cm_to_dict,
     sanitzie_chathistory_llamaindex,
     unvalidate_chat,
@@ -125,7 +126,11 @@ class RagController(Controller):
         result_message, file_schema_citations = await rag_engine.rag_achat(
             validated_chat_history, files_repo
         )
-        return {"message": cm_to_dict(result), "citations": file_schema_citations}
+        assert isinstance(result_message, KeChatMessage)
+        return {
+            "message": cm_to_dict(result_message),
+            "citations": file_schema_citations,
+        }
 
     @post(path="/rag/rag_query")
     async def rag_query(

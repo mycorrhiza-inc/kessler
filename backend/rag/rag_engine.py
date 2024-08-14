@@ -168,7 +168,7 @@ class KeRagEngine:
             return KeChatMessage(role=ChatRole.assistant, content=return_prompt)
 
         query = await generate_query_from_chat_history(chat_history)
-        res = search(query=query)
+        res = search(query=query, output_fields=["source_id", "text"])
         logger.info(res)
         context_msg = generate_context_msg_from_search_results(res)
         # TODO: Get these 2 async func calls to happen simultaneously
