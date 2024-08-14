@@ -1,42 +1,11 @@
 "use client";
-import {
-  Center,
-  Circle,
-  Button,
-  IconButton,
-  Flex,
-  VStack,
-  HStack,
-  StackDivider,
-  Box,
-  Grid,
-  GridItem,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalCloseButton,
-  Container,
-  Text,
-  Select,
-  SkeletonText,
-  DarkMode,
-} from "@chakra-ui/react";
-import {
-  Form,
-  FormLayout,
-  Field,
-  DisplayIf,
-  SubmitButton,
-} from "@saas-ui/react";
-import { FiArrowUpCircle } from "react-icons/fi";
+import { Center, Box, Grid, GridItem } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
-import { initialState } from "node_modules/@clerk/nextjs/dist/types/app-router/server/auth";
-import { useColorMode, useColorModeValue } from "@chakra-ui/react";
 
 import MarkdownRenderer from "./MarkdownRenderer";
 import { ChatMessages, ChatInputForm } from "./ChatUIUtils";
+import FileTable, { defaultLayout } from "./FileTable";
+
 interface ChatAgent {
   role: boolean;
 }
@@ -55,9 +24,11 @@ interface MessageComponentProps {
 function ChatContainer({
   chatUrl,
   modelOptions,
+  setCitations,
 }: {
   chatUrl: string;
   modelOptions: string[];
+  setCitations: (citations: any[]) => void;
 }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [needsResponse, setResponse] = useState(false);
@@ -92,6 +63,7 @@ function ChatContainer({
         return resp.json();
       })
       .then((data) => {
+        setCitations(data.citations || []);
         return data;
       })
       .catch((e) => {
@@ -140,6 +112,8 @@ function ChatUI({
   chatUrl: string;
   modelOptions: string[];
 }) {
+  const [citations, setCitations] = useState<any[]>([]);
+
   return (
     <Center width="100%" height="100%">
       <Box
@@ -155,14 +129,21 @@ function ChatUI({
         overflow="clip"
         position="relative"
       >
-        <Grid h="100%" gridTemplateColumns={"5fr"} gap={5}>
+        <Grid h="100%" gridTemplateColumns="4fr 1fr" gap={5}>
           <GridItem
             rowSpan={10}
             colSpan="auto"
             overflow="scroll clip"
             position="relative"
           >
-            <ChatContainer chatUrl={chatUrl} modelOptions={modelOptions} />
+            <ChatContainer
+              chatUrl={chatUrl}
+              modelOptions={modelOptions}
+              setCitations={setCitations}
+            />
+          </GridItem>
+          <GridItem overflow="scroll clip" position="relative">
+            <FileTable files={citations} layout={defaultLayout} />
           </GridItem>
         </Grid>
       </Box>
