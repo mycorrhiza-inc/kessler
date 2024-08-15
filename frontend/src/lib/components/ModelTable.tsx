@@ -19,10 +19,6 @@ import { useEffect, useState } from "react";
 
 import Paginator from "./Paginator";
 import ViewIframeModal from "./ModelUtils";
-interface FilePageBrowserProps {
-  fileUrl: string;
-  data: any;
-}
 
 interface RowData {
   data: ModelType;
@@ -54,9 +50,12 @@ interface ModelTableProps {
 }
 
 const ModelTable: React.FC<ModelTableProps> = ({ models, layout }) => {
-  const [fileState, setFileState] = useState<RowData[]>(
-    models.map((model) => ({ data: model })),
-  );
+  function makeData(model: ModelType) {
+    return { data: model };
+  }
+  console.log(models);
+  // This following code is giving the error models.map is not a function, what is going wrong?
+  const [tableState, setTableState] = useState(models.map(makeData));
 
   function truncateString(str: string, length = 60) {
     return str.length < length ? str : str.slice(0, length - 3) + "...";
@@ -92,7 +91,7 @@ const ModelTable: React.FC<ModelTableProps> = ({ models, layout }) => {
           </Tr>
         </Thead>
         <Tbody>
-          {fileState.map((model) => (
+          {tableState.map((model) => (
             <>
               <Tr key={model.data.id}>
                 {layoutFiltered.columns.map((col) => (
@@ -104,13 +103,12 @@ const ModelTable: React.FC<ModelTableProps> = ({ models, layout }) => {
                   <>
                     <Td>
                       <ViewIframeModal
-                        // @ts-ignore
-                        iframeUrl={model.data.visualization_url}
+                        iframeURL={model.data.visualization_url}
                         buttonName="View Model"
                       />
                     </Td>
                     <Td>
-                      <a href={model.data.data_url}>
+                      <a href={model.data.data_url} target="_blank">
                         <Button>Download Data</Button>
                       </a>
                     </Td>
@@ -143,11 +141,14 @@ const ModelPageBrowser: React.FC<ModelPageBrowserProps> = ({
   const fetchFiles = async () => {
     setLoading(true);
     const response = await fetch(
-      `${modelUrl}?num_results=${numResults}&page=${page}`,
+      `${modelUrl}`,
+      //`${modelUrl}?num_results=${numResults}&page=${page}`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Origin: window.location.origin, // Add this line
+          "Access-Control-Request-Method": "POST", // Add this line
         },
         body: JSON.stringify(data),
       },
@@ -181,8 +182,7 @@ const ModelPageBrowser: React.FC<ModelPageBrowserProps> = ({
       />
 
       <ViewIframeModal
-        // @ts-ignore
-        iframeUrl="https://nimbus.kessler.xyz/schema/swagger"
+        iframeURL="https://nimbus.kessler.xyz/schema/swagger"
         buttonName="Admin Panel"
       />
     </Box>
