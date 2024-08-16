@@ -6,15 +6,16 @@ from typing import List, Union
 
 
 from constants import QUICKWIT_ENDPOINT
-from models.util import postgres_connection_string
+from models.utils import postgres_connection_string
 
 import logging
 
-logger = logging.get_Logger(__name__)
+logger = logging.getLogger(__name__)
 
 db_string = postgres_connection_string
 def print_response(r):
-    logger.info(f"quickwit_api_call:\nstatus:{r.status_code}\nresponse:\n{r.text}")
+    logger.info(f"quickwit_api_call:\nstatus:{
+        r.status_code}\nresponse:\n{r.text}")
 
 
 def create_dockets_quickwit_index() -> None:
@@ -95,23 +96,27 @@ def ingest_into_index(index_name: str, data: List[dict]) -> None:
 def get_connection():
     return psycopg.connect(db_string)
 
+
 def resolve_file_schema_for_docket_ingest(records: List[dict[str, any]]) -> List[dict[str, any]]:
-        data = []
-        for record in records:
-            record['text'] = record.pop('english_text')
-            record['source_id'] = str(record.pop('id'))
-            record['metadata'] = json.loads(record.pop('mdata'))
-            record['timestamp'] = time.time()
-            data.append(record)
-        return data
+    data = []
+    for record in records:
+        record['text'] = record.pop('english_text')
+        record['source_id'] = str(record.pop('id'))
+        record['metadata'] = json.loads(record.pop('mdata'))
+        record['timestamp'] = time.time()
+        data.append(record)
+    print(f"reformated data:\n\n{data}\n\n")
+    return data
+
 
 def preprocess_id_list_for_sql(ids: List[str]) -> str:
     if len(ids) == 1:
-        return f"({ids[0]})"        
+        return f"({ids[0]})"
     else:
         outstr = " OR ".join(ids)
         return outstr
-    
+
+
 def ingest_files_to_dockets_index(file_ids: Union[str, List[str]]):
     # TODO: valdiate if the file has already been indexed
     conn = get_connection()
@@ -120,9 +125,10 @@ def ingest_files_to_dockets_index(file_ids: Union[str, List[str]]):
         cur.execute(f"SELECT * FROM file WHERE ID IN {ids}")
         records = cur.fetchone()
 
+
 def reindex_whole_db(batch_size: int = 10):
     logger.info("reindexing docokets in quickwit")
-    clear_index()
+    clear_index("dockets")
     conn = get_connection()
     with conn.cursor(row_factory=psycopg.rows.dict_row) as cur:
         cur.execute("SELECT * FROM file;")
@@ -131,6 +137,29 @@ def reindex_whole_db(batch_size: int = 10):
             if not records:
                 break
             data_to_insert = resolve_file_schema_for_docket_ingest(records)
-            ingest_into_index(data_to_insert)
+            ingest_into_index(index_name="dockets", data=data_to_insert)
 
     logger.info("quickwit indexing request complete")
+
+    
+def qw_basic_search(query: str, max_hits=10, start_offset=0) -> List[dict[str,any]]:
+    request_data = {
+        "query": f"text:({query}) OR name:({query})",
+        "snippet_fields":"text",
+        "start_offset": start_offset,
+        "max_hits": max_hits
+        
+    }
+    response = requests.post(
+        f"{QUICKWIT_ENDPOINT}/api/v1/dockets/search",
+        headers={"Content-Type": "application/json"},
+        json= request_data
+        
+    )
+    resp_json = response.json()
+    ids = []
+    for i, hit in enumerate(resp_json['hits']):
+        ids.append({"id":hit['source_id'], "snippet": resp_json['snippets'][i]['text']})    
+        
+    return ids
+        

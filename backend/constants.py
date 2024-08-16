@@ -42,4 +42,4 @@ REDIS_CURRENTLY_PROCESSING_DOCS = "currently_processing_docs"
 
 
 # accessible via the tailnet
-QUICKWIT_ENDPOINT = "http://quickwit-main:7280"
+QUICKWIT_ENDPOINT = os.environ["QUICKWIT_ENDPOINT"]

@@ -41,6 +41,7 @@ from typing import List, Optional, Union, Any, Dict
 
 from vecstore import search
 
+from util import quickwit
 import json
 
 
@@ -224,17 +225,19 @@ class RagController(Controller):
     ) -> Any:
         logger = request.logger
         query = data.query
-        res = search(query=query)
-        res = res[0]
-        for result in res:
-            logger.info(result["entity"])
-            uuid = UUID((result["entity"]["source_id"]))
-            logger.info(f"Asking PG for data on file: {uuid}")
-            schema = model_to_schema(await files_repo.get(uuid))
-            result["file"] = schema
-        if only_fileobj:
-            return list(map(lambda r: r["file"], res))
-        return res
+        r = quickwit.qw_basic_search(query)
+        return r
+        # res = search(query=query)
+        # res = res[0]
+        # for result in res:
+        #     logger.info(result["entity"])
+        #     uuid = UUID((result["entity"]["source_id"]))
+        #     logger.info(f"Asking PG for data on file: {uuid}")
+        #     schema = model_to_schema(await files_repo.get(uuid))
+        #     result["file"] = schema
+        # if only_fileobj:
+        #     return list(map(lambda r: r["file"], res))
+        # return res
 
         # return list(map(create_rag_response_from_query, res))
 
