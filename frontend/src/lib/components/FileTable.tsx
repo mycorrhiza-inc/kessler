@@ -52,12 +52,12 @@ export const defaultLayout: Layout = {
 };
 
 const FileTable: React.FC<FileTableProps> = ({ files, layout }) => {
-  const [fileState, setFileState] = useState<RowData[]>(
+  const [tableState, setTableState] = useState<RowData[]>(
     files.map((file) => ({ selected: false, data: file })),
   );
 
   const toggleSelected = (id: string) => {
-    setFileState((prevState) =>
+    setTableState((prevState) =>
       prevState.map((file) =>
         file.data.id === id ? { ...file, selected: !file.selected } : file,
       ),
@@ -71,7 +71,7 @@ const FileTable: React.FC<FileTableProps> = ({ files, layout }) => {
   };
 
   const updateSelected = (id: string) => {
-    setFileState((prevState) =>
+    setTableState((prevState) =>
       prevState.map((file) =>
         file.data.id === id ? { ...file, selected: !file.selected } : file,
       ),
@@ -116,7 +116,7 @@ const FileTable: React.FC<FileTableProps> = ({ files, layout }) => {
           </Tr>
         </Thead>
         <Tbody>
-          {fileState.map((file) => (
+          {tableState.map((file) => (
             <>
               <Tr key={file.data.id}>
                 {layoutFiltered.columns.map((col) => (
