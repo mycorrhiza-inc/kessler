@@ -14,7 +14,6 @@ from models.files import FileModel
 from llama_index.core import StorageContext
 from llama_index.core import VectorStoreIndex
 from llama_index.core import Settings
-from llama_index.core.llms import ChatMessage
 
 from llama_index.core.node_parser import SentenceWindowNodeParser
 
@@ -63,13 +62,6 @@ def get_llm_from_model_str(model_name: Optional[str]):
         actual_name = "llama-3.1-70b-versatile"
         return Groq(model=actual_name, request_timeout=60.0, api_key=GROQ_API_KEY)
     if model_name in ["llama-405b", "llama-3.1-405b-reasoning"]:
-
-        # actual_name = "llama-3.1-405b-reasoning"
-        # return OctoAI(
-        #     model="meta-llama-3.1-405b-instruct",
-        #     token=OCTOAI_API_KEY,
-        # )
-        # Currently broken, fix by using together or something similar, fall back on 70b until then
         actual_name = "accounts/fireworks/models/llama-v3p1-405b-instruct"
         return Fireworks(model=actual_name, api_key=FIREWORKS_API_KEY)
     if model_name in ["gpt-4o"]:
@@ -298,13 +290,6 @@ async def regenerate_vector_database_from_file_table() -> None:
 #
 def create_rag_response_from_query(query: str):
     return str(query_engine.query(query))
-
-
-def sanitzie_chathistory_llamaindex(chat_history: List[dict]) -> List[ChatMessage]:
-    def sanitize_message(raw_message: dict) -> ChatMessage:
-        return ChatMessage(role=raw_message["role"], content=raw_message["content"])
-
-    return list(map(sanitize_message, chat_history))
 
 
 def generate_chat_completion(chat_history: List[dict]) -> dict:

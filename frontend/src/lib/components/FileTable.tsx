@@ -6,15 +6,18 @@ import {
   Th,
   Td,
   TableContainer,
-  Checkbox,
   Box,
-  Center,
+  Text,
 } from "@chakra-ui/react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import DocumentViewer from "./DocumentViewer";
 import { IoMdCheckmarkCircleOutline } from "react-icons/io";
 import { ImCross } from "react-icons/im";
 import { FileType } from "../interfaces/file";
+
+// Define color variables
+const highlightColor = "gray.900";
+const selectedColor = "blue.300";
 
 interface RowData {
   selected: boolean;
@@ -29,6 +32,7 @@ interface Layout {
     enabled: boolean;
   }[];
   showExtraFeatures: boolean;
+  showDisplayText: boolean;
 }
 
 interface FileTableProps {
@@ -44,38 +48,50 @@ export const defaultLayout: Layout = {
     { key: "docket_id", label: "Docket ID", width: "20%", enabled: false },
   ],
   showExtraFeatures: true,
+  showDisplayText: true,
 };
 
 const FileTable: React.FC<FileTableProps> = ({ files, layout }) => {
-  const [fileState, setFileState] = useState<RowData[]>(
+  const [tableState, setTableState] = useState<RowData[]>(
     files.map((file) => ({ selected: false, data: file })),
   );
 
-  const updateSelected = (id: string) => {
-    setFileState((prevState) =>
+  const toggleSelected = (id: string) => {
+    setTableState((prevState) =>
       prevState.map((file) =>
         file.data.id === id ? { ...file, selected: !file.selected } : file,
       ),
     );
   };
 
-  function truncateString(str: string) {
-    const length = 60;
+  const handleKeydown = (e: React.KeyboardEvent, id: string) => {
+    if (e.shiftKey && e.type === "click") {
+      toggleSelected(id);
+    }
+  };
+
+  const updateSelected = (id: string) => {
+    setTableState((prevState) =>
+      prevState.map((file) =>
+        file.data.id === id ? { ...file, selected: !file.selected } : file,
+      ),
+    );
+  };
+
+  function truncateString(str: string, length: int = 60) {
     return str.length < length ? str : str.slice(0, length - 3) + "...";
   }
   function getFieldFromFile(key: string, file: FileType): string {
-    // Please shut up, I know what Im doing
+    // Please shut up, I know what I'm doing
     // @ts-ignore
-    var result = file[key];
-    if (result == undefined) {
+    let result = file[key];
+    if (result === undefined) {
       // @ts-ignore
       result = file.mdata[key];
     }
-    if (result != undefined) {
-      return String(result);
-    }
-    return "Unknown";
+    return result !== undefined ? String(result) : "Unknown";
   }
+
   const layoutFiltered: Layout = {
     ...layout,
     columns: layout.columns.filter((column) => column.enabled),
@@ -86,7 +102,6 @@ const FileTable: React.FC<FileTableProps> = ({ files, layout }) => {
       <Table>
         <Thead>
           <Tr>
-            <Th width="2%">Select</Th>
             {layoutFiltered.columns.map((col) => (
               <Th key={col.key} width={col.width}>
                 {col.label}
@@ -95,42 +110,58 @@ const FileTable: React.FC<FileTableProps> = ({ files, layout }) => {
             {layoutFiltered.showExtraFeatures && (
               <>
                 <Th width="6%">View</Th>
-                <Th width="2%">Status</Th>{" "}
+                <Th width="2%">Status</Th>
               </>
             )}
           </Tr>
         </Thead>
         <Tbody>
-          {fileState.map((file) => (
-            <Tr key={file.data.id}>
-              <Td>
-                <Box>
-                  <Checkbox
-                    isChecked={file.selected}
-                    onChange={() => updateSelected(file.data.id)}
-                  />
-                </Box>
-              </Td>
-              {layoutFiltered.columns.map((col) => (
-                <Td key={col.key}>
-                  {truncateString(getFieldFromFile(col.key, file.data))}
-                </Td>
-              ))}
-              {layoutFiltered.showExtraFeatures && (
-                <>
-                  <Td>
-                    <DocumentViewer document_object={file.data} />
+          {tableState.map((file) => (
+            <>
+              <Tr key={file.data.id}>
+                {layoutFiltered.columns.map((col) => (
+                  <Td key={col.key}>
+                    {truncateString(getFieldFromFile(col.key, file.data))}
                   </Td>
-                  <Td>
-                    {file.data.stage === "completed" ? (
-                      <IoMdCheckmarkCircleOutline />
-                    ) : (
-                      <ImCross />
-                    )}
+                ))}
+                {layoutFiltered.showExtraFeatures && (
+                  <>
+                    <Td>
+                      <DocumentViewer document_object={file.data} />
+                    </Td>
+                    <Td>
+                      {file.data.stage === "completed" ? (
+                        <IoMdCheckmarkCircleOutline />
+                      ) : (
+                        <ImCross />
+                      )}
+                    </Td>
+                  </>
+                )}
+              </Tr>
+              {layoutFiltered.showDisplayText && (
+                <Tr>
+                  <Td colSpan={layoutFiltered.columns.length + 2}>
+                    <Box w="100%">
+                      {truncateString(file.data.display_text, 150)}
+                    </Box>
                   </Td>
-                </>
+                </Tr>
               )}
-            </Tr>
+
+              <Tr>
+                <Td colSpan={layoutFiltered.columns.length + 2}>
+                  <hr
+                    style={{
+                      background: "black",
+                      // color: "lime",
+                      // borderColor: "lime",
+                      height: "3px",
+                    }}
+                  />
+                </Td>
+              </Tr>
+            </>
           ))}
         </Tbody>
       </Table>
@@ -139,3 +170,17 @@ const FileTable: React.FC<FileTableProps> = ({ files, layout }) => {
 };
 
 export default FileTable;
+
+// Figure out way to get backgrounds working with a div
+// <div
+//   onMouseOver={(e) => {
+//     e.currentTarget.style.backgroundColor = highlightColor;
+//   }}
+//   onMouseOut={(e) => {
+//     e.currentTarget.style.backgroundColor = file.selected
+//       ? selectedColor
+//       : "";
+//   }}
+//   onClick={(e) => handleKeydown(e as any, file.data.id)}
+//   backgroundColor={file.selected ? selectedColor : ""}
+// >

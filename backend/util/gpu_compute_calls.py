@@ -6,7 +6,6 @@ from yaml import Mark
 
 from .niclib import rand_string
 
-from .llm_prompts import LLM
 
 import subprocess
 
@@ -26,11 +25,6 @@ from pydantic import BaseModel
 
 from constants import (
     OS_TMPDIR,
-    OS_GPU_COMPUTE_URL,
-    OS_FILEDIR,
-    OS_HASH_FILEDIR,
-    OS_OVERRIDE_FILEDIR,
-    OS_BACKUP_FILEDIR,
     DATALAB_API_KEY,
     MARKER_ENDPOINT_URL,
 )
@@ -136,7 +130,6 @@ class GPUComputeEndpoint:
                 try:
                     await asyncio.sleep(poll_wait)
                     async with session.get(request_check_url) as poll_response:
-                        poll_response.raise_for_status()
                         poll_data = await poll_response.json()
                         # self.logger.info(poll_data)
                         if poll_data["status"] == "complete":
@@ -183,26 +176,26 @@ class GPUComputeEndpoint:
 
             data = {"s3_url": s3_uri}
             # data = {"langs": "en", "force_ocr": "false", "paginate": "true"}
-            with requests.post(marker_url_endpoint, json=data) as response:
-                response.raise_for_status()
-                # await the json if async
-                data = response.json()
-                request_check_url_leaf = data.get("request_check_url_leaf")
+            async with aiohttp.ClientSession() as session:
+                async with session.post(marker_url_endpoint, json=data) as response:
+                    response_data = await response.json()
+                    # await the json if async
+                    request_check_url_leaf = response_data.get("request_check_url_leaf")
 
-                if request_check_url_leaf is None:
-                    raise Exception(
-                        "Failed to get request_check_url from marker API response"
+                    if request_check_url_leaf is None:
+                        raise Exception(
+                            "Failed to get request_check_url from marker API response"
+                        )
+                    request_check_url = base_url + request_check_url_leaf
+                    self.logger.info(
+                        f"Got response from marker server, polling to see when file is finished processing at url: {request_check_url}"
                     )
-                request_check_url = base_url + request_check_url_leaf
-                self.logger.info(
-                    f"Got response from marker server, polling to see when file is finished processing at url: {request_check_url}"
-                )
-                return await self.pull_marker_endpoint_for_response(
-                    request_check_url=request_check_url,
-                    max_polls=200,
-                    poll_wait=3 + 57 * int(not priority),
-                    server=server,
-                )
+            return await self.pull_marker_endpoint_for_response(
+                request_check_url=request_check_url,
+                max_polls=200,
+                poll_wait=3 + 57 * int(not priority),
+                server=server,
+            )
 
     async def transcribe_pdf_filepath(
         self,

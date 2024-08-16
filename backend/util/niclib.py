@@ -19,6 +19,8 @@ from typing import Callable
 
 import logging
 
+import asyncio
+
 default_logger = logging.getLogger(__name__)
 
 
@@ -165,5 +167,36 @@ async def amap(function: Any, iterable: list) -> list:
     return_list = []
     for iter in iterable:
         return_list.append(await function(iter))
-
     return return_list
+
+
+async def amap_fast(function: Any, iterable: list) -> list:
+    tasks = list(map(function, iterable))
+    return await asyncio.gather(*tasks)
+
+
+# import tokenizers
+# import math
+#
+#
+# tokenizer = tokenizers.Tokenizer.from_pretrained("bert-base-uncased")
+#
+#
+# def token_split(string: str, max_length: int, overlap: int = 0) -> list:
+#     tokenlist = tokenizer.encode(string).ids
+#     num_chunks = math.ceil(len(tokenlist) / max_length)
+#     chunk_size = math.ceil(
+#         len(tokenlist) / num_chunks
+#     )  # Takes in an integer $n$ and then outputs the nth token for use in a map call.
+#
+#     def make_index(token_id: int) -> str:
+#         begin_index, end_index = (
+#             chunk_size * token_id,
+#             chunk_size * (token_id + 1) + overlap,
+#         )
+#         tokens = tokenlist[begin_index:end_index]
+#         return_string = tokenizer.decode(tokens)
+#         return return_string
+#
+#     chunk_ids = range(0, num_chunks - 1)
+#     return list(map(make_index, chunk_ids))

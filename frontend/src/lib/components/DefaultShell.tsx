@@ -57,7 +57,10 @@ import {
   FiLayers,
   FiFeather,
 } from "react-icons/fi";
-
+import { RiChat4Fill, RiChatPollFill } from "react-icons/ri";
+import { IoChatboxEllipsesOutline } from "react-icons/io5";
+import { IoThunderstormOutline } from "react-icons/io5";
+import { MdOutlineChat } from "react-icons/md";
 import { usePathname } from "next/navigation";
 import ColorModeToggle from "./ColorModeToggle";
 
@@ -121,11 +124,10 @@ export default function Page({ children }: { children: React.ReactNode }) {
 
           <SidebarSection flex="1" overflowY="auto" overflowX="hidden">
             <NavGroup>
-              <NavItem
-                href="/"
-                icon={<FiMessageCircle />}
-                isActive={pathIs("")}
-              >
+              <NavItem icon={<FiSearch />} onClick={onOpen}>
+                Search
+              </NavItem>
+              <NavItem href="/" icon={<MdOutlineChat />} isActive={pathIs("")}>
                 Chat with Documents
               </NavItem>
               <NavItem
@@ -137,13 +139,17 @@ export default function Page({ children }: { children: React.ReactNode }) {
               </NavItem>
               <NavItem
                 href="/basic-chat"
-                icon={<FiMessageCircle />}
+                icon={<IoChatboxEllipsesOutline />}
                 isActive={pathIs("basic-chat")}
               >
                 Basic LLM Chat
               </NavItem>
-              <NavItem icon={<FiSearch />} onClick={onOpen}>
-                Search
+              <NavItem
+                href="/nimbus"
+                icon={<IoThunderstormOutline />}
+                isActive={pathIs("nimbus")}
+              >
+                Run Economic Models (ALPHA)
               </NavItem>
             </NavGroup>
           </SidebarSection>
