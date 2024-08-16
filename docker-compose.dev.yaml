@@ -102,6 +102,8 @@ services:
         OTEL_EXPORTER_OTLP_ENDPOINT: "http://localhost:7281"
       ports:
         - 7280:7280
+      expose:
+        - 7280
       command: ["run"]
 
   grafana:

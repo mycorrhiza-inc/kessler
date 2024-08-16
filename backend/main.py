@@ -91,7 +91,7 @@ app = Litestar(
     on_startup=[on_startup],
     plugins=[
         utils.sqlalchemy_plugin,
-        struct_log_pluging,
+       struct_log_pluging,
     ],
     route_handlers=[api_router],
     dependencies={

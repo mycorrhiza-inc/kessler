@@ -203,10 +203,9 @@ class FileController(Controller):
         return obj.mdata
 
     async def get_all_files_raw(
-        self, files_repo: FileRepository, logger: Any
+        self, files_repo: FileRepository
     ) -> list[FileSchema]:
         results = await files_repo.list()
-        logger.info(f"{len(results)} results")
         valid_results = list(map(model_to_schema, results))
         return valid_results
 
@@ -218,7 +217,7 @@ class FileController(Controller):
         ensure_all_on_s3: bool = False,
     ) -> list[FileSchema]:
         """List files."""
-        valid_results = await self.get_all_files_raw(files_repo, request.logger)
+        valid_results = await self.get_all_files_raw(files_repo)
         s3 = S3FileManager()
         if ensure_all_on_s3:
             for result in valid_results:
@@ -238,7 +237,7 @@ class FileController(Controller):
         page: Optional[int],
     ) -> Tuple[list[FileSchema], int]:
         """List files."""
-        valid_results = await self.get_all_files_raw(files_repo, request.logger)
+        valid_results = await self.get_all_files_raw(files_repo)
         return paginate_results(valid_results, num_results, page)
 
     async def query_all_files_raw(
@@ -261,7 +260,7 @@ class FileController(Controller):
         request: Request,
     ) -> list[FileSchema]:
         """List files."""
-        return await self.query_all_files_raw(files_repo, data, request.logger)
+        return await self.query_all_files_raw(files_repo, data)
 
     @post(path="/files/query/paginate")
     async def query_all_files_paginated(
@@ -272,7 +271,7 @@ class FileController(Controller):
         num_results: Optional[int],
         page: Optional[int],
     ) -> Tuple[list[FileSchema], int]:
-        valid_results = await self.query_all_files_raw(files_repo, data, request.logger)
+        valid_results = await self.query_all_files_raw(files_repo, data)
         return paginate_results(valid_results, num_results, page)
 
     # TODO: replace this with a jobs endpoint

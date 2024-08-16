@@ -17,10 +17,6 @@ from pathlib import Path
 from typing import Union, Optional, Any, Tuple
 from typing import Callable
 
-import structlog
-
-default_logger = structlog.get_logger()
-
 
 def paginate_results(
     results: list, num_results: Optional[int], page: Optional[int]
@@ -34,13 +30,10 @@ def paginate_results(
         return max(0, min(x, len(results)))
 
     avalible_pages = math.ceil(len(results) / num_results)
-    default_logger.info(f"Length of Results: {len(results)}")
     if page > avalible_pages:
         page = avalible_pages
     start_page_index = rectify((page - 1) * num_results)
     end_page_index = rectify((page) * num_results)
-    default_logger.info(f"Start Pagination index: {start_page_index}")
-    default_logger.info(f"End Pagination index: {end_page_index}")
     return (results[start_page_index:end_page_index], avalible_pages)
 
 

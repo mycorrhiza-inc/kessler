@@ -80,8 +80,8 @@ sinks:
     type: "http"
     method: "post"
     inputs:
-      # - "remap_syslog"
-      - "api_parser"
+      - "remap_syslog"
+      # - "api_parser"
     encoding:
       codec: "json"
     framing:
