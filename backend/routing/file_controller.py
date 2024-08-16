@@ -329,8 +329,6 @@ class FileController(Controller):
 
         logger.info("DocumentIngester Created")
 
-        # tmpfile_path, metadata = (
-        # LSP is giving some kind of error, I am gonna worry about it later
         tmpfile_path, metadata = docingest.url_to_filepath_and_metadata(data.url)
         new_metadata = data.metadata
 
@@ -342,9 +340,6 @@ class FileController(Controller):
         file_obj = await add_file_raw(
             tmpfile_path, metadata, process, override_hash, files_repo, logger
         )
-        # type_adapter = TypeAdapter(FileSchema)
-        # final_return = model_to_schema(new_file)
-        # logger.info(final_return)
         return f"Successfully added document with uuid: {file_obj.uuid}"
 
     # TODO: anything but this
@@ -357,12 +352,8 @@ class FileController(Controller):
         file_id_str: str = Parameter(
             title="File ID as hex string", description="File to retieve"
         ),
-        regenerate_from: Optional[
-            str
-        ] = None,  # Figure out how to pass in a boolean as a query paramater
-        stop_at: Optional[
-            str
-        ] = None,  # Figure out how to pass in a boolean as a query paramater
+        regenerate_from: Optional[str] = None,
+        stop_at: Optional[str] = None,
     ) -> None:
         """Process a File."""
         logger = request.logger
@@ -389,69 +380,14 @@ class FileController(Controller):
         # TODO : Return Response code and response message
         return self.validate_and_jsonify(obj)
 
-    @post(path="/files/upload/from/md", media_type=MediaType.TEXT)
-    async def upload_from_markdown(
-        self,
-        files_repo: FileRepository,
-        request: Request,
-        data: Annotated[UploadFile, Body(media_type=RequestEncodingType.MULTI_PART)],
-    ) -> None:
-        try:
-            content = await data.read()
-            filename = data.filename
-            file = content.decode()
-            splitfile = file.split("---")
-            restfile = "".join(splitfile[2:])
-            file_metadata = splitfile[1].split("\n")
-            meta = {}
-            for i in file_metadata:
-                if i == "":
-                    continue
-                field = i.split(":")
-                if len(field) >= 2:
-                    meta[field[0]] = "".join(field[1:])
-
-            m_text = json.dumps(meta)
-
-            FileModel(english_text=file, metadata=m_text)
-            new_file = FileModel(
-                url="",
-                name=filename,
-                doctype="mardown",
-                lang="english",
-                source="markdown",
-                metadata=m_text,
-                stage=DocumentStatus.completed.value,
-                hash="None",
-                summary=None,
-                short_summary=None,
-                english_text=restfile,
-            )
-            try:
-                files_repo.session.add(new_file)
-                await files_repo.session.flush()
-                files_repo.session.refresh(new_file)
-                await files_repo.session.commit()
-            except Exception as e:
-                return f"issue: \n{e}"
-            try:
-                meta["source_id"] = str(new_file.id)
-                add_document_to_db(text=restfile, metadata=meta)
-            except Exception as e:
-                request.logger.error(e)
-                return "issue indexing file"
-            return new_file.english_text
-
-        except Exception as e:
-            raise (e)
-
-    @delete(path="/files/{file_id:uuid}")
-    async def delete_file(
-        self,
-        files_repo: FileRepository,
-        file_id: UUID = Parameter(
-            title="File ID as hex string", description="File to delete"
-        ),
-    ) -> None:
-        await files_repo.delete(file_id)
-        await files_repo.session.commit()
+    # TODO: Implement security for this method so people cant just delete everyting from db + remove from vector DB
+    # @delete(path="/files/{file_id:uuid}")
+    # async def delete_file(
+    #     self,
+    #     files_repo: FileRepository,
+    #     file_id: UUID = Parameter(
+    #         title="File ID as hex string", description="File to delete"
+    #     ),
+    # ) -> None:
+    #     await files_repo.delete(file_id)
+    #     await files_repo.session.commit()

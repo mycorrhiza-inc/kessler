@@ -1,11 +1,18 @@
+from models.chats import (
+    KeChatMessage,
+    cm_to_dict,
+    sanitzie_chathistory_llamaindex,
+    unvalidate_chat,
+    validate_chat,
+)
 from rag.llamaindex import (
     get_llm_from_model_str,
     create_rag_response_from_query,
     regenerate_vector_database_from_file_table,
     add_document_to_db_from_text,
     generate_chat_completion,
-    sanitzie_chathistory_llamaindex,
 )
+
 import os
 from pathlib import Path
 from uuid import UUID
@@ -39,9 +46,15 @@ from models.files import (
 from typing import List, Optional, Union, Any, Dict
 
 
+from rag.rag_engine import KeRagEngine, convert_search_results_to_frontend_table
 from vecstore import search
 
 import json
+import asyncio
+
+from constants import lemon_text
+
+from advanced_alchemy.filters import SearchFilter, CollectionFilter
 
 
 class UUIDEncoder(json.JSONEncoder):
@@ -80,11 +93,6 @@ class SimpleChatCompletion(BaseModel):
     chat_history: List[Dict[str, str]]
 
 
-class RAGChat(BaseModel):
-    model: Optional[str] = None
-    chat_history: List[Dict[str, str]]
-
-
 class RAGQueryResponse(BaseModel):
     model: Optional[str] = None
     prompt: str
@@ -95,81 +103,34 @@ class ManualDocument(BaseModel):
     metadata: Optional[dict]
 
 
-from constants import (
-    OS_TMPDIR,
-    OS_GPU_COMPUTE_URL,
-    OS_FILEDIR,
-    OS_HASH_FILEDIR,
-    OS_OVERRIDE_FILEDIR,
-    OS_BACKUP_FILEDIR,
-)
-
-
-def validate_chat(chat_history: List[Dict[str, str]]) -> bool:
-    if not isinstance(chat_history, list):
-        return False
-    found_problem = False
-    for chat in chat_history:
-        if not isinstance(chat, dict):
-            found_problem = True
-        if not chat.get("role") in ["user", "system", "assistant"]:
-            found_problem = True
-        if not isinstance(chat.get("message"), str):
-            found_problem = True
-    return not found_problem
-
-
-def force_conform_chat(chat_history: List[Dict[str, str]]) -> List[Dict[str, str]]:
-    chat_history = list(chat_history)
-    for chat in chat_history:
-        if not chat.get("role") in ["user", "system", "assistant"]:
-            chat["role"] = "system"
-        if not isinstance(chat.get("message"), str):
-            chat["message"] = str(chat.get("message"))
-    return chat_history
-
-
 class RagController(Controller):
     """Rag Controller"""
 
     dependencies = {"files_repo": Provide(provide_files_repo)}
 
     @post(path="/rag/basic_chat")
-    async def basic_chat_no_rag(
-        self, files_repo: FileRepository, data: SimpleChatCompletion
-    ) -> dict:
+    async def basic_chat_no_rag(self, data: SimpleChatCompletion) -> dict:
         model_name = data.model
-        if model_name == "":
-            model_name = None
-        if model_name is None:
-            model_name = "llama-405b"
-        chat_history = data.chat_history
-        chat_history = force_conform_chat(chat_history)
-        assert validate_chat(chat_history), chat_history
-        llama_chat_history = sanitzie_chathistory_llamaindex(chat_history)
-        chosen_llm = get_llm_from_model_str(model_name)
-        response = chosen_llm.chat(llama_chat_history)
-        str_response = str(response)
-
-        def remove_prefixes(input_string: str) -> str:
-            prefixes = ["assistant: "]
-            for prefix in prefixes:
-                if input_string.startswith(prefix):
-                    input_string = input_string[
-                        len(prefix) :
-                    ]  # 10 is the length of "assistant: "
-            return input_string
-
-        str_response = remove_prefixes(str_response)
-        return {"role": "assistant", "content": str_response}
+        validated_chat_history = validate_chat(data.chat_history)
+        rag_engine = KeRagEngine(model_name)
+        result = await rag_engine.achat_basic(validated_chat_history)
+        return {"message": cm_to_dict(result)}
 
     @post(path="/rag/rag_chat")
     async def rag_chat(
-        self, files_repo: FileRepository, data: SimpleChatCompletion
+        self, data: SimpleChatCompletion, files_repo: FileRepository
     ) -> dict:
-        chat_history = data.chat_history
-        ai_message_response = generate_chat_completion(chat_history)
-        return ai_message_response
+        model_name = data.model
+        validated_chat_history = validate_chat(data.chat_history)
+        rag_engine = KeRagEngine(model_name)
+        result_message, file_schema_citations = await rag_engine.rag_achat(
+            validated_chat_history, files_repo
+        )
+        assert isinstance(result_message, KeChatMessage)
+        return {
+            "message": cm_to_dict(result_message),
+            "citations": file_schema_citations,
+        }
 
     @post(path="/rag/rag_query")
     async def rag_query(
@@ -191,28 +152,8 @@ class RagController(Controller):
         doc_metadata = data.metadata
         doc_text = data.text
         if doc_text == "":
-            # Congrats for finding the portal easter egg!
-            doc_text = "This is the cannonical example document with the following advice for dealing with adversity in life: All right, I've been thinking, when life gives you lemons, don't make lemonade! Make life take the lemons back! Get mad! I don't want your damn lemons! What am I supposed to do with these? Demand to see life's manager! Make life rue the day it thought it could give Cave Johnson lemons! Do you know who I am? I'm the man whose gonna burn your house down - with the lemons!"
+            doc_text = lemon_text
         add_document_to_db_from_text(doc_text, doc_metadata)
-
-    @post(path="/dangerous/rag/regenerate_vector_database")
-    async def regen_vecdb(
-        self,
-        files_repo: FileRepository,
-    ) -> str:
-        await regenerate_vector_database_from_file_table()
-        return ""
-
-    @post(path="/search/{fid:uuid}")
-    async def search_collection_by_id(
-        self,
-        request: Request,
-        data: SearchQuery,
-        fid: UUID = Parameter(
-            title="File ID as hex string", description="File to retieve"
-        ),
-    ) -> Any:
-        return "failure"
 
     @post(path="/search")
     async def search(
@@ -221,22 +162,40 @@ class RagController(Controller):
         data: SearchQuery,
         request: Request,
         only_fileobj: bool = False,
-    ) -> Any:
+        max_results: int = 10,
+    ) -> list:
         logger = request.logger
         query = data.query
-        res = search(query=query)
-        res = res[0]
-        for result in res:
-            logger.info(result["entity"])
-            uuid = UUID((result["entity"]["source_id"]))
-            logger.info(f"Asking PG for data on file: {uuid}")
-            schema = model_to_schema(await files_repo.get(uuid))
-            result["file"] = schema
-        if only_fileobj:
-            return list(map(lambda r: r["file"], res))
-        return res
+        # FIXME: Speed up search so its less slow
+        if len(query) <= 3:
+            return []
+        res = search(query=query, output_fields=["source_id", "text"])
+        logger.info(res)
+        return await convert_search_results_to_frontend_table(
+            search_results=res,
+            files_repo=files_repo,
+            max_results=max_results,
+            include_text=True,
+        )
 
-        # return list(map(create_rag_response_from_query, res))
+    # @post(path="/search/{fid:uuid}")
+    # async def search_collection_by_id(
+    #     self,
+    #     request: Request,
+    #     data: SearchQuery,
+    #     fid: UUID = Parameter(
+    #         title="File ID as hex string", description="File to retieve"
+    #     ),
+    # ) -> Any:
+    #     return "failure"
+
+    # @post(path="/dangerous/rag/regenerate_vector_database")
+    # async def regen_vecdb(
+    #     self,
+    #     files_repo: FileRepository,
+    # ) -> str:
+    #     await regenerate_vector_database_from_file_table()
+    #     return ""
 
     # @post(path="/search/{fid:uuid}")
     # async def search_collection_by_id(

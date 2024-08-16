@@ -1,41 +1,11 @@
 "use client";
-import {
-  Center,
-  Circle,
-  Button,
-  IconButton,
-  Flex,
-  VStack,
-  HStack,
-  StackDivider,
-  Box,
-  Grid,
-  GridItem,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalCloseButton,
-  Container,
-  Text,
-  Select,
-  SkeletonText,
-  DarkMode,
-} from "@chakra-ui/react";
-import {
-  Form,
-  FormLayout,
-  Field,
-  DisplayIf,
-  SubmitButton,
-} from "@saas-ui/react";
-import { FiArrowUpCircle } from "react-icons/fi";
+import { Center, Box, Grid, GridItem } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
-import { initialState } from "node_modules/@clerk/nextjs/dist/types/app-router/server/auth";
-import { useColorMode, useColorModeValue } from "@chakra-ui/react";
 
 import MarkdownRenderer from "./MarkdownRenderer";
+import { ChatMessages, ChatInputForm } from "./ChatUIUtils";
+import FileTable, { defaultLayout } from "./FileTable";
+
 interface ChatAgent {
   role: boolean;
 }
@@ -51,290 +21,90 @@ interface MessageComponentProps {
   editMessage: () => {};
 }
 
-// FIX CODE TO MAKE THIS MORE DRY'Y
-
-function MessageComponent({
-  message = {
-    role: "user",
-    content: "",
-    key: Symbol(),
-  },
-}: {
-  message: Message;
-}) {
-  const { colorMode } = useColorMode();
-
-  const isUser = message.role === "user";
-  return (
-    <HStack width="100%" justifyContent={isUser ? "flex-end" : "flex-start"}>
-      <Box
-        width="90%"
-        background={
-          isUser
-            ? colorMode === "light"
-              ? "teal.100"
-              : "teal.700"
-            : colorMode === "light"
-              ? "gray.200"
-              : "gray.700"
-        }
-        borderRadius="10px"
-        overflow="auto"
-        minHeight="100px"
-        justifyContent={message.role == "user" ? "right" : "left"}
-        padding="20px"
-      >
-        <MarkdownRenderer>{message.content}</MarkdownRenderer>
-      </Box>
-    </HStack>
-  );
-}
-
-function AwaitingMessageSkeleton({}: {}) {
-  const { colorMode } = useColorMode();
-  return (
-    <Box
-      width="90%"
-      // probably a good idea to use a hook like this useColorModeValue(lightModeValue, darkModeValue)
-      background={colorMode === "light" ? "gray.200" : "gray.700"}
-      borderRadius="10px"
-      // maxWidth="800px"
-      height="auto"
-      // overflow="auto"
-      minHeight="100px"
-      justifyContent={false ? "right" : "left"}
-      padding="20px"
-    >
-      <SkeletonText
-        startColor="pink.500"
-        endColor="orange.500"
-        mt="4"
-        noOfLines={4}
-        spacing="4"
-        skeletonHeight="2"
-      />
-      {/* <Box width="100%" height="50px">
-          {!message.role && <div>Regenerate</div>}{" "}
-          {message.role && <div>Edit</div>}
-        </Box> */}
-    </Box>
-  );
-}
-// <SkeletonText mt="4" noOfLines={4} spacing="4" skeletonHeight="2" />
-function ChatBox({
+function ChatContainer({
   chatUrl,
   modelOptions,
+  setCitations,
 }: {
   chatUrl: string;
   modelOptions: string[];
+  setCitations: (citations: any[]) => void;
 }) {
-  // const [messages, setMessages] = useState<Message[]>(startingMessages);
   const [messages, setMessages] = useState<Message[]>([]);
   const [needsResponse, setResponse] = useState(false);
   const [loadingResponse, setLoadingResponse] = useState(false);
   const [selectedModel, setSelectedModel] = useState("default");
-  const [userChatbox, setUserChatbox] = useState("");
-  // let messages: Message[] = [];
 
   const getResponse = async () => {
     let chat_hist = messages.map((m) => {
       let { key, ...rest } = m;
       return rest;
     });
-    console.log(`chat history`);
-    console.log(chat_hist);
+
     const modelToSend = selectedModel === "default" ? undefined : selectedModel;
     setLoadingResponse(true);
-    let result = await fetch(
-      // FIXME : Add the base url instead of localhost to make it more amenable to this stuff.
-      // "http://localhost/api/rag/rag_chat",
-      chatUrl,
-      {
-        method: "POST",
-        mode: "cors",
-        headers: {
-          "Content-Type": "application/json",
-          accept: "application/json",
-          // "Access-Control-Allow-Origin": "*",
-          "Referrer-Policy": "no-referrer",
-        },
-        body: JSON.stringify({
-          model: modelToSend,
-          chat_history: chat_hist,
-        }),
+
+    let result = await fetch(chatUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        accept: "application/json",
       },
-    )
+      body: JSON.stringify({
+        model: modelToSend,
+        chat_history: chat_hist,
+      }),
+    })
       .then((resp) => {
-        console.log("completed request");
         setLoadingResponse(false);
-        console.log(resp);
         if (resp.status < 200 || resp.status > 299) {
-          console.log(`error with request:\n${resp}`);
           return "failed request";
         }
         return resp.json();
       })
       .then((data) => {
+        setCitations(data.citations || []);
         return data;
       })
       .catch((e) => {
         console.log("error making request");
         console.log(JSON.stringify(e));
       });
-    console.log(result);
-    setMessages([...messages, result]);
-    // let c = result.body;
 
-    // setMessages(result);
+    setMessages([...messages, result.message]);
   };
 
-  interface msgSent {
-    messageInput: string;
-  }
-  // TODO : Fix Horrible Buggy passing the any function
-  const sendMessage = async (params: msgSent) => {
-    const message_content = params.messageInput;
-    return sendMessageRaw(message_content);
-  };
-  const sendMessageRaw = async (message_content: string) => {
-    console.log("sending message");
-    console.log(`msg: ${message_content}`);
+  const sendMessage = async (message_content: string) => {
     let m: Message = {
       role: "user",
       content: message_content,
       key: Symbol(),
     };
-    console.log(`appending message "${m.content}"`);
-    if (messages.length == 0) {
-      // messages = [m];
-      setMessages([m]);
-      console.log(messages);
-    } else {
-      // messages = [...messages, m];
-      setMessages([...messages, m]);
-      console.log(messages);
-    }
+
+    setMessages([...messages, m]);
     setResponse(true);
-    setUserChatbox("");
   };
 
-  /*
-    with take the current message, find the message
- 
-  */
-
-  // get a response every time a message is sent
   useEffect(() => {
-    console.log("getting response");
     if (needsResponse) {
       getResponse();
       setResponse(false);
     }
   }, [needsResponse]);
+
   return (
     <>
-      <VStack
-        divider={<StackDivider borderColor="gray.200" />}
-        spacing={4}
-        align="stretch"
-        p={4}
-        borderRadius="md"
-        overflowY="auto"
-        flexDir="column"
-        h="100vh"
-      >
-        {messages.length === 0 && (
-          <Box p={5} textAlign="center" color="gray.500">
-            <Text fontSize="lg" fontWeight="bold">
-              Welcome to the Chatbot!
-            </Text>
-            <Text>
-              Type your message in the input box below and press Enter to send.
-            </Text>
-          </Box>
-        )}
-        {messages.map((m: Message) => {
-          return (
-            <MessageComponent
-              // key={m.key.toString()}
-              message={m}
-            />
-          );
-        })}
-        {loadingResponse && <AwaitingMessageSkeleton />}
-        <Box minHeight="300px" width="100%" color="red" />
-      </VStack>
-      <Form onSubmit={sendMessage}>
-        <FormLayout>
-          <Box
-            display="flex"
-            flexDir="row"
-            justifySelf="center"
-            justifyContent="center"
-            w="85%"
-            borderColor="green"
-            // background={useColorModeValue("white", "gray.800")}
-            borderRadius="10px"
-            borderWidth="1px"
-            position="absolute"
-            bottom="0"
-          >
-            <Field
-              name="messageInput"
-              type="textarea"
-              placeholder="chat..."
-              // flex-grow="2"
-              paddingLeft="20px"
-              resize="none"
-              border="none"
-              padding="10px"
-              margin="10px"
-              onKeyPress={(event) => {
-                if (event.key === "Enter" && !event.shiftKey) {
-                  event.preventDefault();
-                  console.log(
-                    `Detected enter press without shift, submitting form "${userChatbox}"`,
-                  );
-                  sendMessageRaw(userChatbox);
-                }
-              }}
-              value={userChatbox}
-              // FIXME : Figure out the proper type for this
-              onChange={(e: any) => setUserChatbox(e.target.value)}
-            />
-            <Center padding="10px">
-              <IconButton
-                isRound={true}
-                variant="solid"
-                colorScheme="green"
-                aria-label="Send"
-                type="submit"
-                icon={<FiArrowUpCircle />}
-              />
-            </Center>
-            <Select
-              placeholder="default"
-              onChange={(e) => setSelectedModel(e.target.value)}
-              margin="10px"
-              size="sm" // Adjust size to make it smaller
-              width="150px" // Adjust width as needed
-            >
-              {modelOptions.map((model: string) => (
-                <option key={model} value={model}>
-                  {model}
-                </option>
-              ))}
-            </Select>
-          </Box>
-        </FormLayout>
-      </Form>
+      <ChatMessages messages={messages} loading={loadingResponse} />
+      <ChatInputForm
+        sendMessage={sendMessage}
+        setSelectedModel={setSelectedModel}
+        modelOptions={modelOptions}
+      />
     </>
   );
 }
-/*
- */
+
 function ChatUI({
-  convoID = "",
   chatUrl,
   modelOptions,
 }: {
@@ -342,7 +112,7 @@ function ChatUI({
   chatUrl: string;
   modelOptions: string[];
 }) {
-  // convoId being empty is a new chat instance
+  const [citations, setCitations] = useState<any[]>([]);
 
   return (
     <Center width="100%" height="100%">
@@ -359,19 +129,22 @@ function ChatUI({
         overflow="clip"
         position="relative"
       >
-        <Grid h="100%" gridTemplateColumns={"5fr"} gap={5}>
+        <Grid h="100%" gridTemplateColumns="4fr 1fr" gap={5}>
           <GridItem
             rowSpan={10}
             colSpan="auto"
             overflow="scroll clip"
             position="relative"
           >
-            <ChatBox chatUrl={chatUrl} modelOptions={modelOptions} />
+            <ChatContainer
+              chatUrl={chatUrl}
+              modelOptions={modelOptions}
+              setCitations={setCitations}
+            />
           </GridItem>
-
-          {/* <GridItem rowSpan={10} overflow="scroll clip">
-            <ContextSources />
-          </GridItem> */}
+          <GridItem overflow="scroll clip" position="relative">
+            <FileTable files={citations} layout={defaultLayout} />
+          </GridItem>
         </Grid>
       </Box>
     </Center>

@@ -4,24 +4,50 @@ from llama_index.core import PromptTemplate
 from llama_index.core.retrievers import BaseRetriever
 from llama_index.core.llms import LLM
 from dataclasses import dataclass
-from typing import Optional, List
+from typing import Optional, List, Union, Any, Tuple
 
 import nest_asyncio
 import asyncio
 
-nest_asyncio.apply()
+from models.chats import ChatRole, KeChatMessage, sanitzie_chathistory_llamaindex
+from rag.llamaindex import get_llm_from_model_str
+from vecstore.search import search
 
-qa_prompt = PromptTemplate(
-    """\
-Context information is below.
+import logging
+
+
+from models.files import FileRepository, FileSchema, model_to_schema
+
+from vecstore import search
+
+
+from uuid import UUID
+
+from advanced_alchemy.filters import SearchFilter, CollectionFilter
+
+
+from constants import lemon_text
+
+qa_prompt = (
+    lambda context_str: f"""
+The following documents should be relevant to the conversation:
 ---------------------
 {context_str}
 ---------------------
-Given the context information and not prior knowledge, answer the query.
-Query: {query_str}
-Answer: \
 """
 )
+
+
+generate_query_from_chat_history_prompt = "Please disregard all instructions and generate a query that could be used to search a vector database for relevant information. The query should capture the main topic or question being discussed in the chat. Please output the query as a string, using a format suitable for a vector database search (e.g. a natural language query or a set of keywords)."
+
+"""
+Stuff
+Chat history: User: "I'm looking for a new phone. What are some good options?" Assistant: "What's your budget?" User: "Around $500" Assistant: "Okay, in that range you have options like the Samsung Galaxy A series or the Google Pixel 4a"
+
+Example output: "Query: 'best phones under $500'"
+"""
+
+does_chat_need_query = 'Please determine if you need to query a vector database of relevant documents to answer the user. Answer with only a "yes" or "no".'
 
 query_str = (
     "Can you tell me about results from RLHF using both model-based and"
@@ -29,100 +55,124 @@ query_str = (
 )
 
 
-async def acombine_results(
-    texts,
-    query_str,
-    qa_prompt,
-    llm,
-    cur_prompt_list,
-    num_children=10,
+default_logger = logging.getLogger(__name__)
+
+
+async def convert_search_results_to_frontend_table(
+    search_results: List[Any],
+    files_repo: FileRepository,
+    max_results: int = 10,
+    include_text: bool = True,
 ):
-    fmt_prompts = []
-    for idx in range(0, len(texts), num_children):
-        text_batch = texts[idx : idx + num_children]
-        context_str = "\n\n".join([t for t in text_batch])
-        fmt_qa_prompt = qa_prompt.format(context_str=context_str, query_str=query_str)
-        fmt_prompts.append(fmt_qa_prompt)
-        cur_prompt_list.append(fmt_qa_prompt)
+    logger = default_logger
+    res = search_results[0]
+    res = res[:max_results]
+    uuid_list = []
+    text_list = []
+    # TODO: Refactor for less checks and ugliness
+    for result in res:
+        logger.info(result)
+        logger.info(result["entity"])
+        uuid = UUID(result["entity"]["source_id"])
+        uuid_list.append(uuid)
+        if include_text:
+            text_list.append(result["entity"]["text"])
+            # text_list.append(lemon_text)
+    uuid_filter = CollectionFilter(field_name="id", values=uuid_list)
+    file_models = await files_repo.list(uuid_filter)
+    file_results = list(map(model_to_schema, file_models))
+    if include_text:
+        for index in range(len(file_results)):
+            file_results[index].display_text = text_list[index]
 
-    tasks = [llm.acomplete(p) for p in fmt_prompts]
-    combined_responses = await asyncio.gather(*tasks)
-    new_texts = [str(r) for r in combined_responses]
+    return file_results
 
-    if len(new_texts) == 1:
-        return new_texts[0]
-    else:
-        return await acombine_results(
-            new_texts, query_str, qa_prompt, llm, num_children=num_children
+
+class KeRagEngine:
+    def __init__(self, llm: Union[str, Any]) -> None:
+        if llm == "":
+            llm = None
+        if llm is None:
+            llm = "llama-405b"
+        if isinstance(llm, str):
+            llm = get_llm_from_model_str(llm)
+        self.llm = llm
+
+    async def achat_basic(self, chat_history: List[KeChatMessage]) -> KeChatMessage:
+        llama_chat_history = sanitzie_chathistory_llamaindex(chat_history)
+        response = await self.llm.achat(llama_chat_history)
+        str_response = str(response)
+
+        def remove_prefixes(input_string: str) -> str:
+            prefixes = ["assistant: "]
+            for prefix in prefixes:
+                if input_string.startswith(prefix):
+                    input_string = input_string[
+                        len(prefix) :
+                    ]  # 10 is the length of "assistant: "
+            return input_string
+
+        str_response = remove_prefixes(str_response)
+        return KeChatMessage(role=ChatRole.assistant, content=str_response)
+
+    async def does_chat_need_query(self, chat_history: List[KeChatMessage]) -> bool:
+        does_chat_need_query = 'Please determine if you need to query a vector database of relevant documents to answer the user. Answer with only a "yes" or "no".'
+        check_message = KeChatMessage(
+            role=ChatRole.assistant, content=does_chat_need_query
         )
 
+        def check_yes_no(test_str: str) -> bool:
+            test_str = test_str.lower()
+            if test_str.startswith("yes"):
+                return True
+            if test_str.startswith("no"):
+                return False
+            raise ValueError("Expected yes or no got: " + test_str)
 
-async def agenerate_response_hs(
-    retrieved_nodes, query_str, qa_prompt, llm, num_children=10
-):
-    """Generate a response using hierarchical summarization strategy.
+        return check_yes_no(
+            (await self.achat_basic(chat_history + [check_message])).content
+        )
 
-    Combine num_children nodes hierarchically until we get one root node.
-
-    """
-    fmt_prompts = []
-    node_responses = []
-    for node in retrieved_nodes:
-        context_str = node.get_content()
-        fmt_qa_prompt = qa_prompt.format(context_str=context_str, query_str=query_str)
-        fmt_prompts.append(fmt_qa_prompt)
-
-    tasks = [llm.acomplete(p) for p in fmt_prompts]
-    node_responses = await asyncio.gather(*tasks)
-
-    response_txt = acombine_results(
-        [str(r) for r in node_responses],
-        query_str,
-        qa_prompt,
-        llm,
-        fmt_prompts,
-        num_children=num_children,
-    )
-
-    return response_txt, fmt_prompts
-
-
-@dataclass
-class Response:
-    response: str
-    source_nodes: Optional[List] = None
-
-    def __str__(self):
-        return self.response
-
-
-class MyQueryEngine:
-    """My query engine.
-
-    Uses the tree summarize response synthesis module by default.
-
-    """
-
-    def __init__(
+    async def rag_achat(
         self,
-        retriever: BaseRetriever,
-        qa_prompt: PromptTemplate,
-        llm: LLM,
-        num_children=10,
-    ) -> None:
-        self._retriever = retriever
-        self._qa_prompt = qa_prompt
-        self._llm = llm
-        self._num_children = num_children
+        chat_history: List[KeChatMessage],
+        files_repo: FileRepository,
+        logger: Optional[logging.Logger] = None,
+    ) -> Tuple[KeChatMessage, List[FileSchema]]:
+        if logger is None:
+            logger = default_logger
+        if not await self.does_chat_need_query(chat_history):
+            return await self.achat_basic(chat_history)
 
-    async def aquery(self, query_str: str):
-        retrieved_nodes = await self._retriever.aretrieve(query_str)
-        response_txt, _ = await agenerate_response_hs(
-            retrieved_nodes,
-            query_str,
-            self._qa_prompt,
-            self._llm,
-            num_children=self._num_children,
-        )
-        response = Response(response_txt, source_nodes=retrieved_nodes)
-        return response
+        async def generate_query_from_chat_history(
+            chat_history: List[KeChatMessage],
+        ) -> str:
+            querygen_addendum = KeChatMessage(
+                role=ChatRole.system, content=generate_query_from_chat_history_prompt
+            )
+            completion = await self.achat_basic(chat_history + [querygen_addendum])
+            return completion
+
+        def generate_context_msg_from_search_results(
+            search_results: List[Any], max_results: int = 3
+        ) -> KeChatMessage:
+            logger = default_logger
+            res = search_results[0]
+            res = res[:max_results]
+            return_prompt = "Here is a list of documents that might be relevant to the following chat:"
+            # TODO: Refactor for less checks and ugliness
+            for result in res:
+                uuid_str = result["entity"]["source_id"]
+                text = result["entity"]["text"]
+                return_prompt += f"\n\n{uuid_str}:\n{text}"
+            return KeChatMessage(role=ChatRole.assistant, content=return_prompt)
+
+        query = await generate_query_from_chat_history(chat_history)
+        res = search(query=query, output_fields=["source_id", "text"])
+        logger.info(res)
+        context_msg = generate_context_msg_from_search_results(res)
+        # TODO: Get these 2 async func calls to happen simultaneously
+        final_message = await self.achat_basic([context_msg] + chat_history)
+        return_schemas = await convert_search_results_to_frontend_table(res, files_repo)
+
+        return (final_message, return_schemas)
