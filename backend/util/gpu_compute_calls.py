@@ -23,24 +23,24 @@ import asyncio
 
 from pydantic import BaseModel
 
-from constants import (
-    OS_TMPDIR,
-    DATALAB_API_KEY,
-    MARKER_ENDPOINT_URL,
-)
+from constants import OS_TMPDIR, DATALAB_API_KEY, MARKER_ENDPOINT_URL, OPENAI_API_KEY
 
 
 global_marker_server_urls = ["https://marker.kessler.xyz"]
+
+default_logger = logging.getLogger(__name__)
 
 
 class GPUComputeEndpoint:
     def __init__(
         self,
-        logger: Any,
+        logger: Optional[Any] = None,
         marker_endpoint_url: str = MARKER_ENDPOINT_URL,
         legacy_endpoint_url: str = "https://depricated-url.com",
         datalab_api_key: str = DATALAB_API_KEY,
     ):
+        if logger is None:
+            logger = default_logger
         self.logger = logger
         self.marker_endpoint_url = marker_endpoint_url
         self.endpoint_url = legacy_endpoint_url
@@ -80,9 +80,7 @@ class GPUComputeEndpoint:
     ) -> str:
         if external_process:
             # TODO : Make it so that it downloads the s3_uri onto local then uploads it to external process.
-            raise Exception(
-                "s3 uploads not supported with external process equaling true."
-            )
+            raise Exception("s3 uploads not supported with external processimg.")
         else:
             base_url = global_marker_server_urls[0]
             if priority:
@@ -152,11 +150,9 @@ class GPUComputeEndpoint:
                         request_check_url=request_check_url,
                         max_polls=200,
                         poll_wait=3 + 57 * int(not priority),
-                        server=MarkerServer("void", 0),
                     )
         else:
-            server = get_least_connection()
-            base_url = server.url
+            base_url = global_marker_server_urls[0]
             if priority:
                 query_str = "?priority=true"
             else:
@@ -187,24 +183,25 @@ class GPUComputeEndpoint:
                         request_check_url=request_check_url,
                         max_polls=200,
                         poll_wait=3 + 57 * int(not priority),
-                        server=server,
                     )
 
-    def audio_to_text_raw(
-        self, filepath: Path, source_lang: str, target_lang: str, file_type: str
-    ) -> str:
+    def audio_to_text_raw(self, filepath: Path, source_lang: Optional[str]) -> str:
         # The API endpoint you will be hitting
-        url = f"{self.endpoint_url}/v0/multimodal_asr/whisper-latest"
+        url = "https://api.openai.com/v1/audio/transcriptions"
         # Open the file in binary mode
         with filepath.open("rb") as file:
             # Define the multipart/form-data payload
             files = {"file": (filepath.name, file, "application/octet-stream")}
-            jsonpayload = {
-                "source_lang": source_lang,
-                "target_lang": target_lang,
+            headers = {
+                "Authorization": f"Bearer {OPENAI_API_KEY}",
+                "Content-Type": "multipart/form-data",
             }
+            data = {"model": "whisper-1"}
+            if source_lang is not None:
+                data["language"] = source_lang
+
             # Make the POST request with files
-            response = requests.post(url, files=files, json=jsonpayload)
+            response = requests.post(url, headers=headers, files=files, data=data)
             # Raise an exception if the request was unsuccessful
             response.raise_for_status()
 
@@ -212,22 +209,15 @@ class GPUComputeEndpoint:
         response_json = response.json()
 
         # Extract the translated text from the JSON response
-        translated_text = response_json["response"]
+        translated_text = response_json["text"]
         return translated_text
 
     def audio_to_text(
         self,
         filepath: Path,
-        source_lang: str,
-        target_lang: str,
-        file_type: str,
-        bitrate: int = 15000,
-        tmpdir: Path = OS_TMPDIR,
+        source_lang: Optional[str] = None,
     ) -> str:
-        downsampled = downsample_audio(filepath, file_type, bitrate, tmpdir)
-        if downsampled == filepath:
-            return self.audio_to_text_raw(filepath, source_lang, target_lang, file_type)
-        return self.audio_to_text_raw(downsampled, source_lang, target_lang, "opus")
+        return self.audio_to_text_raw(filepath, source_lang)
 
     def translate_text(
         self, doctext: str, source_lang: Optional[str], target_lang: str

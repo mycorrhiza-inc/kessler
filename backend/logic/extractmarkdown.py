@@ -79,6 +79,8 @@ class MarkdownExtractor:
                     return (text, metadata)
         if doctype == "pdf":
             s3_uri = self.s3_client.generate_s3_uri_from_hash(hash)
+            if s3_uri is None:
+                raise Exception("File Not Found")
             return (await process_pdf(s3_uri), metadata)
         file_loc = self.s3_client.generate_local_filepath_from_hash(hash)
         if file_loc is None:
@@ -107,7 +109,7 @@ class MarkdownExtractor:
         if doctype == "tex":
             return (process_pandoc(file_loc, "latex"), metadata)
         if doctype in ["mp3", "opus", "mkv"]:
-            raise Exception("Processing of Audio Files Not Supported")
+            raise GPUComputeEndpoint().audio_to_text(file_loc)
         else:
             raise ValueError(
                 f'Improper File Type, processing Failed with doctype: "{doctype}"'
