@@ -30,82 +30,7 @@ from constants import (
 )
 
 
-# Downsample audio before sending to server, human words dont convey that much information anyway
-def downsample_audio(
-    filepath: Path, file_type: str, bitrate: int, tmpdir: Path
-) -> Path:
-    outfile = tmpdir / Path(rand_string() + ".opus")
-    """
-    Converts an input audio or video file to a Opus audio file w/ a specified bit rate.
-    """
-    ffmpeg_command = [
-        "ffmpeg",  # The command to invoke FFmpeg
-        "-i",
-        filepath,  # The input file
-        "-c:a",
-        "libopus",  # Codec to use for the audio conversion
-        "-b:a",
-        str(bitrate),  # Bitrate for the output audio
-        "-vn",  # No video (discard video data)
-        outfile,  # Name of the output file
-    ]
-    # Execute the FFmpeg command
-    result = subprocess.run(
-        ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
-
-    # Check if FFmpeg command execution was successful
-    if result.returncode != 0:
-        warn(
-            f"Error converting video file, falling back to original. FFmpeg said:\n{result.stderr.decode()}"
-        )
-        return filepath
-    return outfile
-
-
 global_marker_server_urls = ["https://marker.kessler.xyz"]
-
-
-class MarkerServer(BaseModel):
-    url: str
-    connections: int = 0
-
-
-def create_server_list(urls: List[str]) -> List[MarkerServer]:
-    return_servers = []
-    for url in urls:
-        return_servers.append(MarkerServer(url=url, connections=0))
-    return return_servers
-
-
-global_marker_servers = create_server_list(global_marker_server_urls)
-
-
-def get_total_connections() -> int:
-    def total_connections_list(marker_servers: List[MarkerServer]) -> int:
-        total = 0
-        for marker_server in marker_servers:
-            total = total + marker_server.connections
-        return total
-
-    global global_marker_servers
-    return total_connections_list(global_marker_servers)
-
-
-def get_least_connection() -> MarkerServer:
-    def least_connection_list(marker_servers: List[MarkerServer]) -> MarkerServer:
-        min_conns = 999999
-        min_conn_server = None
-        for marker_server in marker_servers:
-            if marker_server.connections < min_conns:
-                min_conn_server = marker_server
-                min_conns = marker_server.connections
-        if min_conn_server is None:
-            raise Exception("Marker Server Not Found in List")
-        return min_conn_server
-
-    global global_marker_servers
-    return least_connection_list(global_marker_servers)
 
 
 class GPUComputeEndpoint:
@@ -122,10 +47,9 @@ class GPUComputeEndpoint:
         self.datalab_api_key = datalab_api_key
 
     async def pull_marker_endpoint_for_response(
-        self, request_check_url: str, max_polls: int, poll_wait: int, server: Any
+        self, request_check_url: str, max_polls: int, poll_wait: int
     ) -> str:
         async with aiohttp.ClientSession() as session:
-            server.connections = server.connections + 1
             for polls in range(max_polls):
                 try:
                     await asyncio.sleep(poll_wait)
@@ -133,11 +57,9 @@ class GPUComputeEndpoint:
                         poll_data = await poll_response.json()
                         # self.logger.info(poll_data)
                         if poll_data["status"] == "complete":
-                            server.connections = server.connections - 1
                             self.logger.info(f"Processed document after {polls} polls.")
                             return poll_data["markdown"]
                         if poll_data["status"] == "error":
-                            server.connections = server.connections - 1
                             e = poll_data["error"]
                             self.logger.error(
                                 f"Pdf server encountered an error after {polls} : {e}"
@@ -150,9 +72,7 @@ class GPUComputeEndpoint:
                                 f"PDF Processing Failed. Status was unrecognized {poll_data['status']} after {polls} polls."
                             )
                 except Exception as e:
-                    server.connections = server.connections - 1
                     raise e
-            server.connections = server.connections - 1
             raise TimeoutError("Polling for marker API result timed out")
 
     async def transcribe_pdf_s3_uri(
@@ -164,8 +84,7 @@ class GPUComputeEndpoint:
                 "s3 uploads not supported with external process equaling true."
             )
         else:
-            server = get_least_connection()
-            base_url = server.url
+            base_url = global_marker_server_urls[0]
             if priority:
                 query_str = "?priority=true"
             else:
@@ -194,7 +113,6 @@ class GPUComputeEndpoint:
                 request_check_url=request_check_url,
                 max_polls=200,
                 poll_wait=3 + 57 * int(not priority),
-                server=server,
             )
 
     async def transcribe_pdf_filepath(

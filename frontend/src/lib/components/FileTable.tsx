@@ -16,15 +16,13 @@ import { ImCross } from "react-icons/im";
 import { FileType } from "../interfaces/file";
 
 // Define color variables
-const highlightColor = "gray.900";
-const selectedColor = "blue.300";
 
 interface RowData {
   selected: boolean;
   data: FileType;
 }
 
-interface Layout {
+interface TableLayout {
   columns: {
     key: string;
     label: string;
@@ -37,10 +35,10 @@ interface Layout {
 
 interface FileTableProps {
   files: FileType[];
-  layout: Layout;
+  layout: TableLayout;
 }
 
-export const defaultLayout: Layout = {
+export const defaultLayout: TableLayout = {
   columns: [
     { key: "name", label: "Filename", width: "60%", enabled: true },
     { key: "source", label: "Source", width: "20%", enabled: true },
@@ -77,7 +75,6 @@ const FileTable: React.FC<FileTableProps> = ({ files, layout }) => {
       ),
     );
   };
-
   function truncateString(str: string, length: int = 60) {
     return str.length < length ? str : str.slice(0, length - 3) + "...";
   }
@@ -92,7 +89,7 @@ const FileTable: React.FC<FileTableProps> = ({ files, layout }) => {
     return result !== undefined ? String(result) : "Unknown";
   }
 
-  const layoutFiltered: Layout = {
+  const layoutFiltered: TableLayout = {
     ...layout,
     columns: layout.columns.filter((column) => column.enabled),
   };
@@ -110,7 +107,6 @@ const FileTable: React.FC<FileTableProps> = ({ files, layout }) => {
             {layoutFiltered.showExtraFeatures && (
               <>
                 <Th width="6%">View</Th>
-                <Th width="2%">Status</Th>
               </>
             )}
           </Tr>
@@ -128,13 +124,6 @@ const FileTable: React.FC<FileTableProps> = ({ files, layout }) => {
                   <>
                     <Td>
                       <DocumentViewer document_object={file.data} />
-                    </Td>
-                    <Td>
-                      {file.data.stage === "completed" ? (
-                        <IoMdCheckmarkCircleOutline />
-                      ) : (
-                        <ImCross />
-                      )}
                     </Td>
                   </>
                 )}
@@ -184,3 +173,10 @@ export default FileTable;
 //   onClick={(e) => handleKeydown(e as any, file.data.id)}
 //   backgroundColor={file.selected ? selectedColor : ""}
 // >
+// <Td>
+//   {file.data.stage === "completed" ? (
+//     <IoMdCheckmarkCircleOutline />
+//   ) : (
+//     <ImCross />
+//   )}
+// </Td>

@@ -6,7 +6,11 @@ export default function Page() {
   return (
     <DefaultShell>
       {/* <DashboardPrompt /> */}
-      <ChatUI chatUrl="/api/rag/rag_chat" modelOptions={[]} />
+      <ChatUI
+        chatUrl="/api/rag/rag_chat"
+        modelOptions={[]}
+        useCitations={true}
+      />
     </DefaultShell>
   );
 }
