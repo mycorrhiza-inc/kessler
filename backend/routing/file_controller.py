@@ -320,11 +320,6 @@ class FileController(Controller):
         )
         return f"Successfully added document with uuid: {file_obj.id}"
 
-    class FileTextUpload:
-        text: str
-        doctype: str
-        metadata: Dict[str, Any]
-
     @post(path="/files/upload_file_text")
     async def handle_text_upload(
         self,
