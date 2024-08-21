@@ -1,14 +1,5 @@
 "use client";
 import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalBody,
-  ModalCloseButton,
-  useToast,
-  useDisclosure,
   CircularProgress,
   Input,
   VStack,
@@ -17,24 +8,9 @@ import {
   GridItem,
 } from "@chakra-ui/react";
 import React, { ChangeEvent, useEffect, useState } from "react";
-import { Node } from "reactflow";
-import {
-  FiHome,
-  FiUsers,
-  FiSettings,
-  FiBookmark,
-  FiStar,
-  FiSearch,
-  FiChevronsLeft,
-  FiChevronsRight,
-  FiMessageCircle,
-  FiLayers,
-  FiFeather,
-} from "react-icons/fi";
+import { FiSearch } from "react-icons/fi";
 
 import { defaultLayout } from "./FileTable";
-import { usePathname } from "next/navigation";
-import ColorModeToggle from "./ColorModeToggle";
 import CustomizeFileTableButton from "./CustomizeFileTableButton";
 import FileTable from "./FileTable";
 // import SearchDialog from "./SearchDialog";

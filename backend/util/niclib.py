@@ -200,3 +200,46 @@ async def amap_fast(function: Any, iterable: list) -> list:
 #
 #     chunk_ids = range(0, num_chunks - 1)
 #     return list(map(make_index, chunk_ids))
+#
+# class MarkerServer(BaseModel):
+#     url: str
+#     connections: int = 0
+#
+#
+# def create_server_list(urls: List[str]) -> List[MarkerServer]:
+#     return_servers = []
+#     for url in urls:
+#         return_servers.append(MarkerServer(url=url, connections=0))
+#     return return_servers
+#
+#
+# global_marker_servers = create_server_list(global_marker_server_urls)
+#
+#
+# def get_total_connections() -> int:
+#     def total_connections_list(marker_servers: List[MarkerServer]) -> int:
+#         total = 0
+#         for marker_server in marker_servers:
+#             total = total + marker_server.connections
+#         return total
+#
+#     global global_marker_servers
+#     return total_connections_list(global_marker_servers)
+#
+#
+# def get_least_connection() -> MarkerServer:
+#     def least_connection_list(marker_servers: List[MarkerServer]) -> MarkerServer:
+#         min_conns = 999999
+#         min_conn_server = None
+#         for marker_server in marker_servers:
+#             if marker_server.connections < min_conns:
+#                 min_conn_server = marker_server
+#                 min_conns = marker_server.connections
+#         if min_conn_server is None:
+#             raise Exception("Marker Server Not Found in List")
+#         return min_conn_server
+#
+#     global global_marker_servers
+#     return least_connection_list(global_marker_servers)
+#
+#

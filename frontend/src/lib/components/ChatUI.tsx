@@ -6,6 +6,8 @@ import MarkdownRenderer from "./MarkdownRenderer";
 import { ChatMessages, ChatInputForm } from "./ChatUIUtils";
 import FileTable, { defaultLayout } from "./FileTable";
 
+import { TableLayout } from "./FileTable";
+
 interface ChatAgent {
   role: boolean;
 }
@@ -104,13 +106,26 @@ function ChatContainer({
   );
 }
 
+const smallDefaultLayout: TableLayout = {
+  columns: [
+    { key: "name", label: "Filename", width: "60%", enabled: true },
+    { key: "source", label: "Source", width: "20%", enabled: false },
+    { key: "author", label: "Author", width: "20%", enabled: false },
+    { key: "docket_id", label: "Docket ID", width: "20%", enabled: false },
+  ],
+  showExtraFeatures: true,
+  showDisplayText: true,
+};
+
 function ChatUI({
   chatUrl,
   modelOptions,
+  useCitations,
 }: {
   convoID?: string;
   chatUrl: string;
   modelOptions: string[];
+  useCitations: boolean;
 }) {
   const [citations, setCitations] = useState<any[]>([]);
 
@@ -129,23 +144,31 @@ function ChatUI({
         overflow="clip"
         position="relative"
       >
-        <Grid h="100%" gridTemplateColumns="4fr 1fr" gap={5}>
-          <GridItem
-            rowSpan={10}
-            colSpan="auto"
-            overflow="scroll clip"
-            position="relative"
-          >
-            <ChatContainer
-              chatUrl={chatUrl}
-              modelOptions={modelOptions}
-              setCitations={setCitations}
-            />
-          </GridItem>
-          <GridItem overflow="scroll clip" position="relative">
-            <FileTable files={citations} layout={defaultLayout} />
-          </GridItem>
-        </Grid>
+        {useCitations ? (
+          <Grid h="100%" gridTemplateColumns="4fr 1fr" gap={5}>
+            <GridItem
+              rowSpan={10}
+              colSpan="auto"
+              overflow="scroll clip"
+              position="relative"
+            >
+              <ChatContainer
+                chatUrl={chatUrl}
+                modelOptions={modelOptions}
+                setCitations={setCitations}
+              />
+            </GridItem>
+            <GridItem overflow="scroll clip" position="relative">
+              <FileTable files={citations} layout={smallDefaultLayout} />
+            </GridItem>
+          </Grid>
+        ) : (
+          <ChatContainer
+            chatUrl={chatUrl}
+            modelOptions={modelOptions}
+            setCitations={setCitations}
+          />
+        )}
       </Box>
     </Center>
   );
