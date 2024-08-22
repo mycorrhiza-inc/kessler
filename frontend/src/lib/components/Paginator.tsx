@@ -2,7 +2,7 @@ import { Box, Button, Center, Select, Spinner, Text } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import FileTable from "./FileTable";
 import CustomizeFileTableButton from "./CustomizeFileTableButton";
-import { FileType } from "../interfaces/file";
+import { FileType } from "../interfaces";
 
 import { defaultLayout } from "./FileTable";
 

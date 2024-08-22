@@ -35,6 +35,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
+import { TableLayout } from "../interfaces";
 interface Column {
   key: string;
   label: string;
@@ -42,14 +43,9 @@ interface Column {
   enabled: boolean;
 }
 
-interface Layout {
-  columns: Column[];
-  showExtraFeatures: boolean;
-}
-
 interface CustomizeFileTableButtonProps {
-  layout: Layout;
-  setLayout: React.Dispatch<React.SetStateAction<Layout>>;
+  layout: TableLayout;
+  setLayout: React.Dispatch<React.SetStateAction<TableLayout>>;
 }
 
 const CustomizeFileTableButton: React.FC<CustomizeFileTableButtonProps> = ({
