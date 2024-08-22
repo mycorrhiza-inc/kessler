@@ -75,7 +75,7 @@ class SemanticSplitter:
         sentences: List[SentenceCombination],
         distances: List[float],
         percentile: int = 95,
-        max_sentances: int = 200,
+        max_sentances: int = 100,
     ) -> List[str]:
         chunks = []
         if len(distances) <= 0:
