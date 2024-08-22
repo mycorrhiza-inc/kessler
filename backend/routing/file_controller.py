@@ -118,7 +118,7 @@ from constants import (
 # import base64
 
 
-class FileTextUpload:
+class FileTextUpload(BaseModel):
     text: str
     doctype: str
     metadata: Dict[str, Any]
