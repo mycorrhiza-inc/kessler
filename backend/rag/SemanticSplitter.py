@@ -85,7 +85,6 @@ class SemanticSplitter:
                 i for i, x in enumerate(distances) if x > breakpoint_distance_threshold
             ]
 
-            start_index = 0
             i = 0
             while i < len(indices_above_threshold) - 1:
                 if (
