@@ -21,3 +21,14 @@ export interface FileType {
   mdata: Object;
   display_text: string;
 }
+
+export interface TableLayout {
+  columns: {
+    key: string;
+    label: string;
+    width: string;
+    enabled: boolean;
+  }[];
+  showExtraFeatures: boolean;
+  showDisplayText: boolean;
+}

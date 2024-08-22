@@ -15,22 +15,12 @@ import { IoMdCheckmarkCircleOutline } from "react-icons/io";
 import { ImCross } from "react-icons/im";
 import { FileType } from "../interfaces/file";
 
+import { TableLayout } from "../interfaces";
 // Define color variables
 
 interface RowData {
   selected: boolean;
   data: FileType;
-}
-
-interface TableLayout {
-  columns: {
-    key: string;
-    label: string;
-    width: string;
-    enabled: boolean;
-  }[];
-  showExtraFeatures: boolean;
-  showDisplayText: boolean;
 }
 
 interface FileTableProps {

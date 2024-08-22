@@ -6,7 +6,7 @@ import MarkdownRenderer from "./MarkdownRenderer";
 import { ChatMessages, ChatInputForm } from "./ChatUIUtils";
 import FileTable, { defaultLayout } from "./FileTable";
 
-import { TableLayout } from "./FileTable";
+import { TableLayout } from "../interfaces";
 
 interface ChatAgent {
   role: boolean;
