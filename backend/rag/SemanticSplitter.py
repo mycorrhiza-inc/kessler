@@ -71,15 +71,35 @@ class SemanticSplitter:
         return blocks
 
     def build_chunks(
-        self, sentences: List[SentenceCombination], distances: List[float]
+        self,
+        sentences: List[SentenceCombination],
+        distances: List[float],
+        percentile: int = 95,
+        max_sentances: int = 200,
     ) -> List[str]:
         chunks = []
         if len(distances) <= 0:
-            breakpoint_distance_threshold = np.percentile(distances, 90)
+            breakpoint_distance_threshold = np.percentile(distances, percentile)
 
             indices_above_threshold = [
                 i for i, x in enumerate(distances) if x > breakpoint_distance_threshold
             ]
+
+            start_index = 0
+            i = 0
+            while i < len(indices_above_threshold) - 1:
+                if (
+                    indices_above_threshold[i + 1] - indices_above_threshold[i]
+                    > max_sentances
+                ):
+                    logger.warn(
+                        "Found A chunk with more then {max_sentances} sentences, inserting a index to prevent overflow, if this is happening a lot consider bumping up the percentile or increasing max_sentances in the semantic splitter."
+                    )
+                    indices_above_threshold.insert(
+                        i + 1, indices_above_threshold[i] + max_sentances
+                    )
+                else:
+                    i += 1
 
             start_index = 0
 

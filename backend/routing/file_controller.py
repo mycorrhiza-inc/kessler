@@ -342,6 +342,7 @@ class FileController(Controller):
         with open(final_filepath, "w") as f:
             f.write(data.text)
         additional_metadata = data.metadata
+        additional_metadata["doctype"] = data.doctype
         final_metadata = additional_metadata
         if final_metadata.get("lang") is None:
             final_metadata["lang"] = "en"
