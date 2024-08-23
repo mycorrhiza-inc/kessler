@@ -99,21 +99,26 @@ class SemanticSplitter:
                     logger.warn(
                         f"This semantic chunk is too big for splitting, consider increasing your percentile value: {percentile}, or increasing your max_sentences value: {max_sentences},"
                     )
-                    total_subchunks = index - start_index // max_sentences
-                    subchunk_size = index - start_index // total_subchunks
-                    for i in range(0, total_subchunks - 1):
-                        append_sentence_range_to_chunk(
-                            start_index + i * subchunk_size,
-                            start_index + (i + 1) * subchunk_size,
-                        )
                     append_sentence_range_to_chunk(
-                        start_index + (total_subchunks - 1) * subchunk_size, index + 1
+                        start_index, start_index + max_sentences
                     )
+                    start_index = start_index + max_sentences
+
+                    # Rejected for being to complicated, if still broken, this should fix it
+                    # total_subchunks = index - start_index // max_sentences
+                    # subchunk_size = index - start_index // total_subchunks
+                    # for i in range(0, total_subchunks - 1):
+                    #     append_sentence_range_to_chunk(
+                    #         start_index + i * subchunk_size,
+                    #         start_index + (i + 1) * subchunk_size,
+                    #     )
+                    # append_sentence_range_to_chunk(
+                    #     start_index + (total_subchunks - 1) * subchunk_size, index + 1
+                    # )
                 else:
 
                     append_sentence_range_to_chunk(start_index, index + 1)
-
-                start_index = index + 1
+                    start_index = index + 1
 
             if start_index < len(sentences):
                 combined_text = "".join(
