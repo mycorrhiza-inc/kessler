@@ -97,7 +97,7 @@ class SemanticSplitter:
             for index in indices_above_threshold:
                 if index - start_index > max_sentences:
                     logger.warn(
-                        f"This semantic chunk is too big for splitting, consider increasing your percentile value: {percentile}, or increasing your max_sentences value: {max_sentences},"
+                        f"This semantic chunk is too big for splitting at {index - start_index} sentances, consider increasing your percentile value: {percentile}, or increasing your max_sentences value: {max_sentences},"
                     )
                     for i in range(0, (index - start_index // max_sentences)):
                         append_sentence_range_to_chunk(
