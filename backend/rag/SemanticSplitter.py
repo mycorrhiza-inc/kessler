@@ -101,7 +101,7 @@ class SemanticSplitter:
                     )
                     total_subchunks = index - start_index // max_sentences
                     subchunk_size = index - start_index // total_subchunks
-                    for i in range(0, total_subchunks - 2):
+                    for i in range(0, total_subchunks - 1):
                         append_sentence_range_to_chunk(
                             start_index + i * subchunk_size,
                             start_index + (i + 1) * subchunk_size,
