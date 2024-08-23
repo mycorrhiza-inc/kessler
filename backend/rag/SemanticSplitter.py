@@ -99,9 +99,10 @@ class SemanticSplitter:
                     logger.warn(
                         f"This semantic chunk is too big for splitting, consider increasing your percentile value: {percentile}, or increasing your max_sentences value: {max_sentences},"
                     )
-                    for i in range(0, (index - start_index // max_sentences) + 1):
+                    for i in range(0, (index - start_index // max_sentences)):
                         append_sentence_range_to_chunk(
-                            start_index, start_index + i * max_sentences
+                            start_index + i * max_sentences,
+                            start_index + (i + 1) * max_sentences,
                         )
                     start_index = index + 1
 
