@@ -1,4 +1,7 @@
+import { Card } from "@mui/joy";
+
 type SearchFields = {
+  id: string;
   name: string;
   text: string;
   docketID: string;
@@ -10,12 +13,14 @@ type SearchResultProps = {
 
 const SearchResult = ({ data }: SearchResultProps) => {
   return (
-    <div
+    <Card
       style={{
         padding: "15px",
-        border: "1px solid white",
+        border: "1px solid grey",
         borderRadius: "10px",
         backgroundColor: "inherit",
+        width: "90%",
+        maxHeight: "15em",
       }}
     >
       <h1>{data.name}</h1>
@@ -23,7 +28,7 @@ const SearchResult = ({ data }: SearchResultProps) => {
       <div dangerouslySetInnerHTML={{ __html: data.text }} />
       <span />
       <p>{data.docketID}</p>
-    </div>
+    </Card>
   );
 };
 

@@ -1,5 +1,5 @@
 import SearchResult from "@/components/SearchResult";
-
+import { Stack, Box } from "@mui/joy";
 const SearchResultBox = ({
   searchResults,
   isSearching,
@@ -8,25 +8,19 @@ const SearchResultBox = ({
   isSearching: boolean;
 }) => {
   return (
-    <div className="searchResults">
-      <div
+    <div className="searchResults justify-center items-center ">
+      <Stack
         className="searchResultsContent"
-        style={{ justifyContent: "center" }}
+        style={{ justifyContent: "center", paddingBottom: "300px", paddingTop: "100px" }}
+        direction="column"
+        justifyContent="center"
+        alignItems="center"
+        spacing={2}
       >
-        <div className="min-h-50vh">
-          {isSearching ? (
-            <div className="flex items-center justify-center mt-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white"></div>
-            </div>
-          ) : (
-            <>
-              {searchResults.map((result, index) => (
-                <SearchResult key={index} data={result} />
-              ))}
-            </>
-          )}
-        </div>
-      </div>
+        {searchResults.map((result, index) => (
+          <SearchResult key={index} data={result} />
+        ))}
+      </Stack>
     </div>
   );
 };
