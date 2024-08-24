@@ -11,26 +11,14 @@ import {
 } from "@chakra-ui/react";
 import { useState } from "react";
 import DocumentViewer from "./DocumentViewer";
-import { IoMdCheckmarkCircleOutline } from "react-icons/io";
-import { ImCross } from "react-icons/im";
-import { FileType } from "../interfaces/file";
+import { FileType } from "../interfaces";
 
+import { TableLayout } from "../interfaces";
 // Define color variables
 
 interface RowData {
   selected: boolean;
   data: FileType;
-}
-
-interface TableLayout {
-  columns: {
-    key: string;
-    label: string;
-    width: string;
-    enabled: boolean;
-  }[];
-  showExtraFeatures: boolean;
-  showDisplayText: boolean;
 }
 
 interface FileTableProps {
@@ -75,7 +63,7 @@ const FileTable: React.FC<FileTableProps> = ({ files, layout }) => {
       ),
     );
   };
-  function truncateString(str: string, length: int = 60) {
+  function truncateString(str: string, length: number = 60) {
     return str.length < length ? str : str.slice(0, length - 3) + "...";
   }
   function getFieldFromFile(key: string, file: FileType): string {

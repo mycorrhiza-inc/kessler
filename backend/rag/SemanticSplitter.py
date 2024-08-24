@@ -71,24 +71,55 @@ class SemanticSplitter:
         return blocks
 
     def build_chunks(
-        self, sentences: List[SentenceCombination], distances: List[float]
+        self,
+        sentences: List[SentenceCombination],
+        distances: List[float],
+        percentile: int = 95,
+        max_sentences: int = 50,
     ) -> List[str]:
         chunks = []
         if len(distances) <= 0:
-            breakpoint_distance_threshold = np.percentile(distances, 90)
+            breakpoint_distance_threshold = np.percentile(distances, percentile)
 
             indices_above_threshold = [
                 i for i, x in enumerate(distances) if x > breakpoint_distance_threshold
             ]
 
-            start_index = 0
-
-            # combine sentences into blocks if they are abouve threshold
-            for index in indices_above_threshold:
-                group = sentences[start_index : index + 1]
+            def append_sentence_range_to_chunk(
+                start_index: int, end_index: int
+            ) -> None:
+                group = sentences[start_index:end_index]
                 combined_text = "".join([d["sentence"] for d in group])
                 chunks.append(combined_text)
 
+            # combine sentences into blocks if they are abouve threshold
+            start_index = 0
+            for index in indices_above_threshold:
+                if index - start_index > max_sentences:
+                    logger.warn(
+                        f"This semantic chunk is too big for splitting at {index - start_index} sentances, consider increasing your percentile value: {percentile}, or increasing your max_sentences value: {max_sentences},"
+                    )
+                    for i in range(0, (index - start_index // max_sentences)):
+                        append_sentence_range_to_chunk(
+                            start_index + i * max_sentences,
+                            start_index + (i + 1) * max_sentences,
+                        )
+                    start_index = index + 1
+
+                    # Rejected for being to complicated, if still broken, this should fix it
+                    # total_subchunks = index - start_index // max_sentences
+                    # subchunk_size = index - start_index // total_subchunks
+                    # for i in range(0, total_subchunks - 1):
+                    #     append_sentence_range_to_chunk(
+                    #         start_index + i * subchunk_size,
+                    #         start_index + (i + 1) * subchunk_size,
+                    #     )
+                    # append_sentence_range_to_chunk(
+                    #     start_index + (total_subchunks - 1) * subchunk_size, index + 1
+                    # )
+                    continue
+
+                append_sentence_range_to_chunk(start_index, index + 1)
                 start_index = index + 1
 
             if start_index < len(sentences):

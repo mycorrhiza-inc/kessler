@@ -19,8 +19,6 @@ from models.utils import PydanticBaseModel as BaseModel
 
 
 from models.files import (
-    FileSchema,
-    FileModel,
     provide_files_repo,
     DocumentStatus,
     docstatus_index,
@@ -45,7 +43,6 @@ from logic.databaselogic import (
     filters_docstatus_processing,
 )
 
-from util.gpu_compute_calls import get_total_connections
 import random
 import redis
 
@@ -73,10 +70,6 @@ if "postgresql://" in postgres_connection_string:
     postgres_connection_string = postgres_connection_string.replace(
         "postgresql://", "postgresql+asyncpg://"
     )
-# engine = create_async_engine(
-#         "postgresql+asyncpg://scott:tiger@localhost/test",
-#         echo=True,
-#     )
 
 
 async def create_global_connection():
@@ -102,9 +95,6 @@ class DaemonState(BaseModel):
 class DaemonController(Controller):
     dependencies = {"files_repo": Provide(provide_files_repo)}
 
-    # def jsonify_validate_return(self,):
-    #     return None
-    #
     async def process_force_downgrade_raw(
         self,
         files_repo: FileRepository,
@@ -158,7 +148,6 @@ class DaemonController(Controller):
         request: Request,
         file_id: UUID = Parameter(title="File ID", description="File to retieve"),
         stop_at: Optional[str] = None,
-        regenerate_from: Optional[str] = None,
     ) -> None:
         obj = await files_repo.get(file_id)
         if stop_at is None:
