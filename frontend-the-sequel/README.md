@@ -28,7 +28,7 @@ You could potentially have a parent battle such as "Solve Climate Change", but I
 
 2. A method that people are using to try to solve that problem.
 
-Is a good framework for analysis for NGOs/Companies, since it actively forces you to consider theories of change, in connection with every campaign that they are working on. And its also great for beginners, since every problem is immediately phrased with somet
+Is a good framework for analysis for NGOs/Companies, since it actively forces you to consider theories of change, in connection with every campaign that they are working on. And its also great for beginners, since every problem is immediately bundled with actions that one can take to solve it.
 
 Battles with no children/"leaf battles" should ideally be similar to "SMART Goals", namely they should be narrow and well defined, with measurable outcomes for success and where the next steps for any party are reasonable to find.
 
