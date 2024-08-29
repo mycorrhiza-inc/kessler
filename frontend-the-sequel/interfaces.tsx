@@ -58,136 +58,90 @@ export const exampleDocumentInfo: documentInfo = {
 //
 
 export interface Organization {
-  id: number;
+  id: string;
   name: string;
   description: string;
 }
 
 export interface Action {
-  id: number;
+  id: string;
   organization: Organization;
   description: string;
   date: Date;
 }
 
+export interface Faction {
+  id: string;
+  title: string; // Something like "Opponents", "Proponents", "Third Party Intervenors". For more complicated stuff like a climate bill with nuclear energy, it might be something like "Proponents of bill", "Want nuclear gone from bill", "Want Solar Investments Gone from Bill", and "Completely Opposed".
+  description: string;
+}
+
 export interface Battle {
-  id: number;
+  id: string;
   title: string;
   description: string;
-  parentBattleId?: number;
+  parentBattleIds?: number[];
   childBattleIds?: number[];
   actions: Action[];
+  factions: Faction[];
+  organizationsWithFactions: { organization: Organization; faction: Faction }[];
 }
 // Example data
 
 export const exampleOrganizations: Organization[] = [
   {
-    id: 1,
-    name: "Unnamed Affinity Group from Denver",
+    id: "us-govt",
+    name: "US Government",
     description: "A group fighting for climate justice.",
   },
   {
-    id: 2,
-    name: "Public Trust Doctrine Advocates",
+    id: "oct",
+    name: "Our Childrens Trust",
     description: "An organization using legal means to fight climate change.",
-  },
-  {
-    id: 3,
-    name: "Student BDS Movement",
-    description:
-      "Students promoting Boycott, Divestment, and Sanctions against apartheid in Israel.",
   },
 ];
 
 export const exampleActions: Action[] = [
   {
-    id: 1,
+    id: "action-us-govt-1",
     organization: exampleOrganizations[0],
     description: "Performed Banner Drop in Glenwood Springs Opposing UBR",
     date: new Date("2023-01-15"),
   },
   {
-    id: 2,
+    id: "action-oct-1",
     organization: exampleOrganizations[1],
     description: "Filed Juliana vs United States lawsuit",
     date: new Date("2023-02-20"),
   },
+];
+
+export const exampleFactions: Faction[] = [
   {
-    id: 3,
-    organization: exampleOrganizations[2],
-    description: "Organized Auaria Protest",
-    date: new Date("2023-03-05"),
+    id: "juliana-proponents",
+    title: "Proponents of the lawsuit",
+    description: "Groups who support the Juliana vs United States lawsuit.",
+  },
+  {
+    id: "juliana-opponents",
+    title: "Opponents of the lawsuit",
+    description: "Groups who are against the Juliana vs United States lawsuit.",
   },
 ];
 
-export const exampleBattles: Battle[] = [
+export const exampleBattle: Battle[] = [
   {
-    id: 1,
-    title: "Stopping New Fossil Fuel Development in the USA",
-    description: "Efforts to halt fossil fuel projects in the USA.",
-    childBattleIds: [2],
-    actions: [],
-  },
-  {
-    id: 2,
-    title: "Stopping the Uinta Basin Railway",
-    description: "Efforts to stop the Uinta Basin Railway project.",
-    parentBattleId: 1,
-    childBattleIds: [3],
-    actions: [],
-  },
-  {
-    id: 3,
-    title:
-      "Getting the Mayor of Greenwood Springs to publicly condemn the project",
-    description: "Local level effort to gain political support against UBR.",
-    parentBattleId: 2,
-    actions: [exampleActions[0]],
-  },
-  {
-    id: 4,
-    title: "Fight Climate Change with Judicial System",
-    description: "Using legal means to combat climate change.",
-    childBattleIds: [5],
-    actions: [],
-  },
-  {
-    id: 5,
-    title:
-      "Use the Public Trust Doctrine/ to Establish a Constitutional Right to a Livable Climate",
-    description: "Legal strategy to establish environmental rights.",
-    parentBattleId: 4,
-    childBattleIds: [6],
-    actions: [],
-  },
-  {
-    id: 6,
+    id: "battle-juliana-vs-us",
     title: "Juliana vs United States",
     description:
       "Landmark lawsuit to secure a constitutional right to a livable climate.",
-    parentBattleId: 5,
+    parentBattleIds: [5], // Assuming battle with id 5 exists
+    childBattleIds: [],
     actions: [exampleActions[1]],
-  },
-  {
-    id: 7,
-    title: "Use BDS as a tool of stopping apartheid in Israel",
-    description: "Promoting BDS to fight apartheid policies.",
-    childBattleIds: [8],
-    actions: [],
-  },
-  {
-    id: 8,
-    title: "Use Student Demonstrations to Encourage Divestment from Colleges",
-    description: "Encouraging colleges to divest through student activism.",
-    parentBattleId: 7,
-    childBattleIds: [9],
-    actions: [],
-  },
-  {
-    id: 9,
-    title: "Auaria Protest",
-    description: "A specific protest organized by students.",
-    parentBattleId: 8,
-    actions: [exampleActions[2]],
+    factions: [exampleFactions[0], exampleFactions[1]],
+    organizationsWithFactions: [
+      { organization: exampleOrganizations[1], faction: exampleFactions[0] }, // Our Childrens Trust supports the lawsuit
+      { organization: exampleOrganizations[0], faction: exampleFactions[1] }, //  US Government Opposes the lawsuit.
+    ],
   },
 ];
