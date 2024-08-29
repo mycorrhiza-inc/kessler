@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useState, useEffect } from "react";
+import { Dispatch, SetStateAction, useState, useEffect, useRef } from "react";
 import { Input, Button, Grid, Stack, Divider, Box } from "@mui/joy";
 import { motion } from "framer-motion";
 
@@ -110,7 +110,7 @@ const SearchBox = ({
           </Button>
         </Stack>
         <div className="flex items-center color-white justify-center">
-          advanced stettings
+          advanced settings
           <Stack
             direction={{ xs: "column", sm: "row" }}
             spacing={{ xs: 1, sm: 2, md: 4 }}
@@ -121,7 +121,7 @@ const SearchBox = ({
   );
 };
 
-const MinimizedSEarchBox = ({
+const MinimizedSearchBox = ({
   setMinimized,
 }: {
   setMinimized: Dispatch<SetStateAction<boolean>>;
@@ -143,7 +143,10 @@ export const CenteredFloatingSearhBox = ({
   setSearchQuery,
   inSearchSession,
 }: SearchBoxProps) => {
+  const divRef = useRef<HTMLDivElement>(null);
   const [isMinimized, setIsMinimized] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+  const [searchVisible, setSearchVisible] = useState(true);
 
   const clickMinimized = () => {
     if (isMinimized) {
@@ -151,23 +154,44 @@ export const CenteredFloatingSearhBox = ({
     }
   };
 
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
-        event.preventDefault();
-        setIsMinimized((prevState) => !prevState);
-      }
-    };
+  const handleKeyDown = (event: KeyboardEvent) => {
+    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+      event.preventDefault();
+      setIsMinimized((prevState) => !prevState);
+    }
+  };
 
+  const clickOutFromSearch = (event: MouseEvent) => {
+    if (divRef.current && !divRef.current.contains(event.target as Node)) {
+      setIsMinimized(true);
+    }
+  };
+  const handleScroll = () => {
+    const currentScrollY = window.scrollY;
+    if (currentScrollY > lastScrollY) {
+      setSearchVisible(false);
+    }
+    {
+      setSearchVisible(true);
+    }
+    setLastScrollY(currentScrollY);
+  };
+
+  useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("mousedown", clickOutFromSearch);
+    window.addEventListener("scroll", handleScroll);
 
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("mousedown", clickOutFromSearch);
+      window.removeEventListener("scroll", handleScroll);
     };
   }, []);
 
   return (
     <motion.div
+      ref={divRef}
       layout
       data-isOpen={!isMinimized}
       initial={{
@@ -176,21 +200,22 @@ export const CenteredFloatingSearhBox = ({
       animate={{
         height: "auto",
         width: "auto",
+        display: searchVisible ? "block" : "none",
       }}
       style={{
         position: "fixed",
         bottom: "30px",
         backgroundColor: "white",
         borderRadius: "10px",
+        border: "2px solid grey",
         padding: "10px",
         zIndex: 1000,
-        border: "2px solid grey",
       }}
       className="parent"
     >
       {isMinimized ? (
         <div onClick={clickMinimized}>
-          <MinimizedSEarchBox setMinimized={setIsMinimized} />
+          <MinimizedSearchBox setMinimized={setIsMinimized} />
         </div>
       ) : (
         <SearchBox
