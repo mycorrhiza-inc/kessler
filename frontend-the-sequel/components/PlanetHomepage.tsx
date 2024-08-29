@@ -148,7 +148,7 @@ const BattlePage: React.FC<{ battle: Battle; childBattles: Battle[] }> = ({
           </Carousel>
         </Box>
       )}
-      {childBattles?.length != 0 && (
+      {childBattles?.length > 0 && (
         <Box mt={2}>
           <Carousel>
             {childBattles.map((action) => (
@@ -158,16 +158,18 @@ const BattlePage: React.FC<{ battle: Battle; childBattles: Battle[] }> = ({
         </Box>
       )}
 
-      <Grid container spacing={2} mt={2}>
-        {battle.factionsWithOrgs.map((factionWithOrg, index) => (
-          <Grid item xs={12} sm={6} md={4} key={faction.id}>
-            <FactionBox
-              faction={factionWithOrg.faction}
-              color={factionColors[index % factionColors.length]}
-            />
-          </Grid>
-        ))}
-      </Grid>
+      {battle?.factions?.length > 0 && (
+        <Grid container spacing={2} mt={2}>
+          {battle.factions.map((faction, index) => (
+            <Grid item xs={12} sm={6} md={4} key={faction.id}>
+              <FactionBox
+                faction={faction}
+                color={factionColors[index % factionColors.length]}
+              />
+            </Grid>
+          ))}
+        </Grid>
+      )}
 
       <Box mt={2}>
         <Calendar />
