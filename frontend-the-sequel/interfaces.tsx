@@ -131,7 +131,7 @@ export const exampleFactions: Faction[] = [
   },
 ];
 
-export const exampleBattle: Battle[] = [
+export const exampleBattles: Battle[] = [
   {
     id: "battle-juliana-vs-us",
     title: "Juliana vs United States",

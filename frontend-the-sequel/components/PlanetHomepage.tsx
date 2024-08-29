@@ -132,6 +132,8 @@ const BattlePage: React.FC<{ battle: Battle; childBattles: Battle[] }> = ({
     "oklch(80% 0.1 140)",
     "oklch(80% 0.1 80)",
   ]; // Example colors
+  console.log(battle);
+  console.log(childBattles);
 
   return (
     <Paper elevation={3} style={{ padding: "20px", borderRadius: "15px" }}>
@@ -182,7 +184,7 @@ const PlanetStartPage: React.FC<PlanetStartPageProps> = ({ articles }) => (
   <Container>
     <SearchBar />
     <ArticlesList articles={articles} />
-    <BattlePage battle={exampleBattle} childBattles={[]}></BattlePage>
+    <BattlePage battle={exampleBattles[0]} childBattles={[]}></BattlePage>
   </Container>
 );
 

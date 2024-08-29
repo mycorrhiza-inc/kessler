@@ -9,6 +9,9 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@emotion/react": "^11.13.3",
+    "@emotion/styled": "^11.13.0",
+    "@mui/joy": "^5.0.0-beta.48",
     "@types/mapbox-gl": "^3.4.0",
     "deck.gl": "^9.0.27",
     "mapbox-gl": "^3.6.0",
