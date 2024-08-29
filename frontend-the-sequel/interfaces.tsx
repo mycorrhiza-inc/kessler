@@ -74,6 +74,7 @@ export interface Faction {
   id: string;
   title: string; // Something like "Opponents", "Proponents", "Third Party Intervenors". For more complicated stuff like a climate bill with nuclear energy, it might be something like "Proponents of bill", "Want nuclear gone from bill", "Want Solar Investments Gone from Bill", and "Completely Opposed".
   description: string;
+  organizations: Organization[];
 }
 
 export interface Battle {
@@ -84,7 +85,6 @@ export interface Battle {
   childBattleIds?: number[];
   actions: Action[];
   factions: Faction[];
-  organizationsWithFactions: { organization: Organization; faction: Faction }[];
 }
 // Example data
 
@@ -121,11 +121,13 @@ export const exampleFactions: Faction[] = [
     id: "juliana-proponents",
     title: "Proponents of the lawsuit",
     description: "Groups who support the Juliana vs United States lawsuit.",
+    organizations: [exampleOrganizations[1]],
   },
   {
     id: "juliana-opponents",
     title: "Opponents of the lawsuit",
     description: "Groups who are against the Juliana vs United States lawsuit.",
+    organizations: [exampleOrganizations[0]],
   },
 ];
 
@@ -138,10 +140,6 @@ export const exampleBattle: Battle[] = [
     parentBattleIds: [5], // Assuming battle with id 5 exists
     childBattleIds: [],
     actions: [exampleActions[1]],
-    factions: [exampleFactions[0], exampleFactions[1]],
-    organizationsWithFactions: [
-      { organization: exampleOrganizations[1], faction: exampleFactions[0] }, // Our Childrens Trust supports the lawsuit
-      { organization: exampleOrganizations[0], faction: exampleFactions[1] }, //  US Government Opposes the lawsuit.
-    ],
+    factions: exampleFactions,
   },
 ];

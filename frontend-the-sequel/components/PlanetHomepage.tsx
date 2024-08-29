@@ -1,6 +1,5 @@
 "use client";
 import React from "react";
-import { Paper, Typography, Box, Grid } from "@material-ui/core";
 import Carousel from "react-material-ui-carousel";
 import {
   Box,
@@ -10,7 +9,14 @@ import {
   Grid,
   Paper,
 } from "@mui/material";
-import { article } from "@/interfaces";
+import {
+  article,
+  exampleBattle,
+  Organization,
+  Battle,
+  Faction,
+  Action,
+} from "@/interfaces";
 
 import TestJuristictionViewer from "./JuristictionViewer";
 
@@ -50,49 +56,30 @@ const ArticlesList: React.FC<{
   </Grid>
 );
 
-const PlanetStartPage: React.FC<PlanetStartPageProps> = ({ articles }) => (
-  <Container>
-    <SearchBar />
-    <ArticlesList articles={articles} />
-  </Container>
-);
-
-// 2.71828182845904523536028747135266249775724709369995957496696762772407663035354759457138217852516642742746
-export default PlanetStartPage;
 import Calendar from "react-calendar";
 // Interfaces for new thing:
 //
 //
 
-export interface Organization {
-  id: string;
-  name: string;
-  description: string;
-}
+// export interface Organization {
+//   id: string;
+//   name: string;
+//   description: string;
+// }
+//
+// export interface Action {
+//   id: string;
+//   organization: Organization;
+//   description: string;
+//   date: Date;
+// }
+//
+// export interface Faction {
+//   id: string;
+//   title: string; // Something like "Opponents", "Proponents", "Third Party Intervenors". For more complicated stuff like a climate bill with nuclear energy, it might be something like "Proponents of bill", "Want nuclear gone from bill", "Want Solar Investments Gone from Bill", and "Completely Opposed".
+//   description: string;
+// }
 
-export interface Action {
-  id: string;
-  organization: Organization;
-  description: string;
-  date: Date;
-}
-
-export interface Faction {
-  id: string;
-  title: string; // Something like "Opponents", "Proponents", "Third Party Intervenors". For more complicated stuff like a climate bill with nuclear energy, it might be something like "Proponents of bill", "Want nuclear gone from bill", "Want Solar Investments Gone from Bill", and "Completely Opposed".
-  description: string;
-}
-
-export interface Battle {
-  id: string;
-  title: string;
-  description: string;
-  parentBattleIds?: number[];
-  childBattleIds?: number[];
-  actions: Action[];
-  factions: Faction[];
-  organizationsWithFactions: { organization: Organization; faction: Faction }[];
-}
 const OrganizationCard: React.FC<{ organization: Organization }> = ({
   organization,
 }) => (
@@ -139,28 +126,43 @@ const BattlePage: React.FC<{ battle: Battle; childBattles: Battle[] }> = ({
   battle,
   childBattles,
 }) => {
-  const factionColors = ["#FFC0CB", "#ADD8E6", "#90EE90", "#FFD700"]; // Example colors
+  const factionColors = [
+    "oklch(80% 0.1 0)",
+    "oklch(80% 0.1 200)",
+    "oklch(80% 0.1 140)",
+    "oklch(80% 0.1 80)",
+  ]; // Example colors
 
   return (
     <Paper elevation={3} style={{ padding: "20px", borderRadius: "15px" }}>
       <Typography variant="h4">{battle.title}</Typography>
       <Typography variant="body1">{battle.description}</Typography>
-
-      <Box mt={2}>
-        <Carousel>
-          {battle.actions
-            .sort((a, b) => a.date.getTime() - b.date.getTime())
-            .map((action) => (
-              <ActionCard key={action.id} action={action} />
+      {battle?.actions?.length > 0 && (
+        <Box mt={2}>
+          <Carousel>
+            {battle.actions
+              .sort((a, b) => a.date.getTime() - b.date.getTime())
+              .map((action) => (
+                <ActionCard key={action.id} action={action} />
+              ))}
+          </Carousel>
+        </Box>
+      )}
+      {childBattles?.length != 0 && (
+        <Box mt={2}>
+          <Carousel>
+            {childBattles.map((action) => (
+              <BattleCardPreview key={action.id} battle={action} />
             ))}
-        </Carousel>
-      </Box>
+          </Carousel>
+        </Box>
+      )}
 
       <Grid container spacing={2} mt={2}>
-        {battle.factions.map((faction, index) => (
+        {battle.factionsWithOrgs.map((factionWithOrg, index) => (
           <Grid item xs={12} sm={6} md={4} key={faction.id}>
             <FactionBox
-              faction={faction}
+              faction={factionWithOrg.faction}
               color={factionColors[index % factionColors.length]}
             />
           </Grid>
@@ -174,3 +176,13 @@ const BattlePage: React.FC<{ battle: Battle; childBattles: Battle[] }> = ({
     </Paper>
   );
 };
+const PlanetStartPage: React.FC<PlanetStartPageProps> = ({ articles }) => (
+  <Container>
+    <SearchBar />
+    <ArticlesList articles={articles} />
+    <BattlePage battle={exampleBattle} childBattles={[]}></BattlePage>
+  </Container>
+);
+
+// 2.71828182845904523536028747135266249775724709369995957496696762772407663035354759457138217852516642742746
+export default PlanetStartPage;
