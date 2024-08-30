@@ -95,7 +95,7 @@ export default function TestJuristictionViewer({
   ];
 
   return (
-    <Card>
+    <Card height="100%">
       <DeckGL
         layers={layers}
         initialViewState={INITIAL_VIEW_STATE}

@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import {
   article,
-  exampleBattle,
+  exampleBattles,
   Organization,
   Battle,
   Faction,
@@ -92,8 +92,8 @@ const OrganizationCard: React.FC<{ organization: Organization }> = ({
 const ActionCard: React.FC<{ action: Action }> = ({ action }) => (
   <Paper elevation={3} style={{ padding: "20px", marginBottom: "20px" }}>
     <Typography variant="h6">{action.organization.name}</Typography>
-    <Typography variant="body2">{action.description}</Typography>
-    <Typography variant="caption">{action.date.toDateString()}</Typography>
+    <Typography variant="body2">{action.date.toDateString()}</Typography>
+    <Typography variant="caption">{action.description}</Typography>
   </Paper>
 );
 
@@ -114,10 +114,12 @@ const FactionBox: React.FC<{ faction: Faction; color: string }> = ({
     style={{ padding: "20px", marginBottom: "20px", backgroundColor: color }}
   >
     <Typography variant="h5">{faction.title}</Typography>
+    <Typography>{faction.description}</Typography>
     <Box mt={2}>
-      {faction.organizations.map((org) => (
-        <OrganizationCard key={org.id} organization={org} />
-      ))}
+      {faction?.organizations?.length > 0 &&
+        faction.organizations.map((org) => (
+          <OrganizationCard key={org.id} organization={org} />
+        ))}
     </Box>
   </Paper>
 );
@@ -127,10 +129,10 @@ const BattlePage: React.FC<{ battle: Battle; childBattles: Battle[] }> = ({
   childBattles,
 }) => {
   const factionColors = [
-    "oklch(80% 0.1 0)",
-    "oklch(80% 0.1 200)",
-    "oklch(80% 0.1 140)",
-    "oklch(80% 0.1 80)",
+    "oklch(87% 0.1 0)",
+    "oklch(87% 0.1 200)",
+    "oklch(87% 0.1 140)",
+    "oklch(87% 0.1 80)",
   ]; // Example colors
   console.log(battle);
   console.log(childBattles);
@@ -173,10 +175,32 @@ const BattlePage: React.FC<{ battle: Battle; childBattles: Battle[] }> = ({
         </Grid>
       )}
 
-      <Box mt={2}>
-        <Calendar />
-        <TestJuristictionViewer></TestJuristictionViewer>
-      </Box>
+      <Grid container spacing={2} mt={2}>
+        <Grid item xs={12}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="stretch"
+          >
+            <Box width="50%">
+              <Typography variant="h6" gutterBottom>
+                Calendar
+              </Typography>
+              <Box height="100%">
+                <Calendar />
+              </Box>
+            </Box>
+            <Box width="50%">
+              <Typography variant="h6" gutterBottom>
+                Test Juristiction Viewer
+              </Typography>
+              <Box height="100%">
+                <TestJuristictionViewer />
+              </Box>
+            </Box>
+          </Box>
+        </Grid>
+      </Grid>
     </Paper>
   );
 };

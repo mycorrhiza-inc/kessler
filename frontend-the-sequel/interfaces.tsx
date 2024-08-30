@@ -99,19 +99,45 @@ export const exampleOrganizations: Organization[] = [
     name: "Our Childrens Trust",
     description: "An organization using legal means to fight climate change.",
   },
+  {
+    id: "naacp",
+    name: "National Association for the Advancement of Colored People",
+    description: "Test Description",
+  },
+  {
+    id: "shell",
+    name: "Shell Oil Company",
+    description: "Description for Shell Oil Company",
+  },
+  {
+    id: "bp",
+    name: "BP",
+    description: "Description for BP",
+  },
+  {
+    id: "exxon",
+    name: "ExxonMobil",
+    description: "Description for ExxonMobil",
+  },
 ];
 
 export const exampleActions: Action[] = [
   {
-    id: "action-us-govt-1",
-    organization: exampleOrganizations[0],
-    description: "Performed Banner Drop in Glenwood Springs Opposing UBR",
-    date: new Date("2023-01-15"),
-  },
-  {
     id: "action-oct-1",
     organization: exampleOrganizations[1],
     description: "Filed Juliana vs United States lawsuit",
+    date: new Date("2015-02-20"),
+  },
+  {
+    id: "action-oct-2",
+    organization: exampleOrganizations[1],
+    description: "Juliana Recived Bad Ruling from 9th Circuit",
+    date: new Date("2019-02-20"),
+  },
+  {
+    id: "action-oct-2",
+    organization: exampleOrganizations[1],
+    description: "Juliana Recived Bad Ruling from 9th Circuit Part 2",
     date: new Date("2023-02-20"),
   },
 ];
@@ -121,13 +147,24 @@ export const exampleFactions: Faction[] = [
     id: "juliana-proponents",
     title: "Proponents of the lawsuit",
     description: "Groups who support the Juliana vs United States lawsuit.",
-    organizations: [exampleOrganizations[1]],
+    organizations: [exampleOrganizations[1], exampleOrganizations[2]],
   },
   {
     id: "juliana-opponents",
     title: "Opponents of the lawsuit",
     description: "Groups who are against the Juliana vs United States lawsuit.",
     organizations: [exampleOrganizations[0]],
+  },
+  {
+    id: "fossil-fuel-lobby",
+    title: "Private Oil Companies",
+    description:
+      "Companies who intervened against the Juliana vs United States lawsuit, but dropped out to avoid discovery requests",
+    organizations: [
+      exampleOrganizations[3],
+      exampleOrganizations[4],
+      exampleOrganizations[5],
+    ],
   },
 ];
 
