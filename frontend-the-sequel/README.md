@@ -1,60 +1,96 @@
-# Plans for the future of the globe platform.
+<a href="https://demo-nextjs-with-supabase.vercel.app/">
+  <img alt="Next.js and Supabase Starter Kit - the fastest way to build apps with Next.js and Supabase" src="https://demo-nextjs-with-supabase.vercel.app/opengraph-image.png">
+  <h1 align="center">Next.js and Supabase Starter Kit</h1>
+</a>
 
-## Agent based Analysis Tools
+<p align="center">
+ The fastest way to build apps with Next.js and Supabase
+</p>
 
-I think the best way to think about this platform is as a framework for an LLM to do structured analysis techniques and then present the user the partially processed/ pre-digested results of said analysis, so that users can draw their own conclusions from that.
+<p align="center">
+  <a href="#features"><strong>Features</strong></a> ·
+  <a href="#demo"><strong>Demo</strong></a> ·
+  <a href="#deploy-to-vercel"><strong>Deploy to Vercel</strong></a> ·
+  <a href="#clone-and-run-locally"><strong>Clone and run locally</strong></a> ·
+  <a href="#feedback-and-issues"><strong>Feedback and issues</strong></a>
+  <a href="#more-supabase-examples"><strong>More Examples</strong></a>
+</p>
+<br/>
 
-In some sense, thinking of this as framework for structured analysis, where LLM's play a large role in gathering and preliminary preprocessing of data, then providing the tools for customers to do their own analysis and planning.
+## Features
 
-[Good Basis for a framework of research that continuously improves through reflection by actually taking political action and reflecting on results, suggestion from brad, could be interesting](https://en.wikipedia.org/wiki/Action_research)
+- Works across the entire [Next.js](https://nextjs.org) stack
+  - App Router
+  - Pages Router
+  - Middleware
+  - Client
+  - Server
+  - It just works!
+- supabase-ssr. A package to configure Supabase Auth to use cookies
+- Styling with [Tailwind CSS](https://tailwindcss.com)
+- Components with [shadcn/ui](https://ui.shadcn.com/)
+- Optional deployment with [Supabase Vercel Integration and Vercel deploy](#deploy-your-own)
+  - Environment variables automatically assigned to Vercel project
 
-## Datatypes
+## Demo
 
-Battles - Fundamental Unit Type, Every Battle is has child battles, that are each battles occurring on a smaller more local level that are directly dependant for winning the parent battle. For one example, a chain might look like this.
+You can view a fully working demo at [demo-nextjs-with-supabase.vercel.app](https://demo-nextjs-with-supabase.vercel.app/).
 
-Stopping New Fossil Fuel Development in the USA > Stopping the Uinta Basin Railway > Getting the Mayor of Greenwood Springs to publicly condom the project.
+## Deploy to Vercel
 
-or
+Vercel deployment will guide you through creating a Supabase account and project.
 
-Fight Climate Change with Judicial System > Use the Public Trust Doctrine/ to Establish a Constitutional Right to a Livable Climate > Juliana vs United States
+After installation of the Supabase integration, all relevant environment variables will be assigned to the project so the deployment is fully functioning.
 
-or
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&project-name=nextjs-with-supabase&repository-name=nextjs-with-supabase&demo-title=nextjs-with-supabase&demo-description=This%20starter%20configures%20Supabase%20Auth%20to%20use%20cookies%2C%20making%20the%20user's%20session%20available%20throughout%20the%20entire%20Next.js%20app%20-%20Client%20Components%2C%20Server%20Components%2C%20Route%20Handlers%2C%20Server%20Actions%20and%20Middleware.&demo-url=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2F&external-id=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&demo-image=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2Fopengraph-image.png&integration-ids=oac_VqOgBHqhEoFTPzGkPd7L0iH6)
 
-Use BDS as a tool of stopping apartheid in Israel > Use Student Demonstrations to Encourage Divestement from Colleges > Auaria Protest
+The above will also clone the Starter kit to your GitHub, you can clone that locally and develop locally.
 
-You could potentially have a parent battle such as "Solve Climate Change", but I think that even in the highest levels it is essential to pair every societal problem with an explicit theory of change. Stuff like "End Capitalism" is so broad that its impossible for anyone to know what to do next. But explicitly framing every battle as.
+If you wish to just develop locally and not deploy to Vercel, [follow the steps below](#clone-and-run-locally).
 
-1. In context of some large problem.
+## Clone and run locally
 
-2. A method that people are using to try to solve that problem.
+1. You'll first need a Supabase project which can be made [via the Supabase dashboard](https://database.new)
 
-Is a good framework for analysis for NGOs/Companies, since it actively forces you to consider theories of change, in connection with every campaign that they are working on. And its also great for beginners, since every problem is immediately bundled with actions that one can take to solve it.
+2. Create a Next.js app using the Supabase Starter template npx command
 
-Battles with no children/"leaf battles" should ideally be similar to "SMART Goals", namely they should be narrow and well defined, with measurable outcomes for success and where the next steps for any party are reasonable to find.
+   ```bash
+   npx create-next-app -e with-supabase
+   ```
 
-Likewise the main point of battles with children / "branch battles" is not to provide guidance as to what political action to take, but to try and provide context for each of the landscape that each of the leaf battles are taking place in. As well as providing a location for people to find actions they want to participate in, and network and build community.
+3. Use `cd` to change into the app's directory
 
-Each Battle should have the following attributes:
+   ```bash
+   cd name-of-new-app
+   ```
 
-- Jurisdiction: The Geographical area of people that has immediate political power over, for battles with a clearly defined political boundary this can be defined as just said political boundary, however parent battles are likely to be a bit harder, maybe just union up the boundaries of the children could be a solution.
+4. Rename `.env.local.example` to `.env.local` and update the following:
 
-Boundaries also let you define some good metrics for individual effectiveness on a campaign, since the number of people in a jurisdiction is very loosely correlated with how much impact you could have as a citizen. And specifically if you are hunting for a campaign that will be maximally effective compared to resources invested will want a campaign where they are maximally impactful, a campaign where victory and failure have comparable likelihood, and is disproportionately impactful to the broader cause.
+   ```
+   NEXT_PUBLIC_SUPABASE_URL=[INSERT SUPABASE PROJECT URL]
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=[INSERT SUPABASE PROJECT API ANON KEY]
+   ```
 
-- A Gnatt Chart, showing the previous actions taken in the course of a upcoming events and any upcoming processes that are likely to happen.
+   Both `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` can be found in [your Supabase project's API settings](https://app.supabase.com/project/_/settings/api)
 
-- A list of factions containing various organisations who are lobbying for a specific outcome. Then try to get a stack rank of what organisations in each broad faction are the most important.
-  (This is more important to implement for leaf battles, since the actual factions in play on a thing like "Stop New Fossil Fuel dev in USA" is going to have an almost infinite number of factions. However, for leaf)
+5. You can now run the Next.js local development server:
 
-- A list of "actions" taken by each organisation to try to w in the battle. (Maybe "skirmishes" would be a good name for these) For instance taking the above example, a skirmish would be "Unnamed Affinity Group from Denver, preforms Banner Drop in Glenwood Springs Opposing UBR". (Notifications for these sounds amazing, since if we could ever figure out a way to measure the impact of skirmishes, you could use that as a filter for notifications.)
+   ```bash
+   npm run dev
+   ```
 
-gnatt charts
+   The starter kit should now be running on [localhost:3000](http://localhost:3000/).
 
-Use the static analysis book
+6. This template comes with the default shadcn/ui style initialized. If you instead want other ui.shadcn styles, delete `components.json` and [re-install shadcn/ui](https://ui.shadcn.com/docs/installation/next)
 
-# OPEN QUESTIONS
+> Check out [the docs for Local Development](https://supabase.com/docs/guides/getting-started/local-development) to also run Supabase locally.
 
-1. To what extent can a frontier LLM to do this manual categorization work, that you would need to come up with these nested hierarchies of battles. This would also be a necessary skill for infering the existence of leaf battles from the raw documents themselves.
+## Feedback and issues
 
-2. How do we enable the community to improve on and refine the initial LLM outputs. I think looking at the community notes feature from twitter could be valuble for this, but enabling submission and voting on them would be good.
+Please file feedback and issues over on the [Supabase GitHub org](https://github.com/supabase/supabase/issues/new/choose).
 
-the 90/10 solution for early customers is to just let them modify everything directly using a wikipedia model, and lock stuff to trusted people if its a problem.
+## More Supabase examples
+
+- [Next.js Subscription Payments Starter](https://github.com/vercel/nextjs-subscription-payments)
+- [Cookie-based Auth and the Next.js 13 App Router (free course)](https://youtube.com/playlist?list=PL5S4mPUpp4OtMhpnp93EFSo42iQ40XjbF)
+- [Supabase Auth and the Next.js App Router](https://github.com/supabase/supabase/tree/master/examples/auth/nextjs)
