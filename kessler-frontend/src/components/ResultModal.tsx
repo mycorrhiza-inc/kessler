@@ -1,6 +1,7 @@
 // Modal.js
-import React from 'react';
-import './Modal.css'; // For styling
+import React from "react";
+import { Box } from "@mui/joy";
+import "./Modal.css"; // For styling
 
 type ModalProps = {
   isOpen: boolean;
@@ -12,12 +13,12 @@ const ResultModal = ({ isOpen, onClose, children }: ModalProps) => {
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <button className="close-button" onClick={onClose}>×</button>
-        {children}
-      </div>
-    </div>
+    <Box className="modal-content standard-box" sx={{}}>
+      {/* box containing the  */}
+      {/* children are components passed to result modals from special searches */}
+      {children}
+      <div> {/* header for modal */}</div>
+    </Box>
   );
 };
 

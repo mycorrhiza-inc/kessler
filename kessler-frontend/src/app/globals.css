@@ -26,8 +26,14 @@ body {
     rgb(var(--background-start-rgb));
 }
 
+#standard-box {
+  padding: "15px";
+  border: "1px solid white";
+  border-radius: "10px";
+  background-color: "inherit";
+}
 b {
-  color: red
+  color: red;
 }
 @layer utilities {
   .text-balance {
