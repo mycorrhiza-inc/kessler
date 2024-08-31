@@ -70,9 +70,10 @@ func createQWRequest(query string) QuickwitSearchRequest {
 }
 
 type SearchData struct {
-	Name  string `json:"name"`
-	Text  string `json:"text"`
-	DocID string `json:"docID"`
+	Name     string `json:"name"`
+	Text     string `json:"text"`
+	DocID    string `json:"docID"`
+	SourceID string `json:"sourceID"`
 }
 
 // Function to create search data array
@@ -82,9 +83,10 @@ func ExtractSearchData(data quickwitSearchResponse) ([]SearchData, error) {
 	// Map snippets text to hit names
 	for i, hit := range data.Hits {
 		sdata := SearchData{
-			Name:  hit.Name,
-			Text:  data.Snippets[i].Text[0],
-			DocID: hit.Metadata.DocketID, // Assuming title from metadata is used as docID
+			Name:     hit.Name,
+			Text:     data.Snippets[i].Text[0],
+			DocID:    hit.Metadata.DocketID,
+			SourceID: hit.SourceID,
 		}
 		result = append(result, sdata)
 	}
@@ -97,6 +99,10 @@ func errturn(err error) ([]SearchData, error) {
 }
 
 func searchQuickwit(query string) ([]SearchData, error) {
+
+	if len(query) <= 0 {
+		return []SearchData{}, nil
+	}
 
 	request := createQWRequest(query)
 	jsonData, err := json.Marshal(request)
