@@ -7,6 +7,8 @@ import numpy as np
 
 import logging
 
+import nltk
+
 logger = logging.getLogger(__name__)
 
 
@@ -169,7 +171,6 @@ class SemanticSplitter:
         pass
 
     def split_sentences(self, text: str) -> List[str]:
-        import nltk
 
         tokenizer = nltk.tokenize.PunktSentenceTokenizer()
         return self.split_by_sentence_tokenizer(text, tokenizer)
