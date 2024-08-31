@@ -9,6 +9,7 @@ services:
       - config/global.env
     volumes:
       - ./config/frontend.env.local:/app/.env.local
+      - ./config/global.env:/app/.env
       - ./frontend/app/:/app/app
       - ./frontend/components/:/app/components
       - ./frontend/lib/:/app/lib
