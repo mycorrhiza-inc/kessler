@@ -1,8 +1,5 @@
-import DeployButton from "@/components/supabasetutorial/deploy-button";
-import { EnvVarWarning } from "@/components/supabasetutorial/env-var-warning";
 import HeaderAuth from "@/components/supabasetutorial/header-auth";
 import { ThemeSwitcher } from "@/components/supabasetutorial/theme-switcher";
-import { hasEnvVars } from "@/utils/supabase/check-env-vars";
 import { GeistSans } from "geist/font/sans";
 import { ThemeProvider } from "next-themes";
 import Link from "next/link";
@@ -40,7 +37,7 @@ export default function RootLayout({
                     <Link href={"/"}>Kessler</Link>
                     <div className="flex items-center gap-2"></div>
                   </div>
-                  {!hasEnvVars ? <EnvVarWarning /> : <HeaderAuth />}
+                  <HeaderAuth />
                 </div>
               </nav>
               <div className="flex flex-col gap-20 max-w-5xl p-5">
@@ -49,14 +46,14 @@ export default function RootLayout({
 
               <footer className="w-full flex items-center justify-center border-t mx-auto text-center text-xs gap-8 py-16">
                 <p>
-                  Powered by{" "}
+                  Built by{" "}
                   <a
-                    href="https://supabase.com/?utm_source=create-next-app&utm_medium=template&utm_term=nextjs"
+                    href="https://kessler.xyz"
                     target="_blank"
                     className="font-bold hover:underline"
                     rel="noreferrer"
                   >
-                    Supabase
+                    Mycorrhiza
                   </a>
                 </p>
                 <ThemeSwitcher />
