@@ -9,11 +9,8 @@ services:
       - config/global.env
     volumes:
       - ./config/frontend.env.local:/app/.env.local
-      - ./frontend/app/:/app/app
-      - ./frontend/components/:/app/components
-      - ./frontend/lib/:/app/lib
-      - ./frontend/utils/:/app/utils
-      - ./frontend/public:/app/public
+      - ./config/global.env:/app/.env
+      - ./frontend/src/:/app/src
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"

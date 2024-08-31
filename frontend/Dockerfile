@@ -2,7 +2,7 @@
 FROM node:22.4.1-alpine3.20 as BUILD_IMAGE
 WORKDIR /app
 COPY ./package.json ./  
-# Shouldnt we be copying the lock file here, that seems important.
+COPY ./package-lock.json ./    
 # install dependencies
 RUN npm install --force
 COPY . .
