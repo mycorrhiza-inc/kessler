@@ -118,6 +118,16 @@ from constants import (
 # import base64
 
 
+class FileTextUpload(BaseModel):
+    text: str
+    doctype: str
+    metadata: Dict[str, Any]
+
+
+def ensure_metadata(metadata: Dict[str, Any]) -> None:
+    assert metadata.get("title") is not None
+
+
 class FileController(Controller):
     """File Controller"""
 
@@ -309,6 +319,38 @@ class FileController(Controller):
             final_filepath, final_metadata, process, override_hash, files_repo, logger
         )
         return f"Successfully added document with uuid: {file_obj.id}"
+
+    @post(path="/files/upload_file_text")
+    async def handle_text_upload(
+        self,
+        files_repo: FileRepository,
+        data: FileTextUpload,
+        request: Request,
+        process: bool = True,
+        override_hash: bool = False,
+    ) -> str:
+        logger = request.logger
+        logger.info("Process initiated.")
+        ensure_metadata(data.metadata)
+
+        input_directory = OS_TMPDIR / Path("text_uploads") / Path(rand_string())
+        # Ensure the directories exist
+        os.makedirs(input_directory, exist_ok=True)
+        # Save the text to the output directory
+        filename = f"{rand_string()}.{data.doctype}"
+        final_filepath = input_directory / Path(filename)
+        with open(final_filepath, "w") as f:
+            f.write(data.text)
+        additional_metadata = data.metadata
+        additional_metadata["doctype"] = data.doctype
+        final_metadata = additional_metadata
+        if final_metadata.get("lang") is None:
+            final_metadata["lang"] = "en"
+
+        file_obj = await add_file_raw(
+            final_filepath, final_metadata, process, override_hash, files_repo, logger
+        )
+        return f"Successfully added text document with uuid: {file_obj.id}"
 
     # TODO : (Nic) Make function that can process uploaded files
     @post(path="/files/add_url")

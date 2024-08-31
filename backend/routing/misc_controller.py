@@ -1,7 +1,3 @@
-import os
-from pathlib import Path
-from uuid import UUID
-
 from litestar import Controller, Request, Response
 
 from litestar.handlers.http_handlers.decorators import (
@@ -25,27 +21,6 @@ from models.files import (
     docstatus_index,
     FileRepository,
 )
-
-
-from typing import List, Optional, Dict
-
-
-import logging
-from models import utils
-from logic.filelogic import process_fileid_raw
-import asyncio
-from litestar.contrib.sqlalchemy.base import UUIDBase
-
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from logic.databaselogic import (
-    QueryData,
-    querydata_to_filters_strict,
-    filters_docstatus_processing,
-)
-
-from util.gpu_compute_calls import get_total_connections
-import random
 
 
 class MiscController(Controller):
