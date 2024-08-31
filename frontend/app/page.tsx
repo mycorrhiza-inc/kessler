@@ -3,7 +3,7 @@ import { createClient } from "@/utils/supabase/server";
 import { InfoIcon } from "lucide-react";
 import { redirect } from "next/navigation";
 
-import PlanetStartPage from "@/components/PlanetHomepage";
+import PlanetStartPage from "@/components/experiments/PlanetHomepage";
 import { exampleArticle } from "@/interfaces";
 import SearchApp from "@/components/SearchApp";
 export default async function ProtectedPage() {
