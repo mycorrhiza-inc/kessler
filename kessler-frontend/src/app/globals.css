@@ -41,6 +41,7 @@
   border: "1px solid white";
   border-radius: "10px";
   background-color: "inherit";
+}
 :root { 
   --brand-yellow-rgb: 242, 209, 35;
 }
