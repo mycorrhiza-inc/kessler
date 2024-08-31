@@ -1,8 +1,8 @@
 import { forgotPasswordAction } from "@/app/actions";
-import { FormMessage, Message } from "@/components/form-message";
-import { SubmitButton } from "@/components/submit-button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { FormMessage, Message } from "@/components/supabasetutorial/form-message";
+import { SubmitButton } from "@/components/supabasetutorial/submit-button";
+import { Input } from "@/components/supabasetutorial/ui/input";
+import { Label } from "@/components/supabasetutorial/ui/label";
 import Link from "next/link";
 import { SmtpMessage } from "../smtp-message";
 
