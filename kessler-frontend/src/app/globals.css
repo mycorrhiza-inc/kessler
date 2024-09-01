@@ -36,11 +36,12 @@
     rgb(var(--background-start-rgb));
 } */
 
-#standard-box {
+.standard-box {
   padding: "15px";
-  border: "1px solid white";
+  border: "2px solid grey";
   border-radius: "10px";
-  background-color: "inherit";
+  background-color: "red";
+  color: "blue";
 }
 :root { 
   --brand-yellow-rgb: 242, 209, 35;
