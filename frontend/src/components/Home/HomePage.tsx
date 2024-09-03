@@ -1,12 +1,12 @@
-"use client";
+"use  client"
 import axios from "axios";
-import SearchResult from "@/components/SearchResult";
 import { useState } from "react";
-import SearchBox, { CenteredFloatingSearhBox } from "../components/SearchBox";
+import { CenteredFloatingSearhBox } from "@/components/SearchBox";
 import SearchResultBox from "@/components/SearchResultBox";
-import { Grid, Box, Stack } from "@mui/joy";
 
-export default function SearchApp() {
+
+
+export default function Home() {
   const iOS =
     typeof navigator !== "undefined" &&
     /iPad|iPhone|iPod/.test(navigator.userAgent);
@@ -20,20 +20,13 @@ export default function SearchApp() {
   const handleSearch = async () => {
     setSearchResults([]);
     setIsSearching(true);
-    console.log(`searchhing for ${searchQuery}`);
     try {
-      const response = await axios.post("http://localhost/go/search", {
+      const response = await axios.post("http://localhost:4041/search", {
         query: searchQuery,
       });
       if (response.data.length === 0) {
         return;
       }
-      if (typeof response.data === "string") {
-        setSearchResults([]);
-        return;
-      }
-      console.log("getting data");
-      console.log(response.data);
       setSearchResults(response.data);
     } catch (error) {
       console.log(error);

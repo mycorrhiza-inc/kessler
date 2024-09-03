@@ -1,12 +1,15 @@
 import SearchResult from "@/components/SearchResult";
 import { Stack, Box } from "@mui/joy";
+
+interface SearchResultBoxProps {
+  searchResults?: any[];
+  isSearching?: boolean;
+}
+
 const SearchResultBox = ({
   searchResults,
   isSearching,
-}: {
-  searchResults: any[];
-  isSearching: boolean;
-}) => {
+}: SearchResultBoxProps) => {
   return (
     <div className="searchResults justify-center items-center ">
       <Stack
@@ -17,9 +20,10 @@ const SearchResultBox = ({
         alignItems="center"
         spacing={2}
       >
-        {searchResults.map((result, index) => (
+        {!isSearching && searchResults && searchResults.map((result, index) => (
           <SearchResult key={index} data={result} />
         ))}
+        {isSearching && (<>loading...</>)}
       </Stack>
     </div>
   );
