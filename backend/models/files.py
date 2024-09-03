@@ -99,6 +99,8 @@ class FileSchemaWithText(FileSchema):
 class DocumentStatus(str, Enum):
     unprocessed = "unprocessed"
     completed = "completed"
+    summarization_completed = "summarization_completed"
+    embeddings_completed = "embeddings_completed"
     stage3 = "stage3"
     stage2 = "stage2"
     stage1 = "stage1"
@@ -118,5 +120,9 @@ def docstatus_index(docstatus: DocumentStatus) -> int:
             return 2
         case DocumentStatus.stage3:
             return 3
+        case DocumentStatus.embeddings_completed:
+            return 4
+        case DocumentStatus.summarization_completed:
+            return 5
         case DocumentStatus.completed:
             return 1000
