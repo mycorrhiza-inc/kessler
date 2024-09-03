@@ -4,7 +4,7 @@ services:
     hostname: "app.kessler.xyz"
     build:
       context: ./frontend
-      dockerfile: ./Dockerfile
+      dockerfile: ./Dockerfile-dev
     env_file:
       - config/global.env
     volumes:
