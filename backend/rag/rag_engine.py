@@ -12,6 +12,7 @@ import asyncio
 
 from models.chats import ChatRole, KeChatMessage, sanitzie_chathistory_llamaindex
 from rag.llamaindex import get_llm_from_model_str
+from rag.rag_utils import LLMUtils
 from vecstore.search import search
 
 import logging
@@ -97,23 +98,10 @@ class KeRagEngine:
         if isinstance(llm, str):
             llm = get_llm_from_model_str(llm)
         self.llm = llm
+        self.llm_utils = LLMUtils(llm)
 
     async def achat_basic(self, chat_history: List[KeChatMessage]) -> KeChatMessage:
-        llama_chat_history = sanitzie_chathistory_llamaindex(chat_history)
-        response = await self.llm.achat(llama_chat_history)
-        str_response = str(response)
-
-        def remove_prefixes(input_string: str) -> str:
-            prefixes = ["assistant: "]
-            for prefix in prefixes:
-                if input_string.startswith(prefix):
-                    input_string = input_string[
-                        len(prefix) :
-                    ]  # 10 is the length of "assistant: "
-            return input_string
-
-        str_response = remove_prefixes(str_response)
-        return KeChatMessage(role=ChatRole.assistant, content=str_response)
+        return await self.llm_utils.achat(chat_history)
 
     async def does_chat_need_query(self, chat_history: List[KeChatMessage]) -> bool:
         does_chat_need_query = 'Please determine if you need to query a vector database of relevant documents to answer the user. Answer with only a "yes" or "no".'

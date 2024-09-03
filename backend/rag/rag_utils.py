@@ -42,6 +42,8 @@ def strip_links_and_tables(markdown_text):
 )
 class LLMUtils:
     def __init__(self, llm: Optional[Any]):
+        if llm == "":
+            llm = None
         if llm is None:
             llm = "llama-70b"
         if isinstance(llm, str):
@@ -49,16 +51,33 @@ class LLMUtils:
 
         self.llm = llm
 
+    async def achat(self, chat_history: Any) -> Any:
+        llama_chat_history = sanitzie_chathistory_llamaindex(chat_history)
+        response = await self.llm.achat(llama_chat_history)
+        str_response = str(response)
+
+        def remove_prefixes(input_string: str) -> str:
+            prefixes = ["assistant: "]
+            for prefix in prefixes:
+                if input_string.startswith(prefix):
+                    input_string = input_string[
+                        len(prefix) :
+                    ]  # 10 is the length of "assistant: "
+            return input_string
+
+        str_response = remove_prefixes(str_response)
+        return KeChatMessage(role=ChatRole.assistant, content=str_response)
+
     async def summarize_single_chunk(self, markdown_text: str) -> str:
         summarize_prompt = "Make sure to provide a well researched summary of the text provided by the user, if it appears to be the summary of a larger document, just summarize the section provided."
         summarize_message = KeChatMessage(
             role=ChatRole.assistant, content=summarize_prompt
         )
         text_message = KeChatMessage(role=ChatRole.user, content=markdown_text)
-        summary = await self.llm.achat(
+        summary = await self.achat(
             sanitzie_chathistory_llamaindex([summarize_message, text_message])
         )
-        return summary
+        return summary.content
 
     async def summarize_mapreduce(
         self, markdown_text: str, max_tokensize: int = 8096
@@ -75,7 +94,7 @@ class LLMUtils:
         final_summary = await self.llm.achat(
             [cohere_message, combined_summaries_prompt]
         )
-        return final_summary
+        return final_summary.content
 
 
 # Tests
