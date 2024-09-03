@@ -1,8 +1,11 @@
 import re
 from typing import Any, Optional
 import pytest
+from rag.SemanticSplitter import split_by_max_tokensize
 from rag.llamaindex import get_llm_from_model_str
 from models.chats import KeChatMessage, ChatRole, sanitzie_chathistory_llamaindex
+
+import asyncio
 
 
 def strip_links_and_tables(markdown_text):
@@ -47,7 +50,7 @@ class LLMUtils:
         self.llm = llm
 
     async def summarize_single_chunk(self, markdown_text: str) -> str:
-        summarize_prompt = f"Make sure to provide a well researched summary of the "
+        summarize_prompt = "Make sure to provide a well researched summary of the text provided by the user, if it appears to be the summary of a larger document, just summarize the section provided."
         summarize_message = KeChatMessage(
             role=ChatRole.assistant, content=summarize_prompt
         )
@@ -56,6 +59,23 @@ class LLMUtils:
             sanitzie_chathistory_llamaindex([summarize_message, text_message])
         )
         return summary
+
+    async def summarize_mapreduce(
+        self, markdown_text: str, max_tokensize: int = 8096
+    ) -> str:
+        splits = split_by_max_tokensize(markdown_text, max_tokensize)
+        if len(splits) == 1:
+            return await self.summarize_single_chunk(markdown_text)
+        summaries = await asyncio.gather(
+            *[self.summarize_single_chunk(chunk) for chunk in splits]
+        )
+        coherence_prompt = "Please rewrite the following list of summaries of chunks of the document into a final summary of similar length that incorperates all the details present in the chunks"
+        cohere_message = KeChatMessage(ChatRole.assistant, coherence_prompt)
+        combined_summaries_prompt = KeChatMessage(ChatRole.user, "\n".join(summaries))
+        final_summary = await self.llm.achat(
+            [cohere_message, combined_summaries_prompt]
+        )
+        return final_summary
 
 
 # Tests
