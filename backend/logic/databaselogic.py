@@ -1,7 +1,14 @@
+from uuid import UUID
 from pydantic import BaseModel
 from typing import Optional, Any, List
 from advanced_alchemy.filters import SearchFilter, CollectionFilter
-from models.files import DocumentStatus, docstatus_index, FileSchema
+from models.files import (
+    DocumentStatus,
+    FileModel,
+    FileRepository,
+    docstatus_index,
+    FileSchema,
+)
 
 
 class QueryData(BaseModel):
@@ -77,3 +84,11 @@ def filters_docstatus_processing(
             valid_values.append(status.value)
 
     return [CollectionFilter(field_name="stage", values=valid_values)]
+
+
+async def get_files_from_uuids(
+    files_repo: FileRepository, uuid_list: List[UUID]
+) -> List[FileModel]:
+    uuid_filter = CollectionFilter(field_name="id", values=uuid_list)
+    file_models = await files_repo.list(uuid_filter)
+    return file_models
