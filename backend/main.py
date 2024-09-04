@@ -72,7 +72,7 @@ async def provide_limit_offset_pagination(
 cors_config = CORSConfig(allow_origins=["*"])
 
 api_router = Router(
-    path="/api",
+    path="/api/v1",
     route_handlers=[
         FileController,
         RagController,

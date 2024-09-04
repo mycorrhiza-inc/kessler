@@ -22,7 +22,7 @@ export default function SearchApp() {
     setIsSearching(true);
     console.log(`searchhing for ${searchQuery}`);
     try {
-      const response = await axios.post("http://localhost/go/search", {
+      const response = await axios.post("http://localhost/api/v2/search", {
         query: searchQuery,
       });
       if (response.data.length === 0) {

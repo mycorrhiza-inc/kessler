@@ -32,6 +32,21 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 
+  go-backend:
+    build:
+      context: ./go-backend/
+      dockerfile: ./Dockerfile
+    command:
+      - "go"
+      - "run"
+      - "main.go"
+    expose:
+      - 4041 
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.go-backend.rule=PathPrefix(`/api/v2`) "
+      - "traefik.http.middlewares.test-stripprefix.stripprefix.prefixes=/api/v2"
+
   backend:
     build:
       context: ./backend
@@ -46,7 +61,7 @@ services:
       - ${VOLUMES_DIRECTORY:-./volumes}/files:/files
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=PathPrefix(`/api/`) || PathPrefix(`/schema/`)"
+      - "traefik.http.routers.backend.rule=PathPrefix(`/api/v1`) || PathPrefix(`/schema/`)"
     command:
       - "uvicorn"
       - "main:app"
