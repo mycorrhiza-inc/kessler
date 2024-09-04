@@ -1,4 +1,3 @@
-import Hero from "@/components/supabasetutorial/hero";
 import ConnectSupabaseSteps from "@/components/supabasetutorial/tutorial/connect-supabase-steps";
 import SignUpUserSteps from "@/components/supabasetutorial/tutorial/sign-up-user-steps";
 import { hasEnvVars } from "@/utils/supabase/check-env-vars";

@@ -6,6 +6,7 @@ from llama_index.core.llms import LLM
 from dataclasses import dataclass
 from typing import Optional, List, Union, Any, Tuple
 
+from logic.databaselogic import get_files_from_uuids
 import nest_asyncio
 import asyncio
 
@@ -78,8 +79,7 @@ async def convert_search_results_to_frontend_table(
         if include_text:
             text_list.append(result["entity"]["text"])
             # text_list.append(lemon_text)
-    uuid_filter = CollectionFilter(field_name="id", values=uuid_list)
-    file_models = await files_repo.list(uuid_filter)
+    file_models = await get_files_from_uuids(files_repo, uuid_list)
     file_results = list(map(model_to_schema, file_models))
     if include_text:
         for index in range(len(file_results)):

@@ -9,7 +9,37 @@ import logging
 
 import nltk
 
-logger = logging.getLogger(__name__)
+import tokenizers
+
+import math
+
+default_logger = logging.getLogger(__name__)
+logger = default_logger
+
+bert_tokenizer = tokenizers.Tokenizer.from_pretrained("bert-base-uncased")
+
+
+def split_by_max_tokensize(
+    text: str, max_tokensize: int, overlap: int = 5
+) -> List[str]:
+    tokenizer = bert_tokenizer
+    tokenlist = tokenizer.encode(text).ids
+    num_chunks = math.ceil(len(tokenlist) / max_tokensize)
+    chunk_size = math.ceil(
+        len(tokenlist) / num_chunks
+    )  # Takes in an integer $n$ and then outputs the nth token for use in a map call.
+
+    def make_index(token_id: int) -> str:
+        begin_index, end_index = (
+            chunk_size * token_id,
+            chunk_size * (token_id + 1) + overlap,
+        )
+        tokens = tokenlist[begin_index:end_index]
+        return_string = tokenizer.decode(tokens)
+        return return_string
+
+    chunk_ids = range(0, num_chunks - 1)
+    return list(map(make_index, chunk_ids))
 
 
 class SentenceCombination(TypedDict):
