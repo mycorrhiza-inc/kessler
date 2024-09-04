@@ -36,11 +36,18 @@
     rgb(var(--background-start-rgb));
 } */
 
+.standard-box {
+  padding: "15px";
+  border: "2px solid grey";
+  border-radius: "10px";
+  background-color: "red";
+  color: "blue";
+}
 :root { 
   --brand-yellow-rgb: 242, 209, 35;
 }
 b {
-  color: red
+  color: red;
 }
 @layer utilities {
   .text-balance {

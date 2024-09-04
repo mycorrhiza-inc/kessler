@@ -3,6 +3,7 @@ package search
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 )
 
@@ -11,6 +12,7 @@ type SearchRequest struct {
 }
 
 func HandleSearchRequest(w http.ResponseWriter, r *http.Request) {
+	log.Println("Received a search request")
 	// Create an instance of RequestData
 	var RequestData SearchRequest
 
@@ -24,6 +26,7 @@ func HandleSearchRequest(w http.ResponseWriter, r *http.Request) {
 
 	data, err := searchQuickwit(string(RequestData.Query))
 	if err != nil {
+		log.Fatalf("Error searching quickwit: %s", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -31,6 +34,7 @@ func HandleSearchRequest(w http.ResponseWriter, r *http.Request) {
 	respString, err := json.Marshal(data)
 
 	if err != nil {
+		log.Fatal("Error marshalling response data")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

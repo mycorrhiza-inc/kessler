@@ -298,7 +298,9 @@ async def process_file_raw(
                     "
                     )
         except Exception as e:
-            logger.error(f"Document errored out while processing stage: {current_stage.value}")
+            logger.error(
+                f"Document errored out while processing stage: {current_stage.value}"
+            )
             obj.stage = current_stage.value
             await files_repo.update(obj)
             await files_repo.session.commit()

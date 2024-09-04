@@ -1,5 +1,6 @@
-import { Card, Modal, ModalClose } from "@mui/joy";
+import { Card, Modal, ModalClose, ModalDialog } from "@mui/joy";
 import { useState } from "react";
+import ResultModal from "./ResultModal";
 type SearchFields = {
   id: string;
   name: string;
@@ -40,7 +41,10 @@ const SearchResult = ({ data }: SearchResultProps) => {
         onClose={() => setOpen(false)}
         sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}
       >
-        <div>Modal Contents</div>
+        <ModalDialog className="standard-box">
+          <ModalClose />
+          <ResultModal open={open} />
+        </ModalDialog>
       </Modal>
     </>
   );
