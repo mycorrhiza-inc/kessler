@@ -1,4 +1,5 @@
 from typing_extensions import Doc
+from models.encounters import AuthorSchema
 from rag import rag_engine
 from rag.llamaindex import get_llm_from_model_str
 from rag.rag_utils import LLMUtils, strip_links_and_tables
@@ -283,6 +284,20 @@ async def process_file_raw(
 
     async def assign_org_and_author():
         author_name = doc_metadata.get("author")
+        doc_date = doc_metadata.get("date")
+        author = await author_repo.get_by_name(author_name)
+        if author is None:
+            author = AuthorSchema(id=UUID(), name=author_name)
+        org_id = None
+        # Throw entire thing out and try prompting the llm to see if the document comes from an org or not.
+        if author.work_history and author.work_history.end_date is None:
+            org_id = author.work_history.org_id
+        obj.author_id = author.id
+        obj.org_id = org_id
+        return DocumentStatus.organization_assigned
+
+    async def scan_for_encounters():
+        return DocumentStatus.encounters_analyzed
 
     while True:
         if docstatus_index(current_stage) >= docstatus_index(stop_at):
@@ -311,7 +326,10 @@ async def process_file_raw(
                 case DocumentStatus.embeddings_completed:
                     current_stage = await summarize_document()
                 case DocumentStatus.summarization_completed:
-                    c
+                    current_stage = await assign_org_and_author()
+                case DocumentStatus.organization_assigned:
+                    current_stage = await scan_for_encounters()
+                case DocumentStatus.encounters_analyzed:
                     current_stage = DocumentStatus.completed
                 case _:
                     raise Exception(

@@ -52,6 +52,7 @@ class WorkHistory(PydanticBaseModel):
 class AuthorSchema(PydanticBaseModel):
     id: UUID
     name: str
+    current_org: Optional[UUID]
     work_history: WorkHistory
 
 
@@ -84,6 +85,7 @@ class OrganizationModel(UUIDAuditBase):
 class AuthorModel(UUIDAuditBase):
     __tablename__ = "author"
     name: Mapped[str]
+    current_org: Mapped[Optional[UUID]]
     work_history: Mapped[List["WorkHistoryModel"]]
 
 
