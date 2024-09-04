@@ -49,7 +49,7 @@ from logic.databaselogic import (
 
 class Organization(BaseModel):
     id: UUID
-    name : str
+    name: str
     description: str
     parent_org_id: Optional[UUID]
     author_names: List[str]  # Names that the organisation authors documents under
@@ -64,7 +64,7 @@ class Faction(BaseModel):
 
 class EncounterSchema(BaseModel):
     id: UUID
-    name : str
+    name: str
     created_at: datetime
     document_set: List[FileSchema]
     description: str
@@ -72,10 +72,20 @@ class EncounterSchema(BaseModel):
 
 
 class SeedEncounterData(BaseModel):
-    name : str
+    name: str
     description: Optional[str] = None
     query: Optional[QueryData] = None
     document_uuids: Optional[List[UUID]] = None
+
+
+def gen_org_description(org: Organization) -> str:
+    return f"Org: {org.name}\n{org.description}\n-----------------"
+
+
+def gen_faction_description(fac: Faction) -> str:
+    initial = f"Faction: {fac.name}\n{fac.description}"
+    org_descriptions = list(map(gen_org_description, fac.orgs))
+    return initial + "\n".join(org_descriptions)
 
 
 # TODO:
@@ -121,18 +131,30 @@ class EncounterController(Controller):
     ) -> EncounterSchema:
         return await self.refine_seed(files_repo, encounter)
 
+    async def refine_encounter_description(
+        self,
+        files_repo: FileRepository,
+        encounter: EncounterSchema,
+    ):
+        previous_description = encounter.description
+        summary_list = map(lambda x: x.summary, encounter.document_set)
+        org_descriptions = map(gen_faction_description, encounter.factions)
+
+        # Take the description and refine it.
+        refine_encounter_description_prompt = ""
+
     async def refine_seed(
         self, files_repo: FileRepository, encounter: EncounterSchema
     ) -> EncounterSchema:
         async def generate_encounter_description():
             # Take the document summaries, and the previous description if applicable and generate a new description for the encounter.
             encounter.description = lemon_text
+
         async def search_for_more_documents():
             # Generate search queries for more documents and add them to the document list.
+            generate_query = ""
 
-        async def generate_organisation_list():
             # Generate a list of orgs, include them all in 1 faction for now, the special "unknown" faction.
-
 
         if encounter.description == "":
             await generate_encounter_description()
