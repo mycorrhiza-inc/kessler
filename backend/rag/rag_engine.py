@@ -11,6 +11,7 @@ import nest_asyncio
 import asyncio
 
 from models.chats import ChatRole, KeChatMessage, sanitzie_chathistory_llamaindex
+from rag.SemanticSplitter import split_by_max_tokensize
 from rag.llamaindex import get_llm_from_model_str
 from rag.rag_utils import LLMUtils
 from vecstore.search import search
@@ -27,6 +28,7 @@ from uuid import UUID
 
 from advanced_alchemy.filters import SearchFilter, CollectionFilter
 
+import re
 
 from constants import lemon_text
 
@@ -58,6 +60,14 @@ query_str = (
 
 
 default_logger = logging.getLogger(__name__)
+
+
+def strip_links_and_tables(markdown_text):
+    # Remove markdown links
+    no_links = re.sub(r"\[.*?\]\(.*?\)", "", markdown_text)
+    # Remove markdown tables
+    no_tables = re.sub(r"\|.*?\|", "", no_links)
+    return no_tables
 
 
 async def convert_search_results_to_frontend_table(

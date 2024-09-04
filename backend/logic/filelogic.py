@@ -1,4 +1,5 @@
 from typing_extensions import Doc
+from rag import rag_engine
 from rag.llamaindex import get_llm_from_model_str
 from rag.rag_utils import LLMUtils, strip_links_and_tables
 from vecstore.docprocess import add_document_to_db
@@ -42,6 +43,8 @@ from util.file_io import S3FileManager
 # import base64
 
 from constants import OS_TMPDIR, OS_HASH_FILEDIR, OS_BACKUP_FILEDIR
+
+from rag.rag_engine import KeRagEngine
 
 
 async def add_file_raw(
@@ -176,8 +179,7 @@ async def process_file_raw(
     logger.info(obj.doctype)
     mdextract = MarkdownExtractor(logger, OS_TMPDIR, priority=priority)
     file_manager = S3FileManager(logger=logger)
-    llm = get_llm_from_model_str("llama70b")
-    llmutils = LLMUtils(llm)
+    rag_engine = KeRagEngine("llama70b")
     doc_metadata = json.loads(obj.mdata)
     # Move back to stage 1 after all files are in s3 to save bandwith
     file_path = file_manager.generate_local_filepath_from_hash(obj.hash)
@@ -275,9 +277,12 @@ async def process_file_raw(
 
     async def summarize_document():
         text = obj.english_text
-        summary = await llmutils.summarize_mapreduce(text)
+        summary = await rag_engine.summarize_mapreduce(text)
         obj.summary = summary
         return DocumentStatus.summarization_completed
+
+    async def assign_org_and_author():
+        author_name = doc_metadata.get("author")
 
     while True:
         if docstatus_index(current_stage) >= docstatus_index(stop_at):
@@ -306,6 +311,7 @@ async def process_file_raw(
                 case DocumentStatus.embeddings_completed:
                     current_stage = await summarize_document()
                 case DocumentStatus.summarization_completed:
+                    c
                     current_stage = DocumentStatus.completed
                 case _:
                     raise Exception(

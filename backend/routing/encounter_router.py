@@ -47,37 +47,6 @@ from logic.databaselogic import (
 )
 
 
-class Organization(BaseModel):
-    id: UUID
-    name: str
-    description: str
-    parent_org_id: Optional[UUID]
-    author_names: List[str]  # Names that the organisation authors documents under
-
-
-class Faction(BaseModel):
-    name: str
-    description: str
-    position_float: Optional[float] = None
-    orgs: List[Organization]
-
-
-class EncounterSchema(BaseModel):
-    id: UUID
-    name: str
-    created_at: datetime
-    document_set: List[FileSchema]
-    description: str
-    factions: List[Faction]
-
-
-class SeedEncounterData(BaseModel):
-    name: str
-    description: Optional[str] = None
-    query: Optional[QueryData] = None
-    document_uuids: Optional[List[UUID]] = None
-
-
 def gen_org_description(org: Organization) -> str:
     return f"Org: {org.name}\n{org.description}\n-----------------"
 

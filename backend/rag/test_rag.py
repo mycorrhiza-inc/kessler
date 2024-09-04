@@ -8,14 +8,6 @@ from models.chats import KeChatMessage, ChatRole, sanitzie_chathistory_llamainde
 import asyncio
 
 
-def strip_links_and_tables(markdown_text):
-    # Remove markdown links
-    no_links = re.sub(r"\[.*?\]\(.*?\)", "", markdown_text)
-    # Remove markdown tables
-    no_tables = re.sub(r"\|.*?\|", "", no_links)
-    return no_tables
-
-
 @pytest.mark.parametrize(
     "markdown_text, expected_output",
     [
