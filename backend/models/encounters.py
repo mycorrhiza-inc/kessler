@@ -49,24 +49,17 @@ class OrganizationSchema(PydanticBaseModel):
     current_authors: List[UUID]
 
 
-class WorkHistory(PydanticBaseModel):
-    start_date: datetime
-    end_date: Optional[datetime]
-    org_id: UUID
-    description: str
 
 
-class AuthorSchema(PydanticBaseModel):
+class IndividualSchema(PydanticBaseModel):
     id: UUID
     name: str
     current_org: Optional[UUID]
-    work_history: WorkHistory
 
 
 class Faction(PydanticBaseModel):
     name: str
     description: str
-    position_float: Optional[float] = None
     orgs: List[OrganizationSchema]
 
 
@@ -175,6 +168,12 @@ class RelationFilesAssociatedWithEvent(UUIDAuditBase):
     event_id: Mapped[UUID] = mapped_column(ForeignKey("event.id"))
 
 
+class SQLUtils:
+    def __init__(self, async_db_connection: AsyncSession):
+        self.db = async_db_connection
+
+    async def get_organizations_in_faction(self, faction_id: UUID):
+        
 # class OrganizationsInFaction(UUIDAuditBase):
 #     __tablename__ = "organizations_in_faction"
 #     faction_id: Mapped[UUID] = mapped_column(ForeignKey("faction.id"))
