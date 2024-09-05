@@ -31,6 +31,13 @@ import logging
 
 from enum import Enum
 
+from sqlalchemy import ForeignKey
+from sqlalchemy import Integer
+from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import relationship
+
 
 class OrganizationSchema(PydanticBaseModel):
     id: UUID
@@ -72,21 +79,45 @@ class EncounterSchema(PydanticBaseModel):
     factions: List[Faction]
 
 
+class FactionModel(UUIDAuditBase):
+    __tablename__ = "faction"
+    name: Mapped[str]
+    description: Mapped[str]
+
+
+class IndividualModel(UUIDAuditBase):
+    __tablename__ = "individual"
+    name: Mapped[str]
+
+
 class OrganizationModel(UUIDAuditBase):
     __tablename__ = "organization"
     name: Mapped[str]
     description: Mapped[str | None]
-    parent_org_id: Mapped[UUID | None]
-    org_type: Mapped[str | None]
-    pseudonames: Mapped[List[str]]
-    current_authors: Mapped[List[UUID]]
 
 
-class AuthorModel(UUIDAuditBase):
-    __tablename__ = "author"
-    name: Mapped[str]
-    current_org: Mapped[Optional[UUID]]
-    work_history: Mapped[List["WorkHistoryModel"]]
+class OrganisationsInFaction(UUIDAuditBase):
+    __tablename__ = "organisations_in_faction"
+    faction_id: Mapped[UUID] = mapped_column(ForeignKey("faction.id"))
+    org_id: Mapped[UUID] = mapped_column(ForeignKey("organisation.id"))
+
+
+class IndividualsInFaction(UUIDAuditBase):
+    __tablename__ = "individuals_in_faction"
+    faction_id: Mapped[UUID] = mapped_column(ForeignKey("faction.id"))
+    individual_id: Mapped[UUID] = mapped_column(ForeignKey("individual.id"))
+
+
+class FactionsInEncounter(UUIDAuditBase):
+    __tablename__ = "factions_in_encounter"
+    encounter_id: Mapped[UUID] = mapped_column(ForeignKey("encounter.id"))
+    faction_id: Mapped[UUID] = mapped_column(ForeignKey("faction.id"))
+
+
+class IndividualsCurrentlyAssociatedOrganization(UUIDAuditBase):
+    __tablename__ = "individuals_currently_associated_organization"
+    individual_id: Mapped[UUID] = mapped_column(ForeignKey("individual.id"))
+    org_id: Mapped[UUID] = mapped_column(ForeignKey("organization.id"))
 
 
 class WorkHistoryModel(UUIDAuditBase):
@@ -96,14 +127,6 @@ class WorkHistoryModel(UUIDAuditBase):
     org_id: Mapped[UUID]
     description: Mapped[str]
     author_id: Mapped[UUID]
-
-
-class FactionModel(UUIDAuditBase):
-    __tablename__ = "faction"
-    name: Mapped[str]
-    description: Mapped[str]
-    position_float: Mapped[Optional[float]]
-    orgs: Mapped[List[UUID]]
 
 
 class EncounterModel(UUIDAuditBase):
