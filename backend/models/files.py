@@ -11,6 +11,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from pydantic import Field, field_validator, TypeAdapter
 
+from uuid import UUID
+
 
 import json
 
@@ -33,6 +35,7 @@ class FileModel(UUIDAuditBase):
     mdata: Mapped[str | None]
     stage: Mapped[str | None]
     summary: Mapped[str | None]
+    organization_id: Mapped[UUID | None]
     short_summary: Mapped[str | None]
     original_text: Mapped[str | None]
     english_text: Mapped[str | None]
@@ -71,6 +74,7 @@ class FileSchema(PydanticBaseModel):
     stage: str | None = None
     short_summary: str | None = None
     summary: str | None = None
+    organization_id: UUID | None = None
     mdata: dict | None = None
     display_text: str | None = None
 
@@ -99,6 +103,10 @@ class FileSchemaWithText(FileSchema):
 class DocumentStatus(str, Enum):
     unprocessed = "unprocessed"
     completed = "completed"
+    encounters_analyzed = "encounters_analyzed"
+    organization_assigned = "organization_assigned"
+    summarization_completed = "summarization_completed"
+    embeddings_completed = "embeddings_completed"
     stage3 = "stage3"
     stage2 = "stage2"
     stage1 = "stage1"
@@ -118,5 +126,13 @@ def docstatus_index(docstatus: DocumentStatus) -> int:
             return 2
         case DocumentStatus.stage3:
             return 3
+        case DocumentStatus.embeddings_completed:
+            return 4
+        case DocumentStatus.summarization_completed:
+            return 5
+        case DocumentStatus.organization_assigned:
+            return 6
+        case DocumentStatus.encounters_analyzed:
+            return 7
         case DocumentStatus.completed:
             return 1000
