@@ -115,61 +115,121 @@ class EventModel(UUIDAuditBase):
 # ---------
 # Testing
 # Really stupid way of making tables, if getting errors when initiating the db, comment out all tables beneath this line, then uncomment and run again.
-class OrganizationsInFaction(UUIDAuditBase):
-    __tablename__ = "organizations_in_faction"
+class RelationOrganizationsInFaction(UUIDAuditBase):
+    __tablename__ = "relation_organizations_in_faction"
     faction_id: Mapped[UUID] = mapped_column(ForeignKey("faction.id"))
     organization_id: Mapped[UUID] = mapped_column(ForeignKey("organization.id"))
 
 
-class IndividualsInFaction(UUIDAuditBase):
-    __tablename__ = "individuals_in_faction"
+class RelationIndividualsInFaction(UUIDAuditBase):
+    __tablename__ = "relation_individuals_in_faction"
     faction_id: Mapped[UUID] = mapped_column(ForeignKey("faction.id"))
     individual_id: Mapped[UUID] = mapped_column(ForeignKey("individual.id"))
 
 
-class FactionsInEncounter(UUIDAuditBase):
-    __tablename__ = "factions_in_encounter"
+class RelationFactionsInEncounter(UUIDAuditBase):
+    __tablename__ = "relation_factions_in_encounter"
     encounter_id: Mapped[UUID] = mapped_column(ForeignKey("encounter.id"))
     faction_id: Mapped[UUID] = mapped_column(ForeignKey("faction.id"))
 
 
-class DocumentAuthoredByIndividual(UUIDAuditBase):
-    __tablename__ = "document_authored_by_individual"
+class RelationDocumentAuthoredByIndividual(UUIDAuditBase):
+    __tablename__ = "relation_document_authored_by_individual"
     document_id: Mapped[UUID] = mapped_column(ForeignKey("file.id"))
     individual_id: Mapped[UUID] = mapped_column(ForeignKey("individual.id"))
 
 
-class DocumentAssociatedWithOrganization(UUIDAuditBase):
-    __tablename__ = "document_associated_with_organization"
+class RelationDocumentAssociatedWithOrganization(UUIDAuditBase):
+    __tablename__ = "relation_document_associated_with_organization"
     document_id: Mapped[UUID] = mapped_column(ForeignKey("file.id"))
     organization_id: Mapped[UUID] = mapped_column(ForeignKey("organization.id"))
 
 
-class IndividualsCurrentlyAssociatedOrganization(UUIDAuditBase):
-    __tablename__ = "individuals_currently_associated_organization"
+class RelationIndividualsCurrentlyAssociatedOrganization(UUIDAuditBase):
+    __tablename__ = "relation_individuals_currently_associated_organization"
     individual_id: Mapped[UUID] = mapped_column(ForeignKey("individual.id"))
     organization_id: Mapped[UUID] = mapped_column(ForeignKey("organization.id"))
 
 
-class DocumentsInEncounter(UUIDAuditBase):
-    __tablename__ = "documents_in_encounter"
+class RelationDocumentsInEncounter(UUIDAuditBase):
+    __tablename__ = "relation_documents_in_encounter"
     document_id: Mapped[UUID] = mapped_column(ForeignKey("file.id"))
     encounter_id: Mapped[UUID] = mapped_column(ForeignKey("encounter.id"))
 
 
-class IndividualsAssociatedWithEvent(UUIDAuditBase):
-    __tablename__ = "individuals_associated_with_event"
+class RelationIndividualsAssociatedWithEvent(UUIDAuditBase):
+    __tablename__ = "relation_individuals_associated_with_event"
     individual_id: Mapped[UUID] = mapped_column(ForeignKey("individual.id"))
     event_id: Mapped[UUID] = mapped_column(ForeignKey("event.id"))
 
 
-class OrganizationsAssociatedWithEvent(UUIDAuditBase):
-    __tablename__ = "organizations_associated_with_event"
+class RelationOrganizationsAssociatedWithEvent(UUIDAuditBase):
+    __tablename__ = "relation_organizations_associated_with_event"
     organization_id: Mapped[UUID] = mapped_column(ForeignKey("organization.id"))
     event_id: Mapped[UUID] = mapped_column(ForeignKey("event.id"))
 
 
-class FilesAssociatedWithEvent(UUIDAuditBase):
-    __tablename__ = "files_associated_with_event"
+class RelationFilesAssociatedWithEvent(UUIDAuditBase):
+    __tablename__ = "relation_files_associated_with_event"
     file_id: Mapped[UUID] = mapped_column(ForeignKey("file.id"))
     event_id: Mapped[UUID] = mapped_column(ForeignKey("event.id"))
+
+
+# class OrganizationsInFaction(UUIDAuditBase):
+#     __tablename__ = "organizations_in_faction"
+#     faction_id: Mapped[UUID] = mapped_column(ForeignKey("faction.id"))
+#     organization_id: Mapped[UUID] = mapped_column(ForeignKey("organization.id"))
+#
+#
+# class IndividualsInFaction(UUIDAuditBase):
+#     __tablename__ = "individuals_in_faction"
+#     faction_id: Mapped[UUID] = mapped_column(ForeignKey("faction.id"))
+#     individual_id: Mapped[UUID] = mapped_column(ForeignKey("individual.id"))
+#
+#
+# class FactionsInEncounter(UUIDAuditBase):
+#     __tablename__ = "factions_in_encounter"
+#     encounter_id: Mapped[UUID] = mapped_column(ForeignKey("encounter.id"))
+#     faction_id: Mapped[UUID] = mapped_column(ForeignKey("faction.id"))
+#
+#
+# class DocumentAuthoredByIndividual(UUIDAuditBase):
+#     __tablename__ = "document_authored_by_individual"
+#     document_id: Mapped[UUID] = mapped_column(ForeignKey("file.id"))
+#     individual_id: Mapped[UUID] = mapped_column(ForeignKey("individual.id"))
+#
+#
+# class DocumentAssociatedWithOrganization(UUIDAuditBase):
+#     __tablename__ = "document_associated_with_organization"
+#     document_id: Mapped[UUID] = mapped_column(ForeignKey("file.id"))
+#     organization_id: Mapped[UUID] = mapped_column(ForeignKey("organization.id"))
+#
+#
+# class IndividualsCurrentlyAssociatedOrganization(UUIDAuditBase):
+#     __tablename__ = "individuals_currently_associated_organization"
+#     individual_id: Mapped[UUID] = mapped_column(ForeignKey("individual.id"))
+#     organization_id: Mapped[UUID] = mapped_column(ForeignKey("organization.id"))
+#
+#
+# class DocumentsInEncounter(UUIDAuditBase):
+#     __tablename__ = "documents_in_encounter"
+#     document_id: Mapped[UUID] = mapped_column(ForeignKey("file.id"))
+#     encounter_id: Mapped[UUID] = mapped_column(ForeignKey("encounter.id"))
+#
+#
+# class IndividualsAssociatedWithEvent(UUIDAuditBase):
+#     __tablename__ = "individuals_associated_with_event"
+#     individual_id: Mapped[UUID] = mapped_column(ForeignKey("individual.id"))
+#     event_id: Mapped[UUID] = mapped_column(ForeignKey("event.id"))
+#
+#
+# class OrganizationsAssociatedWithEvent(UUIDAuditBase):
+#     __tablename__ = "organizations_associated_with_event"
+#     organization_id: Mapped[UUID] = mapped_column(ForeignKey("organization.id"))
+#     event_id: Mapped[UUID] = mapped_column(ForeignKey("event.id"))
+#
+#
+# class FilesAssociatedWithEvent(UUIDAuditBase):
+#     __tablename__ = "files_associated_with_event"
+#     file_id: Mapped[UUID] = mapped_column(ForeignKey("file.id"))
+#     event_id: Mapped[UUID] = mapped_column(ForeignKey("event.id"))
