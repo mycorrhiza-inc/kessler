@@ -96,10 +96,16 @@ class OrganizationModel(UUIDAuditBase):
     description: Mapped[str | None]
 
 
+class EncounterModel(UUIDAuditBase):
+    __tablename__ = "encounter"
+    name: Mapped[str]
+    description: Mapped[str]
+
+
 class OrganisationsInFaction(UUIDAuditBase):
     __tablename__ = "organisations_in_faction"
     faction_id: Mapped[UUID] = mapped_column(ForeignKey("faction.id"))
-    org_id: Mapped[UUID] = mapped_column(ForeignKey("organisation.id"))
+    organization_id: Mapped[UUID] = mapped_column(ForeignKey("organisation.id"))
 
 
 class IndividualsInFaction(UUIDAuditBase):
@@ -117,22 +123,10 @@ class FactionsInEncounter(UUIDAuditBase):
 class IndividualsCurrentlyAssociatedOrganization(UUIDAuditBase):
     __tablename__ = "individuals_currently_associated_organization"
     individual_id: Mapped[UUID] = mapped_column(ForeignKey("individual.id"))
-    org_id: Mapped[UUID] = mapped_column(ForeignKey("organization.id"))
+    organization_id: Mapped[UUID] = mapped_column(ForeignKey("organization.id"))
 
 
-class WorkHistoryModel(UUIDAuditBase):
-    __tablename__ = "work_history"
-    start_date: Mapped[datetime]
-    end_date: Mapped[Optional[datetime]]
-    org_id: Mapped[UUID]
-    description: Mapped[str]
-    author_id: Mapped[UUID]
-
-
-class EncounterModel(UUIDAuditBase):
-    __tablename__ = "encounter"
-    name: Mapped[str]
-    created_at: Mapped[datetime]
-    document_set: Mapped[List[UUID]]
-    description: Mapped[str]
-    factions: Mapped[List[FactionModel]]
+class DocumentsInEncounter(UUIDAuditBase):
+    __tablename__ = "documents_in_encounter"
+    document_id: Mapped[UUID] = mapped_column(ForeignKey("file.id"))
+    encounter_id: Mapped[UUID] = mapped_column(ForeignKey("encounter.id"))
