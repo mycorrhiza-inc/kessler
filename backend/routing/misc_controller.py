@@ -28,6 +28,12 @@ class MiscController(Controller):
 
     dependencies = {"files_repo": Provide(provide_files_repo)}
 
+    @get(path="/misc/test")
+    async def basic_test(
+        self,
+    ) -> str:
+        return "Test Successful"
+
     @get(path="/misc/allowable_fields")
     async def get_metadata(
         self,
