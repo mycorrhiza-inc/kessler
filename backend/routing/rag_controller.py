@@ -113,7 +113,7 @@ class RagController(Controller):
         model_name = data.model
         validated_chat_history = validate_chat(data.chat_history)
         rag_engine = KeRagEngine(model_name)
-        result = await rag_engine.achat_basic(validated_chat_history)
+        result = await rag_engine.achat(validated_chat_history)
         return {"message": cm_to_dict(result)}
 
     @post(path="/rag/rag_chat")

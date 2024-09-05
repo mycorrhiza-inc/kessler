@@ -1,4 +1,8 @@
 from typing_extensions import Doc
+from models.encounters import AuthorSchema
+from rag import rag_engine
+from rag.llamaindex import get_llm_from_model_str
+from rag.rag_utils import LLMUtils, strip_links_and_tables
 from vecstore.docprocess import add_document_to_db
 import os
 from pathlib import Path
@@ -40,6 +44,8 @@ from util.file_io import S3FileManager
 # import base64
 
 from constants import OS_TMPDIR, OS_HASH_FILEDIR, OS_BACKUP_FILEDIR
+
+from rag.rag_engine import KeRagEngine
 
 
 async def add_file_raw(
@@ -174,6 +180,7 @@ async def process_file_raw(
     logger.info(obj.doctype)
     mdextract = MarkdownExtractor(logger, OS_TMPDIR, priority=priority)
     file_manager = S3FileManager(logger=logger)
+    rag_engine = KeRagEngine("llama70b")
     doc_metadata = json.loads(obj.mdata)
     # Move back to stage 1 after all files are in s3 to save bandwith
     file_path = file_manager.generate_local_filepath_from_hash(obj.hash)
@@ -262,10 +269,35 @@ async def process_file_raw(
 
         searchable_metadata = generate_searchable_metadata(doc_metadata)
         try:
-            add_document_to_db(obj.english_text, metadata=searchable_metadata)
+            # Added cleaning markdown for actually embedding the document
+            cleaned_text = strip_links_and_tables(obj.english_text)
+            add_document_to_db(cleaned_text, metadata=searchable_metadata)
         except Exception as e:
             raise Exception("Failure in adding document to vector database", e)
-        return DocumentStatus.completed
+        return DocumentStatus.embeddings_completed
+
+    async def summarize_document():
+        text = obj.english_text
+        summary = await rag_engine.summarize_mapreduce(text)
+        obj.summary = summary
+        return DocumentStatus.summarization_completed
+
+    async def assign_org_and_author():
+        author_name = doc_metadata.get("author")
+        doc_date = doc_metadata.get("date")
+        author = await author_repo.get_by_name(author_name)
+        if author is None:
+            author = AuthorSchema(id=UUID(), name=author_name)
+        org_id = None
+        # Throw entire thing out and try prompting the llm to see if the document comes from an org or not.
+        if author.work_history and author.work_history.end_date is None:
+            org_id = author.work_history.org_id
+        obj.author_id = author.id
+        obj.org_id = org_id
+        return DocumentStatus.organization_assigned
+
+    async def scan_for_encounters():
+        return DocumentStatus.encounters_analyzed
 
     while True:
         if docstatus_index(current_stage) >= docstatus_index(stop_at):
@@ -291,6 +323,14 @@ async def process_file_raw(
                     current_stage = await process_stage_two()
                 case DocumentStatus.stage3:
                     current_stage = await process_stage_three()
+                case DocumentStatus.embeddings_completed:
+                    current_stage = await summarize_document()
+                case DocumentStatus.summarization_completed:
+                    current_stage = await assign_org_and_author()
+                case DocumentStatus.organization_assigned:
+                    current_stage = await scan_for_encounters()
+                case DocumentStatus.encounters_analyzed:
+                    current_stage = DocumentStatus.completed
                 case _:
                     raise Exception(
                         "Document was incorrectly added to database, \
