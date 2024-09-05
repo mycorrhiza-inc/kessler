@@ -56,7 +56,11 @@ from constants import (
     REDIS_PRIORITY_DOCPROC_KEY,
     REDIS_BACKGROUND_DOCPROC_KEY,
 )
-from util.redis_utils import bulk_process_file_background, clear_file_queue, convert_model_to_results_and_push
+from util.redis_utils import (
+    bulk_process_file_background,
+    clear_file_queue,
+    convert_model_to_results_and_push,
+)
 
 redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
 
@@ -86,11 +90,11 @@ def push_to_queue(request: str, priority: bool):
     redis_client.rpush(pushkey, request)
 
 
-
 class DaemonState(BaseModel):
     enable_background_processing: Optional[bool] = None
-    stop_at_background_docprocessing : Optional[str] = None
+    stop_at_background_docprocessing: Optional[str] = None
     clear_queue: Optional[bool] = None
+
 
 class DaemonController(Controller):
     dependencies = {"files_repo": Provide(provide_files_repo)}
@@ -103,12 +107,12 @@ class DaemonController(Controller):
         regenerate_from: Optional[str] = None,
     ) -> None:
         if logger is None:
-            logger= default_logger
+            logger = default_logger
         logger.info("Beginning to process all files.")
         if regenerate_from is None:
             regenerate_from = "completed"
         regenerate_from = DocumentStatus(regenerate_from)
-        filters = querydata_to_filters_strict(data)         
+        filters = querydata_to_filters_strict(data)
         logger.info(filters)
         results = await files_repo.list(*filters)
 
@@ -139,7 +143,6 @@ class DaemonController(Controller):
             logger=request.logger,
             regenerate_from=regenerate_from,
         )
-                
 
     @post(path="/daemon/process_file/{file_id:uuid}")
     async def process_file_background(
@@ -159,6 +162,7 @@ class DaemonController(Controller):
             files=[obj],
             stop_at=stop_at,
         )
+
     @post(path="/daemon/process_all_files")
     async def process_all_background(
         self,
@@ -180,7 +184,6 @@ class DaemonController(Controller):
             logger=request.logger,
         )
 
-
     async def process_query_background_raw(
         self,
         files_repo: FileRepository,
@@ -189,7 +192,7 @@ class DaemonController(Controller):
         regenerate_from: Optional[str] = None,
         max_documents: Optional[int] = None,
         randomize: bool = False,
-        logger: Any = default_logger
+        logger: Any = default_logger,
     ) -> None:
         logger.info("Beginning to process all files.")
         if stop_at is None:
@@ -214,20 +217,16 @@ class DaemonController(Controller):
             logger=logger,
         )
 
-
     @post(path="/dangerous/daemon/control_background_processing_daemon")
-    async def control_background_processing_daemon(
-        self,
-        data : DaemonState
-    ) -> str:
+    async def control_background_processing_daemon(self, data: DaemonState) -> str:
         daemon_toggle = data.enable_background_processing
         stop_at = data.stop_at_background_docprocessing
         clear_queue = data.clear_queue
         if daemon_toggle is not None:
-            redis_client.set(REDIS_BACKGROUND_DAEMON_TOGGLE,int(daemon_toggle))
+            redis_client.set(REDIS_BACKGROUND_DAEMON_TOGGLE, int(daemon_toggle))
         if stop_at is not None:
             target = DocumentStatus(stop_at).value
-            redis_client.set(REDIS_BACKGROUND_PROCESSING_STOPS_AT,target )
+            redis_client.set(REDIS_BACKGROUND_PROCESSING_STOPS_AT, target)
         if clear_queue is not None:
             if clear_queue:
                 clear_file_queue()

@@ -15,7 +15,7 @@ import {
   Battle,
   Faction,
   Action,
-} from "@/interfaces";
+} from "@/utils/interfaces";
 
 import TestJuristictionViewer from "./JuristictionViewer";
 
