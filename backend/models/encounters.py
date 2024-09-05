@@ -45,7 +45,7 @@ class OrganizationSchema(PydanticBaseModel):
     description: Optional[str]
     org_type: str
     parent_org_id: Optional[UUID]
-    pseudonames: List[str]  # Names that the organisation authors documents under
+    pseudonames: List[str]  # Names that the organization authors documents under
     current_authors: List[UUID]
 
 
@@ -79,6 +79,7 @@ class EncounterSchema(PydanticBaseModel):
     factions: List[Faction]
 
 
+# Actual SQL Models
 class FactionModel(UUIDAuditBase):
     __tablename__ = "faction"
     name: Mapped[str]
@@ -111,10 +112,13 @@ class EventModel(UUIDAuditBase):
     description: Mapped[str | None]
 
 
-class OrganisationsInFaction(UUIDAuditBase):
-    __tablename__ = "organisations_in_faction"
+# ---------
+# Testing
+# Really stupid way of making tables, if getting errors when initiating the db, comment out all tables beneath this line, then uncomment and run again.
+class OrganizationsInFaction(UUIDAuditBase):
+    __tablename__ = "organizations_in_faction"
     faction_id: Mapped[UUID] = mapped_column(ForeignKey("faction.id"))
-    organization_id: Mapped[UUID] = mapped_column(ForeignKey("organisation.id"))
+    organization_id: Mapped[UUID] = mapped_column(ForeignKey("organization.id"))
 
 
 class IndividualsInFaction(UUIDAuditBase):
