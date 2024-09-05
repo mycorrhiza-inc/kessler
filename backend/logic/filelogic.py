@@ -2,7 +2,6 @@ from typing_extensions import Doc
 from models.encounters import AuthorSchema
 from rag import rag_engine
 from rag.llamaindex import get_llm_from_model_str
-from rag.rag_utils import LLMUtils, strip_links_and_tables
 from vecstore.docprocess import add_document_to_db
 import os
 from pathlib import Path
