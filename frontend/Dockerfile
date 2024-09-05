@@ -21,7 +21,8 @@ COPY --from=BUILD_IMAGE /app/tsconfig.json ./
 # COPY --from=BUILD_IMAGE tailwind.config.js ./
 COPY ./tailwind.config.ts ./
 COPY ./postcss.config.js ./
-COPY ./.env.local ./
+# FIXME: Bad Security, I am currently using a volume for this, this would push the .env.local file to our public dockerrepo
+# COPY ./.env.local ./
 COPY ./tsconfig.json ./
 
 EXPOSE 3000
