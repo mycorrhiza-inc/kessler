@@ -5,14 +5,12 @@ import (
 	// "os"
 	// "context"
 	// "github.com/jackc/pgx/v5"
-	"log"
+
 	"net/http"
+	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/mycorrhizainc/kessler/backend/search"
-)
-
-var (
-	addr = "localhost:4041"
 )
 
 // CORS middleware function
@@ -44,11 +42,18 @@ func main() {
 	// // close connection when server exits
 	// defer conn.Close(context.Background())
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("/search", search.HandleSearchRequest)
+	mux := mux.NewRouter()
+	mux.HandleFunc("/api/v2/search", search.HandleSearchRequest)
 
-	handler := corsMiddleware(mux)
+	muxWithMiddlewares := http.TimeoutHandler(mux, time.Second*3, "Timeout!")
+	handler := corsMiddleware(muxWithMiddlewares)
 
-	log.Printf("server is listening at %s", addr)
-	log.Fatal(http.ListenAndServe(addr, handler))
+	server := &http.Server{
+		Addr:         ":4041",
+		Handler:      handler,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+	}
+
+	server.ListenAndServe()
 }
