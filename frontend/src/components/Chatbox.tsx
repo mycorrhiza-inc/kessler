@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import { Dispatch, SetStateAction, useState } from "react";
 import { CloseIcon, HamburgerIcon } from "@/components/Icons";
 
-
 interface ChatBoxProps {
   chatVisible: boolean;
   setChatVisible: Dispatch<SetStateAction<boolean>>;
@@ -23,6 +22,7 @@ const ChatBox = ({ chatVisible, setChatVisible }: ChatBoxProps) => {
       transition={{ type: "spring", stiffness: 100, damping: 20 }} // Customize the animation
       data-isOpen={!chatVisible}
       style={{
+        zIndex: "9999",
         width: "900px",
         maxWidth: "90vw",
         minHeight: "40vh",
@@ -32,9 +32,8 @@ const ChatBox = ({ chatVisible, setChatVisible }: ChatBoxProps) => {
         borderRadius: "10px",
         border: "2px solid grey",
         padding: "10px",
-        zIndex: 1000,
         color: "black",
-        display:"none"
+        display: "none",
       }}
     >
       <div
