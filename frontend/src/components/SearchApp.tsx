@@ -1,21 +1,17 @@
 "use client";
 import axios from "axios";
-import SearchResult from "@/components/SearchResult";
 import { useState } from "react";
-import SearchBox, { CenteredFloatingSearhBox } from "../components/SearchBox";
+
+import  { CenteredFloatingSearhBox } from "@/components/SearchBox";
 import SearchResultBox from "@/components/SearchResultBox";
-import { Grid, Box, Stack } from "@mui/joy";
+import Chatbox from "@/components/Chatbox";
 
 export default function SearchApp() {
-  const iOS =
-    typeof navigator !== "undefined" &&
-    /iPad|iPhone|iPod/.test(navigator.userAgent);
-
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [chatVisible, setChatVisible] = useState(false);
   const [resultView, setResultView] = useState(false);
-  // ...
 
   const handleSearch = async () => {
     setSearchResults([]);
@@ -43,8 +39,8 @@ export default function SearchApp() {
     setResultView(true);
   };
 
-  /*
-   */
+  const chatMobileStyle = {};
+  const chatDesktopStyle = {};
 
   return (
     <main className="flex min-w-screen h-100vh justify-center">
@@ -52,12 +48,14 @@ export default function SearchApp() {
         handleSearch={handleSearch}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
+        setChatVisible={setChatVisible}
         inSearchSession={resultView}
       />
       <SearchResultBox
         searchResults={searchResults}
         isSearching={isSearching}
       />
+      <Chatbox chatVisible={chatVisible} setChatVisible={setChatVisible} />
     </main>
   );
 }
