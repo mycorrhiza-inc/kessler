@@ -37,7 +37,32 @@ const AdvancedSettings = ({
   queryOptions: extraProperties;
   setQueryOptions: Dispatch<SetStateAction<extraProperties>>;
 }) => {
-  return <p>Bob Lob Law</p>;
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setQueryOptions((prevOptions) => ({
+      ...prevOptions,
+      [name]: value,
+    }));
+  };
+
+  return (
+    <div>
+      {Object.keys(queryOptions).map((key) => (
+        <div key={key}>
+          <label htmlFor={key}>
+            {key.replace("match_", "").replace("_", " ")}
+          </label>
+          <Input
+            type="text"
+            id={key}
+            name={key}
+            value={queryOptions[key as keyof extraProperties]}
+            onChange={handleChange}
+          />
+        </div>
+      ))}
+    </div>
+  );
 };
 
 const SearchBox = ({
@@ -86,13 +111,14 @@ const SearchBox = ({
           ></Stack>
         </div>
         <div className="flex items-center color-white justify-center">
-          <Button
+          <span
             onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
+            style={{ cursor: "pointer", textDecoration: "underline" }}
           >
             {showAdvancedSettings
               ? "Hide advanced settings"
               : "Show advanced settings"}
-          </Button>
+          </span>
         </div>
         {showAdvancedSettings && (
           <Stack
