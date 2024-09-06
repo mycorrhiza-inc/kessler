@@ -80,7 +80,6 @@ const SearchBox = ({
           </Button>
         </Stack>
         <div className="flex items-center color-white justify-center">
-          advanced settings
           <Stack
             direction={{ xs: "column", sm: "row" }}
             spacing={{ xs: 1, sm: 2, md: 4 }}
@@ -122,7 +121,7 @@ const MinimizedSearchBox = ({
     setMinimized(false);
   };
   const handleChatClick = (
-    e: React.MouseEvent<HTMLButtonElement, MouseEvent>
+    e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
   ) => {
     e.stopPropagation(); // This will prevent the div's onClick from firing
     setChatVisible(true);
