@@ -51,28 +51,25 @@ class GPUComputeEndpoint:
     ) -> str:
         async with aiohttp.ClientSession() as session:
             for polls in range(max_polls):
-                try:
-                    await asyncio.sleep(poll_wait)
-                    async with session.get(request_check_url) as poll_response:
-                        poll_data = await poll_response.json()
-                        # self.logger.info(poll_data)
-                        if poll_data["status"] == "complete":
-                            self.logger.info(f"Processed document after {polls} polls.")
-                            return poll_data["markdown"]
-                        if poll_data["status"] == "error":
-                            e = poll_data["error"]
-                            self.logger.error(
-                                f"Pdf server encountered an error after {polls} : {e}"
-                            )
-                            raise Exception(
-                                f"Pdf server encountered an error after {polls} : {e}"
-                            )
-                        if poll_data["status"] != "processing":
-                            raise ValueError(
-                                f"PDF Processing Failed. Status was unrecognized {poll_data['status']} after {polls} polls."
-                            )
-                except Exception as e:
-                    raise e
+                await asyncio.sleep(poll_wait)
+                async with session.get(request_check_url) as poll_response:
+                    poll_data = await poll_response.json()
+                    # self.logger.info(poll_data)
+                    if poll_data["status"] == "complete":
+                        self.logger.info(f"Processed document after {polls} polls.")
+                        return poll_data["markdown"]
+                    if poll_data["status"] == "error":
+                        e = poll_data["error"]
+                        self.logger.error(
+                            f"Pdf server encountered an error after {polls} : {e}"
+                        )
+                        raise Exception(
+                            f"Pdf server encountered an error after {polls} : {e}"
+                        )
+                    if poll_data["status"] != "processing":
+                        raise ValueError(
+                            f"PDF Processing Failed. Status was unrecognized {poll_data['status']} after {polls} polls."
+                        )
             raise TimeoutError("Polling for marker API result timed out")
 
     async def transcribe_pdf_s3_uri(
