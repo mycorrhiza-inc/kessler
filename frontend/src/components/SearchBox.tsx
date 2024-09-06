@@ -34,17 +34,19 @@ const SearchBox = ({
             placeholder="Search"
             style={{ backgroundColor: "white" }}
           />
-          <Button
+          <button
             style={{
               backgroundColor: "--brand-yellow-rgb",
               color: "black",
+              borderRadius: "10px",
               border: "2px solid grey",
+              padding: "2px",
             }}
             className="max-w-60"
             onClick={handleSearch}
           >
             <SearchIcon />
-          </Button>
+          </button>
         </Stack>
         <div className="flex items-center color-white justify-center">
           advanced settings
@@ -68,26 +70,34 @@ const MinimizedSearchBox = ({
   const handleSearchClick = () => {
     setMinimized(false);
   };
-  const handleChatClick = (
-    e: React.MouseEvent<HTMLButtonElement, MouseEvent>
-  ) => {
+  const handleChatClick = (e: React.MouseEvent<HTMLElement, MouseEvent>) => {
     e.stopPropagation(); // This will prevent the div's onClick from firing
     setChatVisible(true);
     console.log("chat element clicked");
   };
   return (
     <Stack direction="row" spacing={2} className="flex items-center">
-      <div onClick={handleSearchClick}>
-        <SearchIcon />
-      </div>
-      <Divider orientation="vertical" />
-      <CommandIcon /> K
-      <Divider orientation="vertical" />
-      <CommandIcon /> J
-      <Divider orientation="vertical" />
-      <button onClick={handleChatClick}>
+      <Stack
+        direction="row"
+        spacing={2}
+        className="flex items-center"
+        onClick={handleChatClick}
+      >
         <ChatIcon />
-      </button>
+        <Divider orientation="vertical" />
+        <CommandIcon /> J
+      </Stack>
+      <Divider orientation="vertical" />
+      <Stack
+        direction="row"
+        spacing={2}
+        className="flex items-center"
+        onClick={handleSearchClick}
+      >
+        <CommandIcon /> K
+        <Divider orientation="vertical" />
+        <SearchIcon />
+      </Stack>
     </Stack>
   );
 };
@@ -175,7 +185,7 @@ export const CenteredFloatingSearhBox = ({
       className="parent"
     >
       {isMinimized ? (
-        <div onClick={clickMinimized}>
+        <div>
           <MinimizedSearchBox
             setMinimized={setIsMinimized}
             setChatVisible={setChatVisible}
