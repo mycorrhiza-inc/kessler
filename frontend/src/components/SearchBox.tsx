@@ -44,24 +44,48 @@ const AdvancedSettings = ({
       [name]: value,
     }));
   };
+  const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
 
   return (
-    <div>
-      {Object.keys(queryOptions).map((key) => (
-        <div key={key}>
-          <label htmlFor={key}>
-            {key.replace("match_", "").replace("_", " ")}
-          </label>
-          <Input
-            type="text"
-            id={key}
-            name={key}
-            value={queryOptions[key as keyof extraProperties]}
-            onChange={handleChange}
-          />
-        </div>
-      ))}
-    </div>
+    <>
+      <div className="flex items-center color-white justify-center">
+        <Stack direction={{ xs: "column" }} spacing={{ xs: 1, sm: 2, md: 4 }}>
+          <div className="flex items-center color-white justify-center">
+            <span
+              onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
+              style={{ cursor: "pointer", textDecoration: "underline" }}
+            >
+              {showAdvancedSettings
+                ? "Hide advanced settings"
+                : "Show advanced settings"}
+            </span>
+          </div>
+          {showAdvancedSettings && (
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={{ xs: 1, sm: 2, md: 4 }}
+            >
+              <div>
+                {Object.keys(queryOptions).map((key) => (
+                  <div key={key}>
+                    <label htmlFor={key}>
+                      {key.replace("match_", "").replace("_", " ")}
+                    </label>
+                    <Input
+                      type="text"
+                      id={key}
+                      name={key}
+                      value={queryOptions[key as keyof extraProperties]}
+                      onChange={handleChange}
+                    />
+                  </div>
+                ))}
+              </div>
+            </Stack>
+          )}
+        </Stack>
+      </div>
+    </>
   );
 };
 
@@ -71,7 +95,6 @@ const SearchBox = ({
   setSearchQuery,
   inSearchSession,
 }: SearchBoxProps) => {
-  const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
   const [queryOptions, setQueryOptions] =
     useState<extraProperties>(emptyExtraProperties);
 
@@ -104,33 +127,10 @@ const SearchBox = ({
             <SearchIcon />
           </Button>
         </Stack>
-        <div className="flex items-center color-white justify-center">
-          <Stack
-            direction={{ xs: "column", sm: "row" }}
-            spacing={{ xs: 1, sm: 2, md: 4 }}
-          ></Stack>
-        </div>
-        <div className="flex items-center color-white justify-center">
-          <span
-            onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
-            style={{ cursor: "pointer", textDecoration: "underline" }}
-          >
-            {showAdvancedSettings
-              ? "Hide advanced settings"
-              : "Show advanced settings"}
-          </span>
-        </div>
-        {showAdvancedSettings && (
-          <Stack
-            direction={{ xs: "column", sm: "row" }}
-            spacing={{ xs: 1, sm: 2, md: 4 }}
-          >
-            <AdvancedSettings
-              queryOptions={queryOptions}
-              setQueryOptions={setQueryOptions}
-            />
-          </Stack>
-        )}
+        <AdvancedSettings
+          setQueryOptions={setQueryOptions}
+          queryOptions={queryOptions}
+        />
       </Stack>
     </Box>
   );
