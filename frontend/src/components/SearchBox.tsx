@@ -17,6 +17,17 @@ const SearchBox = ({
   setSearchQuery,
   inSearchSession,
 }: SearchBoxProps) => {
+  const textRef = useRef<HTMLInputElement>(null);
+  const handleEnter = (event: any) => {
+    if (event.key === 'Enter') {
+      // Trigger function when "Enter" is pressed
+      handleSearch();
+    }
+  };
+
+  useEffect(() => {
+    textRef.current?.focus();
+  }, [])
   return (
     <Box>
       <Stack>
@@ -26,13 +37,15 @@ const SearchBox = ({
           spacing={2}
           className="flex items-center color-white justify-center"
         >
-          <Input
+          <input
+            type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            variant="outlined"
             className="w-full"
             placeholder="Search"
             style={{ backgroundColor: "white" }}
+            ref={textRef}
+            onKeyDown={handleEnter}
           />
           <button
             style={{
