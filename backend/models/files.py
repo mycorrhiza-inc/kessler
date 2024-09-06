@@ -35,10 +35,44 @@ class FileModel(UUIDAuditBase):
     mdata: Mapped[str | None]
     stage: Mapped[str | None]
     summary: Mapped[str | None]
-    organization_id: Mapped[UUID | None]
     short_summary: Mapped[str | None]
     original_text: Mapped[str | None]
     english_text: Mapped[str | None]
+
+
+# class FileModel(UUIDAuditBase):
+#     """Database representation of a file"""
+#
+#     __tablename__ = "file"
+#     url: Mapped[str | None]
+#     doctype: Mapped[str | None]
+#     name: Mapped[str | None]
+#     source: Mapped[str | None]
+#     hash: Mapped[str | None]
+#     stage: Mapped[str | None]
+#     summary: Mapped[str | None]
+#     short_summary: Mapped[str | None]
+
+
+class FileMetadataSource(UUIDAuditBase):
+    file_id: Mapped[UUID]
+    metadata_key: Mapped[str]
+    value: Mapped[str | None]
+
+
+class FileTextSource(UUIDAuditBase):
+    __tablename__ = "file_text_source"
+    file_id: Mapped[UUID]
+    is_original_text: Mapped[bool]
+    language: Mapped[str]
+    text: Mapped[str | None]
+
+
+# Write a SQL Migration script that will take the english text of every document, and add it as a entry in the file text source table, with a unique UUID, the UUID of the original file as the file ID, a true value for the original text and "en" as the language?
+# INSERT INTO file_text_source (id, file_id, is_original_text, language, text)
+# SELECT uuid_generate_v4(), id, true, 'en', english_text
+# FROM file
+# WHERE english_text IS NOT NULL;
 
 
 class FileRepository(SQLAlchemyAsyncRepository[FileModel]):

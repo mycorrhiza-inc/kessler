@@ -1,7 +1,7 @@
 import { Dispatch, SetStateAction, useState, useEffect, useRef } from "react";
 import { Input, Button, Grid, Stack, Divider, Box } from "@mui/joy";
 import { motion } from "framer-motion";
-import {CommandIcon, SearchIcon, ChatIcon} from "@/components/Icons";
+import { CommandIcon, SearchIcon, ChatIcon } from "@/components/Icons";
 
 interface SearchBoxProps {
   handleSearch: () => Promise<void>;
@@ -10,12 +10,45 @@ interface SearchBoxProps {
   inSearchSession: boolean;
 }
 
+interface extraProperties {
+  match_name: string;
+  match_source: string;
+  match_doctype: string;
+  match_stage: string;
+  match_docket_id: string;
+  match_document_class: string;
+  match_author: string;
+}
+const emptyExtraProperties: extraProperties = {
+  match_name: "",
+  match_source: "",
+  match_doctype: "",
+  match_stage: "",
+  match_docket_id: "",
+  match_document_class: "",
+  match_author: "",
+};
+
+const AdvancedSettings = ({
+  queryOptions,
+  setQueryOptions,
+}: {
+  queryOptions: extraProperties;
+  setQueryOptions: Dispatch<SetStateAction<extraProperties>>;
+}) => {
+  return <p>Bob Lob Law</p>;
+};
+
 const SearchBox = ({
   handleSearch,
   searchQuery,
   setSearchQuery,
   inSearchSession,
 }: SearchBoxProps) => {
+  const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
+  const [queryOptions, setQueryOptions] =
+    useState<extraProperties>(emptyExtraProperties);
+
   return (
     <Box>
       <Stack>
@@ -52,6 +85,26 @@ const SearchBox = ({
             spacing={{ xs: 1, sm: 2, md: 4 }}
           ></Stack>
         </div>
+        <div className="flex items-center color-white justify-center">
+          <Button
+            onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
+          >
+            {showAdvancedSettings
+              ? "Hide advanced settings"
+              : "Show advanced settings"}
+          </Button>
+        </div>
+        {showAdvancedSettings && (
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={{ xs: 1, sm: 2, md: 4 }}
+          >
+            <AdvancedSettings
+              queryOptions={queryOptions}
+              setQueryOptions={setQueryOptions}
+            />
+          </Stack>
+        )}
       </Stack>
     </Box>
   );
@@ -146,7 +199,7 @@ export const CenteredFloatingSearhBox = ({
         border: "2px solid grey",
         padding: "10px",
         zIndex: 1000,
-        color: "black"
+        color: "black",
       }}
       className="parent"
     >
