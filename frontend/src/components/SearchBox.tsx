@@ -1,13 +1,14 @@
 import { Dispatch, SetStateAction, useState, useEffect, useRef } from "react";
 import { Input, Button, Grid, Stack, Divider, Box } from "@mui/joy";
 import { motion } from "framer-motion";
-import {CommandIcon, SearchIcon, ChatIcon} from "@/components/Icons";
+import { CommandIcon, SearchIcon, ChatIcon } from "@/components/Icons";
 
 interface SearchBoxProps {
   handleSearch: () => Promise<void>;
   searchQuery: string;
   setSearchQuery: Dispatch<SetStateAction<string>>;
   inSearchSession: boolean;
+  setChatVisible: Dispatch<SetStateAction<boolean>>;
 }
 
 const SearchBox = ({
@@ -59,16 +60,34 @@ const SearchBox = ({
 
 const MinimizedSearchBox = ({
   setMinimized,
+  setChatVisible,
 }: {
   setMinimized: Dispatch<SetStateAction<boolean>>;
+  setChatVisible: Dispatch<SetStateAction<boolean>>;
 }) => {
+  const handleSearchClick = () => {
+    setMinimized(false);
+  };
+  const handleChatClick = (
+    e: React.MouseEvent<HTMLButtonElement, MouseEvent>
+  ) => {
+    e.stopPropagation(); // This will prevent the div's onClick from firing
+    setChatVisible(true);
+    console.log("chat element clicked");
+  };
   return (
     <Stack direction="row" spacing={2} className="flex items-center">
-      <SearchIcon />
+      <div onClick={handleSearchClick}>
+        <SearchIcon />
+      </div>
       <Divider orientation="vertical" />
       <CommandIcon /> K
       <Divider orientation="vertical" />
-      <ChatIcon />
+      <CommandIcon /> J
+      <Divider orientation="vertical" />
+      <button onClick={handleChatClick}>
+        <ChatIcon />
+      </button>
     </Stack>
   );
 };
@@ -77,6 +96,7 @@ export const CenteredFloatingSearhBox = ({
   handleSearch,
   searchQuery,
   setSearchQuery,
+  setChatVisible,
   inSearchSession,
 }: SearchBoxProps) => {
   const divRef = useRef<HTMLDivElement>(null);
@@ -94,6 +114,10 @@ export const CenteredFloatingSearhBox = ({
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
       event.preventDefault();
       setIsMinimized((prevState) => !prevState);
+    }
+    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "j") {
+      event.preventDefault();
+      setChatVisible((prevState) => !prevState);
     }
   };
 
@@ -127,8 +151,8 @@ export const CenteredFloatingSearhBox = ({
 
   return (
     <motion.div
-      ref={divRef}
       layout
+      ref={divRef}
       data-isOpen={!isMinimized}
       initial={{
         width: "20%",
@@ -146,13 +170,16 @@ export const CenteredFloatingSearhBox = ({
         border: "2px solid grey",
         padding: "10px",
         zIndex: 1000,
-        color: "black"
+        color: "black",
       }}
       className="parent"
     >
       {isMinimized ? (
         <div onClick={clickMinimized}>
-          <MinimizedSearchBox setMinimized={setIsMinimized} />
+          <MinimizedSearchBox
+            setMinimized={setIsMinimized}
+            setChatVisible={setChatVisible}
+          />
         </div>
       ) : (
         <SearchBox
@@ -160,6 +187,7 @@ export const CenteredFloatingSearhBox = ({
           setSearchQuery={setSearchQuery}
           handleSearch={handleSearch}
           inSearchSession={inSearchSession}
+          setChatVisible={setChatVisible}
         />
       )}
     </motion.div>
