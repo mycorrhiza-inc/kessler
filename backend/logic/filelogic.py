@@ -1,5 +1,5 @@
 from typing_extensions import Doc
-from models.encounters import AuthorSchema
+from models.encounters import IndividualSchema
 from rag import rag_engine
 from rag.llamaindex import get_llm_from_model_str
 from vecstore.docprocess import add_document_to_db
@@ -286,7 +286,7 @@ async def process_file_raw(
         doc_date = doc_metadata.get("date")
         author = await author_repo.get_by_name(author_name)
         if author is None:
-            author = AuthorSchema(id=UUID(), name=author_name)
+            author = IndividualSchema(id=UUID(), name=author_name)
         org_id = None
         # Throw entire thing out and try prompting the llm to see if the document comes from an org or not.
         if author.work_history and author.work_history.end_date is None:

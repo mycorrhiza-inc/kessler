@@ -30,6 +30,9 @@ services:
     # --tracing.otlp=true
     # --tracing.otlp.http=true
     # --tracing.otlp.http.endpoint=http://jaeger:4318/v1/traces
+    expose:
+      - 80
+      - 443
     ports:
       - "80:80"
       - "${PROXY_UI_PORT:-8083}:8080"
@@ -111,6 +114,29 @@ services:
       - 6379
     ports:
       - 6379:6379
+
+  mage:
+    image: mageai/mageai:latest
+    command: mage start mage-code
+    env_file:
+      - .env
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      USER_CODE_PATH: /mage-code
+      POSTGRES_DBNAME: ${POSTGRES_DBNAME:-postgres}
+      POSTGRES_SCHEMA: ${POSTGRES_SCHEMA:-public}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+    ports:
+      - 6789:6789
+    volumes:
+      - ./mage-code:/home/src/mage-code
+    restart: on-failure:5
+
   # database:
   #   image: pgvector/pgvector:pg16
   #   restart: always

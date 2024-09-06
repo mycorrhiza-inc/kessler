@@ -34,6 +34,16 @@ class MiscController(Controller):
     ) -> str:
         return "Test Successful"
 
+    @get(path="/misc/example_csv")
+    async def large_example_csv(
+        self,
+    ) -> str:
+        rows = ["id,name,age"]
+        for i in range(1, 1001):
+            rows.append(f"{i},Name {i},{20 + (i % 30)}")
+        csv_content = "\n".join(rows)
+        return csv_content
+
     @get(path="/misc/allowable_fields")
     async def get_metadata(
         self,
