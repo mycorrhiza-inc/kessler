@@ -1,6 +1,9 @@
 hidden_service
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+mage-code/.file_versions
+mage-code/.ssh_tunnel
+
 /.env
 server.htpasswd
 # Pycache and .pyc files 

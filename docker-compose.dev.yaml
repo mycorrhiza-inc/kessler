@@ -30,6 +30,9 @@ services:
     # --tracing.otlp=true
     # --tracing.otlp.http=true
     # --tracing.otlp.http.endpoint=http://jaeger:4318/v1/traces
+    expose:
+      - 80
+      - 443
     ports:
       - "80:80"
       - "${PROXY_UI_PORT:-8083}:8080"
@@ -114,14 +117,14 @@ services:
 
   mage:
     image: mageai/mageai:latest
-    command: mage start crystalography
+    command: mage start mage-code
     env_file:
       - .env
     build:
       context: .
       dockerfile: Dockerfile
     environment:
-      USER_CODE_PATH: /crystalography
+      USER_CODE_PATH: /mage-code
       POSTGRES_DBNAME: ${POSTGRES_DBNAME:-postgres}
       POSTGRES_SCHEMA: ${POSTGRES_SCHEMA:-public}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
@@ -131,7 +134,7 @@ services:
     ports:
       - 6789:6789
     volumes:
-      - ./mage-code/:/crystalography/
+      - ./mage-code:/home/src/mage-code
     restart: on-failure:5
 
   # database:
