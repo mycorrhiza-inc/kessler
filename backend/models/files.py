@@ -124,7 +124,7 @@ async def get_original_text_from_file_uuid(
     return None
 
 
-async def get_first_english_version(
+async def get_english_text_from_file_uuid(
     async_db_connection: AsyncSession, file_id: UUID
 ) -> FileTextSchema | None:
     result = await async_db_connection.execute(
@@ -152,6 +152,8 @@ async def get_first_english_version(
 # SELECT uuid_generate_v4(), id, true, 'en', english_text
 # FROM file
 # WHERE english_text IS NOT NULL;
+
+# SQLAlchemyAsyncRepository
 
 
 class FileRepository(SQLAlchemyAsyncRepository[FileModel]):

@@ -18,8 +18,7 @@ from models.files import (
     FileModel,
     FileRepository,
     FileSchema,
-    FileSchemaWithText,
-    provide_files_repo,
+    FileTextSchema,
     DocumentStatus,
     docstatus_index,
     model_to_schema,
@@ -44,7 +43,7 @@ from util.file_io import S3FileManager
 
 from constants import OS_TMPDIR, OS_HASH_FILEDIR, OS_BACKUP_FILEDIR
 
-from rag.rag_engine import KeRagEngine
+from rag.rag_engine import KeRagEngine, strip_links_and_tables
 
 
 async def add_file_raw(
@@ -137,13 +136,14 @@ async def add_file_raw(
         )
         new_file = duplicate_file_obj
 
-    if process:
-        logger.info("Processing File")
-        # Removing the await here, SHOULD allow an instant return to the user, but also have python process the file in the background hopefully!
-        # TODO : It doesnt work, for now its fine and also doesnt compete with the daemon for resources. Fix later
-        # TODO : Add passthrough for low priority file processing with a daemon in the background
-        # since this is a sync main thread call, give it priority
-        await process_file_raw(new_file, files_repo, logger, None, True)
+    # TODO : Removing functionality during sql refactor
+    # if process:
+    #     logger.info("Processing File")
+    #     # Removing the await here, SHOULD allow an instant return to the user, but also have python process the file in the background hopefully!
+    #     # TODO : It doesnt work, for now its fine and also doesnt compete with the daemon for resources. Fix later
+    #     # TODO : Add passthrough for low priority file processing with a daemon in the background
+    #     # since this is a sync main thread call, give it priority
+    #     await process_file_raw(new_file, files_repo, logger, None, True)
 
     return new_file
 
@@ -185,6 +185,9 @@ async def process_file_raw(
     file_path = file_manager.generate_local_filepath_from_hash(obj.hash)
     if file_path is None:
         raise Exception(f"File Must Not exist for hash {obj.hash}")
+    connection = files_repo.
+    document_texts = 
+    english_text = ""
 
     response_code, response_message = (
         500,
@@ -194,6 +197,7 @@ async def process_file_raw(
     # TODO: Replace with pydantic validation
 
     async def process_stage_one():
+        document_texts = []
         # FIXME: Change to deriving the filepath from the uri.
         # This process might spit out new metadata that was embedded in the document, ignoring for now
         logger.info("Sending async request to pdf file.")
@@ -213,33 +217,47 @@ async def process_file_raw(
         )
         assert isinstance(processed_original_text, str)
         logger.info("Backed up markdown text")
-        if obj.lang == "en":
-            # Write directly to the english text box if
-            # original text is identical to save space.
-            obj.english_text = processed_original_text
-            # Skip translation stage if text already english.
-            return DocumentStatus.stage3
-        else:
-            obj.original_text = processed_original_text
-            return DocumentStatus.stage2
+        original_doc_text = FileTextSchema(
+            file_id=obj.id,
+            is_original_text=True,
+            language=obj.lang,
+            text=processed_original_text,
+        )
+        document_texts.append(original_doc_text)
 
     # text conversion
     async def process_stage_two():
-        if obj.lang != "en":
-            try:
-                processed_english_text = mdextract.convert_text_into_eng(
-                    obj.original_text, obj.lang
-                )
-                obj.english_text = processed_english_text
-            except Exception as e:
-                raise Exception(
-                    "failure in stage 2: \ndocument was unable to be translated to english.",
-                    e,
-                )
-        else:
-            raise ValueError(
-                "failure in stage 2: \n Code is in an unreachable state, a document cannot be english and not english",
+        def filter_out_unoriginal(x: FileTextSchema) -> bool:
+            return x.is_original_text
+
+        document_texts[:] = filter(filter_out_unoriginal, document_texts)
+
+        if len(document_texts) == 0:
+            raise Exception(
+                "No text found in document, even though text extraction was completed"
             )
+        if document_texts[0].language == "en":
+            english_text = document_texts[0].text
+            return DocumentStatus.stage3
+        text = document_texts[0].text
+        lang = document_texts[0].language
+        try:
+            processed_english_text = mdextract.convert_text_into_eng(
+                file_text=text, lang=lang
+            )
+        except Exception as e:
+            raise Exception(
+                "failure in stage 2: \ndocument was unable to be translated to english.",
+                e,
+            )
+        translated_text = FileTextSchema(
+            file_id=obj.id,
+            is_original_text=False,
+            language="en",
+            text=processed_english_text,
+        )
+        document_texts.append(translated_text)
+        english_text = processed_english_text
         return DocumentStatus.stage3
 
     # TODO: Replace with pydantic validation
@@ -298,19 +316,19 @@ async def process_file_raw(
     async def scan_for_encounters():
         return DocumentStatus.encounters_analyzed
 
+    async def cleanup(error: bool = False):
+        if error:
+            logger.error(
+                f"Document errored out while processing stage: {current_stage.value}"
+            )
+        obj.stage = current_stage.value
+        await files_repo.update(obj)
+        await files_repo.session.commit()
+        return None
+
     while True:
         if docstatus_index(current_stage) >= docstatus_index(stop_at):
-            response_code, response_message = (
-                200,
-                "Document Fully Processed.",
-            )
-            logger.info(current_stage.value)
-            obj.stage = current_stage.value
-            logger.info(response_code)
-            logger.info(response_message)
-            await files_repo.update(obj)
-            await files_repo.session.commit()
-            return None
+            await cleanup(False)
         try:
             match current_stage:
                 case DocumentStatus.unprocessed:
@@ -337,10 +355,5 @@ async def process_file_raw(
                     "
                     )
         except Exception as e:
-            logger.error(
-                f"Document errored out while processing stage: {current_stage.value}"
-            )
-            obj.stage = current_stage.value
-            await files_repo.update(obj)
-            await files_repo.session.commit()
+            await cleanup(error=True)
             raise e
