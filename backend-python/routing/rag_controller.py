@@ -35,10 +35,7 @@ from models.utils import PydanticBaseModel as BaseModel
 
 
 from models.files import (
-    FileModel,
     FileRepository,
-    FileSchema,
-    model_to_schema,
     provide_files_repo,
 )
 
@@ -177,33 +174,3 @@ class RagController(Controller):
             max_results=max_results,
             include_text=True,
         )
-
-    # @post(path="/search/{fid:uuid}")
-    # async def search_collection_by_id(
-    #     self,
-    #     request: Request,
-    #     data: SearchQuery,
-    #     fid: UUID = Parameter(
-    #         title="File ID as hex string", description="File to retieve"
-    #     ),
-    # ) -> Any:
-    #     return "failure"
-
-    # @post(path="/dangerous/rag/regenerate_vector_database")
-    # async def regen_vecdb(
-    #     self,
-    #     files_repo: FileRepository,
-    # ) -> str:
-    #     await regenerate_vector_database_from_file_table()
-    #     return ""
-
-    # @post(path="/search/{fid:uuid}")
-    # async def search_collection_by_id(
-    #     self,
-    #     request: Request,
-    #     data: SearchQuery,
-    #     fid: UUID = Parameter(
-    #         title="File ID as hex string", description="File to retieve"
-    #     ),
-    # ) -> Any:
-    #     return "failure"

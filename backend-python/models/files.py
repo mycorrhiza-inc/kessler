@@ -1,6 +1,6 @@
 from typing import Annotated, Any, List
 
-from backend.common.file_schemas import FileSchema
+from common.file_schemas import FileSchema
 from litestar.contrib.sqlalchemy.base import UUIDAuditBase
 from litestar.contrib.sqlalchemy.repository import SQLAlchemyAsyncRepository
 
