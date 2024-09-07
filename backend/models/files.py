@@ -54,10 +54,10 @@ class FileModel(UUIDAuditBase):
 #     short_summary: Mapped[str | None]
 
 
-class FileMetadataSource(UUIDAuditBase):
-    file_id: Mapped[UUID]
-    metadata_key: Mapped[str]
-    value: Mapped[str | None]
+# class FileMetadataSource(UUIDAuditBase):
+#     file_id: Mapped[UUID]
+#     metadata_key: Mapped[str]
+#     value: Mapped[str | None]
 
 
 class FileTextSource(UUIDAuditBase):
