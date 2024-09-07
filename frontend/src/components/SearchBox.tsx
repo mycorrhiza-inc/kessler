@@ -1,7 +1,7 @@
 import { Dispatch, SetStateAction, useState, useEffect, useRef } from "react";
 import { Input, Button, Grid, Stack, Divider, Box } from "@mui/joy";
 import Tooltip from "@mui/joy/Tooltip";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion"; // Import necessary components from framer-motion
 import { CommandIcon, SearchIcon, ChatIcon } from "@/components/Icons";
 
 interface SearchBoxProps {
@@ -24,12 +24,12 @@ const extraPropertiesInformation = {
   match_name: {
     displayName: "Name",
     description: "The name associated with the search item.",
-    details: "Searches for items matching the provided name.",
+    details: "Searches for items approximately matching the title",
   },
   match_source: {
     displayName: "Source",
-    description: "The origin or source of the search item.",
-    details: "Filters results based on the source of the document or item.",
+    description: "The ",
+    details: "Filters results matching the provided source exactly.",
   },
   match_doctype: {
     displayName: "Document Type",
@@ -91,108 +91,43 @@ const AdvancedSettings = ({
                 : "Show advanced settings"}
             </span>
           </div>
-          {showAdvancedSettings && (
-            <Grid container spacing={2}>
-              {Object.keys(queryOptions).map((key, index) => {
-                const extraInfo = extraPropertiesInformation[key];
-                return (
-                  <Grid item xs={12} sm={6} key={key}>
-                    <Tooltip title={extraInfo.description} variant="solid">
-                      <p>{extraInfo.displayName}</p>
-                    </Tooltip>
-                    <Input
-                      type="text"
-                      id={key}
-                      name={key}
-                      value={queryOptions[key as keyof extraProperties]}
-                      onChange={handleChange}
-                      title={extraInfo.displayName}
-                    />
-                  </Grid>
-                );
-              })}
-            </Grid>
-          )}
+          <AnimatePresence initial={false}>
+            {showAdvancedSettings && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }} // Duration of the animation in seconds
+              >
+                <Grid container spacing={1}>
+                  {Object.keys(queryOptions).map((key, index) => {
+                    const extraInfo =
+                      extraPropertiesInformation[key as keyof extraProperties];
+                    return (
+                      <Grid item xs={12} sm={6} key={index}>
+                        <Tooltip title={extraInfo.description} variant="solid">
+                          <p>{extraInfo.displayName}</p>
+                        </Tooltip>
+                        <Input
+                          type="text"
+                          id={key}
+                          name={key}
+                          value={queryOptions[key as keyof extraProperties]}
+                          onChange={handleChange}
+                          title={extraInfo.displayName}
+                        />
+                      </Grid>
+                    );
+                  })}
+                </Grid>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </Stack>
       </div>
     </>
   );
 };
-{
-  /* <Stack */
-}
-{
-  /*   direction={{ xs: "column", sm: "row" }} */
-}
-{
-  /*   spacing={{ xs: 1, sm: 2, md: 4 }} */
-}
-{
-  /* > */
-}
-{
-  /*   <div> */
-}
-{
-  /*     {Object.keys(queryOptions).map((key) => { */
-}
-{
-  /*       const extraInfo = extraPropertiesInformation[key]; */
-}
-{
-  /*       return ( */
-}
-{
-  /*         <div key={key}> */
-}
-{
-  /*           <Tooltip title={extraInfo.description} variant="solid"> */
-}
-{
-  /*             <p>{extraInfo.displayName}</p> */
-}
-{
-  /*           </Tooltip> */
-}
-{
-  /*           <Input */
-}
-{
-  /*             type="text" */
-}
-{
-  /*             id={key} */
-}
-{
-  /*             name={key} */
-}
-{
-  /*             value={queryOptions[key as keyof extraProperties]} */
-}
-{
-  /*             onChange={handleChange} */
-}
-{
-  /*             title={extraInfo.displayName} */
-}
-{
-  /*           /> */
-}
-{
-  /*         </div> */
-}
-{
-  /*       ); */
-}
-{
-  /*     })} */
-}
-{
-  /*   </div> */
-}
-{
-  /* </Stack> */
-}
 
 const SearchBox = ({
   handleSearch,
@@ -205,7 +140,7 @@ const SearchBox = ({
 
   const textRef = useRef<HTMLInputElement>(null);
   const handleEnter = (event: any) => {
-    if (event.key === 'Enter') {
+    if (event.key === "Enter") {
       // Trigger function when "Enter" is pressed
       handleSearch();
     }
@@ -213,7 +148,7 @@ const SearchBox = ({
 
   useEffect(() => {
     textRef.current?.focus();
-  }, [])
+  }, []);
   return (
     <Box>
       <Stack>
@@ -223,7 +158,7 @@ const SearchBox = ({
           spacing={2}
           className="flex items-center color-white justify-center"
         >
-          <input
+          <Input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
