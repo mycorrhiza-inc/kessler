@@ -9,7 +9,6 @@ llama_index.vector_stores.milvus
 llama-index-embeddings-octoai
 
 
-lancedb
 
 uvicorn
 litestar
