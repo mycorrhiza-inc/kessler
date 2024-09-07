@@ -21,6 +21,8 @@ import logging
 
 from enum import Enum
 
+from sqlalchemy import select
+
 
 class FileModel(UUIDAuditBase):
     """Database representation of a file"""
@@ -66,6 +68,83 @@ class FileTextSource(UUIDAuditBase):
     is_original_text: Mapped[bool]
     language: Mapped[str]
     text: Mapped[str | None]
+
+
+class FileTextSchema(PydanticBaseModel):
+    file_id: UUID
+    is_original_text: bool
+    language: str
+    text: str
+
+
+async def get_texts_from_file_uuid(
+    async_db_connection: AsyncSession, file_id: UUID
+) -> List[FileTextSchema]:
+    result = await async_db_connection.execute(
+        select(
+            FileTextSource.text,
+            FileTextSource.language,
+            FileTextSource.is_original_text,
+        ).where(FileTextSource.file_id == file_id)
+    )
+    rows = result.fetchall()
+    return [
+        FileTextSchema(
+            file_id=file_id,
+            text=row.text,
+            language=row.language,
+            is_original_text=row.is_original_text,
+        )
+        for row in rows
+    ]
+
+
+async def get_original_text_from_file_uuid(
+    async_db_connection: AsyncSession, file_id: UUID
+) -> FileTextSchema | None:
+    result = await async_db_connection.execute(
+        select(
+            FileTextSource.text,
+            FileTextSource.language,
+            FileTextSource.is_original_text,
+        )
+        .where(
+            FileTextSource.file_id == file_id, FileTextSource.is_original_text == True
+        )
+        .limit(1)
+    )
+    row = result.fetchone()
+    if row:
+        return FileTextSchema(
+            file_id=file_id,
+            text=row.text,
+            language=row.language,
+            is_original_text=row.is_original_text,
+        )
+    return None
+
+
+async def get_first_english_version(
+    async_db_connection: AsyncSession, file_id: UUID
+) -> FileTextSchema | None:
+    result = await async_db_connection.execute(
+        select(
+            FileTextSource.text,
+            FileTextSource.language,
+            FileTextSource.is_original_text,
+        )
+        .where(FileTextSource.file_id == file_id, FileTextSource.language == "en")
+        .limit(1)
+    )
+    row = result.fetchone()
+    if row:
+        return FileTextSchema(
+            file_id=file_id,
+            text=row.text,
+            language=row.language,
+            is_original_text=row.is_original_text,
+        )
+    return None
 
 
 # Write a SQL Migration script that will take the english text of every document, and add it as a entry in the file text source table, with a unique UUID, the UUID of the original file as the file ID, a true value for the original text and "en" as the language?
