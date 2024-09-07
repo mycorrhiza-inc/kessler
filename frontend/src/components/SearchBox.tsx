@@ -97,8 +97,7 @@ const AdvancedSettings = ({
               spacing={{ xs: 1, sm: 2, md: 4 }}
             >
               <div>
-                {Object.keys(queryOptions).map(
-                  (key) => {
+                {Object.keys(queryOptions).map((key) => {
                   const extraInfo = extraPropertiesInformation[key];
                   return (
                     <div key={key}>
@@ -111,13 +110,11 @@ const AdvancedSettings = ({
                         name={key}
                         value={queryOptions[key as keyof extraProperties]}
                         onChange={handleChange}
-                        title={
-                              extraInfo.displayName
-                        }
+                        title={extraInfo.displayName}
                       />
                     </div>
-                  )
-                  )}}
+                  );
+                })}
               </div>
             </Stack>
           )}
