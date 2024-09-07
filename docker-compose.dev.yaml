@@ -69,7 +69,7 @@ services:
       - "traefik.http.routers.go-backend.rule=PathPrefix(`/api/v2`) "
       - "traefik.http.middlewares.test-stripprefix.stripprefix.prefixes=/api/v2"
 
-  backend:
+  python-backend:
     build:
       context: ./backend
       dockerfile: ./Dockerfile
