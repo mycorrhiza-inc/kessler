@@ -203,6 +203,17 @@ const SearchBox = ({
   const [queryOptions, setQueryOptions] =
     useState<extraProperties>(emptyExtraProperties);
 
+  const textRef = useRef<HTMLInputElement>(null);
+  const handleEnter = (event: any) => {
+    if (event.key === 'Enter') {
+      // Trigger function when "Enter" is pressed
+      handleSearch();
+    }
+  };
+
+  useEffect(() => {
+    textRef.current?.focus();
+  }, [])
   return (
     <Box>
       <Stack>
@@ -212,25 +223,29 @@ const SearchBox = ({
           spacing={2}
           className="flex items-center color-white justify-center"
         >
-          <Input
+          <input
+            type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            variant="outlined"
             className="w-full"
             placeholder="Search"
             style={{ backgroundColor: "white" }}
+            ref={textRef}
+            onKeyDown={handleEnter}
           />
-          <Button
+          <button
             style={{
               backgroundColor: "--brand-yellow-rgb",
               color: "black",
+              borderRadius: "10px",
               border: "2px solid grey",
+              padding: "2px",
             }}
             className="max-w-60"
             onClick={handleSearch}
           >
             <SearchIcon />
-          </Button>
+          </button>
         </Stack>
         <AdvancedSettings
           setQueryOptions={setQueryOptions}
@@ -259,9 +274,7 @@ const MinimizedSearchBox = ({
   const handleSearchClick = () => {
     setMinimized(false);
   };
-  const handleChatClick = (
-    e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
-  ) => {
+  const handleChatClick = (e: React.MouseEvent<HTMLElement, MouseEvent>) => {
     e.stopPropagation(); // This will prevent the div's onClick from firing
     setChatVisible(true);
     console.log("chat element clicked");
@@ -386,7 +399,7 @@ export const CenteredFloatingSearhBox = ({
       className="parent"
     >
       {isMinimized ? (
-        <div onClick={clickMinimized}>
+        <div>
           <MinimizedSearchBox
             setMinimized={setIsMinimized}
             setChatVisible={setChatVisible}
