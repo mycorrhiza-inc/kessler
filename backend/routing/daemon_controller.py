@@ -31,7 +31,6 @@ from typing import List, Optional, Dict, Any
 
 import logging
 from models import utils
-from logic.filelogic import process_fileid_raw
 import asyncio
 from litestar.contrib.sqlalchemy.base import UUIDBase
 
