@@ -36,12 +36,12 @@ export default function RootLayout({
                     <div className="flex items-center gap-2"></div>
                   </div>
                   <HeaderAuth />
+                  <ThemeSwitcher />
                 </div>
               </nav>
               <div className="flex flex-col gap-20 max-w-5xl p-5">
                 {children}
               </div>
-
             </div>
           </main>
         </ThemeProvider>

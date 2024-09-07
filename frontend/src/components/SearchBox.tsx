@@ -1,6 +1,7 @@
 import { Dispatch, SetStateAction, useState, useEffect, useRef } from "react";
 import { Input, Button, Grid, Stack, Divider, Box } from "@mui/joy";
-import { motion } from "framer-motion";
+import Tooltip from "@mui/joy/Tooltip";
+import { motion, AnimatePresence } from "framer-motion"; // Import necessary components from framer-motion
 import { CommandIcon, SearchIcon, ChatIcon } from "@/components/Icons";
 
 interface SearchBoxProps {
@@ -11,15 +12,135 @@ interface SearchBoxProps {
   setChatVisible: Dispatch<SetStateAction<boolean>>;
 }
 
+interface extraProperties {
+  match_name: string;
+  match_source: string;
+  match_doctype: string;
+  match_docket_id: string;
+  match_document_class: string;
+  match_author: string;
+}
+const extraPropertiesInformation = {
+  match_name: {
+    displayName: "Name",
+    description: "The name associated with the search item.",
+    details: "Searches for items approximately matching the title",
+  },
+  match_source: {
+    displayName: "Source",
+    description: "The ",
+    details: "Filters results matching the provided source exactly.",
+  },
+  match_doctype: {
+    displayName: "Document Type",
+    description: "The type or category of the document.",
+    details: "Searches for items that match the specified document type.",
+  },
+  match_docket_id: {
+    displayName: "Docket ID",
+    description: "The unique identifier for the docket.",
+    details: "Filters search results based on the docket ID.",
+  },
+  match_document_class: {
+    displayName: "Document Class",
+    description: "The classification or category of the document.",
+    details: "Searches for documents that fall under the specified class.",
+  },
+  match_author: {
+    displayName: "Author",
+    description: "The author of the document.",
+    details: "Searches for items created or written by the specified author.",
+  },
+};
+const emptyExtraProperties: extraProperties = {
+  match_name: "",
+  match_source: "",
+  match_doctype: "",
+  match_docket_id: "",
+  match_document_class: "",
+  match_author: "",
+};
+
+const AdvancedSettings = ({
+  queryOptions,
+  setQueryOptions,
+}: {
+  queryOptions: extraProperties;
+  setQueryOptions: Dispatch<SetStateAction<extraProperties>>;
+}) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setQueryOptions((prevOptions) => ({
+      ...prevOptions,
+      [name]: value,
+    }));
+  };
+  const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
+
+  return (
+    <>
+      <div className="flex items-center color-white justify-center">
+        <Stack direction={{ xs: "column" }} spacing={{ xs: 1, sm: 2, md: 4 }}>
+          <div className="flex items-center color-white justify-center">
+            <span
+              onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
+              style={{ cursor: "pointer", textDecoration: "underline" }}
+            >
+              {showAdvancedSettings
+                ? "Hide advanced settings"
+                : "Show advanced settings"}
+            </span>
+          </div>
+          <AnimatePresence initial={false}>
+            {showAdvancedSettings && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }} // Duration of the animation in seconds
+              >
+                <Grid container spacing={1}>
+                  {Object.keys(queryOptions).map((key, index) => {
+                    const extraInfo =
+                      extraPropertiesInformation[key as keyof extraProperties];
+                    return (
+                      <Grid item xs={12} sm={6} key={index}>
+                        <Tooltip title={extraInfo.description} variant="solid">
+                          <p>{extraInfo.displayName}</p>
+                        </Tooltip>
+                        <Input
+                          type="text"
+                          id={key}
+                          name={key}
+                          value={queryOptions[key as keyof extraProperties]}
+                          onChange={handleChange}
+                          title={extraInfo.displayName}
+                        />
+                      </Grid>
+                    );
+                  })}
+                </Grid>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </Stack>
+      </div>
+    </>
+  );
+};
+
 const SearchBox = ({
   handleSearch,
   searchQuery,
   setSearchQuery,
   inSearchSession,
 }: SearchBoxProps) => {
+  const [queryOptions, setQueryOptions] =
+    useState<extraProperties>(emptyExtraProperties);
+
   const textRef = useRef<HTMLInputElement>(null);
   const handleEnter = (event: any) => {
-    if (event.key === 'Enter') {
+    if (event.key === "Enter") {
       // Trigger function when "Enter" is pressed
       handleSearch();
     }
@@ -27,7 +148,7 @@ const SearchBox = ({
 
   useEffect(() => {
     textRef.current?.focus();
-  }, [])
+  }, []);
   return (
     <Box>
       <Stack>
@@ -37,7 +158,7 @@ const SearchBox = ({
           spacing={2}
           className="flex items-center color-white justify-center"
         >
-          <input
+          <Input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -61,13 +182,10 @@ const SearchBox = ({
             <SearchIcon />
           </button>
         </Stack>
-        <div className="flex items-center color-white justify-center">
-          advanced settings
-          <Stack
-            direction={{ xs: "column", sm: "row" }}
-            spacing={{ xs: 1, sm: 2, md: 4 }}
-          ></Stack>
-        </div>
+        <AdvancedSettings
+          setQueryOptions={setQueryOptions}
+          queryOptions={queryOptions}
+        />
       </Stack>
     </Box>
   );
@@ -80,6 +198,14 @@ const MinimizedSearchBox = ({
   setMinimized: Dispatch<SetStateAction<boolean>>;
   setChatVisible: Dispatch<SetStateAction<boolean>>;
 }) => {
+  const [isMacOS, setIsMacOS] = useState(false);
+
+  useEffect(() => {
+    if (navigator.platform.toUpperCase().indexOf("MAC") >= 0) {
+      setIsMacOS(true);
+    }
+  }, []);
+
   const handleSearchClick = () => {
     setMinimized(false);
   };
@@ -88,29 +214,39 @@ const MinimizedSearchBox = ({
     setChatVisible(true);
     console.log("chat element clicked");
   };
+
   return (
     <Stack direction="row" spacing={2} className="flex items-center">
-      <Stack
-        direction="row"
-        spacing={2}
-        className="flex items-center"
-        onClick={handleChatClick}
+      <Tooltip
+        title={
+          isMacOS ? (
+            <>
+              <CommandIcon /> K
+            </>
+          ) : (
+            "Ctrl K"
+          )
+        }
       >
-        <ChatIcon />
-        <Divider orientation="vertical" />
-        <CommandIcon /> J
-      </Stack>
-      <Divider orientation="vertical" />
-      <Stack
-        direction="row"
-        spacing={2}
-        className="flex items-center"
-        onClick={handleSearchClick}
+        <div onClick={handleSearchClick}>
+          <SearchIcon />
+        </div>
+      </Tooltip>
+      <Tooltip
+        title={
+          isMacOS ? (
+            <>
+              <CommandIcon /> J
+            </>
+          ) : (
+            "Ctrl J"
+          )
+        }
       >
-        <CommandIcon /> K
-        <Divider orientation="vertical" />
-        <SearchIcon />
-      </Stack>
+        <button onClick={handleChatClick}>
+          <ChatIcon />
+        </button>
+      </Tooltip>
     </Stack>
   );
 };

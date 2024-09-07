@@ -4,7 +4,8 @@ hidden_service
 mage-code/.file_versions
 mage-code/.ssh_tunnel
 
-/.env
+/.env 
+frontend/.env.local
 server.htpasswd
 # Pycache and .pyc files 
 **/__pycache__

@@ -38,11 +38,50 @@ class MiscController(Controller):
     async def large_example_csv(
         self,
     ) -> str:
+        first_names = [
+            "Liam",
+            "Noah",
+            "Oliver",
+            "Elijah",
+            "William",
+            "James",
+            "Benjamin",
+            "John",
+            "David",
+            "Wyatt",
+            "Matthew",
+            "Luke",
+            "Asher",
+            "Carter",
+            "Julian",
+            "Grayson",
+            "Leo",
+            "Jayden",
+            "Gabriel",
+            "Isaac",
+            "Lincoln",
+            "Anthony",
+            "Hudson",
+            "Dylan",
+            "Ezra",
+            "Thomas",
+            "Charles",
+            "Christopher",
+            "Jaxon",
+            "Maverick",
+            "Josiah",
+            "Isaiah",
+            "Andrew",
+            "Elias",
+            "Joshua",
+            "Nathan",
+        ]
         rows = ["id,name,age"]
         for i in range(1, 1001):
-            rows.append(f"{i},Name {i},{20 + (i % 30)}")
-        csv_content = "\n".join(rows)
-        return csv_content
+            name = first_names[i % len(first_names)]
+            age = 20 + (i % 30)
+            rows.append(f"{i},{name},{age}")
+        return "\n".join(rows)
 
     @get(path="/misc/allowable_fields")
     async def get_metadata(
