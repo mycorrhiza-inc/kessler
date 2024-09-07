@@ -54,7 +54,7 @@ services:
   #     - "14268:14268"
   #     - "4318:4318" # OpenTelemetry Default HTTP Port
   #     - "9411:9411"
-  go-backend:
+  backend-go:
     build:
       context: ./go-backend/
       dockerfile: ./Dockerfile
@@ -69,7 +69,7 @@ services:
       - "traefik.http.routers.go-backend.rule=PathPrefix(`/api/v2`) "
       - "traefik.http.middlewares.test-stripprefix.stripprefix.prefixes=/api/v2"
 
-  python-backend:
+  backend-python:
     build:
       context: ./backend
       dockerfile: ./Dockerfile
@@ -84,6 +84,33 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.backend.rule=PathPrefix(`/api/v1`) || PathPrefix(`/schema/`)"
+    command:
+      - "uvicorn"
+      - "main:app"
+      - "--host"
+      - "0.0.0.0"
+      - "--port"
+      - "5505"
+      - "--workers"
+      - "4"
+      - "--reload"
+    expose:
+      - 5505
+  document-alchemy-python:
+    build:
+      context: ./document-alchemy/
+      dockerfile: ./Dockerfile
+    env_file:
+      - config/global.env
+    environment:
+      - MILVUS_DEV_DIR=/tmp/milvus/
+    volumes:
+      - ./document-alchemy/:/app
+      - ${VOLUMES_DIRECTORY:-./volumes}/instance:/app/instance
+      - ${VOLUMES_DIRECTORY:-./volumes}/files:/files
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=PathPrefix(`/alchemy/v1/`) "
     command:
       - "uvicorn"
       - "main:app"
