@@ -1,5 +1,6 @@
 import { Dispatch, SetStateAction, useState, useEffect, useRef } from "react";
 import { Input, Button, Grid, Stack, Divider, Box } from "@mui/joy";
+import Tooltip from "@mui/joy/Tooltip";
 import { motion } from "framer-motion";
 import { CommandIcon, SearchIcon, ChatIcon } from "@/components/Icons";
 
@@ -15,16 +16,46 @@ interface extraProperties {
   match_name: string;
   match_source: string;
   match_doctype: string;
-  match_stage: string;
   match_docket_id: string;
   match_document_class: string;
   match_author: string;
 }
+const extraPropertiesInformation = {
+  match_name: {
+    displayName: "Name",
+    description: "The name associated with the search item.",
+    details: "Searches for items matching the provided name.",
+  },
+  match_source: {
+    displayName: "Source",
+    description: "The origin or source of the search item.",
+    details: "Filters results based on the source of the document or item.",
+  },
+  match_doctype: {
+    displayName: "Document Type",
+    description: "The type or category of the document.",
+    details: "Searches for items that match the specified document type.",
+  },
+  match_docket_id: {
+    displayName: "Docket ID",
+    description: "The unique identifier for the docket.",
+    details: "Filters search results based on the docket ID.",
+  },
+  match_document_class: {
+    displayName: "Document Class",
+    description: "The classification or category of the document.",
+    details: "Searches for documents that fall under the specified class.",
+  },
+  match_author: {
+    displayName: "Author",
+    description: "The author of the document.",
+    details: "Searches for items created or written by the specified author.",
+  },
+};
 const emptyExtraProperties: extraProperties = {
   match_name: "",
   match_source: "",
   match_doctype: "",
-  match_stage: "",
   match_docket_id: "",
   match_document_class: "",
   match_author: "",
@@ -66,20 +97,27 @@ const AdvancedSettings = ({
               spacing={{ xs: 1, sm: 2, md: 4 }}
             >
               <div>
-                {Object.keys(queryOptions).map((key) => (
-                  <div key={key}>
-                    <label htmlFor={key}>
-                      {key.replace("match_", "").replace("_", " ")}
-                    </label>
-                    <Input
-                      type="text"
-                      id={key}
-                      name={key}
-                      value={queryOptions[key as keyof extraProperties]}
-                      onChange={handleChange}
-                    />
-                  </div>
-                ))}
+                {Object.keys(queryOptions).map(
+                  (key) => {
+                  const extraInfo = extraPropertiesInformation[key];
+                  return (
+                    <div key={key}>
+                      <Tooltip title={extraInfo.description} variant="solid">
+                        <p>{extraInfo.displayName}</p>
+                      </Tooltip>
+                      <Input
+                        type="text"
+                        id={key}
+                        name={key}
+                        value={queryOptions[key as keyof extraProperties]}
+                        onChange={handleChange}
+                        title={
+                              extraInfo.displayName
+                        }
+                      />
+                    </div>
+                  )
+                  )}}
               </div>
             </Stack>
           )}
