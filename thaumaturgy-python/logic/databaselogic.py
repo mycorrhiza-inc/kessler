@@ -3,12 +3,11 @@ from pydantic import BaseModel
 from typing import Optional, Any, List
 from advanced_alchemy.filters import SearchFilter, CollectionFilter
 from models.files import (
-    DocumentStatus,
     FileModel,
     FileRepository,
-    docstatus_index,
-    FileSchema,
 )
+
+from common.file_schemas import FileSchema, docstatus_index, DocumentStatus
 
 
 class QueryData(BaseModel):
