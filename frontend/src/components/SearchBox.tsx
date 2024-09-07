@@ -92,37 +92,107 @@ const AdvancedSettings = ({
             </span>
           </div>
           {showAdvancedSettings && (
-            <Stack
-              direction={{ xs: "column", sm: "row" }}
-              spacing={{ xs: 1, sm: 2, md: 4 }}
-            >
-              <div>
-                {Object.keys(queryOptions).map((key) => {
-                  const extraInfo = extraPropertiesInformation[key];
-                  return (
-                    <div key={key}>
-                      <Tooltip title={extraInfo.description} variant="solid">
-                        <p>{extraInfo.displayName}</p>
-                      </Tooltip>
-                      <Input
-                        type="text"
-                        id={key}
-                        name={key}
-                        value={queryOptions[key as keyof extraProperties]}
-                        onChange={handleChange}
-                        title={extraInfo.displayName}
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-            </Stack>
+            <Grid container spacing={2}>
+              {Object.keys(queryOptions).map((key, index) => {
+                const extraInfo = extraPropertiesInformation[key];
+                return (
+                  <Grid item xs={12} sm={6} key={key}>
+                    <Tooltip title={extraInfo.description} variant="solid">
+                      <p>{extraInfo.displayName}</p>
+                    </Tooltip>
+                    <Input
+                      type="text"
+                      id={key}
+                      name={key}
+                      value={queryOptions[key as keyof extraProperties]}
+                      onChange={handleChange}
+                      title={extraInfo.displayName}
+                    />
+                  </Grid>
+                );
+              })}
+            </Grid>
           )}
         </Stack>
       </div>
     </>
   );
 };
+{
+  /* <Stack */
+}
+{
+  /*   direction={{ xs: "column", sm: "row" }} */
+}
+{
+  /*   spacing={{ xs: 1, sm: 2, md: 4 }} */
+}
+{
+  /* > */
+}
+{
+  /*   <div> */
+}
+{
+  /*     {Object.keys(queryOptions).map((key) => { */
+}
+{
+  /*       const extraInfo = extraPropertiesInformation[key]; */
+}
+{
+  /*       return ( */
+}
+{
+  /*         <div key={key}> */
+}
+{
+  /*           <Tooltip title={extraInfo.description} variant="solid"> */
+}
+{
+  /*             <p>{extraInfo.displayName}</p> */
+}
+{
+  /*           </Tooltip> */
+}
+{
+  /*           <Input */
+}
+{
+  /*             type="text" */
+}
+{
+  /*             id={key} */
+}
+{
+  /*             name={key} */
+}
+{
+  /*             value={queryOptions[key as keyof extraProperties]} */
+}
+{
+  /*             onChange={handleChange} */
+}
+{
+  /*             title={extraInfo.displayName} */
+}
+{
+  /*           /> */
+}
+{
+  /*         </div> */
+}
+{
+  /*       ); */
+}
+{
+  /*     })} */
+}
+{
+  /*   </div> */
+}
+{
+  /* </Stack> */
+}
 
 const SearchBox = ({
   handleSearch,
@@ -178,6 +248,14 @@ const MinimizedSearchBox = ({
   setMinimized: Dispatch<SetStateAction<boolean>>;
   setChatVisible: Dispatch<SetStateAction<boolean>>;
 }) => {
+  const [isMacOS, setIsMacOS] = useState(false);
+
+  useEffect(() => {
+    if (navigator.platform.toUpperCase().indexOf("MAC") >= 0) {
+      setIsMacOS(true);
+    }
+  }, []);
+
   const handleSearchClick = () => {
     setMinimized(false);
   };
@@ -188,19 +266,39 @@ const MinimizedSearchBox = ({
     setChatVisible(true);
     console.log("chat element clicked");
   };
+
   return (
     <Stack direction="row" spacing={2} className="flex items-center">
-      <div onClick={handleSearchClick}>
-        <SearchIcon />
-      </div>
-      <Divider orientation="vertical" />
-      <CommandIcon /> K
-      <Divider orientation="vertical" />
-      <CommandIcon /> J
-      <Divider orientation="vertical" />
-      <button onClick={handleChatClick}>
-        <ChatIcon />
-      </button>
+      <Tooltip
+        title={
+          isMacOS ? (
+            <>
+              <CommandIcon /> K
+            </>
+          ) : (
+            "Ctrl K"
+          )
+        }
+      >
+        <div onClick={handleSearchClick}>
+          <SearchIcon />
+        </div>
+      </Tooltip>
+      <Tooltip
+        title={
+          isMacOS ? (
+            <>
+              <CommandIcon /> J
+            </>
+          ) : (
+            "Ctrl J"
+          )
+        }
+      >
+        <button onClick={handleChatClick}>
+          <ChatIcon />
+        </button>
+      </Tooltip>
     </Stack>
   );
 };
