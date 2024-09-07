@@ -3,11 +3,15 @@ from pydantic import BaseModel
 from typing import Optional, Any, List
 from advanced_alchemy.filters import SearchFilter, CollectionFilter
 from models.files import (
-    DocumentStatus,
+    FileSchema,
     FileModel,
     FileRepository,
+)
+
+from common.file_schemas import (
+    DocumentStatus,
     docstatus_index,
-    FileSchema,
+    # FileSchema,
 )
 
 

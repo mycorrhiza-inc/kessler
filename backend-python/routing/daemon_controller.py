@@ -20,12 +20,11 @@ from models.utils import PydanticBaseModel as BaseModel
 
 from models.files import (
     provide_files_repo,
-    DocumentStatus,
-    docstatus_index,
     FileRepository,
 )
 
 
+from common.file_schemas import FileSchema, DocumentStatus, docstatus_index
 from typing import List, Optional, Dict, Any
 
 

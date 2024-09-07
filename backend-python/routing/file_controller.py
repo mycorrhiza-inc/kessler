@@ -37,13 +37,10 @@ from models.utils import PydanticBaseModel as BaseModel
 from models.files import (
     FileModel,
     FileRepository,
-    FileSchema,
-    FileSchemaWithText,
     provide_files_repo,
-    DocumentStatus,
-    docstatus_index,
     model_to_schema,
 )
+from common.file_schemas import FileSchema, DocumentStatus, docstatus_index
 
 from logic.docingest import DocumentIngester
 from logic.extractmarkdown import MarkdownExtractor
@@ -153,13 +150,7 @@ class FileController(Controller):
         file_id: UUID = Parameter(title="File ID", description="File to retieve"),
         original_lang: bool = False,
     ) -> str:
-        # Yes I know this is a redundant if, this looks much more readable imo.
-        if original_lang is True:
-            return "Feature delayed due to only supporting english documents."
-        obj = await files_repo.get(file_id)
-
-        markdown_text = obj.english_text
-
+        markdown_text = "Tell Nicole to actually write the markdown fetcher to use the new file text thing"
         if markdown_text == "":
             markdown_text = "Could not find Document Markdown Text"
         return markdown_text
