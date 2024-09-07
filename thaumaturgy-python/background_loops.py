@@ -1,16 +1,11 @@
 import re
 from logic.databaselogic import QueryData, querydata_to_filters_strict
 from models.files import (
-    FileSchema,
-    FileModel,
     provide_files_repo,
-    DocumentStatus,
-    docstatus_index,
-    FileRepository,
 )
 
+from common.file_schemas import DocumentStatus
 
-from typing import Optional, Dict, Tuple, List
 import logging
 from models import utils
 from logic.filelogic import process_fileid_raw

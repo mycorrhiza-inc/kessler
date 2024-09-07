@@ -14,12 +14,11 @@ from models.utils import PydanticBaseModel as BaseModel
 
 
 from models.files import (
-    FileSchema,
-    FileModel,
     provide_files_repo,
-    DocumentStatus,
-    docstatus_index,
     FileRepository,
+)
+from common.file_schemas import (
+    DocumentStatus,
 )
 
 
