@@ -1,4 +1,5 @@
 from uuid import UUID
+from common.encounter_schemas import IndividualSchema, OrganizationSchema
 from pydantic import BaseModel
 
 from pydantic import Field, field_validator, TypeAdapter
@@ -40,10 +41,22 @@ class FileSchema(BaseModel):
         return str(id)
 
 
-class FileSchemaWithText(FileSchema):
+class FileTextSchemaFull(BaseModel):
     id: Annotated[Any, Field(validate_default=True)]
-    original_text: str | None = None
-    english_text: str | None = None
+    url: str | None = None
+    hash: str | None = None
+    doctype: str | None = None
+    lang: str | None = None
+    name: str | None = None
+    source: str | None = None
+    stage: str | None = None
+    short_summary: str | None = None
+    summary: str | None = None
+    organization_id: UUID | None = None
+    mdata: dict | None = None
+    texts: List[FileTextSchema] | None = []
+    authors: List[IndividualSchema] | None = []
+    organization: OrganizationSchema | None = None
 
 
 class DocumentStatus(str, Enum):
