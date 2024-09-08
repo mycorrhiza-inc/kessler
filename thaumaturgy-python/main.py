@@ -41,16 +41,13 @@ cors_config = CORSConfig(allow_origins=["*"])
 
 api_router = Router(
     path="/thaumaturgy/api/v1",
-    route_handlers=[],
+    route_handlers=[DaemonController],
 )
 
 app = Litestar(
     on_startup=[on_startup],
     plugins=[utils.sqlalchemy_plugin],
     route_handlers=[api_router],
-    dependencies={
-        "limit_offset": Provide(provide_limit_offset_pagination),
-    },
     cors_config=cors_config,
     logging_config=logging_config,
     exception_handlers={Exception: plain_text_exception_handler},
