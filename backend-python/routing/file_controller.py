@@ -37,21 +37,13 @@ from models.utils import PydanticBaseModel as BaseModel
 from models.files import (
     FileModel,
     FileRepository,
-    FileSchema,
-    FileSchemaWithText,
     provide_files_repo,
-    DocumentStatus,
-    docstatus_index,
     model_to_schema,
 )
+from common.file_schemas import FileSchema, DocumentStatus, docstatus_index
 
-from logic.docingest import DocumentIngester
-from logic.extractmarkdown import MarkdownExtractor
 
 from typing import List, Optional, Dict, Annotated, Tuple, Any
-
-
-from logic.filelogic import add_file_raw, process_file_raw
 
 
 import json
@@ -153,13 +145,9 @@ class FileController(Controller):
         file_id: UUID = Parameter(title="File ID", description="File to retieve"),
         original_lang: bool = False,
     ) -> str:
-        # Yes I know this is a redundant if, this looks much more readable imo.
-        if original_lang is True:
-            return "Feature delayed due to only supporting english documents."
-        obj = await files_repo.get(file_id)
-
-        markdown_text = obj.english_text
-
+        raise Exception(
+            "Tell Nicole to actually write the markdown fetcher to use the new file text thing"
+        )
         if markdown_text == "":
             markdown_text = "Could not find Document Markdown Text"
         return markdown_text
@@ -296,6 +284,9 @@ class FileController(Controller):
         process: bool = True,
         override_hash: bool = False,
     ) -> str:
+        raise Exception(
+            "This should probably be forwarded to thaumaturgy, since ingest is covered with that asynchronously. Priority Queue should make it pretty fast."
+        )
         logger = request.logger
         logger.info("Process initiated.")
         supplemental_metadata = {"source": "personal"}
@@ -319,108 +310,6 @@ class FileController(Controller):
             final_filepath, final_metadata, process, override_hash, files_repo, logger
         )
         return f"Successfully added document with uuid: {file_obj.id}"
-
-    @post(path="/files/upload_file_text")
-    async def handle_text_upload(
-        self,
-        files_repo: FileRepository,
-        data: FileTextUpload,
-        request: Request,
-        process: bool = True,
-        override_hash: bool = False,
-    ) -> str:
-        logger = request.logger
-        logger.info("Process initiated.")
-        ensure_metadata(data.metadata)
-
-        input_directory = OS_TMPDIR / Path("text_uploads") / Path(rand_string())
-        # Ensure the directories exist
-        os.makedirs(input_directory, exist_ok=True)
-        # Save the text to the output directory
-        filename = f"{rand_string()}.{data.doctype}"
-        final_filepath = input_directory / Path(filename)
-        with open(final_filepath, "w") as f:
-            f.write(data.text)
-        additional_metadata = data.metadata
-        additional_metadata["doctype"] = data.doctype
-        final_metadata = additional_metadata
-        if final_metadata.get("lang") is None:
-            final_metadata["lang"] = "en"
-
-        file_obj = await add_file_raw(
-            final_filepath, final_metadata, process, override_hash, files_repo, logger
-        )
-        return f"Successfully added text document with uuid: {file_obj.id}"
-
-    # TODO : (Nic) Make function that can process uploaded files
-    @post(path="/files/add_url")
-    async def add_url(
-        self,
-        files_repo: FileRepository,
-        data: UrlUpload,
-        request: Request,
-        process: bool = True,
-        override_hash: bool = False,
-    ) -> str:
-        logger = request.logger
-        logger.info("adding files")
-        logger.info(data)
-
-        # ------------------ here be a site for refactor --------------------
-        docingest = DocumentIngester(logger)
-
-        logger.info("DocumentIngester Created")
-
-        tmpfile_path, metadata = docingest.url_to_filepath_and_metadata(data.url)
-        new_metadata = data.metadata
-
-        if new_metadata is not None:
-            metadata.update(new_metadata)
-
-        request.logger.info(f"Metadata Successfully Created with metadata {metadata}")
-
-        file_obj = await add_file_raw(
-            tmpfile_path, metadata, process, override_hash, files_repo, logger
-        )
-        return f"Successfully added document with uuid: {file_obj.uuid}"
-
-    # TODO: anything but this
-
-    @post(path="/process/{file_id_str:str}")
-    async def process_file(
-        self,
-        files_repo: FileRepository,
-        request: Request,
-        file_id_str: str = Parameter(
-            title="File ID as hex string", description="File to retieve"
-        ),
-        regenerate_from: Optional[str] = None,
-        stop_at: Optional[str] = None,
-    ) -> None:
-        """Process a File."""
-        logger = request.logger
-        if stop_at is None:
-            stop_at = "completed"
-        if regenerate_from is None:
-            regenerate_from = "completed"
-        # TODO: Figure out error messaging for these
-        stop_at = DocumentStatus(stop_at)
-        regenerate_from = DocumentStatus(regenerate_from)
-        # TODO : Add error for invalid document ID
-        file_id = UUID(file_id_str)
-        logger.info(file_id)
-        obj = await files_repo.get(file_id)
-        if docstatus_index(DocumentStatus(obj.stage)) < docstatus_index(
-            regenerate_from
-        ):
-            obj.stage = regenerate_from.value
-
-        if docstatus_index(DocumentStatus(obj.stage)) < docstatus_index(stop_at):
-            await process_file_raw(
-                obj, files_repo, request.logger, stop_at, priority=True
-            )
-        # TODO : Return Response code and response message
-        return self.validate_and_jsonify(obj)
 
     # TODO: Implement security for this method so people cant just delete everyting from db + remove from vector DB
     # @delete(path="/files/{file_id:uuid}")

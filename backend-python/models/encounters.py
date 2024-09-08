@@ -40,33 +40,6 @@ from sqlalchemy.orm import relationship
 from sqlalchemy import select
 
 
-class OrganizationSchema(PydanticBaseModel):
-    id: UUID
-    name: str
-    description: Optional[str]
-
-
-class IndividualSchema(PydanticBaseModel):
-    id: UUID
-    name: str
-    current_org: Optional[UUID]
-
-
-class Faction(PydanticBaseModel):
-    name: str
-    description: str
-    orgs: List[OrganizationSchema]
-
-
-class EncounterSchema(PydanticBaseModel):
-    id: UUID
-    name: str
-    created_at: datetime
-    document_set: List[FileSchema]
-    description: str
-    factions: List[Faction]
-
-
 # Actual SQL Models
 class FactionModel(UUIDAuditBase):
     __tablename__ = "faction"
