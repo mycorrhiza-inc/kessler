@@ -48,7 +48,7 @@ from typing import List, Optional, Dict, Annotated, Tuple, Any
 
 import json
 
-from util.niclib import rand_string, paginate_results
+from common.niclib import rand_string, paginate_results
 
 from enum import Enum
 

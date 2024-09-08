@@ -12,14 +12,7 @@ from common.file_schemas import (
     docstatus_index,
     FileSchema,
 )
-
-
-class QueryData(BaseModel):
-    match_name: Optional[str] = None
-    match_source: Optional[str] = None
-    match_doctype: Optional[str] = None
-    match_stage: Optional[str] = None
-    match_metadata: Optional[dict] = None
+from common.misc_schemas import QueryData
 
 
 def querydata_to_filters(query: QueryData) -> list:
