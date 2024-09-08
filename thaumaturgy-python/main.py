@@ -13,11 +13,13 @@ from util.logging import logging_config
 
 from routiing.daemon_controller import DaemonController
 
+from background_looops import initialize_background_loops
+
 logger = logging.getLogger(__name__)
 
 
 async def on_startup() -> None:
-    pass
+    initialize_background_loops()
 
 
 def plain_text_exception_handler(request: Request, exc: Exception) -> Response:
