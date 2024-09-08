@@ -28,12 +28,6 @@ from pydantic import TypeAdapter
 from models.utils import PydanticBaseModel as BaseModel
 
 
-# from models import (
-#     FileModel,
-#     FileRepository,
-#     FileSchema,
-#     provide_files_repo,
-# )
 from models.files import (
     FileModel,
     FileRepository,
@@ -48,7 +42,7 @@ from typing import List, Optional, Dict, Annotated, Tuple, Any
 
 import json
 
-from util.niclib import rand_string, paginate_results
+from common.niclib import rand_string, paginate_results
 
 from enum import Enum
 

@@ -1,8 +1,8 @@
 import boto3
 
-from util.niclib import seperate_markdown_string
+from common.niclib import seperate_markdown_string
 import yaml
-from util.niclib import rand_string, rand_filepath
+from common.niclib import rand_string, rand_filepath
 
 
 from typing import Optional, List, Union, Any
@@ -17,7 +17,7 @@ import mimetypes
 import os
 from pathlib import Path
 import shlex
-from util.niclib import rand_string, get_blake2
+from common.niclib import rand_string, get_blake2
 from tempfile import TemporaryFile, NamedTemporaryFile, _TemporaryFileWrapper
 
 
@@ -32,7 +32,7 @@ import botocore
 
 from urllib.parse import urlparse
 
-from util.niclib import create_markdown_string, seperate_markdown_string
+from common.niclib import create_markdown_string, seperate_markdown_string
 from constants import (
     OS_TMPDIR,
     OS_HASH_FILEDIR,
