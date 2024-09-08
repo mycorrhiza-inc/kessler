@@ -16,7 +16,7 @@ from routing.misc_controller import MiscController
 from util.logging import logging_config
 from routing.file_controller import FileController
 from routing.rag_controller import RagController
-
+from routing.thaumaturgy_controller import ThaumaturgyController
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +73,7 @@ api_router = Router(
         FileController,
         RagController,
         MiscController,
+        ThaumaturgyController,
     ],
 )
 
