@@ -18,7 +18,10 @@ const SearchResult = ({ data }: SearchResultProps) => {
   // Huge fan of dasiui for refactoring the card here, easy extensionality
   return (
     <>
-      <div className="card w-[90%] shadow-xl" onClick={() => setOpen(true)}>
+      <div
+        className="card w-[90%] shadow-xl dark:card-bordered"
+        onClick={() => setOpen(true)}
+      >
         <div className="card-body">
           <h2 className="card-title">
             <h1>{data.name}</h1>
