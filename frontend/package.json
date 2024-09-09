@@ -31,7 +31,9 @@
     "react": "18.2.0",
     "react-calendar": "^5.0.0",
     "react-dom": "18.2.0",
-    "react-map-gl": "^7.1.7"
+    "react-map-gl": "^7.1.7",
+    "react-syntax-highlighter": "^15.5.0",
+    "rehype-katex": "^7.0.1"
   },
   "devDependencies": {
     "@types/node": "20.10.6",
