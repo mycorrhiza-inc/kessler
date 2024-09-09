@@ -1,6 +1,6 @@
 import { Card, Modal, ModalClose, ModalDialog } from "@mui/joy";
 import { useState } from "react";
-import ResultModal from "./ResultModal";
+import DocumentModalBody from "./DocumentModalBody";
 import zIndex from "@mui/material/styles/zIndex";
 type SearchFields = {
   id: string;
@@ -42,7 +42,7 @@ const SearchResult = ({ data }: SearchResultProps) => {
       >
         <ModalDialog className="standard-box">
           <ModalClose />
-          <ResultModal open={open} />
+          <DocumentModalBody open={open} object_id={} />
         </ModalDialog>
       </Modal>
     </>
