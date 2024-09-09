@@ -10,7 +10,7 @@ server.htpasswd
 # Pycache and .pyc files 
 **/__pycache__
 *.pyc
-
+mage-code
 # vscode
 .vscode
 
