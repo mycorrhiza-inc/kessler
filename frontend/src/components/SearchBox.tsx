@@ -94,21 +94,25 @@ const AdvancedSettings = ({
           <AnimatePresence initial={false}>
             {showAdvancedSettings && (
               <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.2 }} // Duration of the animation in seconds
+                initial={{ height: 0, width: 0, opacity: 0 }}
+                animate={{ height: "auto", width: "100%", opacity: 1 }}
+                exit={{ height: 0, width: 0, opacity: 0 }}
+                transition={{ duration: 0.3 }} // Duration of the animation in seconds
               >
-                <Grid container spacing={1}>
+                <div className="flex flex-wrap gap-2">
                   {Object.keys(queryOptions).map((key, index) => {
                     const extraInfo =
                       extraPropertiesInformation[key as keyof extraProperties];
                     return (
-                      <Grid item xs={12} sm={6} key={index}>
+                      <div
+                        className="flex-grow flex-shrink w-48p box-border"
+                        key={index}
+                      >
                         <Tooltip title={extraInfo.description} variant="solid">
                           <p>{extraInfo.displayName}</p>
                         </Tooltip>
-                        <Input
+                        <input
+                          className="input input-bordered w-full max-w-xs"
                           type="text"
                           id={key}
                           name={key}
@@ -116,10 +120,10 @@ const AdvancedSettings = ({
                           onChange={handleChange}
                           title={extraInfo.displayName}
                         />
-                      </Grid>
+                      </div>
                     );
                   })}
-                </Grid>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
