@@ -33,7 +33,8 @@
     "react-dom": "18.2.0",
     "react-map-gl": "^7.1.7",
     "react-syntax-highlighter": "^15.5.0",
-    "rehype-katex": "^7.0.1"
+    "rehype-katex": "^7.0.1",
+    "rehype-raw": "^7.0.0"
   },
   "devDependencies": {
     "@types/node": "20.10.6",

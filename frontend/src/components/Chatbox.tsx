@@ -2,6 +2,7 @@ import { Stack } from "@mui/joy";
 import { motion } from "framer-motion";
 import { Dispatch, SetStateAction, useState } from "react";
 import { CloseIcon, HamburgerIcon } from "@/components/Icons";
+import { ChatMessages, exampleChatHistory } from "./ChatHistory";
 
 interface ChatBoxProps {
   chatVisible: boolean;
@@ -61,6 +62,12 @@ const ChatBox = ({ chatVisible, setChatVisible }: ChatBoxProps) => {
             <CloseIcon />
           </button>
         </Stack>
+      </div>
+      <div>
+        <ChatMessages
+          messages={exampleChatHistory}
+          loading={false}
+        ></ChatMessages>
       </div>
     </motion.div>
   );

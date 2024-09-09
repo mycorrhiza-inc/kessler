@@ -1,9 +1,11 @@
+import MarkdownRenderer from "./MarkdownRenderer";
+
 interface Message {
   role: string;
   content: string;
   key: symbol;
 }
-const chatHistory: Message[] = [
+export const exampleChatHistory: Message[] = [
   {
     role: "user",
     content: "What is a black hole?",

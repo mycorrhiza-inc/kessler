@@ -4,7 +4,6 @@ llama-index-llms-openai
 llama-index-llms-octoai
 llama-index-llms-fireworks
 
-llama-index-vector-stores-postgres
 llama_index.vector_stores.milvus
 llama-index-embeddings-octoai
 
