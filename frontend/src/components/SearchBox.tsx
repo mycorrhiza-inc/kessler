@@ -154,44 +154,36 @@ const SearchBox = ({
     textRef.current?.focus();
   }, []);
   return (
-    <Box>
-      <Stack>
-        {/* Your UI elements here */}
-        <Stack
-          direction="row"
-          spacing={2}
-          className="flex items-center color-white justify-center"
-        >
-          <Input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full"
-            placeholder="Search"
-            style={{ backgroundColor: "white" }}
-            ref={textRef}
-            onKeyDown={handleEnter}
-          />
-          <button
-            style={{
-              backgroundColor: "--brand-yellow-rgb",
-              color: "black",
-              borderRadius: "10px",
-              border: "2px solid grey",
-              padding: "2px",
-            }}
-            className="max-w-60"
-            onClick={handleSearch}
-          >
-            <SearchIcon />
-          </button>
-        </Stack>
-        <AdvancedSettings
-          setQueryOptions={setQueryOptions}
-          queryOptions={queryOptions}
+    <div>
+      <div className="flex flex-row space-x-2 items-center text-white justify-center">
+        <input
+          className="input input-bordered w-full "
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search"
+          ref={textRef}
+          onKeyDown={handleEnter}
         />
-      </Stack>
-    </Box>
+        <button
+          style={{
+            backgroundColor: "--brand-yellow-rgb",
+            color: "black",
+            borderRadius: "10px",
+            border: "2px solid grey",
+            padding: "2px",
+          }}
+          className="max-w-60"
+          onClick={handleSearch}
+        >
+          <SearchIcon />
+        </button>
+      </div>
+      <AdvancedSettings
+        setQueryOptions={setQueryOptions}
+        queryOptions={queryOptions}
+      />
+    </div>
   );
 };
 
