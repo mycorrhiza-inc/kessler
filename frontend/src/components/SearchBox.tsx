@@ -95,7 +95,7 @@ const AdvancedSettings = ({
             {showAdvancedSettings && (
               <motion.div
                 initial={{ height: 0, width: 0, opacity: 0 }}
-                animate={{ height: "auto", width: "100%", opacity: 1 }}
+                animate={{ height: "auto", width: "auto", opacity: 1 }}
                 exit={{ height: 0, width: 0, opacity: 0 }}
                 transition={{ duration: 0.3 }} // Duration of the animation in seconds
               >
