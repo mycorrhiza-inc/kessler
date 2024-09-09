@@ -39,7 +39,12 @@ from models.files import (
 
 from models.utils import provide_async_session
 
-from common.file_schemas import FileSchema, DocumentStatus, docstatus_index
+from common.file_schemas import (
+    FileSchema,
+    DocumentStatus,
+    FileTextSchema,
+    docstatus_index,
+)
 
 
 from typing import List, Optional, Dict, Annotated, Tuple, Any
@@ -136,10 +141,32 @@ class FileController(Controller):
         original_lang: bool = False,
         match_lang: Optional[str] = None,
     ) -> str:
+        # TODO: Return 404 if doc not found.
+        texts = await get_texts_from_file_uuid(db_connection, file_id)
 
-        if markdown_text == "":
-            markdown_text = "Could not find Document Markdown Text"
-        return markdown_text
+        def filter_original_lang(doc: FileTextSchema) -> bool:
+            return doc.is_original_lang
+
+        if original_lang:
+            texts = list(filter(filter_original_lang, texts))
+        # Every doc should have original lang, so if it has a translated lang but not an original, something is very wrong
+        if len(texts) == 0:
+            raise Exception(f"No Texts Found for document {file_id}")
+        search_first_lang = match_lang
+        if search_first_lang is None:
+            search_first_lang = "en"
+
+        def filter_lang(doc: FileTextSchema) -> bool:
+            return doc.language == search_first_lang
+
+        match_lang_texts = list(filter(filter_lang, texts))
+        if len(texts) > 0:
+            markdown_text = match_lang_texts[0].text
+        if match_lang is not None:
+            raise Exception(
+                "Could not find Text matching language, also this should return a 404 error you can bother the devs to fix it"
+            )
+        return texts[0].text
 
     @get(path="/files/raw/{file_id:uuid}")
     async def get_raw(
