@@ -12,23 +12,16 @@ const SearchResultBox = ({
 }: SearchResultBoxProps) => {
   return (
     <div className="searchResults justify-center items-center ">
-      <Stack
-        className="searchResultsContent"
-        style={{ justifyContent: "center", paddingBottom: "200px", paddingTop: "100px" }}
-        direction="column"
-        justifyContent="center"
-        alignItems="center"
-        spacing={2}
-      >
-        {!isSearching && searchResults && searchResults.map((result, index) => (
-          <SearchResult key={index} data={result} />
-        ))}
-        {isSearching && (<>loading...</>)}
-      </Stack>
+      <div className="searchResultsContent flex flex-col justify-center items-center pb-52 pt-24 space-y-2">
+        {!isSearching &&
+          searchResults &&
+          searchResults.map((result, index) => (
+            <SearchResult key={index} data={result} />
+          ))}
+        {isSearching && <span>loading...</span>}
+      </div>
     </div>
   );
 };
-
-
 
 export default SearchResultBox;

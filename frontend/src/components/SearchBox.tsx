@@ -170,14 +170,7 @@ const SearchBox = ({
           onKeyDown={handleEnter}
         />
         <button
-          style={{
-            backgroundColor: "--brand-yellow-rgb",
-            color: "black",
-            borderRadius: "10px",
-            border: "2px solid grey",
-            padding: "2px",
-          }}
-          className="max-w-60"
+          className=" max-w-60 bg-brand-yellow-rgb text-black dark:text-white rounded-lg border-2 border-gray-500 p-1"
           onClick={handleSearch}
         >
           <SearchIcon />
@@ -216,7 +209,7 @@ const MinimizedSearchBox = ({
   };
 
   return (
-    <Stack direction="row" spacing={2} className="flex items-center">
+    <div className="flex flex-row space-x-2 items-center">
       <Tooltip
         title={
           isMacOS ? (
@@ -228,10 +221,11 @@ const MinimizedSearchBox = ({
           )
         }
       >
-        <div onClick={handleSearchClick}>
+        <div className="scale-150" onClick={handleSearchClick}>
           <SearchIcon />
         </div>
       </Tooltip>
+      <div className="w-3 h-6  mx-4"></div>
       <Tooltip
         title={
           isMacOS ? (
@@ -243,11 +237,11 @@ const MinimizedSearchBox = ({
           )
         }
       >
-        <button onClick={handleChatClick}>
+        <button className="scale-150" onClick={handleChatClick}>
           <ChatIcon />
         </button>
       </Tooltip>
-    </Stack>
+    </div>
   );
 };
 
@@ -322,16 +316,9 @@ export const CenteredFloatingSearhBox = ({
         display: searchVisible ? "block" : "none",
       }}
       style={{
-        position: "fixed",
-        bottom: "30px",
-        backgroundColor: "white",
-        borderRadius: "10px",
-        border: "2px solid grey",
-        padding: "10px",
         zIndex: 1000,
-        color: "black",
       }}
-      className="parent"
+      className="parent fixed bottom-7 bg-white text-black dark:bg-gray-900 dark:text-white rounded-lg border-2 border-gray-500 p-2.5 "
     >
       {isMinimized ? (
         <div>
