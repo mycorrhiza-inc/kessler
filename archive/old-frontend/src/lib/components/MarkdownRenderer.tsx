@@ -8,24 +8,18 @@ import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { dracula } from "react-syntax-highlighter/dist/cjs/styles/prism";
-import { useToast } from "@chakra-ui/react";
-import { Button } from "@chakra-ui/react";
 interface MarkdownRendererProps {
   children: string;
 }
 const CodeBlock = ({ node, inline, className, children, ...props }: any) => {
-  const toast = useToast();
   const match = /language-(\w+)/.exec(className || "");
   const codeContent = String(children).replace(/\n$/, "");
+  const [buttonText, setButtonText] = useState("Copy");
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(codeContent);
-    toast({
-      title: "Coppied Succesfully",
-      status: "success",
-      duration: 1000,
-      isClosable: true,
-    });
+    setButtonText("Copied!");
+    setTimeout(() => setButtonText("Copy"), 2000);
   };
 
   return !inline && match ? (
@@ -40,7 +34,7 @@ const CodeBlock = ({ node, inline, className, children, ...props }: any) => {
           {codeContent}
         </SyntaxHighlighter>
       </div>
-      <Button
+      <button
         onClick={copyToClipboard}
         style={{
           position: "absolute",
@@ -49,8 +43,8 @@ const CodeBlock = ({ node, inline, className, children, ...props }: any) => {
           zIndex: 1,
         }}
       >
-        Copy
-      </Button>
+        {buttonText}
+      </button>
     </div>
   ) : (
     <code className={className} {...props}>

@@ -11,9 +11,9 @@ from litestar.di import Provide
 from models import utils
 from util.logging import logging_config
 
-from routiing.daemon_controller import DaemonController
+from routing.daemon_controller import DaemonController
 
-from background_looops import initialize_background_loops
+from background_loops import initialize_background_loops
 
 logger = logging.getLogger(__name__)
 

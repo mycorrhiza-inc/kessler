@@ -140,7 +140,7 @@ async def main_processing_loop() -> None:
             result = None
 
 
-async def initialize_background_loops() -> None:
+def initialize_background_loops() -> None:
     asyncio.create_task(main_processing_loop())
     asyncio.create_task(background_processing_loop())
 
