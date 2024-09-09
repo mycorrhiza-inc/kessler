@@ -79,9 +79,9 @@ const AdvancedSettings = ({
 
   return (
     <>
-      <div className="flex items-center color-white justify-center">
-        <Stack direction={{ xs: "column" }} spacing={{ xs: 1, sm: 2, md: 4 }}>
-          <div className="flex items-center color-white justify-center">
+      <div className="flex items-center justify-center">
+        <div className="flex flex-col space-y-1 sm:space-y-2 md:space-y-4">
+          <div className="flex items-center  justify-center">
             <span
               onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
               style={{ cursor: "pointer", textDecoration: "underline" }}
@@ -99,35 +99,39 @@ const AdvancedSettings = ({
                 exit={{ height: 0, width: 0, opacity: 0 }}
                 transition={{ duration: 0.3 }} // Duration of the animation in seconds
               >
-                <div className="flex flex-wrap gap-2">
-                  {Object.keys(queryOptions).map((key, index) => {
-                    const extraInfo =
-                      extraPropertiesInformation[key as keyof extraProperties];
-                    return (
-                      <div
-                        className="flex-grow flex-shrink w-48p box-border"
-                        key={index}
-                      >
-                        <Tooltip title={extraInfo.description} variant="solid">
-                          <p>{extraInfo.displayName}</p>
-                        </Tooltip>
-                        <input
-                          className="input input-bordered w-full max-w-xs"
-                          type="text"
-                          id={key}
-                          name={key}
-                          value={queryOptions[key as keyof extraProperties]}
-                          onChange={handleChange}
-                          title={extraInfo.displayName}
-                        />
-                      </div>
-                    );
-                  })}
+                <div className="grid grid-cols-2 gap-4">
+                  {Object.keys(queryOptions)
+                    .slice(0, 6)
+                    .map((key, index) => {
+                      const extraInfo =
+                        extraPropertiesInformation[
+                          key as keyof extraProperties
+                        ];
+                      return (
+                        <div className="box-border" key={index}>
+                          <Tooltip
+                            title={extraInfo.description}
+                            variant="solid"
+                          >
+                            <p>{extraInfo.displayName}</p>
+                          </Tooltip>
+                          <input
+                            className="input input-bordered w-full max-w-xs bg-white dark:bg-gray-900"
+                            type="text"
+                            id={key}
+                            name={key}
+                            value={queryOptions[key as keyof extraProperties]}
+                            onChange={handleChange}
+                            title={extraInfo.displayName}
+                          />
+                        </div>
+                      );
+                    })}
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
-        </Stack>
+        </div>
       </div>
     </>
   );
@@ -155,9 +159,9 @@ const SearchBox = ({
   }, []);
   return (
     <div>
-      <div className="flex flex-row space-x-2 items-center text-white justify-center">
+      <div className="flex flex-row space-x-2 items-center text-black dark:text-white justify-center">
         <input
-          className="input input-bordered w-full "
+          className="input input-bordered w-full bg-white dark:bg-gray-900"
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
