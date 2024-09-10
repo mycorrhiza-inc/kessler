@@ -1,0 +1,66 @@
+
+.resize-handle {
+  width: 10px;
+  height: 10px;
+  background-color: gray;
+  position: absolute;
+  cursor: pointer;
+  pointer-events: auto;
+
+}
+
+.resize-handle.top-left {
+  top: 0;
+  left: 0;
+  cursor: nwse-resize;
+}
+
+.resize-handle.top-right {
+  top: 0;
+  right: 0;
+  cursor: nesw-resize;
+}
+
+.resize-handle.bottom-left {
+  bottom: 0;
+  left: 0;
+  cursor: nesw-resize;
+}
+
+.resize-handle.bottom-right {
+  bottom: 0;
+  right: 0;
+  cursor: nwse-resize;
+}
+
+.resize-handle.top {
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  cursor: ns-resize;
+  width: 90%;
+}
+
+.resize-handle.bottom {
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  cursor: ns-resize;
+  width: 90%;
+}
+
+.resize-handle.right {
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: ew-resize;
+  height: 95%;
+}
+
+.resize-handle.left {
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: ew-resize;
+  height: 95%;
+}
