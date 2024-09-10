@@ -55,6 +55,7 @@ from constants import (
 )
 
 from common.file_schemas import DocumentStatus, FileSchemaFull
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class UUIDEncoder(json.JSONEncoder):
@@ -118,4 +119,4 @@ class ThaumaturgyController(Controller):
     ) -> str:
         file = data
         file_obj = await upsert_file_from_full_schema(db_session, file)
-        return f"Successfully added document with uuid: {file_obj.id}"
+        return f"Successfully added document with uuid: {file.id}"
