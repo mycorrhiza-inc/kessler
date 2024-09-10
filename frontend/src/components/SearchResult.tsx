@@ -1,6 +1,6 @@
 import { Card, Modal, ModalClose, ModalDialog } from "@mui/joy";
 import { useState } from "react";
-import ResultModal from "./ResultModal";
+import DocumentModalBody from "./DocumentModalBody";
 import zIndex from "@mui/material/styles/zIndex";
 type SearchFields = {
   id: string;
@@ -15,11 +15,11 @@ type SearchResultProps = {
 
 const SearchResult = ({ data }: SearchResultProps) => {
   const [open, setOpen] = useState(false);
-
+  // Huge fan of dasiui for refactoring the card here, easy extensionality
   return (
     <>
       <div
-        className="card bg-base-100 w-[90%] shadow-xl"
+        className="card w-[90%] shadow-xl dark:card-bordered"
         onClick={() => setOpen(true)}
       >
         <div className="card-body">
@@ -42,7 +42,7 @@ const SearchResult = ({ data }: SearchResultProps) => {
       >
         <ModalDialog className="standard-box">
           <ModalClose />
-          <ResultModal open={open} />
+          <DocumentModalBody open={open} objectId={data.id} />
         </ModalDialog>
       </Modal>
     </>

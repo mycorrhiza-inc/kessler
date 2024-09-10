@@ -16,6 +16,7 @@ from litestar.handlers.http_handlers.decorators import (
 
 from sqlalchemy import select
 
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from litestar.params import Parameter
 from litestar.di import Provide
@@ -33,8 +34,17 @@ from models.files import (
     FileRepository,
     provide_files_repo,
     model_to_schema,
+    get_texts_from_file_uuid,
 )
-from common.file_schemas import FileSchema, DocumentStatus, docstatus_index
+
+from models.utils import provide_async_session
+
+from common.file_schemas import (
+    FileSchema,
+    DocumentStatus,
+    FileTextSchema,
+    docstatus_index,
+)
 
 
 from typing import List, Optional, Dict, Annotated, Tuple, Any
@@ -49,6 +59,10 @@ from enum import Enum
 from sqlalchemy import and_
 
 from logic.databaselogic import QueryData, filter_list_mdata, querydata_to_filters
+
+from constants import (
+    OS_TMPDIR,
+)
 
 
 class UUIDEncoder(json.JSONEncoder):
@@ -88,22 +102,6 @@ class IndexFileRequest(BaseModel):
     id: UUID
 
 
-from constants import (
-    OS_TMPDIR,
-    OS_GPU_COMPUTE_URL,
-    OS_FILEDIR,
-    OS_HASH_FILEDIR,
-    OS_OVERRIDE_FILEDIR,
-    OS_BACKUP_FILEDIR,
-)
-
-
-# import base64
-
-
-# import base64
-
-
 class FileTextUpload(BaseModel):
     text: str
     doctype: str
@@ -117,7 +115,10 @@ def ensure_metadata(metadata: Dict[str, Any]) -> None:
 class FileController(Controller):
     """File Controller"""
 
-    dependencies = {"files_repo": Provide(provide_files_repo)}
+    dependencies = {
+        "files_repo": Provide(provide_files_repo),
+        # "db_session": Provide(provide_async_session),
+    }
 
     # def jsonify_validate_return(self,):
     #     return None
@@ -135,16 +136,37 @@ class FileController(Controller):
     @get(path="/files/markdown/{file_id:uuid}")
     async def get_markdown(
         self,
-        files_repo: FileRepository,
+        db_session: AsyncSession,
         file_id: UUID = Parameter(title="File ID", description="File to retieve"),
         original_lang: bool = False,
+        match_lang: Optional[str] = None,
     ) -> str:
-        raise Exception(
-            "Tell Nicole to actually write the markdown fetcher to use the new file text thing"
-        )
-        if markdown_text == "":
-            markdown_text = "Could not find Document Markdown Text"
-        return markdown_text
+        # TODO: Return 404 if doc not found.
+        texts = await get_texts_from_file_uuid(db_session, file_id)
+
+        def filter_original_lang(doc: FileTextSchema) -> bool:
+            return doc.is_original_lang
+
+        if original_lang:
+            texts = list(filter(filter_original_lang, texts))
+        # Every doc should have original lang, so if it has a translated lang but not an original, something is very wrong
+        if len(texts) == 0:
+            raise Exception(f"No Texts Found for document {file_id}")
+        search_first_lang = match_lang
+        if search_first_lang is None:
+            search_first_lang = "en"
+
+        def filter_lang(doc: FileTextSchema) -> bool:
+            return doc.language == search_first_lang
+
+        match_lang_texts = list(filter(filter_lang, texts))
+        if len(texts) > 0:
+            markdown_text = match_lang_texts[0].text
+        if match_lang is not None:
+            raise Exception(
+                "Could not find Text matching language, also this should return a 404 error you can bother the devs to fix it"
+            )
+        return texts[0].text
 
     @get(path="/files/raw/{file_id:uuid}")
     async def get_raw(
@@ -188,11 +210,10 @@ class FileController(Controller):
     ) -> dict:
         logger = request.logger
         obj = await files_repo.get(file_id)
-        if obj is None:
-            return Response(content="ID does not exist", status_code=404)
+        mdata_str = obj.mdata
+        mdata = json.loads(mdata_str)
 
-        obj = model_to_schema(obj)
-        return obj.mdata
+        return mdata
 
     async def get_all_files_raw(
         self, files_repo: FileRepository, logger: Any

@@ -1,11 +1,10 @@
-"use  client"
+"use  client";
 import axios from "axios";
 import { useState } from "react";
 import { CenteredFloatingSearhBox } from "@/components/SearchBox";
 import SearchResultBox from "@/components/SearchResultBox";
 
-
-
+// It seems like this doenst have any references, should we delete this?
 export default function Home() {
   const iOS =
     typeof navigator !== "undefined" &&
@@ -15,6 +14,7 @@ export default function Home() {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [resultView, setResultView] = useState(false);
+  const [chatVisible, setChatVisible] = useState(false);
   // ...
 
   const handleSearch = async () => {
@@ -42,6 +42,7 @@ export default function Home() {
   return (
     <main className="flex min-w-screen h-100vh justify-center">
       <CenteredFloatingSearhBox
+        setChatVisible={setChatVisible}
         handleSearch={handleSearch}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -54,3 +55,4 @@ export default function Home() {
     </main>
   );
 }
+

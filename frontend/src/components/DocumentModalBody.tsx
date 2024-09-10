@@ -9,7 +9,7 @@ type ModalProps = {
   children?: React.ReactNode;
 };
 
-const ResultModal = ({ open, objectId, children }: ModalProps) => {
+const DocumentModalBody = ({ open, objectId, children }: ModalProps) => {
   const [loading, setLoading] = React.useState(false);
 
   const [title, setTitle] = React.useState("Demo Title");
@@ -20,7 +20,7 @@ const ResultModal = ({ open, objectId, children }: ModalProps) => {
         "http://localhost:4041/documents/peek",
         {
           id: objectId,
-        }
+        },
       );
       if (response.data.length === 0) {
         return;
@@ -66,4 +66,4 @@ const ResultModal = ({ open, objectId, children }: ModalProps) => {
   );
 };
 
-export default ResultModal;
+export default DocumentModalBody;

@@ -8,7 +8,6 @@ from litestar.status_codes import HTTP_500_INTERNAL_SERVER_ERROR
 
 from litestar.di import Provide
 
-from models import utils
 from util.logging import logging_config
 
 from routing.daemon_controller import DaemonController

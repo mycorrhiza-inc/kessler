@@ -9,6 +9,8 @@ from litestar.contrib.sqlalchemy.plugins import (
 
 from pydantic import BaseModel as _BaseModel
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
 session_config = AsyncSessionConfig(expire_on_commit=False)
 
 postgres_connection_string = os.environ["DATABASE_CONNECTION_STRING"]
@@ -22,6 +24,11 @@ sqlalchemy_config = SQLAlchemyAsyncConfig(
     session_config=session_config,
     # extend_existing=True
 )
+
+
+async def provide_async_session(db_session: AsyncSession) -> AsyncSession:
+    return db_session
+
 
 sqlalchemy_plugin = SQLAlchemyInitPlugin(config=sqlalchemy_config)
 

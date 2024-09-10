@@ -9,13 +9,13 @@ import { set } from "lodash-es";
 
 import { ChatMessages, exampleChatHistory } from "./ChatHistory";
 
-
 interface ChatBoxProps {
   chatVisible: boolean;
   setChatVisible: Dispatch<SetStateAction<boolean>>;
   parentRef: RefObject<HTMLDivElement>;
 }
 
+// Should we rename the file from Chatbox.tsx to ChatBox.tsx?
 const ChatBox = ({ chatVisible, setChatVisible, parentRef }: ChatBoxProps) => {
   const [chatSidebarVisible, setChatSidebarVisible] = useState(false);
   const [chatDisplayString, setChatDisplayString] = useState("none");
@@ -153,13 +153,12 @@ const ChatBox = ({ chatVisible, setChatVisible, parentRef }: ChatBoxProps) => {
         >
           <button
             onClick={() => setChatSidebarVisible((prevState) => !prevState)}
-          >
-      className="z-[9999] w-[900px] max-w-[90vw] min-h-[40vh] fixed bottom-[30px] bg-white dark:bg-gray-700 rounded-[10px] border-2 border-grey-500 p-[10px] text-black dark:text-white hidden"
-    >
-      <div className="chatbox-banner sticky top-0 bg-[#f5f5f5] dark:bg-gray-400 p-5 text-center z-50 border-b border-gray-300 h-auto">
+          ></button>
+        </Stack>
+      </div>
+      <div className="chatbox-banner sticky top-0 bg-[#f5f5f5] dark:bg-gray-700 p-5 text-center z-50 border-b border-gray-300 h-auto">
         <div className="flex flex-row justify-between">
           <button>
-
             <HamburgerIcon />
           </button>
           <button

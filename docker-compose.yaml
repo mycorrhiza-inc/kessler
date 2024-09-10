@@ -44,15 +44,15 @@ services:
       - "${VOLUMES_DIRECTORY:-./volumes}/letsencrypt:/letsencrypt"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
 
-  backend:
-    image: fractalhuman1/kessler-backend:latest
+  backend-python:
+    image: fractalhuman1/kessler-backend-python:latest
     env_file:
       - config/global.env
     volumes:
       - ${VOLUMES_DIRECTORY:-./volumes}/files:/files
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`${DOMAIN:-app.kessler.xyz}`) && PathPrefix(`/api`) || PathPrefix(`/schema`)"
+      - "traefik.http.routers.backend.rule=Host(`${DOMAIN:-app.kessler.xyz}`) && PathPrefix(`/api/v1`) || PathPrefix(`/schema`)"
       - "traefik.http.routers.backend.entrypoints=websecure"
       - "traefik.http.routers.backend.tls.certresolver=myresolver"
       # - "traefik.http.routers.backend.tls={}"
@@ -71,6 +71,20 @@ services:
       - "--reload"
     expose:
       - 5505
+  backend-go:
+    image: fractalhuman1/kessler-backend-go:latest
+    command:
+      - "go"
+      - "run"
+      - "main.go"
+    expose:
+      - 4041
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`${DOMAIN:-app.kessler.xyz}`) && PathPrefix(`/api/v2`)"
+      - "traefik.http.middlewares.test-stripprefix.stripprefix.prefixes=/api/v2"
+      - "traefik.http.routers.backend.entrypoints=websecure"
+      - "traefik.http.routers.backend.tls.certresolver=myresolver"
 
   valkey:
     hostname: valkey

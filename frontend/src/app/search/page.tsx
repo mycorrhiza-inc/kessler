@@ -6,6 +6,7 @@ import SearchBox, { CenteredFloatingSearhBox } from "@/components/SearchBox";
 import SearchResultBox from "@/components/SearchResultBox";
 import { Grid, Box, Stack } from "@mui/joy";
 
+// Should this entire file be deleted?
 export default function Search() {
   const iOS =
     typeof navigator !== "undefined" &&
@@ -15,6 +16,7 @@ export default function Search() {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [resultView, setResultView] = useState(false);
+  const [chatVisible, setChatVisible] = useState(false);
   // ...
 
   const handleSearch = async () => {
@@ -42,6 +44,7 @@ export default function Search() {
   return (
     <main className="flex min-w-screen h-100vh justify-center">
       <CenteredFloatingSearhBox
+        setChatVisible={setChatVisible}
         handleSearch={handleSearch}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -54,3 +57,4 @@ export default function Search() {
     </main>
   );
 }
+

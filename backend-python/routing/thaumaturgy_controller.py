@@ -98,7 +98,7 @@ class IndexFileRequest(BaseModel):
 # import base64
 
 
-class thaumaturgyController(Controller):
+class ThaumaturgyController(Controller):
     """File Controller"""
 
     dependencies = {"files_repo": Provide(provide_files_repo)}
