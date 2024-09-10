@@ -76,7 +76,7 @@ def push_to_queue(request: str, priority: bool):
     if priority:
         pushkey = REDIS_DOCPROC_QUEUE_KEY
     else:
-        pushkey = (REDIS_DOCPROC_PRIORITYQUEUE_KEY,)
+        pushkey = REDIS_DOCPROC_PRIORITYQUEUE_KEY
 
     redis_client.rpush(pushkey, request)
 
