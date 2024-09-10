@@ -117,7 +117,7 @@ class FileController(Controller):
 
     dependencies = {
         "files_repo": Provide(provide_files_repo),
-        "db_session": Provide(provide_async_session),
+        # "db_session": Provide(provide_async_session),
     }
 
     # def jsonify_validate_return(self,):
@@ -136,13 +136,13 @@ class FileController(Controller):
     @get(path="/files/markdown/{file_id:uuid}")
     async def get_markdown(
         self,
-        db_connection: AsyncSession,
+        db_session: AsyncSession,
         file_id: UUID = Parameter(title="File ID", description="File to retieve"),
         original_lang: bool = False,
         match_lang: Optional[str] = None,
     ) -> str:
         # TODO: Return 404 if doc not found.
-        texts = await get_texts_from_file_uuid(db_connection, file_id)
+        texts = await get_texts_from_file_uuid(db_session, file_id)
 
         def filter_original_lang(doc: FileTextSchema) -> bool:
             return doc.is_original_lang
@@ -210,11 +210,10 @@ class FileController(Controller):
     ) -> dict:
         logger = request.logger
         obj = await files_repo.get(file_id)
-        if obj is None:
-            return Response(content="ID does not exist", status_code=404)
+        mdata_str = obj.mdata
+        mdata = json.loads(mdata_str)
 
-        obj = model_to_schema(obj)
-        return obj.mdata
+        return mdata
 
     async def get_all_files_raw(
         self, files_repo: FileRepository, logger: Any
