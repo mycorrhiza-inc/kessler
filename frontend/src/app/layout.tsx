@@ -35,6 +35,7 @@ export default function RootLayout({
                     <Link href={"/"}>Kessler</Link>
                   </div>
                   <HeaderAuth />
+                  <ThemeSwitcher />
                 </div>
               </nav>
               <div className="flex flex-col">

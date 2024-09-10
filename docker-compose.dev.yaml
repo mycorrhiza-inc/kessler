@@ -54,24 +54,23 @@ services:
   #     - "14268:14268"
   #     - "4318:4318" # OpenTelemetry Default HTTP Port
   #     - "9411:9411"
-  go-backend:
+  backend-go:
     build:
-      context: ./go-backend/
+      context: ./backend-go/
       dockerfile: ./Dockerfile
     command:
       - "go"
       - "run"
       - "main.go"
-    ports:
-      - 4041:4041
+    expose:
+      - 4041
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.go-backend.rule=PathPrefix(`/api/v2`) "
       - "traefik.http.middlewares.test-stripprefix.stripprefix.prefixes=/api/v2"
-
-  backend:
+  backend-python:
     build:
-      context: ./backend
+      context: ./backend-python/
       dockerfile: ./Dockerfile
     env_file:
       - config/global.env
@@ -83,7 +82,34 @@ services:
       - ${VOLUMES_DIRECTORY:-./volumes}/files:/files
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=PathPrefix(`/api/v1`) || PathPrefix(`/schema/`)"
+      - "traefik.http.routers.backend-python.rule=PathPrefix(`/api/v1`) || PathPrefix(`/schema/`)"
+    command:
+      - "uvicorn"
+      - "main:app"
+      - "--host"
+      - "0.0.0.0"
+      - "--port"
+      - "5505"
+      - "--workers"
+      - "4"
+      - "--reload"
+    expose:
+      - 5505
+  thaumaturgy-python:
+    build:
+      context: ./thaumaturgy-python/
+      dockerfile: ./Dockerfile
+    env_file:
+      - config/global.env
+    environment:
+      - MILVUS_DEV_DIR=/tmp/milvus/
+    volumes:
+      - ./document-alchemy/:/app
+      - ${VOLUMES_DIRECTORY:-./volumes}/instance:/app/instance
+      - ${VOLUMES_DIRECTORY:-./volumes}/files:/files
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.thaumaturgy-python.rule=PathPrefix(`/alchemy/v1/`) "
     command:
       - "uvicorn"
       - "main:app"
@@ -115,27 +141,27 @@ services:
     ports:
       - 6379:6379
 
-  mage:
-    image: mageai/mageai:latest
-    command: mage start mage-code
-    env_file:
-      - .env
-    build:
-      context: .
-      dockerfile: Dockerfile
-    environment:
-      USER_CODE_PATH: /mage-code
-      POSTGRES_DBNAME: ${POSTGRES_DBNAME:-postgres}
-      POSTGRES_SCHEMA: ${POSTGRES_SCHEMA:-public}
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_HOST: ${POSTGRES_HOST}
-      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
-    ports:
-      - 6789:6789
-    volumes:
-      - ./mage-code:/home/src/mage-code
-    restart: on-failure:5
+  # mage:
+  #   image: mageai/mageai:latest
+  #   command: mage start mage-code
+  #   env_file:
+  #     - .env
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   environment:
+  #     USER_CODE_PATH: /mage-code
+  #     POSTGRES_DBNAME: ${POSTGRES_DBNAME:-postgres}
+  #     POSTGRES_SCHEMA: ${POSTGRES_SCHEMA:-public}
+  #     POSTGRES_USER: ${POSTGRES_USER:-postgres}
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  #     POSTGRES_HOST: ${POSTGRES_HOST}
+  #     POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+  #   ports:
+  #     - 6789:6789
+  #   volumes:
+  #     - ./mage-code:/home/src/mage-code
+  #   restart: on-failure:5
 
   # database:
   #   image: pgvector/pgvector:pg16

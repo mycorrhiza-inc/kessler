@@ -11,7 +11,7 @@ const SearchResultBox = ({
   isSearching,
 }: SearchResultBoxProps) => {
   return (
-    <div className="searchResults justify-center items-center ">
+    <div className="searchResultsContent flex flex-col justify-center items-center pb-52 pt-24 space-y-2">
       <Stack
         className="searchResultsContent"
         style={{ justifyContent: "center",  }}
@@ -28,7 +28,5 @@ const SearchResultBox = ({
     </div>
   );
 };
-
-
 
 export default SearchResultBox;

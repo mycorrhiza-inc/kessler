@@ -1,5 +1,3 @@
-// TODO : Maybe this is a bad idea since it could really bloat the application
-// Math stuff could be thrown out, having tables is important, and code highlighting is kinda standard.
 import React from "react";
 import Markdown from "react-markdown";
 import rehypeKatex from "rehype-katex";
@@ -8,6 +6,7 @@ import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { dracula } from "react-syntax-highlighter/dist/cjs/styles/prism";
+import { useState } from "react";
 interface MarkdownRendererProps {
   children: string;
 }
