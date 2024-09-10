@@ -1,5 +1,5 @@
 import re
-from logic.databaselogic import QueryData, querydata_to_filters_strict
+from common.misc_schemas import QueryData
 from models.files import (
     provide_files_repo,
 )
