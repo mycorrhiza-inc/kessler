@@ -102,6 +102,10 @@ const MinimizedSearchBox = ({
   );
 };
 
+const ActionBoxController = ( {isMinimized, chatVisible}: {isMinimized: boolean, chatVisible: boolean}) => {
+
+}
+
 export const CenteredFloatingSearhBox = ({
   handleSearch,
   searchQuery,
@@ -158,7 +162,7 @@ export const CenteredFloatingSearhBox = ({
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);
-
+  
   return (
     <motion.div
       layout
@@ -179,10 +183,10 @@ export const CenteredFloatingSearhBox = ({
         borderRadius: "10px",
         border: "2px solid grey",
         padding: "10px",
-        zIndex: 1000,
+        zIndex: 1500,
         color: "black",
       }}
-      className="parent"
+      className="parent justify-self-center"
     >
       {isMinimized ? (
         <div>

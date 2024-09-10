@@ -14,7 +14,7 @@ const SearchResultBox = ({
     <div className="searchResults justify-center items-center ">
       <Stack
         className="searchResultsContent"
-        style={{ justifyContent: "center", paddingBottom: "200px", paddingTop: "100px" }}
+        style={{ justifyContent: "center",  }}
         direction="column"
         justifyContent="center"
         alignItems="center"
