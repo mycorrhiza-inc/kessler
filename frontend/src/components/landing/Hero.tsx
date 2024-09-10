@@ -5,8 +5,7 @@ export default function Hero() {
     <div
       className="hero min-h-screen w-max"
       style={{
-        backgroundImage:
-          "url(https://images.unsplash.com/photo-1506475064951-f1c5640c1e59)",
+        backgroundImage: "url(/landing-background.jpg)",
       }}
     >
       <div className="hero-overlay bg-opacity-60"></div>
