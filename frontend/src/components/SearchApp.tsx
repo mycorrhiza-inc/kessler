@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 
 import { CenteredFloatingSearhBox } from "@/components/SearchBox";
 import SearchResultBox from "@/components/SearchResultBox";
-import Chatbox from "@/components/Chatbox";
+import ChatBox from "@/components/ChatBox";
 
 export default function SearchApp() {
   const [isSearching, setIsSearching] = useState(false);
@@ -44,7 +44,8 @@ export default function SearchApp() {
   const divRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div className="searchContainer" 
+    <div
+      className="searchContainer"
       style={{
         position: "relative",
         width: "99vw",
@@ -53,7 +54,11 @@ export default function SearchApp() {
       }}
       ref={divRef}
     >
-      <Chatbox chatVisible={chatVisible} setChatVisible={setChatVisible} parentRef={divRef}/>
+      <ChatBox
+        chatVisible={chatVisible}
+        setChatVisible={setChatVisible}
+        parentRef={divRef}
+      />
       <CenteredFloatingSearhBox
         handleSearch={handleSearch}
         searchQuery={searchQuery}
