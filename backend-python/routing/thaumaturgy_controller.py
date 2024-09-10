@@ -118,5 +118,5 @@ class ThaumaturgyController(Controller):
         override_hash: bool = False,
     ) -> str:
         file = data
-        file_obj = await upsert_file_from_full_schema(db_session, file)
+        await upsert_file_from_full_schema(db_session, file)
         return f"Successfully added document with uuid: {file.id}"
