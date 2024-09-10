@@ -54,15 +54,19 @@ const CodeBlock = ({ node, inline, className, children, ...props }: any) => {
 
 const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ children }) => {
   return (
-    <Markdown
-      remarkPlugins={[remarkMath, remarkGfm]}
-      rehypePlugins={[rehypeKatex, rehypeRaw]}
-      components={{
-        code: CodeBlock,
-      }}
-    >
-      {children}
-    </Markdown>
+    <>
+      <article className="prose">
+        <Markdown
+          remarkPlugins={[remarkMath, remarkGfm]}
+          rehypePlugins={[rehypeKatex, rehypeRaw]}
+          components={{
+            code: CodeBlock,
+          }}
+        >
+          {children}
+        </Markdown>
+      </article>
+    </>
   );
 };
 
