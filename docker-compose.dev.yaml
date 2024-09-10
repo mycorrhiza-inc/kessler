@@ -56,6 +56,20 @@ services:
   #     - "9411:9411"
   backend-go:
     build:
+      context: ./backend-go/
+      dockerfile: ./Dockerfile
+    command:
+      - "go"
+      - "run"
+      - "main.go"
+    expose:
+      - 4041
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.go-backend.rule=PathPrefix(`/api/v2`) "
+      - "traefik.http.middlewares.test-stripprefix.stripprefix.prefixes=/api/v2"
+  backend-python:
+    build:
       context: ./backend-python/
       dockerfile: ./Dockerfile
     env_file:
@@ -68,7 +82,7 @@ services:
       - ${VOLUMES_DIRECTORY:-./volumes}/files:/files
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=PathPrefix(`/api/v1`) || PathPrefix(`/schema/`)"
+      - "traefik.http.routers.backend-python.rule=PathPrefix(`/api/v1`) || PathPrefix(`/schema/`)"
     command:
       - "uvicorn"
       - "main:app"
@@ -95,7 +109,7 @@ services:
       - ${VOLUMES_DIRECTORY:-./volumes}/files:/files
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=PathPrefix(`/alchemy/v1/`) "
+      - "traefik.http.routers.thaumaturgy-python.rule=PathPrefix(`/alchemy/v1/`) "
     command:
       - "uvicorn"
       - "main:app"

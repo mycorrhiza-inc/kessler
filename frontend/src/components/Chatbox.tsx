@@ -22,35 +22,10 @@ const ChatBox = ({ chatVisible, setChatVisible }: ChatBoxProps) => {
       }}
       transition={{ type: "spring", stiffness: 100, damping: 20 }} // Customize the animation
       data-isOpen={!chatVisible}
-      style={{
-        zIndex: "9999",
-        width: "900px",
-        maxWidth: "90vw",
-        minHeight: "40vh",
-        position: "fixed",
-        bottom: "30px",
-        backgroundColor: "white",
-        borderRadius: "10px",
-        border: "2px solid grey",
-        padding: "10px",
-        color: "black",
-        display: "none",
-      }}
+      className="z-[9999] w-[900px] max-w-[90vw] min-h-[40vh] fixed bottom-[30px] bg-white dark:bg-gray-700 rounded-[10px] border-2 border-grey-500 p-[10px] text-black dark:text-white hidden"
     >
-      <div
-        className="chatbox-banner"
-        style={{
-          position: "sticky",
-          top: "0",
-          backgroundColor: "#f1f1f1",
-          padding: "20px",
-          textAlign: "center",
-          zIndex: "1000" /* Ensures it's on top of other content */,
-          borderBottom: "1px solid #ccc",
-          height: "auto",
-        }}
-      >
-        <Stack direction="row" justifyContent="space-between">
+      <div className="chatbox-banner sticky top-0 bg-[#f5f5f5] dark:bg-gray-400 p-5 text-center z-50 border-b border-gray-300 h-auto">
+        <div className="flex flex-row justify-between">
           <button>
             <HamburgerIcon />
           </button>
@@ -61,7 +36,7 @@ const ChatBox = ({ chatVisible, setChatVisible }: ChatBoxProps) => {
           >
             <CloseIcon />
           </button>
-        </Stack>
+        </div>
       </div>
       <div>
         <ChatMessages

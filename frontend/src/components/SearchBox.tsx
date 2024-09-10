@@ -79,9 +79,9 @@ const AdvancedSettings = ({
 
   return (
     <>
-      <div className="flex items-center color-white justify-center">
-        <Stack direction={{ xs: "column" }} spacing={{ xs: 1, sm: 2, md: 4 }}>
-          <div className="flex items-center color-white justify-center">
+      <div className="flex items-center justify-center">
+        <div className="flex flex-col space-y-1 sm:space-y-2 md:space-y-4">
+          <div className="flex items-center  justify-center">
             <span
               onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
               style={{ cursor: "pointer", textDecoration: "underline" }}
@@ -94,36 +94,44 @@ const AdvancedSettings = ({
           <AnimatePresence initial={false}>
             {showAdvancedSettings && (
               <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.2 }} // Duration of the animation in seconds
+                initial={{ height: 0, width: 0, opacity: 0 }}
+                animate={{ height: "auto", width: "auto", opacity: 1 }}
+                exit={{ height: 0, width: 0, opacity: 0 }}
+                transition={{ duration: 0.3 }} // Duration of the animation in seconds
               >
-                <Grid container spacing={1}>
-                  {Object.keys(queryOptions).map((key, index) => {
-                    const extraInfo =
-                      extraPropertiesInformation[key as keyof extraProperties];
-                    return (
-                      <Grid item xs={12} sm={6} key={index}>
-                        <Tooltip title={extraInfo.description} variant="solid">
-                          <p>{extraInfo.displayName}</p>
-                        </Tooltip>
-                        <Input
-                          type="text"
-                          id={key}
-                          name={key}
-                          value={queryOptions[key as keyof extraProperties]}
-                          onChange={handleChange}
-                          title={extraInfo.displayName}
-                        />
-                      </Grid>
-                    );
-                  })}
-                </Grid>
+                <div className="grid grid-cols-2 gap-4">
+                  {Object.keys(queryOptions)
+                    .slice(0, 6)
+                    .map((key, index) => {
+                      const extraInfo =
+                        extraPropertiesInformation[
+                          key as keyof extraProperties
+                        ];
+                      return (
+                        <div className="box-border" key={index}>
+                          <Tooltip
+                            title={extraInfo.description}
+                            variant="solid"
+                          >
+                            <p>{extraInfo.displayName}</p>
+                          </Tooltip>
+                          <input
+                            className="input input-bordered w-full max-w-xs bg-white dark:bg-gray-900"
+                            type="text"
+                            id={key}
+                            name={key}
+                            value={queryOptions[key as keyof extraProperties]}
+                            onChange={handleChange}
+                            title={extraInfo.displayName}
+                          />
+                        </div>
+                      );
+                    })}
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
-        </Stack>
+        </div>
       </div>
     </>
   );
@@ -150,44 +158,29 @@ const SearchBox = ({
     textRef.current?.focus();
   }, []);
   return (
-    <Box>
-      <Stack>
-        {/* Your UI elements here */}
-        <Stack
-          direction="row"
-          spacing={2}
-          className="flex items-center color-white justify-center"
-        >
-          <Input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full"
-            placeholder="Search"
-            style={{ backgroundColor: "white" }}
-            ref={textRef}
-            onKeyDown={handleEnter}
-          />
-          <button
-            style={{
-              backgroundColor: "--brand-yellow-rgb",
-              color: "black",
-              borderRadius: "10px",
-              border: "2px solid grey",
-              padding: "2px",
-            }}
-            className="max-w-60"
-            onClick={handleSearch}
-          >
-            <SearchIcon />
-          </button>
-        </Stack>
-        <AdvancedSettings
-          setQueryOptions={setQueryOptions}
-          queryOptions={queryOptions}
+    <div>
+      <div className="flex flex-row space-x-2 items-center text-black dark:text-white justify-center">
+        <input
+          className="input input-bordered w-full bg-white dark:bg-gray-900"
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search"
+          ref={textRef}
+          onKeyDown={handleEnter}
         />
-      </Stack>
-    </Box>
+        <button
+          className=" max-w-60 bg-brand-yellow-rgb text-black dark:text-white rounded-lg border-2 border-gray-500 p-1"
+          onClick={handleSearch}
+        >
+          <SearchIcon />
+        </button>
+      </div>
+      <AdvancedSettings
+        setQueryOptions={setQueryOptions}
+        queryOptions={queryOptions}
+      />
+    </div>
   );
 };
 
@@ -216,7 +209,7 @@ const MinimizedSearchBox = ({
   };
 
   return (
-    <Stack direction="row" spacing={2} className="flex items-center">
+    <div className="flex flex-row space-x-2 items-center">
       <Tooltip
         title={
           isMacOS ? (
@@ -228,10 +221,11 @@ const MinimizedSearchBox = ({
           )
         }
       >
-        <div onClick={handleSearchClick}>
+        <div className="scale-150" onClick={handleSearchClick}>
           <SearchIcon />
         </div>
       </Tooltip>
+      <div className="w-3 h-6  mx-4"></div>
       <Tooltip
         title={
           isMacOS ? (
@@ -243,11 +237,11 @@ const MinimizedSearchBox = ({
           )
         }
       >
-        <button onClick={handleChatClick}>
+        <button className="scale-150" onClick={handleChatClick}>
           <ChatIcon />
         </button>
       </Tooltip>
-    </Stack>
+    </div>
   );
 };
 
@@ -322,16 +316,9 @@ export const CenteredFloatingSearhBox = ({
         display: searchVisible ? "block" : "none",
       }}
       style={{
-        position: "fixed",
-        bottom: "30px",
-        backgroundColor: "white",
-        borderRadius: "10px",
-        border: "2px solid grey",
-        padding: "10px",
         zIndex: 1000,
-        color: "black",
       }}
-      className="parent"
+      className="parent fixed bottom-7 bg-white text-black dark:bg-gray-900 dark:text-white rounded-lg border-2 border-gray-500 p-2.5 "
     >
       {isMinimized ? (
         <div>
