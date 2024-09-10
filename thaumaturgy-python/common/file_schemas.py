@@ -1,5 +1,4 @@
 from uuid import UUID
-from common.encounter_schemas import IndividualSchema, OrganizationSchema
 from pydantic import BaseModel
 
 from pydantic import Field, field_validator, TypeAdapter
@@ -8,6 +7,8 @@ from typing import Annotated, Any, List
 
 
 from enum import Enum
+
+from common.org_schemas import OrganizationSchema, IndividualSchema
 
 
 class FileTextSchema(BaseModel):

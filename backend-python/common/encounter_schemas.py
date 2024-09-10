@@ -7,17 +7,7 @@ from datetime import datetime
 
 from common.file_schemas import FileSchema
 
-
-class OrganizationSchema(BaseModel):
-    id: UUID
-    name: str
-    description: Optional[str]
-
-
-class IndividualSchema(BaseModel):
-    id: UUID
-    name: str
-    current_org: Optional[UUID]
+from common.org_schemas import OrganizationSchema
 
 
 class Faction(BaseModel):
