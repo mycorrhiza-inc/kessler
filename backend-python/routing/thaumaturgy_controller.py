@@ -55,6 +55,7 @@ from constants import (
 )
 
 from common.file_schemas import DocumentStatus, FileSchemaFull
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class UUIDEncoder(json.JSONEncoder):
@@ -98,44 +99,24 @@ class IndexFileRequest(BaseModel):
 
 
 # import base64
+from models.files import upsert_file_from_full_schema
 
 
 class ThaumaturgyController(Controller):
     """File Controller"""
 
-    dependencies = {"files_repo": Provide(provide_files_repo)}
-
     # def jsonify_validate_return(self,):
     #     return None
-
+    # TODO: ADD some kind of authentication to this entire controller
     @post(path="/thaumaturgy/upsert_file", media_type=MediaType.TEXT)
-    async def handle_file_upload(
+    async def upsert_file_dangerous(
         self,
-        files_repo: FileRepository,
+        db_session: AsyncSession,
         data: FileSchemaFull,
         request: Request,
         process: bool = True,
         override_hash: bool = False,
     ) -> str:
-        logger = request.logger
-        logger.info("Process initiated.")
-        supplemental_metadata = {"source": "personal"}
-
-        input_directory = OS_TMPDIR / Path("formdata_uploads") / Path(rand_string())
-        # Ensure the directories exist
-        os.makedirs(input_directory, exist_ok=True)
-        # Save the PDF to the output directory
-        filename = data.filename
-        final_filepath = input_directory / Path(filename)
-        with open(final_filepath, "wb") as f:
-            f.write(data.file.read())
-        additional_metadata = docingest.infer_metadata_from_path(final_filepath)
-        additional_metadata.update(supplemental_metadata)
-        final_metadata = additional_metadata
-        if final_metadata.get("lang") is None:
-            final_metadata["lang"] = "en"
-
-        file_obj = await add_file_raw(
-            final_filepath, final_metadata, process, override_hash, files_repo, logger
-        )
-        return f"Successfully added document with uuid: {file_obj.id}"
+        file = data
+        await upsert_file_from_full_schema(db_session, file)
+        return f"Successfully added document with uuid: {file.id}"

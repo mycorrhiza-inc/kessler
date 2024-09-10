@@ -40,6 +40,14 @@ from sqlalchemy.orm import relationship
 from sqlalchemy import select
 
 
+from common.encounter_schemas import (
+    EncounterSchema,
+    EventSchema,
+)
+
+from common.org_schemas import OrganizationSchema, IndividualSchema
+
+
 # Actual SQL Models
 class FactionModel(UUIDAuditBase):
     __tablename__ = "faction"
@@ -102,7 +110,7 @@ class RelationFileAuthoredByIndividual(UUIDAuditBase):
 
 class RelationFileAssociatedWithOrganization(UUIDAuditBase):
     __tablename__ = "relation_document_associated_with_organization"
-    document_id: Mapped[UUID] = mapped_column(ForeignKey("file.id"))
+    file_id: Mapped[UUID] = mapped_column(ForeignKey("file.id"))
     organization_id: Mapped[UUID] = mapped_column(ForeignKey("organization.id"))
 
 
@@ -348,13 +356,13 @@ class SQLUtils:
 #
 # class DocumentAuthoredByIndividual(UUIDAuditBase):
 #     __tablename__ = "document_authored_by_individual"
-#     document_id: Mapped[UUID] = mapped_column(ForeignKey("file.id"))
+#     file_id: Mapped[UUID] = mapped_column(ForeignKey("file.id"))
 #     individual_id: Mapped[UUID] = mapped_column(ForeignKey("individual.id"))
 #
 #
 # class DocumentAssociatedWithOrganization(UUIDAuditBase):
 #     __tablename__ = "document_associated_with_organization"
-#     document_id: Mapped[UUID] = mapped_column(ForeignKey("file.id"))
+#     file_id: Mapped[UUID] = mapped_column(ForeignKey("file.id"))
 #     organization_id: Mapped[UUID] = mapped_column(ForeignKey("organization.id"))
 #
 #
@@ -366,7 +374,7 @@ class SQLUtils:
 #
 # class DocumentsInEncounter(UUIDAuditBase):
 #     __tablename__ = "documents_in_encounter"
-#     document_id: Mapped[UUID] = mapped_column(ForeignKey("file.id"))
+#     file_id: Mapped[UUID] = mapped_column(ForeignKey("file.id"))
 #     encounter_id: Mapped[UUID] = mapped_column(ForeignKey("encounter.id"))
 #
 #
