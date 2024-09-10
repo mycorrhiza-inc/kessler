@@ -15,7 +15,6 @@ interface ChatBoxProps {
   parentRef: RefObject<HTMLDivElement>;
 }
 
-// Should we rename the file from Chatbox.tsx to ChatBox.tsx?
 const ChatBox = ({ chatVisible, setChatVisible, parentRef }: ChatBoxProps) => {
   const [chatSidebarVisible, setChatSidebarVisible] = useState(false);
   const [chatDisplayString, setChatDisplayString] = useState("none");

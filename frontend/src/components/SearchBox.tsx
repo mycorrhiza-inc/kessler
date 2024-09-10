@@ -245,13 +245,9 @@ const MinimizedSearchBox = ({
   );
 };
 
-const ActionBoxController = ({
-  isMinimized,
-  chatVisible,
-}: {
-  isMinimized: boolean;
-  chatVisible: boolean;
-}) => {};
+const ActionBoxController = ( {isMinimized, chatVisible}: {isMinimized: boolean, chatVisible: boolean}) => {
+
+}
 
 export const CenteredFloatingSearhBox = ({
   handleSearch,
@@ -309,7 +305,7 @@ export const CenteredFloatingSearhBox = ({
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);
-
+  
   return (
     <motion.div
       layout
@@ -324,6 +320,7 @@ export const CenteredFloatingSearhBox = ({
         display: searchVisible ? "block" : "none",
       }}
       style={{
+
         position: "fixed",
         bottom: "30px",
         backgroundColor: "white",
@@ -333,6 +330,10 @@ export const CenteredFloatingSearhBox = ({
         zIndex: 1500,
         color: "black",
       }}
+
+        zIndex: 1000,
+      }}
+      className="parent fixed bottom-7 bg-white text-black dark:bg-gray-900 dark:text-white rounded-lg border-2 border-gray-500 p-2.5 "
     >
       {isMinimized ? (
         <div>
