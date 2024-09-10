@@ -159,7 +159,7 @@ const SearchBox = ({
   }, []);
   return (
     <div>
-      <div className="flex flex-row space-x-2 items-center text-black dark:text-white justify-center">
+      <div className="flex flex-row space-x-2 items-center  justify-center">
         <input
           className="input input-bordered w-full bg-white dark:bg-gray-900"
           type="text"
@@ -170,7 +170,7 @@ const SearchBox = ({
           onKeyDown={handleEnter}
         />
         <button
-          className=" max-w-60 bg-brand-yellow-rgb text-black dark:text-white rounded-lg border-2 border-gray-500 p-1"
+          className="max-w-60 bg-brand-yellow-rgb text-black dark:text-white rounded-lg border-2 border-gray-500 p-1"
           onClick={handleSearch}
         >
           <SearchIcon />
@@ -187,9 +187,11 @@ const SearchBox = ({
 const MinimizedSearchBox = ({
   setMinimized,
   setChatVisible,
+  chatVisible,
 }: {
   setMinimized: Dispatch<SetStateAction<boolean>>;
   setChatVisible: Dispatch<SetStateAction<boolean>>;
+  chatVisible: boolean;
 }) => {
   const [isMacOS, setIsMacOS] = useState(false);
 
@@ -204,7 +206,7 @@ const MinimizedSearchBox = ({
   };
   const handleChatClick = (e: React.MouseEvent<HTMLElement, MouseEvent>) => {
     e.stopPropagation(); // This will prevent the div's onClick from firing
-    setChatVisible(true);
+    setChatVisible((prevState) => !prevState);
     console.log("chat element clicked");
   };
 
@@ -245,9 +247,13 @@ const MinimizedSearchBox = ({
   );
 };
 
-const ActionBoxController = ( {isMinimized, chatVisible}: {isMinimized: boolean, chatVisible: boolean}) => {
-
-}
+const ActionBoxController = ({
+  isMinimized,
+  chatVisible,
+}: {
+  isMinimized: boolean;
+  chatVisible: boolean;
+}) => {};
 
 export const CenteredFloatingSearhBox = ({
   handleSearch,
@@ -305,7 +311,7 @@ export const CenteredFloatingSearhBox = ({
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);
-  
+
   return (
     <motion.div
       layout
@@ -320,17 +326,14 @@ export const CenteredFloatingSearhBox = ({
         display: searchVisible ? "block" : "none",
       }}
       style={{
-
         position: "fixed",
         bottom: "30px",
-        backgroundColor: "white",
         borderRadius: "10px",
         border: "2px solid grey",
         padding: "10px",
         zIndex: 1500,
-        color: "black",
       }}
-      className="parent fixed bottom-7 bg-white text-black dark:bg-gray-900 dark:text-white rounded-lg border-2 border-gray-500 p-2.5 "
+      className="parent fixed bottom-7 rounded-lg border-2 border-gray-500 bg-white dark:bg-gray-900 text-black dark:text-white"
     >
       {isMinimized ? (
         <div>

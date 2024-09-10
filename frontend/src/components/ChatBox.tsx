@@ -4,7 +4,7 @@ import { useEffect, MutableRefObject, useRef, RefObject } from "react";
 
 import { Dispatch, SetStateAction, use, useState } from "react";
 import { CloseIcon, HamburgerIcon } from "@/components/Icons";
-import "./Chatbox.css";
+import "./ChatBox.css";
 import { set } from "lodash-es";
 
 import { ChatMessages, exampleChatHistory } from "./ChatHistory";
