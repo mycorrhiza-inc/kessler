@@ -66,7 +66,7 @@ services:
       - 4041
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.go-backend.rule=PathPrefix(`/api/v2`) "
+      - "traefik.http.routers.go-backend.rule=PathPrefix(`/api/v2`)"
       - "traefik.http.middlewares.test-stripprefix.stripprefix.prefixes=/api/v2"
   backend-python:
     build:
@@ -77,7 +77,7 @@ services:
     environment:
       - MILVUS_DEV_DIR=/tmp/milvus/
     volumes:
-      - ./backend:/app
+      - ./backend-python:/app
       - ${VOLUMES_DIRECTORY:-./volumes}/instance:/app/instance
       - ${VOLUMES_DIRECTORY:-./volumes}/files:/files
     labels:
@@ -104,7 +104,7 @@ services:
     environment:
       - MILVUS_DEV_DIR=/tmp/milvus/
     volumes:
-      - ./document-alchemy/:/app
+      - ./thaumaturgy-python/:/app
       - ${VOLUMES_DIRECTORY:-./volumes}/instance:/app/instance
       - ${VOLUMES_DIRECTORY:-./volumes}/files:/files
     labels:
