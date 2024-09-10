@@ -1,6 +1,6 @@
 from typing import Annotated, Any, List
 
-from common.file_schemas import FileSchema
+from common.file_schemas import FileSchema, FileSchemaFull
 from litestar.contrib.sqlalchemy.base import UUIDAuditBase
 from litestar.contrib.sqlalchemy.repository import SQLAlchemyAsyncRepository
 
@@ -100,6 +100,7 @@ async def get_texts_from_file_uuid(
     ]
 
 
+# I wrote these 2 initially, but I think they might be redundant at this point.
 async def get_original_text_from_file_uuid(
     async_db_connection: AsyncSession, file_id: UUID
 ) -> FileTextSchema | None:
@@ -146,6 +147,13 @@ async def get_english_text_from_file_uuid(
             is_original_text=row.is_original_text,
         )
     return None
+
+
+async def upsert_file_from_full_schema(
+    async_db_connection: AsyncSession, file: FileSchemaFull
+):
+    mdata_str = json.dumps(file.mdata)
+    pass
 
 
 # Write a SQL Migration script that will take the english text of every document, and add it as a entry in the file text source table, with a unique UUID, the UUID of the original file as the file ID, a true value for the original text and "en" as the language?
