@@ -1,8 +1,8 @@
 "use client";
 import axios from "axios";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
-import  { CenteredFloatingSearhBox } from "@/components/SearchBox";
+import { CenteredFloatingSearhBox } from "@/components/SearchBox";
 import SearchResultBox from "@/components/SearchResultBox";
 import Chatbox from "@/components/Chatbox";
 
@@ -41,9 +41,19 @@ export default function SearchApp() {
 
   const chatMobileStyle = {};
   const chatDesktopStyle = {};
+  const divRef = useRef<HTMLDivElement>(null);
 
   return (
-    <main className="flex min-w-screen h-100vh justify-center">
+    <div className="searchContainer" 
+      style={{
+        position: "relative",
+        width: "99vw",
+        height: "90vh",
+        padding: "20",
+      }}
+      ref={divRef}
+    >
+      <Chatbox chatVisible={chatVisible} setChatVisible={setChatVisible} parentRef={divRef}/>
       <CenteredFloatingSearhBox
         handleSearch={handleSearch}
         searchQuery={searchQuery}
@@ -55,7 +65,6 @@ export default function SearchApp() {
         searchResults={searchResults}
         isSearching={isSearching}
       />
-      <Chatbox chatVisible={chatVisible} setChatVisible={setChatVisible} />
-    </main>
+    </div>
   );
 }
