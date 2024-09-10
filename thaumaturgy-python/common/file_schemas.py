@@ -42,7 +42,7 @@ class FileSchema(BaseModel):
         return str(id)
 
 
-class FileTextSchemaFull(BaseModel):
+class FileSchemaFull(BaseModel):
     id: Annotated[Any, Field(validate_default=True)]
     url: str | None = None
     hash: str | None = None

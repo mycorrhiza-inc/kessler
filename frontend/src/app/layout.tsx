@@ -1,8 +1,6 @@
-import HeaderAuth from "@/components/supabasetutorial/header-auth";
-import { ThemeSwitcher } from "@/components/supabasetutorial/theme-switcher";
 import { GeistSans } from "geist/font/sans";
 import { ThemeProvider } from "next-themes";
-import Link from "next/link";
+import Header from "@/components/Header";
 import "./globals.css";
 
 const defaultUrl = "https://app.kessler.xyz";
@@ -27,20 +25,10 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <Header></Header>
           <main className="h-100vh flex flex-col items-center">
             <div className="flex-1 w-100vw h-100vw flex flex-col items-center">
-              <nav className="w-full flex justify-center border-b border-b-foreground/10 h-16">
-                <div className="w-full max-w-5xl flex justify-between items-center p-3 px-5 text-sm" style={{zIndex: 3000}}>
-                  <div className="flex gap-5 items-center font-semibold">
-                    <Link href={"/"}>Kessler</Link>
-                  </div>
-                  <HeaderAuth />
-                  <ThemeSwitcher />
-                </div>
-              </nav>
-              <div className="flex flex-col">
-                {children}
-              </div>
+              <div className="flex flex-col">{children}</div>
             </div>
           </main>
         </ThemeProvider>

@@ -54,6 +54,8 @@ from constants import (
     OS_TMPDIR,
 )
 
+from common.file_schemas import DocumentStatus, FileSchemaFull
+
 
 class UUIDEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -110,7 +112,7 @@ class ThaumaturgyController(Controller):
     async def handle_file_upload(
         self,
         files_repo: FileRepository,
-        data: Annotated[UploadFile, Body(media_type=RequestEncodingType.MULTI_PART)],
+        data: FileSchemaFull,
         request: Request,
         process: bool = True,
         override_hash: bool = False,
@@ -119,7 +121,6 @@ class ThaumaturgyController(Controller):
         logger.info("Process initiated.")
         supplemental_metadata = {"source": "personal"}
 
-        docingest = DocumentIngester(logger)
         input_directory = OS_TMPDIR / Path("formdata_uploads") / Path(rand_string())
         # Ensure the directories exist
         os.makedirs(input_directory, exist_ok=True)
