@@ -42,7 +42,7 @@ const SearchResult = ({ data }: SearchResultProps) => {
       >
         <ModalDialog className="standard-box">
           <ModalClose />
-          <DocumentModalBody open={open} object_id={} />
+          <DocumentModalBody open={open} objectId={data.id} />
         </ModalDialog>
       </Modal>
     </>
