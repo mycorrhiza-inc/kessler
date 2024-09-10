@@ -31,14 +31,14 @@ REDIS_HOST = os.getenv("REDIS_HOST", "valkey")
 REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
 
 
-REDIS_PRIORITY_DOCPROC_KEY = "docproc_queue_priority"
-REDIS_BACKGROUND_DOCPROC_KEY = "docproc_queue_background"
+REDIS_DOCPROC_PRIORITYQUEUE_KEY = "docproc_queue_priority"
+REDIS_DOCPROC_QUEUE_KEY = "docproc_queue_background"
 
 REDIS_DOCPROC_INFORMATION = "docproc_information"
 
-REDIS_BACKGROUND_DAEMON_TOGGLE = "background_daemon"
-REDIS_BACKGROUND_PROCESSING_STOPS_AT = "background_stop_at"
-REDIS_CURRENTLY_PROCESSING_DOCS = "currently_processing_docs"
+REDIS_DOCPROC_BACKGROUND_DAEMON_TOGGLE = "docproc_background_daemon"
+REDIS_DOCPROC_BACKGROUND_PROCESSING_STOPS_AT = "docproc_background_stop_at"
+REDIS_DOCPROC_CURRENTLY_PROCESSING_DOCS = "docproc_currently_processing_docs"
 
 
 # Congrats for finding the portal easter egg!
