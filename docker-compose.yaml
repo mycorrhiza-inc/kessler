@@ -1,6 +1,7 @@
 # local development docker compose
 services:
   frontend:
+    hostname: app.kessler.xyz
     image: fractalhuman1/kessler-frontend:latest
     env_file:
       - config/global.env
