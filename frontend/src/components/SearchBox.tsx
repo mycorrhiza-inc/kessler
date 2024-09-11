@@ -187,11 +187,9 @@ const SearchBox = ({
 const MinimizedSearchBox = ({
   setMinimized,
   setChatVisible,
-  chatVisible,
 }: {
   setMinimized: Dispatch<SetStateAction<boolean>>;
   setChatVisible: Dispatch<SetStateAction<boolean>>;
-  chatVisible: boolean;
 }) => {
   const [isMacOS, setIsMacOS] = useState(false);
 

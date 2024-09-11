@@ -7,7 +7,8 @@ export async function GET(request: Request) {
   // https://supabase.com/docs/guides/auth/server-side/nextjs
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
-  const origin = requestUrl.origin;
+  // const origin = requestUrl.origin;
+  const origin = "https://app.kessler.xyz/";
   const redirectTo = requestUrl.searchParams.get("redirect_to")?.toString();
 
   if (code) {
