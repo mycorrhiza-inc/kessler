@@ -48,7 +48,7 @@ const DocumentModalBody = ({ open, objectId, children, title }: ModalProps) => {
 
   return (
     <div
-      className="modal-content standard-box"
+      className="modal-content standard-box "
       style={{
         minHeight: "80vh",
         minWidth: "60vw",
@@ -58,7 +58,7 @@ const DocumentModalBody = ({ open, objectId, children, title }: ModalProps) => {
       <div className="card-title">
         {!loading ? <h1>{title}</h1> : <h1>{title}</h1>}
       </div>
-      {/* passed content for filter */}
+      {/* REFACTOR MODALS to fix stupid BS with MUI */}
       {children ? <div>{children}</div> : null}
       <div className="modal-body">
         <Tabs aria-label="Basic tabs" defaultValue={0}>
