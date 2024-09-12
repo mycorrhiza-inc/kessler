@@ -95,33 +95,6 @@ services:
       - "--reload"
     expose:
       - 5505
-  thaumaturgy-python:
-    build:
-      context: ./thaumaturgy-python/
-      dockerfile: ./Dockerfile
-    env_file:
-      - config/global.env
-    environment:
-      - MILVUS_DEV_DIR=/tmp/milvus/
-    volumes:
-      - ./thaumaturgy-python/:/app
-      - ${VOLUMES_DIRECTORY:-./volumes}/instance:/app/instance
-      - ${VOLUMES_DIRECTORY:-./volumes}/files:/files
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.thaumaturgy-python.rule=PathPrefix(`/alchemy/v1/`) "
-    command:
-      - "uvicorn"
-      - "main:app"
-      - "--host"
-      - "0.0.0.0"
-      - "--port"
-      - "5505"
-      - "--workers"
-      - "4"
-      - "--reload"
-    expose:
-      - 5505
 
   valkey:
     container_name: valkey

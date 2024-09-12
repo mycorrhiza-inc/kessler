@@ -19,6 +19,8 @@ const SearchResult = ({ data }: SearchResultProps) => {
   const docid: string = data.sourceID;
   const onClick = () => {
     setOpen(true);
+    // Oh come on, the docid is always not null, its defined right below you
+    // @ts-ignore
     document.getElementById(`doc_modal_${docid}`).showModal();
   };
   return (
@@ -37,8 +39,11 @@ const SearchResult = ({ data }: SearchResultProps) => {
           <p>{data.docketID}</p>
         </div>
       </div>
-      <dialog id={`doc_modal_${docid}`} className="modal max-w-full">
-        <div className="modal-box">
+      <dialog id={`doc_modal_${docid}`} className="modal ">
+        <div
+          className="modal-box bg-white dark:bg-black"
+          // This should just work and not require a background override, its an inidication something is deeply wrong
+        >
           <form method="dialog">
             {/* if there is a button in form, it will close the modal */}
             <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">
