@@ -41,7 +41,11 @@ const SearchResult = ({ data }: SearchResultProps) => {
       </div>
       <dialog id={`doc_modal_${docid}`} className="modal ">
         <div
-          className="modal-box bg-white dark:bg-black"
+          className="modal-box bg-white dark:bg-black "
+          style={{
+            minHeight: "80vh",
+            minWidth: "60vw",
+          }}
           // This should just work and not require a background override, its an inidication something is deeply wrong
         >
           <form method="dialog">
@@ -50,8 +54,6 @@ const SearchResult = ({ data }: SearchResultProps) => {
               ✕
             </button>
           </form>
-          <h3 className="font-bold text-lg">Hello!</h3>
-          <p className="py-4">Press ESC key or click on ✕ button to close</p>
           <DocumentModalBody open={open} objectId={data.sourceID} />
         </div>
       </dialog>

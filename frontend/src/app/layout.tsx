@@ -2,7 +2,7 @@ import { GeistSans } from "geist/font/sans";
 import { ThemeProvider } from "next-themes";
 import Header from "@/components/Header";
 import "./globals.css";
-import InitColorSchemeScript from "@mui/joy/InitColorSchemeScript";
+// import InitColorSchemeScript from "@mui/joy/InitColorSchemeScript";
 const defaultUrl = "https://app.kessler.xyz";
 
 export const metadata = {
@@ -26,8 +26,8 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <Header></Header>
-          <main className="h-100vh flex flex-col items-center">
-            <div className="flex-1 w-100vw h-100vw flex flex-col items-center">
+          <main className="flex flex-col items-center">
+            <div className="flex-1 w-100vw flex flex-col items-center">
               <div className="flex flex-col">{children}</div>
             </div>
           </main>
