@@ -2,7 +2,7 @@ import { GeistSans } from "geist/font/sans";
 import { ThemeProvider } from "next-themes";
 import Header from "@/components/Header";
 import "./globals.css";
-
+import InitColorSchemeScript from "@mui/joy/InitColorSchemeScript";
 const defaultUrl = "https://app.kessler.xyz";
 
 export const metadata = {

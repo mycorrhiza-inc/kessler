@@ -59,7 +59,6 @@ export default function SearchApp() {
         setChatVisible={setChatVisible}
         parentRef={divRef}
       />
-
       <CenteredFloatingSearhBox
         handleSearch={handleSearch}
         searchQuery={searchQuery}
