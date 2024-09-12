@@ -1,5 +1,5 @@
 // Modal.js
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import * as Tabs from "@radix-ui/react-tabs";
 import axios from "axios";
 
@@ -49,12 +49,15 @@ const DocumentModalBody = ({ open, objectId, children, title }: ModalProps) => {
     setDocText(response.data);
   };
 
+  const prevOpen = useRef(open);
+
   useEffect(() => {
-    if (open) {
+    if (open && !prevOpen.current) {
       setPdfUrl(`/api/v1/files/raw/${objectId}`);
       getDocumentText();
       getDocumentMetadata();
     }
+    prevOpen.current = open;
   }, [open]);
 
   return (
