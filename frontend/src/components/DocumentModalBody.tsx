@@ -58,7 +58,10 @@ const DocumentModalBody = ({ open, objectId, children, title }: ModalProps) => {
         getDocumentText();
         getDocumentMetadata();
       } else {
-        // Do close stuff
+        // Do stuff when modal closes
+        setPdfUrl("");
+        setDocText("Loading Document Text");
+        setDocMetadata({});
       }
       prevOpen.current = open;
     }
