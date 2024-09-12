@@ -10,18 +10,12 @@ type ModalProps = {
   open: boolean;
   objectId?: string;
   children?: React.ReactNode;
-  docTitle?: string;
+  title?: string;
 };
 
-const DocumentModalBody = ({
-  open,
-  objectId,
-  children,
-  docTitle,
-}: ModalProps) => {
+const DocumentModalBody = ({ open, objectId, children, title }: ModalProps) => {
   const [loading, setLoading] = React.useState(false);
 
-  const [title, setTitle] = React.useState("Demo Title");
   const [docText, setDocText] = React.useState("Loading Document Text");
 
   const peekDocument = async () => {
