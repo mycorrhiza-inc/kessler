@@ -40,7 +40,7 @@ const DocumentModalBody = ({ open, objectId, children, title }: ModalProps) => {
   };
   const getDocumentMetadata = async () => {
     const response = await axios.get(`/api/v1/files/metadata/${objectId}`);
-    setDocMetadata(response);
+    setDocMetadata(response.data);
     console.log(docMetadata);
   };
 
