@@ -52,12 +52,16 @@ const DocumentModalBody = ({ open, objectId, children, title }: ModalProps) => {
   const prevOpen = useRef(open);
 
   useEffect(() => {
-    if (open && !prevOpen.current) {
-      setPdfUrl(`/api/v1/files/raw/${objectId}`);
-      getDocumentText();
-      getDocumentMetadata();
+    if (open != prevOpen.current) {
+      if (open) {
+        setPdfUrl(`/api/v1/files/raw/${objectId}`);
+        getDocumentText();
+        getDocumentMetadata();
+      } else {
+        // Do close stuff
+      }
+      prevOpen.current = open;
     }
-    prevOpen.current = open;
   }, [open]);
 
   return (
