@@ -3,7 +3,7 @@ import { useState } from "react";
 import DocumentModalBody from "./DocumentModalBody";
 import zIndex from "@mui/material/styles/zIndex";
 type SearchFields = {
-  id: string;
+  sourceID: string;
   name: string;
   text: string;
   docketID: string;
@@ -42,7 +42,7 @@ const SearchResult = ({ data }: SearchResultProps) => {
       >
         <ModalDialog className="standard-box">
           <ModalClose />
-          <DocumentModalBody open={open} objectId={data.id} />
+          <DocumentModalBody open={open} objectId={data.sourceID} />
         </ModalDialog>
       </Modal>
     </>

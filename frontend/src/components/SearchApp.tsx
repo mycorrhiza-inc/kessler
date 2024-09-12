@@ -60,15 +60,13 @@ export default function SearchApp() {
         parentRef={divRef}
       />
 
-      <div className="flex items-center justify-center h-full">
-        <CenteredFloatingSearhBox
-          handleSearch={handleSearch}
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          setChatVisible={setChatVisible}
-          inSearchSession={resultView}
-        />
-      </div>
+      <CenteredFloatingSearhBox
+        handleSearch={handleSearch}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        setChatVisible={setChatVisible}
+        inSearchSession={resultView}
+      />
       <SearchResultBox
         searchResults={searchResults}
         isSearching={isSearching}
