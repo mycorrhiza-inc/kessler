@@ -10,6 +10,80 @@ import { useState } from "react";
 interface MarkdownRendererProps {
   children: string;
 }
+export const testMarkdownContent = `
+# Header 1
+## Header 2
+### Header 3
+#### Header 4
+##### Header 5
+###### Header 6
+
+**Bold Text**
+
+*Italic Text*
+
+***Bold and Italic Text***
+
+~~Strikethrough Text~~
+
+> Blockquote
+
+* Unordered list item 1
+* Unordered list item 2
+  * Nested list item
+    * Deeper nested list item
+
+1. Ordered list item 1
+2. Ordered list item 2
+   1. Nested ordered list item
+   2. Nested ordered list item
+
+\`Inline code\`
+
+
+#  \`Inline code\` in a header
+
+\`\`\`javascript
+// Code block
+function helloWorld() {
+  console.log("Hello, world!");
+}
+\`\`\`
+
+[Link to Google](https://www.google.com)
+
+![Image Alt Text](https://via.placeholder.com/150)
+
+| Table Header 1 | Table Header 2 |
+| -------------- | -------------- |
+| Table Cell 1   | Table Cell 2   |
+| Table Cell 3   | Table Cell 4   |
+
+\`\`\`markdown
+# Markdown code block
+\`\`\`
+
+- [ ] Task list item 1
+- [x] Task list item 2
+
+\`\`\`math
+E = mc^2
+\`\`\`
+
+\`\`\`json
+{
+  "name": "John",
+  "age": 30,
+  "city": "New York"
+}
+\`\`\`
+
+\`\`\`python
+# Python code block
+def greet():
+    print("Hello, world!")
+\`\`\`
+`;
 const CodeBlock = ({ node, inline, className, children, ...props }: any) => {
   const match = /language-(\w+)/.exec(className || "");
   const codeContent = String(children).replace(/\n$/, "");
@@ -55,7 +129,10 @@ const CodeBlock = ({ node, inline, className, children, ...props }: any) => {
 const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ children }) => {
   return (
     <>
-      <article className="prose">
+      <article
+        className="prose prose-neutral !text-black !dark:text-white "
+        style={{ maxWidth: "70vw" }}
+      >
         <Markdown
           remarkPlugins={[remarkMath, remarkGfm]}
           rehypePlugins={[rehypeKatex, rehypeRaw]}
