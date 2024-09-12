@@ -19,7 +19,9 @@ const DocumentModalBody = ({ open, objectId, children, title }: ModalProps) => {
 
   const [docText, setDocText] = React.useState("Loading Document Text");
   const [pdfUrl, setPdfUrl] = React.useState("");
+  const [docMetadata, setDocMetadata] = React.useState({});
 
+  // Currently doesnt do anything, should it be removed? - Nic
   const peekDocument = async () => {
     try {
       const response = await axios.post(
@@ -36,6 +38,12 @@ const DocumentModalBody = ({ open, objectId, children, title }: ModalProps) => {
     } finally {
     }
   };
+  const getDocumentMetadata = async () => {
+    const response = await axios.get(`/api/v1/files/metadata/${objectId}`);
+    setDocMetadata(response);
+    console.log(docMetadata);
+  };
+
   const getDocumentText = async () => {
     const response = await axios.get(`/api/v1/files/markdown/${objectId}`);
     setDocText(response.data);
@@ -45,11 +53,13 @@ const DocumentModalBody = ({ open, objectId, children, title }: ModalProps) => {
     if (open) {
       setPdfUrl(`/api/v1/files/raw/${objectId}`);
       getDocumentText();
+      getDocumentMetadata();
     }
   }, [open]);
 
   return (
     <div className="modal-content standard-box ">
+      <></>
       {/* children are components passed to result modals from special searches */}
       <div className="card-title">
         {!loading ? <h1>{title}</h1> : <h1>{title}</h1>}
@@ -85,34 +95,17 @@ const DocumentModalBody = ({ open, objectId, children, title }: ModalProps) => {
               {/* head */}
               <thead>
                 <tr>
-                  <th></th>
-                  <th>Name</th>
-                  <th>Job</th>
-                  <th>Favorite Color</th>
+                  <th>Field</th>
+                  <th>Value</th>
                 </tr>
               </thead>
               <tbody>
-                {/* row 1 */}
-                <tr>
-                  <th>1</th>
-                  <td>Cy Ganderton</td>
-                  <td>Quality Control Specialist</td>
-                  <td>Blue</td>
-                </tr>
-                {/* row 2 */}
-                <tr>
-                  <th>2</th>
-                  <td>Hart Hagerty</td>
-                  <td>Desktop Support Technician</td>
-                  <td>Purple</td>
-                </tr>
-                {/* row 3 */}
-                <tr>
-                  <th>3</th>
-                  <td>Brice Swyre</td>
-                  <td>Tax Accountant</td>
-                  <td>Red</td>
-                </tr>
+                {Object.entries(docMetadata).map(([key, value]) => (
+                  <tr key={key}>
+                    <td>{key}</td>
+                    <td>{String(value)}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
