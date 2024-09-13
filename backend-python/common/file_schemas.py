@@ -43,7 +43,7 @@ class FileSchema(BaseModel):
 
 
 class FileSchemaFull(BaseModel):
-    id: Annotated[Any, Field(validate_default=True)]
+    id: UUID
     url: str | None = None
     hash: str | None = None
     doctype: str | None = None
@@ -55,8 +55,8 @@ class FileSchemaFull(BaseModel):
     summary: str | None = None
     organization_id: UUID | None = None
     mdata: dict | None = None
-    texts: List[FileTextSchema] | None = []
-    authors: List[IndividualSchema] | None = []
+    texts: List[FileTextSchema] = []
+    authors: List[IndividualSchema] = []
     organization: OrganizationSchema | None = None
 
 

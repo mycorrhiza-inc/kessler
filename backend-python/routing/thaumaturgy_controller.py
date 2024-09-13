@@ -57,6 +57,12 @@ from constants import (
 from common.file_schemas import DocumentStatus, FileSchemaFull
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from models.files import upsert_file_from_full_schema
+import logging
+
+
+default_logger = logging.getLogger(__name__)
+
 
 class UUIDEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -69,37 +75,18 @@ class UUIDEncoder(json.JSONEncoder):
 # TODO : Create test that adds a file once we know what the file DB schema is going to look like
 
 
-class FileUpdate(BaseModel):
-    message: str
+class FileEmbeddings(BaseModel):
+    file_id: UUID
+    text: str
     metadata: Dict[str, Any]
-
-
-class UrlUpload(BaseModel):
-    url: str
-    metadata: Dict[str, Any] = {}
-
-
-class UrlUploadList(BaseModel):
-    url: List[str]
-
-
-class FileCreate(BaseModel):
-    message: str
-
-
-class FileUpload(BaseModel):
-    message: str
-
-
-class IndexFileRequest(BaseModel):
-    id: UUID
+    strings: List[str] | None
+    embeddings: List[List[float]] | None
 
 
 # import base64
 
 
 # import base64
-from models.files import upsert_file_from_full_schema
 
 
 class ThaumaturgyController(Controller):
@@ -113,10 +100,58 @@ class ThaumaturgyController(Controller):
         self,
         db_session: AsyncSession,
         data: FileSchemaFull,
-        request: Request,
         process: bool = True,
         override_hash: bool = False,
     ) -> str:
         file = data
         await upsert_file_from_full_schema(db_session, file)
         return f"Successfully added document with uuid: {file.id}"
+
+    @post(path="/thaumaturgy/insert_file_embeddings", media_type=MediaType.TEXT)
+    async def create_file_embeddings(
+        self,
+        db_session: AsyncSession,
+        data: FileEmbeddings,
+        request: Request,
+        remove_old: bool = False,
+    ) -> None:
+        await self.create_file_embeddings_raw(data=data, remove_old=remove_old)
+
+    async def create_file_embeddings_raw(
+        self,
+        data: FileEmbeddings,
+        remove_old: bool,
+    ) -> None:
+        if remove_old:
+            pass
+        logger = default_logger
+        source_id = data.file_id
+        doc_metadata = data.metadata
+        embedding_text = data.text
+
+        logger.info("Adding Document to Vector Database")
+
+        def generate_searchable_metadata(initial_metadata: dict) -> dict:
+            return_metadata = {
+                "title": initial_metadata.get("title"),
+                "author": initial_metadata.get("author"),
+                "source": initial_metadata.get("source"),
+                "date": initial_metadata.get("date"),
+                "source_id": source_id,
+            }
+
+            def guarentee_field(field: str, default_value: Any = "unknown"):
+                if return_metadata.get(field) is None:
+                    return_metadata[field] = default_value
+
+            guarentee_field("title")
+            guarentee_field("author")
+            guarentee_field("source")
+            guarentee_field("date")
+            return return_metadata
+
+        searchable_metadata = generate_searchable_metadata(doc_metadata)
+        try:
+            add_document_to_db(embedding_text, metadata=searchable_metadata)
+        except Exception as e:
+            raise Exception("Failure in adding document to vector database", e)
