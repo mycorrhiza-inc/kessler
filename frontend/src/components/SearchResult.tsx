@@ -16,11 +16,24 @@ type SearchResultProps = {
 const SearchResult = ({ data }: SearchResultProps) => {
   const [open, setOpen] = useState(false);
   // Huge fan of dasiui for refactoring the card here, easy extensionality
+  const docid: string = data.sourceID;
+  const openModal = () => {
+    setOpen(true);
+    // Oh come on, the docid is always not null, its defined right below you
+    // @ts-ignore
+    document.getElementById(`doc_modal_${docid}`).showModal();
+  };
+  const closeModal = () => {
+    setOpen(false);
+    // Oh come on, the docid is always not null, its defined right below you
+    // @ts-ignore
+    document.getElementById(`doc_modal_${docid}`).close();
+  };
   return (
     <>
       <div
         className="card w-[90%] shadow-xl dark:card-bordered"
-        onClick={() => setOpen(true)}
+        onClick={openModal}
       >
         <div className="card-body">
           <h2 className="card-title">
@@ -32,21 +45,41 @@ const SearchResult = ({ data }: SearchResultProps) => {
           <p>{data.docketID}</p>
         </div>
       </div>
-      <Modal
-        aria-labelledby="modal-title"
-        aria-describedby="modal-desc"
-        open={open}
-        onClose={() => setOpen(false)}
-        sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}
-        style={{ zIndex: 99 }}
-      >
-        <ModalDialog className="standard-box">
-          <ModalClose />
-          <DocumentModalBody open={open} objectId={data.sourceID} />
-        </ModalDialog>
-      </Modal>
+      <dialog id={`doc_modal_${docid}`} className="modal ">
+        <div
+          className="modal-box bg-white dark:bg-black "
+          style={{
+            minHeight: "80vh",
+            minWidth: "60vw",
+          }}
+          // This should just work and not require a background override, its an inidication something is deeply wrong
+        >
+          <form method="dialog">
+            {/* if there is a button in form, it will close the modal */}
+            <button
+              className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+              onClick={closeModal}
+            >
+              ✕
+            </button>
+          </form>
+          {open && <DocumentModalBody open={open} objectId={data.sourceID} />}
+        </div>
+      </dialog>
     </>
   );
 };
+// <Modal
+//   aria-labelledby="modal-title"
+//   aria-describedby="modal-desc"
+//   open={open}
+//   onClose={() => setOpen(false)}
+//   sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}
+//   style={{ zIndex: 99 }}
+// >
+//   <ModalDialog className="standard-box">
+//     <ModalClose />
+//   </ModalDialog>
+// </Modal>
 
 export default SearchResult;
