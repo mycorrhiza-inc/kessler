@@ -2,12 +2,14 @@ import { create } from "zustand";
 import Bookmark from "@/lib/bookmark";
 import { ChatLog } from "@/lib/chat";
 import omit from "lodash-es/omit";
+import { DocidMap, Document } from "@/lib/document";
 
 interface KesslerState {
   bookmarks: Bookmark[]; // array of ids
   chats: { [key: string]: ChatLog }; // array of ids
   mainChatId: string;
   chatList: string[];
+  documents: DocidMap;
   addBookmark: (id: string, type: string) => void;
   newChat: () => Promise<void>;
   addMessage: (chat_id: string, message: string) => void;
@@ -19,6 +21,7 @@ const useKesslerStore = create<KesslerState>((set) => ({
   chats: {},
   chatList: [],
   mainChatId: "",
+  documents: {},
   addBookmark: (id, type) => set((state) => ({})),
   newChat: async () => {
     // create new chat via API
@@ -42,4 +45,18 @@ const useKesslerStore = create<KesslerState>((set) => ({
   },
   addMessage: (chat_id, message) => {},
   setMainChat: (chat_id) => set((state) => ({ ...state, mainChatId: chat_id })),
+  cacheDocids: (doc_ids: string[]) =>
+    set((state) => {
+      const updated_docs = doc_ids.reduce(
+        (acc, docid) => {
+          if (!state.documents[docid]) {
+            acc[docid] = new Document({ docid: docid });
+          }
+          return acc;
+        },
+        { ...state.documents }
+      );
+
+      return { ...state, documents: updated_docs };
+    }),
 }));
