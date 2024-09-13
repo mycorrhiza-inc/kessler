@@ -58,6 +58,10 @@ from common.file_schemas import DocumentStatus, FileSchemaFull
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.files import upsert_file_from_full_schema
+import logging
+
+
+default_logger = logging.getLogger(__name__)
 
 
 class UUIDEncoder(json.JSONEncoder):
@@ -75,8 +79,8 @@ class FileEmbeddings(BaseModel):
     file_id: UUID
     text: str
     metadata: Dict[str, Any]
-    strings: List[str]
-    embeddings: List[List[float]]
+    strings: List[str] | None
+    embeddings: List[List[float]] | None
 
 
 # import base64
@@ -109,22 +113,18 @@ class ThaumaturgyController(Controller):
         db_session: AsyncSession,
         data: FileEmbeddings,
         request: Request,
-        process: bool = True,
-        override_hash: bool = False,
+        remove_old: bool = False,
     ) -> None:
-        await self.create_file_embeddings_raw(
-            db_session, data, request, process, override_hash
-        )
+        await self.create_file_embeddings_raw(data=data, remove_old=remove_old)
 
     async def create_file_embeddings_raw(
         self,
-        db_session: AsyncSession,
         data: FileEmbeddings,
-        request: Request,
-        process: bool = True,
-        override_hash: bool = False,
+        remove_old: bool,
     ) -> None:
-        logger = request.logger
+        if remove_old:
+            pass
+        logger = default_logger
         source_id = data.file_id
         doc_metadata = data.metadata
         embedding_text = data.text
