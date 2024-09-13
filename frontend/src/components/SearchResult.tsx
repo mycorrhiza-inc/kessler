@@ -17,17 +17,23 @@ const SearchResult = ({ data }: SearchResultProps) => {
   const [open, setOpen] = useState(false);
   // Huge fan of dasiui for refactoring the card here, easy extensionality
   const docid: string = data.sourceID;
-  const onClick = () => {
+  const openModal = () => {
     setOpen(true);
     // Oh come on, the docid is always not null, its defined right below you
     // @ts-ignore
     document.getElementById(`doc_modal_${docid}`).showModal();
   };
+  const closeModal = () => {
+    setOpen(false);
+    // Oh come on, the docid is always not null, its defined right below you
+    // @ts-ignore
+    document.getElementById(`doc_modal_${docid}`).close();
+  };
   return (
     <>
       <div
         className="card w-[90%] shadow-xl dark:card-bordered"
-        onClick={onClick}
+        onClick={openModal}
       >
         <div className="card-body">
           <h2 className="card-title">
@@ -50,11 +56,14 @@ const SearchResult = ({ data }: SearchResultProps) => {
         >
           <form method="dialog">
             {/* if there is a button in form, it will close the modal */}
-            <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">
+            <button
+              className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+              onClick={closeModal}
+            >
               ✕
             </button>
           </form>
-          <DocumentModalBody open={open} objectId={data.sourceID} />
+          {open && <DocumentModalBody open={open} objectId={data.sourceID} />}
         </div>
       </dialog>
     </>
