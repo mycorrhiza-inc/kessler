@@ -49,23 +49,11 @@ const DocumentModalBody = ({ open, objectId, children, title }: ModalProps) => {
     setDocText(response.data);
   };
 
-  const prevOpen = useRef(open);
-
   useEffect(() => {
-    if (open != prevOpen.current) {
-      if (open) {
-        setPdfUrl(`/api/v1/files/raw/${objectId}`);
-        getDocumentText();
-        getDocumentMetadata();
-      } else {
-        // Do stuff when modal closes
-        setPdfUrl("");
-        setDocText("Loading Document Text");
-        setDocMetadata({});
-      }
-      prevOpen.current = open;
-    }
-  }, [open]);
+    setPdfUrl(`/api/v1/files/raw/${objectId}`);
+    getDocumentText();
+    getDocumentMetadata();
+  }, []);
 
   return (
     <div className="modal-content standard-box ">
