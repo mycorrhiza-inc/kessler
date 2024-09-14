@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	// "os"
+	"os"
+	"reflect"
 )
 
-var quickwitURL = "http://100.86.5.114:7280"
+var quickwitURL = os.Getenv("S3_BUCKET")
 
 type Hit struct {
 	CreatedAt     string   `json:"created_at"`
@@ -98,13 +99,61 @@ func errturn(err error) ([]SearchData, error) {
 	return nil, err
 }
 
-func searchQuickwit(query string) ([]SearchData, error) {
+func constructMetadataQueryString(filter Metadata) string {
+	var filterQuery string
+	filters := []string{}
 
-	if len(query) <= 0 {
+	values := reflect.ValueOf(filter)
+	types := reflect.TypeOf(filter)
+
+	for i := 0; i < types.NumField(); i++ {
+		// get the field and value
+		field := types.Field(i)
+		value := values.Field(i)
+		// Get the json tag value
+		tag := field.Tag.Get("json")
+
+		// skip all non-slice filters and empty slices
+		if value.Kind() != reflect.Slice || value.Len() <= 0 {
+			continue
+		}
+
+		// TODO: handle excluding values from the query
+
+		field_queries := []string{}
+		// format each query equality
+		for j := 0; j < value.Len(); j++ {
+			s := fmt.Sprintf("metadata.%s:(%s)", tag, value.Index(j))
+			field_queries = append(field_queries, s)
+		}
+
+		// construct the filter specific string
+		filterString := field_queries[0]
+		for q := 1; q < len(field_queries); q++ {
+			filterString += fmt.Sprintf(" OR %s", field_queries[q])
+		}
+	}
+	// concat all filters with AND clauses
+	for _, f := range filters {
+		// WARN: This is potentially not safe. TBD if quickwit's query language is
+		// vulnerable to injectable attacks
+		filterQuery += fmt.Sprintf(" AND (%s)", f)
+	}
+	return filterQuery
+}
+
+func searchQuickwit(r SearchRequest) ([]SearchData, error) {
+
+	if len(r.Query) <= 0 {
 		return []SearchData{}, nil
 	}
 
-	request := createQWRequest(query)
+	queryString := r.Query
+	filtersString := constructMetadataQueryString(r.SeaerchFilters)
+
+	queryString += filtersString
+
+	request := createQWRequest(queryString)
 	jsonData, err := json.Marshal(request)
 	if err != nil {
 		log.Fatalf("Error Marshalling quickwit request: %s", err)
