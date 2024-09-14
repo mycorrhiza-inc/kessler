@@ -1,16 +1,13 @@
 package main
 
 import (
-	// "fmt"
-	// "os"
-	// "context"
-	// "github.com/jackc/pgx/v5"
-
 	"net/http"
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 	"github.com/mycorrhizainc/kessler/backend/search"
+	"log"
 )
 
 // CORS middleware function
@@ -41,6 +38,11 @@ func main() {
 	// }
 	// // close connection when server exits
 	// defer conn.Close(context.Background())
+
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 
 	mux := mux.NewRouter()
 	mux.HandleFunc("/api/v2/search", search.HandleSearchRequest)
