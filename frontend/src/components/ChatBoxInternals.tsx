@@ -18,7 +18,10 @@ const ChatBoxInternals = ({
           loading={false}
         ></ChatMessages>
       </div>
-
+      <textarea
+        className="textarea textarea-bordered"
+        placeholder="Bio"
+      ></textarea>
       <div
         className="chatContainer"
         style={{
