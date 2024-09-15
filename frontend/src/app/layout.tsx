@@ -26,21 +26,21 @@ export default function RootLayout({
       style={{ backgroundColor: "var(--background)" }}
       suppressHydrationWarning
     >
-      <ThemeProvider
-        attribute="class"
-        defaultTheme="system"
-        enableSystem
-        disableTransitionOnChange
-      >
-        <body className="bg-background text-foreground">
+      <body className="bg-background text-foreground">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
           <Header></Header>
           <main className="flex flex-col items-center">
             <div className="flex-1 w-100vw flex flex-col items-center">
               <div className="flex flex-col">{children}</div>
             </div>
           </main>
-        </body>
-      </ThemeProvider>
+        </ThemeProvider>
+      </body>
     </html>
   );
 }
