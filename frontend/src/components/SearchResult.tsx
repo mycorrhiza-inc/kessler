@@ -47,7 +47,7 @@ const SearchResult = ({ data }: SearchResultProps) => {
       </div>
       <dialog id={`doc_modal_${docid}`} className="modal ">
         <div
-          className="modal-box bg-white dark:bg-black "
+          className="modal-box bg-base-100 "
           style={{
             minHeight: "80vh",
             minWidth: "60vw",

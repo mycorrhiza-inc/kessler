@@ -4,6 +4,8 @@ import { ChatMessages, exampleChatHistory } from "./ChatHistory";
 import { Stack } from "@mui/joy";
 
 const ChatBoxInternals = ({
+  chatVisible,
+  setChatVisible,
   chatSidebarVisible,
   setChatSidebarVisible,
 }: {

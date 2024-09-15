@@ -170,7 +170,7 @@ const SearchBox = ({
           onKeyDown={handleEnter}
         />
         <button
-          className="max-w-60 bg-brand-yellow-rgb text-black dark:text-white rounded-lg border-2 border-gray-500 p-1"
+          className="max-w-60 bg-brand-yellow-rgb text-base-content rounded-lg border-2 border-gray-500 p-1"
           onClick={handleSearch}
         >
           <SearchIcon />
@@ -331,7 +331,7 @@ export const CenteredFloatingSearhBox = ({
         padding: "10px",
         zIndex: 1500,
       }}
-      className="parent fixed bottom-7 rounded-lg border-2 border-gray-500 bg-white dark:bg-gray-900 text-black dark:text-white"
+      className="parent fixed bottom-7 rounded-lg border-2 border-gray-500 bg-white dark:bg-gray-900 text-base-content"
     >
       {isMinimized ? (
         <div>
