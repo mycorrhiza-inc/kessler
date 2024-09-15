@@ -12,38 +12,14 @@ const ChatBoxInternals = ({
 }) => {
   return (
     <>
-      <div className="overflow-y-auto">
-        <ChatMessages
-          messages={exampleChatHistory}
-          loading={false}
-        ></ChatMessages>
-      </div>
+      <ChatMessages
+        messages={exampleChatHistory}
+        loading={false}
+      ></ChatMessages>
       <textarea
         className="textarea textarea-bordered"
         placeholder="Bio"
       ></textarea>
-      <div
-        className="chatContainer"
-        style={{
-          display: "flex",
-          flexDirection: "row",
-          height: "90%",
-          width: "100%",
-          padding: "2px",
-        }}
-      >
-        <div
-          className="chatSidebar"
-          style={{
-            width: chatSidebarVisible ? "20%" : "0%",
-            backgroundColor: "red",
-            overflow: "scroll",
-          }}
-        >
-          sidebar contents
-        </div>
-        <div> chat contents</div>
-      </div>
     </>
   );
 };
@@ -84,3 +60,25 @@ export default ChatBoxInternals;
 //     </button>
 //   </div>
 // </div>
+//<div
+//  className="chatContainer"
+//  style={{
+//    display: "flex",
+//    flexDirection: "row",
+//    height: "90%",
+//    width: "100%",
+//    padding: "2px",
+//  }}
+//>
+//  <div
+//    className="chatSidebar"
+//    style={{
+//      width: chatSidebarVisible ? "20%" : "0%",
+//      backgroundColor: "red",
+//      overflow: "scroll",
+//    }}
+//  >
+//    sidebar contents
+//  </div>
+//  <div> chat contents</div>
+//</div>
