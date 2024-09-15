@@ -1,12 +1,9 @@
 import { Stack } from "@mui/joy";
 import { motion, PanInfo, useDragControls } from "framer-motion";
 import { useEffect, MutableRefObject, useRef, RefObject } from "react";
-
-import { Dispatch, SetStateAction, use, useState } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 import { CloseIcon, HamburgerIcon } from "@/components/Icons";
 import "./ChatBox.css";
-import { set } from "lodash-es";
-
 import { ChatMessages, exampleChatHistory } from "./ChatHistory";
 
 interface ChatBoxProps {
@@ -19,34 +16,32 @@ const ChatBox = ({ chatVisible, setChatVisible, parentRef }: ChatBoxProps) => {
   const [chatSidebarVisible, setChatSidebarVisible] = useState(false);
   const [chatDisplayString, setChatDisplayString] = useState("none");
   const containerRef = useRef(null);
-  const [isResizing, setIsResizing] = useState(false); // Track resizing state to trigger reset
-  const [isDragging, setIsDragging] = useState(true); // Track dragging state to trigger reset
+  const [isResizing, setIsResizing] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
 
   const controls = useDragControls();
   function startDrag(event: any) {
-    controls.start(event);
+    if (!isResizing) {
+      // Only start dragging if not currently resizing
+      setIsDragging(true);
+      controls.start(event);
+    }
   }
   useEffect(() => {
     if (!chatVisible) {
-      setTimeout(() => setChatDisplayString("none"), 0.5);
+      setChatDisplayString("none");
     } else {
       setChatDisplayString("block");
     }
-  });
+  }, [chatVisible]);
 
   const [size, setSize] = useState({ width: 300, height: 300 });
-  // const [position, setPosition] = useState({ x: 0, y: 0 });
-
   const minSize = 50;
 
   // Handle resizing from edges and corners
-
-  // Render a resize handle
   const resizeHandle = (direction: string) => {
     const handleMouseMove = (e: MouseEvent) => {
-      console.log("mouse moving");
-      console.log("changing size");
       let newWidth = size.width;
       let newHeight = size.height;
 
@@ -54,14 +49,14 @@ const ChatBox = ({ chatVisible, setChatVisible, parentRef }: ChatBoxProps) => {
         newWidth = Math.max(e.clientX - position.x, minSize);
       } else if (direction.includes("left")) {
         newWidth = Math.max(position.x - e.clientX + size.width, minSize);
-        setPosition((prevPosition) => ({ ...prevPosition, x: e.clientX }));
+        setPosition({ ...position, x: e.clientX });
       }
 
       if (direction.includes("bottom")) {
         newHeight = Math.max(e.clientY - position.y, minSize);
       } else if (direction.includes("top")) {
         newHeight = Math.max(position.y - e.clientY + size.height, minSize);
-        setPosition((prevPosition) => ({ ...prevPosition, y: e.clientY }));
+        setPosition({ ...position, y: e.clientY });
       }
 
       setSize({ width: newWidth, height: newHeight });
@@ -71,38 +66,34 @@ const ChatBox = ({ chatVisible, setChatVisible, parentRef }: ChatBoxProps) => {
       setIsResizing(false);
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
+      setIsDragging(false); // Ensure dragging state is reset
     };
 
-    // Start resizing process
-    const startResize = (e: any) => {
-      console.log("resizing");
-
+    const startResize = (e: React.MouseEvent) => {
       setIsResizing(true);
-      console.log(isResizing);
+      setIsDragging(false);
       document.addEventListener("mousemove", handleMouseMove);
       document.addEventListener("mouseup", handleMouseUp);
     };
+
     return (
       <div className={`resize-handle ${direction}`} onMouseDown={startResize} />
     );
   };
+
   return (
     <motion.div
       animate={{
         minHeight: "40vh",
-        // y: chatVisible ? "20vh" : "150vh", // if mobile, animate to the middle of the screen
-        // x: "0", // if mobile, animate to the middle of the screen
         display: chatDisplayString,
         width: size.width,
         height: size.height,
         position: "absolute",
       }}
       drag={isDragging}
-      dragConstraints={parentRef}
       dragControls={controls}
+      dragConstraints={parentRef}
       dragMomentum={false}
-      // dragElastic={0.01}
-      // transition={{ type: "spring", stiffness: 100, damping: 20 }} // Customize the animation
       data-isOpen={!chatVisible}
       style={{
         top: position.y,
@@ -117,8 +108,8 @@ const ChatBox = ({ chatVisible, setChatVisible, parentRef }: ChatBoxProps) => {
         width: size.width,
         height: size.height,
         position: "fixed",
-        pointerEvents: "none", // Prevent the div from blocking pointer events of children
-        overflow: "hidden", // Prevent children from overflowing the div
+        pointerEvents: "none",
+        overflow: "hidden",
       }}
       ref={containerRef}
     >
@@ -139,7 +130,7 @@ const ChatBox = ({ chatVisible, setChatVisible, parentRef }: ChatBoxProps) => {
           backgroundColor: "#f1f1f1",
           padding: "20px",
           textAlign: "center",
-          zIndex: "1000" /* Ensures it's on top of other content */,
+          zIndex: "1000",
           borderBottom: "1px solid #ccc",
           height: "auto",
           pointerEvents: "auto",
@@ -200,5 +191,4 @@ const ChatBox = ({ chatVisible, setChatVisible, parentRef }: ChatBoxProps) => {
     </motion.div>
   );
 };
-
 export default ChatBox;
