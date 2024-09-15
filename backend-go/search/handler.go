@@ -8,7 +8,8 @@ import (
 )
 
 type SearchRequest struct {
-	Query string `json:"query"`
+	Query          string   `json:"query"`
+	SeaerchFilters Metadata `json:"filters"`
 }
 
 func HandleSearchRequest(w http.ResponseWriter, r *http.Request) {
@@ -30,7 +31,7 @@ func HandleSearchRequest(w http.ResponseWriter, r *http.Request) {
 		}
 		defer r.Body.Close() // Close the body when done
 
-		data, err := searchQuickwit(string(RequestData.Query))
+		data, err := searchQuickwit(RequestData)
 		if err != nil {
 			log.Fatalf("Error searching quickwit: %s", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -53,7 +54,4 @@ func HandleSearchRequest(w http.ResponseWriter, r *http.Request) {
 	default:
 		http.Error(w, "Unsupported request method", http.StatusMethodNotAllowed)
 	}
-}
-
-func Hi(w http.ResponseWriter, r *http.Request) {
 }
