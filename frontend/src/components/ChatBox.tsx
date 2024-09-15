@@ -1,9 +1,7 @@
 import { Stack } from "@mui/joy";
-import { motion, PanInfo, useDragControls } from "framer-motion";
 import { useEffect, MutableRefObject, useRef, RefObject } from "react";
 import { Dispatch, SetStateAction, useState } from "react";
 import { CloseIcon, HamburgerIcon } from "@/components/Icons";
-import "./ChatBox.css";
 import { ChatMessages, exampleChatHistory } from "./ChatHistory";
 
 interface ChatBoxProps {
@@ -17,17 +15,8 @@ const ChatBox = ({ chatVisible, setChatVisible, parentRef }: ChatBoxProps) => {
   const [chatDisplayString, setChatDisplayString] = useState("none");
   const containerRef = useRef(null);
   const [isResizing, setIsResizing] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
 
-  const controls = useDragControls();
-  function startDrag(event: any) {
-    if (!isResizing) {
-      // Only start dragging if not currently resizing
-      setIsDragging(true);
-      controls.start(event);
-    }
-  }
   useEffect(() => {
     if (!chatVisible) {
       setChatDisplayString("none");
@@ -66,12 +55,10 @@ const ChatBox = ({ chatVisible, setChatVisible, parentRef }: ChatBoxProps) => {
       setIsResizing(false);
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
-      setIsDragging(false); // Ensure dragging state is reset
     };
 
     const startResize = (e: React.MouseEvent) => {
       setIsResizing(true);
-      setIsDragging(false);
       document.addEventListener("mousemove", handleMouseMove);
       document.addEventListener("mouseup", handleMouseUp);
     };
@@ -82,20 +69,13 @@ const ChatBox = ({ chatVisible, setChatVisible, parentRef }: ChatBoxProps) => {
   };
 
   return (
-    <motion.div
-      animate={{
+    <div
+      style={{
         minHeight: "40vh",
         display: chatDisplayString,
         width: size.width,
         height: size.height,
         position: "absolute",
-      }}
-      drag={isDragging}
-      dragControls={controls}
-      dragConstraints={parentRef}
-      dragMomentum={false}
-      data-isOpen={!chatVisible}
-      style={{
         top: position.y,
         left: position.x,
         backgroundColor: "white",
@@ -104,10 +84,6 @@ const ChatBox = ({ chatVisible, setChatVisible, parentRef }: ChatBoxProps) => {
         padding: "10px",
         zIndex: 10000,
         color: "black",
-        display: "none",
-        width: size.width,
-        height: size.height,
-        position: "fixed",
         pointerEvents: "none",
         overflow: "hidden",
       }}
@@ -136,11 +112,7 @@ const ChatBox = ({ chatVisible, setChatVisible, parentRef }: ChatBoxProps) => {
           pointerEvents: "auto",
         }}
       >
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          onPointerDown={startDrag}
-        >
+        <Stack direction="row" justifyContent="space-between">
           <button
             onClick={() => setChatSidebarVisible((prevState) => !prevState)}
           ></button>
@@ -177,18 +149,20 @@ const ChatBox = ({ chatVisible, setChatVisible, parentRef }: ChatBoxProps) => {
           padding: "2px",
         }}
       >
-        <motion.div
+        <div
           className="chatSidebar"
-          animate={{
+          style={{
             width: chatSidebarVisible ? "20%" : "0%",
+            backgroundColor: "red",
+            overflow: "scroll",
           }}
-          style={{ backgroundColor: "red", overflow: "scroll" }}
         >
           sidebar contents
-        </motion.div>
+        </div>
         <div> chat contents</div>
       </div>
-    </motion.div>
+    </div>
   );
 };
+
 export default ChatBox;
