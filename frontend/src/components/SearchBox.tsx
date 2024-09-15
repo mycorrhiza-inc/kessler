@@ -109,12 +109,12 @@ const AdvancedSettings = ({
                         ];
                       return (
                         <div className="box-border" key={index}>
-                          <Tooltip
-                            title={extraInfo.description}
-                            variant="solid"
+                          <div
+                            className="tooltip"
+                            data-tip={extraInfo.description}
                           >
                             <p>{extraInfo.displayName}</p>
-                          </Tooltip>
+                          </div>
                           <input
                             className="input input-bordered w-full max-w-xs bg-white dark:bg-gray-900"
                             type="text"

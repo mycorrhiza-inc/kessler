@@ -3,7 +3,7 @@ import { motion, PanInfo, useDragControls } from "framer-motion";
 import { useEffect, MutableRefObject, useRef, RefObject } from "react";
 import { Dispatch, SetStateAction, useState } from "react";
 import { CloseIcon, HamburgerIcon } from "@/components/Icons";
-import "./ChatBox.css";
+import "./ChatBoxAnimated.css";
 import { ChatMessages, exampleChatHistory } from "./ChatHistory";
 
 interface ChatBoxProps {

@@ -3,6 +3,7 @@ import { useEffect, MutableRefObject, useRef, RefObject } from "react";
 import { Dispatch, SetStateAction, useState } from "react";
 import { CloseIcon, HamburgerIcon } from "@/components/Icons";
 import { ChatMessages, exampleChatHistory } from "./ChatHistory";
+import ChatBoxInternals from "./ChatBoxInternals";
 
 interface ChatBoxProps {
   chatVisible: boolean;
@@ -28,46 +29,6 @@ const ChatBox = ({ chatVisible, setChatVisible, parentRef }: ChatBoxProps) => {
   const [size, setSize] = useState({ width: 300, height: 300 });
   const minSize = 50;
 
-  // Handle resizing from edges and corners
-  const resizeHandle = (direction: string) => {
-    const handleMouseMove = (e: MouseEvent) => {
-      let newWidth = size.width;
-      let newHeight = size.height;
-
-      if (direction.includes("right")) {
-        newWidth = Math.max(e.clientX - position.x, minSize);
-      } else if (direction.includes("left")) {
-        newWidth = Math.max(position.x - e.clientX + size.width, minSize);
-        setPosition({ ...position, x: e.clientX });
-      }
-
-      if (direction.includes("bottom")) {
-        newHeight = Math.max(e.clientY - position.y, minSize);
-      } else if (direction.includes("top")) {
-        newHeight = Math.max(position.y - e.clientY + size.height, minSize);
-        setPosition({ ...position, y: e.clientY });
-      }
-
-      setSize({ width: newWidth, height: newHeight });
-    };
-
-    const handleMouseUp = () => {
-      setIsResizing(false);
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-    };
-
-    const startResize = (e: React.MouseEvent) => {
-      setIsResizing(true);
-      document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("mouseup", handleMouseUp);
-    };
-
-    return (
-      <div className={`resize-handle ${direction}`} onMouseDown={startResize} />
-    );
-  };
-
   return (
     <div
       style={{
@@ -89,78 +50,10 @@ const ChatBox = ({ chatVisible, setChatVisible, parentRef }: ChatBoxProps) => {
       }}
       ref={containerRef}
     >
-      {resizeHandle("bottom-right")}
-      {resizeHandle("bottom-left")}
-      {resizeHandle("top-right")}
-      {resizeHandle("top-left")}
-      {resizeHandle("top")}
-      {resizeHandle("bottom")}
-      {resizeHandle("left")}
-      {resizeHandle("right")}
-
-      <div
-        className="chatbox-banner"
-        style={{
-          position: "sticky",
-          top: "0",
-          backgroundColor: "#f1f1f1",
-          padding: "20px",
-          textAlign: "center",
-          zIndex: "1000",
-          borderBottom: "1px solid #ccc",
-          height: "auto",
-          pointerEvents: "auto",
-        }}
-      >
-        <Stack direction="row" justifyContent="space-between">
-          <button
-            onClick={() => setChatSidebarVisible((prevState) => !prevState)}
-          ></button>
-        </Stack>
-      </div>
-      <div className="chatbox-banner sticky top-0 bg-[#f5f5f5] dark:bg-gray-700 p-5 text-center z-50 border-b border-gray-300 h-auto">
-        <div className="flex flex-row justify-between">
-          <button>
-            <HamburgerIcon />
-          </button>
-          <button
-            onClick={() => {
-              setChatVisible((prev) => !prev);
-            }}
-          >
-            <CloseIcon />
-          </button>
-        </div>
-      </div>
-      <div>
-        <ChatMessages
-          messages={exampleChatHistory}
-          loading={false}
-        ></ChatMessages>
-      </div>
-
-      <div
-        className="chatContainer"
-        style={{
-          display: "flex",
-          flexDirection: "row",
-          height: "90%",
-          width: "100%",
-          padding: "2px",
-        }}
-      >
-        <div
-          className="chatSidebar"
-          style={{
-            width: chatSidebarVisible ? "20%" : "0%",
-            backgroundColor: "red",
-            overflow: "scroll",
-          }}
-        >
-          sidebar contents
-        </div>
-        <div> chat contents</div>
-      </div>
+      <ChatBoxInternals
+        chatSidebarVisible={chatSidebarVisible}
+        setChatSidebarVisible={setChatSidebarVisible}
+      ></ChatBoxInternals>
     </div>
   );
 };
