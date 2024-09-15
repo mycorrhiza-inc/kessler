@@ -4,69 +4,64 @@ import Tooltip from "@mui/joy/Tooltip";
 import { motion, AnimatePresence } from "framer-motion"; // Import necessary components from framer-motion
 import { CommandIcon, SearchIcon, ChatIcon } from "@/components/Icons";
 
-interface SearchBoxProps {
-  handleSearch: () => Promise<void>;
-  searchQuery: string;
-  setSearchQuery: Dispatch<SetStateAction<string>>;
-  inSearchSession: boolean;
-  setChatVisible: Dispatch<SetStateAction<boolean>>;
-}
 
-interface extraProperties {
-  match_name: string;
-  match_source: string;
-  match_doctype: string;
-  match_docket_id: string;
-  match_document_class: string;
-  match_author: string;
+export interface AdvancedSearchFilters {
+  name: string;
+  source: string;
+  doctype: string;
+  docket_id: string;
+  document_class: string;
+  author: string;
 }
 const extraPropertiesInformation = {
-  match_name: {
+  name: {
     displayName: "Name",
     description: "The name associated with the search item.",
     details: "Searches for items approximately matching the title",
   },
-  match_source: {
+  source: {
     displayName: "Source",
     description: "The ",
     details: "Filters results matching the provided source exactly.",
   },
-  match_doctype: {
+  doctype: {
     displayName: "Document Type",
     description: "The type or category of the document.",
     details: "Searches for items that match the specified document type.",
   },
-  match_docket_id: {
+  docket_id: {
     displayName: "Docket ID",
     description: "The unique identifier for the docket.",
     details: "Filters search results based on the docket ID.",
   },
-  match_document_class: {
+  document_class: {
     displayName: "Document Class",
     description: "The classification or category of the document.",
     details: "Searches for documents that fall under the specified class.",
   },
-  match_author: {
+  author: {
     displayName: "Author",
     description: "The author of the document.",
     details: "Searches for items created or written by the specified author.",
   },
 };
-const emptyExtraProperties: extraProperties = {
-  match_name: "",
-  match_source: "",
-  match_doctype: "",
-  match_docket_id: "",
-  match_document_class: "",
-  match_author: "",
+export const newAdvancedSearchFilters = (): AdvancedSearchFilters => {
+  return {
+    name: "",
+    source: "",
+    doctype: "",
+    docket_id: "",
+    document_class: "",
+    author: "",
+  };
 };
 
 const AdvancedSettings = ({
   queryOptions,
   setQueryOptions,
 }: {
-  queryOptions: extraProperties;
-  setQueryOptions: Dispatch<SetStateAction<extraProperties>>;
+  queryOptions: AdvancedSearchFilters;
+  setQueryOptions: Dispatch<SetStateAction<AdvancedSearchFilters>>;
 }) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -75,6 +70,7 @@ const AdvancedSettings = ({
       [name]: value,
     }));
   };
+
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
 
   return (
@@ -105,7 +101,7 @@ const AdvancedSettings = ({
                     .map((key, index) => {
                       const extraInfo =
                         extraPropertiesInformation[
-                          key as keyof extraProperties
+                          key as keyof AdvancedSearchFilters
                         ];
                       return (
                         <div className="box-border" key={index}>
@@ -120,7 +116,9 @@ const AdvancedSettings = ({
                             type="text"
                             id={key}
                             name={key}
-                            value={queryOptions[key as keyof extraProperties]}
+                            value={
+                              queryOptions[key as keyof AdvancedSearchFilters]
+                            }
                             onChange={handleChange}
                             title={extraInfo.displayName}
                           />
@@ -137,15 +135,29 @@ const AdvancedSettings = ({
   );
 };
 
+interface SearchBoxProps {
+  handleSearch: () => Promise<void>;
+  searchQuery: string;
+  setSearchQuery: Dispatch<SetStateAction<string>>;
+  inSearchSession: boolean;
+  setChatVisible: Dispatch<SetStateAction<boolean>>;
+  queryOptions: AdvancedSearchFilters;
+  setQueryOptions: Dispatch<SetStateAction<AdvancedSearchFilters>>;
+}
+
+
+
+
+
+
 const SearchBox = ({
   handleSearch,
   searchQuery,
   setSearchQuery,
   inSearchSession,
-}: SearchBoxProps) => {
-  const [queryOptions, setQueryOptions] =
-    useState<extraProperties>(emptyExtraProperties);
-
+  queryOptions,
+  setQueryOptions,
+}:  SearchBoxProps) => {
   const textRef = useRef<HTMLInputElement>(null);
   const handleEnter = (event: any) => {
     if (event.key === "Enter") {
@@ -259,6 +271,8 @@ export const CenteredFloatingSearhBox = ({
   setSearchQuery,
   setChatVisible,
   inSearchSession,
+  queryOptions,
+  setQueryOptions,
 }: SearchBoxProps) => {
   const divRef = useRef<HTMLDivElement>(null);
   const [isMinimized, setIsMinimized] = useState(true);
@@ -347,6 +361,8 @@ export const CenteredFloatingSearhBox = ({
           handleSearch={handleSearch}
           inSearchSession={inSearchSession}
           setChatVisible={setChatVisible}
+          setQueryOptions={setQueryOptions}
+          queryOptions={queryOptions}
         />
       )}
     </motion.div>

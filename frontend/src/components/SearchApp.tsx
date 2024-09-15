@@ -2,7 +2,7 @@
 import axios from "axios";
 import { useRef, useState } from "react";
 
-import { CenteredFloatingSearhBox } from "@/components/SearchBox";
+import { CenteredFloatingSearhBox, newAdvancedSearchFilters, AdvancedSearchFilters } from "@/components/SearchBox";
 import SearchResultBox from "@/components/SearchResultBox";
 import ChatBox from "@/components/ChatBox";
 
@@ -12,6 +12,7 @@ export default function SearchApp() {
   const [searchQuery, setSearchQuery] = useState("");
   const [chatVisible, setChatVisible] = useState(false);
   const [resultView, setResultView] = useState(false);
+  const [queryOptions, setQueryOptions] = useState<AdvancedSearchFilters>(newAdvancedSearchFilters());
 
   const handleSearch = async () => {
     setSearchResults([]);
@@ -20,6 +21,7 @@ export default function SearchApp() {
     try {
       const response = await axios.post("http://localhost/api/v2/search", {
         query: searchQuery,
+        filters: queryOptions
       });
       if (response.data.length === 0) {
         return;
@@ -65,6 +67,8 @@ export default function SearchApp() {
         setSearchQuery={setSearchQuery}
         setChatVisible={setChatVisible}
         inSearchSession={resultView}
+        queryOptions={queryOptions}
+        setQueryOptions={setQueryOptions}
       />
       <SearchResultBox
         searchResults={searchResults}
