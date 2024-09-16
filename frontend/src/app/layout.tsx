@@ -24,7 +24,6 @@ export default function RootLayout({
       lang="en"
       className={GeistSans.className}
       // style={{ background-color: "oklch(var(--b1))" }
-      data-theme="dark"
       suppressHydrationWarning
     >
       <body className="bg-background text-foreground bg-base-100">
