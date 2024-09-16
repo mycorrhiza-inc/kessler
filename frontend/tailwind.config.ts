@@ -94,6 +94,7 @@ const config = {
         },
       },
       "forest",
+      "lemonade",
       "retro",
       "cyberpunk",
       "valentine",

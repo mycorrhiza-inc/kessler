@@ -116,7 +116,7 @@ const AdvancedSettings = ({
                             <p>{extraInfo.displayName}</p>
                           </div>
                           <input
-                            className="input input-bordered w-full max-w-xs bg-white dark:bg-gray-900"
+                            className="input input-bordered w-full max-w-xs"
                             type="text"
                             id={key}
                             name={key}
@@ -161,7 +161,7 @@ const SearchBox = ({
     <div>
       <div className="flex flex-row space-x-2 items-center  justify-center">
         <input
-          className="input input-bordered w-full bg-base-200"
+          className="input input-bordered w-full"
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}

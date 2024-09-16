@@ -39,7 +39,6 @@ const Header = () => {
           <a href="/">Kessler</a>
         </div>
         <HeaderAuth />
-        <ThemeSelector />
       </div>
     </nav>
   );
