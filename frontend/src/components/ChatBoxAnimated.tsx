@@ -84,6 +84,7 @@ const ChatBox = ({ chatVisible, setChatVisible, parentRef }: ChatBoxProps) => {
 
   return (
     <motion.div
+      className="overflow-y-scroll"
       animate={{
         minHeight: "40vh",
         display: chatDisplayString,

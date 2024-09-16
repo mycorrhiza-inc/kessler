@@ -30,7 +30,10 @@ async function HeaderAuth() {
 }
 const Header = () => {
   return (
-    <nav className="w-full flex justify-center border-b border-b-foreground/10 h-16 bg-white dark:bg-black">
+    <nav
+      className="w-full flex justify-center border-b border-b-foreground/10 h-16 bg-white dark:bg-black"
+      // style={{ position: "fixed", top: 0 }}
+    >
       <div
         className="w-full max-w-5xl flex justify-between items-center p-3 px-5 text-sm"
         style={{ zIndex: 3000 }}

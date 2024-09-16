@@ -31,6 +31,7 @@ const ChatBox = ({ chatVisible, setChatVisible, parentRef }: ChatBoxProps) => {
 
   return (
     <div
+      className="resize"
       style={{
         minHeight: "40vh",
         display: chatDisplayString,
@@ -50,10 +51,7 @@ const ChatBox = ({ chatVisible, setChatVisible, parentRef }: ChatBoxProps) => {
       }}
       ref={containerRef}
     >
-      <ChatBoxInternals
-        chatSidebarVisible={chatSidebarVisible}
-        setChatSidebarVisible={setChatSidebarVisible}
-      ></ChatBoxInternals>
+      <ChatBoxInternals></ChatBoxInternals>
     </div>
   );
 };
