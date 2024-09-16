@@ -94,6 +94,10 @@ const config = {
         },
       },
       "forest",
+      "retro",
+      "cyberpunk",
+      "valentine",
+      "aqua",
     ],
   },
 } satisfies Config;

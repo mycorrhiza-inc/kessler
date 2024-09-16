@@ -11,20 +11,20 @@ async function HeaderAuth() {
   return user ? (
     <div className="flex items-center gap-4">
       Hey, {user.email}!
-      <form action={signOutAction}>
-        <Button type="submit" variant={"outline"}>
+      <form action={signOutAction} method="post">
+        <button type="submit" className="btn btn-outline btn-secondary">
           Sign out
-        </Button>
+        </button>
       </form>
     </div>
   ) : (
     <div className="flex gap-2">
-      <Button asChild size="sm" variant={"outline"}>
-        <a href="/sign-in">Sign in</a>
-      </Button>
-      <Button asChild size="sm" variant={"default"}>
-        <a href="/sign-up">Sign up</a>
-      </Button>
+      <a href="/sign-in" className="btn btn-outline btn-secondary">
+        Sign in
+      </a>
+      <a href="/sign-up" className="btn btn-outline btn-secondary">
+        Sign up
+      </a>
     </div>
   );
 }

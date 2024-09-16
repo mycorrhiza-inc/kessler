@@ -161,7 +161,7 @@ const SearchBox = ({
     <div>
       <div className="flex flex-row space-x-2 items-center  justify-center">
         <input
-          className="input input-bordered w-full bg-white dark:bg-gray-900"
+          className="input input-bordered w-full bg-base-200"
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
@@ -331,7 +331,7 @@ export const CenteredFloatingSearhBox = ({
         padding: "10px",
         zIndex: 1500,
       }}
-      className="parent fixed bottom-7 rounded-lg border-2 border-gray-500 bg-white dark:bg-gray-900 text-base-content"
+      className="parent fixed bottom-7 rounded-lg border-2 border-gray-500 bg-base-200 text-base-content"
     >
       {isMinimized ? (
         <div>
