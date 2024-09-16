@@ -1,5 +1,38 @@
 const ThemeSelector = () => {
-  const themes = ["Default", "Retro", "Cyberpunk", "Valentine", "Aqua"];
+  const themes = [
+    "light",
+    "dark",
+    "cupcake",
+    "bumblebee",
+    "emerald",
+    "corporate",
+    "synthwave",
+    "retro",
+    "cyberpunk",
+    "valentine",
+    "halloween",
+    "garden",
+    "forest",
+    "aqua",
+    "lofi",
+    "pastel",
+    "fantasy",
+    "wireframe",
+    "black",
+    "luxury",
+    "dracula",
+    "cmyk",
+    "autumn",
+    "business",
+    "acid",
+    "lemonade",
+    "night",
+    "coffee",
+    "winter",
+    "dim",
+    "nord",
+    "sunset",
+  ];
   return (
     <div className="dropdown mb-72">
       <div tabIndex={0} role="button" className="btn m-1">
@@ -25,7 +58,7 @@ const ThemeSelector = () => {
                 type="radio"
                 name="theme-dropdown"
                 className="theme-controller btn btn-sm btn-block btn-ghost justify-start"
-                aria-label={theme}
+                aria-label={theme.charAt(0).toUpperCase() + theme.slice(1)}
                 value={theme.toLowerCase()}
               />
             </li>
