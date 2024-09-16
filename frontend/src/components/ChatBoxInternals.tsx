@@ -1,25 +1,48 @@
 import { CloseIcon, HamburgerIcon } from "@/components/Icons";
 import { ChatMessages, exampleChatHistory } from "./ChatHistory";
 
+import { useEffect, useRef } from "react";
 import { Stack } from "@mui/joy";
 
-const ChatBoxInternals = ({
-  chatSidebarVisible,
-  setChatSidebarVisible,
-}: {
-  chatSidebarVisible: boolean;
-  setChatSidebarVisible: React.Dispatch<React.SetStateAction<boolean>>;
-}) => {
+const ChatBoxInternals = ({}: {}) => {
+  const messagesEndRef = useRef(null);
+
+  // Too much complexity add later
+  // // Scroll to the bottom function
+  // const scrollToBottom = () => {
+  //   // Chatgpt code, very dangerous
+  //   // @ts-ignore
+  //   messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  // };
+  //
+  // // Use effect to scroll down whenever chat history changes
+  // useEffect(() => {
+  //   scrollToBottom();
+  // }, [exampleChatHistory]);
   return (
     <>
-      <ChatMessages
-        messages={exampleChatHistory}
-        loading={false}
-      ></ChatMessages>
-      <textarea
-        className="textarea textarea-bordered"
-        placeholder="Bio"
-      ></textarea>
+      <div
+        style={{
+          bottom: 0,
+          height: "100%",
+          display: "flex",
+          flexDirection: "column-reverse",
+          justifyContent: "space-between",
+        }}
+      >
+        <div
+          style={{
+            overflowY: "scroll",
+            flexGrow: 1,
+            display: "flex",
+            flexDirection: "column-reverse",
+          }}
+        >
+          <ChatMessages messages={exampleChatHistory} loading={false} />
+          <div ref={messagesEndRef} />
+        </div>
+        <textarea></textarea>
+      </div>
     </>
   );
 };

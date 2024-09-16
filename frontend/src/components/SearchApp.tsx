@@ -5,6 +5,7 @@ import { useRef, useState } from "react";
 import { CenteredFloatingSearhBox } from "@/components/SearchBox";
 import SearchResultBox from "@/components/SearchResultBox";
 import ChatBox from "@/components/ChatBox";
+import ChatBoxInternals from "./ChatBoxInternals";
 
 export default function SearchApp() {
   const [isSearching, setIsSearching] = useState(false);
@@ -46,19 +47,15 @@ export default function SearchApp() {
   return (
     <div
       className="searchContainer"
+      ref={divRef}
       style={{
         position: "relative",
         width: "99vw",
         height: "90vh",
-        padding: "20",
+        padding: "20px",
+        overflow: "hidden",
       }}
-      ref={divRef}
     >
-      <ChatBox
-        chatVisible={chatVisible}
-        setChatVisible={setChatVisible}
-        parentRef={divRef}
-      />
       <CenteredFloatingSearhBox
         handleSearch={handleSearch}
         searchQuery={searchQuery}
@@ -66,10 +63,37 @@ export default function SearchApp() {
         setChatVisible={setChatVisible}
         inSearchSession={resultView}
       />
-      <SearchResultBox
-        searchResults={searchResults}
-        isSearching={isSearching}
-      />
+      <div
+        className="results-container"
+        style={{
+          display: "flex",
+          height: "calc(100% - 20px)",
+        }}
+      >
+        <div
+          className="search-results"
+          style={{
+            flex: 1,
+            overflowY: "auto",
+          }}
+        >
+          <SearchResultBox
+            searchResults={searchResults}
+            isSearching={isSearching}
+          />
+        </div>
+        {chatVisible && (
+          <div
+            className="chat-box"
+            style={{
+              flex: "0 0 20%",
+              overflowY: "auto",
+            }}
+          >
+            <ChatBoxInternals></ChatBoxInternals>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
