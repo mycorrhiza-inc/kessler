@@ -34,7 +34,7 @@ const ThemeSelector = () => {
     "sunset",
   ];
   return (
-    <div className="join join-vertical join-horizontal">
+    <div className="join join-vertical">
       {themes.map((theme) => (
         <input
           type="radio"

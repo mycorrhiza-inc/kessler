@@ -23,11 +23,11 @@ export default function RootLayout({
     <html
       lang="en"
       className={GeistSans.className}
-      style={{ backgroundColor: "oklch(var(--b1))" }}
+      // style={{ background-color: "oklch(var(--b1))" }
       data-theme="dark"
       suppressHydrationWarning
     >
-      <body className="bg-background text-foreground">
+      <body className="bg-background text-foreground bg-base-100">
         <Header></Header>
         <main className="flex flex-col items-center">
           <div className="flex-1 w-100vw flex flex-col items-center">
