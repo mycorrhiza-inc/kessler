@@ -40,7 +40,6 @@ const ChatBox = ({ chatVisible, setChatVisible, parentRef }: ChatBoxProps) => {
         position: "absolute",
         top: position.y,
         left: position.x,
-        backgroundColor: "white",
         borderRadius: "10px",
         border: "2px solid grey",
         padding: "10px",

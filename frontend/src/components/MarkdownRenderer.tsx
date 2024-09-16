@@ -131,7 +131,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ children }) => {
     <>
       <article
         // These colors should be style and component specific
-        className="prose prose-neutral text-black dark:text-white prose-headings:text-black dark:prose-headings:text-white"
+        className="prose prose-neutral text-base-content prose-headings:text-base-content"
         style={{ maxWidth: "70vw" }}
       >
         <Markdown

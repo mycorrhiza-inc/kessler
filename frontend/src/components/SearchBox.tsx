@@ -116,7 +116,7 @@ const AdvancedSettings = ({
                             <p>{extraInfo.displayName}</p>
                           </div>
                           <input
-                            className="input input-bordered w-full max-w-xs bg-white dark:bg-gray-900"
+                            className="input input-bordered w-full max-w-xs"
                             type="text"
                             id={key}
                             name={key}
@@ -161,7 +161,7 @@ const SearchBox = ({
     <div>
       <div className="flex flex-row space-x-2 items-center  justify-center">
         <input
-          className="input input-bordered w-full bg-white dark:bg-gray-900"
+          className="input input-bordered w-full"
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
@@ -170,7 +170,7 @@ const SearchBox = ({
           onKeyDown={handleEnter}
         />
         <button
-          className="max-w-60 bg-brand-yellow-rgb text-black dark:text-white rounded-lg border-2 border-gray-500 p-1"
+          className="max-w-60 bg-brand-yellow-rgb text-base-content rounded-lg border-2 border-gray-500 p-1"
           onClick={handleSearch}
         >
           <SearchIcon />
@@ -331,7 +331,7 @@ export const CenteredFloatingSearhBox = ({
         padding: "10px",
         zIndex: 1500,
       }}
-      className="parent fixed bottom-7 rounded-lg border-2 border-gray-500 bg-white dark:bg-gray-900 text-black dark:text-white"
+      className="parent fixed bottom-7 rounded-lg border-2 border-gray-500 bg-base-200 text-base-content"
     >
       {isMinimized ? (
         <div>

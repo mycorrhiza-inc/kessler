@@ -1,7 +1,7 @@
 import { signOutAction } from "@/app/actions";
-import { ThemeSwitcher } from "@/components/supabasetutorial/theme-switcher";
 import { Button } from "@/components/supabasetutorial/ui/button";
 import { createClient } from "@/utils/supabase/server";
+import ThemeSelector from "./ThemeSelector";
 
 async function HeaderAuth() {
   const {
@@ -11,29 +11,26 @@ async function HeaderAuth() {
   return user ? (
     <div className="flex items-center gap-4">
       Hey, {user.email}!
-      <form action={signOutAction}>
-        <Button type="submit" variant={"outline"}>
+      <form action={signOutAction} method="post">
+        <button type="submit" className="btn btn-outline btn-secondary">
           Sign out
-        </Button>
+        </button>
       </form>
     </div>
   ) : (
     <div className="flex gap-2">
-      <Button asChild size="sm" variant={"outline"}>
-        <a href="/sign-in">Sign in</a>
-      </Button>
-      <Button asChild size="sm" variant={"default"}>
-        <a href="/sign-up">Sign up</a>
-      </Button>
+      <a href="/sign-in" className="btn btn-outline btn-secondary">
+        Sign in
+      </a>
+      <a href="/sign-up" className="btn btn-outline btn-secondary">
+        Sign up
+      </a>
     </div>
   );
 }
 const Header = () => {
   return (
-    <nav
-      className="w-full flex justify-center border-b border-b-foreground/10 h-16 bg-white dark:bg-black"
-      // style={{ position: "fixed", top: 0 }}
-    >
+    <nav className="w-full flex justify-center border-b border-b-foreground/10 h-16 bg-base-100 text-base-content">
       <div
         className="w-full max-w-5xl flex justify-between items-center p-3 px-5 text-sm"
         style={{ zIndex: 3000 }}
@@ -42,7 +39,6 @@ const Header = () => {
           <a href="/">Kessler</a>
         </div>
         <HeaderAuth />
-        <ThemeSwitcher />
       </div>
     </nav>
   );

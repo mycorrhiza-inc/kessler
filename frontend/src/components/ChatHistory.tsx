@@ -59,9 +59,7 @@ function MessageComponent({ message }: { message: Message }) {
     <div className={`flex w-full ${isUser ? "justify-end" : "justify-start"}`}>
       <div
         className={`w-11/12 rounded-lg overflow-auto min-h-[100px] p-5 ${
-          isUser
-            ? "bg-teal-100 dark:bg-teal-700"
-            : "bg-gray-200 dark:bg-gray-700"
+          isUser ? "bg-secondary" : "bg-base-300"
         }`}
       >
         <MarkdownRenderer>{message.content}</MarkdownRenderer>
@@ -72,11 +70,11 @@ function MessageComponent({ message }: { message: Message }) {
 
 function AwaitingMessageSkeleton() {
   return (
-    <div className="w-11/12 bg-gray-200 dark:bg-gray-700 rounded-lg min-h-[100px] p-5">
+    <div className="w-11/12 bg-base-300 dark:bg-gray-700 rounded-lg min-h-[100px] p-5">
       <div className="animate-pulse">
-        <div className="h-2 bg-pink-500 my-4 rounded"></div>
-        <div className="h-2 bg-pink-500 my-4 rounded"></div>
-        <div className="h-2 bg-pink-500 my-4 rounded"></div>
+        <div className="h-2 bg-accent my-4 rounded"></div>
+        <div className="h-2 bg-accent my-4 rounded"></div>
+        <div className="h-2 bg-accent my-4 rounded"></div>
       </div>
     </div>
   );
@@ -90,9 +88,9 @@ export function ChatMessages({
   loading: boolean;
 }) {
   return (
-    <div className="flex flex-col h-screen p-4 space-y-4 bg-white dark:bg-black border divide-y rounded-md">
+    <div className="flex flex-col h-screen p-4 space-y-4 overflow-y-auto bg-base-100 border divide-y rounded-md">
       {messages.length === 0 && (
-        <div className="p-5 text-center text-gray-500">
+        <div className="p-5 text-center text-base-content">
           <h2 className="text-lg font-bold">Welcome to the Chatbot!</h2>
           <p>
             Type your message in the input box below and press Enter to send.
