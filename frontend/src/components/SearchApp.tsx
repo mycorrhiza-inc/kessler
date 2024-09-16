@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 
 import { CenteredFloatingSearhBox } from "@/components/SearchBox";
 import SearchResultBox from "@/components/SearchResultBox";
-import ChatBox from "@/components/ChatBox";
+import ChatBox from "@/components/ChatBoxAnimated";
 
 export default function SearchApp() {
   const [isSearching, setIsSearching] = useState(false);

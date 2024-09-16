@@ -79,6 +79,23 @@ const config = {
     require("tailwindcss-animate"),
     require("daisyui"),
   ],
+  daisyui: {
+    themes: [
+      {
+        light: {
+          ...require("daisyui/src/theming/themes")["light"],
+          "base-100": "oklch(100%,0,0)",
+          "base-content": "oklch(0%,0,0)",
+        },
+        dark: {
+          ...require("daisyui/src/theming/themes")["dark"],
+          "base-100": "oklch(0%,0,0)",
+          "base-content": "oklch(100%,0,0)",
+        },
+      },
+      "forest",
+    ],
+  },
 } satisfies Config;
 
 export default config;

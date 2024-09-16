@@ -16,8 +16,16 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // const { theme } = useTheme();
+  // console.log(theme);
+  // const bg_color_tw = theme === "light" ? "bg-white" : "bg-black";
   return (
-    <html lang="en" className={GeistSans.className} suppressHydrationWarning>
+    <html
+      lang="en"
+      className={GeistSans.className}
+      style={{ backgroundColor: "var(--background)" }}
+      suppressHydrationWarning
+    >
       <body className="bg-background text-foreground">
         <ThemeProvider
           attribute="class"
