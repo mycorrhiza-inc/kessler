@@ -5,6 +5,7 @@ const ThemeSelector = () => {
     "forest",
     "lemonade",
     "retro",
+    // "colorblind",
     "cyberpunk",
     "valentine",
     "aqua",
@@ -20,6 +21,7 @@ const ThemeSelector = () => {
               name="theme-dropdown"
               className="theme-controller btn btn-sm btn-block btn-ghost justify-start"
               aria-label={theme.charAt(0).toUpperCase() + theme.slice(1)}
+              // Lowercase conversion probably not necessary
               value={theme.toLowerCase()}
             />
           </li>

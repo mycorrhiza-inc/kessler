@@ -9,7 +9,7 @@ import { dracula } from "react-syntax-highlighter/dist/cjs/styles/prism";
 import { useState } from "react";
 interface MarkdownRendererProps {
   children: string;
-  color: string | undefined;
+  color?: string;
 }
 export const testMarkdownContent = `
 # Header 1
