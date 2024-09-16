@@ -84,12 +84,12 @@ const config = {
       {
         light: {
           ...require("daisyui/src/theming/themes")["light"],
-          "base-100": "oklch(100%,0,0)",
+          //"base-100": "oklch(100%,0,0)",
           "base-content": "oklch(0%,0,0)",
         },
         dark: {
           ...require("daisyui/src/theming/themes")["dark"],
-          "base-100": "oklch(0%,0,0)",
+          // "base-100": "oklch(0%,0,0)",
           "base-content": "oklch(100%,0,0)",
         },
       },

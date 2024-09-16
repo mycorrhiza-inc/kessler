@@ -1,7 +1,7 @@
 import { signOutAction } from "@/app/actions";
-import { ThemeSwitcher } from "@/components/supabasetutorial/theme-switcher";
 import { Button } from "@/components/supabasetutorial/ui/button";
 import { createClient } from "@/utils/supabase/server";
+import ThemeSelector from "./ThemeSelector";
 
 async function HeaderAuth() {
   const {
@@ -39,7 +39,7 @@ const Header = () => {
           <a href="/">Kessler</a>
         </div>
         <HeaderAuth />
-        <ThemeSwitcher />
+        <ThemeSelector />
       </div>
     </nav>
   );
