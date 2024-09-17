@@ -31,6 +31,7 @@ from models.utils import PydanticBaseModel as BaseModel
 from models.files import (
     FileModel,
     FileRepository,
+    get_full_file_from_uuid,
     provide_files_repo,
     file_model_to_schema,
 )
@@ -98,10 +99,11 @@ class ThaumaturgyController(Controller):
     @get(path="/thaumaturgy/full_file/{file_id}")
     async def get_file_by_id(
         self,
-        files_repo: FileRepository,
+        db_session: AsyncSession,
         file_id: UUID = Parameter(title="File ID", description="File to retieve"),
     ) -> FileSchemaFull:
-        
+        result = await get_full_file_from_uuid(db_session, file_id)
+
     @post(path="/thaumaturgy/upsert_file", media_type=MediaType.TEXT)
     async def upsert_file_dangerous(
         self,
