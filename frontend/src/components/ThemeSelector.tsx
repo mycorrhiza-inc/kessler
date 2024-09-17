@@ -5,13 +5,16 @@ const ThemeSelector = () => {
     "forest",
     "lemonade",
     "retro",
+    // "colorblind",
     "cyberpunk",
     "valentine",
     "aqua",
   ];
   return (
-    <details className="dropdown">
-      <summary className="btn m-1">Theme</summary>
+    <div className="dropdown dropdown-hover">
+      <div tabIndex={0} role="button" className="btn m-1">
+        Theme
+      </div>
       <ul className="menu dropdown-content bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
         {themes.map((theme) => (
           <li key={theme}>
@@ -20,12 +23,13 @@ const ThemeSelector = () => {
               name="theme-dropdown"
               className="theme-controller btn btn-sm btn-block btn-ghost justify-start"
               aria-label={theme.charAt(0).toUpperCase() + theme.slice(1)}
+              // Lowercase conversion probably not necessary
               value={theme.toLowerCase()}
             />
           </li>
         ))}
       </ul>
-    </details>
+    </div>
   );
 };
 

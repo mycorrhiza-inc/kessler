@@ -19,11 +19,10 @@ const ChatBoxInternals = ({
         style={{
           position: "sticky",
           top: "0",
-          backgroundColor: "#f1f1f1",
           padding: "20px",
           textAlign: "center",
           zIndex: "1000",
-          borderBottom: "1px solid #ccc",
+          borderBottom: "1px solid ",
           height: "auto",
           pointerEvents: "auto",
         }}
@@ -34,7 +33,7 @@ const ChatBoxInternals = ({
           ></button>
         </Stack>
       </div>
-      <div className="chatbox-banner sticky top-0 bg-[#f5f5f5] dark:bg-gray-700 p-5 text-center z-50 border-b border-gray-300 h-auto">
+      <div className="chatbox-banner sticky top-0 p-5 text-center z-50 border-b border-accent h-auto">
         <div className="flex flex-row justify-between">
           <button>
             <HamburgerIcon />

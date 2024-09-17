@@ -9,6 +9,7 @@ import { dracula } from "react-syntax-highlighter/dist/cjs/styles/prism";
 import { useState } from "react";
 interface MarkdownRendererProps {
   children: string;
+  color?: string;
 }
 export const testMarkdownContent = `
 # Header 1
@@ -126,12 +127,18 @@ const CodeBlock = ({ node, inline, className, children, ...props }: any) => {
   );
 };
 
-const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ children }) => {
+const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
+  children,
+  color,
+}) => {
+  const textColor = color
+    ? `text-${color} prose-headings:text-${color}`
+    : "text-base-content prose-headings:text-base-content";
   return (
     <>
       <article
         // These colors should be style and component specific
-        className="prose prose-neutral text-base-content prose-headings:text-base-content"
+        className={"prose prose-neutral " + textColor}
         style={{ maxWidth: "70vw" }}
       >
         <Markdown

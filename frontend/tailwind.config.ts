@@ -91,7 +91,19 @@ const config = {
           ...require("daisyui/src/theming/themes")["dark"],
           // "base-100": "#000000",
           "base-content": "#FFFFFF",
+          "success-content": "#FFFFFF",
         },
+        // WORST THEME EVER DO NOT USE
+        // red: oklch(73.15% 0.1792 50)
+        // green: oklch(73.15% 0.1792 140)
+        // colorblind: {
+        //   ...require("daisyui/src/theming/themes")["aqua"],
+        //   "base-100": "#63c24d",
+        //   "base-200": "#63c24d",
+        //   "base-300": "#63c24d",
+        //   "base-content": "#fe8027",
+        //   "success-content": "#fe8027",
+        // },
       },
       "forest",
       "lemonade",

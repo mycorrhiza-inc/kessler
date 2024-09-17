@@ -62,6 +62,10 @@ services:
       - "go"
       - "run"
       - "main.go"
+    env_file:
+      - config/global.env
+    volumes:
+      - ./config/global.env:/app/.env
     expose:
       - 4041
     labels:

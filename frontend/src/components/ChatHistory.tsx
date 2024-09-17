@@ -59,10 +59,12 @@ function MessageComponent({ message }: { message: Message }) {
     <div className={`flex w-full ${isUser ? "justify-end" : "justify-start"}`}>
       <div
         className={`w-11/12 rounded-lg overflow-auto min-h-[100px] p-5 ${
-          isUser ? "bg-secondary" : "bg-base-300"
+          isUser ? "bg-success" : "bg-base-300"
         }`}
       >
-        <MarkdownRenderer>{message.content}</MarkdownRenderer>
+        <MarkdownRenderer color={isUser ? "success-content" : "base-content"}>
+          {message.content}
+        </MarkdownRenderer>
       </div>
     </div>
   );
@@ -70,7 +72,7 @@ function MessageComponent({ message }: { message: Message }) {
 
 function AwaitingMessageSkeleton() {
   return (
-    <div className="w-11/12 bg-base-300 dark:bg-gray-700 rounded-lg min-h-[100px] p-5">
+    <div className="w-11/12 bg-base-300 rounded-lg min-h-[100px] p-5">
       <div className="animate-pulse">
         <div className="h-2 bg-accent my-4 rounded"></div>
         <div className="h-2 bg-accent my-4 rounded"></div>
