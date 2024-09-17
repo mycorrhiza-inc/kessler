@@ -1,6 +1,7 @@
-from typing import Annotated, Any, List
+from typing import Annotated, Any, List, Optional
 
 from common.file_schemas import FileSchema, FileSchemaFull
+from common.org_schemas import IndividualSchema, OrganizationSchema
 from litestar.contrib.sqlalchemy.base import UUIDAuditBase
 from litestar.contrib.sqlalchemy.repository import SQLAlchemyAsyncRepository
 
@@ -100,6 +101,49 @@ async def get_texts_from_file_uuid(
         )
         for row in rows
     ]
+
+
+def model_to_schema(model: FileModel) -> FileSchema:
+    metadata_str = model.mdata
+    model.mdata = None
+    type_adapter = TypeAdapter(FileSchema)
+    schema = type_adapter.validate_python(
+        model
+    )  # This probably needs to be implemented manually since text is still stored in db
+    schema.mdata = json.loads(metadata_str)
+    return schema
+
+
+async def get_partial_file_from_uuid(async_db_connection: AsyncSession, file_id: UUID):
+    result = async_db_connection.execute(
+        select(FileModel).where(FileModel.id == file_id)
+    )
+    db_model = result.scalars().first()
+    return model_to_schema(db_model)
+
+
+async def get_full_file_from_uuid(async_db_connection: AsyncSession, file_id: UUID):
+    tasks = [
+        get_partial_file_from_uuid(async_db_connection, file_id),
+        get_texts_from_file_uuid(async_db_connection, file_id),
+    ]
+    components = await asyncio.gather(*tasks)
+
+    def piece_together_full_fileschema(
+        partial_file_schema: FileSchema,
+        texts: List[FileTextSchema] = [],
+        authors: List[IndividualSchema] = [],
+        org: Optional[OrganizationSchema] = None,
+    ) -> FileSchemaFull:
+        return_dict = partial_file_schema.dict()
+        return_dict["texts"] = texts
+        return_dict["authors"] = authors
+        return_dict["organization"] = org
+        return FileSchemaFull(**return_dict)
+
+    return piece_together_full_fileschema(
+        partial_file_schema=components[0], texts=components[1]
+    )
 
 
 async def delete_file_from_file_uuid(
@@ -267,15 +311,6 @@ async def provide_files_repo(db_session: AsyncSession) -> FileRepository:
     default_logger.info(file_repo)
     default_logger.info(type(file_repo))
     return file_repo
-
-
-def model_to_schema(model: FileModel) -> FileSchema:
-    metadata_str = model.mdata
-    model.mdata = None
-    type_adapter = TypeAdapter(FileSchema)
-    schema = type_adapter.validate_python(model)
-    schema.mdata = json.loads(metadata_str)
-    return schema
 
 
 class FileSchemaWithText(FileSchema):
