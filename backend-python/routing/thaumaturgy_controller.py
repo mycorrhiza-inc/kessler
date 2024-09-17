@@ -32,7 +32,7 @@ from models.files import (
     FileModel,
     FileRepository,
     provide_files_repo,
-    model_to_schema,
+    file_model_to_schema,
 )
 from common.file_schemas import FileSchema, DocumentStatus, docstatus_index
 

@@ -21,7 +21,7 @@ from models.files import (
     FileModel,
     FileRepository,
     FileSchema,
-    model_to_schema,
+    file_model_to_schema,
     provide_files_repo,
 )
 

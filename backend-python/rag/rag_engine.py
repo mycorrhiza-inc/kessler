@@ -18,7 +18,7 @@ from vecstore.search import search
 import logging
 
 
-from models.files import FileRepository, FileSchema, model_to_schema
+from models.files import FileRepository, FileSchema, file_model_to_schema
 
 from vecstore import search
 
@@ -90,7 +90,7 @@ async def convert_search_results_to_frontend_table(
             text_list.append(result["entity"]["text"])
             # text_list.append(lemon_text)
     file_models = await get_files_from_uuids(files_repo, uuid_list)
-    file_results = list(map(model_to_schema, file_models))
+    file_results = list(map(file_model_to_schema, file_models))
     if include_text:
         for index in range(len(file_results)):
             file_results[index].display_text = text_list[index]

@@ -103,7 +103,7 @@ async def get_texts_from_file_uuid(
     ]
 
 
-def model_to_schema(model: FileModel) -> FileSchema:
+def file_model_to_schema(model: FileModel) -> FileSchema:
     metadata_str = model.mdata
     model.mdata = None
     type_adapter = TypeAdapter(FileSchema)
@@ -119,7 +119,7 @@ async def get_partial_file_from_uuid(async_db_connection: AsyncSession, file_id:
         select(FileModel).where(FileModel.id == file_id)
     )
     db_model = result.scalars().first()
-    return model_to_schema(db_model)
+    return file_model_to_schema(db_model)
 
 
 async def get_full_file_from_uuid(async_db_connection: AsyncSession, file_id: UUID):

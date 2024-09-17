@@ -33,7 +33,7 @@ from models.files import (
     FileModel,
     FileRepository,
     provide_files_repo,
-    model_to_schema,
+    file_model_to_schema,
     get_texts_from_file_uuid,
 )
 
@@ -131,7 +131,7 @@ class FileController(Controller):
     ) -> FileSchema:
         obj = await files_repo.get(file_id)
 
-        return model_to_schema(obj)
+        return file_model_to_schema(obj)
 
     @get(path="/files/markdown/{file_id:uuid}")
     async def get_markdown(
@@ -220,7 +220,7 @@ class FileController(Controller):
     ) -> list[FileSchema]:
         results = await files_repo.list()
         logger.info(f"{len(results)} results")
-        valid_results = list(map(model_to_schema, results))
+        valid_results = list(map(file_model_to_schema, results))
         return valid_results
 
     @post(path="/files/all")
@@ -260,7 +260,7 @@ class FileController(Controller):
         filters = querydata_to_filters(query)
         results = await files_repo.list(*filters)
         logger.info(f"{len(results)} results")
-        valid_results = list(map(model_to_schema, results))
+        valid_results = list(map(file_model_to_schema, results))
         if query.match_metadata is None or query.match_metadata == {}:
             return valid_results
         filtered_valid_results = filter_list_mdata(valid_results, query.match_metadata)
