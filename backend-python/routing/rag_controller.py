@@ -1,4 +1,4 @@
-from models.chats import (
+from common.chat_schemas import (
     KeChatMessage,
     cm_to_dict,
     sanitzie_chathistory_llamaindex,
