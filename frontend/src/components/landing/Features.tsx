@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
@@ -91,38 +92,75 @@ const futureFeaturesData: Feature[] = [
   },
 ];
 
+// <div className="card bg-base-100 w-96 shadow-xl">
+//   <figure className="px-10 pt-10">
+//     <img
+//       src="https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp"
+//       alt="Shoes"
+//       className="rounded-xl" />
+//   </figure>
+//   <div className="card-body items-center text-center">
+//     <h2 className="card-title">Shoes!</h2>
+//     <p>If a dog chews shoes whose shoes does he choose?</p>
+//     <div className="card-actions">
+//       <button className="btn btn-primary">Buy Now</button>
+//     </div>
+//   </div>
+// </div>
+
+//const SingleFeature = ({ feature }: { feature: Feature }) => {
+//  const { icon, title, description } = feature;
+//
+//  return (
+//    <>
+//      <motion.div
+//        variants={{
+//          hidden: {
+//            opacity: 0,
+//            y: -10,
+//          },
+//
+//          visible: {
+//            opacity: 1,
+//            y: 0,
+//          },
+//        }}
+//        initial="hidden"
+//        whileInView="visible"
+//        transition={{ duration: 0.5 }}
+//        viewport={{ once: true }}
+//        className="animate_top z-40 rounded-lg border border-white bg-white p-7.5 shadow-solid-3 transition-all hover:shadow-solid-4 dark:border-strokedark dark:bg-blacksection dark:hover:bg-hoverdark xl:p-12.5"
+//      >
+//        <div className="relative flex h-16 w-16 items-center justify-center rounded-[4px] bg-primary">
+//          <Image src={icon} width={36} height={36} alt="title" />
+//        </div>
+//        <h3 className="mb-5 mt-7.5 text-xl font-semibold text-black dark:text-white xl:text-itemtitle">
+//          {title}
+//        </h3>
+//        <p>{description}</p>
+//      </motion.div>
+//    </>
+//  );
+//};
 const SingleFeature = ({ feature }: { feature: Feature }) => {
   const { icon, title, description } = feature;
 
   return (
-    <>
-      <motion.div
-        variants={{
-          hidden: {
-            opacity: 0,
-            y: -10,
-          },
-
-          visible: {
-            opacity: 1,
-            y: 0,
-          },
-        }}
-        initial="hidden"
-        whileInView="visible"
-        transition={{ duration: 0.5 }}
-        viewport={{ once: true }}
-        className="animate_top z-40 rounded-lg border border-white bg-white p-7.5 shadow-solid-3 transition-all hover:shadow-solid-4 dark:border-strokedark dark:bg-blacksection dark:hover:bg-hoverdark xl:p-12.5"
-      >
-        <div className="relative flex h-16 w-16 items-center justify-center rounded-[4px] bg-primary">
-          <Image src={icon} width={36} height={36} alt="title" />
-        </div>
-        <h3 className="mb-5 mt-7.5 text-xl font-semibold text-black dark:text-white xl:text-itemtitle">
-          {title}
-        </h3>
+    <div className="card bg-base-200 w-96 shadow-xl">
+      <figure className="px-10 pt-10">
+        <Image
+          src={icon}
+          width={36}
+          height={36}
+          alt={title}
+          className="rounded-xl"
+        />
+      </figure>
+      <div className="card-body items-center text-center">
+        <h2 className="card-title">{title}</h2>
         <p>{description}</p>
-      </motion.div>
-    </>
+      </div>
+    </div>
   );
 };
 
@@ -134,7 +172,7 @@ const Feature = () => {
         <div className="mx-auto max-w-c-1315 px-4 md:px-8 xl:px-0">
           {/* <!-- Section Title Start --> */}
           <div className="text-center">
-            <h2 className="text-4xl font-bold">SOLID FEATURES</h2>
+            <h2 className="text-4xl font-bold">FEATURES (So far)</h2>
             <h3 className="text-xl mt-4">Core Features of Kessler</h3>
             <p className="mt-2">
               Kessler is still in beta, but this is what we have implemented so
@@ -158,3 +196,5 @@ const Feature = () => {
     </>
   );
 };
+
+export default Feature;

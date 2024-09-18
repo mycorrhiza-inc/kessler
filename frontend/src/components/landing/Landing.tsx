@@ -1,19 +1,23 @@
+import Feature from "./Features";
 import Hero from "./Hero";
 
 export default function Landing() {
   return (
     <main>
       <div
-        className="searchContainer"
+        className="items-center justify-center h-full"
         style={{
-          position: "relative",
           width: "99vw",
-          height: "80vh",
+          height: "60vh",
           padding: "20",
         }}
       >
-        <div className="flex items-center justify-center h-full">
+        <div className="items-center justify-center h-full">
           <Hero></Hero>
+        </div>
+
+        <div className=" items-center justify-center">
+          <Feature></Feature>
         </div>
       </div>
     </main>

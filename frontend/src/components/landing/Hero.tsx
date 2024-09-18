@@ -2,7 +2,7 @@ export default function Hero() {
   // Fix the broken min-h-screen stuff and make it actually work
   return (
     <div
-      className="hero min-h-screen min-w-screen"
+      className="hero min-h-full min-w-screen"
       style={{
         backgroundImage: "url(/landing-background.webp)",
       }}
