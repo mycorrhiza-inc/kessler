@@ -18,7 +18,7 @@ export default function Landing() {
         </div>
 
         <div
-          className="flex items-center justify-center w-full"
+          className="flex flex-col items-center justify-center w-full"
           style={{ minWidth: "30vw" }}
         >
           <Feature></Feature>

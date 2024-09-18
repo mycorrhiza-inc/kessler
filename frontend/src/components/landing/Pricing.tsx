@@ -4,9 +4,10 @@ import Image from "next/image";
 import MarkdownRenderer from "../MarkdownRenderer";
 
 const Pricing = () => {
-  const isUser = true; // Example boolean, replace with actual logic
-  const message = {
-    community: `
+  const pricing_tiers = [
+    {
+      key: "community",
+      message: `
 ## $0 /month
 **Community Tier**
 
@@ -14,8 +15,14 @@ const Pricing = () => {
 - Access to a limited set of open access government documents
 - [Run your own instance with our open source code](https://git.mycor.io/mycorrhiza/kessler)
 `,
-    professional: `
-## $30 /month
+      buttonLink: "https://app.kessler.xyz",
+      buttonText: "Try Now",
+      indicator: null,
+    },
+    {
+      key: "professional",
+      message: `
+## $50 /month
 **Professional Tier**
 
 - Access to all our government documents
@@ -23,8 +30,13 @@ const Pricing = () => {
 - Use of frontier level Large Language Models for rag functionality (Llama 405B, GPT-4o)
 - Intended for Individuals or Non-Profits doing community work.
 `,
-
-    enterprise: `
+      buttonLink: "/payment",
+      buttonText: "Purchase",
+      indicator: "Popular!",
+    },
+    {
+      key: "enterprise",
+      message: `
 ## Contact Us
 **Enterprise Tier**
 
@@ -33,7 +45,11 @@ const Pricing = () => {
 - Access to our raw government datasets
 - Intended for Large Companies or National/International NGO's
 `,
-  };
+      buttonLink: "/contact",
+      buttonText: "Contact Us",
+      indicator: null,
+    },
+  ];
 
   return (
     <>
@@ -42,57 +58,36 @@ const Pricing = () => {
           <div className="animate_top mx-auto text-center">
             <div className="text-center">
               <h2 className="text-2xl font-bold">PRICING PLANS</h2>
-              <p className="mt-4 text-gray-600">
+              <p className="mt-4">
                 Pricing that fits your needs and helps fund future development.
               </p>
             </div>
           </div>
         </div>
-
-        <div className="relative mx-auto mt-15 max-w-[1207px] px-4 md:px-8 xl:mt-20 xl:px-0">
-          <div className="absolute -bottom-15 -z-1 h-full w-full">
-            <Image
-              fill
-              src="./images/shape/shape-dotted-light.svg"
-              alt="Dotted"
-              className="dark:hidden"
-            />
-          </div>
-
-          <div className="flex flex-wrap justify-center gap-7.5 lg:flex-nowrap xl:gap-12.5">
-            <div className="card bg-base-100 w-96 shadow-xl">
-              <div className="card-body">
-                <MarkdownRenderer>{message.community}</MarkdownRenderer>
-                <div className="card-actions justify-end">
-                  <a href="https://app.kessler.xyz" className="btn btn-primary">
-                    Try Now
-                  </a>
+        {/* This should be dryified quite a bit */}
+        <div className="flex flex-wrap justify-center gap-5 mt-15 max-w-[1207px] px-4 md:px-8 xl:mt-20 xl:px-0">
+          {pricing_tiers.map(
+            ({ key, message, buttonLink, buttonText, indicator }) => (
+              <div
+                key={key}
+                className={`card bg-base-200 w-96 shadow-xl ${indicator ? "indicator" : ""}`}
+              >
+                {indicator && (
+                  <span className="indicator-item badge badge-secondary">
+                    {indicator}
+                  </span>
+                )}
+                <div className="card-body">
+                  <MarkdownRenderer>{message}</MarkdownRenderer>
+                  <div className="card-actions justify-end">
+                    <a href={buttonLink} className="btn btn-primary">
+                      {buttonText}
+                    </a>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            <div className="card bg-base-100 w-96 shadow-xl">
-              <div className="card-body">
-                <MarkdownRenderer>{message.professional}</MarkdownRenderer>
-                <div className="card-actions justify-end">
-                  <a href="/payment" className="btn btn-primary">
-                    Purchase
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            <div className="card bg-base-100 w-96 shadow-xl">
-              <div className="card-body">
-                <MarkdownRenderer>{message.enterprise}</MarkdownRenderer>
-                <div className="card-actions justify-end">
-                  <a href="/contact" className="btn btn-primary">
-                    Contact Us
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
+            ),
+          )}
         </div>
       </section>
     </>

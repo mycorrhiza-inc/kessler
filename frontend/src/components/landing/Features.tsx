@@ -172,7 +172,8 @@ const Feature = () => {
         <div className="mx-auto max-w-c-1315 px-4 md:px-8 xl:px-0">
           {/* <!-- Section Title Start --> */}
           <div className="text-center">
-            <h2 className="text-4xl font-bold">FEATURES (So far)</h2>
+            <h2 className="text-4xl font-bold">SOLID FEATURES</h2>
+            <h3 className="text-xl mt-4">Core Features of Kessler</h3>
             <p className="mt-2">
               Kessler is still in beta, but this is what we have implemented so
               far.
@@ -180,7 +181,7 @@ const Feature = () => {
           </div>
           {/* <!-- Section Title End --> */}
 
-          <div className="mt-12.5 grid grid-cols-1 gap-7.5 md:grid-cols-2 lg:mt-15 lg:grid-cols-3 xl:mt-20 xl:gap-12.5">
+          <div className="mt-12.5 grid grid-cols-1 gap-7.5 md:grid-cols-2 lg:mt-15 lg:grid-cols-3 xl:mt-20 gap-5">
             {/* <!-- Features item Start --> */}
 
             {featuresData.map((feature, key) => (
