@@ -173,7 +173,6 @@ const Feature = () => {
           {/* <!-- Section Title Start --> */}
           <div className="text-center">
             <h2 className="text-4xl font-bold">FEATURES (So far)</h2>
-            <h3 className="text-xl mt-4">Core Features of Kessler</h3>
             <p className="mt-2">
               Kessler is still in beta, but this is what we have implemented so
               far.

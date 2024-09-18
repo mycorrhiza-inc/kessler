@@ -1,5 +1,6 @@
 import Feature from "./Features";
 import Hero from "./Hero";
+import Pricing from "./Pricing";
 
 export default function Landing() {
   return (
@@ -16,8 +17,12 @@ export default function Landing() {
           <Hero></Hero>
         </div>
 
-        <div className=" items-center justify-center">
+        <div
+          className="flex items-center justify-center w-full"
+          style={{ minWidth: "30vw" }}
+        >
           <Feature></Feature>
+          <Pricing></Pricing>
         </div>
       </div>
     </main>
