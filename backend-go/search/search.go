@@ -10,7 +10,7 @@ import (
 	"reflect"
 )
 
-var quickwitURL = os.Getenv("S3_BUCKET")
+var quickwitURL = os.Getenv("QUICKWIT_ENDPOINT")
 
 type Hit struct {
 	CreatedAt     string   `json:"created_at"`
@@ -155,9 +155,10 @@ func searchQuickwit(r SearchRequest) ([]SearchData, error) {
 
 	request := createQWRequest(queryString)
 	jsonData, err := json.Marshal(request)
+	log.Printf("jsondata: \n%s", jsonData)
 	if err != nil {
-		log.Fatalf("Error Marshalling quickwit request: %s", err)
-		errturn(err)
+		log.Printf("Error Marshalling quickwit request: %s", err)
+		return nil, err
 	}
 
 	request_url := fmt.Sprintf("%s/api/v1/dockets/search", quickwitURL)
@@ -167,27 +168,28 @@ func searchQuickwit(r SearchRequest) ([]SearchData, error) {
 		bytes.NewBuffer(jsonData),
 	)
 	if err != nil {
-		log.Fatalf("Error sending request to quickwit: %s", err)
+		log.Printf("Error sending request to quickwit: %s", err)
 		errturn(err)
 	}
 
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		log.Fatalf("Error: received status code %v", resp.StatusCode)
-		return errturn(fmt.Errorf("Error: received status code %v", resp.StatusCode))
+		log.Printf("Error: received status code %v", resp.StatusCode)
+		a, e := errturn(fmt.Errorf("received status code %v", resp.StatusCode))
+		return a, e
 	}
 	var searchResponse quickwitSearchResponse
 	err = json.NewDecoder(resp.Body).Decode(&searchResponse)
 	if err != nil {
-		log.Fatalf("Error unmarshalling quickwit response: %s", err)
+		log.Printf("Error unmarshalling quickwit response: %s", err)
 		errturn(err)
 	}
 
 	data, err := ExtractSearchData(searchResponse)
 
 	if err != nil {
-		log.Fatalf("Error creating response data: %s", err)
+		log.Printf("Error creating response data: %s", err)
 		errturn(err)
 	}
 

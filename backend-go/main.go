@@ -4,10 +4,11 @@ import (
 	"net/http"
 	"time"
 
+	"log"
+
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	"github.com/mycorrhizainc/kessler/backend/search"
-	"log"
 )
 
 // CORS middleware function
@@ -57,5 +58,9 @@ func main() {
 		WriteTimeout: 10 * time.Second,
 	}
 
-	server.ListenAndServe()
+	log.Println("Starting server on :4041")
+	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		log.Fatalf("Webserver Failed: %s", err)
+	}
+
 }
