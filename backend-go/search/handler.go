@@ -33,15 +33,14 @@ func HandleSearchRequest(w http.ResponseWriter, r *http.Request) {
 
 		data, err := searchQuickwit(RequestData)
 		if err != nil {
-			log.Fatalf("Error searching quickwit: %s", err)
+			log.Printf("Error searching quickwit: %s", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
 		}
 
 		respString, err := json.Marshal(data)
 
 		if err != nil {
-			log.Fatal("Error marshalling response data")
+			log.Println("Error marshalling response data")
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
