@@ -1,13 +1,7 @@
-from litestar.contrib.sqlalchemy.base import UUIDAuditBase
-
-from sqlalchemy.orm import Mapped
-
-
-from typing import Optional, List, Union, Dict
-
 from pydantic import BaseModel
 
-import hashlib
+
+from common.niclib import token_split
 
 from llama_index.core.llms import ChatMessage as LlamaChatMessage
 
@@ -15,37 +9,44 @@ from enum import Enum
 from pathlib import Path
 
 
-from llama_index.llms.openai import OpenAI
-from llama_index.core import PromptTemplate
+from typing import Optional, List, Union, Any, Tuple, Dict
 
-from llama_index.core.retrievers import BaseRetriever
-from llama_index.core.llms import LLM
-from dataclasses import dataclass
-from typing import Optional, List, Union, Any, Tuple
-
-from logic.databaselogic import get_files_from_uuids
-import nest_asyncio
 import asyncio
 
 from rag.SemanticSplitter import split_by_max_tokensize
-from rag.llamaindex import get_llm_from_model_str
-from vecstore.search import search
 
 import logging
 
+from llama_index.llms.groq import Groq
+from llama_index.llms.openai import OpenAI
+from llama_index.llms.octoai import OctoAI
+from llama_index.llms.fireworks import Fireworks
 
-from models.files import FileRepository, FileSchema, file_model_to_schema
 
-from vecstore import search
+from constants import OPENAI_API_KEY, OCTOAI_API_KEY, GROQ_API_KEY, FIREWORKS_API_KEY
 
 
-from uuid import UUID
+def get_llm_from_model_str(model_name: Optional[str]):
+    if model_name is None:
+        model_name = "llama-405b"
+    if model_name in ["llama-8b", "llama-3.1-8b-instant"]:
+        actual_name = "llama-3.1-8b-instant"
+        return Groq(model=actual_name, request_timeout=60.0, api_key=GROQ_API_KEY)
+    if model_name in [
+        "llama-70b",
+        "llama3-70b-8192",
+        "llama-3.1-70b-versatile",
+    ]:
+        actual_name = "llama-3.1-70b-versatile"
+        return Groq(model=actual_name, request_timeout=60.0, api_key=GROQ_API_KEY)
+    if model_name in ["llama-405b", "llama-3.1-405b-reasoning"]:
+        actual_name = "accounts/fireworks/models/llama-v3p1-405b-instruct"
+        return Fireworks(model=actual_name, api_key=FIREWORKS_API_KEY)
+    if model_name in ["gpt-4o"]:
+        return OpenAI(model=model_name, request_timeout=60.0, api_key=OPENAI_API_KEY)
+    else:
+        raise Exception("Model String Invalid or Not Supported")
 
-from advanced_alchemy.filters import SearchFilter, CollectionFilter
-
-import re
-
-from constants import lemon_text
 
 qa_prompt = (
     lambda context_str: f"""
@@ -187,3 +188,22 @@ class KeLLMUtils:
         combined_summaries_prompt = KeChatMessage(ChatRole.user, "\n".join(summaries))
         final_summary = await self.achat([cohere_message, combined_summaries_prompt])
         return final_summary.content
+
+    async def mapreduce_llm_instruction_across_string(
+        self, content: str, chunk_size: int, instruction: str, join_str: str
+    ) -> str:
+        # Replace with semantic splitter
+        split = token_split(content, chunk_size)
+
+        async def clean_chunk(chunk: str) -> str:
+
+            history = [
+                KeChatMessage(content=instruction, role=ChatRole.assistant),
+                KeChatMessage(content=chunk, role=ChatRole.user),
+            ]
+            completion = await self.llm.achat(history)
+            return completion.content
+
+        tasks = [clean_chunk(chunk) for chunk in split]
+        results = await asyncio.gather(*tasks)
+        return join_str.join(results)
