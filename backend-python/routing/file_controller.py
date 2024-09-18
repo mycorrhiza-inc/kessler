@@ -64,6 +64,10 @@ from constants import (
     OS_TMPDIR,
 )
 
+import logging
+
+default_logger = logging.getLogger(__name__)
+
 
 class UUIDEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -132,6 +136,18 @@ class FileController(Controller):
         obj = await files_repo.get(file_id)
 
         return file_model_to_schema(obj)
+
+    @get(path="/file/get-by-hash/{file_hash:str}")
+    async def get_file_by_hash(
+        self,
+        files_repo: FileRepository,
+        file_id: UUID = Parameter(title="File ID", description="File to retieve"),
+    ) -> Dict[str, Any]:
+        logger = default_logger
+        logger.error(
+            "Only used for deduplication, not super relevant for now, not implementing. This method should not be called"
+        )
+        return {"exists": False}
 
     @get(path="/files/markdown/{file_id:uuid}")
     async def get_markdown(
