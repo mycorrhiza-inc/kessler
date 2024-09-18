@@ -33,7 +33,7 @@ from models.files import (
     FileModel,
     FileRepository,
     provide_files_repo,
-    model_to_schema,
+    file_model_to_schema,
     get_texts_from_file_uuid,
 )
 
@@ -63,6 +63,10 @@ from logic.databaselogic import QueryData, filter_list_mdata, querydata_to_filte
 from constants import (
     OS_TMPDIR,
 )
+
+import logging
+
+default_logger = logging.getLogger(__name__)
 
 
 class UUIDEncoder(json.JSONEncoder):
@@ -131,7 +135,19 @@ class FileController(Controller):
     ) -> FileSchema:
         obj = await files_repo.get(file_id)
 
-        return model_to_schema(obj)
+        return file_model_to_schema(obj)
+
+    @get(path="/file/get-by-hash/{file_hash:str}")
+    async def get_file_by_hash(
+        self,
+        files_repo: FileRepository,
+        file_id: UUID = Parameter(title="File ID", description="File to retieve"),
+    ) -> Dict[str, Any]:
+        logger = default_logger
+        logger.error(
+            "Only used for deduplication, not super relevant for now, not implementing. This method should not be called"
+        )
+        return {"exists": False}
 
     @get(path="/files/markdown/{file_id:uuid}")
     async def get_markdown(
@@ -220,7 +236,7 @@ class FileController(Controller):
     ) -> list[FileSchema]:
         results = await files_repo.list()
         logger.info(f"{len(results)} results")
-        valid_results = list(map(model_to_schema, results))
+        valid_results = list(map(file_model_to_schema, results))
         return valid_results
 
     @post(path="/files/all")
@@ -260,7 +276,7 @@ class FileController(Controller):
         filters = querydata_to_filters(query)
         results = await files_repo.list(*filters)
         logger.info(f"{len(results)} results")
-        valid_results = list(map(model_to_schema, results))
+        valid_results = list(map(file_model_to_schema, results))
         if query.match_metadata is None or query.match_metadata == {}:
             return valid_results
         filtered_valid_results = filter_list_mdata(valid_results, query.match_metadata)

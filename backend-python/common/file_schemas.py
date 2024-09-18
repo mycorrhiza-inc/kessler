@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 from pydantic import Field, field_validator, TypeAdapter
 
-from typing import Annotated, Any, List
+from typing import Annotated, Any, List, Dict
 
 
 from enum import Enum
@@ -32,7 +32,7 @@ class FileSchema(BaseModel):
     short_summary: str | None = None
     summary: str | None = None
     organization_id: UUID | None = None
-    mdata: dict | None = None
+    mdata: Dict[str, Any] = {}
     display_text: str | None = None
 
     # Good idea to do this for dict based mdata, instead wrote a custom function for it
@@ -54,7 +54,7 @@ class FileSchemaFull(BaseModel):
     short_summary: str | None = None
     summary: str | None = None
     organization_id: UUID | None = None
-    mdata: dict | None = None
+    mdata: Dict[str, Any] = {}
     texts: List[FileTextSchema] = []
     authors: List[IndividualSchema] = []
     organization: OrganizationSchema | None = None
@@ -67,6 +67,7 @@ class DocumentStatus(str, Enum):
     organization_assigned = "organization_assigned"
     summarization_completed = "summarization_completed"
     embeddings_completed = "embeddings_completed"
+    upload_document_to_db = "upload_document_to_db"
     stage3 = "stage3"
     stage2 = "stage2"
     stage1 = "stage1"
@@ -86,13 +87,15 @@ def docstatus_index(docstatus: DocumentStatus) -> int:
             return 2
         case DocumentStatus.stage3:
             return 3
-        case DocumentStatus.embeddings_completed:
-            return 4
         case DocumentStatus.summarization_completed:
+            return 4
+        case DocumentStatus.embeddings_completed:
             return 5
         case DocumentStatus.organization_assigned:
             return 6
         case DocumentStatus.encounters_analyzed:
             return 7
+        case DocumentStatus.upload_document_to_db:
+            return 8
         case DocumentStatus.completed:
             return 1000
