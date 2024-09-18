@@ -10,7 +10,7 @@ from logic.databaselogic import get_files_from_uuids
 import nest_asyncio
 import asyncio
 
-from common.chat_schemas import ChatRole, KeChatMessage, sanitzie_chathistory_llamaindex
+from common.llm_utils import ChatRole, KeChatMessage, sanitzie_chathistory_llamaindex
 from rag.SemanticSplitter import split_by_max_tokensize
 from rag.llamaindex import get_llm_from_model_str
 from vecstore.search import search
