@@ -123,8 +123,8 @@ const ChatBox = ({ chatVisible, setChatVisible, parentRef }: ChatBoxProps) => {
       {resizeHandle("left")}
       {resizeHandle("right")}
       <ChatBoxInternals
-        chatSidebarVisible={chatSidebarVisible}
-        setChatSidebarVisible={setChatSidebarVisible}
+      // chatSidebarVisible={chatSidebarVisible}
+      // setChatSidebarVisible={setChatSidebarVisible}
       ></ChatBoxInternals>
     </motion.div>
   );

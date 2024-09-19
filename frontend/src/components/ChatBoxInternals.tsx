@@ -8,13 +8,7 @@ interface Message {
   content: string;
   key: symbol;
 }
-const ChatBoxInternals = ({
-  chatSidebarVisible,
-  setChatSidebarVisible,
-}: {
-  chatSidebarVisible: boolean;
-  setChatSidebarVisible: React.Dispatch<React.SetStateAction<boolean>>;
-}) => {
+const ChatBoxInternals = ({}: {}) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [needsResponse, setResponse] = useState(false);
   const [loadingResponse, setLoadingResponse] = useState(false);
@@ -69,7 +63,8 @@ const ChatBoxInternals = ({
     "llama-8b",
   ];
 
-  const handleSubmit = async (e) => {
+  // This isnt working fix problem with type
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
 
     // Check if e.target is a form element
@@ -81,6 +76,7 @@ const ChatBoxInternals = ({
     const newMessage = {
       role: "user",
       content: userMessage,
+      key: Symbol(),
     };
 
     setMessages([...messages, newMessage]);

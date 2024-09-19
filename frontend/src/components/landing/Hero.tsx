@@ -4,6 +4,7 @@ export default function Hero() {
     <div
       className="hero min-h-full min-w-screen"
       style={{
+        height: "60vh",
         backgroundImage: "url(/landing-background.webp)",
       }}
     >
@@ -13,6 +14,11 @@ export default function Hero() {
           Welcome to <br /> Kessler
         </h1>
         <p className="mb-5">Please use our application 🙏 Namaste</p>
+        <div className="flex justify-center space-x-4">
+          <a href="/demo" className="btn glass shadow-xl btn-lg">
+            Try Now!
+          </a>
+        </div>
         <div className="flex justify-center space-x-4">
           <a href="/sign-in" className="btn glass shadow-xl">
             Sign In
