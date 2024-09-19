@@ -4,7 +4,6 @@ import { useRef, useState } from "react";
 
 import { CenteredFloatingSearhBox } from "@/components/SearchBox";
 import SearchResultBox from "@/components/SearchResultBox";
-import ChatBox from "@/components/ChatBox";
 import ChatBoxInternals from "./ChatBoxInternals";
 
 export default function SearchApp() {
