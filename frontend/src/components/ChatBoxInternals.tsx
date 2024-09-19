@@ -71,12 +71,19 @@ const ChatBoxInternals = ({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Check if e.target is a form element
+    if (!(e.target instanceof HTMLFormElement)) return;
+
     const userMessage = e.target.elements.userMessage.value.trim();
     if (!userMessage) return;
 
-    const newMessage = Message({ role: "user", content: userMessage });
-    setMessages([...messages, newMessage]);
+    const newMessage = {
+      role: "user",
+      content: userMessage,
+    };
 
+    setMessages([...messages, newMessage]);
     await getResponse();
   };
 
@@ -95,6 +102,7 @@ const ChatBoxInternals = ({
       handleSubmit(e);
     }
   };
+
   return (
     <form className="h-screen flex flex-col" onSubmit={handleSubmit}>
       <div className="flex-none h-[5%] flex flex-row justify-center">
@@ -129,15 +137,12 @@ const ChatBoxInternals = ({
         <ChatMessages messages={messages} loading={false}></ChatMessages>
       </div>
       <div className="flex-none h-[25%]">
-        {/* Submit with this logic */}
-        {/* if (evt.keyCode == 13 && !evt.shiftKey) { */}
-        {/*     form.submit(); */}
-        {/* } */}
         <textarea
           name="userMessage"
           className="textarea textarea-accent w-full h-full"
           placeholder={`Type Here to Chat\nEnter to Send, Shift+Enter for New Line`}
           onKeyDown={handleKeyDown}
+          type="text" // Ensuring the name attribute allows handling in a form element
         ></textarea>
       </div>
     </form>
