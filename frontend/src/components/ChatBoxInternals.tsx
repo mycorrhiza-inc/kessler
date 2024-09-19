@@ -8,13 +8,7 @@ interface Message {
   content: string;
   key: symbol;
 }
-const ChatBoxInternals = ({
-  chatSidebarVisible,
-  setChatSidebarVisible,
-}: {
-  chatSidebarVisible: boolean;
-  setChatSidebarVisible: React.Dispatch<React.SetStateAction<boolean>>;
-}) => {
+const ChatBoxInternals = ({}: {}) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [needsResponse, setResponse] = useState(false);
   const [loadingResponse, setLoadingResponse] = useState(false);
@@ -69,7 +63,8 @@ const ChatBoxInternals = ({
     "llama-8b",
   ];
 
-  const handleSubmit = async (e) => {
+  // This isnt working fix problem with type
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
 
     // Check if e.target is a form element
@@ -81,21 +76,23 @@ const ChatBoxInternals = ({
     const newMessage = {
       role: "user",
       content: userMessage,
+      key: Symbol(),
     };
 
     setMessages([...messages, newMessage]);
     await getResponse();
   };
 
-  const handleModelSelect = (model) => {
+  // More BS
+  const handleModelSelect = (model: any) => {
     setSelectedModel(model);
   };
 
-  const handleRagModeToggle = (e) => {
+  const handleRagModeToggle = (e: any) => {
     setRagMode(e.target.checked);
   };
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = (e: any) => {
     if (e.key === "Enter" && !e.shiftKey) {
       console.log("Hit enter, with shift key down");
       e.preventDefault();
@@ -142,7 +139,7 @@ const ChatBoxInternals = ({
           className="textarea textarea-accent w-full h-full"
           placeholder={`Type Here to Chat\nEnter to Send, Shift+Enter for New Line`}
           onKeyDown={handleKeyDown}
-          type="text" // Ensuring the name attribute allows handling in a form element
+          // type="text" // Ensuring the name attribute allows handling in a form element
         ></textarea>
       </div>
     </form>
