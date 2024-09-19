@@ -1,7 +1,7 @@
 # local development docker compose
 services:
   frontend:
-    hostname: app.kessler.xyz
+    hostname: kessler.xyz
     image: fractalhuman1/kessler-frontend:latest
     env_file:
       - config/global.env
@@ -9,10 +9,10 @@ services:
       - ./config/frontend.env.local:/app.env.local
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`${DOMAIN:-app.kessler.xyz}`) && PathPrefix(`/`)"
+      - "traefik.http.routers.frontend.rule=Host(`${DOMAIN:-kessler.xyz}`) && PathPrefix(`/`)"
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.routers.frontend.tls.certresolver=myresolver"
-      - "traefik.http.routers.whoami.rule=Host(`${DOMAIN:-app.kessler.xyz}`)"
+      - "traefik.http.routers.whoami.rule=Host(`${DOMAIN:-kessler.xyz}`)"
       - "traefik.http.routers.whoami.entrypoints=websecure"
       - "traefik.http.routers.whoami.tls.certresolver=myresolver"
     expose:
@@ -53,7 +53,7 @@ services:
       - ${VOLUMES_DIRECTORY:-./volumes}/files:/files
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`${DOMAIN:-app.kessler.xyz}`) && PathPrefix(`/api/v1`) || PathPrefix(`/schema`)"
+      - "traefik.http.routers.backend.rule=Host(`${DOMAIN:-kessler.xyz}`) && PathPrefix(`/api/v1`) || PathPrefix(`/schema`)"
       - "traefik.http.routers.backend.entrypoints=websecure"
       - "traefik.http.routers.backend.tls.certresolver=myresolver"
       # - "traefik.http.routers.backend.tls={}"
@@ -82,7 +82,7 @@ services:
       - 4041
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`${DOMAIN:-app.kessler.xyz}`) && PathPrefix(`/api/v2`)"
+      - "traefik.http.routers.backend.rule=Host(`${DOMAIN:-kessler.xyz}`) && PathPrefix(`/api/v2`)"
       - "traefik.http.middlewares.test-stripprefix.stripprefix.prefixes=/api/v2"
       - "traefik.http.routers.backend.entrypoints=websecure"
       - "traefik.http.routers.backend.tls.certresolver=myresolver"
