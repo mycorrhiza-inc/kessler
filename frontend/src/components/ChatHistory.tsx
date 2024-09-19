@@ -90,7 +90,7 @@ export function ChatMessages({
   loading: boolean;
 }) {
   return (
-    <div className="flex flex-col h-screen p-4 space-y-4 overflow-y-auto bg-base-100 border divide-y rounded-md">
+    <>
       {messages.length === 0 && (
         <div className="p-5 text-center text-base-content">
           <h2 className="text-lg font-bold">Welcome to the Chatbot!</h2>
@@ -103,7 +103,6 @@ export function ChatMessages({
         <MessageComponent message={m} />
       ))}
       {loading && <AwaitingMessageSkeleton />}
-      <div className="w-full min-h-[300px] text-red-500"></div>
-    </div>
+    </>
   );
 }

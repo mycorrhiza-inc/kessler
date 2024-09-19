@@ -2,12 +2,12 @@ export default function Hero() {
   // Fix the broken min-h-screen stuff and make it actually work
   return (
     <div
-      className="hero min-h-screen min-w-screen"
+      className="hero min-h-full min-w-screen"
       style={{
         backgroundImage: "url(/landing-background.webp)",
       }}
     >
-      <div className="hero-overlay bg-opacity-60"></div>
+      <div className="hero-overlay bg-opacity-40"></div>
       <div className="hero-content text-neutral-content text-center flex flex-col items-center w-max">
         <h1 className="mb-5 text-5xl font-bold">
           Welcome to <br /> Kessler

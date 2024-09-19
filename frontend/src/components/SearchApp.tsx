@@ -87,7 +87,7 @@ export default function SearchApp() {
             className="chat-box"
             style={{
               flex: "0 0 20%",
-              overflowY: "auto",
+              overflowY: "hidden",
             }}
           >
             <ChatBoxInternals></ChatBoxInternals>

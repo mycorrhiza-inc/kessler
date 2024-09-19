@@ -19,7 +19,6 @@ import logging
 
 from llama_index.llms.groq import Groq
 from llama_index.llms.openai import OpenAI
-from llama_index.llms.octoai import OctoAI
 from llama_index.llms.fireworks import Fireworks
 
 
@@ -166,7 +165,7 @@ class KeLLMUtils:
     async def summarize_single_chunk(self, markdown_text: str) -> str:
         summarize_prompt = "Make sure to provide a well researched summary of the text provided by the user, if it appears to be the summary of a larger document, just summarize the section provided."
         summarize_message = KeChatMessage(
-            role=ChatRole.assistant, content=summarize_prompt
+            role=ChatRole.system, content=summarize_prompt
         )
         text_message = KeChatMessage(role=ChatRole.user, content=markdown_text)
         summary = await self.achat(
@@ -184,10 +183,20 @@ class KeLLMUtils:
             *[self.summarize_single_chunk(chunk) for chunk in splits]
         )
         coherence_prompt = "Please rewrite the following list of summaries of chunks of the document into a final summary of similar length that incorperates all the details present in the chunks"
-        cohere_message = KeChatMessage(ChatRole.assistant, coherence_prompt)
-        combined_summaries_prompt = KeChatMessage(ChatRole.user, "\n".join(summaries))
+        cohere_message = KeChatMessage(role=ChatRole.system, content=coherence_prompt)
+        combined_summaries_prompt = KeChatMessage(
+            role=ChatRole.user, content="\n".join(summaries)
+        )
         final_summary = await self.achat([cohere_message, combined_summaries_prompt])
         return final_summary.content
+
+    async def simple_instruct(self, content: str, instruct: str) -> str:
+        history = [
+            KeChatMessage(content=instruct, role=ChatRole.system),
+            KeChatMessage(content=content, role=ChatRole.user),
+        ]
+        completion = await self.achat(history)
+        return completion.content
 
     async def mapreduce_llm_instruction_across_string(
         self, content: str, chunk_size: int, instruction: str, join_str: str
@@ -198,7 +207,7 @@ class KeLLMUtils:
         async def clean_chunk(chunk: str) -> str:
 
             history = [
-                KeChatMessage(content=instruction, role=ChatRole.assistant),
+                KeChatMessage(content=instruction, role=ChatRole.system),
                 KeChatMessage(content=chunk, role=ChatRole.user),
             ]
             completion = await self.llm.achat(history)

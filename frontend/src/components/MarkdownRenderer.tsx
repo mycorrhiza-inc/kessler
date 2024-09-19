@@ -6,7 +6,6 @@ import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { dracula } from "react-syntax-highlighter/dist/cjs/styles/prism";
-import { useState } from "react";
 interface MarkdownRendererProps {
   children: string;
   color?: string;
@@ -88,12 +87,9 @@ def greet():
 const CodeBlock = ({ node, inline, className, children, ...props }: any) => {
   const match = /language-(\w+)/.exec(className || "");
   const codeContent = String(children).replace(/\n$/, "");
-  const [buttonText, setButtonText] = useState("Copy");
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(codeContent);
-    setButtonText("Copied!");
-    setTimeout(() => setButtonText("Copy"), 2000);
   };
 
   return !inline && match ? (
@@ -108,17 +104,14 @@ const CodeBlock = ({ node, inline, className, children, ...props }: any) => {
           {codeContent}
         </SyntaxHighlighter>
       </div>
-      <button
-        onClick={copyToClipboard}
-        style={{
-          position: "absolute",
-          top: "10px",
-          right: "10px",
-          zIndex: 1,
-        }}
+      <label
+        className="swap"
+        style={{ position: "absolute", top: "10px", right: "10px", zIndex: 1 }}
       >
-        {buttonText}
-      </button>
+        <input type="checkbox" onClick={copyToClipboard} />
+        <div className="swap-on">Copied!</div>
+        <div className="swap-off">Copy</div>
+      </label>
     </div>
   ) : (
     <code className={className} {...props}>
