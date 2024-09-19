@@ -4,11 +4,10 @@ INSERT INTO public.file_text_source (
 		is_original_text,
 		language,
 		text,
-		sa_orm_sentinel,
 		created_at,
 		updated_at
 	)
-VALUES ($1, $2, $3, $4, NOW(), NOW())
+VALUES ($1, $2, $3, NOW(), NOW())
 RETURNING id;
 -- name: GetFileText :one
 SELECT text
