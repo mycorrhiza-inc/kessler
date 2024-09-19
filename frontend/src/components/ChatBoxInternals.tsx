@@ -20,8 +20,8 @@ const ChatBoxInternals = ({
   const [loadingResponse, setLoadingResponse] = useState(false);
   const [selectedModel, setSelectedModel] = useState("default");
   const [citations, setCitations] = useState<any[]>([]);
-  const [isRag, setIsRag] = useState(true);
-  const chatUrl = isRag ? "/api/v1/rag/rag_chat" : "/api/v1/rag/basic_chat";
+  const chatUrl = ragMode ? "/api/v1/rag/rag_chat" : "/api/v1/rag/basic_chat";
+  const [selectedModel, setSelectedModel] = useState("default");
 
   const getResponse = async () => {
     let chat_hist = messages.map((m) => {
@@ -61,10 +61,36 @@ const ChatBoxInternals = ({
 
     setMessages([...messages, result.message]);
   };
-  const model_list = ["llama-405b", "gpt-4o", "llama-70b", "llama-8b"];
+  const model_list = [
+    "default",
+    "llama-405b",
+    "gpt-4o",
+    "llama-70b",
+    "llama-8b",
+  ];
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const userMessage = e.target.elements.userMessage.value.trim();
+    if (!userMessage) return;
+
+    const newMessage = Message({ role: "user", content: userMessage });
+    setMessages([...messages, newMessage]);
+
+    await getResponse();
+  };
+
+  const handleModelSelect = (model) => {
+    setSelectedModel(model);
+  };
+
+  const handleRagModeToggle = (e) => {
+    setRagMode(e.target.checked);
+  };
+
   return (
-    <>
-      <div className="w-full flex flex-row justify-center">
+    <form className="h-screen flex flex-col" onSubmit={handleSubmit}>
+      <div className="flex-none h-[5%] flex flex-row justify-center">
         <div className="dropdown dropdown-hover">
           <div tabIndex={0} role="button" className="btn m-1">
             Select Model
@@ -75,7 +101,7 @@ const ChatBoxInternals = ({
           >
             {model_list.map((model) => (
               <li key={model}>
-                <a>{model}</a>
+                <a onClick={() => handleModelSelect(model)}>{model}</a>
               </li>
             ))}
           </ul>
@@ -85,23 +111,28 @@ const ChatBoxInternals = ({
             <input
               type="checkbox"
               className="toggle toggle-accent"
-              defaultChecked
+              checked={ragMode}
+              onChange={handleRagModeToggle}
             />
             <span className="label-text">Rag Mode</span>
           </label>
         </div>
       </div>
-      <div>
-        <ChatMessages
-          messages={exampleChatHistory}
-          loading={false}
-        ></ChatMessages>
+      <div className="flex-1 h-[70%] overflow-y-auto">
+        <ChatMessages messages={messages} loading={false}></ChatMessages>
       </div>
-      <textarea
-        className="textarea textarea-accent w-full"
-        placeholder={`Type Here to Chat\nEnter to Send, Shift+Enter for New Line`}
-      ></textarea>
-    </>
+      <div className="flex-none h-[25%]">
+        {/* Submit with this logic */}
+        {/* if (evt.keyCode == 13 && !evt.shiftKey) { */}
+        {/*     form.submit(); */}
+        {/* } */}
+        <textarea
+          name="userMessage"
+          className="textarea textarea-accent w-full h-full"
+          placeholder={`Type Here to Chat\nEnter to Send, Shift+Enter for New Line`}
+        ></textarea>
+      </div>
+    </form>
   );
 };
 export default ChatBoxInternals;
