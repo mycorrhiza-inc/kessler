@@ -7,7 +7,6 @@ import { SubmitButton } from "@/components/supabasetutorial/submit-button";
 import { Input } from "@/components/supabasetutorial/ui/input";
 import { Label } from "@/components/supabasetutorial/ui/label";
 import Link from "next/link";
-import { SmtpMessage } from "../smtp-message";
 
 export default function Signup({ searchParams }: { searchParams: Message }) {
   if ("message" in searchParams) {
@@ -22,9 +21,9 @@ export default function Signup({ searchParams }: { searchParams: Message }) {
     <>
       <form className="flex flex-col min-w-64 max-w-64 mx-auto">
         <h1 className="text-2xl font-medium">Sign up</h1>
-        <p className="text-sm text text-foreground">
+        <p className="text-sm text-base-content">
           Already have an account?{" "}
-          <Link className="text-primary font-medium underline" href="/sign-in">
+          <Link className="font-medium underline" href="/sign-in">
             Sign in
           </Link>
         </p>
@@ -45,7 +44,6 @@ export default function Signup({ searchParams }: { searchParams: Message }) {
           <FormMessage message={searchParams} />
         </div>
       </form>
-      <SmtpMessage />
     </>
   );
 }
