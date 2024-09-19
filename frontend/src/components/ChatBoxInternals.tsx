@@ -83,15 +83,16 @@ const ChatBoxInternals = ({}: {}) => {
     await getResponse();
   };
 
-  const handleModelSelect = (model) => {
+  // More BS
+  const handleModelSelect = (model: any) => {
     setSelectedModel(model);
   };
 
-  const handleRagModeToggle = (e) => {
+  const handleRagModeToggle = (e: any) => {
     setRagMode(e.target.checked);
   };
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = (e: any) => {
     if (e.key === "Enter" && !e.shiftKey) {
       console.log("Hit enter, with shift key down");
       e.preventDefault();
@@ -138,7 +139,7 @@ const ChatBoxInternals = ({}: {}) => {
           className="textarea textarea-accent w-full h-full"
           placeholder={`Type Here to Chat\nEnter to Send, Shift+Enter for New Line`}
           onKeyDown={handleKeyDown}
-          type="text" // Ensuring the name attribute allows handling in a form element
+          // type="text" // Ensuring the name attribute allows handling in a form element
         ></textarea>
       </div>
     </form>
