@@ -146,7 +146,7 @@ const SingleFeature = ({ feature }: { feature: Feature }) => {
   const { icon, title, description } = feature;
 
   return (
-    <div className="card bg-base-200 w-96 shadow-xl">
+    <div className="card bg-neutral w-96 shadow-xl text-neutral-content">
       <figure className="px-10 pt-10">
         <Image
           src={icon}
