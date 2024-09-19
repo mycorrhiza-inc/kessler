@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 type ModalProps = {
   isOpen: boolean;
@@ -12,7 +12,9 @@ const ResultModal = ({ isOpen, onClose, children }: ModalProps) => {
   return (
     <div className="modal-overlay">
       <div className="modal-content">
-        <button className="close-button" onClick={onClose}>×</button>
+        <button className="close-button" onClick={onClose}>
+          ×
+        </button>
         {children}
       </div>
     </div>
