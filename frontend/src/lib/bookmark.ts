@@ -34,10 +34,10 @@ export default class Bookmark implements BookmarkInterface {
       });
     return this;
   };
-  
+
   constructor(id: string, type: BookmarkType, title?: string) {
     this.id = id;
     this.type = type;
     this.title = title;
-  };
+  }
 }

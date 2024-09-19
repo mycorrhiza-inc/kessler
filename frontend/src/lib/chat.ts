@@ -29,7 +29,7 @@ export class ChatLog implements ChatLogInterface {
   messages: ChatMessageInterface[] = [];
 
   addMessage: (message: ChatMessageInterface) => void = (
-    message: ChatMessageInterface
+    message: ChatMessageInterface,
   ) => {};
   RecomputeMessage: (id: string) => void = () => {};
   loadLog: () => void = () => {

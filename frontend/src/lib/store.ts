@@ -31,7 +31,7 @@ export const DefaultKesslerStoreState = {
 };
 
 export const createKesslerStore = (
-  initState: KesslerStoreState = DefaultKesslerStoreState
+  initState: KesslerStoreState = DefaultKesslerStoreState,
 ) => {
   return createStore<KesslerStore>((set, get) => ({
     ...initState,
@@ -56,7 +56,7 @@ export const createKesslerStore = (
         return { ...state, chatList: sorted };
       });
     },
-    addMessage: (chat_id, message) => { },
+    addMessage: (chat_id, message) => {},
     setMainChat: (chat_id) =>
       set((state) => ({ ...state, mainChatId: chat_id })),
     cacheDocids: (doc_ids: string[]) =>
@@ -68,7 +68,7 @@ export const createKesslerStore = (
             }
             return acc;
           },
-          { ...state.documents }
+          { ...state.documents },
         );
 
         return { ...state, documents: updated_docs };
@@ -76,4 +76,3 @@ export const createKesslerStore = (
     getDoc: (doc_id: string) => get().documents[doc_id],
   }));
 };
-
