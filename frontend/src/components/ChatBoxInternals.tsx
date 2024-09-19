@@ -20,8 +20,8 @@ const ChatBoxInternals = ({
   const [loadingResponse, setLoadingResponse] = useState(false);
   const [selectedModel, setSelectedModel] = useState("default");
   const [citations, setCitations] = useState<any[]>([]);
+  const [ragMode, setRagMode] = useState(true);
   const chatUrl = ragMode ? "/api/v1/rag/rag_chat" : "/api/v1/rag/basic_chat";
-  const [selectedModel, setSelectedModel] = useState("default");
 
   const getResponse = async () => {
     let chat_hist = messages.map((m) => {
@@ -88,6 +88,12 @@ const ChatBoxInternals = ({
     setRagMode(e.target.checked);
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e);
+    }
+  };
   return (
     <form className="h-screen flex flex-col" onSubmit={handleSubmit}>
       <div className="flex-none h-[5%] flex flex-row justify-center">
@@ -130,6 +136,7 @@ const ChatBoxInternals = ({
           name="userMessage"
           className="textarea textarea-accent w-full h-full"
           placeholder={`Type Here to Chat\nEnter to Send, Shift+Enter for New Line`}
+          onKeyDown={handleKeyDown}
         ></textarea>
       </div>
     </form>
