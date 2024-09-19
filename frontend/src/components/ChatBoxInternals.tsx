@@ -90,6 +90,7 @@ const ChatBoxInternals = ({
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
+      console.log("Hit enter, with shift key down");
       e.preventDefault();
       handleSubmit(e);
     }

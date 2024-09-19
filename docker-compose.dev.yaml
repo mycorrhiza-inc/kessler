@@ -1,7 +1,7 @@
 # local development docker compose
 services:
   frontend:
-    hostname: "app.kessler.xyz"
+    hostname: "kessler.xyz"
     build:
       context: ./frontend
       dockerfile: ./Dockerfile-dev

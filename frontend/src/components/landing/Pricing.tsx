@@ -15,7 +15,7 @@ const Pricing = () => {
 - Access to a limited set of open access government documents
 - [Run your own instance with our open source code](https://git.mycor.io/mycorrhiza/kessler)
 `,
-      buttonLink: "https://app.kessler.xyz",
+      buttonLink: "https://kessler.xyz",
       buttonText: "Try Now",
       indicator: null,
     },
