@@ -53,8 +53,13 @@ const ChatBoxInternals = ({}: {}) => {
         console.log("error making request");
         console.log(JSON.stringify(e));
       });
+    const chat_response: Message = {
+      role: "assistant",
+      key: Symbol(),
+      content: result.message.content,
+    };
 
-    setMessages([...messages, result.message]);
+    setMessages([...messages, chat_response]);
   };
   const model_list = [
     "default",
@@ -68,11 +73,12 @@ const ChatBoxInternals = ({}: {}) => {
   const handleSubmit = async () => {
     // Check if e.target is a form element
 
-    const newMessage = {
+    const newMessage: Message = {
       role: "user",
       content: `${draftText}`,
       key: Symbol(),
     };
+    console.log(newMessage);
 
     setMessages([...messages, newMessage]);
     setDraftText("");
