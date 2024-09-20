@@ -58,7 +58,7 @@ const ChatBoxInternals = ({}: {}) => {
       key: Symbol(),
       content: result.message.content,
     };
-
+    console.log(chat_response);
     setMessages([...messages, chat_response]);
   };
   const model_list = [
