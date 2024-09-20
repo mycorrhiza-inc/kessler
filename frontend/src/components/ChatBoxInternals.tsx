@@ -15,6 +15,7 @@ const ChatBoxInternals = ({}: {}) => {
   const [selectedModel, setSelectedModel] = useState("default");
   const [citations, setCitations] = useState<any[]>([]);
   const [ragMode, setRagMode] = useState(true);
+  const [draftText, setDraftText] = useState("");
   const chatUrl = ragMode ? "/api/v1/rag/rag_chat" : "/api/v1/rag/basic_chat";
 
   const getResponse = async () => {
@@ -64,22 +65,17 @@ const ChatBoxInternals = ({}: {}) => {
   ];
 
   // This isnt working fix problem with type
-  const handleSubmit = async (e: any) => {
-    e.preventDefault();
-
+  const handleSubmit = async () => {
     // Check if e.target is a form element
-    if (!(e.target instanceof HTMLFormElement)) return;
-
-    const userMessage = e.target.elements.userMessage.value.trim();
-    if (!userMessage) return;
 
     const newMessage = {
       role: "user",
-      content: userMessage,
+      content: `${draftText}`,
       key: Symbol(),
     };
 
     setMessages([...messages, newMessage]);
+    setDraftText("");
     await getResponse();
   };
 
@@ -96,12 +92,16 @@ const ChatBoxInternals = ({}: {}) => {
     if (e.key === "Enter" && !e.shiftKey) {
       console.log("Hit enter, with shift key down");
       e.preventDefault();
-      handleSubmit(e);
+      handleSubmit();
     }
   };
 
   return (
-    <form className="h-screen flex flex-col" onSubmit={handleSubmit}>
+    <form
+      className="flex flex-col"
+      onSubmit={handleSubmit}
+      style={{ height: "85vh" }}
+    >
       <div className="flex-none h-[5%] flex flex-row justify-center">
         <div className="dropdown dropdown-hover">
           <div tabIndex={0} role="button" className="btn m-1">
@@ -131,7 +131,10 @@ const ChatBoxInternals = ({}: {}) => {
         </div>
       </div>
       <div className="flex-1 h-[70%] overflow-y-auto">
-        <ChatMessages messages={messages} loading={false}></ChatMessages>
+        <ChatMessages
+          messages={messages}
+          loading={loadingResponse}
+        ></ChatMessages>
       </div>
       <div className="flex-none h-[25%]">
         <textarea
@@ -139,7 +142,8 @@ const ChatBoxInternals = ({}: {}) => {
           className="textarea textarea-accent w-full h-full"
           placeholder={`Type Here to Chat\nEnter to Send, Shift+Enter for New Line`}
           onKeyDown={handleKeyDown}
-          // type="text" // Ensuring the name attribute allows handling in a form element
+          value={draftText} // ...force the input's value to match the state variable...
+          onChange={(e) => setDraftText(e.target.value)} // ... and update the state variable on any edits!
         ></textarea>
       </div>
     </form>
