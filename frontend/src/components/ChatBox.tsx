@@ -50,7 +50,8 @@ const ChatBox = ({ chatVisible, setChatVisible, parentRef }: ChatBoxProps) => {
       }}
       ref={containerRef}
     >
-      <ChatBoxInternals></ChatBoxInternals>
+      {/* <ChatBoxInternals></ChatBoxInternals> */}
+      {/* Commented until citations can be figured out  */}
     </div>
   );
 };

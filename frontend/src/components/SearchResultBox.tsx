@@ -25,6 +25,9 @@ const SearchResultBox = ({
           searchResults.map((result, index) => (
             <SearchResult key={index} data={result} />
           ))}
+        {!isSearching &&
+          Array.isArray(searchResults) &&
+          searchResults.length === 0 && <>No results found</>}
         {isSearching && <>loading...</>}
       </Stack>
     </div>

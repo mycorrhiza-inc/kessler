@@ -89,7 +89,9 @@ export default function SearchApp() {
               overflowY: "visible",
             }}
           >
-            <ChatBoxInternals></ChatBoxInternals>
+            <ChatBoxInternals
+              setCitations={setSearchResults}
+            ></ChatBoxInternals>
           </div>
         )}
       </div>

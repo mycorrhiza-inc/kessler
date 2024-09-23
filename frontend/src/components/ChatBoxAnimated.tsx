@@ -122,10 +122,11 @@ const ChatBox = ({ chatVisible, setChatVisible, parentRef }: ChatBoxProps) => {
       {resizeHandle("bottom")}
       {resizeHandle("left")}
       {resizeHandle("right")}
-      <ChatBoxInternals
-      // chatSidebarVisible={chatSidebarVisible}
-      // setChatSidebarVisible={setChatSidebarVisible}
-      ></ChatBoxInternals>
+      {/* <ChatBoxInternals */}
+      {/* // chatSidebarVisible={chatSidebarVisible} */}
+      {/* // setChatSidebarVisible={setChatSidebarVisible} */}
+      {/* ></ChatBoxInternals> */}
+      {/* Commented out until I can figure out chat citatuions */}
     </motion.div>
   );
 };

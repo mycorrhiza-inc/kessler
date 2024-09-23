@@ -8,12 +8,16 @@ interface Message {
   content: string;
   key: symbol;
 }
-const ChatBoxInternals = ({}: {}) => {
+
+interface ChatBoxInternalsProps {
+  setCitations: (citations: any[]) => void;
+}
+
+const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [needsResponse, setResponse] = useState(false);
   const [loadingResponse, setLoadingResponse] = useState(false);
   const [selectedModel, setSelectedModel] = useState("default");
-  const [citations, setCitations] = useState<any[]>([]);
   const [ragMode, setRagMode] = useState(true);
   const [draftText, setDraftText] = useState("");
   const chatUrl = ragMode ? "/api/v1/rag/rag_chat" : "/api/v1/rag/basic_chat";
