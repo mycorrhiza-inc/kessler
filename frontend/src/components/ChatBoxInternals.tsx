@@ -19,13 +19,18 @@ const ChatBoxInternals = ({}: {}) => {
   const chatUrl = ragMode ? "/api/v1/rag/rag_chat" : "/api/v1/rag/basic_chat";
 
   const getResponse = async (responseText: string) => {
+    if (responseText == "") {
+      return;
+    }
     const newMessage: Message = {
       role: "user",
-      content: responseText,
       key: Symbol(),
+      content: responseText,
     };
     console.log(newMessage);
     setMessages([...messages, newMessage]);
+
+    console.log(messages);
     let chat_hist = messages.map((m) => {
       let { key, ...rest } = m;
       return rest;
@@ -66,7 +71,8 @@ const ChatBoxInternals = ({}: {}) => {
       content: result == "failed request" ? result : result.message.content,
     };
     console.log(chat_response);
-    setMessages([...messages, chat_response]);
+    // setMessages([...messages, chat_response]);
+    console.log(messages);
   };
   const model_list = [
     "default",
@@ -79,7 +85,6 @@ const ChatBoxInternals = ({}: {}) => {
   // This isnt working fix problem with type
   const handleSubmit = async () => {
     // Check if e.target is a form element
-
     const chatText = `${draftText}`;
     setDraftText("");
     await getResponse(chatText);
@@ -96,7 +101,7 @@ const ChatBoxInternals = ({}: {}) => {
 
   const handleKeyDown = (e: any) => {
     if (e.key === "Enter" && !e.shiftKey) {
-      console.log("Hit enter, with shift key down");
+      console.log("Hit enter, without shift key down");
       e.preventDefault();
       handleSubmit();
     }
@@ -108,7 +113,7 @@ const ChatBoxInternals = ({}: {}) => {
       onSubmit={handleSubmit}
       style={{ height: "85vh" }}
     >
-      <div className="flex-none h-[5%] flex flex-row justify-center">
+      <div className="flex-none h-[5%] flex flex-row justify-center bg-base-100 text-base-content">
         <div className="dropdown dropdown-hover">
           <div tabIndex={0} role="button" className="btn m-1">
             Select Model
