@@ -41,6 +41,7 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
     const modelToSend = selectedModel === "default" ? undefined : selectedModel;
     setLoadingResponse(true);
 
+    // Should this fetch get refactored out into lib as something that calls a chat endpoint?
     let result = await fetch(chatUrl, {
       method: "POST",
       headers: {

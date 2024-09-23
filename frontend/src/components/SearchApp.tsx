@@ -24,6 +24,7 @@ export default function SearchApp() {
     }
   }, [chatVisible]);
 
+  // Should this be refactored out of components and into the lib as a async function that returns search results?
   const handleSearch = async () => {
     setSearchResults([]);
     setIsSearching(true);
