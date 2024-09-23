@@ -53,7 +53,6 @@ export default function SearchApp() {
   const chatMobileStyle = {};
   const chatDesktopStyle = {};
   const divRef = useRef<HTMLDivElement>(null);
-  const searchResultsFlexValue = chatVisible ? 0.65 : 1;
 
   return (
     <div
