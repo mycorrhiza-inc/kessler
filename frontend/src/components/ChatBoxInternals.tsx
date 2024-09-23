@@ -113,7 +113,7 @@ const ChatBoxInternals = ({}: {}) => {
       onSubmit={handleSubmit}
       style={{ height: "85vh" }}
     >
-      <div className="flex-none h-[5%] flex flex-row justify-center bg-base-100 text-base-content">
+      <div className="flex-none h-[10%] flex flex-row justify-center bg-base-100 text-base-content">
         <div className="dropdown dropdown-hover">
           <div tabIndex={0} role="button" className="btn m-1">
             Select Model
@@ -141,13 +141,13 @@ const ChatBoxInternals = ({}: {}) => {
           </label>
         </div>
       </div>
-      <div className="flex-1 h-[70%] overflow-y-auto">
+      <div className="flex-1 h-[85%] overflow-y-auto">
         <ChatMessages
           messages={messages}
           loading={loadingResponse}
         ></ChatMessages>
       </div>
-      <div className="flex-none h-[25%]">
+      <div className="flex-none h-[15%]">
         <textarea
           name="userMessage"
           className="textarea textarea-accent w-full h-full"

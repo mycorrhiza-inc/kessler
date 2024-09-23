@@ -110,7 +110,8 @@ def file_model_to_schema(model: FileModel) -> FileSchema:
     schema = type_adapter.validate_python(
         model
     )  # This probably needs to be implemented manually since text is still stored in db
-    schema.mdata = json.loads(metadata_str)
+    if metadata_str is not None:
+        schema.mdata = json.loads(metadata_str)
     return schema
 
 
