@@ -18,7 +18,14 @@ const ChatBoxInternals = ({}: {}) => {
   const [draftText, setDraftText] = useState("");
   const chatUrl = ragMode ? "/api/v1/rag/rag_chat" : "/api/v1/rag/basic_chat";
 
-  const getResponse = async () => {
+  const getResponse = async (responseText: string) => {
+    const newMessage: Message = {
+      role: "user",
+      content: responseText,
+      key: Symbol(),
+    };
+    console.log(newMessage);
+    setMessages([...messages, newMessage]);
     let chat_hist = messages.map((m) => {
       let { key, ...rest } = m;
       return rest;
@@ -56,7 +63,7 @@ const ChatBoxInternals = ({}: {}) => {
     const chat_response: Message = {
       role: "assistant",
       key: Symbol(),
-      content: result.message.content,
+      content: result == "failed request" ? result : result.message.content,
     };
     console.log(chat_response);
     setMessages([...messages, chat_response]);
@@ -73,16 +80,9 @@ const ChatBoxInternals = ({}: {}) => {
   const handleSubmit = async () => {
     // Check if e.target is a form element
 
-    const newMessage: Message = {
-      role: "user",
-      content: `${draftText}`,
-      key: Symbol(),
-    };
-    console.log(newMessage);
-
-    setMessages([...messages, newMessage]);
+    const chatText = `${draftText}`;
     setDraftText("");
-    await getResponse();
+    await getResponse(chatText);
   };
 
   // More BS
