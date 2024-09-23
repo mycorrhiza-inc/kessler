@@ -1,6 +1,6 @@
 "use client";
 import axios from "axios";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 
 import { motion } from "framer-motion";
 import { CenteredFloatingSearhBox } from "@/components/SearchBox";
@@ -13,6 +13,16 @@ export default function SearchApp() {
   const [searchQuery, setSearchQuery] = useState("");
   const [chatVisible, setChatVisible] = useState(false);
   const [resultView, setResultView] = useState(false);
+  const [renderChat, setRenderChat] = useState(false);
+
+  useEffect(() => {
+    if (chatVisible) {
+      setRenderChat(true);
+    } else {
+      const timer = setTimeout(() => setRenderChat(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [chatVisible]);
 
   const handleSearch = async () => {
     setSearchResults([]);
@@ -92,7 +102,11 @@ export default function SearchApp() {
             overflowY: "visible",
           }}
         >
-          <ChatBoxInternals setCitations={setSearchResults}></ChatBoxInternals>
+          {renderChat && (
+            <ChatBoxInternals
+              setCitations={setSearchResults}
+            ></ChatBoxInternals>
+          )}
         </motion.div>
       </div>
     </div>
