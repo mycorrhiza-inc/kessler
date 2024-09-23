@@ -28,7 +28,7 @@ const ChatBoxInternals = ({}: {}) => {
       content: responseText,
     };
     console.log(newMessage);
-    setMessages([...messages, newMessage]);
+    setMessages((prevMessages) => [...prevMessages, newMessage]);
 
     console.log(messages);
     let chat_hist = messages.map((m) => {
@@ -71,7 +71,7 @@ const ChatBoxInternals = ({}: {}) => {
       content: result == "failed request" ? result : result.message.content,
     };
     console.log(chat_response);
-    // setMessages([...messages, chat_response]);
+    setMessages((prevMessages) => [...prevMessages, chat_response]);
     console.log(messages);
   };
   const model_list = [
