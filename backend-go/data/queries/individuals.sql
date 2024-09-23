@@ -24,6 +24,6 @@ SET name = $1,
 	updated_at = NOW()
 WHERE id = $4
 RETURNING id;
--- name: DeleteIndividual :one
+-- name: DeleteIndividual :exec
 DELETE FROM public.individual
 WHERE id = $1;

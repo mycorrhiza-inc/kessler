@@ -5,7 +5,7 @@ INSERT INTO public.organization (
 		created_at,
 		updated_at
 	)
-VALUES ($1, $2, $3, NOW(), NOW())
+VALUES ($1, $2, NOW(), NOW())
 RETURNING id;
 -- name: ReadOrganization :one
 SELECT *
@@ -34,6 +34,6 @@ SET description = $1,
 	updated_at = NOW()
 WHERE id = $2
 RETURNING id;
--- name: DeleteOrganization :one
+-- name: DeleteOrganization :exec
 DELETE FROM public.organization
 WHERE id = $1;

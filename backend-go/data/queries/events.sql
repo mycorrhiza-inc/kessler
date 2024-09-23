@@ -6,8 +6,8 @@ INSERT INTO public.event (
 		created_at,
 		updated_at
 	)
-VALUES ($1, $2, $4, NOW(), NOW())
-RETURNING id;
+VALUES ($1, $2, $3, NOW(), NOW())
+RETURNING *;
 -- name: ReadEvent :one
 SELECT *
 FROM public.event
@@ -36,12 +36,6 @@ SET name = $1,
 	updated_at = NOW()
 WHERE id = $2
 RETURNING id;
--- name: UpdateEvent :one
-UPDATE public.event
-SET description = $1,
-	updated_at = NOW()
-WHERE id = $2
-RETURNING id;
--- name: DeleteEvent :one
+-- name: DeleteEvent :exec
 DELETE FROM public.event
 WHERE id = $1;

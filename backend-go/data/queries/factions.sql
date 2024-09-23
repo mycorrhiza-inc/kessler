@@ -34,6 +34,6 @@ SET description = $1,
 	updated_at = NOW()
 WHERE id = $2
 RETURNING id;
--- name: DeleteFaction :one
+-- name: DeleteFaction :exec
 DELETE FROM public.faction
 WHERE id = $1;

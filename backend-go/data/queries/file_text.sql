@@ -7,7 +7,7 @@ INSERT INTO public.file_text_source (
 		created_at,
 		updated_at
 	)
-VALUES ($1, $2, $3, NOW(), NOW())
+VALUES ($1, $2, $3, $4, NOW(), NOW())
 RETURNING id;
 -- name: GetFileText :one
 SELECT text
@@ -32,13 +32,14 @@ RETURNING id;
 UPDATE public.file_text_source
 SET language = $1,
 	updated_at = NOW()
-WHERE file_id = $2;
+WHERE file_id = $2
+RETURNING id;
 -- name: UpdateIsNotOriginalText :one
 UPDATE public.file_text_source
 SET is_original_text = $1,
 	updated_at = NOW()
-WHERE id = $2;
+WHERE id = $2
 RETURNING id;
--- name: DeleteFileTexts :one
+-- name: DeleteFileTexts :exec
 DELETE FROM public.file_text_source
 WHERE file_id = $1;

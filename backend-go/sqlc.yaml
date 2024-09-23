@@ -1,8 +1,8 @@
 version: "2"
 sql:
-  - schema: "data/sql/migrations" 
-    queries: "data/sql/queries" 
-    engine: "sqlite"
+  - schema: "data/migrations" 
+    queries: "data/queries" 
+    engine: "postgresql"
     gen:
       go:
         out: "gen/dbstore"

@@ -22,6 +22,6 @@ SET encounter_id = $1,
 	updated_at = NOW()
 WHERE id = $3
 RETURNING id;
--- name: DeleteEncounterFaction :one
+-- name: DeleteEncounterFaction :exec
 DELETE FROM public.relation_factions_encounters
 WHERE faction_id = $1;
