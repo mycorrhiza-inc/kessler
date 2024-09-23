@@ -8,16 +8,33 @@ interface Message {
   content: string;
   key: symbol;
 }
-const ChatBoxInternals = ({}: {}) => {
+
+interface ChatBoxInternalsProps {
+  setCitations: (citations: any[]) => void;
+}
+
+const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [needsResponse, setResponse] = useState(false);
   const [loadingResponse, setLoadingResponse] = useState(false);
   const [selectedModel, setSelectedModel] = useState("default");
-  const [citations, setCitations] = useState<any[]>([]);
   const [ragMode, setRagMode] = useState(true);
+  const [draftText, setDraftText] = useState("");
   const chatUrl = ragMode ? "/api/v1/rag/rag_chat" : "/api/v1/rag/basic_chat";
 
-  const getResponse = async () => {
+  const getResponse = async (responseText: string) => {
+    if (responseText == "") {
+      return;
+    }
+    const newMessage: Message = {
+      role: "user",
+      key: Symbol(),
+      content: responseText,
+    };
+    console.log(newMessage);
+    setMessages((prevMessages) => [...prevMessages, newMessage]);
+
+    console.log(messages);
     let chat_hist = messages.map((m) => {
       let { key, ...rest } = m;
       return rest;
@@ -52,8 +69,14 @@ const ChatBoxInternals = ({}: {}) => {
         console.log("error making request");
         console.log(JSON.stringify(e));
       });
-
-    setMessages([...messages, result.message]);
+    const chat_response: Message = {
+      role: "assistant",
+      key: Symbol(),
+      content: result == "failed request" ? result : result.message.content,
+    };
+    console.log(chat_response);
+    setMessages((prevMessages) => [...prevMessages, chat_response]);
+    console.log(messages);
   };
   const model_list = [
     "default",
@@ -64,23 +87,11 @@ const ChatBoxInternals = ({}: {}) => {
   ];
 
   // This isnt working fix problem with type
-  const handleSubmit = async (e: any) => {
-    e.preventDefault();
-
+  const handleSubmit = async () => {
     // Check if e.target is a form element
-    if (!(e.target instanceof HTMLFormElement)) return;
-
-    const userMessage = e.target.elements.userMessage.value.trim();
-    if (!userMessage) return;
-
-    const newMessage = {
-      role: "user",
-      content: userMessage,
-      key: Symbol(),
-    };
-
-    setMessages([...messages, newMessage]);
-    await getResponse();
+    const chatText = `${draftText}`;
+    setDraftText("");
+    await getResponse(chatText);
   };
 
   // More BS
@@ -94,15 +105,19 @@ const ChatBoxInternals = ({}: {}) => {
 
   const handleKeyDown = (e: any) => {
     if (e.key === "Enter" && !e.shiftKey) {
-      console.log("Hit enter, with shift key down");
+      console.log("Hit enter, without shift key down");
       e.preventDefault();
-      handleSubmit(e);
+      handleSubmit();
     }
   };
 
   return (
-    <form className="h-screen flex flex-col" onSubmit={handleSubmit}>
-      <div className="flex-none h-[5%] flex flex-row justify-center">
+    <form
+      className="flex flex-col"
+      onSubmit={handleSubmit}
+      style={{ height: "85vh" }}
+    >
+      <div className="flex-none h-[10%] flex flex-row justify-center bg-base-100 text-base-content">
         <div className="dropdown dropdown-hover">
           <div tabIndex={0} role="button" className="btn m-1">
             Select Model
@@ -130,16 +145,20 @@ const ChatBoxInternals = ({}: {}) => {
           </label>
         </div>
       </div>
-      <div className="flex-1 h-[70%] overflow-y-auto">
-        <ChatMessages messages={messages} loading={false}></ChatMessages>
+      <div className="flex-1 h-[85%] overflow-y-auto">
+        <ChatMessages
+          messages={messages}
+          loading={loadingResponse}
+        ></ChatMessages>
       </div>
-      <div className="flex-none h-[25%]">
+      <div className="flex-none h-[15%]">
         <textarea
           name="userMessage"
           className="textarea textarea-accent w-full h-full"
           placeholder={`Type Here to Chat\nEnter to Send, Shift+Enter for New Line`}
           onKeyDown={handleKeyDown}
-          // type="text" // Ensuring the name attribute allows handling in a form element
+          value={draftText} // ...force the input's value to match the state variable...
+          onChange={(e) => setDraftText(e.target.value)} // ... and update the state variable on any edits!
         ></textarea>
       </div>
     </form>

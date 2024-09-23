@@ -110,19 +110,22 @@ def file_model_to_schema(model: FileModel) -> FileSchema:
     schema = type_adapter.validate_python(
         model
     )  # This probably needs to be implemented manually since text is still stored in db
-    schema.mdata = json.loads(metadata_str)
+    if metadata_str is not None:
+        schema.mdata = json.loads(metadata_str)
     return schema
 
 
 async def get_partial_file_from_uuid(async_db_connection: AsyncSession, file_id: UUID):
-    result = async_db_connection.execute(
+    result = await async_db_connection.execute(
         select(FileModel).where(FileModel.id == file_id)
     )
     db_model = result.scalars().first()
     return file_model_to_schema(db_model)
 
 
-async def get_full_file_from_uuid(async_db_connection: AsyncSession, file_id: UUID):
+async def get_full_file_from_uuid(
+    async_db_connection: AsyncSession, file_id: UUID
+) -> FileSchemaFull:
     tasks = [
         get_partial_file_from_uuid(async_db_connection, file_id),
         get_texts_from_file_uuid(async_db_connection, file_id),

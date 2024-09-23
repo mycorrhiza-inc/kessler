@@ -15,7 +15,10 @@ export default function Hero() {
         </h1>
         <p className="mb-5">Please use our application 🙏 Namaste</p>
         <div className="flex justify-center space-x-4">
-          <a href="/demo" className="btn glass shadow-xl btn-lg">
+          <a
+            href="/demo"
+            className="btn glass shadow-xl btn-lg btn-outline btn-neutral"
+          >
             Try Now!
           </a>
         </div>

@@ -7,7 +7,6 @@ import { SubmitButton } from "@/components/supabasetutorial/submit-button";
 import { Input } from "@/components/supabasetutorial/ui/input";
 import { Label } from "@/components/supabasetutorial/ui/label";
 import Link from "next/link";
-import { SmtpMessage } from "../smtp-message";
 
 export default function ForgotPassword({
   searchParams,
@@ -35,7 +34,6 @@ export default function ForgotPassword({
           <FormMessage message={searchParams} />
         </div>
       </form>
-      <SmtpMessage />
     </>
   );
 }

@@ -86,10 +86,12 @@ export default function SearchApp() {
             className="chat-box"
             style={{
               flex: "0 0 20%",
-              overflowY: "hidden",
+              overflowY: "visible",
             }}
           >
-            <ChatBoxInternals></ChatBoxInternals>
+            <ChatBoxInternals
+              setCitations={setSearchResults}
+            ></ChatBoxInternals>
           </div>
         )}
       </div>
