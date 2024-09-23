@@ -1,7 +1,6 @@
 import { CloseIcon, HamburgerIcon } from "@/components/Icons";
 import { ChatMessages, exampleChatHistory } from "./ChatHistory";
 import { useState } from "react";
-import { Stack } from "@mui/joy";
 
 interface Message {
   role: string;
@@ -120,9 +119,9 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
       onSubmit={handleSubmit}
       style={{ height: "85vh" }}
     >
-      <div className="flex-none h-[10%] flex flex-row justify-center bg-base-100 text-base-content gap-5">
+      <div className="flex-none flex flex-row justify-center bg-base-100 text-base-content gap-11">
         <div className="dropdown dropdown-hover">
-          <div tabIndex={0} role="button" className="btn m-1">
+          <div tabIndex={0} role="button" className="btn m-1 bg-base-300">
             Select Model
           </div>
           <ul
@@ -160,7 +159,7 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
       <div className="flex-none h-[15%]">
         <textarea
           name="userMessage"
-          className="textarea textarea-accent w-full h-full"
+          className="textarea textarea-accent w-full h-full bg-base-300"
           placeholder={`Type Here to Chat\nEnter to Send, Shift+Enter for New Line`}
           onKeyDown={handleKeyDown}
           value={draftText} // ...force the input's value to match the state variable...
