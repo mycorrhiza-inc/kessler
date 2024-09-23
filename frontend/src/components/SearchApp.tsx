@@ -53,6 +53,7 @@ export default function SearchApp() {
   const chatMobileStyle = {};
   const chatDesktopStyle = {};
   const divRef = useRef<HTMLDivElement>(null);
+  const searchResultsFlexValue = chatVisible ? 0.65 : 1;
 
   return (
     <div
@@ -95,7 +96,7 @@ export default function SearchApp() {
         <motion.div
           className="chat-box"
           initial={{ x: "100%" }}
-          animate={chatVisible ? { x: 0 } : { x: "100%" }}
+          animate={chatVisible ? { x: 0 } : { x: "110%" }}
           transition={{ type: "tween", stiffness: 200 }}
           style={{
             flex: "0 0 35%",
