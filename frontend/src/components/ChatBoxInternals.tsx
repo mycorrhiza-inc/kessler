@@ -75,7 +75,6 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
     };
     newMessages = [...newMessages, chat_response];
     setMessages(newMessages);
-    console.log(messages);
   };
   const model_list = [
     "default",
@@ -137,15 +136,17 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
             ))}
           </ul>
         </div>
-        <label className="label cursor-pointer flex flex-col">
-          <input
-            type="checkbox"
-            className="toggle toggle-accent"
-            checked={ragMode}
-            onChange={handleRagModeToggle}
-          />
-          <span className="label-text">Rag Mode</span>
-        </label>
+        <div className="space-y-1">
+          <label className="label cursor-pointer flex flex-col">
+            <input
+              type="checkbox"
+              className="toggle toggle-accent"
+              checked={ragMode}
+              onChange={handleRagModeToggle}
+            />
+            <span className="label-text">Rag Mode</span>
+          </label>
+        </div>
         <button className="btn btn-primary" onClick={createNewChat}>
           New Chat
         </button>
@@ -164,6 +165,7 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
           onKeyDown={handleKeyDown}
           value={draftText} // ...force the input's value to match the state variable...
           onChange={(e) => setDraftText(e.target.value)} // ... and update the state variable on any edits!
+          disabled={loadingResponse}
         ></textarea>
       </div>
     </form>
