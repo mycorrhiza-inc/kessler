@@ -31,11 +31,10 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
       key: Symbol(),
       content: responseText,
     };
-    console.log(newMessage);
-    setMessages((prevMessages) => [...prevMessages, newMessage]);
+    var newMessages = [...messages, newMessage];
+    setMessages(newMessages);
 
-    console.log(messages);
-    let chat_hist = messages.map((m) => {
+    let chat_hist = newMessages.map((m) => {
       let { key, ...rest } = m;
       return rest;
     });
@@ -74,8 +73,8 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
       key: Symbol(),
       content: result == "failed request" ? result : result.message.content,
     };
-    console.log(chat_response);
-    setMessages((prevMessages) => [...prevMessages, chat_response]);
+    newMessages = [...newMessages, chat_response];
+    setMessages(newMessages);
     console.log(messages);
   };
   const model_list = [
@@ -111,13 +110,18 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
     }
   };
 
+  const createNewChat = () => {
+    setMessages([]);
+    setCitations([]);
+  };
+
   return (
     <form
       className="flex flex-col"
       onSubmit={handleSubmit}
       style={{ height: "85vh" }}
     >
-      <div className="flex-none h-[10%] flex flex-row justify-center bg-base-100 text-base-content">
+      <div className="flex-none h-[10%] flex flex-row justify-center bg-base-100 text-base-content gap-5">
         <div className="dropdown dropdown-hover">
           <div tabIndex={0} role="button" className="btn m-1">
             Select Model
@@ -133,17 +137,18 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
             ))}
           </ul>
         </div>
-        <div className="form-control w-52">
-          <label className="label cursor-pointer flex flex-col">
-            <input
-              type="checkbox"
-              className="toggle toggle-accent"
-              checked={ragMode}
-              onChange={handleRagModeToggle}
-            />
-            <span className="label-text">Rag Mode</span>
-          </label>
-        </div>
+        <label className="label cursor-pointer flex flex-col">
+          <input
+            type="checkbox"
+            className="toggle toggle-accent"
+            checked={ragMode}
+            onChange={handleRagModeToggle}
+          />
+          <span className="label-text">Rag Mode</span>
+        </label>
+        <button className="btn btn-primary" onClick={createNewChat}>
+          New Chat
+        </button>
       </div>
       <div className="flex-1 h-[85%] overflow-y-auto">
         <ChatMessages

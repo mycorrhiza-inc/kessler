@@ -85,7 +85,7 @@ export default function SearchApp() {
           <div
             className="chat-box"
             style={{
-              flex: "0 0 20%",
+              flex: "0 0 35%",
               overflowY: "visible",
             }}
           >
