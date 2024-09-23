@@ -2,6 +2,7 @@
 import axios from "axios";
 import { useRef, useState } from "react";
 
+import { motion } from "framer-motion";
 import { CenteredFloatingSearhBox } from "@/components/SearchBox";
 import SearchResultBox from "@/components/SearchResultBox";
 import ChatBoxInternals from "./ChatBoxInternals";
@@ -81,19 +82,18 @@ export default function SearchApp() {
             isSearching={isSearching}
           />
         </div>
-        {chatVisible && (
-          <div
-            className="chat-box"
-            style={{
-              flex: "0 0 35%",
-              overflowY: "visible",
-            }}
-          >
-            <ChatBoxInternals
-              setCitations={setSearchResults}
-            ></ChatBoxInternals>
-          </div>
-        )}
+        <motion.div
+          className="chat-box"
+          initial={{ x: "100%" }}
+          animate={chatVisible ? { x: 0 } : { x: "100%" }}
+          transition={{ type: "tween", stiffness: 200 }}
+          style={{
+            flex: "0 0 35%",
+            overflowY: "visible",
+          }}
+        >
+          <ChatBoxInternals setCitations={setSearchResults}></ChatBoxInternals>
+        </motion.div>
       </div>
     </div>
   );

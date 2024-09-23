@@ -114,11 +114,7 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
   };
 
   return (
-    <form
-      className="flex flex-col"
-      onSubmit={handleSubmit}
-      style={{ height: "85vh" }}
-    >
+    <div className="flex flex-col" style={{ height: "85vh" }}>
       <div className="flex-none flex flex-row justify-center bg-base-100 text-base-content gap-11">
         <div className="dropdown dropdown-hover">
           <div tabIndex={0} role="button" className="btn m-1 bg-base-300">
@@ -167,7 +163,7 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
           disabled={loadingResponse}
         ></textarea>
       </div>
-    </form>
+    </div>
   );
 };
 export default ChatBoxInternals;
