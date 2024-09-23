@@ -1,7 +1,6 @@
 import { CloseIcon, HamburgerIcon } from "@/components/Icons";
 import { ChatMessages, exampleChatHistory } from "./ChatHistory";
 import { useState } from "react";
-import { Stack } from "@mui/joy";
 
 interface Message {
   role: string;
@@ -31,11 +30,10 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
       key: Symbol(),
       content: responseText,
     };
-    console.log(newMessage);
-    setMessages((prevMessages) => [...prevMessages, newMessage]);
+    var newMessages = [...messages, newMessage];
+    setMessages(newMessages);
 
-    console.log(messages);
-    let chat_hist = messages.map((m) => {
+    let chat_hist = newMessages.map((m) => {
       let { key, ...rest } = m;
       return rest;
     });
@@ -43,6 +41,7 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
     const modelToSend = selectedModel === "default" ? undefined : selectedModel;
     setLoadingResponse(true);
 
+    // Should this fetch get refactored out into lib as something that calls a chat endpoint?
     let result = await fetch(chatUrl, {
       method: "POST",
       headers: {
@@ -74,9 +73,8 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
       key: Symbol(),
       content: result == "failed request" ? result : result.message.content,
     };
-    console.log(chat_response);
-    setMessages((prevMessages) => [...prevMessages, chat_response]);
-    console.log(messages);
+    newMessages = [...newMessages, chat_response];
+    setMessages(newMessages);
   };
   const model_list = [
     "default",
@@ -111,15 +109,16 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
     }
   };
 
+  const createNewChat = () => {
+    setMessages([]);
+    setCitations([]);
+  };
+
   return (
-    <form
-      className="flex flex-col"
-      onSubmit={handleSubmit}
-      style={{ height: "85vh" }}
-    >
-      <div className="flex-none h-[10%] flex flex-row justify-center bg-base-100 text-base-content">
+    <div className="flex flex-col" style={{ height: "85vh" }}>
+      <div className="flex-none flex flex-row justify-center bg-base-100 text-base-content gap-11">
         <div className="dropdown dropdown-hover">
-          <div tabIndex={0} role="button" className="btn m-1">
+          <div tabIndex={0} role="button" className="btn m-1 bg-base-300">
             Select Model
           </div>
           <ul
@@ -133,7 +132,7 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
             ))}
           </ul>
         </div>
-        <div className="form-control w-52">
+        <div className="space-y-1">
           <label className="label cursor-pointer flex flex-col">
             <input
               type="checkbox"
@@ -144,6 +143,9 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
             <span className="label-text">Rag Mode</span>
           </label>
         </div>
+        <button className="btn btn-primary" onClick={createNewChat}>
+          New Chat
+        </button>
       </div>
       <div className="flex-1 h-[85%] overflow-y-auto">
         <ChatMessages
@@ -154,14 +156,15 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
       <div className="flex-none h-[15%]">
         <textarea
           name="userMessage"
-          className="textarea textarea-accent w-full h-full"
+          className="textarea textarea-accent w-full h-full bg-base-300"
           placeholder={`Type Here to Chat\nEnter to Send, Shift+Enter for New Line`}
           onKeyDown={handleKeyDown}
           value={draftText} // ...force the input's value to match the state variable...
           onChange={(e) => setDraftText(e.target.value)} // ... and update the state variable on any edits!
+          disabled={loadingResponse}
         ></textarea>
       </div>
-    </form>
+    </div>
   );
 };
 export default ChatBoxInternals;

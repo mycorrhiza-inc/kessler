@@ -1,7 +1,8 @@
 "use client";
 import axios from "axios";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 
+import { motion } from "framer-motion";
 import { CenteredFloatingSearhBox } from "@/components/SearchBox";
 import SearchResultBox from "@/components/SearchResultBox";
 import ChatBoxInternals from "./ChatBoxInternals";
@@ -12,7 +13,18 @@ export default function SearchApp() {
   const [searchQuery, setSearchQuery] = useState("");
   const [chatVisible, setChatVisible] = useState(false);
   const [resultView, setResultView] = useState(false);
+  const [renderChat, setRenderChat] = useState(false);
 
+  useEffect(() => {
+    if (chatVisible) {
+      setRenderChat(true);
+    } else {
+      const timer = setTimeout(() => setRenderChat(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [chatVisible]);
+
+  // Should this be refactored out of components and into the lib as a async function that returns search results?
   const handleSearch = async () => {
     setSearchResults([]);
     setIsSearching(true);
@@ -81,19 +93,22 @@ export default function SearchApp() {
             isSearching={isSearching}
           />
         </div>
-        {chatVisible && (
-          <div
-            className="chat-box"
-            style={{
-              flex: "0 0 20%",
-              overflowY: "visible",
-            }}
-          >
+        <motion.div
+          className="chat-box"
+          initial={{ x: "100%" }}
+          animate={chatVisible ? { x: 0 } : { x: "110%" }}
+          transition={{ type: "tween", stiffness: 200 }}
+          style={{
+            flex: "0 0 35%",
+            overflowY: "visible",
+          }}
+        >
+          {renderChat && (
             <ChatBoxInternals
               setCitations={setSearchResults}
             ></ChatBoxInternals>
-          </div>
-        )}
+          )}
+        </motion.div>
       </div>
     </div>
   );
