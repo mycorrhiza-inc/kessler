@@ -42,8 +42,8 @@ func HandleBasicChatRequest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	openaiRequest := openai.ChatCompletionRequest{
-		Model:     openai.GPT3Dot5Turbo, // Use default model, will ignore reqBody.Model for simplicity.
-		MaxTokens: 200,                  // For demonstration, we will limit the output to 20 tokens.
+		Model:     openai.GPT4oLatest,
+		MaxTokens: 2000,
 		Messages:  messages,
 		Stream:    true,
 	}
