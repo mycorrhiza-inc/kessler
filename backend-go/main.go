@@ -1,13 +1,13 @@
 package main
 
 import (
+	"log"
 	"net/http"
 	"time"
 
-	"log"
-
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
+	"github.com/mycorrhizainc/kessler/backend/rag"
 	"github.com/mycorrhizainc/kessler/backend/search"
 )
 
@@ -29,6 +29,7 @@ func corsMiddleware(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+
 func main() {
 	//
 	// set up db connection
@@ -47,6 +48,7 @@ func main() {
 
 	mux := mux.NewRouter()
 	mux.HandleFunc("/api/v2/search", search.HandleSearchRequest)
+	mux.HandleFunc("/api/v2/rag/basic_chat", rag.HandleBasicChatRequest)
 
 	muxWithMiddlewares := http.TimeoutHandler(mux, time.Second*3, "Timeout!")
 	handler := corsMiddleware(muxWithMiddlewares)
@@ -62,5 +64,4 @@ func main() {
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("Webserver Failed: %s", err)
 	}
-
 }
