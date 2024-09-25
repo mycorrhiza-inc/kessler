@@ -53,14 +53,10 @@ services:
       - ${VOLUMES_DIRECTORY:-./volumes}/files:/files
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`${DOMAIN:-kessler.xyz}`) && PathPrefix(`/api/v1`) || PathPrefix(`/schema`)"
-      - "traefik.http.routers.backend.entrypoints=websecure"
-      - "traefik.http.routers.backend.tls.certresolver=myresolver"
-      # - "traefik.http.routers.backend.tls={}"
-      # - "traefik.http.middlewares.testheader.headers.accesscontrolalloworigin=*"
+      - "traefik.http.routers.backend-python.rule=Host(`${DOMAIN:-kessler.xyz}`) && PathPrefix(`/api/v1`) || PathPrefix(`/schema`)"
+      - "traefik.http.routers.backend-python.entrypoints=websecure"
+      - "traefik.http.routers.backend-python.tls.certresolver=myresolver"
     command:
-      # - "python"
-      # - "rag/postgres_example.py"
       - "uvicorn"
       - "main:app"
       - "--host"
@@ -84,7 +80,7 @@ services:
       - 4041
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`${DOMAIN:-kessler.xyz}`) && PathPrefix(`/api/v2`)"
+      - "traefik.http.routers.backend-go.rule=Host(`${DOMAIN:-kessler.xyz}`) && PathPrefix(`/api/v2`)"
       - "traefik.http.middlewares.test-stripprefix.stripprefix.prefixes=/api/v2"
-      - "traefik.http.routers.backend.entrypoints=websecure"
-      - "traefik.http.routers.backend.tls.certresolver=myresolver"
+      - "traefik.http.routers.backend-go.entrypoints=websecure"
+      - "traefik.http.routers.backend-go.tls.certresolver=myresolver"
