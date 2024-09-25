@@ -7,6 +7,8 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
+
+	// This seems wrong, and the lsp is complaining, but format on save always adds it
 	"github.com/mycorrhizainc/kessler/backend/rag"
 	"github.com/mycorrhizainc/kessler/backend/search"
 )
