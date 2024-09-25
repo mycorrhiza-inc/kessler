@@ -24,6 +24,16 @@ type RequestBody struct {
 	ChatHistory []ChatHistory `json:"chat_history"`
 }
 
+func createOpenaiClientFromString(model_name string) func([]ChatHistory) {
+	return func(messages []ChatHistory) {
+		switch model_name {
+			case "gpt-4o"{
+				return openai.NewClient(openaiKey) // Replace with your actual token
+			}
+		}
+	}
+}
+
 func HandleBasicChatRequest(w http.ResponseWriter, r *http.Request) {
 	c := openai.NewClient(openaiKey) // Replace with your actual token
 	var reqBody RequestBody
