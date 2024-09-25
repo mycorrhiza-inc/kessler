@@ -13,6 +13,19 @@ import (
 	"github.com/mycorrhizainc/kessler/backend/search"
 )
 
+// path swagger is customable
+// path (/*any) is required for load the html page own by swagger
+// http://localhost:8810/nexsoft/doc/api/swagger/index.html
+func SwaggerRouting(router *mux.Router) {
+	prefix := "/nexsoft/doc/api"
+	router.PathPrefix(prefix).Handler(httpSwagger.Handler(
+		httpSwagger.URL("doc.json"),
+		// httpSwagger.DeepLinking(true),
+		// httpSwagger.DocExpansion("none"),
+		// httpSwagger.DomID("swagger-ui"),
+	)).Methods(http.MethodGet)
+}
+
 // CORS middleware function
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -61,6 +74,8 @@ func main() {
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
+
+	config.SwaggerRouting(mux)
 
 	log.Println("Starting server on :4041")
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
