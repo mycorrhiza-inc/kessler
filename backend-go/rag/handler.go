@@ -24,18 +24,18 @@ type RequestBody struct {
 	ChatHistory []ChatHistory `json:"chat_history"`
 }
 
-func createOpenaiClientFromString(model_name string) func([]ChatHistory) {
-	return func(messages []ChatHistory) {
-		switch model_name {
-			case "gpt-4o"{
-				return openai.NewClient(openaiKey) // Replace with your actual token
-			}
-		}
+func createOpenaiClientFromString(model_name string) (*openai.Client, string) {
+	switch model_name {
+	case "gpt-4o", "gpt-4o-mini":
+		return openai.NewClient(openaiKey), openai.GPT4oLatest
+	default:
+		// Return openai for now, refactor later to deal with stuff
+		return openai.NewClient(openaiKey), openai.GPT4oLatest
+		// panic(fmt.Sprintf("Unsupported model name: %s", model_name))
 	}
 }
 
 func HandleBasicChatRequest(w http.ResponseWriter, r *http.Request) {
-	c := openai.NewClient(openaiKey) // Replace with your actual token
 	var reqBody RequestBody
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
@@ -51,15 +51,16 @@ func HandleBasicChatRequest(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
+	client, modelid := createOpenaiClientFromString("gpt-4o")
 	openaiRequest := openai.ChatCompletionRequest{
-		Model:     openai.GPT4oLatest,
+		Model:     modelid,
 		MaxTokens: 2000,
 		Messages:  messages,
 		Stream:    true,
 	}
 
 	ctx := context.Background()
-	stream, err := c.CreateChatCompletionStream(ctx, openaiRequest)
+	stream, err := client.CreateChatCompletionStream(ctx, openaiRequest)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to create chat completion stream: %v", err), http.StatusInternalServerError)
 		return
