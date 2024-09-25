@@ -17,7 +17,7 @@ import (
 // path (/*any) is required for load the html page own by swagger
 // http://localhost:8810/nexsoft/doc/api/swagger/index.html
 func SwaggerRouting(router *mux.Router) {
-	prefix := "/nexsoft/doc/api"
+	prefix := "/api/v2"
 	router.PathPrefix(prefix).Handler(httpSwagger.Handler(
 		httpSwagger.URL("doc.json"),
 		// httpSwagger.DeepLinking(true),
@@ -61,9 +61,10 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
+	prefix := "/api/v2"
 	mux := mux.NewRouter()
-	mux.HandleFunc("/api/v2/search", search.HandleSearchRequest)
-	mux.HandleFunc("/api/v2/rag/basic_chat", rag.HandleBasicChatRequest)
+	mux.HandleFunc(prefix+"/search", search.HandleSearchRequest)
+	mux.HandleFunc(prefix+"/basic_chat", rag.HandleBasicChatRequest)
 
 	muxWithMiddlewares := http.TimeoutHandler(mux, time.Second*3, "Timeout!")
 	handler := corsMiddleware(muxWithMiddlewares)
