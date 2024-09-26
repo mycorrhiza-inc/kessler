@@ -45,6 +45,27 @@ func corsMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+// --------------------------------------------------
+// annotations		: Annotation used for Swagger-UI
+//					and will be mapping to folder and files (./root/docs/**)
+// docs import		: import ( _ "denitiawan/research-swagger-gomod-gin/docs" )
+//					will be used for update all values on all files inside that folder
+//					when you run syntax (swag init)
+// url swagger-ui 	: http://localhost:5050/nexsoft/doc/api/swagger/index.html
+// --------------------------------------------------
+//	@version		1.1.0
+//	@title			Demo Swagger-UI (GO+GORILLA MUX) for Nexsoft Project
+//	@description	Implement swagger-ui on Go project with Gorilla Mux (web framework) + JWT Authorization
+//	@host			localhost:5050
+//	@BasePath		/
+
+// ------showing authorize button (but validation jwt is not working)---------
+//	@Security					Authorization
+//	@securityDefinitions.apikey	Authorization
+//	@in							header
+//	@name						Authorization
+//	@schemes					http
+// ------showing authorize button (but validation jwt is not working)---------
 func main() {
 	//
 	// set up db connection
@@ -76,7 +97,7 @@ func main() {
 		WriteTimeout: 10 * time.Second,
 	}
 
-	config.SwaggerRouting(mux)
+	SwaggerRouting(mux)
 
 	log.Println("Starting server on :4041")
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
