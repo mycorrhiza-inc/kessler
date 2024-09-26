@@ -7,10 +7,10 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
-
+	"github.com/mycorrhizainc/kessler/backend-go/rag"
+	"github.com/mycorrhizainc/kessler/backend-go/search"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
 	// This seems wrong, and the lsp is complaining, but format on save always adds it
-	"github.com/mycorrhizainc/kessler/backend/rag"
-	"github.com/mycorrhizainc/kessler/backend/search"
 )
 
 // path swagger is customable
