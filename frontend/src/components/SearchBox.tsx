@@ -320,8 +320,6 @@ export const CenteredFloatingSearhBox = ({
         height: "auto",
         width: "auto",
         display: searchVisible ? "block" : "none",
-        left: "50%",
-        x: "-50%",
       }}
       style={{
         position: "fixed",
