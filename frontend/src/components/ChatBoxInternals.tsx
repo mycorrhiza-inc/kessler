@@ -61,7 +61,9 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
         return resp.json();
       })
       .then((data) => {
-        setCitations(data.citations || []);
+        if (data.citations && data.citations.length > 0) {
+          setCitations(data.citations);
+        }
         return data;
       })
       .catch((e) => {
