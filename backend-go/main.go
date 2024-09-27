@@ -9,8 +9,8 @@ import (
 	"github.com/joho/godotenv"
 
 	// This seems wrong, and the lsp is complaining, but format on save always adds it
-	"github.com/mycorrhizainc/kessler/backend/rag"
-	"github.com/mycorrhizainc/kessler/backend/search"
+	"github.com/mycorrhizainc/kessler/backend-go/rag"
+	"github.com/mycorrhizainc/kessler/backend-go/search"
 )
 
 // CORS middleware function

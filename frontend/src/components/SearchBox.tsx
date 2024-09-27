@@ -315,13 +315,15 @@ export const CenteredFloatingSearhBox = ({
       layout
       ref={divRef}
       data-isOpen={!isMinimized}
-      initial={{
-        width: "20%",
-      }}
+      initial={{}}
       animate={{
         height: "auto",
         width: "auto",
         display: searchVisible ? "block" : "none",
+        left: "50%",
+        bottom: "50%",
+        x: "-50%",
+        y: "50%",
       }}
       style={{
         position: "fixed",
