@@ -21,23 +21,6 @@ const DocumentModalBody = ({ open, objectId, children, title }: ModalProps) => {
   const [pdfUrl, setPdfUrl] = React.useState("");
   const [docMetadata, setDocMetadata] = React.useState({});
 
-  // Currently doesnt do anything, should it be removed? - Nic
-  const peekDocument = async () => {
-    try {
-      const response = await axios.post(
-        "http://localhost:4041/documents/peek",
-        {
-          id: objectId,
-        },
-      );
-      if (response.data.length === 0) {
-        return;
-      }
-    } catch (error) {
-      console.log(error);
-    } finally {
-    }
-  };
   const getDocumentMetadata = async () => {
     const response = await axios.get(`/api/v1/files/metadata/${objectId}`);
     setDocMetadata(response.data);
