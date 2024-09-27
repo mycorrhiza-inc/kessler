@@ -74,28 +74,29 @@ export default function SearchApp() {
         setChatVisible={setChatVisible}
         inSearchSession={resultView}
       />
+      {/* Refactor this code to use a motion.div so that SearchResultBox fills the */}
+      {/* full screen when chat isnt visible, currently it only takes up 65% */}
+      {/* regardless of chat-box being visible. */}
       <div
-        className="results-container"
         style={{
           display: "flex",
           height: "calc(100% - 20px)",
         }}
       >
-        <div
+        <motion.div
           className="search-results"
-          style={{
-            flex: 1,
-            overflowY: "auto",
-          }}
+          initial={{ width: "100%" }}
+          animate={chatVisible ? { width: "10%" } : { width: "150%" }}
+          transition={{ type: "tween", stiffness: 200 }}
         >
           <SearchResultBox
             searchResults={searchResults}
             isSearching={isSearching}
           />
-        </div>
+        </motion.div>
         <motion.div
           className="chat-box"
-          initial={{ x: "100%" }}
+          initial={{ x: "110%" }}
           animate={chatVisible ? { x: 0 } : { x: "110%" }}
           transition={{ type: "tween", stiffness: 200 }}
           style={{
