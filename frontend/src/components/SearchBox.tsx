@@ -311,43 +311,49 @@ export const CenteredFloatingSearhBox = ({
   }, []);
 
   return (
-    <motion.div
-      layout
-      ref={divRef}
-      data-isOpen={!isMinimized}
-      initial={{}}
-      animate={{
-        height: "auto",
-        width: "auto",
-        display: searchVisible ? "block" : "none",
-      }}
+    <div
+      className="w-full flex justify-center"
       style={{
         position: "fixed",
         bottom: "30px",
-        borderRadius: "10px",
-        border: "2px solid grey",
-        padding: "10px",
         zIndex: 1500,
       }}
-      className="parent fixed bottom-7 rounded-lg border-2 border-gray-500 bg-base-200 text-base-content"
     >
-      {isMinimized ? (
-        <div>
-          <MinimizedSearchBox
-            setMinimized={setIsMinimized}
+      <motion.div
+        layout
+        ref={divRef}
+        data-isOpen={!isMinimized}
+        initial={{}}
+        animate={{
+          height: "auto",
+          width: "auto",
+          display: searchVisible ? "block" : "none",
+        }}
+        style={{
+          borderRadius: "10px",
+          border: "2px solid grey",
+          padding: "10px",
+        }}
+        className="parent fixed bottom-7 rounded-lg border-2 border-gray-500 bg-base-200 text-base-content"
+      >
+        {isMinimized ? (
+          <div>
+            <MinimizedSearchBox
+              setMinimized={setIsMinimized}
+              setChatVisible={setChatVisible}
+            />
+          </div>
+        ) : (
+          <SearchBox
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            handleSearch={handleSearch}
+            inSearchSession={inSearchSession}
             setChatVisible={setChatVisible}
           />
-        </div>
-      ) : (
-        <SearchBox
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          handleSearch={handleSearch}
-          inSearchSession={inSearchSession}
-          setChatVisible={setChatVisible}
-        />
-      )}
-    </motion.div>
+        )}
+      </motion.div>
+    </div>
   );
 };
 
