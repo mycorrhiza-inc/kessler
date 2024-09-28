@@ -82,7 +82,7 @@ class SearchData(BaseModel):
     sourceID: str
 
 
-async def convert_search_results_to_frontend_table(
+async def convert_search_results_to_frontend_table_old(
     search_results: List[Any],
     files_repo: FileRepository,
     max_results: int = 10,
@@ -109,6 +109,40 @@ async def convert_search_results_to_frontend_table(
             file_results[index].display_text = text_list[index]
 
     return file_results
+
+
+async def convert_search_results_to_frontend_table(
+    search_results: List[Any],
+    files_repo: FileRepository,
+    max_results: int = 10,
+    include_text: bool = True,
+):
+    logger = default_logger
+    res = search_results[0]
+    res = res[:max_results]
+    uuid_list = []
+    text_list = []
+    # TODO: Refactor for less checks and ugliness
+    for result in res:
+        logger.info(result)
+        logger.info(result["entity"])
+        uuid = UUID(result["entity"]["source_id"])
+        uuid_list.append(uuid)
+        if include_text:
+            text_list.append(result["entity"]["text"])
+            # text_list.append(lemon_text)
+    file_models = await get_files_from_uuids(files_repo, uuid_list)
+    search_data_results = []
+    for index, file_model in enumerate(file_models):
+        search_data = SearchData(
+            name=file_model.name if file_model.name else "",
+            text=text_list[index] if include_text else "",
+            docID="",  # Not a validated field in the mdata so far, discuss at some point.
+            sourceID=str(file_model.id),
+        )
+        search_data_results.append(search_data)
+
+    return search_data_results
 
 
 class KeRagEngine(KeLLMUtils):
