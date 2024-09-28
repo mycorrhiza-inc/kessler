@@ -35,6 +35,7 @@ from advanced_alchemy.filters import SearchFilter, CollectionFilter
 import re
 
 from constants import lemon_text
+from pydantic import BaseModel
 
 qa_prompt = (
     lambda context_str: f"""
@@ -72,6 +73,13 @@ def strip_links_and_tables(markdown_text):
     # Remove markdown tables
     no_tables = re.sub(r"\|.*?\|", "", no_links)
     return no_tables
+
+
+class SearchData(BaseModel):
+    name: str
+    text: str
+    docID: str
+    sourceID: str
 
 
 async def convert_search_results_to_frontend_table(
