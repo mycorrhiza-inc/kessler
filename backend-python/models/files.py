@@ -27,6 +27,8 @@ from sqlalchemy import select
 
 import asyncio
 
+from common.niclib import Maybe
+
 
 class FileModel(UUIDAuditBase):
     """Database representation of a file"""
@@ -42,8 +44,6 @@ class FileModel(UUIDAuditBase):
     stage: Mapped[str | None]
     summary: Mapped[str | None]
     short_summary: Mapped[str | None]
-    original_text: Mapped[str | None]
-    english_text: Mapped[str | None]
 
 
 # class FileModel(UUIDAuditBase):
@@ -104,14 +104,11 @@ async def get_texts_from_file_uuid(
 
 
 def file_model_to_schema(model: FileModel) -> FileSchema:
-    metadata_str = model.mdata
-    model.mdata = None
-    type_adapter = TypeAdapter(FileSchema)
-    schema = type_adapter.validate_python(
-        model
-    )  # This probably needs to be implemented manually since text is still stored in db
-    if metadata_str is not None:
-        schema.mdata = json.loads(metadata_str)
+    model_dict = model.to_dict()
+    if model.mdata is None:
+        model.mdata = "{}"
+    model_dict["mdata"] = json.loads(model.mdata)
+    schema = FileSchema(**model_dict)
     return schema
 
 
@@ -120,7 +117,8 @@ async def get_partial_file_from_uuid(async_db_connection: AsyncSession, file_id:
         select(FileModel).where(FileModel.id == file_id)
     )
     db_model = result.scalars().first()
-    return file_model_to_schema(db_model)
+    # YOU CANT TAKE MY MONADS FROM MEEEEEEE (Also the python type system isnt designed for this kind of torture, maybe go is better.)
+    return Maybe(file_model_to_schema)(db_model)
 
 
 async def get_full_file_from_uuid(
