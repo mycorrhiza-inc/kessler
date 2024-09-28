@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const chatUrl = "http://localhost/api/chat";
+const chatUrl = "/api/chat";
 const modelToSend = "llama-3.1-8b";
 
 export interface ChatMessageInterface {
@@ -34,7 +34,7 @@ export class ChatLog implements ChatLogInterface {
   RecomputeMessage: (id: string) => void = () => {};
   loadLog: () => void = () => {
     axios
-      .get("http://localhost/api/chat/?id=" + this.id, {})
+      .get("/api/chat/?id=" + this.id, {})
       .then((result: any) => {
         if (result.data) {
           this.messages = result.data.chat_history;
@@ -47,7 +47,7 @@ export class ChatLog implements ChatLogInterface {
   };
   new: () => void = () => {
     axios
-      .post("http://localhost/api/chat/new", {})
+      .post("/api/chat/new", {})
       .then((result: any) => {
         if (result.data) {
           this.id = result.data.id;
@@ -70,7 +70,7 @@ export class ChatLog implements ChatLogInterface {
   };
 
   async sendMessage() {
-    const chatUrl = "http://localhost/api/chat/?id=" + this.id;
+    const chatUrl = "/api/chat/?id=" + this.id;
     let result = await fetch(chatUrl, {
       method: "POST",
       headers: {
