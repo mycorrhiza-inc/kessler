@@ -12,9 +12,11 @@ interface Message {
 const MessageComponent = ({
   message,
   clickMessage,
+  highlighted,
 }: {
   message: Message;
   clickMessage: any; // This makes me sad
+  highlighted: boolean;
 }) => {
   const isUser = message.role === "user";
   return (
@@ -54,7 +56,9 @@ export const ChatMessages = ({
   loading: boolean;
   setCitations: (citations: any[]) => void;
 }) => {
+  const [highlighted, setHighlighted] = useState<number | null>(null);
   const setMessageCitations = (index: number) => {
+    setHighlighted(index);
     const isUser = messages[index].role === "user";
     if (
       !isUser &&
@@ -79,6 +83,7 @@ export const ChatMessages = ({
           key={index}
           message={m}
           clickMessage={() => setMessageCitations(index)}
+          highlighted={highlighted === index}
         />;
       })}
       {loading && <AwaitingMessageSkeleton />}
