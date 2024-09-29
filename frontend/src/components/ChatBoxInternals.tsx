@@ -1,13 +1,83 @@
-import { CloseIcon, HamburgerIcon } from "@/components/Icons";
-import { ChatMessages, exampleChatHistory } from "./ChatHistory";
 import { useState } from "react";
 
+import MarkdownRenderer from "./MarkdownRenderer";
+import { m } from "framer-motion";
 interface Message {
   role: string;
   content: string;
+  citations: any[]; // Define a format for search results and include them here
   key: symbol;
 }
 
+const MessageComponent = ({
+  message,
+  clickMessage,
+}: {
+  message: Message;
+  clickMessage: any; // This makes me sad
+}) => {
+  const isUser = message.role === "user";
+  return (
+    <div className={`flex w-full ${isUser ? "justify-end" : "justify-start"}`}>
+      <div
+        className={`w-11/12 rounded-lg overflow-auto min-h-[100px] p-5 ${
+          isUser ? "bg-success" : "bg-base-300"
+        }`}
+        onClick={clickMessage}
+      >
+        <MarkdownRenderer color={isUser ? "success-content" : "base-content"}>
+          {message.content}
+        </MarkdownRenderer>
+      </div>
+    </div>
+  );
+};
+
+const AwaitingMessageSkeleton = () => {
+  return (
+    <div className="w-11/12 bg-base-300 rounded-lg min-h-[100px] p-5">
+      <div className="animate-pulse">
+        <div className="h-2 bg-accent my-4 rounded"></div>
+        <div className="h-2 bg-accent my-4 rounded"></div>
+        <div className="h-2 bg-accent my-4 rounded"></div>
+      </div>
+    </div>
+  );
+};
+
+export const ChatMessages = ({
+  messages,
+  loading,
+  setCitations,
+}: {
+  messages: Message[];
+  loading: boolean;
+  setCitations: (citations: any[]) => void;
+}) => {
+
+  const setMessageCitations = (index : number) => {
+    const isUser = messages[index].role === "user";
+    if (!isUser && messages[index].citations && messages[index].citations.length > 0) {
+      setCitations(messages[index].citations);
+    }
+  };
+  return (
+    <>
+      {messages.length === 0 && (
+        <div className="p-5 text-center text-base-content">
+          <h2 className="text-lg font-bold">Welcome to the Chatbot!</h2>
+          <p>
+            Type your message in the input box below and press Enter to send.
+          </p>
+        </div>
+      )}
+      {messages.map((m: Message) => {(
+        <MessageComponent message={m} clickMessage={() => setMessageCitations(1)} />
+      ))}}
+      {loading && <AwaitingMessageSkeleton />}
+    </>
+  );
+};
 interface ChatBoxInternalsProps {
   setCitations: (citations: any[]) => void;
 }

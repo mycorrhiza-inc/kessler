@@ -77,6 +77,13 @@ query_str = (
 default_logger = logging.getLogger(__name__)
 
 
+class SearchData(BaseModel):
+    name: str
+    text: str
+    docID: str
+    sourceID: str
+
+
 class RAGChat(BaseModel):
     model: Optional[str] = None
     chat_history: List[Dict[str, str]]
@@ -91,6 +98,7 @@ class ChatRole(str, Enum):
 class KeChatMessage(BaseModel):
     content: str
     role: ChatRole
+    citations: List[SearchData] = []
 
 
 # Do something with the chat message validation maybe, probably not worth it

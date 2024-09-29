@@ -1,7 +1,5 @@
-import { Card, Modal, ModalClose, ModalDialog } from "@mui/joy";
 import { useState } from "react";
 import DocumentModalBody from "./DocumentModalBody";
-import zIndex from "@mui/material/styles/zIndex";
 type SearchFields = {
   sourceID: string;
   name: string;
@@ -69,17 +67,5 @@ const SearchResult = ({ data }: SearchResultProps) => {
     </>
   );
 };
-// <Modal
-//   aria-labelledby="modal-title"
-//   aria-describedby="modal-desc"
-//   open={open}
-//   onClose={() => setOpen(false)}
-//   sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}
-//   style={{ zIndex: 99 }}
-// >
-//   <ModalDialog className="standard-box">
-//     <ModalClose />
-//   </ModalDialog>
-// </Modal>
 
 export default SearchResult;

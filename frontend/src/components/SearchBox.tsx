@@ -1,5 +1,4 @@
 import { Dispatch, SetStateAction, useState, useEffect, useRef } from "react";
-import { Input, Button, Grid, Stack, Divider, Box } from "@mui/joy";
 import Tooltip from "@mui/joy/Tooltip";
 import { motion, AnimatePresence } from "framer-motion"; // Import necessary components from framer-motion
 import { CommandIcon, SearchIcon, ChatIcon } from "@/components/Icons";

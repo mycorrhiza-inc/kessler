@@ -75,13 +75,6 @@ def strip_links_and_tables(markdown_text):
     return no_tables
 
 
-class SearchData(BaseModel):
-    name: str
-    text: str
-    docID: str
-    sourceID: str
-
-
 async def convert_search_results_to_frontend_table_old(
     search_results: List[Any],
     files_repo: FileRepository,
