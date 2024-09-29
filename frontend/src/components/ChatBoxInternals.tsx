@@ -8,46 +8,6 @@ interface Message {
   key: symbol;
 }
 
-const MessageComponent = ({
-  message,
-  clickMessage,
-  highlighted,
-}: {
-  message: Message;
-  clickMessage: any; // This makes me sad
-  highlighted: boolean;
-}) => {
-  const isUser = message.role === "user";
-  return (
-    <div className={`flex w-full ${isUser ? "justify-end" : "justify-start"}`}>
-      <div
-        className={`w-11/12 rounded-lg overflow-auto min-h-[100px] p-5 ${
-          isUser ? "bg-success" : "bg-base-300"
-        }
-${highlighted ? "ring-2 ring-primary" : ""}
-`}
-        onClick={clickMessage}
-      >
-        <MarkdownRenderer color={isUser ? "success-content" : "base-content"}>
-          {message.content}
-        </MarkdownRenderer>
-      </div>
-    </div>
-  );
-};
-
-const AwaitingMessageSkeleton = () => {
-  return (
-    <div className="w-11/12 bg-base-300 rounded-lg min-h-[100px] p-5">
-      <div className="animate-pulse">
-        <div className="h-2 bg-accent my-4 rounded"></div>
-        <div className="h-2 bg-accent my-4 rounded"></div>
-        <div className="h-2 bg-accent my-4 rounded"></div>
-      </div>
-    </div>
-  );
-};
-
 export const ChatMessages = ({
   messages,
   loading,
@@ -70,6 +30,33 @@ export const ChatMessages = ({
       setCitations(message.citations);
     }
   };
+  const MessageComponent = ({
+    message,
+    clickMessage,
+    highlighted,
+  }: {
+    message: Message;
+    clickMessage: any; // This makes me sad
+    highlighted: boolean;
+  }) => {
+    const isUser = message.role === "user";
+    return (
+      <div
+        className={`flex w-full ${isUser ? "justify-end" : "justify-start"}`}
+      >
+        <div
+          className={`w-11/12 rounded-lg overflow-auto min-h-[100px] p-5 ${
+            isUser ? "bg-success" : "bg-base-300"
+          } ${highlighted ? "highlighted" : "not-highlighted"}`}
+          onClick={clickMessage}
+        >
+          <MarkdownRenderer color={isUser ? "success-content" : "base-content"}>
+            {message.content}
+          </MarkdownRenderer>
+        </div>
+      </div>
+    );
+  };
   return (
     <>
       {messages.length === 0 && (
@@ -80,15 +67,22 @@ export const ChatMessages = ({
           </p>
         </div>
       )}
-      {messages.map((m: Message, index: number) => {
+      {messages.map((m: Message) => {
         <MessageComponent
-          key={index}
           message={m}
-          clickMessage={() => setMessageCitations(index)}
-          highlighted={highlighted === index}
+          clickMessage={() => setMessageCitations(0)}
+          highlighted={highlighted === 0}
         />;
       })}
-      {loading && <AwaitingMessageSkeleton />}
+      {loading && (
+        <div className="w-11/12 bg-base-300 rounded-lg min-h-[100px] p-5">
+          <div className="animate-pulse">
+            <div className="h-2 bg-accent my-4 rounded"></div>
+            <div className="h-2 bg-accent my-4 rounded"></div>
+            <div className="h-2 bg-accent my-4 rounded"></div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
@@ -115,7 +109,9 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
       content: responseText,
       citations: [],
     };
+    console.log(newMessage);
     var newMessages = [...messages, newMessage];
+    console.log(newMessages);
     setMessages(newMessages);
 
     let chat_hist = newMessages.map((m) => {
