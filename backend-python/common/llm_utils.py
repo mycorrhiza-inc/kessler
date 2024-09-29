@@ -134,16 +134,6 @@ def validate_chat(chat_history: List[Dict[str, Any]]) -> List[KeChatMessage]:
     return list(map(dict_to_cm, chat_history))
 
 
-def force_conform_chat(chat_history: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    chat_history = list(chat_history)
-    for chat in chat_history:
-        if not chat.get("role") in ["user", "system", "assistant"]:
-            chat["role"] = "system"
-        if not isinstance(chat.get("message"), str):
-            chat["message"] = str(chat.get("message"))
-    return chat_history
-
-
 class KeLLMUtils:
     def __init__(self, llm: Union[str, Any]) -> None:
         if llm == "":
