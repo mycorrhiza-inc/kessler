@@ -65,7 +65,7 @@ export default function SearchApp() {
         width: "99vw",
         height: "90vh",
         padding: "20px",
-        overflow: "hidden",
+        overflow: "scroll",
       }}
     >
       <CenteredFloatingSearhBox
@@ -86,7 +86,7 @@ export default function SearchApp() {
         }
         transition={{ type: "tween", stiffness: 200 }}
         style={{
-          position: "fixed",
+          position: "relative",
           top: 0,
           left: 0,
           height: "calc(100% - 20px)",
@@ -109,7 +109,8 @@ export default function SearchApp() {
             style={{
               position: "fixed",
               right: 0,
-              height: "calc(100% - 20px)",
+              bottom:0,
+              height: "auto",
               width: "35%",
               overflowY: "visible",
             }}

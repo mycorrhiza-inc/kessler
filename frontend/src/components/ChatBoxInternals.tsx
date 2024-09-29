@@ -197,7 +197,7 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
       <div className="flex-none flex flex-row justify-center bg-base-100 text-base-content gap-11">
         <div className="dropdown dropdown-hover">
           <div tabIndex={0} role="button" className="btn m-1 bg-base-300">
-            Select Model
+            {selectedModel !== "default" ? selectedModel : "Select Model"}
           </div>
           <ul
             tabIndex={0}
