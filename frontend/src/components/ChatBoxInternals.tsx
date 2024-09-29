@@ -1,13 +1,8 @@
 import { useState } from "react";
 
 import MarkdownRenderer from "./MarkdownRenderer";
-interface Message {
-  role: string;
-  content: string;
-  citations: any[]; // Define a format for search results and include them here
-  key: symbol;
-}
 
+import { exampleChatHistory, Message } from "@/lib/chat";
 export const ChatMessages = ({
   messages,
   loading,
@@ -68,11 +63,13 @@ export const ChatMessages = ({
         </div>
       )}
       {messages.map((m: Message) => {
-        <MessageComponent
-          message={m}
-          clickMessage={() => setMessageCitations(0)}
-          highlighted={highlighted === 0}
-        />;
+        return (
+          <MessageComponent
+            message={m}
+            clickMessage={() => setMessageCitations(0)}
+            highlighted={highlighted === 0}
+          />
+        );
       })}
       {loading && (
         <div className="w-11/12 bg-base-300 rounded-lg min-h-[100px] p-5">

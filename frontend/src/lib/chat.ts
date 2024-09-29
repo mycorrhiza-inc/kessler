@@ -3,50 +3,64 @@ import axios from "axios";
 const chatUrl = "/api/chat";
 const modelToSend = "llama-3.1-8b";
 
-export const exampleChatHistory: any[] = [
+export interface Message {
+  role: string;
+  content: string;
+  citations: any[]; // Define a format for search results and include them here
+  key: symbol;
+}
+export const exampleChatHistory: Message[] = [
   {
     role: "user",
     content: "What is a black hole?",
     key: Symbol(),
+    citations: [],
   },
   {
     role: "assistant",
     content:
       "A black hole is a region of space where the gravitational pull is so strong that not even light can escape from it.",
     key: Symbol(),
+    citations: [],
   },
   {
     role: "user",
     content: "How are black holes formed?",
     key: Symbol(),
+    citations: [],
   },
   {
     role: "assistant",
     content:
       "Black holes are formed when massive stars collapse under their own gravity at the end of their life cycle.",
     key: Symbol(),
+    citations: [],
   },
   {
     role: "user",
     content: "Can black holes be seen?",
     key: Symbol(),
+    citations: [],
   },
   {
     role: "assistant",
     content:
       "No, black holes cannot be seen directly because their gravitational pull prevents light from escaping, but their presence can be inferred by observing the effects on nearby objects.",
     key: Symbol(),
+    citations: [],
   },
   {
     role: "user",
     content: "What would happen if you fell into a black hole?",
     key: Symbol(),
+    citations: [],
   },
   {
     role: "assistant",
     content:
       "If you fell into a black hole, you would experience extreme gravitational forces and time dilation. Ultimately, you would be stretched and compressed in a process known as spaghettification.",
     key: Symbol(),
+    citations: [],
   },
 ];
 
