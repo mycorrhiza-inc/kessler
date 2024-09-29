@@ -1,7 +1,6 @@
 import { useState } from "react";
 
 import MarkdownRenderer from "./MarkdownRenderer";
-import { m } from "framer-motion";
 interface Message {
   role: string;
   content: string;
@@ -24,7 +23,9 @@ const MessageComponent = ({
       <div
         className={`w-11/12 rounded-lg overflow-auto min-h-[100px] p-5 ${
           isUser ? "bg-success" : "bg-base-300"
-        }`}
+        }
+${highlighted ? "ring-2 ring-primary" : ""}
+`}
         onClick={clickMessage}
       >
         <MarkdownRenderer color={isUser ? "success-content" : "base-content"}>
@@ -51,21 +52,22 @@ export const ChatMessages = ({
   messages,
   loading,
   setCitations,
+  highlighted,
+  setHighlighted,
 }: {
   messages: Message[];
   loading: boolean;
   setCitations: (citations: any[]) => void;
+  highlighted: number;
+  setHighlighted: (index: number) => void;
 }) => {
-  const [highlighted, setHighlighted] = useState<number | null>(null);
   const setMessageCitations = (index: number) => {
     setHighlighted(index);
-    const isUser = messages[index].role === "user";
-    if (
-      !isUser &&
-      messages[index].citations &&
-      messages[index].citations.length > 0
-    ) {
-      setCitations(messages[index].citations);
+    const message = messages[index];
+    const isntUser = message.role != "user";
+    const citationExists = message.citations && message.citations.length > 0;
+    if (isntUser && citationExists) {
+      setCitations(message.citations);
     }
   };
   return (
@@ -95,8 +97,8 @@ interface ChatBoxInternalsProps {
 }
 
 const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
+  const [highlighted, setHighlighted] = useState<number>(-1); // -1 Means no message is highlighted
   const [messages, setMessages] = useState<Message[]>([]);
-  const [needsResponse, setResponse] = useState(false);
   const [loadingResponse, setLoadingResponse] = useState(false);
   const [selectedModel, setSelectedModel] = useState("default");
   const [ragMode, setRagMode] = useState(true);
@@ -145,6 +147,7 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
       })
       .then((data) => {
         if (data.citations && data.citations.length > 0) {
+          setHighlighted(newMessages.length); // You arent subtracting one here, since you want it to highlight the last message added to the list.
           setCitations(data.citations);
         }
         return data;
@@ -249,6 +252,9 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
         <ChatMessages
           messages={messages}
           loading={loadingResponse}
+          setCitations={setCitations}
+          highlighted={highlighted}
+          setHighlighted={setHighlighted}
         ></ChatMessages>
       </div>
       <div className="flex-none h-[15%]">
@@ -266,60 +272,3 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
   );
 };
 export default ChatBoxInternals;
-// Added complexity, removing for a bit.
-// <div
-//   className="chatbox-banner"
-//   style={{
-//     position: "sticky",
-//     top: "0",
-//     padding: "20px",
-//     textAlign: "center",
-//     zIndex: "1000",
-//     borderBottom: "1px solid ",
-//     height: "auto",
-//     pointerEvents: "auto",
-//   }}
-// >
-//   <Stack direction="row" justifyContent="space-between">
-//     <button
-//       onClick={() => setChatSidebarVisible((prevState) => !prevState)}
-//     ></button>
-//   </Stack>
-// </div>
-// <div className="chatbox-banner sticky top-0 p-5 text-center z-50 border-b border-accent h-auto">
-//   <div className="flex flex-row justify-between">
-//     <button>
-//       <HamburgerIcon />
-//     </button>
-//     <button
-//       onClick={() => {
-//         setChatVisible((prev) => !prev);
-//       }}
-//     >
-//       <CloseIcon />
-//     </button>
-//   </div>
-// </div>
-//
-// <div
-//   className="chatContainer"
-//   style={{
-//     display: "flex",
-//     flexDirection: "row",
-//     height: "90%",
-//     width: "100%",
-//     padding: "2px",
-//   }}
-// >
-//   <div
-//     className="chatSidebar"
-//     style={{
-//       width: chatSidebarVisible ? "20%" : "0%",
-//       backgroundColor: "red",
-//       overflow: "scroll",
-//     }}
-//   >
-//     sidebar contents
-//   </div>
-//   <div> chat contents</div>
-// </div>

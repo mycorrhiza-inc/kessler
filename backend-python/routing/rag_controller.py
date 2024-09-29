@@ -87,7 +87,7 @@ class IndexFileResponse(BaseModel):
 
 class SimpleChatCompletion(BaseModel):
     model: Optional[str] = None
-    chat_history: List[Dict[str, str]]
+    chat_history: List[Dict[str, Any]]
 
 
 class RAGQueryResponse(BaseModel):
@@ -120,13 +120,10 @@ class RagController(Controller):
         model_name = data.model
         validated_chat_history = validate_chat(data.chat_history)
         rag_engine = KeRagEngine(model_name)
-        result_message, file_schema_citations = await rag_engine.rag_achat(
-            validated_chat_history, files_repo
-        )
+        result_message = await rag_engine.rag_achat(validated_chat_history, files_repo)
         assert isinstance(result_message, KeChatMessage)
         return {
             "message": cm_to_dict(result_message),
-            "citations": file_schema_citations,
         }
 
     @post(path="/rag/rag_query")
