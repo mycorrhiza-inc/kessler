@@ -77,6 +77,13 @@ query_str = (
 default_logger = logging.getLogger(__name__)
 
 
+class SearchData(BaseModel):
+    name: str
+    text: str
+    docID: str
+    sourceID: str
+
+
 class RAGChat(BaseModel):
     model: Optional[str] = None
     chat_history: List[Dict[str, str]]
@@ -91,6 +98,7 @@ class ChatRole(str, Enum):
 class KeChatMessage(BaseModel):
     content: str
     role: ChatRole
+    citations: List[SearchData] | None = None
 
 
 # Do something with the chat message validation maybe, probably not worth it
@@ -108,31 +116,22 @@ def sanitzie_chathistory_llamaindex(chat_history: List) -> List[LlamaChatMessage
 def dict_to_cm(input_dict: Union[dict, KeChatMessage]) -> KeChatMessage:
     if isinstance(input_dict, KeChatMessage):
         return input_dict
-    return KeChatMessage(
-        content=input_dict["content"], role=ChatRole(input_dict["role"])
-    )
+    input_dict["role"] = ChatRole(input_dict["role"])
+    return KeChatMessage(**input_dict)
 
 
-def cm_to_dict(cm: KeChatMessage) -> Dict[str, str]:
-    return {"content": cm.content, "role": cm.role.value}
+def cm_to_dict(cm: KeChatMessage) -> Dict[str, Any]:
+    return_dict = cm.model_dump()
+    return_dict["role"] = cm.role.value
+    return return_dict
 
 
-def unvalidate_chat(chat_history: List[KeChatMessage]) -> List[Dict[str, str]]:
+def unvalidate_chat(chat_history: List[KeChatMessage]) -> List[Dict[str, Any]]:
     return list(map(cm_to_dict, chat_history))
 
 
-def validate_chat(chat_history: List[Dict[str, str]]) -> List[KeChatMessage]:
+def validate_chat(chat_history: List[Dict[str, Any]]) -> List[KeChatMessage]:
     return list(map(dict_to_cm, chat_history))
-
-
-def force_conform_chat(chat_history: List[Dict[str, str]]) -> List[Dict[str, str]]:
-    chat_history = list(chat_history)
-    for chat in chat_history:
-        if not chat.get("role") in ["user", "system", "assistant"]:
-            chat["role"] = "system"
-        if not isinstance(chat.get("message"), str):
-            chat["message"] = str(chat.get("message"))
-    return chat_history
 
 
 class KeLLMUtils:

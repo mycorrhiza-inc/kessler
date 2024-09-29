@@ -1,20 +1,95 @@
-import { CloseIcon, HamburgerIcon } from "@/components/Icons";
-import { ChatMessages, exampleChatHistory } from "./ChatHistory";
 import { useState } from "react";
 
-interface Message {
-  role: string;
-  content: string;
-  key: symbol;
-}
+import MarkdownRenderer from "./MarkdownRenderer";
 
+import { exampleChatHistory, Message } from "@/lib/chat";
+export const ChatMessages = ({
+  messages,
+  loading,
+  setCitations,
+  highlighted,
+  setHighlighted,
+}: {
+  messages: Message[];
+  loading: boolean;
+  setCitations: (citations: any[]) => void;
+  highlighted: number;
+  setHighlighted: (index: number) => void;
+}) => {
+  const setMessageCitations = (index: number) => {
+    setHighlighted(index);
+    const message = messages[index];
+    const isntUser = message.role != "user";
+    const citationExists = message.citations && message.citations.length > 0;
+    if (isntUser && citationExists) {
+      setCitations(message.citations);
+    }
+  };
+  const MessageComponent = ({
+    message,
+    clickMessage,
+    highlighted,
+  }: {
+    message: Message;
+    clickMessage: any; // This makes me sad
+    highlighted: boolean;
+  }) => {
+    const isUser = message.role === "user";
+    return (
+      <div
+        className={`flex w-full ${isUser ? "justify-end" : "justify-start"}`}
+      >
+        <div
+          className={`w-11/12 rounded-lg overflow-auto min-h-[100px] p-5 ${
+            isUser ? "bg-success" : "bg-base-300"
+          } ${highlighted ? "highlighted" : "not-highlighted"}`}
+          onClick={clickMessage}
+        >
+          <MarkdownRenderer color={isUser ? "success-content" : "base-content"}>
+            {message.content}
+          </MarkdownRenderer>
+        </div>
+      </div>
+    );
+  };
+  return (
+    <>
+      {messages.length === 0 && (
+        <div className="p-5 text-center text-base-content">
+          <h2 className="text-lg font-bold">Welcome to the Chatbot!</h2>
+          <p>
+            Type your message in the input box below and press Enter to send.
+          </p>
+        </div>
+      )}
+      {messages.map((m: Message) => {
+        return (
+          <MessageComponent
+            message={m}
+            clickMessage={() => setMessageCitations(0)}
+            highlighted={highlighted === 0}
+          />
+        );
+      })}
+      {loading && (
+        <div className="w-11/12 bg-base-300 rounded-lg min-h-[100px] p-5">
+          <div className="animate-pulse">
+            <div className="h-2 bg-accent my-4 rounded"></div>
+            <div className="h-2 bg-accent my-4 rounded"></div>
+            <div className="h-2 bg-accent my-4 rounded"></div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
 interface ChatBoxInternalsProps {
   setCitations: (citations: any[]) => void;
 }
 
 const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
+  const [highlighted, setHighlighted] = useState<number>(-1); // -1 Means no message is highlighted
   const [messages, setMessages] = useState<Message[]>([]);
-  const [needsResponse, setResponse] = useState(false);
   const [loadingResponse, setLoadingResponse] = useState(false);
   const [selectedModel, setSelectedModel] = useState("default");
   const [ragMode, setRagMode] = useState(true);
@@ -29,8 +104,11 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
       role: "user",
       key: Symbol(),
       content: responseText,
+      citations: [],
     };
+    console.log(newMessage);
     var newMessages = [...messages, newMessage];
+    console.log(newMessages);
     setMessages(newMessages);
 
     let chat_hist = newMessages.map((m) => {
@@ -62,6 +140,7 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
       })
       .then((data) => {
         if (data.citations && data.citations.length > 0) {
+          setHighlighted(newMessages.length); // You arent subtracting one here, since you want it to highlight the last message added to the list.
           setCitations(data.citations);
         }
         return data;
@@ -70,11 +149,24 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
         console.log("error making request");
         console.log(JSON.stringify(e));
       });
-    const chat_response: Message = {
-      role: "assistant",
-      key: Symbol(),
-      content: result == "failed request" ? result : result.message.content,
-    };
+    let chat_response: Message;
+
+    if (result == "failed request") {
+      chat_response = {
+        role: "assistant",
+        key: Symbol(),
+        content: result,
+        citations: [],
+      };
+    } else {
+      chat_response = {
+        role: "assistant",
+        key: Symbol(),
+        content: result.message.content,
+        citations: result.message.citations,
+      };
+    }
+
     newMessages = [...newMessages, chat_response];
     setMessages(newMessages);
   };
@@ -153,6 +245,9 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
         <ChatMessages
           messages={messages}
           loading={loadingResponse}
+          setCitations={setCitations}
+          highlighted={highlighted}
+          setHighlighted={setHighlighted}
         ></ChatMessages>
       </div>
       <div className="flex-none h-[15%]">
@@ -170,60 +265,3 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
   );
 };
 export default ChatBoxInternals;
-// Added complexity, removing for a bit.
-// <div
-//   className="chatbox-banner"
-//   style={{
-//     position: "sticky",
-//     top: "0",
-//     padding: "20px",
-//     textAlign: "center",
-//     zIndex: "1000",
-//     borderBottom: "1px solid ",
-//     height: "auto",
-//     pointerEvents: "auto",
-//   }}
-// >
-//   <Stack direction="row" justifyContent="space-between">
-//     <button
-//       onClick={() => setChatSidebarVisible((prevState) => !prevState)}
-//     ></button>
-//   </Stack>
-// </div>
-// <div className="chatbox-banner sticky top-0 p-5 text-center z-50 border-b border-accent h-auto">
-//   <div className="flex flex-row justify-between">
-//     <button>
-//       <HamburgerIcon />
-//     </button>
-//     <button
-//       onClick={() => {
-//         setChatVisible((prev) => !prev);
-//       }}
-//     >
-//       <CloseIcon />
-//     </button>
-//   </div>
-// </div>
-//
-// <div
-//   className="chatContainer"
-//   style={{
-//     display: "flex",
-//     flexDirection: "row",
-//     height: "90%",
-//     width: "100%",
-//     padding: "2px",
-//   }}
-// >
-//   <div
-//     className="chatSidebar"
-//     style={{
-//       width: chatSidebarVisible ? "20%" : "0%",
-//       backgroundColor: "red",
-//       overflow: "scroll",
-//     }}
-//   >
-//     sidebar contents
-//   </div>
-//   <div> chat contents</div>
-// </div>

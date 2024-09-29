@@ -9,11 +9,21 @@ import ChatBoxInternals from "./ChatBoxInternals";
 
 export default function SearchApp() {
   const [isSearching, setIsSearching] = useState(false);
-  const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [chatVisible, setChatVisible] = useState(false);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchDisplay, setSearchDisplay] = useState<any[]>([]);
   const [resultView, setResultView] = useState(false);
-  const [renderChat, setRenderChat] = useState(false);
+  useEffect(() => {
+    if (!chatVisible) {
+      setSearchDisplay(searchResults);
+    } else {
+      setSearchDisplay([]);
+    }
+  }, [chatVisible]);
+  useEffect(() => {
+    setSearchDisplay(searchResults);
+  }, [searchResults]);
 
   // Should this be refactored out of components and into the lib as a async function that returns search results?
   const handleSearch = async () => {
@@ -83,7 +93,7 @@ export default function SearchApp() {
         }}
       >
         <SearchResultBox
-          searchResults={searchResults}
+          searchResults={searchDisplay}
           isSearching={isSearching}
         />
       </motion.div>
@@ -106,7 +116,7 @@ export default function SearchApp() {
             }}
           >
             <ChatBoxInternals
-              setCitations={setSearchResults}
+              setCitations={setSearchDisplay}
             ></ChatBoxInternals>
           </motion.div>
         )}

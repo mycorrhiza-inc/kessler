@@ -13,6 +13,7 @@ import asyncio
 from common.llm_utils import (
     ChatRole,
     KeChatMessage,
+    SearchData,
     sanitzie_chathistory_llamaindex,
     KeLLMUtils,
 )
@@ -73,13 +74,6 @@ def strip_links_and_tables(markdown_text):
     # Remove markdown tables
     no_tables = re.sub(r"\|.*?\|", "", no_links)
     return no_tables
-
-
-class SearchData(BaseModel):
-    name: str
-    text: str
-    docID: str
-    sourceID: str
 
 
 async def convert_search_results_to_frontend_table_old(
@@ -206,5 +200,6 @@ class KeRagEngine(KeLLMUtils):
         # TODO: Get these 2 async func calls to happen simultaneously
         final_message = await self.achat([context_msg] + chat_history)
         return_schemas = await convert_search_results_to_frontend_table(res, files_repo)
+        final_message.citations = return_schemas
 
-        return (final_message, return_schemas)
+        return final_message
