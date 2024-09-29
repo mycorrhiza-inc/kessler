@@ -106,6 +106,7 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
       role: "user",
       key: Symbol(),
       content: responseText,
+      citations: [],
     };
     var newMessages = [...messages, newMessage];
     setMessages(newMessages);
@@ -147,11 +148,24 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
         console.log("error making request");
         console.log(JSON.stringify(e));
       });
-    const chat_response: Message = {
-      role: "assistant",
-      key: Symbol(),
-      content: result == "failed request" ? result : result.message.content,
-    };
+    let chat_response: Message;
+
+    if (result == "failed request") {
+      chat_response = {
+        role: "assistant",
+        key: Symbol(),
+        content: result,
+        citations: [],
+      };
+    } else {
+      chat_response = {
+        role: "assistant",
+        key: Symbol(),
+        content: result.message.content,
+        citations: result.message.citations,
+      };
+    }
+
     newMessages = [...newMessages, chat_response];
     setMessages(newMessages);
   };
