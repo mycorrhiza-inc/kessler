@@ -74,10 +74,11 @@ export const ChatMessages = ({
           </p>
         </div>
       )}
-      {messages.map((m: Message) => {
+      {messages.map((m: Message, index: number) => {
         <MessageComponent
+          key={index}
           message={m}
-          clickMessage={() => setMessageCitations(1)}
+          clickMessage={() => setMessageCitations(index)}
         />;
       })}
       {loading && <AwaitingMessageSkeleton />}
