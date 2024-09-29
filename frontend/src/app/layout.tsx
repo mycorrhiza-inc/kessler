@@ -27,8 +27,8 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="bg-background text-foreground bg-base-100">
-        <Header></Header>
         <main className="flex flex-col items-center">
+          <Header />
           <div className="flex-1 w-100vw flex flex-col items-center">
             <div className="flex flex-col text-base-content">{children}</div>
           </div>
