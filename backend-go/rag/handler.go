@@ -13,15 +13,9 @@ import (
 
 var openaiKey = os.Getenv("OPENAI_API_KEY")
 
-// Define the structure of our request JSON
-type ChatHistory struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
-}
-
 type RequestBody struct {
-	Model       string        `json:"model"`
-	ChatHistory []ChatHistory `json:"chat_history"`
+	Model       string              `json:"model"`
+	ChatHistory []SimpleChatMessage `json:"chat_history"`
 }
 
 func createOpenaiClientFromString(model_name string) (*openai.Client, string) {
@@ -35,23 +29,18 @@ func createOpenaiClientFromString(model_name string) (*openai.Client, string) {
 	}
 }
 
-func HandleBasicChatRequest(w http.ResponseWriter, r *http.Request) {
-	var reqBody RequestBody
-	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
-		return
-	}
+func createChatCompletionAsync(modelName string, chatHistory []SimpleChatMessage) (string, error) {
+	client, modelid := createOpenaiClientFromString(modelName)
 
 	// Create message slice for OpenAI request
 	var messages []openai.ChatCompletionMessage
-	for _, history := range reqBody.ChatHistory {
+	for _, history := range chatHistory {
 		messages = append(messages, openai.ChatCompletionMessage{
 			Role:    history.Role,
 			Content: history.Content,
 		})
 	}
 
-	client, modelid := createOpenaiClientFromString("gpt-4o")
 	openaiRequest := openai.ChatCompletionRequest{
 		Model:     modelid,
 		MaxTokens: 2000,
@@ -62,8 +51,7 @@ func HandleBasicChatRequest(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 	stream, err := client.CreateChatCompletionStream(ctx, openaiRequest)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to create chat completion stream: %v", err), http.StatusInternalServerError)
-		return
+		return "", fmt.Errorf("failed to create chat completion stream: %v", err)
 	}
 	defer stream.Close()
 
@@ -72,11 +60,27 @@ func HandleBasicChatRequest(w http.ResponseWriter, r *http.Request) {
 		response, err := stream.Recv()
 		if err != nil {
 			if err != io.EOF {
-				http.Error(w, fmt.Sprintf("Stream error: %v", err), http.StatusInternalServerError)
+				return "", fmt.Errorf("stream error: %v", err)
 			}
 			break
 		}
 		chatResponse += response.Choices[0].Delta.Content
+	}
+
+	return chatResponse, nil
+}
+
+func HandleBasicChatRequest(w http.ResponseWriter, r *http.Request) {
+	var reqBody RequestBody
+	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	chatResponse, err := createChatCompletionAsync(reqBody.Model, reqBody.ChatHistory)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
