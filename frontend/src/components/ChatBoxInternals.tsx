@@ -54,10 +54,13 @@ export const ChatMessages = ({
   loading: boolean;
   setCitations: (citations: any[]) => void;
 }) => {
-
-  const setMessageCitations = (index : number) => {
+  const setMessageCitations = (index: number) => {
     const isUser = messages[index].role === "user";
-    if (!isUser && messages[index].citations && messages[index].citations.length > 0) {
+    if (
+      !isUser &&
+      messages[index].citations &&
+      messages[index].citations.length > 0
+    ) {
       setCitations(messages[index].citations);
     }
   };
@@ -71,9 +74,12 @@ export const ChatMessages = ({
           </p>
         </div>
       )}
-      {messages.map((m: Message) => {(
-        <MessageComponent message={m} clickMessage={() => setMessageCitations(1)} />
-      ))}}
+      {messages.map((m: Message) => {
+        <MessageComponent
+          message={m}
+          clickMessage={() => setMessageCitations(1)}
+        />;
+      })}
       {loading && <AwaitingMessageSkeleton />}
     </>
   );
