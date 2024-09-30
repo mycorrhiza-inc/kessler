@@ -66,9 +66,6 @@ func SimpleToKeChatMessage(msg SimpleChatMessage) (KeChatMessage, error) {
 func KeToSimpleChatMessage(keMsg KeChatMessage) SimpleChatMessage {
 	return SimpleChatMessage{
 		Content: keMsg.Content,
-type LLM interface {
-	Achat(chatHistory []KeChatMessage) (KeChatMessage, error)
-}
 		Role:    string(keMsg.Role),
 	}
 }
@@ -122,7 +119,7 @@ type LLM interface{
 
 
 func (model LLM) SummarizeSingleChunk(markdownText string) (string, error) {
-	summarizePrompt := "Make sure to provide a well researched summary of the text provided by the user, if it appears to be the summary of a larger document, just summarize the section provided."
+	const summarizePrompt := "Make sure to provide a well researched summary of the text provided by the user, if it appears to be the summary of a larger document, just summarize the section provided."
 	summarizeMessage := KeChatMessage{
 		Role:    ChatRoleSystem,
 		Content: summarizePrompt,
@@ -154,7 +151,7 @@ func (model LLM) SummarizeMapReduce(markdownText string, maxTokenSize int) (stri
 		summaries = append(summaries, summary)
 	}
 
-	coherencePrompt := "Please rewrite the following list of summaries of chunks of the document into a final summary of similar length that incorporates all the details present in the chunks"
+	const coherencePrompt := "Please rewrite the following list of summaries of chunks of the document into a final summary of similar length that incorporates all the details present in the chunks"
 	cohereMessage := KeChatMessage{
 		Role:    ChatRoleSystem,
 		Content: coherencePrompt,
