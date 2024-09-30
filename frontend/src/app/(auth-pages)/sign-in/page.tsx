@@ -24,7 +24,7 @@ export default function Login({ searchParams }: { searchParams: Message }) {
         <div className="flex justify-between items-center">
           <Label htmlFor="password">Password</Label>
           <Link
-            className="text-xs text-foreground underline"
+            className="text-xs text-base-content underline"
             href="/forgot-password"
           >
             Forgot Password?
