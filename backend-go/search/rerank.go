@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -24,9 +25,10 @@ type RerankResponse struct {
 	} `json:"results"`
 }
 
-func rerankDocuments(ctx context.Context, query string, documents []string) ([]string, error) {
+var CO_API_KEY = os.Getenv("CO_API_KEY")
+
+func rerankStringsAndQueryPermutation(ctx context.Context, query string, documents []string) ([]int, error) {
 	const url = "https://api.cohere.com/v1/rerank"
-	apiKey := "your_api_key_here" // Replace with your actual API key
 
 	reqBody := RerankRequest{
 		Model:     "rerank-english-v3.0",
@@ -47,7 +49,7 @@ func rerankDocuments(ctx context.Context, query string, documents []string) ([]s
 
 	req.Header.Set("accept", "application/json")
 	req.Header.Set("content-type", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("bearer %s", apiKey))
+	req.Header.Set("Authorization", fmt.Sprintf("bearer %s", CO_API_KEY))
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -67,11 +69,23 @@ func rerankDocuments(ctx context.Context, query string, documents []string) ([]s
 		return nil, err
 	}
 
-	rerankedDocuments := make([]string, len(documents))
-	for _, result := range rerankResp.Results {
-		rerankedDocuments[result.Index] = documents[result.Index]
+	permutation := make([]int, len(documents))
+	for i, result := range rerankResp.Results {
+		permutation[i] = result.Index
 	}
-	return rerankedDocuments, nil
+	return permutation, nil
+}
+
+func rerankSearchResults(searchResults []SearchData, query string, documents []string) ([]SearchData, error) {
+	permutation, err := rerankStringsAndQueryPermutation(context.Background(), query, documents)
+	if err != nil {
+		return nil, err
+	}
+	rerankedResults := make([]SearchData, len(searchResults))
+	for i, permutation := range permutation {
+		rerankedResults[i] = searchResults[permutation]
+	}
+	return rerankedResults, nil
 }
 
 func test_reranker() {
@@ -87,10 +101,14 @@ func test_reranker() {
 		"Capital punishment (the death penalty) has existed in the United States since before the United States was a country. As of 2017, capital punishment is legal in 30 of the 50 states.",
 	}
 
-	rerankedDocs, err := rerankDocuments(ctx, query, documents)
+	rerankedDocPermutation, err := rerankStringsAndQueryPermutation(ctx, query, documents)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return
+	}
+	rerankedDocs := make([]string, len(rerankedDocPermutation))
+	for i, permutation := range rerankedDocPermutation {
+		rerankedDocs[i] = documents[permutation]
 	}
 
 	fmt.Println("Reranked Documents:")
