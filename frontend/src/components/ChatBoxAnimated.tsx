@@ -1,11 +1,7 @@
-import { Stack } from "@mui/joy";
 import { motion, PanInfo, useDragControls } from "framer-motion";
 import { useEffect, MutableRefObject, useRef, RefObject } from "react";
 import { Dispatch, SetStateAction, useState } from "react";
-import { CloseIcon, HamburgerIcon } from "@/components/Icons";
 import "./ChatBoxAnimated.css";
-import { ChatMessages, exampleChatHistory } from "./ChatHistory";
-import ChatBoxInternals from "./ChatBoxInternals";
 
 interface ChatBoxProps {
   chatVisible: boolean;
