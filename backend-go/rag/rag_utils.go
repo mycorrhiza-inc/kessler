@@ -1,13 +1,14 @@
+package rag
+
 import (
 	"fmt"
-	"log"
 	"strings"
 )
 
-func (model LLM) DoesChatNeedQuery(chatHistory []KeChatMessage) (bool, error) {
-	const doesChatNeedQuery := "Please determine if you need to query a vector database of relevant documents to answer the user. Answer with only a \"yes\" or \"no\"."
+func DoesChatNeedQuery(model LLM, chatHistory []KeChatMessage) (bool, error) {
+	const doesChatNeedQuery = "Please determine if you need to query a vector database of relevant documents to answer the user. Answer with only a \"yes\" or \"no\"."
 	checkMessage := KeChatMessage{
-		Role:    ChatRoleAssistant,
+		Role:    Assistant,
 		Content: doesChatNeedQuery,
 	}
 	checkHistory := append(chatHistory, checkMessage)
@@ -30,7 +31,7 @@ func (model LLM) DoesChatNeedQuery(chatHistory []KeChatMessage) (bool, error) {
 	return checkYesNo(checkResponse.Content)
 }
 
-// func (model LLM) RagAchat(chatHistory []KeChatMessage, filesRepo FileRepository, logger *log.Logger) (KeChatMessage, []FileSchema, error) {
+// func RagAchat(model LLM, chatHistory []KeChatMessage, filesRepo FileRepository, logger *log.Logger) (KeChatMessage, []FileSchema, error) {
 // 	if logger == nil {
 // 		logger = log.Default()
 // 	}
@@ -45,7 +46,7 @@ func (model LLM) DoesChatNeedQuery(chatHistory []KeChatMessage) (bool, error) {
 //
 // 	generateQueryFromChatHistory := func(chatHistory []KeChatMessage) (string, error) {
 // 		querygenAddendum := KeChatMessage{
-// 			Role:    ChatRoleSystem,
+// 			Role:    System,
 // 			Content: generateQueryFromChatHistoryPrompt,
 // 		}
 // 		completion, err := model.Achat(append(chatHistory, querygenAddendum))

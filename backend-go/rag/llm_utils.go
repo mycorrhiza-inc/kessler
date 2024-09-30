@@ -105,27 +105,27 @@ func CreateKeChatCompletion(modelName string, chatHistory []KeChatMessage) (KeCh
 	}
 	return ke_completion, nil
 }
-type LLMModelName struct {
+
+type LLMModel struct {
 	model_name string
 }
 
-func (model_name LLMModelName) Achat(chatHistory []KeChatMessage) (KeChatMessage, error) {
-	return CreateKeChatCompletion(model_name, chatHistory)
+func (model_name LLMModel) Achat(chatHistory []KeChatMessage) (KeChatMessage, error) {
+	return CreateKeChatCompletion(model_name.model_name, chatHistory)
 }
-type LLM interface{
+
+type LLM interface {
 	Achat(chatHistory []KeChatMessage) (KeChatMessage, error)
 }
 
-
-
-func (model LLM) SummarizeSingleChunk(markdownText string) (string, error) {
-	const summarizePrompt := "Make sure to provide a well researched summary of the text provided by the user, if it appears to be the summary of a larger document, just summarize the section provided."
+func SummarizeSingleChunk(model LLM, markdownText string) (string, error) {
+	const summarizePrompt = "Make sure to provide a well researched summary of the text provided by the user, if it appears to be the summary of a larger document, just summarize the section provided."
 	summarizeMessage := KeChatMessage{
-		Role:    ChatRoleSystem,
+		Role:    System,
 		Content: summarizePrompt,
 	}
 	textMessage := KeChatMessage{
-		Role:    ChatRoleUser,
+		Role:    User,
 		Content: markdownText,
 	}
 	history := []KeChatMessage{summarizeMessage, textMessage}
@@ -136,41 +136,10 @@ func (model LLM) SummarizeSingleChunk(markdownText string) (string, error) {
 	return summary.Content, nil
 }
 
-func (model LLM) SummarizeMapReduce(markdownText string, maxTokenSize int) (string, error) {
-	splits := splitByMaxTokenSize(markdownText, maxTokenSize)
-	if len(splits) == 1 {
-		return model.SummarizeSingleChunk(markdownText)
-	}
-
-	var summaries []string
-	for _, chunk := range splits {
-		summary, err := model.SummarizeSingleChunk(chunk)
-		if err != nil {
-			return "", err
-		}
-		summaries = append(summaries, summary)
-	}
-
-	const coherencePrompt := "Please rewrite the following list of summaries of chunks of the document into a final summary of similar length that incorporates all the details present in the chunks"
-	cohereMessage := KeChatMessage{
-		Role:    ChatRoleSystem,
-		Content: coherencePrompt,
-	}
-	combinedSummariesPrompt := KeChatMessage{
-		Role:    ChatRoleUser,
-		Content: strings.Join(summaries, "\n"),
-	}
-	finalSummary, err := model.Achat([]KeChatMessage{cohereMessage, combinedSummariesPrompt})
-	if err != nil {
-		return "", err
-	}
-	return finalSummary.Content, nil
-}
-
-func (model LLM) SimpleInstruct(content string, instruct string) (string, error) {
+func SimpleInstruct(model LLM, content string, instruct string) (string, error) {
 	history := []KeChatMessage{
-		{Content: instruct, Role: ChatRoleSystem},
-		{Content: content, Role: ChatRoleUser},
+		{Content: instruct, Role: System},
+		{Content: content, Role: User},
 	}
 	completion, err := model.Achat(history)
 	if err != nil {
@@ -179,35 +148,66 @@ func (model LLM) SimpleInstruct(content string, instruct string) (string, error)
 	return completion.Content, nil
 }
 
-func (model LLM) MapReduceLLMInstructionAcrossString(content string, chunkSize int, instruction string, joinStr string) (string, error) {
-	splits := tokenSplit(content, chunkSize)
-
-	type result struct {
-		content string
-		err     error
-	}
-
-	resultChan := make(chan result, len(splits))
-
-	for _, chunk := range splits {
-		go func(chunk string) {
-			history := []KeChatMessage{
-				{Content: instruction, Role: ChatRoleSystem},
-				{Content: chunk, Role: ChatRoleUser},
-			}
-			completion, err := model.Achat(history)
-			resultChan <- result{content: completion.Content, err: err}
-		}(chunk)
-	}
-
-	var results []string
-	for i := 0; i < len(splits); i++ {
-		res := <-resultChan
-		if res.err != nil {
-			return "", res.err
-		}
-		results = append(results, res.content)
-	}
-
-	return strings.Join(results, joinStr), nil
-}
+// func SummarizeMapReduce(model LLM, markdownText string, maxTokenSize int) (string, error) {
+// 	splits := splitByMaxTokenSize(markdownText, maxTokenSize)
+// 	if len(splits) == 1 {
+// 		return SummarizeSingleChunk(model, markdownText)
+// 	}
+//
+// 	var summaries []string
+// 	for _, chunk := range splits {
+// 		summary, err := SummarizeSingleChunk(model, chunk)
+// 		if err != nil {
+// 			return "", err
+// 		}
+// 		summaries = append(summaries, summary)
+// 	}
+//
+// 	const coherencePrompt = "Please rewrite the following list of summaries of chunks of the document into a final summary of similar length that incorporates all the details present in the chunks"
+// 	cohereMessage := KeChatMessage{
+// 		Role:    System,
+// 		Content: coherencePrompt,
+// 	}
+// 	combinedSummariesPrompt := KeChatMessage{
+// 		Role:    User,
+// 		Content: strings.Join(summaries, "\n"),
+// 	}
+// 	finalSummary, err := model.Achat([]KeChatMessage{cohereMessage, combinedSummariesPrompt})
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	return finalSummary.Content, nil
+// }
+//
+// func MapReduceLLMInstructionAcrossString(model LLM, content string, chunkSize int, instruction string, joinStr string) (string, error) {
+// 	splits := tokenSplit(content, chunkSize)
+//
+// 	type result struct {
+// 		content string
+// 		err     error
+// 	}
+//
+// 	resultChan := make(chan result, len(splits))
+//
+// 	for _, chunk := range splits {
+// 		go func(chunk string) {
+// 			history := []KeChatMessage{
+// 				{Content: instruction, Role: System},
+// 				{Content: chunk, Role: User},
+// 			}
+// 			completion, err := model.Achat(history)
+// 			resultChan <- result{content: completion.Content, err: err}
+// 		}(chunk)
+// 	}
+//
+// 	var results []string
+// 	for i := 0; i < len(splits); i++ {
+// 		res := <-resultChan
+// 		if res.err != nil {
+// 			return "", res.err
+// 		}
+// 		results = append(results, res.content)
+// 	}
+//
+// 	return strings.Join(results, joinStr), nil
+// }
