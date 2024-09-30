@@ -12,7 +12,7 @@ var openaiKey = os.Getenv("OPENAI_API_KEY")
 
 type RequestBody struct {
 	Model       string          `json:"model"`
-	ChatHistory []KeChatMessage `json:"chat_history"`
+	ChatHistory []ChatMessage `json:"chat_history"`
 }
 
 func createOpenaiClientFromString(model_name string) (*openai.Client, string) {

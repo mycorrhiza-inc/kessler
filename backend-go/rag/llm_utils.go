@@ -15,11 +15,11 @@ type SearchData struct {
 }
 
 type RAGChat struct {
-	Model       string          `json:"model"`
-	ChatHistory []KeChatMessage `json:"chat_history"`
+	Model       string        `json:"model"`
+	ChatHistory []ChatMessage `json:"chat_history"`
 }
 
-// write two functions, one that converts a simple chatmessage into a KeChatMessage with emtpy values for context and citations, while validating the chatRole. Then write another that just throws that info away and turns a KeChatMessage into a simple chatmessage.
+// write two functions, one that converts a simple chatmessage into a ChatMessage with emtpy values for context and citations, while validating the chatRole. Then write another that just throws that info away and turns a ChatMessage into a simple chatmessage.
 type ChatRole string
 
 const (
@@ -33,7 +33,7 @@ type SimpleChatMessage struct {
 	Role    string `json:"role"`
 }
 
-type KeChatMessage struct {
+type ChatMessage struct {
 	Content   string               `json:"content"`
 	Role      ChatRole             `json:"role"`
 	Citations *[]SearchData        `json:"citations,omitempty"`
@@ -50,12 +50,12 @@ func ValidateChatRole(role string) (ChatRole, error) {
 	}
 }
 
-func SimpleToKeChatMessage(msg SimpleChatMessage) (KeChatMessage, error) {
+func SimpleToChatMessage(msg SimpleChatMessage) (ChatMessage, error) {
 	role, err := ValidateChatRole(msg.Role)
 	if err != nil {
-		return KeChatMessage{}, err
+		return ChatMessage{}, err
 	}
-	return KeChatMessage{
+	return ChatMessage{
 		Content:   msg.Content,
 		Role:      role,
 		Citations: &[]SearchData{},
@@ -63,17 +63,17 @@ func SimpleToKeChatMessage(msg SimpleChatMessage) (KeChatMessage, error) {
 	}, nil
 }
 
-func KeToSimpleChatMessage(keMsg KeChatMessage) SimpleChatMessage {
+func KeToSimpleChatMessage(keMsg ChatMessage) SimpleChatMessage {
 	return SimpleChatMessage{
 		Content: keMsg.Content,
 		Role:    string(keMsg.Role),
 	}
 }
 
-func SimpleToKeChatMessages(msgs []SimpleChatMessage) ([]KeChatMessage, error) {
-	var keMsgs []KeChatMessage
+func SimpleToChatMessages(msgs []SimpleChatMessage) ([]ChatMessage, error) {
+	var keMsgs []ChatMessage
 	for _, msg := range msgs {
-		keMsg, err := SimpleToKeChatMessage(msg)
+		keMsg, err := SimpleToChatMessage(msg)
 		if err != nil {
 			return nil, err
 		}
@@ -82,7 +82,7 @@ func SimpleToKeChatMessages(msgs []SimpleChatMessage) ([]KeChatMessage, error) {
 	return keMsgs, nil
 }
 
-func KeToSimpleChatMessages(keMsgs []KeChatMessage) []SimpleChatMessage {
+func KeToSimpleChatMessages(keMsgs []ChatMessage) []SimpleChatMessage {
 	var msgs []SimpleChatMessage
 	for _, keMsg := range keMsgs {
 		msg := KeToSimpleChatMessage(keMsg)
@@ -91,13 +91,13 @@ func KeToSimpleChatMessages(keMsgs []KeChatMessage) []SimpleChatMessage {
 	return msgs
 }
 
-func CreateKeChatCompletion(modelName string, chatHistory []KeChatMessage) (KeChatMessage, error) {
+func CreateKeChatCompletion(modelName string, chatHistory []ChatMessage) (ChatMessage, error) {
 	simple_history := KeToSimpleChatMessages(chatHistory)
 	simple_completion_string, err := createSimpleChatCompletionString(modelName, simple_history)
 	if err != nil {
-		return KeChatMessage{}, err
+		return ChatMessage{}, err
 	}
-	ke_completion := KeChatMessage{
+	ke_completion := ChatMessage{
 		simple_completion_string,
 		Assistant,
 		&[]SearchData{},
@@ -110,25 +110,25 @@ type LLMModel struct {
 	model_name string
 }
 
-func (model_name LLMModel) Achat(chatHistory []KeChatMessage) (KeChatMessage, error) {
+func (model_name LLMModel) Achat(chatHistory []ChatMessage) (ChatMessage, error) {
 	return CreateKeChatCompletion(model_name.model_name, chatHistory)
 }
 
 type LLM interface {
-	Achat(chatHistory []KeChatMessage) (KeChatMessage, error)
+	Achat(chatHistory []ChatMessage) (ChatMessage, error)
 }
 
 func SummarizeSingleChunk(model LLM, markdownText string) (string, error) {
 	const summarizePrompt = "Make sure to provide a well researched summary of the text provided by the user, if it appears to be the summary of a larger document, just summarize the section provided."
-	summarizeMessage := KeChatMessage{
+	summarizeMessage := ChatMessage{
 		Role:    System,
 		Content: summarizePrompt,
 	}
-	textMessage := KeChatMessage{
+	textMessage := ChatMessage{
 		Role:    User,
 		Content: markdownText,
 	}
-	history := []KeChatMessage{summarizeMessage, textMessage}
+	history := []ChatMessage{summarizeMessage, textMessage}
 	summary, err := model.Achat(history)
 	if err != nil {
 		return "", err
@@ -137,7 +137,7 @@ func SummarizeSingleChunk(model LLM, markdownText string) (string, error) {
 }
 
 func SimpleInstruct(model LLM, content string, instruct string) (string, error) {
-	history := []KeChatMessage{
+	history := []ChatMessage{
 		{Content: instruct, Role: System},
 		{Content: content, Role: User},
 	}
@@ -164,15 +164,15 @@ func SimpleInstruct(model LLM, content string, instruct string) (string, error) 
 // 	}
 //
 // 	const coherencePrompt = "Please rewrite the following list of summaries of chunks of the document into a final summary of similar length that incorporates all the details present in the chunks"
-// 	cohereMessage := KeChatMessage{
+// 	cohereMessage := ChatMessage{
 // 		Role:    System,
 // 		Content: coherencePrompt,
 // 	}
-// 	combinedSummariesPrompt := KeChatMessage{
+// 	combinedSummariesPrompt := ChatMessage{
 // 		Role:    User,
 // 		Content: strings.Join(summaries, "\n"),
 // 	}
-// 	finalSummary, err := model.Achat([]KeChatMessage{cohereMessage, combinedSummariesPrompt})
+// 	finalSummary, err := model.Achat([]ChatMessage{cohereMessage, combinedSummariesPrompt})
 // 	if err != nil {
 // 		return "", err
 // 	}
@@ -191,7 +191,7 @@ func SimpleInstruct(model LLM, content string, instruct string) (string, error) 
 //
 // 	for _, chunk := range splits {
 // 		go func(chunk string) {
-// 			history := []KeChatMessage{
+// 			history := []ChatMessage{
 // 				{Content: instruction, Role: System},
 // 				{Content: chunk, Role: User},
 // 			}

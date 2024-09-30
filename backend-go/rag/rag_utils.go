@@ -5,9 +5,9 @@ import (
 	"strings"
 )
 
-func DoesChatNeedQuery(model LLM, chatHistory []KeChatMessage) (bool, error) {
+func DoesChatNeedQuery(model LLM, chatHistory []ChatMessage) (bool, error) {
 	const doesChatNeedQuery = "Please determine if you need to query a vector database of relevant documents to answer the user. Answer with only a \"yes\" or \"no\"."
-	checkMessage := KeChatMessage{
+	checkMessage := ChatMessage{
 		Role:    Assistant,
 		Content: doesChatNeedQuery,
 	}
@@ -31,21 +31,21 @@ func DoesChatNeedQuery(model LLM, chatHistory []KeChatMessage) (bool, error) {
 	return checkYesNo(checkResponse.Content)
 }
 
-// func RagAchat(model LLM, chatHistory []KeChatMessage, filesRepo FileRepository, logger *log.Logger) (KeChatMessage, []FileSchema, error) {
+// func RagAchat(model LLM, chatHistory []ChatMessage, filesRepo FileRepository, logger *log.Logger) (ChatMessage, []FileSchema, error) {
 // 	if logger == nil {
 // 		logger = log.Default()
 // 	}
 // 	needsQuery, err := model.DoesChatNeedQuery(chatHistory)
 // 	if err != nil {
-// 		return KeChatMessage{}, nil, err
+// 		return ChatMessage{}, nil, err
 // 	}
 // 	if !needsQuery {
 // 		finalMessage, err := model.Achat(chatHistory)
 // 		return finalMessage, nil, err
 // 	}
 //
-// 	generateQueryFromChatHistory := func(chatHistory []KeChatMessage) (string, error) {
-// 		querygenAddendum := KeChatMessage{
+// 	generateQueryFromChatHistory := func(chatHistory []ChatMessage) (string, error) {
+// 		querygenAddendum := ChatMessage{
 // 			Role:    System,
 // 			Content: generateQueryFromChatHistoryPrompt,
 // 		}
@@ -56,7 +56,7 @@ func DoesChatNeedQuery(model LLM, chatHistory []KeChatMessage) (bool, error) {
 // 		return completion.Content, nil
 // 	}
 //
-// 	generateContextMsgFromSearchResults := func(searchResults []map[string]interface{}, maxResults int) KeChatMessage {
+// 	generateContextMsgFromSearchResults := func(searchResults []map[string]interface{}, maxResults int) ChatMessage {
 // 		if logger == nil {
 // 			logger = log.Default()
 // 		}
@@ -70,7 +70,7 @@ func DoesChatNeedQuery(model LLM, chatHistory []KeChatMessage) (bool, error) {
 // 			text := result["entity"].(map[string]interface{})["text"].(string)
 // 			returnPrompt += fmt.Sprintf("\n\n%s:\n%s", uuidStr, text)
 // 		}
-// 		return KeChatMessage{
+// 		return ChatMessage{
 // 			Role:    ChatRoleAssistant,
 // 			Content: returnPrompt,
 // 		}
@@ -78,19 +78,19 @@ func DoesChatNeedQuery(model LLM, chatHistory []KeChatMessage) (bool, error) {
 //
 // 	query, err := generateQueryFromChatHistory(chatHistory)
 // 	if err != nil {
-// 		return KeChatMessage{}, nil, err
+// 		return ChatMessage{}, nil, err
 // 	}
 // 	res := search(query, []string{"source_id", "text"})
 // 	logger.Println(res)
 // 	contextMsg := generateContextMsgFromSearchResults(res, 3)
 //
-// 	finalMessage, err := model.Achat(append([]KeChatMessage{contextMsg}, chatHistory...))
+// 	finalMessage, err := model.Achat(append([]ChatMessage{contextMsg}, chatHistory...))
 // 	if err != nil {
-// 		return KeChatMessage{}, nil, err
+// 		return ChatMessage{}, nil, err
 // 	}
 // 	returnSchemas, err := convertSearchResultsToFrontendTable(res, filesRepo)
 // 	if err != nil {
-// 		return KeChatMessage{}, nil, err
+// 		return ChatMessage{}, nil, err
 // 	}
 // 	finalMessage.Citations = returnSchemas
 //
