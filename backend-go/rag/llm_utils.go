@@ -24,8 +24,8 @@ type ChatRole string
 
 const (
 	User      ChatRole = "user"
-	System    ChatRole = "system"
-	Assistant ChatRole = "assistant"
+	System             = "system"
+	Assistant          = "assistant"
 )
 
 type SimpleChatMessage struct {
@@ -147,3 +147,5 @@ func SimpleInstruct(model LLM, content string, instruct string) (string, error) 
 	}
 	return completion.Content, nil
 }
+
+// Add rest of the functions from llm utils at some point
