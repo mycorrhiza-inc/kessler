@@ -14,17 +14,17 @@ export default function Login({ searchParams }: { searchParams: Message }) {
       <h1 className="text-2xl font-medium">Sign in</h1>
       <p className="text-sm text-base-content">
         Don't have an account?{" "}
-        <Link className="font-medium underline" href="/sign-up">
+        <a className="font-medium underline" href="/sign-up">
           Sign up
-        </Link>
+        </a>
       </p>
       <div className="flex flex-col gap-2 [&>input]:mb-3 mt-8">
         <Label htmlFor="email">Email</Label>
         <Input name="email" placeholder="you@example.com" required />
         <div className="flex justify-between items-center">
           <Label htmlFor="password">Password</Label>
-          <Link
-            className="text-xs text-foreground underline"
+          <a
+            className="text-xs text-base-content underline"
             href="/forgot-password"
           >
             Forgot Password?
