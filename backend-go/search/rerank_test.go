@@ -3,10 +3,11 @@ package search
 import (
 	"context"
 	"fmt"
+	"testing"
 	"time"
 )
 
-func test_reranker() {
+func Test_reranker(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -23,6 +24,10 @@ func test_reranker() {
 	if err != nil {
 		fmt.Println("Error:", err)
 		return
+	}
+	fmt.Println("Permutation:")
+	for _, docperm := range rerankedDocPermutation {
+		fmt.Println(docperm)
 	}
 	rerankedDocs := make([]string, len(rerankedDocPermutation))
 	for i, permutation := range rerankedDocPermutation {

@@ -56,6 +56,10 @@ func rerankStringsAndQueryPermutation(ctx context.Context, query string, documen
 		return nil, err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("error: received status code %d, response: %s", resp.StatusCode, string(bodyBytes))
+	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -68,7 +72,7 @@ func rerankStringsAndQueryPermutation(ctx context.Context, query string, documen
 		return nil, err
 	}
 
-	permutation := make([]int, len(documents))
+	permutation := make([]int, len(rerankResp.Results))
 	for i, result := range rerankResp.Results {
 		permutation[i] = result.Index
 	}

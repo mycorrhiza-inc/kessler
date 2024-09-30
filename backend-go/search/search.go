@@ -148,7 +148,7 @@ func searchQuickwit(r SearchRequest) ([]SearchData, error) {
 	}
 
 	queryString := r.Query
-	filtersString := constructMetadataQueryString(r.SeaerchFilters)
+	filtersString := constructMetadataQueryString(r.SearchFilters)
 
 	queryString += filtersString
 
