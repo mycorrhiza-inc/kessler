@@ -66,6 +66,9 @@ func SimpleToKeChatMessage(msg SimpleChatMessage) (KeChatMessage, error) {
 func KeToSimpleChatMessage(keMsg KeChatMessage) SimpleChatMessage {
 	return SimpleChatMessage{
 		Content: keMsg.Content,
+type LLM interface {
+	Achat(chatHistory []KeChatMessage) (KeChatMessage, error)
+}
 		Role:    string(keMsg.Role),
 	}
 }
@@ -91,10 +94,6 @@ func KeToSimpleChatMessages(keMsgs []KeChatMessage) []SimpleChatMessage {
 	return msgs
 }
 
-type LLM interface {
-	Achat(chatHistory []map[string]interface{}) (string, error)
-}
-
 func CreateKeChatCompletion(modelName string, chatHistory []KeChatMessage) (KeChatMessage, error) {
 	simple_history := KeToSimpleChatMessages(chatHistory)
 	simple_completion_string, err := createSimpleChatCompletionString(modelName, simple_history)
@@ -109,59 +108,109 @@ func CreateKeChatCompletion(modelName string, chatHistory []KeChatMessage) (KeCh
 	}
 	return ke_completion, nil
 }
+type LLMModelName struct {
+	model_name string
+}
 
-// async def summarize_single_chunk(self, markdown_text: str) -> str:
-//     summarize_prompt = "Make sure to provide a well researched summary of the text provided by the user, if it appears to be the summary of a larger document, just summarize the section provided."
-//     summarize_message = KeChatMessage(
-//         role=ChatRole.system, content=summarize_prompt
-//     )
-//     text_message = KeChatMessage(role=ChatRole.user, content=markdown_text)
-//     summary = await self.achat(
-//         sanitzie_chathistory_llamaindex([summarize_message, text_message])
-//     )
-//     return summary.content
-//
-// async def summarize_mapreduce(
-//     self, markdown_text: str, max_tokensize: int = 8096
-// ) -> str:
-//     splits = split_by_max_tokensize(markdown_text, max_tokensize)
-//     if len(splits) == 1:
-//         return await self.summarize_single_chunk(markdown_text)
-//     summaries = await asyncio.gather(
-//         *[self.summarize_single_chunk(chunk) for chunk in splits]
-//     )
-//     coherence_prompt = "Please rewrite the following list of summaries of chunks of the document into a final summary of similar length that incorperates all the details present in the chunks"
-//     cohere_message = KeChatMessage(role=ChatRole.system, content=coherence_prompt)
-//     combined_summaries_prompt = KeChatMessage(
-//         role=ChatRole.user, content="\n".join(summaries)
-//     )
-//     final_summary = await self.achat([cohere_message, combined_summaries_prompt])
-//     return final_summary.content
-//
-// async def simple_instruct(self, content: str, instruct: str) -> str:
-//     history = [
-//         KeChatMessage(content=instruct, role=ChatRole.system),
-//         KeChatMessage(content=content, role=ChatRole.user),
-//     ]
-//     completion = await self.achat(history)
-//     return completion.content
-//
-// async def mapreduce_llm_instruction_across_string(
-//     self, content: str, chunk_size: int, instruction: str, join_str: str
-// ) -> str:
-//     # Replace with semantic splitter
-//     split = token_split(content, chunk_size)
-//
-//     async def clean_chunk(chunk: str) -> str:
-//
-//         history = [
-//             KeChatMessage(content=instruction, role=ChatRole.system),
-//             KeChatMessage(content=chunk, role=ChatRole.user),
-//         ]
-//         completion = await self.llm.achat(history)
-//         return completion.content
-//
-//     tasks = [clean_chunk(chunk) for chunk in split]
-//     results = await asyncio.gather(*tasks)
-//     return join_str.join(results)
-//
+func (model_name LLMModelName) Achat(chatHistory []KeChatMessage) (KeChatMessage, error) {
+	return CreateKeChatCompletion(model_name, chatHistory)
+}
+type LLM interface{
+	Achat(chatHistory []KeChatMessage) (KeChatMessage, error)
+}
+
+
+
+func (model LLM) SummarizeSingleChunk(markdownText string) (string, error) {
+	summarizePrompt := "Make sure to provide a well researched summary of the text provided by the user, if it appears to be the summary of a larger document, just summarize the section provided."
+	summarizeMessage := KeChatMessage{
+		Role:    ChatRoleSystem,
+		Content: summarizePrompt,
+	}
+	textMessage := KeChatMessage{
+		Role:    ChatRoleUser,
+		Content: markdownText,
+	}
+	history := []KeChatMessage{summarizeMessage, textMessage}
+	summary, err := model.Achat(history)
+	if err != nil {
+		return "", err
+	}
+	return summary.Content, nil
+}
+
+func (model LLM) SummarizeMapReduce(markdownText string, maxTokenSize int) (string, error) {
+	splits := splitByMaxTokenSize(markdownText, maxTokenSize)
+	if len(splits) == 1 {
+		return model.SummarizeSingleChunk(markdownText)
+	}
+
+	var summaries []string
+	for _, chunk := range splits {
+		summary, err := model.SummarizeSingleChunk(chunk)
+		if err != nil {
+			return "", err
+		}
+		summaries = append(summaries, summary)
+	}
+
+	coherencePrompt := "Please rewrite the following list of summaries of chunks of the document into a final summary of similar length that incorporates all the details present in the chunks"
+	cohereMessage := KeChatMessage{
+		Role:    ChatRoleSystem,
+		Content: coherencePrompt,
+	}
+	combinedSummariesPrompt := KeChatMessage{
+		Role:    ChatRoleUser,
+		Content: strings.Join(summaries, "\n"),
+	}
+	finalSummary, err := model.Achat([]KeChatMessage{cohereMessage, combinedSummariesPrompt})
+	if err != nil {
+		return "", err
+	}
+	return finalSummary.Content, nil
+}
+
+func (model LLM) SimpleInstruct(content string, instruct string) (string, error) {
+	history := []KeChatMessage{
+		{Content: instruct, Role: ChatRoleSystem},
+		{Content: content, Role: ChatRoleUser},
+	}
+	completion, err := model.Achat(history)
+	if err != nil {
+		return "", err
+	}
+	return completion.Content, nil
+}
+
+func (model LLM) MapReduceLLMInstructionAcrossString(content string, chunkSize int, instruction string, joinStr string) (string, error) {
+	splits := tokenSplit(content, chunkSize)
+
+	type result struct {
+		content string
+		err     error
+	}
+
+	resultChan := make(chan result, len(splits))
+
+	for _, chunk := range splits {
+		go func(chunk string) {
+			history := []KeChatMessage{
+				{Content: instruction, Role: ChatRoleSystem},
+				{Content: chunk, Role: ChatRoleUser},
+			}
+			completion, err := model.Achat(history)
+			resultChan <- result{content: completion.Content, err: err}
+		}(chunk)
+	}
+
+	var results []string
+	for i := 0; i < len(splits); i++ {
+		res := <-resultChan
+		if res.err != nil {
+			return "", res.err
+		}
+		results = append(results, res.content)
+	}
+
+	return strings.Join(results, joinStr), nil
+}
