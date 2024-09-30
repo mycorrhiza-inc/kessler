@@ -195,7 +195,7 @@ func searchQuickwit(r SearchRequest) ([]SearchData, error) {
 	// TODO: It might be a good idea for this to fail semi silently, log the error,
 	if err != nil {
 		log.Printf("Error reranking results: %s", err)
-		errturn(err)
+		return data, nil
 	}
 
 	return rerankedData, nil
