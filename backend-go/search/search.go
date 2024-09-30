@@ -192,7 +192,7 @@ func searchQuickwit(r SearchRequest) ([]SearchData, error) {
 	}
 
 	rerankedData, err := rerankSearchResults(data, r.Query)
-	// TODO: It might be a good idea for this to fail semi silently, log the error,
+	// Fail semi silently and returns the regular unranked results
 	if err != nil {
 		log.Printf("Error reranking results: %s", err)
 		return data, nil
