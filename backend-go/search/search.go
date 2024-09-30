@@ -143,7 +143,6 @@ func constructMetadataQueryString(filter Metadata) string {
 }
 
 func searchQuickwit(r SearchRequest) ([]SearchData, error) {
-
 	if len(r.Query) <= 0 {
 		return []SearchData{}, nil
 	}
@@ -187,11 +186,17 @@ func searchQuickwit(r SearchRequest) ([]SearchData, error) {
 	}
 
 	data, err := ExtractSearchData(searchResponse)
-
 	if err != nil {
 		log.Printf("Error creating response data: %s", err)
 		errturn(err)
 	}
 
-	return data, nil
+	rerankedData, err := rerankSearchResults(data, r.Query)
+	// TODO: It might be a good idea for this to fail semi silently, log the error,
+	if err != nil {
+		log.Printf("Error reranking results: %s", err)
+		errturn(err)
+	}
+
+	return rerankedData, nil
 }

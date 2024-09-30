@@ -76,7 +76,11 @@ func rerankStringsAndQueryPermutation(ctx context.Context, query string, documen
 	return permutation, nil
 }
 
-func rerankSearchResults(searchResults []SearchData, query string, documents []string) ([]SearchData, error) {
+func rerankSearchResults(searchResults []SearchData, query string) ([]SearchData, error) {
+	var documents []string
+	for _, result := range searchResults {
+		documents = append(documents, result.Text)
+	}
 	permutation, err := rerankStringsAndQueryPermutation(context.Background(), query, documents)
 	if err != nil {
 		return nil, err
@@ -111,6 +115,7 @@ func test_reranker() {
 		rerankedDocs[i] = documents[permutation]
 	}
 
+	fmt.Println("Query:", query)
 	fmt.Println("Reranked Documents:")
 	for _, doc := range rerankedDocs {
 		fmt.Println(doc)
