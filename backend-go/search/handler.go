@@ -9,7 +9,7 @@ import (
 
 type SearchRequest struct {
 	Query          string   `json:"query"`
-	SeaerchFilters Metadata `json:"filters"`
+	SearchFilters Metadata `json:"filters"`
 }
 
 func HandleSearchRequest(w http.ResponseWriter, r *http.Request) {
