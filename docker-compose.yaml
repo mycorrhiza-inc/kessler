@@ -7,6 +7,7 @@ services:
       - config/global.env
     volumes:
       - ./config/frontend.env.local:/app.env.local
+      - ./config/global.env:/app/.env
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.frontend.rule=Host(`${DOMAIN:-kessler.xyz}`) && PathPrefix(`/`)"
