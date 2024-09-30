@@ -7,12 +7,7 @@ CREATE TABLE IF NOT EXISTS public.users (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS user.sessions (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id INT NOT NULL,
-    jwt TEXT NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id)
-);
+CREATE SCHEMA IF NOT EXISTS userfiles;
 -- +goose Down
 DROP TABLE IF EXISTS public.users;
-DROP TABLE IF EXISTS user.sessions;
+DROP SCHEMA IF EXISTS userfiles;
