@@ -6,7 +6,6 @@ import {
 import { SubmitButton } from "@/components/supabasetutorial/submit-button";
 import { Input } from "@/components/supabasetutorial/ui/input";
 import { Label } from "@/components/supabasetutorial/ui/label";
-import Link from "next/link";
 
 export default function ForgotPassword({
   searchParams,
@@ -20,9 +19,9 @@ export default function ForgotPassword({
           <h1 className="text-2xl font-medium">Reset Password</h1>
           <p className="text-sm text-base-content">
             Already have an account?{" "}
-            <Link className="text-primary underline" href="/sign-in">
+            <a className="underline" href="/sign-in">
               Sign in
-            </Link>
+            </a>
           </p>
         </div>
         <div className="flex flex-col gap-2 [&>input]:mb-3 mt-8">
