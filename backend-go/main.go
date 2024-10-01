@@ -50,6 +50,7 @@ func main() {
 	mux := mux.NewRouter()
 	mux.HandleFunc("/api/v2/search", search.HandleSearchRequest)
 	mux.HandleFunc("/api/v2/rag/basic_chat", rag.HandleBasicChatRequest)
+	mux.HandleFunc("/api/v2/rag/chat", rag.HandleRagChatRequest)
 
 	muxWithMiddlewares := http.TimeoutHandler(mux, time.Second*3, "Timeout!")
 	handler := corsMiddleware(muxWithMiddlewares)
