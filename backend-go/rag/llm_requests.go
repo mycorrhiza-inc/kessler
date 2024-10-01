@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/mycorrhiza-inc/kessler/backend-go/search"
 	openai "github.com/sashabaranov/go-openai"
 	"github.com/sashabaranov/go-openai/jsonschema"
 )
@@ -23,23 +24,23 @@ func createOpenaiClientFromString(model_name string) (*openai.Client, string) {
 }
 
 type FunctionCall struct {
-	schema   openai.FunctionDefinition
-	function func(string) (ToolCallResults, error)
+	Schema openai.FunctionDefinition
+	Func   func(string) (ToolCallResults, error)
 }
 type ToolCallResults struct {
-	response  string
-	citations *[]SearchData
+	Response  string
+	Citations *[]search.SearchData
 }
 
 type MultiplexerChatCompletionRequest struct {
-	modelName   string
-	chatHistory []ChatMessage
-	functions   []FunctionCall
+	ModelName   string
+	ChatHistory []ChatMessage
+	Functions   []FunctionCall
 }
 
 func createSimpleChatCompletionString(messageRequest MultiplexerChatCompletionRequest) (string, error) {
-	modelName := messageRequest.modelName
-	chatHistory := messageRequest.chatHistory
+	modelName := messageRequest.ModelName
+	chatHistory := messageRequest.ChatHistory
 	client, modelid := createOpenaiClientFromString(modelName)
 
 	// Create message slice for OpenAI request
@@ -87,8 +88,8 @@ var test_func_document = openai.FunctionDefinition{
 
 func createComplexRequest(messageRequest MultiplexerChatCompletionRequest) (ChatMessage, error) {
 	ctx := context.Background()
-	modelName := messageRequest.modelName
-	chatHistory := messageRequest.chatHistory
+	modelName := messageRequest.ModelName
+	chatHistory := messageRequest.ChatHistory
 	client, modelID := createOpenaiClientFromString(modelName)
 
 	// Create message slice for OpenAI request
@@ -100,20 +101,20 @@ func createComplexRequest(messageRequest MultiplexerChatCompletionRequest) (Chat
 		})
 	}
 
-	if len(messageRequest.functions) > 1 {
+	if len(messageRequest.Functions) > 1 {
 		return ChatMessage{}, fmt.Errorf("multiple functions not supported, please fix at some point")
 	}
 	// Logic of code below must be fixed
 	var tools []openai.Tool
-	for _, fn := range messageRequest.functions {
+	for _, fn := range messageRequest.Functions {
 		tools = append(tools, openai.Tool{
 			Type:     openai.ToolTypeFunction,
-			Function: &fn.schema,
+			Function: &fn.Schema,
 		})
 	}
 
 	fmt.Printf("Asking OpenAI '%v' and providing it %d functions...\n",
-		dialogue[0].Content, len(messageRequest.functions))
+		dialogue[0].Content, len(messageRequest.Functions))
 	resp, err := client.CreateChatCompletion(ctx,
 		openai.ChatCompletionRequest{
 			Model:    modelID,
@@ -143,14 +144,14 @@ func createComplexRequest(messageRequest MultiplexerChatCompletionRequest) (Chat
 	contextMessages := []openai.ChatCompletionMessage{msg}
 	fmt.Printf("OpenAI called us back wanting to invoke our function '%v' with params '%v'\n",
 		msg.ToolCalls[0].Function.Name, msg.ToolCalls[0].Function.Arguments)
-	run_func := messageRequest.functions[0].function
+	run_func := messageRequest.Functions[0].Func
 	run_results, err := run_func(msg.ToolCalls[0].Function.Arguments)
 	if err != nil {
 		return ChatMessage{}, fmt.Errorf("error running function: %v", err)
 	}
 	toolMsg := openai.ChatCompletionMessage{
 		Role:       openai.ChatMessageRoleTool,
-		Content:    run_results.response,
+		Content:    run_results.Response,
 		Name:       msg.ToolCalls[0].Function.Name,
 		ToolCallID: msg.ToolCalls[0].ID,
 	}
@@ -175,7 +176,7 @@ func createComplexRequest(messageRequest MultiplexerChatCompletionRequest) (Chat
 	simple_returns := OAIMessagesToSimples(contextMessages)
 	return ChatMessage{
 		SimpleChatMessage: SimpleChatMessage{msg.Content, "assistant"},
-		Citations:         run_results.citations,
+		Citations:         run_results.Citations,
 		Context:           &simple_returns,
 	}, nil
 }
