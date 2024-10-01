@@ -5,5 +5,5 @@ sql:
     engine: "postgresql"
     gen:
       go:
-        out: "gen/dbstore"
+        out: "backend-go/gen/dbstore"
 
