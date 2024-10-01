@@ -3,10 +3,23 @@ package rag
 import (
 	"context"
 	"fmt"
-	"io"
+	"os"
 
 	openai "github.com/sashabaranov/go-openai"
 )
+
+var openaiKey = os.Getenv("OPENAI_API_KEY")
+
+func createOpenaiClientFromString(model_name string) (*openai.Client, string) {
+	switch model_name {
+	case "gpt-4o", "gpt-4o-mini":
+		return openai.NewClient(openaiKey), openai.GPT4oLatest
+	default:
+		// Return openai for now, refactor later to deal with stuff
+		return openai.NewClient(openaiKey), openai.GPT4oLatest
+		// panic(fmt.Sprintf("Unsupported model name: %s", model_name))
+	}
+}
 
 func createSimpleChatCompletionString(modelName string, chatHistory []SimpleChatMessage) (string, error) {
 	client, modelid := createOpenaiClientFromString(modelName)
@@ -24,27 +37,18 @@ func createSimpleChatCompletionString(modelName string, chatHistory []SimpleChat
 		Model:     modelid,
 		MaxTokens: 2000,
 		Messages:  messages,
-		Stream:    true,
+		Stream:    false,
 	}
 
 	ctx := context.Background()
-	stream, err := client.CreateChatCompletionStream(ctx, openaiRequest)
+	chatResponse, err := client.CreateChatCompletion(ctx, openaiRequest)
 	if err != nil {
-		return "", fmt.Errorf("failed to create chat completion stream: %v", err)
+		return "", fmt.Errorf("failed to create chat completion: %v", err)
 	}
-	defer stream.Close()
-
-	var chatResponse string
-	for {
-		response, err := stream.Recv()
-		if err != nil {
-			if err != io.EOF {
-				return "", fmt.Errorf("stream error: %v", err)
-			}
-			break
-		}
-		chatResponse += response.Choices[0].Delta.Content
+	chatText := chatResponse.Choices[0].Message.Content
+	if chatText == "" {
+		return "", fmt.Errorf("no chat completion text returned")
 	}
 
-	return chatResponse, nil
+	return chatText, nil
 }

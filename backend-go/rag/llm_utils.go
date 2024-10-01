@@ -110,42 +110,12 @@ type LLMModel struct {
 	model_name string
 }
 
-func (model_name LLMModel) Achat(chatHistory []ChatMessage) (ChatMessage, error) {
+func (model_name LLMModel) Chat(chatHistory []ChatMessage) (ChatMessage, error) {
 	return CreateKeChatCompletion(model_name.model_name, chatHistory)
 }
 
 type LLM interface {
-	Achat(chatHistory []ChatMessage) (ChatMessage, error)
+	Chat(chatHistory []ChatMessage) (ChatMessage, error)
 }
 
-func SummarizeSingleChunk(model LLM, markdownText string) (string, error) {
-	const summarizePrompt = "Make sure to provide a well researched summary of the text provided by the user, if it appears to be the summary of a larger document, just summarize the section provided."
-	summarizeMessage := ChatMessage{
-		Role:    System,
-		Content: summarizePrompt,
-	}
-	textMessage := ChatMessage{
-		Role:    User,
-		Content: markdownText,
-	}
-	history := []ChatMessage{summarizeMessage, textMessage}
-	summary, err := model.Achat(history)
-	if err != nil {
-		return "", err
-	}
-	return summary.Content, nil
-}
-
-func SimpleInstruct(model LLM, content string, instruct string) (string, error) {
-	history := []ChatMessage{
-		{Content: instruct, Role: System},
-		{Content: content, Role: User},
-	}
-	completion, err := model.Achat(history)
-	if err != nil {
-		return "", err
-	}
-	return completion.Content, nil
-}
-
-// Add rest of the functions from llm utils at some point
+// Wait to add all the llm utils until you understand how to write concurrent code in go more.
