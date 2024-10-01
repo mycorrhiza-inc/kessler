@@ -31,7 +31,7 @@ func HandleSearchRequest(w http.ResponseWriter, r *http.Request) {
 		}
 		defer r.Body.Close() // Close the body when done
 
-		data, err := searchQuickwit(RequestData)
+		data, err := SearchQuickwit(RequestData)
 		if err != nil {
 			log.Printf("Error searching quickwit: %s", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
