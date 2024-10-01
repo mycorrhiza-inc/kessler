@@ -24,7 +24,11 @@ func createOpenaiClientFromString(model_name string) (*openai.Client, string) {
 
 type FunctionCall struct {
 	schema   openai.FunctionDefinition
-	function func(string) (string, error)
+	function func(string) (ToolCallResults, error)
+}
+type ToolCallResults struct {
+	response  string
+	citations *[]SearchData
 }
 
 type MultiplexerChatCompletionRequest struct {
@@ -81,7 +85,7 @@ var test_func_document = openai.FunctionDefinition{
 	},
 }
 
-func createComplexRequest(messageRequest MultiplexerChatCompletionRequest) (string, error) {
+func createComplexRequest(messageRequest MultiplexerChatCompletionRequest) (ChatMessage, error) {
 	ctx := context.Background()
 	modelName := messageRequest.modelName
 	chatHistory := messageRequest.chatHistory
@@ -96,57 +100,80 @@ func createComplexRequest(messageRequest MultiplexerChatCompletionRequest) (stri
 		})
 	}
 
-	f := messageRequest.functions[0].schema
-	t := openai.Tool{
-		Type:     openai.ToolTypeFunction,
-		Function: &f,
+	if len(messageRequest.functions) > 1 {
+		return ChatMessage{}, fmt.Errorf("multiple functions not supported, please fix at some point")
+	}
+	// Logic of code below must be fixed
+	var tools []openai.Tool
+	for _, fn := range messageRequest.functions {
+		tools = append(tools, openai.Tool{
+			Type:     openai.ToolTypeFunction,
+			Function: &fn.schema,
+		})
 	}
 
-	fmt.Printf("Asking OpenAI '%v' and providing it a '%v()' function...\n",
-		dialogue[0].Content, f.Name)
+	fmt.Printf("Asking OpenAI '%v' and providing it %d functions...\n",
+		dialogue[0].Content, len(messageRequest.functions))
 	resp, err := client.CreateChatCompletion(ctx,
 		openai.ChatCompletionRequest{
 			Model:    modelID,
 			Messages: dialogue,
-			Tools:    []openai.Tool{t},
+			Tools:    tools,
 		},
 	)
 	if err != nil || len(resp.Choices) != 1 {
-		return "", fmt.Errorf("Completion error: err:%v len(choices):%v", err, len(resp.Choices))
+		return ChatMessage{}, fmt.Errorf("completion error: err:%v len(choices):%v", err, len(resp.Choices))
 	}
 	msg := resp.Choices[0].Message
-	if len(msg.ToolCalls) != 1 {
-		return "", fmt.Errorf("Completion error: len(toolcalls): %v", len(msg.ToolCalls))
+	if resp.Choices[0].FinishReason != "tool_calls" && msg.Content != "" {
+		return ChatMessage{
+			msg.Content,
+			"assistant",
+			nil,
+			nil,
+		}, nil
 	}
-
+	if len(msg.ToolCalls) == 0 {
+		return ChatMessage{}, fmt.Errorf("no tool calls in openai response, dispite stopping for a tool completion")
+	}
+	if len(msg.ToolCalls) > 1 {
+		return ChatMessage{}, fmt.Errorf("we only support one function call per message, got %v, please fix", len(msg.ToolCalls))
+	}
 	// simulate calling the function & responding to OpenAI
 	dialogue = append(dialogue, msg)
 	fmt.Printf("OpenAI called us back wanting to invoke our function '%v' with params '%v'\n",
 		msg.ToolCalls[0].Function.Name, msg.ToolCalls[0].Function.Arguments)
+	run_func := messageRequest.functions[0].function
+	run_results, err := run_func(msg.ToolCalls[0].Function.Arguments)
+	if err != nil {
+		return ChatMessage{}, fmt.Errorf("error running function: %v", err)
+	}
 	dialogue = append(dialogue, openai.ChatCompletionMessage{
 		Role:       openai.ChatMessageRoleTool,
-		Content:    "Sunny and 80 degrees.",
+		Content:    run_results.response,
 		Name:       msg.ToolCalls[0].Function.Name,
 		ToolCallID: msg.ToolCalls[0].ID,
 	})
-	fmt.Printf("Sending OpenAI our '%v()' function's response and requesting the reply to the original question...\n",
-		f.Name)
 	resp, err = client.CreateChatCompletion(ctx,
 		openai.ChatCompletionRequest{
-			Model:    openai.GPT4TurboPreview,
+			Model:    modelID,
 			Messages: dialogue,
-			Tools:    []openai.Tool{t},
+			Tools:    tools,
 		},
 	)
 	if err != nil || len(resp.Choices) != 1 {
-		return "", fmt.Errorf("2nd completion error: err:%v len(choices):%v\n", err,
-			len(resp.Choices))
+		return ChatMessage{}, fmt.Errorf("2nd completion error: err:%v len(choices):%v\n", err, len(resp.Choices))
 	}
 
 	// display OpenAI's response to the original question utilizing our function
 	msg = resp.Choices[0].Message
 	if msg.Content == "" {
-		return "", fmt.Errorf("OpenAI returned an empty response")
+		return ChatMessage{}, fmt.Errorf("OpenAI returned an empty response")
 	}
-	return msg.Content, nil
+	return ChatMessage{
+		msg.Content,
+		"assistant",
+		run_results.citations,
+		&[]SimpleChatMessage{},
+	}, nil
 }
