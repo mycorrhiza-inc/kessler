@@ -94,7 +94,7 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
   const [selectedModel, setSelectedModel] = useState("default");
   const [ragMode, setRagMode] = useState(true);
   const [draftText, setDraftText] = useState("");
-  const chatUrl = ragMode ? "/api/v1/rag/rag_chat" : "/api/v1/rag/basic_chat";
+  const chatUrl = ragMode ? "/api/v2/rag/chat" : "/api/v2/rag/basic_chat";
 
   const getResponse = async (responseText: string) => {
     if (responseText == "") {
@@ -134,6 +134,8 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
       .then((resp) => {
         setLoadingResponse(false);
         if (resp.status < 200 || resp.status > 299) {
+          console.log("failed request with status " + resp.status);
+          console.log(resp);
           return "failed request";
         }
         return resp.json();

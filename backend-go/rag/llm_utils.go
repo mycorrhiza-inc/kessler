@@ -25,7 +25,9 @@ type SimpleChatMessage struct {
 }
 
 type ChatMessage struct {
-	SimpleChatMessage
+	// SimpleChatMessage
+	Content   string               `json:"content"`
+	Role      string               `json:"role"`
 	Citations *[]search.SearchData `json:"citations,omitempty"`
 	Context   *[]SimpleChatMessage `json:"context,omitempty"`
 }
@@ -33,15 +35,17 @@ type ChatMessage struct {
 // Function converting simple to ChatMessage
 func SimpleToChatMessage(msg SimpleChatMessage) ChatMessage {
 	return ChatMessage{
-		SimpleChatMessage: msg,
-		Citations:         &[]search.SearchData{},
-		Context:           &[]SimpleChatMessage{},
+		// SimpleChatMessage: msg,
+		Content:   msg.Content,
+		Role:      msg.Role,
+		Citations: &[]search.SearchData{},
+		Context:   &[]SimpleChatMessage{},
 	}
 }
 
 // Function converting ChatMessage to simple openai.ChatCompletionMessage
 func ChatMessageToSimple(msg ChatMessage) SimpleChatMessage {
-	return msg.SimpleChatMessage
+	return SimpleChatMessage{Content: msg.Content, Role: msg.Role}
 }
 
 func AdvancedMessageContent(msg ChatMessage) string {

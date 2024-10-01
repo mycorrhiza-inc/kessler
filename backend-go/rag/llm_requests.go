@@ -130,9 +130,10 @@ func createComplexRequest(messageRequest MultiplexerChatCompletionRequest) (Chat
 	msg := resp.Choices[0].Message
 	if resp.Choices[0].FinishReason != "tool_calls" && msg.Content != "" {
 		return ChatMessage{
-			SimpleChatMessage: SimpleChatMessage{msg.Content, "assistant"},
-			Citations:         nil,
-			Context:           nil,
+			Content:   msg.Content,
+			Role:      "assistant",
+			Citations: nil,
+			Context:   nil,
 		}, nil
 	}
 	if len(msg.ToolCalls) == 0 {
@@ -177,8 +178,9 @@ func createComplexRequest(messageRequest MultiplexerChatCompletionRequest) (Chat
 	}
 	simple_returns := OAIMessagesToSimples(contextMessages)
 	return ChatMessage{
-		SimpleChatMessage: SimpleChatMessage{msg.Content, "assistant"},
-		Citations:         run_results.Citations,
-		Context:           &simple_returns,
+		Content:   msg.Content,
+		Role:      "assistant",
+		Citations: run_results.Citations,
+		Context:   &simple_returns,
 	}, nil
 }

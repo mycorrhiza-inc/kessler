@@ -26,7 +26,7 @@ func HandleBasicChatRequest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"response": chatResponse})
+	json.NewEncoder(w).Encode(map[string]any{"message": chatResponse})
 }
 
 func HandleRagChatRequest(w http.ResponseWriter, r *http.Request) {
@@ -45,5 +45,5 @@ func HandleRagChatRequest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"response": chatResponse})
+	json.NewEncoder(w).Encode(map[string]any{"message": chatResponse})
 }
