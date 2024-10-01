@@ -1,32 +1,23 @@
 package rag
 
 import (
+	"encoding/json"
 	"fmt"
+
+	openai "github.com/sashabaranov/go-openai"
+	"github.com/sashabaranov/go-openai/jsonschema"
+
+	"github.com/mycorrhiza-inc/kessler/backend-go/search"
 )
 
 // Use custom enums in place of Python's Enum class
 
 // Define the structures in place of Pydantic models
-type SearchData struct {
-	Name     string `json:"name"`
-	Text     string `json:"text"`
-	DocID    string `json:"doc_id"`
-	SourceID string `json:"source_id"`
-}
 
 type RAGChat struct {
 	Model       string        `json:"model"`
 	ChatHistory []ChatMessage `json:"chat_history"`
 }
-
-// write two functions, one that converts a simple chatmessage into a ChatMessage with emtpy values for context and citations, while validating the chatRole. Then write another that just throws that info away and turns a ChatMessage into a simple chatmessage.
-type ChatRole string
-
-const (
-	User      ChatRole = "user"
-	System             = "system"
-	Assistant          = "assistant"
-)
 
 type SimpleChatMessage struct {
 	Content string `json:"content"`
@@ -34,118 +25,130 @@ type SimpleChatMessage struct {
 }
 
 type ChatMessage struct {
-	Content   string               `json:"content"`
-	Role      ChatRole             `json:"role"`
-	Citations *[]SearchData        `json:"citations,omitempty"`
+	SimpleChatMessage
+	Citations *[]search.SearchData `json:"citations,omitempty"`
 	Context   *[]SimpleChatMessage `json:"context,omitempty"`
 }
 
-func ValidateChatRole(role string) (ChatRole, error) {
-	chatRole := ChatRole(role)
-	switch chatRole {
-	case User, System, Assistant:
-		return chatRole, nil
-	default:
-		return "", fmt.Errorf("invalid role: %s", role)
-	}
-}
-
-func SimpleToChatMessage(msg SimpleChatMessage) (ChatMessage, error) {
-	role, err := ValidateChatRole(msg.Role)
-	if err != nil {
-		return ChatMessage{}, err
-	}
+// Function converting simple to ChatMessage
+func SimpleToChatMessage(msg SimpleChatMessage) ChatMessage {
 	return ChatMessage{
-		Content:   msg.Content,
-		Role:      role,
-		Citations: &[]SearchData{},
-		Context:   &[]SimpleChatMessage{},
-	}, nil
-}
-
-func KeToSimpleChatMessage(keMsg ChatMessage) SimpleChatMessage {
-	return SimpleChatMessage{
-		Content: keMsg.Content,
-		Role:    string(keMsg.Role),
+		SimpleChatMessage: msg,
+		Citations:         &[]search.SearchData{},
+		Context:           &[]SimpleChatMessage{},
 	}
 }
 
-func SimpleToChatMessages(msgs []SimpleChatMessage) ([]ChatMessage, error) {
+// Function converting ChatMessage to simple openai.ChatCompletionMessage
+func ChatMessageToSimple(msg ChatMessage) SimpleChatMessage {
+	return msg.SimpleChatMessage
+}
+
+func AdvancedMessageContent(msg ChatMessage) string {
+	return msg.Content
+}
+
+func OAIMsgToSimple(oaiMsg openai.ChatCompletionMessage) SimpleChatMessage {
+	return SimpleChatMessage{
+		Content: oaiMsg.Content,
+		Role:    string(oaiMsg.Role),
+	}
+}
+
+func SimpleToChatMessages(msgs []SimpleChatMessage) []ChatMessage {
 	var keMsgs []ChatMessage
 	for _, msg := range msgs {
-		keMsg, err := SimpleToChatMessage(msg)
-		if err != nil {
-			return nil, err
-		}
+		keMsg := SimpleToChatMessage(msg)
 		keMsgs = append(keMsgs, keMsg)
 	}
-	return keMsgs, nil
+	return keMsgs
 }
 
-func KeToSimpleChatMessages(keMsgs []ChatMessage) []SimpleChatMessage {
+func ChatMessageToSimples(keMsgs []ChatMessage) []SimpleChatMessage {
 	var msgs []SimpleChatMessage
 	for _, keMsg := range keMsgs {
-		msg := KeToSimpleChatMessage(keMsg)
+		msg := ChatMessageToSimple(keMsg)
 		msgs = append(msgs, msg)
 	}
 	return msgs
 }
 
-func CreateKeChatCompletion(modelName string, chatHistory []ChatMessage) (ChatMessage, error) {
-	simple_history := KeToSimpleChatMessages(chatHistory)
-	simple_completion_string, err := createSimpleChatCompletionString(modelName, simple_history)
-	if err != nil {
-		return ChatMessage{}, err
+func OAIMessagesToSimples(oaiMsgs []openai.ChatCompletionMessage) []SimpleChatMessage {
+	var msgs []SimpleChatMessage
+	for _, oaiMsg := range oaiMsgs {
+		msg := OAIMsgToSimple(oaiMsg)
+		msgs = append(msgs, msg)
 	}
-	ke_completion := ChatMessage{
-		simple_completion_string,
-		Assistant,
-		&[]SearchData{},
-		&[]SimpleChatMessage{},
-	}
-	return ke_completion, nil
+	return msgs
+}
+
+func OAIMessagesToComplex(oaiMsgs []openai.ChatCompletionMessage) []ChatMessage {
+	return SimpleToChatMessages(OAIMessagesToSimples(oaiMsgs))
 }
 
 type LLMModel struct {
-	model_name string
+	ModelName string
 }
 
-func (model_name LLMModel) Achat(chatHistory []ChatMessage) (ChatMessage, error) {
-	return CreateKeChatCompletion(model_name.model_name, chatHistory)
+func (model_name LLMModel) Chat(chatHistory []ChatMessage) (ChatMessage, error) {
+	requestMultiplex := MultiplexerChatCompletionRequest{
+		ChatHistory: chatHistory,
+		ModelName:   model_name.ModelName,
+		Functions:   []FunctionCall{},
+	}
+	return createComplexRequest(requestMultiplex)
+}
+
+var rag_query_func_schema = openai.FunctionDefinition{
+	Name: "query_government_documents",
+	Parameters: jsonschema.Definition{
+		Type: jsonschema.Object,
+		Properties: map[string]jsonschema.Definition{
+			"query": {
+				Type:        jsonschema.String,
+				Description: "The query string to search government documents and knowledge",
+			},
+		},
+		Required: []string{"query"},
+	},
+}
+
+// arguments='{"order_id":"order_12345"}',
+func rag_query_func(query_json string) (ToolCallResults, error) {
+	var queryData map[string]string
+	err := json.Unmarshal([]byte(query_json), &queryData)
+	if err != nil {
+		return ToolCallResults{}, fmt.Errorf("error unmarshaling query_json: %v", err)
+	}
+	search_query, ok := queryData["query"]
+	if !ok {
+		return ToolCallResults{}, fmt.Errorf("query field is missing in query_json")
+	}
+	search_request := search.SearchRequest{search_query, search.Metadata{}}
+	search_results, err := search.SearchQuickwit(search_request)
+	if err != nil {
+		return ToolCallResults{}, err
+	}
+	format_string := search.FormatSearchResults(search_results, 1)
+	result := ToolCallResults{Response: format_string, Citations: &search_results}
+
+	return result, nil
+}
+
+var rag_func_call = FunctionCall{Schema: rag_query_func_schema, Func: rag_query_func}
+
+func (model_name LLMModel) RagChat(chatHistory []ChatMessage) (ChatMessage, error) {
+	requestMultiplex := MultiplexerChatCompletionRequest{
+		ChatHistory: chatHistory,
+		ModelName:   model_name.ModelName,
+		Functions:   []FunctionCall{rag_func_call},
+	}
+	return createComplexRequest(requestMultiplex)
 }
 
 type LLM interface {
-	Achat(chatHistory []ChatMessage) (ChatMessage, error)
+	Chat(chatHistory []ChatMessage) (ChatMessage, error)
+	RagChat(chatHistory []ChatMessage) (ChatMessage, error)
 }
 
-func SummarizeSingleChunk(model LLM, markdownText string) (string, error) {
-	const summarizePrompt = "Make sure to provide a well researched summary of the text provided by the user, if it appears to be the summary of a larger document, just summarize the section provided."
-	summarizeMessage := ChatMessage{
-		Role:    System,
-		Content: summarizePrompt,
-	}
-	textMessage := ChatMessage{
-		Role:    User,
-		Content: markdownText,
-	}
-	history := []ChatMessage{summarizeMessage, textMessage}
-	summary, err := model.Achat(history)
-	if err != nil {
-		return "", err
-	}
-	return summary.Content, nil
-}
-
-func SimpleInstruct(model LLM, content string, instruct string) (string, error) {
-	history := []ChatMessage{
-		{Content: instruct, Role: System},
-		{Content: content, Role: User},
-	}
-	completion, err := model.Achat(history)
-	if err != nil {
-		return "", err
-	}
-	return completion.Content, nil
-}
-
-// Add rest of the functions from llm utils at some point
+// Wait to add all the llm utils until you understand how to write concurrent code in go more.

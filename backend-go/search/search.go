@@ -142,7 +142,7 @@ func constructMetadataQueryString(filter Metadata) string {
 	return filterQuery
 }
 
-func searchQuickwit(r SearchRequest) ([]SearchData, error) {
+func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
 	if len(r.Query) <= 0 {
 		return []SearchData{}, nil
 	}
@@ -192,11 +192,22 @@ func searchQuickwit(r SearchRequest) ([]SearchData, error) {
 	}
 
 	rerankedData, err := rerankSearchResults(data, r.Query)
-	// TODO: It might be a good idea for this to fail semi silently, log the error,
+	// Fail semi silently and returns the regular unranked results
 	if err != nil {
 		log.Printf("Error reranking results: %s", err)
 		return data, nil
 	}
 
 	return rerankedData, nil
+}
+
+func FormatSearchResults(searchResults []SearchData, truncate int) string {
+	searchResultsTruncated := searchResults[:truncate]
+	var searchResultsString string
+	for _, result := range searchResultsTruncated {
+		searchResultsString += fmt.Sprintf("Name: %s\n", result.Name)
+		searchResultsString += fmt.Sprintf("Text: %s\n", result.Text)
+		// searchResultsString += fmt.Sprintf("DocID: %s\n", result.DocID)
+	}
+	return searchResultsString
 }

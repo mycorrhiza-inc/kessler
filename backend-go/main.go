@@ -8,9 +8,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 
-	// This seems wrong, and the lsp is complaining, but format on save always adds it
-	"github.com/mycorrhizainc/kessler/backend-go/rag"
-	"github.com/mycorrhizainc/kessler/backend-go/search"
+	"github.com/mycorrhiza-inc/kessler/backend-go/rag"
+	"github.com/mycorrhiza-inc/kessler/backend-go/search"
 )
 
 // CORS middleware function
