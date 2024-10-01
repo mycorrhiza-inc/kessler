@@ -2,8 +2,6 @@ package rag
 
 import (
 	"fmt"
-
-	openai "github.com/sashabaranov/go-openai"
 )
 
 // Use custom enums in place of Python's Enum class
@@ -99,7 +97,7 @@ func CreateKeChatCompletion(modelName string, chatHistory []ChatMessage) (ChatMe
 	multiplex_request := MultiplexerChatCompletionRequest{
 		modelName,
 		simple_history,
-		[]openai.FunctionDefinition{},
+		[]FunctionCall{},
 	}
 	simple_completion_string, err := createSimpleChatCompletionString(multiplex_request)
 	if err != nil {

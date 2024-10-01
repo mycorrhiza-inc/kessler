@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	openai "github.com/sashabaranov/go-openai"
+	"github.com/sashabaranov/go-openai/jsonschema"
 )
 
 func TestSimpleChatCompletionString(t *testing.T) {
@@ -30,7 +31,7 @@ func TestSimpleChatCompletionString(t *testing.T) {
 	multiplex_request := MultiplexerChatCompletionRequest{
 		modelName,
 		chatHistory,
-		[]openai.FunctionDefinition{},
+		[]FunctionCall{},
 	}
 	result, err := createSimpleChatCompletionString(multiplex_request)
 	if err != nil {
@@ -38,6 +39,20 @@ func TestSimpleChatCompletionString(t *testing.T) {
 		fmt.Println("Error:", err)
 	}
 	fmt.Println("Result:", result)
+}
+
+var test_document_func_schema = openai.FunctionDefinition{
+	Name: "get_document_info_from_uuid",
+	Parameters: jsonschema.Definition{
+		Type: jsonschema.Object,
+		Properties: map[string]jsonschema.Definition{
+			"uuid": {
+				Type:        jsonschema.String,
+				Description: "The UUID of the document",
+			},
+		},
+		Required: []string{"uuid"},
+	},
 }
 
 func TestChatFunctionCalling(t *testing.T) {
@@ -55,7 +70,7 @@ func TestChatFunctionCalling(t *testing.T) {
 	multiplex_request := MultiplexerChatCompletionRequest{
 		modelName,
 		chatHistory,
-		[]openai.FunctionDefinition{},
+		[]FunctionCall{},
 	}
 	result, err := createSimpleChatCompletionString(multiplex_request)
 	if err != nil {
