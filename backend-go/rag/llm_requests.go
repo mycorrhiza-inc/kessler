@@ -16,11 +16,11 @@ func createOpenaiClientFromString(model_name string) (*openai.Client, string) {
 	switch model_name {
 	case "gpt-4o", "gpt-4o-mini":
 		// return openai.NewClient(openaiKey), openai.GPT4oLatest
+		// Apparently "gpt-4o" supports function calling but "gpt-4o-latest" doesnt. Good software design fellas
 		return openai.NewClient(openaiKey), "gpt-4o"
 	default:
-		// Return openai for now, refactor later to deal with stuff
-		return openai.NewClient(openaiKey), openai.GPT4oLatest
-		// panic(fmt.Sprintf("Unsupported model name: %s", model_name))
+		fmt.Println("Model not found, using default model: gpt-4o")
+		return openai.NewClient(openaiKey), "gpt-4o"
 	}
 }
 
