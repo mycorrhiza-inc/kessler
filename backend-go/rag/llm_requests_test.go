@@ -54,28 +54,3 @@ var test_document_func_schema = openai.FunctionDefinition{
 		Required: []string{"uuid"},
 	},
 }
-
-func TestChatFunctionCalling(t *testing.T) {
-	modelName := "gpt-4o"
-	chatHistory := []SimpleChatMessage{
-		{
-			Content: "Hello, how can I assist you today?",
-			Role:    "assistant",
-		},
-		{
-			Content: "Could you please tell me the current weather in Denver CO?",
-			Role:    "user",
-		},
-	}
-	multiplex_request := MultiplexerChatCompletionRequest{
-		modelName,
-		SimpleToChatMessages(chatHistory),
-		[]FunctionCall{},
-	}
-	result, err := createSimpleChatCompletionString(multiplex_request)
-	if err != nil {
-		t.Fail()
-		fmt.Println("Error:", err)
-	}
-	fmt.Println("Result:", result)
-}

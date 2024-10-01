@@ -15,7 +15,8 @@ var openaiKey = os.Getenv("OPENAI_API_KEY")
 func createOpenaiClientFromString(model_name string) (*openai.Client, string) {
 	switch model_name {
 	case "gpt-4o", "gpt-4o-mini":
-		return openai.NewClient(openaiKey), openai.GPT4oLatest
+		// return openai.NewClient(openaiKey), openai.GPT4oLatest
+		return openai.NewClient(openaiKey), "gpt-4o"
 	default:
 		// Return openai for now, refactor later to deal with stuff
 		return openai.NewClient(openaiKey), openai.GPT4oLatest
@@ -115,6 +116,7 @@ func createComplexRequest(messageRequest MultiplexerChatCompletionRequest) (Chat
 
 	fmt.Printf("Asking OpenAI '%v' and providing it %d functions...\n",
 		dialogue[0].Content, len(messageRequest.Functions))
+	fmt.Printf("Calling OpenAI model %v\n", modelID)
 	resp, err := client.CreateChatCompletion(ctx,
 		openai.ChatCompletionRequest{
 			Model:    modelID,

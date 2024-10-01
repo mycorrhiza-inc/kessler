@@ -87,13 +87,13 @@ func OAIMessagesToComplex(oaiMsgs []openai.ChatCompletionMessage) []ChatMessage 
 }
 
 type LLMModel struct {
-	model_name string
+	ModelName string
 }
 
 func (model_name LLMModel) Chat(chatHistory []ChatMessage) (ChatMessage, error) {
 	requestMultiplex := MultiplexerChatCompletionRequest{
 		ChatHistory: chatHistory,
-		ModelName:   model_name.model_name,
+		ModelName:   model_name.ModelName,
 		Functions:   []FunctionCall{},
 	}
 	return createComplexRequest(requestMultiplex)
@@ -137,8 +137,18 @@ func rag_query_func(query_json string) (ToolCallResults, error) {
 
 var rag_func_call = FunctionCall{Schema: rag_query_func_schema, Func: rag_query_func}
 
+func (model_name LLMModel) RagChat(chatHistory []ChatMessage) (ChatMessage, error) {
+	requestMultiplex := MultiplexerChatCompletionRequest{
+		ChatHistory: chatHistory,
+		ModelName:   model_name.ModelName,
+		Functions:   []FunctionCall{rag_func_call},
+	}
+	return createComplexRequest(requestMultiplex)
+}
+
 type LLM interface {
 	Chat(chatHistory []ChatMessage) (ChatMessage, error)
+	RagChat(chatHistory []ChatMessage) (ChatMessage, error)
 }
 
 // Wait to add all the llm utils until you understand how to write concurrent code in go more.
