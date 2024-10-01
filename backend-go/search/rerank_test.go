@@ -22,8 +22,7 @@ func Test_reranker(t *testing.T) {
 
 	rerankedDocPermutation, err := rerankStringsAndQueryPermutation(ctx, query, documents)
 	if err != nil {
-		t.Fail()
-		fmt.Println("Error:", err)
+		t.Fatal("Error:", err)
 	}
 	fmt.Println("Permutation:")
 	for _, docperm := range rerankedDocPermutation {
