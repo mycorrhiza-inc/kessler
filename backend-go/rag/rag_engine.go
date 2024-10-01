@@ -1,7 +1,7 @@
 package rag
 
 import (
-	"github.com/mycorrhizainc/kessler/backend-go/search"
+	"github.com/mycorrhiza-inc/kessler/backend-go/search"
 	openai "github.com/sashabaranov/go-openai"
 	"github.com/sashabaranov/go-openai/jsonschema"
 )

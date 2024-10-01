@@ -1,4 +1,4 @@
-module github.com/mycorrhizainc/kessler/backend-go
+module github.com/mycorrhiza-inc/kessler/backend-go
 
 go 1.22.5
 
