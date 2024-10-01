@@ -16,8 +16,10 @@ func HandleBasicChatRequest(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
+	llmObject := LLMModel{reqBody.Model}
 
-	chatResponse, err := CreateKeChatCompletion(reqBody.Model, reqBody.ChatHistory)
+	chatHistory := reqBody.ChatHistory
+	chatResponse, err := llmObject.Chat(chatHistory)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

@@ -10,7 +10,7 @@ import (
 
 func TestSimpleChatCompletionString(t *testing.T) {
 	modelName := "gpt-4o"
-	chatHistory := []ChatMessage{
+	chatHistory := []SimpleChatMessage{
 		{
 			Content: "Hello, how can I assist you today?",
 			Role:    "assistant",
@@ -30,7 +30,7 @@ func TestSimpleChatCompletionString(t *testing.T) {
 	}
 	multiplex_request := MultiplexerChatCompletionRequest{
 		modelName,
-		chatHistory,
+		SimpleToChatMessages(chatHistory),
 		[]FunctionCall{},
 	}
 	result, err := createSimpleChatCompletionString(multiplex_request)
@@ -57,7 +57,7 @@ var test_document_func_schema = openai.FunctionDefinition{
 
 func TestChatFunctionCalling(t *testing.T) {
 	modelName := "gpt-4o"
-	chatHistory := []ChatMessage{
+	chatHistory := []SimpleChatMessage{
 		{
 			Content: "Hello, how can I assist you today?",
 			Role:    "assistant",
@@ -69,7 +69,7 @@ func TestChatFunctionCalling(t *testing.T) {
 	}
 	multiplex_request := MultiplexerChatCompletionRequest{
 		modelName,
-		chatHistory,
+		SimpleToChatMessages(chatHistory),
 		[]FunctionCall{},
 	}
 	result, err := createSimpleChatCompletionString(multiplex_request)

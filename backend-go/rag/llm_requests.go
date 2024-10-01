@@ -127,10 +127,9 @@ func createComplexRequest(messageRequest MultiplexerChatCompletionRequest) (Chat
 	msg := resp.Choices[0].Message
 	if resp.Choices[0].FinishReason != "tool_calls" && msg.Content != "" {
 		return ChatMessage{
-			msg.Content,
-			"assistant",
-			nil,
-			nil,
+			SimpleChatMessage: SimpleChatMessage{msg.Content, "assistant"},
+			Citations:         nil,
+			Context:           nil,
 		}, nil
 	}
 	if len(msg.ToolCalls) == 0 {
@@ -141,6 +140,7 @@ func createComplexRequest(messageRequest MultiplexerChatCompletionRequest) (Chat
 	}
 	// simulate calling the function & responding to OpenAI
 	dialogue = append(dialogue, msg)
+	contextMessages := []openai.ChatCompletionMessage{msg}
 	fmt.Printf("OpenAI called us back wanting to invoke our function '%v' with params '%v'\n",
 		msg.ToolCalls[0].Function.Name, msg.ToolCalls[0].Function.Arguments)
 	run_func := messageRequest.functions[0].function
@@ -148,12 +148,14 @@ func createComplexRequest(messageRequest MultiplexerChatCompletionRequest) (Chat
 	if err != nil {
 		return ChatMessage{}, fmt.Errorf("error running function: %v", err)
 	}
-	dialogue = append(dialogue, openai.ChatCompletionMessage{
+	toolMsg := openai.ChatCompletionMessage{
 		Role:       openai.ChatMessageRoleTool,
 		Content:    run_results.response,
 		Name:       msg.ToolCalls[0].Function.Name,
 		ToolCallID: msg.ToolCalls[0].ID,
-	})
+	}
+	dialogue = append(dialogue, toolMsg)
+	contextMessages = append(contextMessages, toolMsg)
 	resp, err = client.CreateChatCompletion(ctx,
 		openai.ChatCompletionRequest{
 			Model:    modelID,
@@ -170,10 +172,10 @@ func createComplexRequest(messageRequest MultiplexerChatCompletionRequest) (Chat
 	if msg.Content == "" {
 		return ChatMessage{}, fmt.Errorf("OpenAI returned an empty response")
 	}
+	simple_returns := OAIMessagesToSimples(contextMessages)
 	return ChatMessage{
-		msg.Content,
-		"assistant",
-		run_results.citations,
-		&[]SimpleChatMessage{},
+		SimpleChatMessage: SimpleChatMessage{msg.Content, "assistant"},
+		Citations:         run_results.citations,
+		Context:           &simple_returns,
 	}, nil
 }

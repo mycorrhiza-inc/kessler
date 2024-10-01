@@ -1,7 +1,7 @@
 package rag
 
 import (
-	"fmt"
+	openai "github.com/sashabaranov/go-openai"
 )
 
 // Use custom enums in place of Python's Enum class
@@ -19,95 +19,71 @@ type RAGChat struct {
 	ChatHistory []ChatMessage `json:"chat_history"`
 }
 
-// write two functions, one that converts a simple chatmessage into a ChatMessage with emtpy values for context and citations, while validating the chatRole. Then write another that just throws that info away and turns a ChatMessage into a simple chatmessage.
-type ChatRole string
-
-const (
-	User      ChatRole = "user"
-	System             = "system"
-	Assistant          = "assistant"
-)
-
 type SimpleChatMessage struct {
 	Content string `json:"content"`
 	Role    string `json:"role"`
 }
 
 type ChatMessage struct {
-	Content   string               `json:"content"`
-	Role      ChatRole             `json:"role"`
+	SimpleChatMessage
 	Citations *[]SearchData        `json:"citations,omitempty"`
 	Context   *[]SimpleChatMessage `json:"context,omitempty"`
 }
 
-func ValidateChatRole(role string) (ChatRole, error) {
-	chatRole := ChatRole(role)
-	switch chatRole {
-	case User, System, Assistant:
-		return chatRole, nil
-	default:
-		return "", fmt.Errorf("invalid role: %s", role)
-	}
-}
-
-func SimpleToChatMessage(msg SimpleChatMessage) (ChatMessage, error) {
-	role, err := ValidateChatRole(msg.Role)
-	if err != nil {
-		return ChatMessage{}, err
-	}
+// Function converting simple to ChatMessage
+func SimpleToChatMessage(msg SimpleChatMessage) ChatMessage {
 	return ChatMessage{
-		Content:   msg.Content,
-		Role:      role,
-		Citations: &[]SearchData{},
-		Context:   &[]SimpleChatMessage{},
-	}, nil
-}
-
-func KeToSimpleChatMessage(keMsg ChatMessage) SimpleChatMessage {
-	return SimpleChatMessage{
-		Content: keMsg.Content,
-		Role:    string(keMsg.Role),
+		SimpleChatMessage: msg,
+		Citations:         &[]SearchData{},
+		Context:           &[]SimpleChatMessage{},
 	}
 }
 
-func SimpleToChatMessages(msgs []SimpleChatMessage) ([]ChatMessage, error) {
+// Function converting ChatMessage to simple openai.ChatCompletionMessage
+func ChatMessageToSimple(msg ChatMessage) SimpleChatMessage {
+	return msg.SimpleChatMessage
+}
+
+func AdvancedMessageContent(msg ChatMessage) string {
+	return msg.Content
+}
+
+func OAIMsgToSimple(oaiMsg openai.ChatCompletionMessage) SimpleChatMessage {
+	return SimpleChatMessage{
+		Content: oaiMsg.Content,
+		Role:    string(oaiMsg.Role),
+	}
+}
+
+func SimpleToChatMessages(msgs []SimpleChatMessage) []ChatMessage {
 	var keMsgs []ChatMessage
 	for _, msg := range msgs {
-		keMsg, err := SimpleToChatMessage(msg)
-		if err != nil {
-			return nil, err
-		}
+		keMsg := SimpleToChatMessage(msg)
 		keMsgs = append(keMsgs, keMsg)
 	}
-	return keMsgs, nil
+	return keMsgs
 }
 
-func KeToSimpleChatMessages(keMsgs []ChatMessage) []SimpleChatMessage {
+func ChatMessageToSimples(keMsgs []ChatMessage) []SimpleChatMessage {
 	var msgs []SimpleChatMessage
 	for _, keMsg := range keMsgs {
-		msg := KeToSimpleChatMessage(keMsg)
+		msg := ChatMessageToSimple(keMsg)
 		msgs = append(msgs, msg)
 	}
 	return msgs
 }
 
-func CreateKeChatCompletion(modelName string, chatHistory []ChatMessage) (ChatMessage, error) {
-	multiplex_request := MultiplexerChatCompletionRequest{
-		modelName,
-		chatHistory,
-		[]FunctionCall{},
+func OAIMessagesToSimples(oaiMsgs []openai.ChatCompletionMessage) []SimpleChatMessage {
+	var msgs []SimpleChatMessage
+	for _, oaiMsg := range oaiMsgs {
+		msg := OAIMsgToSimple(oaiMsg)
+		msgs = append(msgs, msg)
 	}
-	simple_completion_string, err := createSimpleChatCompletionString(multiplex_request)
-	if err != nil {
-		return ChatMessage{}, err
-	}
-	ke_completion := ChatMessage{
-		simple_completion_string,
-		Assistant,
-		&[]SearchData{},
-		&[]SimpleChatMessage{},
-	}
-	return ke_completion, nil
+	return msgs
+}
+
+func OAIMessagesToComplex(oaiMsgs []openai.ChatCompletionMessage) []ChatMessage {
+	return SimpleToChatMessages(OAIMessagesToSimples(oaiMsgs))
 }
 
 type LLMModel struct {
@@ -115,7 +91,11 @@ type LLMModel struct {
 }
 
 func (model_name LLMModel) Chat(chatHistory []ChatMessage) (ChatMessage, error) {
-	return CreateKeChatCompletion(model_name.model_name, chatHistory)
+	requestMultiplex := MultiplexerChatCompletionRequest{
+		chatHistory: chatHistory,
+		modelName:   model_name.model_name,
+	}
+	return createComplexRequest(requestMultiplex)
 }
 
 type LLM interface {
