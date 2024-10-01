@@ -140,26 +140,33 @@ func createComplexRequest(messageRequest MultiplexerChatCompletionRequest) (Chat
 		return ChatMessage{}, fmt.Errorf("no tool calls in openai response, dispite stopping for a tool completion")
 	}
 	if len(msg.ToolCalls) > 1 {
-		return ChatMessage{}, fmt.Errorf("we only support one function call per message, got %v, please fix", len(msg.ToolCalls))
+		// return ChatMessage{}, fmt.Errorf("we only support one function call per message, got %v, please fix", len(msg.ToolCalls))
+		fmt.Printf("Warning: we only support one function call per message, got %v, proceeding to only do the first tool call.\n", len(msg.ToolCalls))
 	}
-	// simulate calling the function & responding to OpenAI
 	dialogue = append(dialogue, msg)
 	contextMessages := []openai.ChatCompletionMessage{msg}
-	fmt.Printf("OpenAI called us back wanting to invoke our function '%v' with params '%v'\n",
-		msg.ToolCalls[0].Function.Name, msg.ToolCalls[0].Function.Arguments)
-	run_func := messageRequest.Functions[0].Func
-	run_results, err := run_func(msg.ToolCalls[0].Function.Arguments)
-	if err != nil {
-		return ChatMessage{}, fmt.Errorf("error running function: %v", err)
+	returnCitations := []search.SearchData{}
+	for toolCallID := range msg.ToolCalls[:1] {
+		fmt.Printf("OpenAI called us back wanting to invoke our function '%v' with params '%v'\n",
+			msg.ToolCalls[toolCallID].Function.Name, msg.ToolCalls[toolCallID].Function.Arguments)
+		run_func := messageRequest.Functions[toolCallID].Func
+		run_results, err := run_func(msg.ToolCalls[toolCallID].Function.Arguments)
+		if err != nil {
+			return ChatMessage{}, fmt.Errorf("error running function: %v", err)
+		}
+		toolMsg := openai.ChatCompletionMessage{
+			Role:       openai.ChatMessageRoleTool,
+			Content:    run_results.Response,
+			Name:       msg.ToolCalls[toolCallID].Function.Name,
+			ToolCallID: msg.ToolCalls[toolCallID].ID,
+		}
+		dialogue = append(dialogue, toolMsg)
+		contextMessages = append(contextMessages, toolMsg)
+		if run_results.Citations != nil {
+			returnCitations = append(returnCitations, *run_results.Citations...)
+		}
+
 	}
-	toolMsg := openai.ChatCompletionMessage{
-		Role:       openai.ChatMessageRoleTool,
-		Content:    run_results.Response,
-		Name:       msg.ToolCalls[0].Function.Name,
-		ToolCallID: msg.ToolCalls[0].ID,
-	}
-	dialogue = append(dialogue, toolMsg)
-	contextMessages = append(contextMessages, toolMsg)
 	resp, err = client.CreateChatCompletion(ctx,
 		openai.ChatCompletionRequest{
 			Model:    modelID,
@@ -180,7 +187,7 @@ func createComplexRequest(messageRequest MultiplexerChatCompletionRequest) (Chat
 	return ChatMessage{
 		Content:   msg.Content,
 		Role:      "assistant",
-		Citations: run_results.Citations,
+		Citations: &returnCitations,
 		Context:   &simple_returns,
 	}, nil
 }

@@ -2,6 +2,7 @@ package rag
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 )
 
@@ -21,6 +22,7 @@ func HandleBasicChatRequest(w http.ResponseWriter, r *http.Request) {
 	chatHistory := reqBody.ChatHistory
 	chatResponse, err := llmObject.Chat(chatHistory)
 	if err != nil {
+		fmt.Println("Error:", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -40,6 +42,7 @@ func HandleRagChatRequest(w http.ResponseWriter, r *http.Request) {
 	chatHistory := reqBody.ChatHistory
 	chatResponse, err := llmObject.RagChat(chatHistory)
 	if err != nil {
+		fmt.Println("Error:", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
