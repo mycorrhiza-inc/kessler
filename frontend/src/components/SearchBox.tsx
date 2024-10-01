@@ -60,7 +60,7 @@ const emptyExtraProperties: extraProperties = {
   match_author: "",
 };
 
-const AdvancedSettings = ({
+const AdvancedFilters = ({
   queryOptions,
   setQueryOptions,
 }: {
@@ -74,7 +74,7 @@ const AdvancedSettings = ({
       [name]: value,
     }));
   };
-  const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   return (
     <>
@@ -82,16 +82,16 @@ const AdvancedSettings = ({
         <div className="flex flex-col space-y-1 sm:space-y-2 md:space-y-4">
           <div className="flex items-center  justify-center">
             <span
-              onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
+              onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
               style={{ cursor: "pointer", textDecoration: "underline" }}
             >
-              {showAdvancedSettings
-                ? "Hide advanced settings"
-                : "Show advanced settings"}
+              {showAdvancedFilters
+                ? "Hide Advanced Filters"
+                : "Show Advanced Filters"}
             </span>
           </div>
           <AnimatePresence initial={false}>
-            {showAdvancedSettings && (
+            {showAdvancedFilters && (
               <motion.div
                 initial={{ height: 0, width: 0, opacity: 0 }}
                 animate={{ height: "auto", width: "auto", opacity: 1 }}
@@ -175,7 +175,7 @@ const SearchBox = ({
           <SearchIcon />
         </button>
       </div>
-      <AdvancedSettings
+      <AdvancedFilters
         setQueryOptions={setQueryOptions}
         queryOptions={queryOptions}
       />
