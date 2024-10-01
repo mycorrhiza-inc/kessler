@@ -92,11 +92,9 @@ func KeToSimpleChatMessages(keMsgs []ChatMessage) []SimpleChatMessage {
 }
 
 func CreateKeChatCompletion(modelName string, chatHistory []ChatMessage) (ChatMessage, error) {
-	simple_history := KeToSimpleChatMessages(chatHistory)
-
 	multiplex_request := MultiplexerChatCompletionRequest{
 		modelName,
-		simple_history,
+		chatHistory,
 		[]FunctionCall{},
 	}
 	simple_completion_string, err := createSimpleChatCompletionString(multiplex_request)

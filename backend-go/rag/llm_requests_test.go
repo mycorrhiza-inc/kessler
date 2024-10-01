@@ -10,7 +10,7 @@ import (
 
 func TestSimpleChatCompletionString(t *testing.T) {
 	modelName := "gpt-4o"
-	chatHistory := []SimpleChatMessage{
+	chatHistory := []ChatMessage{
 		{
 			Content: "Hello, how can I assist you today?",
 			Role:    "assistant",
@@ -57,7 +57,7 @@ var test_document_func_schema = openai.FunctionDefinition{
 
 func TestChatFunctionCalling(t *testing.T) {
 	modelName := "gpt-4o"
-	chatHistory := []SimpleChatMessage{
+	chatHistory := []ChatMessage{
 		{
 			Content: "Hello, how can I assist you today?",
 			Role:    "assistant",
