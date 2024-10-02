@@ -10,6 +10,7 @@ const ThemeSelector = () => {
     setMounted(true);
   }, []);
 
+  // Prevent theme selection if js not loaded
   if (!mounted) {
     return (
       <div className="dropdown dropdown-hover">

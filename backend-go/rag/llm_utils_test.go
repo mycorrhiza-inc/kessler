@@ -3,6 +3,8 @@ package rag
 import (
 	"fmt"
 	"testing"
+
+	"github.com/mycorrhiza-inc/kessler/backend-go/search"
 )
 
 func TestRag(t *testing.T) {
@@ -18,7 +20,7 @@ func TestRag(t *testing.T) {
 	}
 	chatHistory := SimpleToChatMessages(history)
 	llmObject := LLMModel{ModelName: "gpt-4o"}
-	result, err := llmObject.RagChat(chatHistory)
+	result, err := llmObject.RagChat(chatHistory, search.Metadata{})
 	if err != nil {
 		t.Fatal(err)
 	}

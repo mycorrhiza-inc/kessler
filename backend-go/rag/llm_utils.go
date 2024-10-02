@@ -118,42 +118,51 @@ var rag_query_func_schema = openai.FunctionDefinition{
 }
 
 // arguments='{"order_id":"order_12345"}',
-func rag_query_func(query_json string) (ToolCallResults, error) {
-	var queryData map[string]string
-	err := json.Unmarshal([]byte(query_json), &queryData)
-	if err != nil {
-		return ToolCallResults{}, fmt.Errorf("error unmarshaling query_json: %v", err)
-	}
-	search_query, ok := queryData["query"]
-	if !ok {
-		return ToolCallResults{}, fmt.Errorf("query field is missing in query_json")
-	}
-	search_request := search.SearchRequest{search_query, search.Metadata{}}
-	search_results, err := search.SearchQuickwit(search_request)
-	if err != nil {
-		return ToolCallResults{}, err
-	}
-	// Increase to give llm more results.
-	const truncation = 4
-	var truncated_search_results []search.SearchData
-	if len(search_results) < truncation {
-		truncated_search_results = search_results
-	} else {
-		truncated_search_results = search_results[:truncation]
-	}
-	format_string := search.FormatSearchResults(truncated_search_results, search_query)
-	result := ToolCallResults{Response: format_string, Citations: &truncated_search_results}
+func rag_query_func_generated_from_filters(filters search.Metadata) func(query_json string) (ToolCallResults, error) {
+	return func(query_json string) (ToolCallResults, error) {
+		var queryData map[string]string
+		err := json.Unmarshal([]byte(query_json), &queryData)
+		if err != nil {
+			return ToolCallResults{}, fmt.Errorf("error unmarshaling query_json: %v", err)
+		}
+		search_query, ok := queryData["query"]
+		if !ok {
+			return ToolCallResults{}, fmt.Errorf("query field is missing in query_json")
+		}
+		search_request := search.SearchRequest{search_query, filters}
+		search_results, err := search.SearchQuickwit(search_request)
+		if err != nil {
+			return ToolCallResults{}, err
+		}
+		// Increase to give llm more results.
+		const truncation = 4
+		var truncated_search_results []search.SearchData
+		if len(search_results) < truncation {
+			truncated_search_results = search_results
+		} else {
+			truncated_search_results = search_results[:truncation]
+		}
+		format_string := search.FormatSearchResults(truncated_search_results, search_query)
+		result := ToolCallResults{Response: format_string, Citations: &truncated_search_results}
 
-	return result, nil
+		return result, nil
+	}
 }
 
-var rag_func_call = FunctionCall{Schema: rag_query_func_schema, Func: rag_query_func}
+func rag_func_call_filters(filters search.Metadata) FunctionCall {
+	return FunctionCall{
+		Schema: rag_query_func_schema,
+		Func:   rag_query_func_generated_from_filters(filters),
+	}
+}
 
-func (model_name LLMModel) RagChat(chatHistory []ChatMessage) (ChatMessage, error) {
+var rag_func_call_no_filters = rag_func_call_filters(search.Metadata{})
+
+func (model_name LLMModel) RagChat(chatHistory []ChatMessage, filters search.Metadata) (ChatMessage, error) {
 	requestMultiplex := MultiplexerChatCompletionRequest{
 		ChatHistory: chatHistory,
 		ModelName:   model_name.ModelName,
-		Functions:   []FunctionCall{rag_func_call},
+		Functions:   []FunctionCall{rag_func_call_filters(filters)},
 	}
 	return createComplexRequest(requestMultiplex)
 }
