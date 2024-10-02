@@ -124,6 +124,8 @@ func createComplexRequest(messageRequest MultiplexerChatCompletionRequest) (Chat
 			Tools:    tools,
 		},
 	)
+	fmt.Printf("Finished calling OpenAI model %v\n", modelID)
+
 	if err != nil || len(resp.Choices) != 1 {
 		return ChatMessage{}, fmt.Errorf("completion error: err:%v len(choices):%v", err, len(resp.Choices))
 	}
@@ -167,6 +169,7 @@ func createComplexRequest(messageRequest MultiplexerChatCompletionRequest) (Chat
 		}
 
 	}
+	fmt.Printf("Aked OAI for all tool calls,\n")
 	resp, err = client.CreateChatCompletion(ctx,
 		openai.ChatCompletionRequest{
 			// Removing ability to recursively call tools, it gets one shot for now.
@@ -176,13 +179,16 @@ func createComplexRequest(messageRequest MultiplexerChatCompletionRequest) (Chat
 			Tools:    []openai.Tool{},
 		},
 	)
+	fmt.Printf("Finished calling OpenAI model %v\n", modelID)
 	if err != nil || len(resp.Choices) != 1 {
-		return ChatMessage{}, fmt.Errorf("2nd completion error: err:%v len(choices):%v\n", err, len(resp.Choices))
+		fmt.Printf("2nd OpenAI completion error: err:%v len(choices):%v\n", err, len(resp.Choices))
+		return ChatMessage{}, fmt.Errorf("2nd completion error: err:%v len(choices):%v", err, len(resp.Choices))
 	}
 
 	// display OpenAI's response to the original question utilizing our function
 	msg = resp.Choices[0].Message
 	if msg.Content == "" {
+		fmt.Printf("OpenAI returned an empty response\n")
 		return ChatMessage{}, fmt.Errorf("OpenAI returned an empty response")
 	}
 	simple_returns := OAIMessagesToSimples(contextMessages)

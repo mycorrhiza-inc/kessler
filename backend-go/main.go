@@ -52,7 +52,7 @@ func main() {
 	mux.HandleFunc("/api/v2/rag/basic_chat", rag.HandleBasicChatRequest)
 	mux.HandleFunc("/api/v2/rag/chat", rag.HandleRagChatRequest)
 
-	muxWithMiddlewares := http.TimeoutHandler(mux, time.Second*3, "Timeout!")
+	muxWithMiddlewares := http.TimeoutHandler(mux, time.Second*10, "Timeout!")
 	handler := corsMiddleware(muxWithMiddlewares)
 
 	server := &http.Server{
