@@ -57,17 +57,17 @@ const ThemeSelector = () => {
                       <div className="text-primary-content text-sm font-bold">
                         A
                       </div>
-                    </div>{" "}
+                    </div>
                     <div className="bg-secondary flex aspect-square w-5 items-center justify-center rounded lg:w-6">
                       <div className="text-secondary-content text-sm font-bold">
                         A
                       </div>
-                    </div>{" "}
+                    </div>
                     <div className="bg-accent flex aspect-square w-5 items-center justify-center rounded lg:w-6">
                       <div className="text-accent-content text-sm font-bold">
                         A
                       </div>
-                    </div>{" "}
+                    </div>
                     <div className="bg-neutral flex aspect-square w-5 items-center justify-center rounded lg:w-6">
                       <div className="text-neutral-content text-sm font-bold">
                         A
