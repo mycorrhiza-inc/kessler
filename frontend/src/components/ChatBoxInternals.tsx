@@ -144,6 +144,8 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
         if (!data.message) {
           console.log("no message in data");
           console.log(data);
+          console.log(data["message"]);
+          console.log(data.message);
           return "failed request";
         }
         console.log("got data");
@@ -152,6 +154,8 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
           setHighlighted(newMessages.length); // You arent subtracting one here, since you want it to highlight the last message added to the list.
           setCitations(data.message.citations);
         }
+        console.log("Returning Message:");
+        console.log(data.message);
         return data.message;
       })
       .catch((e) => {

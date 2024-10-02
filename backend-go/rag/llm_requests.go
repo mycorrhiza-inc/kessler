@@ -169,9 +169,11 @@ func createComplexRequest(messageRequest MultiplexerChatCompletionRequest) (Chat
 	}
 	resp, err = client.CreateChatCompletion(ctx,
 		openai.ChatCompletionRequest{
+			// Removing ability to recursively call tools, it gets one shot for now.
+			// Tools:    tools,
 			Model:    modelID,
 			Messages: dialogue,
-			Tools:    tools,
+			Tools:    []openai.Tool{},
 		},
 	)
 	if err != nil || len(resp.Choices) != 1 {

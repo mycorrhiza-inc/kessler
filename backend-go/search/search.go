@@ -201,10 +201,9 @@ func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
 	return rerankedData, nil
 }
 
-func FormatSearchResults(searchResults []SearchData, truncate int) string {
-	searchResultsTruncated := searchResults[:truncate]
-	var searchResultsString string
-	for _, result := range searchResultsTruncated {
+func FormatSearchResults(searchResults []SearchData, query string) string {
+	searchResultsString := fmt.Sprintf("Query: %s\n", query)
+	for _, result := range searchResults {
 		searchResultsString += fmt.Sprintf("Name: %s\n", result.Name)
 		searchResultsString += fmt.Sprintf("Text: %s\n", result.Text)
 		// searchResultsString += fmt.Sprintf("DocID: %s\n", result.DocID)
