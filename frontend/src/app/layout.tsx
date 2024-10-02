@@ -27,12 +27,14 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="bg-base-100">
-        <main className="flex flex-col items-center">
-          <Header />
-          <div className="flex-1 w-100vw flex flex-col items-center">
-            <div className="flex flex-col text-base-content">{children}</div>
-          </div>
-        </main>
+        <ThemeProvider>
+          <main className="flex flex-col items-center">
+            <Header />
+            <div className="flex-1 w-100vw flex flex-col items-center">
+              <div className="flex flex-col text-base-content">{children}</div>
+            </div>
+          </main>
+        </ThemeProvider>
       </body>
     </html>
   );
