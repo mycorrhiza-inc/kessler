@@ -141,7 +141,7 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
         return resp.json();
       })
       .then((data) => {
-        if (data.citations && data.citations.length > 0) {
+        if (data.message.citations && data.message.citations.length > 0) {
           setHighlighted(newMessages.length); // You arent subtracting one here, since you want it to highlight the last message added to the list.
           setCitations(data.citations);
         }
