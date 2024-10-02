@@ -10,6 +10,7 @@ backend-go/.env
 mage-code/.file_versions
 mage-code/.ssh_tunnel
 
+backend-go/tmp
 /.env 
 **/.env.local
 server.htpasswd
