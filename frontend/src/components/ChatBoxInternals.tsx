@@ -62,12 +62,12 @@ export const ChatMessages = ({
           </p>
         </div>
       )}
-      {messages.map((m: Message) => {
+      {messages.map((m: Message, index: number) => {
         return (
           <MessageComponent
             message={m}
-            clickMessage={() => setMessageCitations(0)}
-            highlighted={highlighted === 0}
+            clickMessage={() => setMessageCitations(index)}
+            highlighted={highlighted === index}
           />
         );
       })}
@@ -141,11 +141,18 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
         return resp.json();
       })
       .then((data) => {
-        if (data.message.citations && data.message.citations.length > 0) {
-          setHighlighted(newMessages.length); // You arent subtracting one here, since you want it to highlight the last message added to the list.
-          setCitations(data.citations);
+        if (!data.message) {
+          console.log("no message in data");
+          console.log(data);
+          return "failed request";
         }
-        return data;
+        console.log("got data");
+        console.log(data);
+        if (data.message.citations && data.citations.message.length > 0) {
+          setHighlighted(newMessages.length); // You arent subtracting one here, since you want it to highlight the last message added to the list.
+          setCitations(data.message.citations);
+        }
+        return data.message;
       })
       .catch((e) => {
         console.log("error making request");
@@ -164,8 +171,8 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
       chat_response = {
         role: "assistant",
         key: Symbol(),
-        content: result.message.content,
-        citations: result.message.citations,
+        content: result.content,
+        citations: result.citations,
       };
     }
 
