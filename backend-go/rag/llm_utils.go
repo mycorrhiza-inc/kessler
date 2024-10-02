@@ -25,7 +25,9 @@ type SimpleChatMessage struct {
 }
 
 type ChatMessage struct {
-	SimpleChatMessage
+	// SimpleChatMessage
+	Content   string               `json:"content"`
+	Role      string               `json:"role"`
 	Citations *[]search.SearchData `json:"citations,omitempty"`
 	Context   *[]SimpleChatMessage `json:"context,omitempty"`
 }
@@ -33,15 +35,17 @@ type ChatMessage struct {
 // Function converting simple to ChatMessage
 func SimpleToChatMessage(msg SimpleChatMessage) ChatMessage {
 	return ChatMessage{
-		SimpleChatMessage: msg,
-		Citations:         &[]search.SearchData{},
-		Context:           &[]SimpleChatMessage{},
+		// SimpleChatMessage: msg,
+		Content:   msg.Content,
+		Role:      msg.Role,
+		Citations: &[]search.SearchData{},
+		Context:   &[]SimpleChatMessage{},
 	}
 }
 
 // Function converting ChatMessage to simple openai.ChatCompletionMessage
 func ChatMessageToSimple(msg ChatMessage) SimpleChatMessage {
-	return msg.SimpleChatMessage
+	return SimpleChatMessage{Content: msg.Content, Role: msg.Role}
 }
 
 func AdvancedMessageContent(msg ChatMessage) string {
@@ -129,8 +133,16 @@ func rag_query_func(query_json string) (ToolCallResults, error) {
 	if err != nil {
 		return ToolCallResults{}, err
 	}
-	format_string := search.FormatSearchResults(search_results, 1)
-	result := ToolCallResults{Response: format_string, Citations: &search_results}
+	// Increase to give llm more results.
+	const truncation = 4
+	var truncated_search_results []search.SearchData
+	if len(search_results) < truncation {
+		truncated_search_results = search_results
+	} else {
+		truncated_search_results = search_results[:truncation]
+	}
+	format_string := search.FormatSearchResults(truncated_search_results, search_query)
+	result := ToolCallResults{Response: format_string, Citations: &truncated_search_results}
 
 	return result, nil
 }

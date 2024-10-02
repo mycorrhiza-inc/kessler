@@ -28,7 +28,7 @@ export default function Login({ searchParams }: { searchParams: Message }) {
             href="/forgot-password"
           >
             Forgot Password?
-          </Link>
+          </a>
         </div>
         <Input
           type="password"

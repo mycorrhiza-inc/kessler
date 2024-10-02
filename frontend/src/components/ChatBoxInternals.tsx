@@ -62,12 +62,12 @@ export const ChatMessages = ({
           </p>
         </div>
       )}
-      {messages.map((m: Message) => {
+      {messages.map((m: Message, index: number) => {
         return (
           <MessageComponent
             message={m}
-            clickMessage={() => setMessageCitations(0)}
-            highlighted={highlighted === 0}
+            clickMessage={() => setMessageCitations(index)}
+            highlighted={highlighted === index}
           />
         );
       })}
@@ -94,7 +94,7 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
   const [selectedModel, setSelectedModel] = useState("default");
   const [ragMode, setRagMode] = useState(true);
   const [draftText, setDraftText] = useState("");
-  const chatUrl = ragMode ? "/api/v1/rag/rag_chat" : "/api/v1/rag/basic_chat";
+  const chatUrl = ragMode ? "/api/v2/rag/chat" : "/api/v2/rag/basic_chat";
 
   const getResponse = async (responseText: string) => {
     if (responseText == "") {
@@ -134,16 +134,29 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
       .then((resp) => {
         setLoadingResponse(false);
         if (resp.status < 200 || resp.status > 299) {
+          console.log("failed request with status " + resp.status);
+          console.log(resp);
           return "failed request";
         }
         return resp.json();
       })
       .then((data) => {
-        if (data.citations && data.citations.length > 0) {
-          setHighlighted(newMessages.length); // You arent subtracting one here, since you want it to highlight the last message added to the list.
-          setCitations(data.citations);
+        if (!data.message) {
+          console.log("no message in data");
+          console.log(data);
+          console.log(data["message"]);
+          console.log(data.message);
+          return "failed request";
         }
-        return data;
+        console.log("got data");
+        console.log(data);
+        if (data.message.citations && data.citations.message.length > 0) {
+          setHighlighted(newMessages.length); // You arent subtracting one here, since you want it to highlight the last message added to the list.
+          setCitations(data.message.citations);
+        }
+        console.log("Returning Message:");
+        console.log(data.message);
+        return data.message;
       })
       .catch((e) => {
         console.log("error making request");
@@ -162,8 +175,8 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
       chat_response = {
         role: "assistant",
         key: Symbol(),
-        content: result.message.content,
-        citations: result.message.citations,
+        content: result.content,
+        citations: result.citations,
       };
     }
 
