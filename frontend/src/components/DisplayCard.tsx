@@ -1,10 +1,10 @@
 const IntroductionCard = () => {
   return (
-    <div className="card card-side bg-neutral text-neutral-content shadow-xl w-5/12">
+    <div className="card card-side bg-primary border-primary outline-secondary border-2 text-neutral-content shadow-xl w-5/12">
       <figure>
         <img src="/logo-big.png" alt="Kessler Logo" />
       </figure>
-      <div className="card-body">
+      <div className="card-body text-primary-content">
         <h2 className="card-title">Welcome To Kessler!</h2>
         <p>Use the buttons at the bottom to start.</p>
         <p>
@@ -21,7 +21,7 @@ const IntroductionCard = () => {
           author.
         </p>
         <div className="card-actions justify-end">
-          <button className="btn btn-primary">Start Tour</button>
+          <button className="btn btn-accent">Start Tour</button>
         </div>
       </div>
     </div>

@@ -71,10 +71,10 @@ const Pricing = () => {
             ({ key, message, buttonLink, buttonText, indicator }) => (
               <div
                 key={key}
-                className={`card border-secondary border-2  outline-secondary w-96 shadow-xl ${indicator ? "indicator" : ""}`}
+                className={`card border-secondary border-4  outline-secondary w-96 shadow-xl ${indicator ? "indicator" : ""}`}
               >
                 {indicator && (
-                  <span className="indicator-item badge h-auto badge-accent mr-10">
+                  <span className="indicator-item badge h-auto badge-accent mr-10 p-2">
                     {indicator}
                   </span>
                 )}

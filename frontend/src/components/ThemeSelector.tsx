@@ -29,14 +29,10 @@ const ThemeSelector = () => {
   }
   const theme_list = {
     "light": "bumblebee",
+    "emerald": "emerald",
+    "cmyk": "cmyk",
     "dark": "dark",
     "black": "black",
-    "emerald": "emerald",
-    "cmyk": "cmyk"
-    // "forest",
-    // "synthwave",
-    // "light",
-    // "lemonade",
   }
 
   return (
