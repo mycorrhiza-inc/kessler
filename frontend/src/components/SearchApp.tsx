@@ -60,8 +60,6 @@ export default function SearchApp() {
     setResultView(true);
   };
 
-  const chatMobileStyle = {};
-  const chatDesktopStyle = {};
   const divRef = useRef<HTMLDivElement>(null);
 
   return (
@@ -80,6 +78,7 @@ export default function SearchApp() {
         handleSearch={handleSearch}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
+        chatVisible={chatVisible}
         setChatVisible={setChatVisible}
         inSearchSession={resultView}
         queryOptions={searchFilters}

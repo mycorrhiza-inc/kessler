@@ -22,7 +22,7 @@ const AdvancedFilters = ({
       [name]: value,
     }));
   };
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(true);
 
   return (
     <>
@@ -89,6 +89,7 @@ interface SearchBoxProps {
   searchQuery: string;
   setSearchQuery: Dispatch<SetStateAction<string>>;
   inSearchSession: boolean;
+  chatVisible: boolean;
   setChatVisible: Dispatch<SetStateAction<boolean>>;
   queryOptions: extraProperties;
   setQueryOptions: Dispatch<SetStateAction<extraProperties>>;
@@ -169,11 +170,13 @@ const MinimizedSearchBox = ({
         title={
           isMacOS ? (
             <>
-              <kbd className="kbd">⌘</kbd>+<kbd className="kbd">K</kbd>
+              <kbd className="kbd text-base-content">⌘</kbd>+
+              <kbd className="kbd text-base-content">K</kbd>
             </>
           ) : (
             <>
-              <kbd className="kbd">ctrl</kbd>+<kbd className="kbd">K</kbd>
+              <kbd className="kbd text-base-content">ctrl</kbd>+
+              <kbd className="kbd text-base-content">K</kbd>
             </>
           )
         }
@@ -187,11 +190,13 @@ const MinimizedSearchBox = ({
         title={
           isMacOS ? (
             <>
-              <kbd className="kbd">⌘</kbd>+<kbd className="kbd">J</kbd>
+              <kbd className="kbd text-base-content">⌘</kbd>+
+              <kbd className="kbd text-base-content">J</kbd>
             </>
           ) : (
             <>
-              <kbd className="kbd">ctrl</kbd>+<kbd className="kbd">J</kbd>
+              <kbd className="kbd text-base-content">ctrl</kbd>+
+              <kbd className="kbd text-base-content">J</kbd>
             </>
           )
         }
@@ -216,8 +221,11 @@ export const CenteredFloatingSearhBox = ({
   handleSearch,
   searchQuery,
   setSearchQuery,
+  chatVisible,
   setChatVisible,
   inSearchSession,
+  queryOptions,
+  setQueryOptions,
 }: SearchBoxProps) => {
   const divRef = useRef<HTMLDivElement>(null);
   const [isMinimized, setIsMinimized] = useState(true);
@@ -270,8 +278,11 @@ export const CenteredFloatingSearhBox = ({
   }, []);
 
   return (
-    <div
-      className="w-full flex justify-center"
+    <motion.div
+      className="flex justify-center"
+      initial={{ width: "100%" }}
+      animate={chatVisible ? { width: "calc(100% - 35%)" } : { width: "100%" }}
+      transition={{ type: "tween", stiffness: 200 }}
       style={{
         position: "fixed",
         bottom: "30px",
@@ -309,10 +320,12 @@ export const CenteredFloatingSearhBox = ({
             handleSearch={handleSearch}
             inSearchSession={inSearchSession}
             setChatVisible={setChatVisible}
+            setQueryOptions={setQueryOptions}
+            queryOptions={queryOptions}
           />
         )}
       </motion.div>
-    </div>
+    </motion.div>
   );
 };
 
