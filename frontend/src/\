@@ -27,30 +27,33 @@ const ThemeSelector = () => {
       </>
     );
   }
-  const theme_list = {
-    "light": "bumblebee",
-    "dark": "forest",
-    "black": "black"
-    // "forest",
-    // "synthwave",
-    // "light",
-    // "lemonade",
-  }
+  const theme_list: string[] = [
+    "light",
+    "dark",
+    "forest",
+    "lemonade",
+    "retro",
+    // "colorblind",
+    "cyberpunk",
+    "valentine",
+    "aqua",
+  ];
 
   return (
     <>
-      <div className=" p-5 m-5 justify-center border-2 border-['accent'] rounded-lg">
-
-        <h1 className="text-3xl font-bold">Themes</h1>
+      <div className="">
+        <div tabIndex={0}>
+          Theme Big
+        </div>
         <div className="flex flex-row flex-wrap space-x-5">
-          {Object.entries(theme_list).map(([themeName, themeValue]) => (
+          {theme_list.map((themeValue) => (
             <div
               key={themeValue}
+              data-theme={themeValue}
               onClick={() => setTheme(themeValue)}
-              className="rounded-box"
             >
               <div
-                className="bg-base-100 text-base-content w-full cursor-pointer font-sans rounded-box shadow-lg p-2"
+                className="bg-base-100 text-base-content w-full cursor-pointer font-sans"
                 data-theme={themeValue}
               >
                 <div className="grid grid-cols-5 grid-rows-3">
@@ -70,7 +73,7 @@ const ThemeSelector = () => {
                     >
                       <path d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z"></path>
                     </svg>
-                    <div className="font-bold">{themeName}</div>
+                    <div className="font-bold">{themeValue}</div>
                     <div className="flex flex-wrap gap-1">
                       <div className="bg-primary flex aspect-square w-5 items-center justify-center rounded lg:w-6">
                         <div className="text-primary-content text-sm font-bold">
@@ -96,7 +99,7 @@ const ThemeSelector = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </duiv>
           ))}
         </div>
       </div>
