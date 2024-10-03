@@ -1,7 +1,6 @@
 import { signOutAction } from "@/app/actions";
-import { Button } from "@/components/supabasetutorial/ui/button";
 import { createClient } from "@/utils/supabase/server";
-import ThemeSelector from "./ThemeSelector";
+import { UserIcon } from "@/components/Icons";
 
 async function HeaderAuth() {
   const {
@@ -10,13 +9,25 @@ async function HeaderAuth() {
 
   return user ? (
     <div className="flex items-center gap-4">
-      Hey, {user.email}!
-      <form action={signOutAction} method="post">
-        <button type="submit" className="btn btn-outline btn-secondary">
-          Sign out
-        </button>
-      </form>
-    </div>
+      <div class="dropdown dropdown-end">
+        <div tabindex={0} role="button" class="btn btn-ghost rounded-btn">
+          <UserIcon />
+        </div>
+        <form action={signOutAction} method="post">
+          <ul
+            tabindex={0}
+            class="menu dropdown-content bg-base-200 rounded-box z-[1] w-52 p-2 ">
+            <li>Hey, {user.email}!</li>
+            <li><a href="/settings">Settings</a></li>
+            <li>
+              <button type="submit" className="btn btn-outline btn-secondary">
+                Sign out
+              </button>
+            </li>
+          </ul>
+        </form>
+      </div>
+    </div >
   ) : (
     <div className="flex gap-2">
       <a href="/sign-in" className="btn btn-outline btn-secondary">
@@ -42,7 +53,6 @@ const Header = () => {
           <a href="/">Kessler</a>
         </div>
         <HeaderAuth />
-        <ThemeSelector></ThemeSelector>
       </div>
     </nav>
   );

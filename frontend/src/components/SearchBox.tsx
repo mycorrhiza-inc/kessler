@@ -22,7 +22,7 @@ const AdvancedFilters = ({
       [name]: value,
     }));
   };
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(true);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   return (
     <>
@@ -52,7 +52,7 @@ const AdvancedFilters = ({
                     .map((key, index) => {
                       const extraInfo =
                         extraPropertiesInformation[
-                          key as keyof extraProperties
+                        key as keyof extraProperties
                         ];
                       return (
                         <div className="box-border" key={index}>
@@ -215,7 +215,7 @@ const ActionBoxController = ({
 }: {
   isMinimized: boolean;
   chatVisible: boolean;
-}) => {};
+}) => { };
 
 export const CenteredFloatingSearhBox = ({
   handleSearch,
