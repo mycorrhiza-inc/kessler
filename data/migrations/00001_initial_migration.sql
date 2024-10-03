@@ -21,7 +21,7 @@ CREATE TABLE public.faction (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-CREATE TABLE public.file (
+CREATE TABLE IF NOT EXISTS public.file (
     url VARCHAR,
     doctype VARCHAR,
     lang VARCHAR,
@@ -36,7 +36,7 @@ CREATE TABLE public.file (
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-CREATE TABLE public.file_text_source (
+CREATE TABLE IF NOT EXISTS public.file_text_source (
     file_id UUID NOT NULL,
     is_original_text BOOLEAN NOT NULL,
     language VARCHAR NOT NULL,
