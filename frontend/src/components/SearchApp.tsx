@@ -21,6 +21,7 @@ export default function SearchApp() {
   const [resultView, setResultView] = useState(false);
   const [searchFilters, setSearchFilters] =
     useState<extraProperties>(emptyExtraProperties);
+  const [showCard, setShowCard] = useState("introduction");
   useEffect(() => {
     if (!chatVisible) {
       setSearchDisplay(searchResults);
@@ -32,6 +33,9 @@ export default function SearchApp() {
   useEffect(() => {
     setSearchDisplay(searchResults);
   }, [searchResults]);
+  useEffect(() => {
+    setSearchDisplay(searchResults);
+  }, [searchDisplay]);
 
   // Should this be refactored out of components and into the lib as a async function that returns search results?
   const handleSearch = async () => {
@@ -102,6 +106,7 @@ export default function SearchApp() {
         }}
       >
         <SearchResultBox
+          showCard={showCard}
           searchResults={searchDisplay}
           isSearching={isSearching}
         />

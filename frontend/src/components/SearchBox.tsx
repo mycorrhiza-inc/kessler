@@ -319,6 +319,7 @@ export const CenteredFloatingSearhBox = ({
             setSearchQuery={setSearchQuery}
             handleSearch={handleSearch}
             inSearchSession={inSearchSession}
+            chatVisible={chatVisible}
             setChatVisible={setChatVisible}
             setQueryOptions={setQueryOptions}
             queryOptions={queryOptions}
