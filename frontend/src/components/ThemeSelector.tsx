@@ -13,11 +13,18 @@ const ThemeSelector = () => {
   // Prevent theme selection if js not loaded
   if (!mounted) {
     return (
-      <div className="dropdown dropdown-hover">
-        <div tabIndex={0} role="button" className="btn m-1">
-          Theme
+      <>
+        <div className="dropdown dropdown-hover">
+          <div tabIndex={0} role="button" className="btn m-1">
+            Theme Big
+          </div>
         </div>
-      </div>
+        <div className="dropdown dropdown-hover">
+          <div tabIndex={0} role="button" className="btn m-1">
+            Theme Small
+          </div>
+        </div>
+      </>
     );
   }
   const theme_list: string[] = [
@@ -53,6 +60,19 @@ const ThemeSelector = () => {
                   <div className="bg-base-200 col-start-1 row-span-2 row-start-1"></div>{" "}
                   <div className="bg-base-300 col-start-1 row-start-3"></div>{" "}
                   <div className="bg-base-100 col-span-4 col-start-2 row-span-3 row-start-1 flex flex-col gap-1 p-2">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      className={
+                        (themeValue === theme ? "" : "invisible") +
+                        " h-3 w-3 shrink-0"
+                      }
+                    >
+                      <path d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z"></path>
+                    </svg>{" "}
                     <div className="font-bold">{themeValue}</div>{" "}
                     <div className="flex flex-wrap gap-1">
                       <div className="bg-primary flex aspect-square w-5 items-center justify-center rounded lg:w-6">
@@ -102,7 +122,10 @@ const ThemeSelector = () => {
                     height="16"
                     viewBox="0 0 24 24"
                     fill="currentColor"
-                    className="invisible h-3 w-3 shrink-0"
+                    className={
+                      (themeValue === theme ? "" : "invisible") +
+                      " h-3 w-3 shrink-0"
+                    }
                   >
                     <path d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z"></path>
                   </svg>{" "}
