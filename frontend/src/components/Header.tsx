@@ -9,14 +9,14 @@ async function HeaderAuth() {
 
   return user ? (
     <div className="flex items-center gap-4">
-      <div class="dropdown dropdown-end">
-        <div tabindex={0} role="button" class="btn btn-ghost rounded-btn">
+      <div className="dropdown dropdown-end">
+        <div tabindex={0} role="button" className="btn btn-primary rounded-btn">
           <UserIcon />
         </div>
         <form action={signOutAction} method="post">
           <ul
             tabindex={0}
-            class="menu dropdown-content bg-base-200 rounded-box z-[1] w-52 p-2 ">
+            className="menu dropdown-content bg-base-200 rounded-box z-[1] w-52 p-2 ">
             <li>Hey, {user.email}!</li>
             <li><a href="/settings">Settings</a></li>
             <li>

@@ -76,15 +76,33 @@ const config = {
           "base-content": "#000000",
         },
         dark: {
-          ...require("daisyui/src/theming/themes")["dark"],
+          ...require("daisyui/src/theming/themes")["dim"],
           // "base-100": "#000000",
           "base-content": "#FFFFFF",
           "success-content": "#FFFFFF",
         },
+        bumblebee: {
+          ...require("daisyui/src/theming/themes")["bumblebee"],
+          //"base-100": "#FFFFFF",
+          "base-content": "#000000",
+        },
+        cmyk: {
+          ...require("daisyui/src/theming/themes")["cmyk"],
+          //"base-100": "#FFFFFF",
+          "base-content": "#000000",
+        },
+        emerald: {
+          ...require("daisyui/src/theming/themes")["emerald"],
+          //"base-100": "#FFFFFF",
+          "base-content": "#000000",
+        },
+
       },
-      "bumblebee",
       "black",
       "forest",
+      "corporate",
+      "sunset",
+      "acid",
     ],
   },
 } satisfies Config;
