@@ -32,7 +32,9 @@ export default function SearchApp() {
   }, [chatVisible]);
   useEffect(() => {
     setSearchDisplay(searchResults);
-    setShowCard("");
+    if (searchResults.length > 0) {
+      setShowCard("");
+    }
   }, [searchResults]);
   useEffect(() => {
     setSearchDisplay(searchResults);
