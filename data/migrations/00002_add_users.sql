@@ -24,17 +24,16 @@ CREATE TABLE IF NOT EXISTS public.relation_users_usergroups (
 
 CREATE SCHEMA IF NOT EXISTS userfiles;
 
-CREATE TABLE IF NOT EXISTS userfiles.acl {
+CREATE TABLE IF NOT EXISTS userfiles.acl (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   usergroup_id UUID NOT NULL,
   owner_id UUID NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (usergroup_id) REFERENCES public.usergroup(id) ON DELETE CASCADE,
   FOREIGN KEY (owner_id) REFERENCES public.users(id) ON DELETE CASCADE
-  };
-}
+);
 
-CREATE TABLE IF NOT EXISTS public.userfiles (
+CREATE TABLE IF NOT EXISTS userfiles.file (
     url VARCHAR,
     doctype VARCHAR,
     lang VARCHAR,
@@ -48,10 +47,15 @@ CREATE TABLE IF NOT EXISTS public.userfiles (
     usergroup_id UUID NOT NULL,
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     created_at TIMESTAMPTZ DEFAULT now(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     -- when a usergroup is deleted all userfiles associated with it should
     FOREIGN KEY (usergroup_id) REFERENCES public.usergroup(id) ON DELETE CASCADE
 );
 
 -- +goose Down
 DROP TABLE IF EXISTS public.users;
+DROP TABLE IF EXISTS public.usergroup;
+DROP SCHEMA IF EXISTS userfiles;
+DROP TABLE IF EXISTS userfiles.acl;
+DROP TABLE IF EXISTS usrfiles.file;
+
