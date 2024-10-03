@@ -146,7 +146,7 @@ const SingleFeature = ({ feature }: { feature: Feature }) => {
   const { icon, title, description } = feature;
 
   return (
-    <div className="card bg-neutral w-96 shadow-xl text-neutral-content">
+    <div className="card bg-primary w-96 shadow-xl text-neutral-content">
       <figure className="px-10 pt-10">
         <Image
           src={icon}
@@ -156,7 +156,7 @@ const SingleFeature = ({ feature }: { feature: Feature }) => {
           className="rounded-xl"
         />
       </figure>
-      <div className="card-body items-center text-center">
+      <div className="card-body items-center text-center text-primary-content">
         <h2 className="card-title">{title}</h2>
         <p>{description}</p>
       </div>
