@@ -51,15 +51,16 @@ func main() {
 	mux.HandleFunc("/api/v2/search", search.HandleSearchRequest)
 	mux.HandleFunc("/api/v2/rag/basic_chat", rag.HandleBasicChatRequest)
 	mux.HandleFunc("/api/v2/rag/chat", rag.HandleRagChatRequest)
+	const timeout = time.Second * 10
 
-	muxWithMiddlewares := http.TimeoutHandler(mux, time.Second*10, "Timeout!")
+	muxWithMiddlewares := http.TimeoutHandler(mux, timeout, "Timeout!")
 	handler := corsMiddleware(muxWithMiddlewares)
 
 	server := &http.Server{
 		Addr:         ":4041",
 		Handler:      handler,
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
+		ReadTimeout:  timeout,
+		WriteTimeout: timeout,
 	}
 
 	log.Println("Starting server on :4041")

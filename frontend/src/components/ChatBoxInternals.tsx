@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import MarkdownRenderer from "./MarkdownRenderer";
 
+import { extraProperties } from "@/utils/interfaces";
 import { exampleChatHistory, Message } from "@/lib/chat";
 export const ChatMessages = ({
   messages,
@@ -85,9 +86,13 @@ export const ChatMessages = ({
 };
 interface ChatBoxInternalsProps {
   setCitations: (citations: any[]) => void;
+  ragFilters: extraProperties;
 }
 
-const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
+const ChatBoxInternals = ({
+  setCitations,
+  ragFilters,
+}: ChatBoxInternalsProps) => {
   const [highlighted, setHighlighted] = useState<number>(-1); // -1 Means no message is highlighted
   const [messages, setMessages] = useState<Message[]>([]);
   const [loadingResponse, setLoadingResponse] = useState(false);
@@ -120,7 +125,7 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
     setLoadingResponse(true);
 
     // Should this fetch get refactored out into lib as something that calls a chat endpoint?
-    let result = await fetch(chatUrl, {
+    let result_message = await fetch(chatUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -129,6 +134,7 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
       body: JSON.stringify({
         model: modelToSend,
         chat_history: chat_hist,
+        filters: ragFilters,
       }),
     })
       .then((resp) => {
@@ -144,15 +150,16 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
         if (!data.message) {
           console.log("no message in data");
           console.log(data);
-          console.log(data["message"]);
-          console.log(data.message);
           return "failed request";
         }
         console.log("got data");
         console.log(data);
-        if (data.message.citations && data.citations.message.length > 0) {
+        if (data.message.citations) {
+          console.log("got citations");
           setHighlighted(newMessages.length); // You arent subtracting one here, since you want it to highlight the last message added to the list.
+          console.log("set highlighted message");
           setCitations(data.message.citations);
+          console.log("set citations");
         }
         console.log("Returning Message:");
         console.log(data.message);
@@ -161,22 +168,23 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
       .catch((e) => {
         console.log("error making request");
         console.log(JSON.stringify(e));
+        return "encountered exception while fetching data";
       });
     let chat_response: Message;
 
-    if (result == "failed request") {
+    if (typeof result_message === "string") {
       chat_response = {
         role: "assistant",
         key: Symbol(),
-        content: result,
+        content: result_message,
         citations: [],
       };
     } else {
       chat_response = {
         role: "assistant",
         key: Symbol(),
-        content: result.content,
-        citations: result.citations,
+        content: result_message.content,
+        citations: result_message.citations,
       };
     }
 
@@ -261,7 +269,7 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
           setCitations={setCitations}
           highlighted={highlighted}
           setHighlighted={setHighlighted}
-        ></ChatMessages>
+        />
       </div>
       <div className="flex-none h-[15%]">
         <textarea

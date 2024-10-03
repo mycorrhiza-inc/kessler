@@ -3,63 +3,11 @@ import Tooltip from "@mui/joy/Tooltip";
 import { motion, AnimatePresence } from "framer-motion"; // Import necessary components from framer-motion
 import { CommandIcon, SearchIcon, ChatIcon } from "@/components/Icons";
 
-interface SearchBoxProps {
-  handleSearch: () => Promise<void>;
-  searchQuery: string;
-  setSearchQuery: Dispatch<SetStateAction<string>>;
-  inSearchSession: boolean;
-  setChatVisible: Dispatch<SetStateAction<boolean>>;
-}
-
-interface extraProperties {
-  match_name: string;
-  match_source: string;
-  match_doctype: string;
-  match_docket_id: string;
-  match_document_class: string;
-  match_author: string;
-}
-const extraPropertiesInformation = {
-  match_name: {
-    displayName: "Name",
-    description: "The name associated with the search item.",
-    details: "Searches for items approximately matching the title",
-  },
-  match_source: {
-    displayName: "Source",
-    description: "The ",
-    details: "Filters results matching the provided source exactly.",
-  },
-  match_doctype: {
-    displayName: "Document Type",
-    description: "The type or category of the document.",
-    details: "Searches for items that match the specified document type.",
-  },
-  match_docket_id: {
-    displayName: "Docket ID",
-    description: "The unique identifier for the docket.",
-    details: "Filters search results based on the docket ID.",
-  },
-  match_document_class: {
-    displayName: "Document Class",
-    description: "The classification or category of the document.",
-    details: "Searches for documents that fall under the specified class.",
-  },
-  match_author: {
-    displayName: "Author",
-    description: "The author of the document.",
-    details: "Searches for items created or written by the specified author.",
-  },
-};
-const emptyExtraProperties: extraProperties = {
-  match_name: "",
-  match_source: "",
-  match_doctype: "",
-  match_docket_id: "",
-  match_document_class: "",
-  match_author: "",
-};
-
+import {
+  extraProperties,
+  extraPropertiesInformation,
+  emptyExtraProperties,
+} from "@/utils/interfaces";
 const AdvancedFilters = ({
   queryOptions,
   setQueryOptions,
@@ -136,15 +84,23 @@ const AdvancedFilters = ({
   );
 };
 
+interface SearchBoxProps {
+  handleSearch: () => Promise<void>;
+  searchQuery: string;
+  setSearchQuery: Dispatch<SetStateAction<string>>;
+  inSearchSession: boolean;
+  setChatVisible: Dispatch<SetStateAction<boolean>>;
+  queryOptions: extraProperties;
+  setQueryOptions: Dispatch<SetStateAction<extraProperties>>;
+}
 const SearchBox = ({
   handleSearch,
   searchQuery,
   setSearchQuery,
   inSearchSession,
+  queryOptions,
+  setQueryOptions,
 }: SearchBoxProps) => {
-  const [queryOptions, setQueryOptions] =
-    useState<extraProperties>(emptyExtraProperties);
-
   const textRef = useRef<HTMLInputElement>(null);
   const handleEnter = (event: any) => {
     if (event.key === "Enter") {
@@ -213,10 +169,12 @@ const MinimizedSearchBox = ({
         title={
           isMacOS ? (
             <>
-              <CommandIcon /> K
+              <kbd className="kbd">⌘</kbd>+<kbd className="kbd">K</kbd>
             </>
           ) : (
-            "Ctrl K"
+            <>
+              <kbd className="kbd">ctrl</kbd>+<kbd className="kbd">K</kbd>
+            </>
           )
         }
       >
@@ -229,10 +187,12 @@ const MinimizedSearchBox = ({
         title={
           isMacOS ? (
             <>
-              <CommandIcon /> J
+              <kbd className="kbd">⌘</kbd>+<kbd className="kbd">J</kbd>
             </>
           ) : (
-            "Ctrl J"
+            <>
+              <kbd className="kbd">ctrl</kbd>+<kbd className="kbd">J</kbd>
+            </>
           )
         }
       >

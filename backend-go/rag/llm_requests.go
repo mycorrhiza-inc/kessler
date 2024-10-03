@@ -169,7 +169,7 @@ func createComplexRequest(messageRequest MultiplexerChatCompletionRequest) (Chat
 		}
 
 	}
-	fmt.Printf("Aked OAI for all tool calls,\n")
+	fmt.Printf("Asked OAI for all tool calls,\n")
 	resp, err = client.CreateChatCompletion(ctx,
 		openai.ChatCompletionRequest{
 			// Removing ability to recursively call tools, it gets one shot for now.
