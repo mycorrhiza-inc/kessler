@@ -150,8 +150,6 @@ const ChatBoxInternals = ({
         if (!data.message) {
           console.log("no message in data");
           console.log(data);
-          console.log(data["message"]);
-          console.log(data.message);
           return "failed request";
         }
         console.log("got data");
@@ -159,7 +157,6 @@ const ChatBoxInternals = ({
         if (data.message.citations) {
           console.log("got citations");
           setHighlighted(newMessages.length); // You arent subtracting one here, since you want it to highlight the last message added to the list.
-
           console.log("set highlighted message");
           setCitations(data.message.citations);
           console.log("set citations");
