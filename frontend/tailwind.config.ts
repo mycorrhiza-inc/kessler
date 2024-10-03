@@ -85,6 +85,12 @@ const config = {
       "bumblebee",
       "black",
       "forest",
+      "cmky",
+      "emerald",
+      "corporate",
+      "sunset",
+      "acid",
+      "cmyk"
     ],
   },
 } satisfies Config;
