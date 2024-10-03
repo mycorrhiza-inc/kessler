@@ -226,7 +226,7 @@ func HybridSearch(request SearchRequest) ([]SearchData, error) {
 		fmt.Printf("Quickwit returned error: %s", resultsQuickwit.Error)
 	}
 	if resultsMilvus.Error != nil && resultsQuickwit.Error != nil {
-		return []SearchData{}, fmt.Errorf("Both Milvus and Quickwit returned errors. milvus error: %s quickwit error: %s", resultsMilvus.Error, resultsQuickwit.Error)
+		return []SearchData{}, fmt.Errorf("both Milvus and Quickwit returned errors. milvus error: %s quickwit error: %s", resultsMilvus.Error, resultsQuickwit.Error)
 	}
 	unrankedResults := append(resultsMilvus.Results, resultsQuickwit.Results...)
 	rerankedData, err := rerankSearchResults(unrankedResults, request.Query)
@@ -238,6 +238,7 @@ func HybridSearch(request SearchRequest) ([]SearchData, error) {
 
 	return rerankedData, nil
 }
+
 func FormatSearchResults(searchResults []SearchData, query string) string {
 	searchResultsString := fmt.Sprintf("Query: %s\n", query)
 	for _, result := range searchResults {
