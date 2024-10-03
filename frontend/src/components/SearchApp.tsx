@@ -7,6 +7,11 @@ import { CenteredFloatingSearhBox } from "@/components/SearchBox";
 import SearchResultBox from "@/components/SearchResultBox";
 import ChatBoxInternals from "./ChatBoxInternals";
 
+import {
+  extraProperties,
+  extraPropertiesInformation,
+  emptyExtraProperties,
+} from "@/utils/interfaces";
 export default function SearchApp() {
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -14,6 +19,8 @@ export default function SearchApp() {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searchDisplay, setSearchDisplay] = useState<any[]>([]);
   const [resultView, setResultView] = useState(false);
+  const [searchFilters, setSearchFilters] =
+    useState<extraProperties>(emptyExtraProperties);
   useEffect(() => {
     if (!chatVisible) {
       setSearchDisplay(searchResults);
@@ -75,6 +82,8 @@ export default function SearchApp() {
         setSearchQuery={setSearchQuery}
         setChatVisible={setChatVisible}
         inSearchSession={resultView}
+        queryOptions={searchFilters}
+        setQueryOptions={setSearchFilters}
       />
       {/* Refactor this code to use a motion.div so that SearchResultBox fills the */}
       {/* full screen when chat isnt visible, currently it only takes up 65% */}
@@ -114,7 +123,10 @@ export default function SearchApp() {
           overflowY: "visible",
         }}
       >
-        <ChatBoxInternals setCitations={setSearchDisplay}></ChatBoxInternals>
+        <ChatBoxInternals
+          setCitations={setSearchDisplay}
+          ragFilters={searchFilters}
+        ></ChatBoxInternals>
       </motion.div>
     </div>
   );

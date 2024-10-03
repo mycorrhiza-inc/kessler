@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import MarkdownRenderer from "./MarkdownRenderer";
 
+import { extraProperties } from "@/utils/interfaces";
 import { exampleChatHistory, Message } from "@/lib/chat";
 export const ChatMessages = ({
   messages,
@@ -85,9 +86,13 @@ export const ChatMessages = ({
 };
 interface ChatBoxInternalsProps {
   setCitations: (citations: any[]) => void;
+  ragFilters: extraProperties;
 }
 
-const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
+const ChatBoxInternals = ({
+  setCitations,
+  ragFilters,
+}: ChatBoxInternalsProps) => {
   const [highlighted, setHighlighted] = useState<number>(-1); // -1 Means no message is highlighted
   const [messages, setMessages] = useState<Message[]>([]);
   const [loadingResponse, setLoadingResponse] = useState(false);
@@ -129,6 +134,7 @@ const ChatBoxInternals = ({ setCitations }: ChatBoxInternalsProps) => {
       body: JSON.stringify({
         model: modelToSend,
         chat_history: chat_hist,
+        filters: ragFilters,
       }),
     })
       .then((resp) => {
