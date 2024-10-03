@@ -169,10 +169,12 @@ const MinimizedSearchBox = ({
         title={
           isMacOS ? (
             <>
-              <CommandIcon /> K
+              <kbd className="kbd">⌘</kbd>+<kbd className="kbd">K</kbd>
             </>
           ) : (
-            "Ctrl K"
+            <>
+              <kbd className="kbd">ctrl</kbd>+<kbd className="kbd">K</kbd>
+            </>
           )
         }
       >
@@ -185,10 +187,12 @@ const MinimizedSearchBox = ({
         title={
           isMacOS ? (
             <>
-              <CommandIcon /> J
+              <kbd className="kbd">⌘</kbd>+<kbd className="kbd">J</kbd>
             </>
           ) : (
-            "Ctrl J"
+            <>
+              <kbd className="kbd">ctrl</kbd>+<kbd className="kbd">J</kbd>
+            </>
           )
         }
       >
