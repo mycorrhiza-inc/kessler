@@ -39,7 +39,7 @@ function HeaderAuth({ user }: { user: User | null }) {
     </div>
   );
 }
-const Header = ({ user }: { user: User }) => {
+const Header = ({ user }: { user: User | null }) => {
   return (
     <nav
       className="w-full flex justify-center border-b border-b-foreground/10 h-16 bg-base-200 text-base-content"

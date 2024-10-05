@@ -14,7 +14,7 @@ import {
 } from "@/utils/interfaces";
 import Header from "./Header";
 import { User } from "@supabase/supabase-js";
-export default function SearchApp({ user }: { user: User }) {
+export default function SearchApp({ user }: { user: User | null }) {
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [chatVisible, setChatVisible] = useState(false);

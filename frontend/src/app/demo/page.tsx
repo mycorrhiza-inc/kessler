@@ -15,7 +15,7 @@ export default async function ProtectedPage() {
 
   return (
     <div className="w-full">
-      <SearchApp></SearchApp>
+      <SearchApp user={user}></SearchApp>
     </div>
   );
 }
