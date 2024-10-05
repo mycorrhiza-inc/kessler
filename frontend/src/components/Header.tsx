@@ -16,7 +16,7 @@ function HeaderAuth({ user }: { user: User | null }) {
         tabIndex={0}
         role="button"
         className="btn btn-primary rounded-btn"
-        onClick={() => setSettingsOpen(true)}
+        onClick={() => setSettingsOpen((prev) => !prev)}
       >
         <UserIcon />
       </div>

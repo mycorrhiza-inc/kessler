@@ -20,7 +20,7 @@ const SearchResult = ({ data }: SearchResultProps) => {
       <div
         className="card w-[90%] shadow-xl dark:card-bordered"
         onClick={() => {
-          setOpen(true);
+          setOpen((prev) => !prev);
         }}
       >
         <div className="card-body">
