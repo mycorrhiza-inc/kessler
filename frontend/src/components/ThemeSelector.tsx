@@ -25,11 +25,15 @@ const ThemeSelector = () => {
   // "sunset",
   // "acid",
   const theme_list = {
+    dark: "dark",
+    black: "black",
+    forest: "forest",
+    sunset: "sunset",
     light: "bumblebee",
     emerald: "emerald",
     cmyk: "cmyk",
-    dark: "dark",
-    black: "black",
+    corporate: "corporate",
+    acid: "acid",
   };
 
   return (
