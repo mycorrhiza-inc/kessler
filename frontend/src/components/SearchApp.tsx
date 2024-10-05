@@ -34,12 +34,12 @@ export default function SearchApp({ user }: { user: User | null }) {
   }, [chatVisible]);
   useEffect(() => {
     setSearchDisplay(searchResults);
-    if (searchResults.length > 0) {
-      setShowCard("");
-    }
   }, [searchResults]);
   useEffect(() => {
-    setSearchDisplay(searchResults);
+    if (searchDisplay.length > 0) {
+      setShowCard("");
+    }
+    // setShowCard("");
   }, [searchDisplay]);
 
   // Should this be refactored out of components and into the lib as a async function that returns search results?
