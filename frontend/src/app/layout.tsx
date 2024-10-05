@@ -11,7 +11,7 @@ export const metadata = {
   description: "Inteligence and Research tools for Lobbying",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -29,7 +29,6 @@ export default function RootLayout({
       <body className="bg-base-100">
         <ThemeProvider>
           <main className="flex flex-col items-center">
-            <Header />
             <div className="flex-1 w-100vw flex flex-col items-center">
               <div className="flex flex-col text-base-content">{children}</div>
             </div>

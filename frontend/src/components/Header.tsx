@@ -1,22 +1,30 @@
-import { signOutAction } from "@/app/actions";
+"use client";
+// Is this even a good idea/acceptable?
 import { createClient } from "@/utils/supabase/server";
 import { UserIcon } from "@/components/Icons";
 import { useState } from "react";
 import Modal from "./styled-components/Modal";
 import SettingsContent from "./SettingsContent";
+import { User } from "@supabase/supabase-js";
 
-async function HeaderAuth() {
-  const {
-    data: { user },
-  } = await createClient().auth.getUser();
+function HeaderAuth({ user }: { user: User | null }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   return user ? (
     <>
-      <div tabIndex={0} role="button" className="btn btn-primary rounded-btn">
+      <div
+        tabIndex={0}
+        role="button"
+        className="btn btn-primary rounded-btn"
+        onClick={() => setSettingsOpen(true)}
+      >
         <UserIcon />
       </div>
-      <Modal open={settingsOpen} setOpen={setSettingsOpen}>
+      <Modal
+        open={settingsOpen}
+        setOpen={setSettingsOpen}
+        uuid="user-settings-menu-header-auth"
+      >
         <SettingsContent user={user} />
       </Modal>
     </>
@@ -31,7 +39,7 @@ async function HeaderAuth() {
     </div>
   );
 }
-const Header = () => {
+const Header = ({ user }: { user: User }) => {
   return (
     <nav
       className="w-full flex justify-center border-b border-b-foreground/10 h-16 bg-base-200 text-base-content"
@@ -44,7 +52,7 @@ const Header = () => {
         <div className="flex gap-5 items-center font-semibold">
           <a href="/">Kessler</a>
         </div>
-        <HeaderAuth />
+        <HeaderAuth user={user} />
       </div>
     </nav>
   );

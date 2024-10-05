@@ -3,25 +3,26 @@ const Modal = ({
   children,
   open,
   setOpen,
+  uuid,
 }: {
   children: React.ReactNode;
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  uuid: string;
 }) => {
-  const uuid = (Math.random() + 1).toString(36).substring(7);
   useEffect(() => {
     if (open) {
-      // Oh come on, the docid is always not null, its defined right below you
+      // Oh come on, the uuid is always not null, its defined right below you
       // @ts-ignore
-      document.getElementById(`doc_modal_${uuid}`).showModal();
+      document.getElementById(`modal_${uuid}`).showModal();
     } else {
-      // Oh come on, the docid is always not null, its defined right below you
+      // Oh come on, the uuid is always not null, its defined right below you
       // @ts-ignore
-      document.getElementById(`doc_modal_${uuid}`).close();
+      document.getElementById(`modal_${uuid}`).close();
     }
   }, [open]);
   return (
-    <dialog id={`doc_modal_${uuid}`} className="modal ">
+    <dialog id={`modal_${uuid}`} className="modal ">
       <div
         className="modal-box bg-base-100 "
         style={{

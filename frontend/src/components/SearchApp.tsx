@@ -12,7 +12,9 @@ import {
   extraPropertiesInformation,
   emptyExtraProperties,
 } from "@/utils/interfaces";
-export default function SearchApp() {
+import Header from "./Header";
+import { User } from "@supabase/supabase-js";
+export default function SearchApp({ user }: { user: User }) {
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [chatVisible, setChatVisible] = useState(false);
@@ -70,72 +72,75 @@ export default function SearchApp() {
   const divRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div
-      className="searchContainer"
-      ref={divRef}
-      style={{
-        position: "relative",
-        width: "99vw",
-        height: "90vh",
-        padding: "20px",
-        overflow: "scroll",
-      }}
-    >
-      <CenteredFloatingSearhBox
-        handleSearch={handleSearch}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        chatVisible={chatVisible}
-        setChatVisible={setChatVisible}
-        inSearchSession={resultView}
-        queryOptions={searchFilters}
-        setQueryOptions={setSearchFilters}
-      />
-      {/* Refactor this code to use a motion.div so that SearchResultBox fills the */}
-      {/* full screen when chat isnt visible, currently it only takes up 65% */}
-      {/* regardless of chat-box being visible. */}
-      <motion.div
-        className="search-results"
-        initial={{ width: "100%" }}
-        animate={
-          chatVisible ? { width: "calc(100% - 35%)" } : { width: "100%" }
-        }
-        transition={{ type: "tween", stiffness: 200 }}
+    <>
+      <Header user={user} />
+      <div
+        className="searchContainer"
+        ref={divRef}
         style={{
           position: "relative",
-          top: 0,
-          left: 0,
-          height: "calc(100% - 20px)",
+          width: "99vw",
+          height: "90vh",
+          padding: "20px",
+          overflow: "scroll",
         }}
       >
-        <SearchResultBox
-          showCard={showCard}
-          searchResults={searchDisplay}
-          isSearching={isSearching}
+        <CenteredFloatingSearhBox
+          handleSearch={handleSearch}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          chatVisible={chatVisible}
+          setChatVisible={setChatVisible}
+          inSearchSession={resultView}
+          queryOptions={searchFilters}
+          setQueryOptions={setSearchFilters}
         />
-      </motion.div>
-      {/* Remove animate presense to make chat persistent when closing app */}
-      <motion.div
-        key="chat-box"
-        className="chat-box"
-        initial={{ x: "110%" }}
-        animate={chatVisible ? { x: 0 } : { x: "110%" }}
-        transition={{ type: "tween", stiffness: 200 }}
-        style={{
-          position: "fixed",
-          right: 0,
-          bottom: 0,
-          height: "auto",
-          width: "35%",
-          overflowY: "visible",
-        }}
-      >
-        <ChatBoxInternals
-          setCitations={setSearchDisplay}
-          ragFilters={searchFilters}
-        ></ChatBoxInternals>
-      </motion.div>
-    </div>
+        {/* Refactor this code to use a motion.div so that SearchResultBox fills the */}
+        {/* full screen when chat isnt visible, currently it only takes up 65% */}
+        {/* regardless of chat-box being visible. */}
+        <motion.div
+          className="search-results"
+          initial={{ width: "100%" }}
+          animate={
+            chatVisible ? { width: "calc(100% - 35%)" } : { width: "100%" }
+          }
+          transition={{ type: "tween", stiffness: 200 }}
+          style={{
+            position: "relative",
+            top: 0,
+            left: 0,
+            height: "calc(100% - 20px)",
+          }}
+        >
+          <SearchResultBox
+            showCard={showCard}
+            searchResults={searchDisplay}
+            isSearching={isSearching}
+          />
+        </motion.div>
+        {/* Remove animate presense to make chat persistent when closing app */}
+        <motion.div
+          key="chat-box"
+          className="chat-box"
+          initial={{ x: "110%" }}
+          animate={chatVisible ? { x: 0 } : { x: "110%" }}
+          transition={{ type: "tween", stiffness: 200 }}
+          style={{
+            position: "fixed",
+            right: 0,
+            bottom: 0,
+            height: "auto",
+            width: "35%",
+            overflowY: "visible",
+          }}
+        >
+          <ChatBoxInternals
+            setCitations={setSearchDisplay}
+            ragFilters={searchFilters}
+          ></ChatBoxInternals>
+        </motion.div>
+      </div>
+    </>
   );
 }
 

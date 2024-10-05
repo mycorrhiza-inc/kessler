@@ -12,10 +12,9 @@ export default async function ProtectedPage() {
   if (!user) {
     return redirect("/start");
   }
-
   return (
     <div className="w-full">
-      <SearchApp></SearchApp>
+      <SearchApp user={user}></SearchApp>
     </div>
   );
 }
