@@ -1,8 +1,6 @@
 import { GeistSans } from "geist/font/sans";
 import { ThemeProvider } from "next-themes";
-import Header from "@/components/Header";
 import "./globals.css";
-// import InitColorSchemeScript from "@mui/joy/InitColorSchemeScript";
 const defaultUrl = "https://kessler.xyz";
 
 export const metadata = {
@@ -11,7 +9,7 @@ export const metadata = {
   description: "Inteligence and Research tools for Lobbying",
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
