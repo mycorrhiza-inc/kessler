@@ -1,36 +1,25 @@
 import { signOutAction } from "@/app/actions";
 import { createClient } from "@/utils/supabase/server";
 import { UserIcon } from "@/components/Icons";
+import { useState } from "react";
+import Modal from "./styled-components/Modal";
+import SettingsContent from "./SettingsContent";
 
 async function HeaderAuth() {
   const {
     data: { user },
   } = await createClient().auth.getUser();
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   return user ? (
-    <div className="flex items-center gap-4">
-      <div className="dropdown dropdown-end">
-        <div tabIndex={0} role="button" className="btn btn-primary rounded-btn">
-          <UserIcon />
-        </div>
-        <form action={signOutAction} method="post">
-          <ul
-            tabIndex={0}
-            className="menu dropdown-content bg-base-200 rounded-box z-[1] w-52 p-2 "
-          >
-            <li>Hey, {user.email}!</li>
-            <li>
-              <a href="/settings">Settings</a>
-            </li>
-            <li>
-              <button type="submit" className="btn btn-outline btn-secondary">
-                Sign out
-              </button>
-            </li>
-          </ul>
-        </form>
+    <>
+      <div tabIndex={0} role="button" className="btn btn-primary rounded-btn">
+        <UserIcon />
       </div>
-    </div>
+      <Modal open={settingsOpen} setOpen={setSettingsOpen}>
+        <SettingsContent user={user} />
+      </Modal>
+    </>
   ) : (
     <div className="flex gap-2">
       <a href="/sign-in" className="btn btn-outline btn-secondary">
