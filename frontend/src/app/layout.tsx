@@ -1,8 +1,6 @@
 import { GeistSans } from "geist/font/sans";
 import { ThemeProvider } from "next-themes";
-import Header from "@/components/Header";
 import "./globals.css";
-// import InitColorSchemeScript from "@mui/joy/InitColorSchemeScript";
 const defaultUrl = "https://kessler.xyz";
 
 export const metadata = {
@@ -29,7 +27,6 @@ export default function RootLayout({
       <body className="bg-base-100">
         <ThemeProvider>
           <main className="flex flex-col items-center">
-            <Header />
             <div className="flex-1 w-100vw flex flex-col items-center">
               <div className="flex flex-col text-base-content">{children}</div>
             </div>

@@ -13,32 +13,32 @@ const ThemeSelector = () => {
   // Prevent theme selection if js not loaded
   if (!mounted) {
     return (
-      <>
-        <div className="dropdown dropdown-hover">
-          <div tabIndex={0} role="button" className="btn m-1">
-            Theme Big
-          </div>
-        </div>
-        <div className="dropdown dropdown-hover">
-          <div tabIndex={0} role="button" className="btn m-1">
-            Theme Small
-          </div>
-        </div>
-      </>
+      <div className=" p-5 m-5 justify-center border-2 border-['accent'] rounded-box">
+        <h1 className="text-3xl font-bold">Loading Themes</h1>
+      </div>
     );
   }
+
+  // These extra themes are included in TW, but not selectable, is this intentional?
+  // "forest",
+  // "corporate",
+  // "sunset",
+  // "acid",
   const theme_list = {
-    "light": "bumblebee",
-    "emerald": "emerald",
-    "cmyk": "cmyk",
-    "dark": "dark",
-    "black": "black",
-  }
+    dark: "dark",
+    black: "black",
+    forest: "forest",
+    sunset: "sunset",
+    light: "bumblebee",
+    emerald: "emerald",
+    cmyk: "cmyk",
+    corporate: "corporate",
+    acid: "acid",
+  };
 
   return (
     <>
       <div className=" p-5 m-5 justify-center border-2 border-['accent'] rounded-box">
-
         <h1 className="text-3xl font-bold">Themes</h1>
         <div className="flex flex-row flex-wrap space-x-5 ">
           {Object.entries(theme_list).map(([themeName, themeValue]) => (
@@ -49,9 +49,7 @@ const ThemeSelector = () => {
               data-theme={themeValue}
               data-act-class="ACTIVECLASS"
             >
-              <div
-                className="bg-base-100 text-base-content w-full cursor-pointer font-sans rounded-box shadow-lg p-2"
-              >
+              <div className="bg-base-100 text-base-content w-full cursor-pointer font-sans rounded-box shadow-lg p-2">
                 <div className="grid grid-cols-5 grid-rows-3">
                   <div className="bg-base-200 col-start-1 row-span-2 row-start-1"></div>{" "}
                   <div className="bg-base-300 col-start-1 row-start-3"></div>{" "}

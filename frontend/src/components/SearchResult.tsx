@@ -1,5 +1,6 @@
 import { useState } from "react";
 import DocumentModalBody from "./DocumentModalBody";
+import Modal from "./styled-components/Modal";
 type SearchFields = {
   sourceID: string;
   name: string;
@@ -14,24 +15,13 @@ type SearchResultProps = {
 const SearchResult = ({ data }: SearchResultProps) => {
   const [open, setOpen] = useState(false);
   // Huge fan of dasiui for refactoring the card here, easy extensionality
-  const docid: string = data.sourceID;
-  const openModal = () => {
-    setOpen(true);
-    // Oh come on, the docid is always not null, its defined right below you
-    // @ts-ignore
-    document.getElementById(`doc_modal_${docid}`).showModal();
-  };
-  const closeModal = () => {
-    setOpen(false);
-    // Oh come on, the docid is always not null, its defined right below you
-    // @ts-ignore
-    document.getElementById(`doc_modal_${docid}`).close();
-  };
   return (
     <>
       <div
         className="card w-[90%] shadow-xl dark:card-bordered"
-        onClick={openModal}
+        onClick={() => {
+          setOpen((prev) => !prev);
+        }}
       >
         <div className="card-body">
           <h2 className="card-title">
@@ -43,27 +33,9 @@ const SearchResult = ({ data }: SearchResultProps) => {
           <p>{data.docketID}</p>
         </div>
       </div>
-      <dialog id={`doc_modal_${docid}`} className="modal ">
-        <div
-          className="modal-box bg-base-100 "
-          style={{
-            minHeight: "80vh",
-            minWidth: "60vw",
-          }}
-          // This should just work and not require a background override, its an inidication something is deeply wrong
-        >
-          <form method="dialog">
-            {/* if there is a button in form, it will close the modal */}
-            <button
-              className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-              onClick={closeModal}
-            >
-              ✕
-            </button>
-          </form>
-          {open && <DocumentModalBody open={open} objectId={data.sourceID} />}
-        </div>
-      </dialog>
+      <Modal open={open} setOpen={setOpen} uuid={data.sourceID}>
+        <DocumentModalBody open={open} objectId={data.sourceID} />
+      </Modal>
     </>
   );
 };
