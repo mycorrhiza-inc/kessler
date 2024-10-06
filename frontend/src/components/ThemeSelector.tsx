@@ -2,6 +2,24 @@
 import { useTheme } from "next-themes";
 import { useState, useEffect } from "react";
 
+interface ThemeData {
+  name: string;
+  value: string;
+  lightdark: string;
+}
+
+export const themeDataDictionary: { [key: string]: ThemeData } = {
+  dark: { name: "dark", value: "dark", lightdark: "dark" },
+  black: { name: "black", value: "black", lightdark: "dark" },
+  forest: { name: "forest", value: "forest", lightdark: "dark" },
+  sunset: { name: "sunset", value: "sunset", lightdark: "dark" },
+  bumblebee: { name: "light", value: "bumblebee", lightdark: "light" },
+  emerald: { name: "emerald", value: "emerald", lightdark: "light" },
+  cmyk: { name: "cmyk", value: "cmyk", lightdark: "light" },
+  corporate: { name: "corporate", value: "corporate", lightdark: "light" },
+  acid: { name: "acid", value: "acid", lightdark: "light" },
+};
+export const themeDataList: ThemeData[] = Object.values(themeDataDictionary);
 const ThemeSelector = () => {
   const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
@@ -24,29 +42,19 @@ const ThemeSelector = () => {
   // "corporate",
   // "sunset",
   // "acid",
-  const theme_list = {
-    dark: "dark",
-    black: "black",
-    forest: "forest",
-    sunset: "sunset",
-    light: "bumblebee",
-    emerald: "emerald",
-    cmyk: "cmyk",
-    corporate: "corporate",
-    acid: "acid",
-  };
+  //
 
   return (
     <>
       <div className=" p-5 m-5 justify-center border-2 border-['accent'] rounded-box">
         <h1 className="text-3xl font-bold">Themes</h1>
         <div className="flex flex-row flex-wrap space-x-5 ">
-          {Object.entries(theme_list).map(([themeName, themeValue]) => (
+          {themeDataList.map((themeData) => (
             <div
-              key={themeValue}
-              onClick={() => setTheme(themeValue)}
+              key={themeData.value}
+              onClick={() => setTheme(themeData.value)}
               className="rounded-box"
-              data-theme={themeValue}
+              data-theme={themeData.value}
               data-act-class="ACTIVECLASS"
             >
               <div className="bg-base-100 text-base-content w-full cursor-pointer font-sans rounded-box shadow-lg p-2">
@@ -61,13 +69,13 @@ const ThemeSelector = () => {
                       viewBox="0 0 24 24"
                       fill="currentColor"
                       className={
-                        (themeValue === theme ? "" : "invisible ") +
+                        (themeData.value === theme ? "" : "invisible ") +
                         "h-3 w-3 shrink-0"
                       }
                     >
                       <path d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z"></path>
                     </svg>
-                    <div className="font-bold">{themeName}</div>
+                    <div className="font-bold">{themeData.name}</div>
                     <div className="flex flex-wrap gap-1">
                       <div className="bg-primary flex aspect-square w-5 items-center justify-center rounded lg:w-6">
                         <div className="text-primary-content text-sm font-bold">
