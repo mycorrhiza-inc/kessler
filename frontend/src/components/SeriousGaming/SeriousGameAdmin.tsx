@@ -22,7 +22,7 @@ const initialNodes = [
 ];
 const initialEdges = [{ id: "e1-2", source: "1", target: "2" }];
 
-export default function TestFlowVisuals({ user }: { user: User | null }) {
+const TestFlowVisuals = ({ user }: { user: User | null }) => {
   const { theme } = useTheme();
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
@@ -37,7 +37,7 @@ export default function TestFlowVisuals({ user }: { user: User | null }) {
   return (
     <div>
       <Header user={user} />
-      <div style={{ width: "50vw", height: "50vh" }}>
+      <div style={{ width: "90vw", height: "80vh" }}>
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -55,4 +55,5 @@ export default function TestFlowVisuals({ user }: { user: User | null }) {
       </div>
     </div>
   );
-}
+};
+export default TestFlowVisuals;
