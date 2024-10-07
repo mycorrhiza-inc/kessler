@@ -1,8 +1,10 @@
+import { User } from "@supabase/supabase-js";
 import Feature from "./Features";
 import Hero from "./Hero";
 import Pricing from "./Pricing";
 
-export default function Landing() {
+export default function Landing({ user }: { user: User | null }) {
+  const isLoggedIn = user ? true : false;
   return (
     <main>
       <div
@@ -13,7 +15,7 @@ export default function Landing() {
         }}
       >
         <div className="items-center justify-center h-full">
-          <Hero></Hero>
+          <Hero isLoggedIn={isLoggedIn}></Hero>
         </div>
 
         <div

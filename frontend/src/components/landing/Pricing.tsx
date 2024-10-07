@@ -14,9 +14,8 @@ const Pricing = () => {
 
 - Access to search functionality
 - Access to a limited set of open access government documents
-- [Run your own instance with our open source code](https://git.mycor.io/mycorrhiza/kessler)
 `,
-      buttonLink: "https://kessler.xyz",
+      buttonLink: "https://kessler.xyz/demo",
       buttonText: "Try Now",
       indicator: null,
     },
@@ -30,6 +29,7 @@ const Pricing = () => {
 - Ability to upload and process your own documents
 - Use of frontier level Large Language Models for rag functionality (Llama 405B, GPT-4o)
 - Intended for Individuals or Non-Profits doing community work.
+- Access to the source code under an MIT License!
 `,
       buttonLink: "/payment",
       buttonText: "Purchase",
@@ -60,7 +60,9 @@ const Pricing = () => {
             <div className="text-center">
               <h2 className="text-2xl font-bold">PRICING PLANS</h2>
               <p className="mt-4">
-                Pricing that fits your needs and helps fund future development.
+                WHILE KESSLER IS IN BETA, EVERYTHING IS FREE. However, once we
+                have built out the features and dataset, we are planning on
+                charging to continue to support development.
               </p>
             </div>
           </div>
