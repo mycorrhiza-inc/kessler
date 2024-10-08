@@ -1,11 +1,37 @@
 package crud
 
 import (
+	"context"
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
+	"github.com/jackc/pgx"
+	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
 )
+
+var pgConnString = os.Getenv("DATABASE_CONNECTION_STRING")
+
+func testPostgresConnection() {
+	ctx := context.Background()
+
+	conn, err := pgx.Connect(ctx, pgConnString)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
+		return
+
+	}
+	defer conn.Close(ctx)
+	queries := dbstore.New(conn)
+	files, err := queries.ListFiles(ctx)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error listing files: %v\n", err)
+		return
+	}
+	truncatedFiles := files[:100]
+	fmt.Println("Successfully listed files:", truncatedFiles)
+}
 
 func defineCrudRoutes(router *mux.Router) {
 	s := router.PathPrefix("/crud").Subrouter()
@@ -28,55 +54,3 @@ func getFileHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unsupported request method", http.StatusMethodNotAllowed)
 	}
 }
-
-// func makeGetFileHandler(queries *Queries) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		fileIDStr := r.URL.Path[len("/files/"):]
-// 		fileID, err := uuid.Parse(fileIDStr)
-// 		if err != nil {
-// 			http.Error(w, "Invalid file ID", http.StatusBadRequest)
-// 			return
-// 		}
-//
-// 		file, err := queries.ReadFile(context.Background(), fileID)
-// 		if err != nil {
-// 			http.Error(w, "File not found", http.StatusNotFound)
-// 			return
-// 		}
-//
-// 		w.Header().Set("Content-Type", "application/json")
-// 		if err := json.NewEncoder(w).Encode(file); err != nil {
-// 			http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		}
-// 	}
-// }
-//
-// func makeGetMetadataHandler(queries *Queries) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		fileIDStr := r.URL.Path[len("/files/metadata/"):]
-// 		fileID, err := uuid.Parse(fileIDStr)
-// 		if err != nil {
-// 			http.Error(w, "Invalid file ID", http.StatusBadRequest)
-// 			return
-// 		}
-//
-// 		file, err := queries.ReadFile(context.Background(), fileID)
-// 		if err != nil {
-// 			http.Error(w, "File not found", http.StatusNotFound)
-// 			return
-// 		}
-//
-// 		var metadata map[string]interface{}
-// 		if file.Mdata.Valid {
-// 			if err := json.Unmarshal([]byte(file.Mdata.String), &metadata); err != nil {
-// 				http.Error(w, "Error parsing metadata", http.StatusInternalServerError)
-// 				return
-// 			}
-// 		}
-//
-// 		w.Header().Set("Content-Type", "application/json")
-// 		if err := json.NewEncoder(w).Encode(metadata); err != nil {
-// 			http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		}
-// 	}
-// }
