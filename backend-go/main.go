@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 
+	"github.com/mycorrhiza-inc/kessler/backend-go/crud"
 	"github.com/mycorrhiza-inc/kessler/backend-go/rag"
 	"github.com/mycorrhiza-inc/kessler/backend-go/search"
 )
@@ -32,6 +33,7 @@ func corsMiddleware(next http.Handler) http.Handler {
 }
 
 func main() {
+	crud.TestPostgresConnection()
 	//
 	// set up db connection
 	// conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))

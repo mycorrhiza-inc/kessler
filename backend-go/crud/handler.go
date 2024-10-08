@@ -13,24 +13,27 @@ import (
 
 var pgConnString = os.Getenv("DATABASE_CONNECTION_STRING")
 
-func testPostgresConnection() {
+func TestPostgresConnection() (string, error) {
 	ctx := context.Background()
+	config := pgx.ConnConfig{}
 
-	conn, err := pgx.Connect(ctx, pgConnString)
+	conn, err := pgx.Connect(config)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
-		return
+		return "", fmt.Errorf("Unable to connect to database")
 
 	}
-	defer conn.Close(ctx)
+	defer conn.Close()
 	queries := dbstore.New(conn)
 	files, err := queries.ListFiles(ctx)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error listing files: %v\n", err)
-		return
+		return "", fmt.Errorf("Error Found")
+
 	}
 	truncatedFiles := files[:100]
 	fmt.Println("Successfully listed files:", truncatedFiles)
+	return "Success", nil
 }
 
 func defineCrudRoutes(router *mux.Router) {
