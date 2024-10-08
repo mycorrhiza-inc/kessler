@@ -7,14 +7,10 @@ INSERT INTO public.relation_individuals_organizations (
 	)
 VALUES ($1, $2, NOW(), NOW())
 RETURNING id;
--- name: ReadIndividualsCurrentlyAssociatedWithOrganization :one
-SELECT *
-FROM public.relation_individuals_organizations
-WHERE id = $1;
 -- name: ListIndividualsCurrentlyAssociatedWithOrganization :many
 SELECT *
 FROM public.relation_individuals_organizations
-ORDER BY created_at DESC;
+WHERE organization_id = $1;
 -- name: UpdateIndividualsCurrentlyAssociatedWithOrganization :one
 UPDATE public.relation_individuals_organizations
 SET individual_id = $1,
