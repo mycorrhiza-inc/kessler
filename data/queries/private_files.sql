@@ -28,15 +28,15 @@ VALUES (
 		NOW()
 	)
 RETURNING id;
--- name: ReadFile :one
+-- name: ReadPrivateFile :one
 SELECT *
 FROM userfiles.private_file
 WHERE id = $1;
--- name: ListFiles :many
+-- name: ListPrivateFiles :many
 SELECT *
 FROM userfiles.private_file
 ORDER BY created_at DESC;
--- name: UpdateFile :one
+-- name: UpdatePrivateFile :one
 UPDATE userfiles.private_file
 SET url = $1,
 	doctype = $2,
@@ -51,6 +51,6 @@ SET url = $1,
 	updated_at = NOW()
 WHERE id = $11
 RETURNING id;
--- name: DeleteFile :exec
+-- name: DeletePrivateFile :exec
 DELETE FROM userfiles.private_file
 WHERE id = $1;

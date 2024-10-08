@@ -1,4 +1,4 @@
--- name: CreateFileTextSource :one
+-- name: CreatePrivateFileTextSource :one
 INSERT INTO userfiles.private_file_text_source (
 		file_id,
 		is_original_text,
@@ -9,37 +9,17 @@ INSERT INTO userfiles.private_file_text_source (
 	)
 VALUES ($1, $2, $3, $4, NOW(), NOW())
 RETURNING id;
--- name: GetFileText :one
-SELECT text
-FROM userfiles.private_file_text_source
-WHERE file_id = $1;
--- name: GetFileLanguage :one 
-SELECT language
-FROM userfiles.private_file_text_source
-WHERE file_id = $1;
--- name: ListTextsOfFile :many
+-- name: ListPrivateTextsOfFile :many
 SELECT *
 FROM userfiles.private_file_text_source
 WHERE file_id = $1
-ORDER BY created_at DESC;
--- name: UpdateFileTextSource :one
-UPDATE userfiles.private_file_text_source
-SET text = $1,
-	updated_at = NOW()
-WHERE id = $2
-RETURNING id;
--- name: UpdateFileTextLanguage :one
-UPDATE userfiles.private_file_text_source
-SET language = $1,
-	updated_at = NOW()
-WHERE file_id = $2
-RETURNING id;
--- name: UpdateIsNotOriginalText :one
-UPDATE userfiles.private_file_text_source
-SET is_original_text = $1,
-	updated_at = NOW()
-WHERE id = $2
-RETURNING id;
--- name: DeleteFileTexts :exec
+-- name: ListPrivateTextsOfFileWithLang :many
+SELECT *
+FROM userfiles.private_file_text_source
+WHERE file_id = $1 and language = $2
+-- name: ListPrivateTextsOfFileOriginal
+SELECT *
+FROM userfiles.private_file_text_source
+WHERE file_id = $1 and is_original_text = true
+-- name: DeletePrivateFileTexts :exec
 DELETE FROM userfiles.private_file_text_source
-WHERE file_id = $1;
