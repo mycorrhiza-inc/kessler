@@ -137,18 +137,6 @@ class FileController(Controller):
 
         return file_model_to_schema(obj)
 
-    @get(path="/file/get-by-hash/{file_hash:str}")
-    async def get_file_by_hash(
-        self,
-        files_repo: FileRepository,
-        file_id: UUID = Parameter(title="File ID", description="File to retieve"),
-    ) -> Dict[str, Any]:
-        logger = default_logger
-        logger.error(
-            "Only used for deduplication, not super relevant for now, not implementing. This method should not be called"
-        )
-        return {"exists": False}
-
     @get(path="/files/markdown/{file_id:uuid}")
     async def get_markdown(
         self,
@@ -231,45 +219,7 @@ class FileController(Controller):
 
         return mdata
 
-    async def get_all_files_raw(
-        self, files_repo: FileRepository, logger: Any
-    ) -> list[FileSchema]:
-        results = await files_repo.list()
-        logger.info(f"{len(results)} results")
-        valid_results = list(map(file_model_to_schema, results))
-        return valid_results
-
-    @post(path="/files/all")
-    async def get_all_files(
-        self,
-        files_repo: FileRepository,
-        request: Request,
-        ensure_all_on_s3: bool = False,
-    ) -> list[FileSchema]:
-        """List files."""
-        valid_results = await self.get_all_files_raw(files_repo, request.logger)
-        s3 = S3FileManager()
-        if ensure_all_on_s3:
-            for result in valid_results:
-                hash = result.hash
-                if hash is not None:
-                    s3.generate_local_filepath_from_hash(
-                        hash, ensure_network=True, download_local=False
-                    )
-        return valid_results
-
-    @post(path="/files/all/paginate")
-    async def get_all_files_paginated(
-        self,
-        files_repo: FileRepository,
-        request: Request,
-        num_results: Optional[int],
-        page: Optional[int],
-    ) -> Tuple[list[FileSchema], int]:
-        """List files."""
-        valid_results = await self.get_all_files_raw(files_repo, request.logger)
-        return paginate_results(valid_results, num_results, page)
-
+    # These should almost certainly be refactored into one endpoint, with a default paginate=true query param
     async def query_all_files_raw(
         self, files_repo: FileRepository, query: QueryData, logger: Any
     ) -> List[FileSchema]:
@@ -303,6 +253,46 @@ class FileController(Controller):
     ) -> Tuple[list[FileSchema], int]:
         valid_results = await self.query_all_files_raw(files_repo, data, request.logger)
         return paginate_results(valid_results, num_results, page)
+
+    # Not moving over to go line----------
+    @get(path="/file/get-by-hash/{file_hash:str}")
+    async def get_file_by_hash(
+        self,
+        files_repo: FileRepository,
+        file_id: UUID = Parameter(title="File ID", description="File to retieve"),
+    ) -> Dict[str, Any]:
+        logger = default_logger
+        logger.error(
+            "Only used for deduplication, not super relevant for now, not implementing. This method should not be called"
+        )
+        return {"exists": False}
+
+    async def get_all_files_raw(
+        self, files_repo: FileRepository, logger: Any
+    ) -> list[FileSchema]:
+        results = await files_repo.list()
+        logger.info(f"{len(results)} results")
+        valid_results = list(map(file_model_to_schema, results))
+        return valid_results
+
+    @post(path="/files/all")
+    async def get_all_files(
+        self,
+        files_repo: FileRepository,
+        request: Request,
+        ensure_all_on_s3: bool = False,
+    ) -> list[FileSchema]:
+        """List files."""
+        valid_results = await self.get_all_files_raw(files_repo, request.logger)
+        s3 = S3FileManager()
+        if ensure_all_on_s3:
+            for result in valid_results:
+                hash = result.hash
+                if hash is not None:
+                    s3.generate_local_filepath_from_hash(
+                        hash, ensure_network=True, download_local=False
+                    )
+        return valid_results
 
     # TODO: replace this with a jobs endpoint
 
@@ -353,3 +343,15 @@ class FileController(Controller):
     # ) -> None:
     #     await files_repo.delete(file_id)
     #     await files_repo.session.commit()
+    #
+    # @post(path="/files/all/paginate")
+    # async def get_all_files_paginated(
+    #     self,
+    #     files_repo: FileRepository,
+    #     request: Request,
+    #     num_results: Optional[int],
+    #     page: Optional[int],
+    # ) -> Tuple[list[FileSchema], int]:
+    #     """List files."""
+    #     valid_results = await self.get_all_files_raw(files_repo, request.logger)
+    #     return paginate_results(valid_results, num_results, page)

@@ -48,9 +48,10 @@ func main() {
 	}
 
 	mux := mux.NewRouter()
-	mux.HandleFunc("/api/v2/search", search.HandleSearchRequest)
-	mux.HandleFunc("/api/v2/rag/basic_chat", rag.HandleBasicChatRequest)
-	mux.HandleFunc("/api/v2/rag/chat", rag.HandleRagChatRequest)
+	misc_s := mux.PathPrefix("/api/v2").Subrouter()
+	misc_s.HandleFunc("/search", search.HandleSearchRequest)
+	misc_s.HandleFunc("/rag/basic_chat", rag.HandleBasicChatRequest)
+	misc_s.HandleFunc("/rag/chat", rag.HandleRagChatRequest)
 	const timeout = time.Second * 10
 
 	muxWithMiddlewares := http.TimeoutHandler(mux, timeout, "Timeout!")
