@@ -1,5 +1,5 @@
 -- name: CreateFile :one
-INSERT INTO public.private_file (
+INSERT INTO userfiles.private_file (
 		url,
 		doctype,
 		lang,
@@ -30,14 +30,14 @@ VALUES (
 RETURNING id;
 -- name: ReadFile :one
 SELECT *
-FROM public.private_file
+FROM userfiles.private_file
 WHERE id = $1;
 -- name: ListFiles :many
 SELECT *
-FROM public.private_file
+FROM userfiles.private_file
 ORDER BY created_at DESC;
 -- name: UpdateFile :one
-UPDATE public.private_file
+UPDATE userfiles.private_file
 SET url = $1,
 	doctype = $2,
 	lang = $3,
@@ -52,5 +52,5 @@ SET url = $1,
 WHERE id = $11
 RETURNING id;
 -- name: DeleteFile :exec
-DELETE FROM public.private_file
+DELETE FROM userfiles.private_file
 WHERE id = $1;
