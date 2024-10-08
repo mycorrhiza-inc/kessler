@@ -47,11 +47,11 @@ func (q *Queries) DeleteIndividualsCurrentlyAssociatedWithOrganization(ctx conte
 const listIndividualsCurrentlyAssociatedWithOrganization = `-- name: ListIndividualsCurrentlyAssociatedWithOrganization :many
 SELECT individual_id, organization_id, id, created_at, updated_at
 FROM public.relation_individuals_organizations
-ORDER BY created_at DESC
+WHERE organization_id = $1
 `
 
-func (q *Queries) ListIndividualsCurrentlyAssociatedWithOrganization(ctx context.Context) ([]RelationIndividualsOrganization, error) {
-	rows, err := q.db.QueryContext(ctx, listIndividualsCurrentlyAssociatedWithOrganization)
+func (q *Queries) ListIndividualsCurrentlyAssociatedWithOrganization(ctx context.Context, organizationID uuid.UUID) ([]RelationIndividualsOrganization, error) {
+	rows, err := q.db.QueryContext(ctx, listIndividualsCurrentlyAssociatedWithOrganization, organizationID)
 	if err != nil {
 		return nil, err
 	}
@@ -77,25 +77,6 @@ func (q *Queries) ListIndividualsCurrentlyAssociatedWithOrganization(ctx context
 		return nil, err
 	}
 	return items, nil
-}
-
-const readIndividualsCurrentlyAssociatedWithOrganization = `-- name: ReadIndividualsCurrentlyAssociatedWithOrganization :one
-SELECT individual_id, organization_id, id, created_at, updated_at
-FROM public.relation_individuals_organizations
-WHERE id = $1
-`
-
-func (q *Queries) ReadIndividualsCurrentlyAssociatedWithOrganization(ctx context.Context, id uuid.UUID) (RelationIndividualsOrganization, error) {
-	row := q.db.QueryRowContext(ctx, readIndividualsCurrentlyAssociatedWithOrganization, id)
-	var i RelationIndividualsOrganization
-	err := row.Scan(
-		&i.IndividualID,
-		&i.OrganizationID,
-		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
 }
 
 const updateIndividualsCurrentlyAssociatedWithOrganization = `-- name: UpdateIndividualsCurrentlyAssociatedWithOrganization :one

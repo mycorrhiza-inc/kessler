@@ -158,3 +158,68 @@ type RelationOrganizationsFaction struct {
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 }
+
+type RelationUsersUsergroup struct {
+	UserID      uuid.UUID
+	UsergroupID uuid.UUID
+	ID          uuid.UUID
+	CreatedAt   time.Time
+}
+
+type User struct {
+	ID        uuid.UUID
+	Username  sql.NullString
+	StripeID  sql.NullString
+	Email     string
+	CreatedAt time.Time
+}
+
+type UserfilesAcl struct {
+	ID          uuid.UUID
+	UsergroupID uuid.UUID
+	OwnerID     uuid.UUID
+	CreatedAt   time.Time
+}
+
+type UserfilesPrivateAccessControl struct {
+	OperatorID    uuid.UUID
+	OperatorTable string
+	ObjectID      uuid.UUID
+	ObjectTable   string
+	ID            uuid.UUID
+	CreatedAt     sql.NullTime
+	UpdatedAt     sql.NullTime
+}
+
+type UserfilesPrivateFile struct {
+	Url          sql.NullString
+	Doctype      sql.NullString
+	Lang         sql.NullString
+	Name         sql.NullString
+	Source       sql.NullString
+	Hash         sql.NullString
+	Mdata        sql.NullString
+	Stage        sql.NullString
+	Summary      sql.NullString
+	ShortSummary sql.NullString
+	UsergroupID  uuid.UUID
+	ID           uuid.UUID
+	CreatedAt    sql.NullTime
+	UpdatedAt    time.Time
+}
+
+type UserfilesPrivateFileTextSource struct {
+	FileID         uuid.UUID
+	IsOriginalText bool
+	Language       string
+	Text           sql.NullString
+	ID             uuid.UUID
+	CreatedAt      sql.NullTime
+	UpdatedAt      sql.NullTime
+}
+
+type Usergroup struct {
+	ID        uuid.UUID
+	Name      string
+	CreatedAt time.Time
+}
