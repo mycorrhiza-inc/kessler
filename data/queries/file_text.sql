@@ -12,15 +12,15 @@ RETURNING id;
 -- name: ListTextsOfFile :many
 SELECT *
 FROM public.file_text_source
-WHERE file_id = $1
--- name: ListTextsOfFileWithLang :many
+WHERE file_id = $1;
+-- name: ListTextsOfFileWithLanguage :many
 SELECT *
 FROM public.file_text_source
-WHERE file_id = $1 and language = $2
--- name: ListTextsOfFileOriginal
+WHERE file_id = $1 and language = $2;
+-- name: ListTextsOfFileOriginal :many
 SELECT *
 FROM public.file_text_source
-WHERE file_id = $1 and is_original_text = true
+WHERE file_id = $1 and is_original_text = true;
 -- name: DeleteFileTexts :exec
 DELETE FROM public.file_text_source
 WHERE file_id = $1;

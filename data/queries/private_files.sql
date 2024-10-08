@@ -1,4 +1,4 @@
--- name: CreateFile :one
+-- name: CreatePrivateFile :one
 INSERT INTO userfiles.private_file (
 		url,
 		doctype,
