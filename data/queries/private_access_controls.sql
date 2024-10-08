@@ -17,6 +17,15 @@ WHERE operator_id = $1;
 SELECT *
 FROM public.private_access_controls
 WHERE object_id = $1;
+-- name: CheckOperatorAccessToObject :one
+SELECT EXISTS(
+    SELECT 1
+    FROM public.private_access_controls
+    WHERE operator_id = $1 AND object_id = $2
+);
 -- name: DeleteAccessControl :exec
 DELETE FROM public.private_access_controls
 WHERE id = $1;
+-- name: RevokeAccessForOperatorOnObject :exec
+DELETE FROM public.private_access_controls
+WHERE operator_id = $1 AND object_id = $2;
