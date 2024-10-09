@@ -7,9 +7,8 @@ package dbstore
 
 import (
 	"context"
-	"database/sql"
 
-	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createIndividual = `-- name: CreateIndividual :one
@@ -26,13 +25,13 @@ RETURNING id
 
 type CreateIndividualParams struct {
 	Name       string
-	Username   sql.NullString
-	ChosenName sql.NullString
+	Username   pgtype.Text
+	ChosenName pgtype.Text
 }
 
-func (q *Queries) CreateIndividual(ctx context.Context, arg CreateIndividualParams) (uuid.UUID, error) {
-	row := q.db.QueryRowContext(ctx, createIndividual, arg.Name, arg.Username, arg.ChosenName)
-	var id uuid.UUID
+func (q *Queries) CreateIndividual(ctx context.Context, arg CreateIndividualParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, createIndividual, arg.Name, arg.Username, arg.ChosenName)
+	var id pgtype.UUID
 	err := row.Scan(&id)
 	return id, err
 }
@@ -42,8 +41,8 @@ DELETE FROM public.individual
 WHERE id = $1
 `
 
-func (q *Queries) DeleteIndividual(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.ExecContext(ctx, deleteIndividual, id)
+func (q *Queries) DeleteIndividual(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteIndividual, id)
 	return err
 }
 
@@ -54,7 +53,7 @@ ORDER BY created_at DESC
 `
 
 func (q *Queries) ListIndividuals(ctx context.Context) ([]Individual, error) {
-	rows, err := q.db.QueryContext(ctx, listIndividuals)
+	rows, err := q.db.Query(ctx, listIndividuals)
 	if err != nil {
 		return nil, err
 	}
@@ -74,9 +73,6 @@ func (q *Queries) ListIndividuals(ctx context.Context) ([]Individual, error) {
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -89,8 +85,8 @@ FROM public.individual
 WHERE id = $1
 `
 
-func (q *Queries) ReadIndividual(ctx context.Context, id uuid.UUID) (Individual, error) {
-	row := q.db.QueryRowContext(ctx, readIndividual, id)
+func (q *Queries) ReadIndividual(ctx context.Context, id pgtype.UUID) (Individual, error) {
+	row := q.db.QueryRow(ctx, readIndividual, id)
 	var i Individual
 	err := row.Scan(
 		&i.Name,
@@ -115,19 +111,19 @@ RETURNING id
 
 type UpdateIndividualParams struct {
 	Name       string
-	Username   sql.NullString
-	ChosenName sql.NullString
-	ID         uuid.UUID
+	Username   pgtype.Text
+	ChosenName pgtype.Text
+	ID         pgtype.UUID
 }
 
-func (q *Queries) UpdateIndividual(ctx context.Context, arg UpdateIndividualParams) (uuid.UUID, error) {
-	row := q.db.QueryRowContext(ctx, updateIndividual,
+func (q *Queries) UpdateIndividual(ctx context.Context, arg UpdateIndividualParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, updateIndividual,
 		arg.Name,
 		arg.Username,
 		arg.ChosenName,
 		arg.ID,
 	)
-	var id uuid.UUID
+	var id pgtype.UUID
 	err := row.Scan(&id)
 	return id, err
 }

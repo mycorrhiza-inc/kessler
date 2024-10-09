@@ -8,7 +8,7 @@ package dbstore
 import (
 	"context"
 
-	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createIndividualsCurrentlyAssociatedWithOrganization = `-- name: CreateIndividualsCurrentlyAssociatedWithOrganization :one
@@ -23,13 +23,13 @@ RETURNING id
 `
 
 type CreateIndividualsCurrentlyAssociatedWithOrganizationParams struct {
-	IndividualID   uuid.UUID
-	OrganizationID uuid.UUID
+	IndividualID   pgtype.UUID
+	OrganizationID pgtype.UUID
 }
 
-func (q *Queries) CreateIndividualsCurrentlyAssociatedWithOrganization(ctx context.Context, arg CreateIndividualsCurrentlyAssociatedWithOrganizationParams) (uuid.UUID, error) {
-	row := q.db.QueryRowContext(ctx, createIndividualsCurrentlyAssociatedWithOrganization, arg.IndividualID, arg.OrganizationID)
-	var id uuid.UUID
+func (q *Queries) CreateIndividualsCurrentlyAssociatedWithOrganization(ctx context.Context, arg CreateIndividualsCurrentlyAssociatedWithOrganizationParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, createIndividualsCurrentlyAssociatedWithOrganization, arg.IndividualID, arg.OrganizationID)
+	var id pgtype.UUID
 	err := row.Scan(&id)
 	return id, err
 }
@@ -39,8 +39,8 @@ DELETE FROM public.relation_individuals_organizations
 WHERE id = $1
 `
 
-func (q *Queries) DeleteIndividualsCurrentlyAssociatedWithOrganization(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.ExecContext(ctx, deleteIndividualsCurrentlyAssociatedWithOrganization, id)
+func (q *Queries) DeleteIndividualsCurrentlyAssociatedWithOrganization(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteIndividualsCurrentlyAssociatedWithOrganization, id)
 	return err
 }
 
@@ -50,8 +50,8 @@ FROM public.relation_individuals_organizations
 WHERE organization_id = $1
 `
 
-func (q *Queries) ListIndividualsCurrentlyAssociatedWithOrganization(ctx context.Context, organizationID uuid.UUID) ([]RelationIndividualsOrganization, error) {
-	rows, err := q.db.QueryContext(ctx, listIndividualsCurrentlyAssociatedWithOrganization, organizationID)
+func (q *Queries) ListIndividualsCurrentlyAssociatedWithOrganization(ctx context.Context, organizationID pgtype.UUID) ([]RelationIndividualsOrganization, error) {
+	rows, err := q.db.Query(ctx, listIndividualsCurrentlyAssociatedWithOrganization, organizationID)
 	if err != nil {
 		return nil, err
 	}
@@ -70,9 +70,6 @@ func (q *Queries) ListIndividualsCurrentlyAssociatedWithOrganization(ctx context
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -89,14 +86,14 @@ RETURNING id
 `
 
 type UpdateIndividualsCurrentlyAssociatedWithOrganizationParams struct {
-	IndividualID   uuid.UUID
-	OrganizationID uuid.UUID
-	ID             uuid.UUID
+	IndividualID   pgtype.UUID
+	OrganizationID pgtype.UUID
+	ID             pgtype.UUID
 }
 
-func (q *Queries) UpdateIndividualsCurrentlyAssociatedWithOrganization(ctx context.Context, arg UpdateIndividualsCurrentlyAssociatedWithOrganizationParams) (uuid.UUID, error) {
-	row := q.db.QueryRowContext(ctx, updateIndividualsCurrentlyAssociatedWithOrganization, arg.IndividualID, arg.OrganizationID, arg.ID)
-	var id uuid.UUID
+func (q *Queries) UpdateIndividualsCurrentlyAssociatedWithOrganization(ctx context.Context, arg UpdateIndividualsCurrentlyAssociatedWithOrganizationParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, updateIndividualsCurrentlyAssociatedWithOrganization, arg.IndividualID, arg.OrganizationID, arg.ID)
+	var id pgtype.UUID
 	err := row.Scan(&id)
 	return id, err
 }

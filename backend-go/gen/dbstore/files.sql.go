@@ -7,9 +7,8 @@ package dbstore
 
 import (
 	"context"
-	"database/sql"
 
-	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createFile = `-- name: CreateFile :one
@@ -45,20 +44,20 @@ RETURNING id
 `
 
 type CreateFileParams struct {
-	Url          sql.NullString
-	Doctype      sql.NullString
-	Lang         sql.NullString
-	Name         sql.NullString
-	Source       sql.NullString
-	Hash         sql.NullString
-	Mdata        sql.NullString
-	Stage        sql.NullString
-	Summary      sql.NullString
-	ShortSummary sql.NullString
+	Url          pgtype.Text
+	Doctype      pgtype.Text
+	Lang         pgtype.Text
+	Name         pgtype.Text
+	Source       pgtype.Text
+	Hash         pgtype.Text
+	Mdata        pgtype.Text
+	Stage        pgtype.Text
+	Summary      pgtype.Text
+	ShortSummary pgtype.Text
 }
 
-func (q *Queries) CreateFile(ctx context.Context, arg CreateFileParams) (uuid.UUID, error) {
-	row := q.db.QueryRowContext(ctx, createFile,
+func (q *Queries) CreateFile(ctx context.Context, arg CreateFileParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, createFile,
 		arg.Url,
 		arg.Doctype,
 		arg.Lang,
@@ -70,7 +69,7 @@ func (q *Queries) CreateFile(ctx context.Context, arg CreateFileParams) (uuid.UU
 		arg.Summary,
 		arg.ShortSummary,
 	)
-	var id uuid.UUID
+	var id pgtype.UUID
 	err := row.Scan(&id)
 	return id, err
 }
@@ -80,8 +79,8 @@ DELETE FROM public.file
 WHERE id = $1
 `
 
-func (q *Queries) DeleteFile(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.ExecContext(ctx, deleteFile, id)
+func (q *Queries) DeleteFile(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteFile, id)
 	return err
 }
 
@@ -92,7 +91,7 @@ ORDER BY created_at DESC
 `
 
 func (q *Queries) ListFiles(ctx context.Context) ([]File, error) {
-	rows, err := q.db.QueryContext(ctx, listFiles)
+	rows, err := q.db.Query(ctx, listFiles)
 	if err != nil {
 		return nil, err
 	}
@@ -119,9 +118,6 @@ func (q *Queries) ListFiles(ctx context.Context) ([]File, error) {
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -134,8 +130,8 @@ FROM public.file
 WHERE id = $1
 `
 
-func (q *Queries) ReadFile(ctx context.Context, id uuid.UUID) (File, error) {
-	row := q.db.QueryRowContext(ctx, readFile, id)
+func (q *Queries) ReadFile(ctx context.Context, id pgtype.UUID) (File, error) {
+	row := q.db.QueryRow(ctx, readFile, id)
 	var i File
 	err := row.Scan(
 		&i.Url,
@@ -173,21 +169,21 @@ RETURNING id
 `
 
 type UpdateFileParams struct {
-	Url          sql.NullString
-	Doctype      sql.NullString
-	Lang         sql.NullString
-	Name         sql.NullString
-	Source       sql.NullString
-	Hash         sql.NullString
-	Mdata        sql.NullString
-	Stage        sql.NullString
-	Summary      sql.NullString
-	ShortSummary sql.NullString
-	ID           uuid.UUID
+	Url          pgtype.Text
+	Doctype      pgtype.Text
+	Lang         pgtype.Text
+	Name         pgtype.Text
+	Source       pgtype.Text
+	Hash         pgtype.Text
+	Mdata        pgtype.Text
+	Stage        pgtype.Text
+	Summary      pgtype.Text
+	ShortSummary pgtype.Text
+	ID           pgtype.UUID
 }
 
-func (q *Queries) UpdateFile(ctx context.Context, arg UpdateFileParams) (uuid.UUID, error) {
-	row := q.db.QueryRowContext(ctx, updateFile,
+func (q *Queries) UpdateFile(ctx context.Context, arg UpdateFileParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, updateFile,
 		arg.Url,
 		arg.Doctype,
 		arg.Lang,
@@ -200,7 +196,7 @@ func (q *Queries) UpdateFile(ctx context.Context, arg UpdateFileParams) (uuid.UU
 		arg.ShortSummary,
 		arg.ID,
 	)
-	var id uuid.UUID
+	var id pgtype.UUID
 	err := row.Scan(&id)
 	return id, err
 }

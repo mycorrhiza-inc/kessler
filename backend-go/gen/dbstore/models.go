@@ -5,221 +5,218 @@
 package dbstore
 
 import (
-	"database/sql"
-	"time"
-
-	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Encounter struct {
-	Name        sql.NullString
-	Description sql.NullString
-	ID          uuid.UUID
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	Name        pgtype.Text
+	Description pgtype.Text
+	ID          pgtype.UUID
+	CreatedAt   pgtype.Timestamptz
+	UpdatedAt   pgtype.Timestamptz
 }
 
 type Event struct {
-	Date        sql.NullTime
-	Name        sql.NullString
-	Description sql.NullString
-	ID          uuid.UUID
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	Date        pgtype.Timestamptz
+	Name        pgtype.Text
+	Description pgtype.Text
+	ID          pgtype.UUID
+	CreatedAt   pgtype.Timestamptz
+	UpdatedAt   pgtype.Timestamptz
 }
 
 type Faction struct {
 	Name        string
 	Description string
-	ID          uuid.UUID
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID          pgtype.UUID
+	CreatedAt   pgtype.Timestamptz
+	UpdatedAt   pgtype.Timestamptz
 }
 
 type File struct {
-	Url          sql.NullString
-	Doctype      sql.NullString
-	Lang         sql.NullString
-	Name         sql.NullString
-	Source       sql.NullString
-	Hash         sql.NullString
-	Mdata        sql.NullString
-	Stage        sql.NullString
-	Summary      sql.NullString
-	ShortSummary sql.NullString
-	ID           uuid.UUID
-	CreatedAt    sql.NullTime
-	UpdatedAt    time.Time
+	Url          pgtype.Text
+	Doctype      pgtype.Text
+	Lang         pgtype.Text
+	Name         pgtype.Text
+	Source       pgtype.Text
+	Hash         pgtype.Text
+	Mdata        pgtype.Text
+	Stage        pgtype.Text
+	Summary      pgtype.Text
+	ShortSummary pgtype.Text
+	ID           pgtype.UUID
+	CreatedAt    pgtype.Timestamptz
+	UpdatedAt    pgtype.Timestamptz
 }
 
 type FileTextSource struct {
-	FileID         uuid.UUID
+	FileID         pgtype.UUID
 	IsOriginalText bool
 	Language       string
-	Text           sql.NullString
-	ID             uuid.UUID
-	CreatedAt      sql.NullTime
-	UpdatedAt      sql.NullTime
+	Text           pgtype.Text
+	ID             pgtype.UUID
+	CreatedAt      pgtype.Timestamptz
+	UpdatedAt      pgtype.Timestamptz
 }
 
 type Individual struct {
 	Name       string
-	Username   sql.NullString
-	ChosenName sql.NullString
-	ID         uuid.UUID
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
+	Username   pgtype.Text
+	ChosenName pgtype.Text
+	ID         pgtype.UUID
+	CreatedAt  pgtype.Timestamptz
+	UpdatedAt  pgtype.Timestamptz
 }
 
 type Organization struct {
 	Name        string
-	Description sql.NullString
-	ID          uuid.UUID
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	Description pgtype.Text
+	ID          pgtype.UUID
+	CreatedAt   pgtype.Timestamptz
+	UpdatedAt   pgtype.Timestamptz
 }
 
 type RelationDocumentsEncounter struct {
-	DocumentID  uuid.UUID
-	EncounterID uuid.UUID
-	ID          uuid.UUID
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	DocumentID  pgtype.UUID
+	EncounterID pgtype.UUID
+	ID          pgtype.UUID
+	CreatedAt   pgtype.Timestamptz
+	UpdatedAt   pgtype.Timestamptz
 }
 
 type RelationDocumentsIndividualsAuthor struct {
-	DocumentID   uuid.UUID
-	IndividualID uuid.UUID
-	ID           uuid.UUID
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	DocumentID   pgtype.UUID
+	IndividualID pgtype.UUID
+	ID           pgtype.UUID
+	CreatedAt    pgtype.Timestamptz
+	UpdatedAt    pgtype.Timestamptz
 }
 
 type RelationDocumentsOrganization struct {
-	DocumentID     uuid.UUID
-	OrganizationID uuid.UUID
-	ID             uuid.UUID
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
+	DocumentID     pgtype.UUID
+	OrganizationID pgtype.UUID
+	ID             pgtype.UUID
+	CreatedAt      pgtype.Timestamptz
+	UpdatedAt      pgtype.Timestamptz
 }
 
 type RelationFactionsEncounter struct {
-	EncounterID uuid.UUID
-	FactionID   uuid.UUID
-	ID          uuid.UUID
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	EncounterID pgtype.UUID
+	FactionID   pgtype.UUID
+	ID          pgtype.UUID
+	CreatedAt   pgtype.Timestamptz
+	UpdatedAt   pgtype.Timestamptz
 }
 
 type RelationFilesEvent struct {
-	FileID    uuid.UUID
-	EventID   uuid.UUID
-	ID        uuid.UUID
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	FileID    pgtype.UUID
+	EventID   pgtype.UUID
+	ID        pgtype.UUID
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
 }
 
 type RelationIndividualsEvent struct {
-	IndividualID uuid.UUID
-	EventID      uuid.UUID
-	ID           uuid.UUID
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	IndividualID pgtype.UUID
+	EventID      pgtype.UUID
+	ID           pgtype.UUID
+	CreatedAt    pgtype.Timestamptz
+	UpdatedAt    pgtype.Timestamptz
 }
 
 type RelationIndividualsFaction struct {
-	FactionID    uuid.UUID
-	IndividualID uuid.UUID
-	ID           uuid.UUID
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	FactionID    pgtype.UUID
+	IndividualID pgtype.UUID
+	ID           pgtype.UUID
+	CreatedAt    pgtype.Timestamptz
+	UpdatedAt    pgtype.Timestamptz
 }
 
 type RelationIndividualsOrganization struct {
-	IndividualID   uuid.UUID
-	OrganizationID uuid.UUID
-	ID             uuid.UUID
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
+	IndividualID   pgtype.UUID
+	OrganizationID pgtype.UUID
+	ID             pgtype.UUID
+	CreatedAt      pgtype.Timestamptz
+	UpdatedAt      pgtype.Timestamptz
 }
 
 type RelationOrganizationsEvent struct {
-	OrganizationID uuid.UUID
-	EventID        uuid.UUID
-	ID             uuid.UUID
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
+	OrganizationID pgtype.UUID
+	EventID        pgtype.UUID
+	ID             pgtype.UUID
+	CreatedAt      pgtype.Timestamptz
+	UpdatedAt      pgtype.Timestamptz
 }
 
 type RelationOrganizationsFaction struct {
-	FactionID      uuid.UUID
-	OrganizationID uuid.UUID
-	ID             uuid.UUID
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
+	FactionID      pgtype.UUID
+	OrganizationID pgtype.UUID
+	ID             pgtype.UUID
+	CreatedAt      pgtype.Timestamptz
+	UpdatedAt      pgtype.Timestamptz
 }
 
 type RelationUsersUsergroup struct {
-	UserID      uuid.UUID
-	UsergroupID uuid.UUID
-	ID          uuid.UUID
-	CreatedAt   time.Time
+	UserID      pgtype.UUID
+	UsergroupID pgtype.UUID
+	ID          pgtype.UUID
+	CreatedAt   pgtype.Timestamp
 }
 
 type User struct {
-	ID        uuid.UUID
-	Username  sql.NullString
-	StripeID  sql.NullString
+	ID        pgtype.UUID
+	Username  pgtype.Text
+	StripeID  pgtype.Text
 	Email     string
-	CreatedAt time.Time
+	CreatedAt pgtype.Timestamp
 }
 
 type UserfilesAcl struct {
-	ID          uuid.UUID
-	UsergroupID uuid.UUID
-	OwnerID     uuid.UUID
-	CreatedAt   time.Time
+	ID          pgtype.UUID
+	UsergroupID pgtype.UUID
+	OwnerID     pgtype.UUID
+	CreatedAt   pgtype.Timestamp
 }
 
 type UserfilesPrivateAccessControl struct {
-	OperatorID    uuid.UUID
+	OperatorID    pgtype.UUID
 	OperatorTable string
-	ObjectID      uuid.UUID
+	ObjectID      pgtype.UUID
 	ObjectTable   string
-	ID            uuid.UUID
-	CreatedAt     sql.NullTime
-	UpdatedAt     sql.NullTime
+	ID            pgtype.UUID
+	CreatedAt     pgtype.Timestamptz
+	UpdatedAt     pgtype.Timestamptz
 }
 
 type UserfilesPrivateFile struct {
-	Url          sql.NullString
-	Doctype      sql.NullString
-	Lang         sql.NullString
-	Name         sql.NullString
-	Source       sql.NullString
-	Hash         sql.NullString
-	Mdata        sql.NullString
-	Stage        sql.NullString
-	Summary      sql.NullString
-	ShortSummary sql.NullString
-	UsergroupID  uuid.UUID
-	ID           uuid.UUID
-	CreatedAt    sql.NullTime
-	UpdatedAt    time.Time
+	Url          pgtype.Text
+	Doctype      pgtype.Text
+	Lang         pgtype.Text
+	Name         pgtype.Text
+	Source       pgtype.Text
+	Hash         pgtype.Text
+	Mdata        pgtype.Text
+	Stage        pgtype.Text
+	Summary      pgtype.Text
+	ShortSummary pgtype.Text
+	UsergroupID  pgtype.UUID
+	ID           pgtype.UUID
+	CreatedAt    pgtype.Timestamptz
+	UpdatedAt    pgtype.Timestamptz
 }
 
 type UserfilesPrivateFileTextSource struct {
-	FileID         uuid.UUID
+	FileID         pgtype.UUID
 	IsOriginalText bool
 	Language       string
-	Text           sql.NullString
-	ID             uuid.UUID
-	CreatedAt      sql.NullTime
-	UpdatedAt      sql.NullTime
+	Text           pgtype.Text
+	ID             pgtype.UUID
+	CreatedAt      pgtype.Timestamptz
+	UpdatedAt      pgtype.Timestamptz
 }
 
 type Usergroup struct {
-	ID        uuid.UUID
+	ID        pgtype.UUID
 	Name      string
-	CreatedAt time.Time
+	CreatedAt pgtype.Timestamp
 }

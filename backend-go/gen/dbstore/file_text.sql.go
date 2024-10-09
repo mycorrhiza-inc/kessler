@@ -7,9 +7,8 @@ package dbstore
 
 import (
 	"context"
-	"database/sql"
 
-	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createFileTextSource = `-- name: CreateFileTextSource :one
@@ -26,20 +25,20 @@ RETURNING id
 `
 
 type CreateFileTextSourceParams struct {
-	FileID         uuid.UUID
+	FileID         pgtype.UUID
 	IsOriginalText bool
 	Language       string
-	Text           sql.NullString
+	Text           pgtype.Text
 }
 
-func (q *Queries) CreateFileTextSource(ctx context.Context, arg CreateFileTextSourceParams) (uuid.UUID, error) {
-	row := q.db.QueryRowContext(ctx, createFileTextSource,
+func (q *Queries) CreateFileTextSource(ctx context.Context, arg CreateFileTextSourceParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, createFileTextSource,
 		arg.FileID,
 		arg.IsOriginalText,
 		arg.Language,
 		arg.Text,
 	)
-	var id uuid.UUID
+	var id pgtype.UUID
 	err := row.Scan(&id)
 	return id, err
 }
@@ -49,8 +48,8 @@ DELETE FROM public.file_text_source
 WHERE file_id = $1
 `
 
-func (q *Queries) DeleteFileTexts(ctx context.Context, fileID uuid.UUID) error {
-	_, err := q.db.ExecContext(ctx, deleteFileTexts, fileID)
+func (q *Queries) DeleteFileTexts(ctx context.Context, fileID pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteFileTexts, fileID)
 	return err
 }
 
@@ -60,8 +59,8 @@ FROM public.file_text_source
 WHERE file_id = $1
 `
 
-func (q *Queries) ListTextsOfFile(ctx context.Context, fileID uuid.UUID) ([]FileTextSource, error) {
-	rows, err := q.db.QueryContext(ctx, listTextsOfFile, fileID)
+func (q *Queries) ListTextsOfFile(ctx context.Context, fileID pgtype.UUID) ([]FileTextSource, error) {
+	rows, err := q.db.Query(ctx, listTextsOfFile, fileID)
 	if err != nil {
 		return nil, err
 	}
@@ -81,9 +80,6 @@ func (q *Queries) ListTextsOfFile(ctx context.Context, fileID uuid.UUID) ([]File
 			return nil, err
 		}
 		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -97,8 +93,8 @@ FROM public.file_text_source
 WHERE file_id = $1 and is_original_text = true
 `
 
-func (q *Queries) ListTextsOfFileOriginal(ctx context.Context, fileID uuid.UUID) ([]FileTextSource, error) {
-	rows, err := q.db.QueryContext(ctx, listTextsOfFileOriginal, fileID)
+func (q *Queries) ListTextsOfFileOriginal(ctx context.Context, fileID pgtype.UUID) ([]FileTextSource, error) {
+	rows, err := q.db.Query(ctx, listTextsOfFileOriginal, fileID)
 	if err != nil {
 		return nil, err
 	}
@@ -118,9 +114,6 @@ func (q *Queries) ListTextsOfFileOriginal(ctx context.Context, fileID uuid.UUID)
 			return nil, err
 		}
 		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -135,12 +128,12 @@ WHERE file_id = $1 and language = $2
 `
 
 type ListTextsOfFileWithLanguageParams struct {
-	FileID   uuid.UUID
+	FileID   pgtype.UUID
 	Language string
 }
 
 func (q *Queries) ListTextsOfFileWithLanguage(ctx context.Context, arg ListTextsOfFileWithLanguageParams) ([]FileTextSource, error) {
-	rows, err := q.db.QueryContext(ctx, listTextsOfFileWithLanguage, arg.FileID, arg.Language)
+	rows, err := q.db.Query(ctx, listTextsOfFileWithLanguage, arg.FileID, arg.Language)
 	if err != nil {
 		return nil, err
 	}
@@ -160,9 +153,6 @@ func (q *Queries) ListTextsOfFileWithLanguage(ctx context.Context, arg ListTexts
 			return nil, err
 		}
 		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

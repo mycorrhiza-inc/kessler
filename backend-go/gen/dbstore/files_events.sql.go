@@ -8,7 +8,7 @@ package dbstore
 import (
 	"context"
 
-	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createFilesAssociatedWithEvent = `-- name: CreateFilesAssociatedWithEvent :one
@@ -23,13 +23,13 @@ RETURNING id
 `
 
 type CreateFilesAssociatedWithEventParams struct {
-	FileID  uuid.UUID
-	EventID uuid.UUID
+	FileID  pgtype.UUID
+	EventID pgtype.UUID
 }
 
-func (q *Queries) CreateFilesAssociatedWithEvent(ctx context.Context, arg CreateFilesAssociatedWithEventParams) (uuid.UUID, error) {
-	row := q.db.QueryRowContext(ctx, createFilesAssociatedWithEvent, arg.FileID, arg.EventID)
-	var id uuid.UUID
+func (q *Queries) CreateFilesAssociatedWithEvent(ctx context.Context, arg CreateFilesAssociatedWithEventParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, createFilesAssociatedWithEvent, arg.FileID, arg.EventID)
+	var id pgtype.UUID
 	err := row.Scan(&id)
 	return id, err
 }
@@ -39,8 +39,8 @@ DELETE FROM public.relation_files_events
 WHERE id = $1
 `
 
-func (q *Queries) DeleteFilesAssociatedWithEvent(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.ExecContext(ctx, deleteFilesAssociatedWithEvent, id)
+func (q *Queries) DeleteFilesAssociatedWithEvent(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteFilesAssociatedWithEvent, id)
 	return err
 }
 
@@ -51,7 +51,7 @@ ORDER BY created_at DESC
 `
 
 func (q *Queries) ListFilesAssociatedWithEvent(ctx context.Context) ([]RelationFilesEvent, error) {
-	rows, err := q.db.QueryContext(ctx, listFilesAssociatedWithEvent)
+	rows, err := q.db.Query(ctx, listFilesAssociatedWithEvent)
 	if err != nil {
 		return nil, err
 	}
@@ -70,9 +70,6 @@ func (q *Queries) ListFilesAssociatedWithEvent(ctx context.Context) ([]RelationF
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -85,8 +82,8 @@ FROM public.relation_files_events
 WHERE id = $1
 `
 
-func (q *Queries) ReadFilesAssociatedWithEvent(ctx context.Context, id uuid.UUID) (RelationFilesEvent, error) {
-	row := q.db.QueryRowContext(ctx, readFilesAssociatedWithEvent, id)
+func (q *Queries) ReadFilesAssociatedWithEvent(ctx context.Context, id pgtype.UUID) (RelationFilesEvent, error) {
+	row := q.db.QueryRow(ctx, readFilesAssociatedWithEvent, id)
 	var i RelationFilesEvent
 	err := row.Scan(
 		&i.FileID,
@@ -108,14 +105,14 @@ RETURNING id
 `
 
 type UpdateFilesAssociatedWithEventParams struct {
-	FileID  uuid.UUID
-	EventID uuid.UUID
-	ID      uuid.UUID
+	FileID  pgtype.UUID
+	EventID pgtype.UUID
+	ID      pgtype.UUID
 }
 
-func (q *Queries) UpdateFilesAssociatedWithEvent(ctx context.Context, arg UpdateFilesAssociatedWithEventParams) (uuid.UUID, error) {
-	row := q.db.QueryRowContext(ctx, updateFilesAssociatedWithEvent, arg.FileID, arg.EventID, arg.ID)
-	var id uuid.UUID
+func (q *Queries) UpdateFilesAssociatedWithEvent(ctx context.Context, arg UpdateFilesAssociatedWithEventParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, updateFilesAssociatedWithEvent, arg.FileID, arg.EventID, arg.ID)
+	var id pgtype.UUID
 	err := row.Scan(&id)
 	return id, err
 }

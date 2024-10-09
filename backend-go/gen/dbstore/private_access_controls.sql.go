@@ -8,7 +8,7 @@ package dbstore
 import (
 	"context"
 
-	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const checkOperatorAccessToObject = `-- name: CheckOperatorAccessToObject :one
@@ -20,12 +20,12 @@ SELECT EXISTS(
 `
 
 type CheckOperatorAccessToObjectParams struct {
-	OperatorID uuid.UUID
-	ObjectID   uuid.UUID
+	OperatorID pgtype.UUID
+	ObjectID   pgtype.UUID
 }
 
 func (q *Queries) CheckOperatorAccessToObject(ctx context.Context, arg CheckOperatorAccessToObjectParams) (bool, error) {
-	row := q.db.QueryRowContext(ctx, checkOperatorAccessToObject, arg.OperatorID, arg.ObjectID)
+	row := q.db.QueryRow(ctx, checkOperatorAccessToObject, arg.OperatorID, arg.ObjectID)
 	var exists bool
 	err := row.Scan(&exists)
 	return exists, err
@@ -45,20 +45,20 @@ RETURNING id
 `
 
 type CreatePrivateAccessControlParams struct {
-	OperatorID    uuid.UUID
+	OperatorID    pgtype.UUID
 	OperatorTable string
-	ObjectID      uuid.UUID
+	ObjectID      pgtype.UUID
 	ObjectTable   string
 }
 
-func (q *Queries) CreatePrivateAccessControl(ctx context.Context, arg CreatePrivateAccessControlParams) (uuid.UUID, error) {
-	row := q.db.QueryRowContext(ctx, createPrivateAccessControl,
+func (q *Queries) CreatePrivateAccessControl(ctx context.Context, arg CreatePrivateAccessControlParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, createPrivateAccessControl,
 		arg.OperatorID,
 		arg.OperatorTable,
 		arg.ObjectID,
 		arg.ObjectTable,
 	)
-	var id uuid.UUID
+	var id pgtype.UUID
 	err := row.Scan(&id)
 	return id, err
 }
@@ -68,8 +68,8 @@ DELETE FROM userfiles.private_access_controls
 WHERE id = $1
 `
 
-func (q *Queries) DeleteAccessControl(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.ExecContext(ctx, deleteAccessControl, id)
+func (q *Queries) DeleteAccessControl(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteAccessControl, id)
 	return err
 }
 
@@ -79,8 +79,8 @@ FROM userfiles.private_access_controls
 WHERE operator_id = $1
 `
 
-func (q *Queries) ListAcessesForOperator(ctx context.Context, operatorID uuid.UUID) ([]UserfilesPrivateAccessControl, error) {
-	rows, err := q.db.QueryContext(ctx, listAcessesForOperator, operatorID)
+func (q *Queries) ListAcessesForOperator(ctx context.Context, operatorID pgtype.UUID) ([]UserfilesPrivateAccessControl, error) {
+	rows, err := q.db.Query(ctx, listAcessesForOperator, operatorID)
 	if err != nil {
 		return nil, err
 	}
@@ -100,9 +100,6 @@ func (q *Queries) ListAcessesForOperator(ctx context.Context, operatorID uuid.UU
 			return nil, err
 		}
 		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -116,8 +113,8 @@ FROM userfiles.private_access_controls
 WHERE object_id = $1
 `
 
-func (q *Queries) ListOperatorsCanAcessObject(ctx context.Context, objectID uuid.UUID) ([]UserfilesPrivateAccessControl, error) {
-	rows, err := q.db.QueryContext(ctx, listOperatorsCanAcessObject, objectID)
+func (q *Queries) ListOperatorsCanAcessObject(ctx context.Context, objectID pgtype.UUID) ([]UserfilesPrivateAccessControl, error) {
+	rows, err := q.db.Query(ctx, listOperatorsCanAcessObject, objectID)
 	if err != nil {
 		return nil, err
 	}
@@ -138,9 +135,6 @@ func (q *Queries) ListOperatorsCanAcessObject(ctx context.Context, objectID uuid
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -153,11 +147,11 @@ WHERE operator_id = $1 AND object_id = $2
 `
 
 type RevokeAccessForOperatorOnObjectParams struct {
-	OperatorID uuid.UUID
-	ObjectID   uuid.UUID
+	OperatorID pgtype.UUID
+	ObjectID   pgtype.UUID
 }
 
 func (q *Queries) RevokeAccessForOperatorOnObject(ctx context.Context, arg RevokeAccessForOperatorOnObjectParams) error {
-	_, err := q.db.ExecContext(ctx, revokeAccessForOperatorOnObject, arg.OperatorID, arg.ObjectID)
+	_, err := q.db.Exec(ctx, revokeAccessForOperatorOnObject, arg.OperatorID, arg.ObjectID)
 	return err
 }

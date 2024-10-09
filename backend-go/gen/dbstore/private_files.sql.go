@@ -7,9 +7,8 @@ package dbstore
 
 import (
 	"context"
-	"database/sql"
 
-	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createPrivateFile = `-- name: CreatePrivateFile :one
@@ -45,20 +44,20 @@ RETURNING id
 `
 
 type CreatePrivateFileParams struct {
-	Url          sql.NullString
-	Doctype      sql.NullString
-	Lang         sql.NullString
-	Name         sql.NullString
-	Source       sql.NullString
-	Hash         sql.NullString
-	Mdata        sql.NullString
-	Stage        sql.NullString
-	Summary      sql.NullString
-	ShortSummary sql.NullString
+	Url          pgtype.Text
+	Doctype      pgtype.Text
+	Lang         pgtype.Text
+	Name         pgtype.Text
+	Source       pgtype.Text
+	Hash         pgtype.Text
+	Mdata        pgtype.Text
+	Stage        pgtype.Text
+	Summary      pgtype.Text
+	ShortSummary pgtype.Text
 }
 
-func (q *Queries) CreatePrivateFile(ctx context.Context, arg CreatePrivateFileParams) (uuid.UUID, error) {
-	row := q.db.QueryRowContext(ctx, createPrivateFile,
+func (q *Queries) CreatePrivateFile(ctx context.Context, arg CreatePrivateFileParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, createPrivateFile,
 		arg.Url,
 		arg.Doctype,
 		arg.Lang,
@@ -70,7 +69,7 @@ func (q *Queries) CreatePrivateFile(ctx context.Context, arg CreatePrivateFilePa
 		arg.Summary,
 		arg.ShortSummary,
 	)
-	var id uuid.UUID
+	var id pgtype.UUID
 	err := row.Scan(&id)
 	return id, err
 }
@@ -80,8 +79,8 @@ DELETE FROM userfiles.private_file
 WHERE id = $1
 `
 
-func (q *Queries) DeletePrivateFile(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.ExecContext(ctx, deletePrivateFile, id)
+func (q *Queries) DeletePrivateFile(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deletePrivateFile, id)
 	return err
 }
 
@@ -92,7 +91,7 @@ ORDER BY created_at DESC
 `
 
 func (q *Queries) ListPrivateFiles(ctx context.Context) ([]UserfilesPrivateFile, error) {
-	rows, err := q.db.QueryContext(ctx, listPrivateFiles)
+	rows, err := q.db.Query(ctx, listPrivateFiles)
 	if err != nil {
 		return nil, err
 	}
@@ -120,9 +119,6 @@ func (q *Queries) ListPrivateFiles(ctx context.Context) ([]UserfilesPrivateFile,
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -135,8 +131,8 @@ FROM userfiles.private_file
 WHERE id = $1
 `
 
-func (q *Queries) ReadPrivateFile(ctx context.Context, id uuid.UUID) (UserfilesPrivateFile, error) {
-	row := q.db.QueryRowContext(ctx, readPrivateFile, id)
+func (q *Queries) ReadPrivateFile(ctx context.Context, id pgtype.UUID) (UserfilesPrivateFile, error) {
+	row := q.db.QueryRow(ctx, readPrivateFile, id)
 	var i UserfilesPrivateFile
 	err := row.Scan(
 		&i.Url,
@@ -175,21 +171,21 @@ RETURNING id
 `
 
 type UpdatePrivateFileParams struct {
-	Url          sql.NullString
-	Doctype      sql.NullString
-	Lang         sql.NullString
-	Name         sql.NullString
-	Source       sql.NullString
-	Hash         sql.NullString
-	Mdata        sql.NullString
-	Stage        sql.NullString
-	Summary      sql.NullString
-	ShortSummary sql.NullString
-	ID           uuid.UUID
+	Url          pgtype.Text
+	Doctype      pgtype.Text
+	Lang         pgtype.Text
+	Name         pgtype.Text
+	Source       pgtype.Text
+	Hash         pgtype.Text
+	Mdata        pgtype.Text
+	Stage        pgtype.Text
+	Summary      pgtype.Text
+	ShortSummary pgtype.Text
+	ID           pgtype.UUID
 }
 
-func (q *Queries) UpdatePrivateFile(ctx context.Context, arg UpdatePrivateFileParams) (uuid.UUID, error) {
-	row := q.db.QueryRowContext(ctx, updatePrivateFile,
+func (q *Queries) UpdatePrivateFile(ctx context.Context, arg UpdatePrivateFileParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, updatePrivateFile,
 		arg.Url,
 		arg.Doctype,
 		arg.Lang,
@@ -202,7 +198,7 @@ func (q *Queries) UpdatePrivateFile(ctx context.Context, arg UpdatePrivateFilePa
 		arg.ShortSummary,
 		arg.ID,
 	)
-	var id uuid.UUID
+	var id pgtype.UUID
 	err := row.Scan(&id)
 	return id, err
 }

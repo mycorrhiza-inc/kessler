@@ -7,9 +7,8 @@ package dbstore
 
 import (
 	"context"
-	"database/sql"
 
-	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createOrganization = `-- name: CreateOrganization :one
@@ -25,12 +24,12 @@ RETURNING id
 
 type CreateOrganizationParams struct {
 	Name        string
-	Description sql.NullString
+	Description pgtype.Text
 }
 
-func (q *Queries) CreateOrganization(ctx context.Context, arg CreateOrganizationParams) (uuid.UUID, error) {
-	row := q.db.QueryRowContext(ctx, createOrganization, arg.Name, arg.Description)
-	var id uuid.UUID
+func (q *Queries) CreateOrganization(ctx context.Context, arg CreateOrganizationParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, createOrganization, arg.Name, arg.Description)
+	var id pgtype.UUID
 	err := row.Scan(&id)
 	return id, err
 }
@@ -40,8 +39,8 @@ DELETE FROM public.organization
 WHERE id = $1
 `
 
-func (q *Queries) DeleteOrganization(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.ExecContext(ctx, deleteOrganization, id)
+func (q *Queries) DeleteOrganization(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteOrganization, id)
 	return err
 }
 
@@ -52,7 +51,7 @@ ORDER BY created_at DESC
 `
 
 func (q *Queries) ListOrganizations(ctx context.Context) ([]Organization, error) {
-	rows, err := q.db.QueryContext(ctx, listOrganizations)
+	rows, err := q.db.Query(ctx, listOrganizations)
 	if err != nil {
 		return nil, err
 	}
@@ -71,9 +70,6 @@ func (q *Queries) ListOrganizations(ctx context.Context) ([]Organization, error)
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -86,8 +82,8 @@ FROM public.organization
 WHERE id = $1
 `
 
-func (q *Queries) ReadOrganization(ctx context.Context, id uuid.UUID) (Organization, error) {
-	row := q.db.QueryRowContext(ctx, readOrganization, id)
+func (q *Queries) ReadOrganization(ctx context.Context, id pgtype.UUID) (Organization, error) {
+	row := q.db.QueryRow(ctx, readOrganization, id)
 	var i Organization
 	err := row.Scan(
 		&i.Name,
@@ -110,13 +106,13 @@ RETURNING id
 
 type UpdateOrganizationParams struct {
 	Name        string
-	Description sql.NullString
-	ID          uuid.UUID
+	Description pgtype.Text
+	ID          pgtype.UUID
 }
 
-func (q *Queries) UpdateOrganization(ctx context.Context, arg UpdateOrganizationParams) (uuid.UUID, error) {
-	row := q.db.QueryRowContext(ctx, updateOrganization, arg.Name, arg.Description, arg.ID)
-	var id uuid.UUID
+func (q *Queries) UpdateOrganization(ctx context.Context, arg UpdateOrganizationParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, updateOrganization, arg.Name, arg.Description, arg.ID)
+	var id pgtype.UUID
 	err := row.Scan(&id)
 	return id, err
 }
@@ -130,13 +126,13 @@ RETURNING id
 `
 
 type UpdateOrganizationDescriptionParams struct {
-	Description sql.NullString
-	ID          uuid.UUID
+	Description pgtype.Text
+	ID          pgtype.UUID
 }
 
-func (q *Queries) UpdateOrganizationDescription(ctx context.Context, arg UpdateOrganizationDescriptionParams) (uuid.UUID, error) {
-	row := q.db.QueryRowContext(ctx, updateOrganizationDescription, arg.Description, arg.ID)
-	var id uuid.UUID
+func (q *Queries) UpdateOrganizationDescription(ctx context.Context, arg UpdateOrganizationDescriptionParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, updateOrganizationDescription, arg.Description, arg.ID)
+	var id pgtype.UUID
 	err := row.Scan(&id)
 	return id, err
 }
@@ -151,12 +147,12 @@ RETURNING id
 
 type UpdateOrganizationNameParams struct {
 	Name string
-	ID   uuid.UUID
+	ID   pgtype.UUID
 }
 
-func (q *Queries) UpdateOrganizationName(ctx context.Context, arg UpdateOrganizationNameParams) (uuid.UUID, error) {
-	row := q.db.QueryRowContext(ctx, updateOrganizationName, arg.Name, arg.ID)
-	var id uuid.UUID
+func (q *Queries) UpdateOrganizationName(ctx context.Context, arg UpdateOrganizationNameParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, updateOrganizationName, arg.Name, arg.ID)
+	var id pgtype.UUID
 	err := row.Scan(&id)
 	return id, err
 }
