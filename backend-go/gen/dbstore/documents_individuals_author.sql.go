@@ -8,7 +8,7 @@ package dbstore
 import (
 	"context"
 
-	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const getDocumentAuthors = `-- name: GetDocumentAuthors :many
@@ -17,22 +17,19 @@ FROM public.relation_documents_individuals_author
 WHERE document_id = $1
 `
 
-func (q *Queries) GetDocumentAuthors(ctx context.Context, documentID uuid.UUID) ([]uuid.UUID, error) {
-	rows, err := q.db.QueryContext(ctx, getDocumentAuthors, documentID)
+func (q *Queries) GetDocumentAuthors(ctx context.Context, documentID pgtype.UUID) ([]pgtype.UUID, error) {
+	rows, err := q.db.Query(ctx, getDocumentAuthors, documentID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []uuid.UUID
+	var items []pgtype.UUID
 	for rows.Next() {
-		var individual_id uuid.UUID
+		var individual_id pgtype.UUID
 		if err := rows.Scan(&individual_id); err != nil {
 			return nil, err
 		}
 		items = append(items, individual_id)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -52,12 +49,12 @@ RETURNING document_id, individual_id, id, created_at, updated_at
 `
 
 type LinkDocumentToIndividualParams struct {
-	DocumentID   uuid.UUID
-	IndividualID uuid.UUID
+	DocumentID   pgtype.UUID
+	IndividualID pgtype.UUID
 }
 
 func (q *Queries) LinkDocumentToIndividual(ctx context.Context, arg LinkDocumentToIndividualParams) (RelationDocumentsIndividualsAuthor, error) {
-	row := q.db.QueryRowContext(ctx, linkDocumentToIndividual, arg.DocumentID, arg.IndividualID)
+	row := q.db.QueryRow(ctx, linkDocumentToIndividual, arg.DocumentID, arg.IndividualID)
 	var i RelationDocumentsIndividualsAuthor
 	err := row.Scan(
 		&i.DocumentID,
@@ -76,8 +73,8 @@ WHERE individual_id = $1
 ORDER BY created_at DESC
 `
 
-func (q *Queries) ListDocumentsAuthoredByIndividual(ctx context.Context, individualID uuid.UUID) ([]RelationDocumentsIndividualsAuthor, error) {
-	rows, err := q.db.QueryContext(ctx, listDocumentsAuthoredByIndividual, individualID)
+func (q *Queries) ListDocumentsAuthoredByIndividual(ctx context.Context, individualID pgtype.UUID) ([]RelationDocumentsIndividualsAuthor, error) {
+	rows, err := q.db.Query(ctx, listDocumentsAuthoredByIndividual, individualID)
 	if err != nil {
 		return nil, err
 	}
@@ -96,9 +93,6 @@ func (q *Queries) ListDocumentsAuthoredByIndividual(ctx context.Context, individ
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -112,11 +106,11 @@ WHERE document_id = $1
 `
 
 type UnlinkDocumentFromIndividualParams struct {
-	DocumentID   uuid.UUID
-	IndividualID uuid.UUID
+	DocumentID   pgtype.UUID
+	IndividualID pgtype.UUID
 }
 
 func (q *Queries) UnlinkDocumentFromIndividual(ctx context.Context, arg UnlinkDocumentFromIndividualParams) error {
-	_, err := q.db.ExecContext(ctx, unlinkDocumentFromIndividual, arg.DocumentID, arg.IndividualID)
+	_, err := q.db.Exec(ctx, unlinkDocumentFromIndividual, arg.DocumentID, arg.IndividualID)
 	return err
 }

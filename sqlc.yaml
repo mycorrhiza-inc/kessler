@@ -1,9 +1,9 @@
 version: "2"
 sql:
-  - schema: "data/migrations" 
-    queries: "data/queries" 
+  - schema: "data/migrations"
+    queries: "data/queries"
     engine: "postgresql"
     gen:
       go:
         out: "backend-go/gen/dbstore"
-
+        sql_package: "pgx/v5"

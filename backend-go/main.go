@@ -32,25 +32,16 @@ func corsMiddleware(next http.Handler) http.Handler {
 }
 
 func main() {
-	//
-	// set up db connection
-	// conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
-	// if err != nil {
-	// 	fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
-	// 	os.Exit(1)
-	// }
-	// // close connection when server exits
-	// defer conn.Close(context.Background())
-
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
 
 	mux := mux.NewRouter()
-	mux.HandleFunc("/api/v2/search", search.HandleSearchRequest)
-	mux.HandleFunc("/api/v2/rag/basic_chat", rag.HandleBasicChatRequest)
-	mux.HandleFunc("/api/v2/rag/chat", rag.HandleRagChatRequest)
+	misc_s := mux.PathPrefix("/api/v2").Subrouter()
+	misc_s.HandleFunc("/search", search.HandleSearchRequest)
+	misc_s.HandleFunc("/rag/basic_chat", rag.HandleBasicChatRequest)
+	misc_s.HandleFunc("/rag/chat", rag.HandleRagChatRequest)
 	const timeout = time.Second * 10
 
 	muxWithMiddlewares := http.TimeoutHandler(mux, timeout, "Timeout!")

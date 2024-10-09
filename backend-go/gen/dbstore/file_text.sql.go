@@ -7,9 +7,8 @@ package dbstore
 
 import (
 	"context"
-	"database/sql"
 
-	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createFileTextSource = `-- name: CreateFileTextSource :one
@@ -26,20 +25,20 @@ RETURNING id
 `
 
 type CreateFileTextSourceParams struct {
-	FileID         uuid.UUID
+	FileID         pgtype.UUID
 	IsOriginalText bool
 	Language       string
-	Text           sql.NullString
+	Text           pgtype.Text
 }
 
-func (q *Queries) CreateFileTextSource(ctx context.Context, arg CreateFileTextSourceParams) (uuid.UUID, error) {
-	row := q.db.QueryRowContext(ctx, createFileTextSource,
+func (q *Queries) CreateFileTextSource(ctx context.Context, arg CreateFileTextSourceParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, createFileTextSource,
 		arg.FileID,
 		arg.IsOriginalText,
 		arg.Language,
 		arg.Text,
 	)
-	var id uuid.UUID
+	var id pgtype.UUID
 	err := row.Scan(&id)
 	return id, err
 }
@@ -49,46 +48,19 @@ DELETE FROM public.file_text_source
 WHERE file_id = $1
 `
 
-func (q *Queries) DeleteFileTexts(ctx context.Context, fileID uuid.UUID) error {
-	_, err := q.db.ExecContext(ctx, deleteFileTexts, fileID)
+func (q *Queries) DeleteFileTexts(ctx context.Context, fileID pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteFileTexts, fileID)
 	return err
-}
-
-const getFileLanguage = `-- name: GetFileLanguage :one
-SELECT language
-FROM public.file_text_source
-WHERE file_id = $1
-`
-
-func (q *Queries) GetFileLanguage(ctx context.Context, fileID uuid.UUID) (string, error) {
-	row := q.db.QueryRowContext(ctx, getFileLanguage, fileID)
-	var language string
-	err := row.Scan(&language)
-	return language, err
-}
-
-const getFileText = `-- name: GetFileText :one
-SELECT text
-FROM public.file_text_source
-WHERE file_id = $1
-`
-
-func (q *Queries) GetFileText(ctx context.Context, fileID uuid.UUID) (sql.NullString, error) {
-	row := q.db.QueryRowContext(ctx, getFileText, fileID)
-	var text sql.NullString
-	err := row.Scan(&text)
-	return text, err
 }
 
 const listTextsOfFile = `-- name: ListTextsOfFile :many
 SELECT file_id, is_original_text, language, text, id, created_at, updated_at
 FROM public.file_text_source
 WHERE file_id = $1
-ORDER BY created_at DESC
 `
 
-func (q *Queries) ListTextsOfFile(ctx context.Context, fileID uuid.UUID) ([]FileTextSource, error) {
-	rows, err := q.db.QueryContext(ctx, listTextsOfFile, fileID)
+func (q *Queries) ListTextsOfFile(ctx context.Context, fileID pgtype.UUID) ([]FileTextSource, error) {
+	rows, err := q.db.Query(ctx, listTextsOfFile, fileID)
 	if err != nil {
 		return nil, err
 	}
@@ -109,8 +81,39 @@ func (q *Queries) ListTextsOfFile(ctx context.Context, fileID uuid.UUID) ([]File
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
+	if err := rows.Err(); err != nil {
 		return nil, err
+	}
+	return items, nil
+}
+
+const listTextsOfFileOriginal = `-- name: ListTextsOfFileOriginal :many
+SELECT file_id, is_original_text, language, text, id, created_at, updated_at
+FROM public.file_text_source
+WHERE file_id = $1 and is_original_text = true
+`
+
+func (q *Queries) ListTextsOfFileOriginal(ctx context.Context, fileID pgtype.UUID) ([]FileTextSource, error) {
+	rows, err := q.db.Query(ctx, listTextsOfFileOriginal, fileID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []FileTextSource
+	for rows.Next() {
+		var i FileTextSource
+		if err := rows.Scan(
+			&i.FileID,
+			&i.IsOriginalText,
+			&i.Language,
+			&i.Text,
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -118,62 +121,41 @@ func (q *Queries) ListTextsOfFile(ctx context.Context, fileID uuid.UUID) ([]File
 	return items, nil
 }
 
-const updateFileTextLanguage = `-- name: UpdateFileTextLanguage :one
-UPDATE public.file_text_source
-SET language = $1,
-	updated_at = NOW()
-WHERE file_id = $2
-RETURNING id
+const listTextsOfFileWithLanguage = `-- name: ListTextsOfFileWithLanguage :many
+SELECT file_id, is_original_text, language, text, id, created_at, updated_at
+FROM public.file_text_source
+WHERE file_id = $1 and language = $2
 `
 
-type UpdateFileTextLanguageParams struct {
+type ListTextsOfFileWithLanguageParams struct {
+	FileID   pgtype.UUID
 	Language string
-	FileID   uuid.UUID
 }
 
-func (q *Queries) UpdateFileTextLanguage(ctx context.Context, arg UpdateFileTextLanguageParams) (uuid.UUID, error) {
-	row := q.db.QueryRowContext(ctx, updateFileTextLanguage, arg.Language, arg.FileID)
-	var id uuid.UUID
-	err := row.Scan(&id)
-	return id, err
-}
-
-const updateFileTextSource = `-- name: UpdateFileTextSource :one
-UPDATE public.file_text_source
-SET text = $1,
-	updated_at = NOW()
-WHERE id = $2
-RETURNING id
-`
-
-type UpdateFileTextSourceParams struct {
-	Text sql.NullString
-	ID   uuid.UUID
-}
-
-func (q *Queries) UpdateFileTextSource(ctx context.Context, arg UpdateFileTextSourceParams) (uuid.UUID, error) {
-	row := q.db.QueryRowContext(ctx, updateFileTextSource, arg.Text, arg.ID)
-	var id uuid.UUID
-	err := row.Scan(&id)
-	return id, err
-}
-
-const updateIsNotOriginalText = `-- name: UpdateIsNotOriginalText :one
-UPDATE public.file_text_source
-SET is_original_text = $1,
-	updated_at = NOW()
-WHERE id = $2
-RETURNING id
-`
-
-type UpdateIsNotOriginalTextParams struct {
-	IsOriginalText bool
-	ID             uuid.UUID
-}
-
-func (q *Queries) UpdateIsNotOriginalText(ctx context.Context, arg UpdateIsNotOriginalTextParams) (uuid.UUID, error) {
-	row := q.db.QueryRowContext(ctx, updateIsNotOriginalText, arg.IsOriginalText, arg.ID)
-	var id uuid.UUID
-	err := row.Scan(&id)
-	return id, err
+func (q *Queries) ListTextsOfFileWithLanguage(ctx context.Context, arg ListTextsOfFileWithLanguageParams) ([]FileTextSource, error) {
+	rows, err := q.db.Query(ctx, listTextsOfFileWithLanguage, arg.FileID, arg.Language)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []FileTextSource
+	for rows.Next() {
+		var i FileTextSource
+		if err := rows.Scan(
+			&i.FileID,
+			&i.IsOriginalText,
+			&i.Language,
+			&i.Text,
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
