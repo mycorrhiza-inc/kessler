@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/gorilla/mux"
-	"github.com/jackc/pgx"
+	"github.com/jackc/pgx/v5"
 	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
 )
 
@@ -15,15 +15,13 @@ var pgConnString = os.Getenv("DATABASE_CONNECTION_STRING")
 
 func TestPostgresConnection() (string, error) {
 	ctx := context.Background()
-	config := pgx.ConnConfig{}
 
-	conn, err := pgx.Connect(config)
+	conn, err := pgx.Connect(ctx, "user=pqgotest dbname=pqgotest sslmode=verify-full")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
 		return "", fmt.Errorf("Unable to connect to database")
-
 	}
-	defer conn.Close()
+	defer conn.Close(ctx)
 	queries := dbstore.New(conn)
 	files, err := queries.ListFiles(ctx)
 	if err != nil {
