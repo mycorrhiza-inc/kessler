@@ -7,7 +7,9 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+	"github.com/jackc/pgx/pgtype"
 	"github.com/jackc/pgx/v5"
 	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
 )
@@ -37,34 +39,48 @@ func TestPostgresConnection() (string, error) {
 }
 
 func defineCrudRoutes(router *mux.Router) {
-	s := router.PathPrefix("/crud").Subrouter()
-	s.HandleFunc("/files/{uuid}", getFileHandler)
+	ctx := context.Background()
+
+	// conn, err := pgx.Connect(ctx, "user=pqgotest dbname=pqgotest sslmode=verify-full")
+	conn, err := pgx.Connect(ctx, pgConnString)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
+		return
+	}
+	defer conn.Close(ctx)
+	queries := dbstore.New(conn)
+	public_subrouter := router.PathPrefix("/public").Subrouter()
+	public_subrouter.HandleFunc("/files/{uuid}", makeFileHandler(queries))
+	// private_subrouter := router.PathPrefix("/private").Subrouter()
+	// private_subrouter.HandleFunc("/files/{uuid}", getPrivateFileHandler)
 }
 
-func getFileHandler(w http.ResponseWriter, r *http.Request) {
-	params := mux.Vars(r)
-	fileID := params["uuid"]
+func makeFileHandler(q *dbstore.Queries) func(w http.ResponseWriter, r *http.Request) {
+	return_func := func(w http.ResponseWriter, r *http.Request) {
+		params := mux.Vars(r)
+		fileID := params["uuid"]
+		parsedUUID, err := uuid.Parse(fileID)
+		if err != nil {
+			http.Error(w, "Invalid File ID format", http.StatusBadRequest)
+			return
+		}
+		pgUUID := pgtype.UUID{bytes: parsedUUID, Valid: true}
+		ctx := r.Context()
 
-	parsedUUID, err := parseUUID(fileID) // hypothetical helper function
-	if err != nil {
-		http.Error(w, "Invalid File ID format", http.StatusBadRequest)
-		return
+		file, err := q.ReadFile(ctx, pgUUID)
+		if err != nil {
+			http.Error(w, "File not found", http.StatusNotFound)
+			return
+		}
+
+		// fileSchema := fileToSchema(file)
+		fileSchema := file
+		response, _ := json.Marshal(fileSchema)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(response)
 	}
-
-	ctx := r.Context()
-
-	q := NewQueries(nil) // assuming the database connection is managed better in the real app
-	file, err := q.ReadFile(ctx, parsedUUID)
-	if err != nil {
-		http.Error(w, "File not found", http.StatusNotFound)
-		return
-	}
-
-	fileSchema := fileToSchema(file)
-	response, _ := json.Marshal(fileSchema)
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(response)
+	return return_func
 }
 
 func getMarkdownHandler(w http.ResponseWriter, r *http.Request) {
