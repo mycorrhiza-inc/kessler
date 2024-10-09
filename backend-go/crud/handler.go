@@ -51,6 +51,7 @@ func defineCrudRoutes(router *mux.Router) {
 	queries := dbstore.New(conn)
 	public_subrouter := router.PathPrefix("/public").Subrouter()
 	public_subrouter.HandleFunc("/files/{uuid}", makeFileHandler(queries))
+	public_subrouter.HandleFunc("/files/{uuid}/markdown", makeMarkdownHandler(queries))
 	// private_subrouter := router.PathPrefix("/private").Subrouter()
 	// private_subrouter.HandleFunc("/files/{uuid}", getPrivateFileHandler)
 }
@@ -83,46 +84,49 @@ func makeFileHandler(q *dbstore.Queries) func(w http.ResponseWriter, r *http.Req
 	return return_func
 }
 
-func getMarkdownHandler(w http.ResponseWriter, r *http.Request) {
-	params := mux.Vars(r)
-	fileID := params["uuid"]
+func makeMarkdownHandler(q *dbstore.Queries) func(w http.ResponseWriter, r *http.Request) {
+	return_func := func(w http.ResponseWriter, r *http.Request) {
+		params := mux.Vars(r)
+		fileID := params["uuid"]
 
-	parsedUUID, err := parseUUID(fileID) // hypothetical helper function
-	if err != nil {
-		http.Error(w, "Invalid File ID format", http.StatusBadRequest)
-		return
+		parsedUUID, err := uuid.Parse(fileID) // hypothetical helper function
+		if err != nil {
+			http.Error(w, "Invalid File ID format", http.StatusBadRequest)
+			return
+		}
+		pgUUID := pgtype.UUID{bytes: parsedUUID, Valid: true}
+
+		originalLang := r.URL.Query().Get("original_lang") == "true"
+		matchLang := r.URL.Query().Get("match_lang")
+
+		ctx := r.Context()
+
+		var texts []dbstore.FileTextSource
+		if originalLang {
+			texts, err = q.ListTextsOfFileOriginal(ctx, pgUUID)
+		} else if matchLang != "" {
+			texts, err = q.ListTextsOfFileWithLanguage(ctx, dbstore.ListTextsOfFileWithLanguageParams{
+				FileID:   pgUUID,
+				Language: matchLang,
+			})
+		} else {
+			texts, err = q.ListTextsOfFile(ctx, pgUUID)
+			matchLang = "en"
+		}
+
+		if err != nil {
+			http.Error(w, "Error retrieving texts", http.StatusInternalServerError)
+			return
+		}
+
+		if len(texts) == 0 {
+			http.Error(w, "No texts found for document", http.StatusNotFound)
+			return
+		}
+
+		markdownText := texts[0].Text
+		w.Header().Set("Content-Type", "text/plain")
+		w.Write([]byte(markdownText.String))
 	}
-
-	originalLang := r.URL.Query().Get("original_lang") == "true"
-	matchLang := r.URL.Query().Get("match_lang")
-
-	ctx := r.Context()
-	q := NewQueries(nil) // assuming the database connection is managed better in the real app
-
-	var texts []FileTextSource
-	if originalLang {
-		texts, err = q.ListTextsOfFileOriginal(ctx, parsedUUID)
-	} else if matchLang != "" {
-		texts, err = q.ListTextsOfFileWithLanguage(ctx, ListTextsOfFileWithLanguageParams{
-			FileID:   parsedUUID,
-			Language: matchLang,
-		})
-	} else {
-		texts, err = q.ListTextsOfFile(ctx, parsedUUID)
-		matchLang = "en"
-	}
-
-	if err != nil {
-		http.Error(w, "Error retrieving texts", http.StatusInternalServerError)
-		return
-	}
-
-	if len(texts) == 0 {
-		http.Error(w, "No texts found for document", http.StatusNotFound)
-		return
-	}
-
-	markdownText := texts[0].Text
-	w.Header().Set("Content-Type", "text/plain")
-	w.Write([]byte(markdownText))
+	return return_func
 }
