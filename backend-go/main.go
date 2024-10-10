@@ -76,6 +76,7 @@ func makeTokenValidator(dbtx_val dbstore.DBTX) func(r *http.Request) UserValidat
 				userID:    "anonomous",
 			}
 		}
+		// Validation four our scrapers to add data to the system
 		if strings.HasPrefix(token, "Bearer thaum_") {
 			// TODO: Add a check so that authentication only succeeds if it comes from a tailscale IP.
 			q := *dbstore.New(dbtx_val)
@@ -83,7 +84,7 @@ func makeTokenValidator(dbtx_val dbstore.DBTX) func(r *http.Request) UserValidat
 			// Replacing this with PBKDF2 or something would be more secure, but it should matter since every API key can be gaurenteed to have at least 128/256 bits of strength.
 			hash := blake2b.Sum256([]byte(token[trim:]))
 			encodedHash := base64.URLEncoding.EncodeToString(hash[:])
-			fmt.Println(encodedHash)
+			fmt.Println("Checking Database for Hashed API Key:", encodedHash)
 			ctx := r.Context()
 			result, err := q.CheckIfThaumaturgyAPIKeyExists(ctx, encodedHash)
 			if result.KeyBlake3Hash == encodedHash && err != nil {
@@ -91,6 +92,7 @@ func makeTokenValidator(dbtx_val dbstore.DBTX) func(r *http.Request) UserValidat
 			}
 			return UserValidation{validated: false}
 		}
+		// Add validation for supabase users
 		return UserValidation{validated: false}
 	}
 	return return_func
@@ -100,12 +102,14 @@ func makeAuthMiddleware(dbtx_val dbstore.DBTX) func(http.Handler) http.Handler {
 	tokenValidator := makeTokenValidator(dbtx_val)
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			fmt.Println("Authenticating request")
 			userInfo := tokenValidator(r)
 			if userInfo.validated {
 				r.Header.Set("Authorization", fmt.Sprintf("Authenticated %s", userInfo.userID))
 				next.ServeHTTP(w, r)
 
 			} else {
+				fmt.Println("Auth Failed, for ip address", r.RemoteAddr)
 				http.Error(w, "Forbidden", http.StatusForbidden)
 			}
 		})
@@ -146,14 +150,14 @@ func main() {
 
 	mux := mux.NewRouter()
 	crud.DefineCrudRoutes(mux, connPool)
-	mux.HandleFunc("/search", search.HandleSearchRequest)
-	mux.HandleFunc("/rag/basic_chat", rag.HandleBasicChatRequest)
-	mux.HandleFunc("/rag/chat", rag.HandleRagChatRequest)
+	mux.HandleFunc("/api/v2/search", search.HandleSearchRequest)
+	mux.HandleFunc("/api/v2/rag/basic_chat", rag.HandleBasicChatRequest)
+	mux.HandleFunc("/api/v2/rag/chat", rag.HandleRagChatRequest)
 	const timeout = time.Second * 10
 
 	muxWithMiddlewares := http.TimeoutHandler(mux, timeout, "Timeout!")
 	authMiddleware := makeAuthMiddleware(connPool)
-	handler := authMiddleware(corsMiddleware(muxWithMiddlewares))
+	handler := corsMiddleware(authMiddleware(muxWithMiddlewares))
 
 	server := &http.Server{
 		Addr:         ":4041",
