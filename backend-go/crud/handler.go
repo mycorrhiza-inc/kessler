@@ -9,14 +9,21 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"github.com/jackc/pgx/pgtype"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
 )
 
-var pgConnString = os.Getenv("DATABASE_CONNECTION_STRING")
+type UserInfo struct {
+	validated     bool
+	userID        string
+	orgID         string
+	isThaumaturgy bool
+	paymentTier   string
+}
 
 func TestPostgresConnection() (string, error) {
+	pgConnString := os.Getenv("DATABASE_CONNECTION_STRING")
 	ctx := context.Background()
 
 	// conn, err := pgx.Connect(ctx, "user=pqgotest dbname=pqgotest sslmode=verify-full")
@@ -38,26 +45,17 @@ func TestPostgresConnection() (string, error) {
 	return "Success", nil
 }
 
-func defineCrudRoutes(router *mux.Router) {
-	ctx := context.Background()
-
-	// conn, err := pgx.Connect(ctx, "user=pqgotest dbname=pqgotest sslmode=verify-full")
-	conn, err := pgx.Connect(ctx, pgConnString)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
-		return
-	}
-	defer conn.Close(ctx)
-	queries := dbstore.New(conn)
+func DefineCrudRoutes(router *mux.Router, dbtx_val dbstore.DBTX) {
 	public_subrouter := router.PathPrefix("/public").Subrouter()
-	public_subrouter.HandleFunc("/files/{uuid}", makeFileHandler(queries))
-	public_subrouter.HandleFunc("/files/{uuid}/markdown", makeMarkdownHandler(queries))
+	public_subrouter.HandleFunc("/files/{uuid}", makeFileHandler(dbtx_val))
+	public_subrouter.HandleFunc("/files/{uuid}/markdown", makeMarkdownHandler(dbtx_val))
 	// private_subrouter := router.PathPrefix("/private").Subrouter()
 	// private_subrouter.HandleFunc("/files/{uuid}", getPrivateFileHandler)
 }
 
-func makeFileHandler(q *dbstore.Queries) func(w http.ResponseWriter, r *http.Request) {
+func makeFileHandler(dbtx_val dbstore.DBTX) func(w http.ResponseWriter, r *http.Request) {
 	return_func := func(w http.ResponseWriter, r *http.Request) {
+		q := *dbstore.New(dbtx_val)
 		params := mux.Vars(r)
 		fileID := params["uuid"]
 		parsedUUID, err := uuid.Parse(fileID)
@@ -65,7 +63,7 @@ func makeFileHandler(q *dbstore.Queries) func(w http.ResponseWriter, r *http.Req
 			http.Error(w, "Invalid File ID format", http.StatusBadRequest)
 			return
 		}
-		pgUUID := pgtype.UUID{bytes: parsedUUID, Valid: true}
+		pgUUID := pgtype.UUID{Bytes: parsedUUID, Valid: true}
 		ctx := r.Context()
 
 		file, err := q.ReadFile(ctx, pgUUID)
@@ -84,8 +82,9 @@ func makeFileHandler(q *dbstore.Queries) func(w http.ResponseWriter, r *http.Req
 	return return_func
 }
 
-func makeMarkdownHandler(q *dbstore.Queries) func(w http.ResponseWriter, r *http.Request) {
+func makeMarkdownHandler(dbtx_val dbstore.DBTX) func(w http.ResponseWriter, r *http.Request) {
 	return_func := func(w http.ResponseWriter, r *http.Request) {
+		q := *dbstore.New(dbtx_val)
 		params := mux.Vars(r)
 		fileID := params["uuid"]
 
@@ -94,7 +93,7 @@ func makeMarkdownHandler(q *dbstore.Queries) func(w http.ResponseWriter, r *http
 			http.Error(w, "Invalid File ID format", http.StatusBadRequest)
 			return
 		}
-		pgUUID := pgtype.UUID{bytes: parsedUUID, Valid: true}
+		pgUUID := pgtype.UUID{Bytes: parsedUUID, Valid: true}
 
 		originalLang := r.URL.Query().Get("original_lang") == "true"
 		matchLang := r.URL.Query().Get("match_lang")
