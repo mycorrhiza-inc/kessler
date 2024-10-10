@@ -2,6 +2,7 @@ package crud
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -13,14 +14,32 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
+	"golang.org/x/crypto/blake2b"
 )
 
-func validateBearerToken(r *http.Request) (string, bool) {
-	token := r.Header.Get("Authorization")
-	if strings.HasPrefix(token, "Bearer thaum_") {
-		return "thaumaturgy", true
+type UserInfo struct {
+	userID        string
+	orgID         string
+	isThaumaturgy bool
+	paymentTier   string
+}
+
+func makeTokenValidator(q *dbstore.Queries) func(r *http.Request) (UserInfo, bool) {
+	return_func := func(r *http.Request) (UserInfo, bool) {
+		token := r.Header.Get("Authorization")
+		if strings.HasPrefix(token, "Bearer thaum_") {
+			const trim = len("Bearer thaum_")
+			hash := blake2b.Sum256([]byte(token[trim:]))
+			encodedHash := base64.StdEncoding.EncodeToString(hash[:])
+			fmt.Println(encodedHash)
+			ctx := r.Context()
+			query := q.CheckIfThaumaturgyAPIKeyExists(ctx, encodedHash)
+
+			return UserInfo{userID: "thaumaturgy", isThaumaturgy: true}, true
+		}
+		return UserInfo{}, false
 	}
-	return "", false
+	return return_func
 }
 
 var pgConnString = os.Getenv("DATABASE_CONNECTION_STRING")
