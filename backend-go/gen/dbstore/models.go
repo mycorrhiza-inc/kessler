@@ -215,6 +215,14 @@ type UserfilesPrivateFileTextSource struct {
 	UpdatedAt      pgtype.Timestamptz
 }
 
+type UserfilesThaumaturgyApiKey struct {
+	KeyName       pgtype.Text
+	KeyBlake3Hash string
+	ID            pgtype.UUID
+	CreatedAt     pgtype.Timestamptz
+	UpdatedAt     pgtype.Timestamptz
+}
+
 type Usergroup struct {
 	ID        pgtype.UUID
 	Name      string

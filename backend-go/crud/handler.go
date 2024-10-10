@@ -6,13 +6,22 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"github.com/jackc/pgx/pgtype"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
 )
+
+func validateBearerToken(r *http.Request) (string, bool) {
+	token := r.Header.Get("Authorization")
+	if strings.HasPrefix(token, "Bearer thaum_") {
+		return "thaumaturgy", true
+	}
+	return "", false
+}
 
 var pgConnString = os.Getenv("DATABASE_CONNECTION_STRING")
 
@@ -65,7 +74,7 @@ func makeFileHandler(q *dbstore.Queries) func(w http.ResponseWriter, r *http.Req
 			http.Error(w, "Invalid File ID format", http.StatusBadRequest)
 			return
 		}
-		pgUUID := pgtype.UUID{bytes: parsedUUID, Valid: true}
+		pgUUID := pgtype.UUID{Bytes: parsedUUID, Valid: true}
 		ctx := r.Context()
 
 		file, err := q.ReadFile(ctx, pgUUID)
@@ -94,7 +103,7 @@ func makeMarkdownHandler(q *dbstore.Queries) func(w http.ResponseWriter, r *http
 			http.Error(w, "Invalid File ID format", http.StatusBadRequest)
 			return
 		}
-		pgUUID := pgtype.UUID{bytes: parsedUUID, Valid: true}
+		pgUUID := pgtype.UUID{Bytes: parsedUUID, Valid: true}
 
 		originalLang := r.URL.Query().Get("original_lang") == "true"
 		matchLang := r.URL.Query().Get("match_lang")
