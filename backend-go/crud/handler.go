@@ -22,9 +22,8 @@ type UserInfo struct {
 	paymentTier   string
 }
 
-var pgConnString = os.Getenv("DATABASE_CONNECTION_STRING")
-
 func TestPostgresConnection() (string, error) {
+	pgConnString := os.Getenv("DATABASE_CONNECTION_STRING")
 	ctx := context.Background()
 
 	// conn, err := pgx.Connect(ctx, "user=pqgotest dbname=pqgotest sslmode=verify-full")
