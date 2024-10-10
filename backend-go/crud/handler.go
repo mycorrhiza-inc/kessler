@@ -2,44 +2,24 @@ package crud
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
-	"strings"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
-	"golang.org/x/crypto/blake2b"
 )
 
 type UserInfo struct {
+	validated     bool
 	userID        string
 	orgID         string
 	isThaumaturgy bool
 	paymentTier   string
-}
-
-func makeTokenValidator(q *dbstore.Queries) func(r *http.Request) (UserInfo, bool) {
-	return_func := func(r *http.Request) (UserInfo, bool) {
-		token := r.Header.Get("Authorization")
-		if strings.HasPrefix(token, "Bearer thaum_") {
-			const trim = len("Bearer thaum_")
-			hash := blake2b.Sum256([]byte(token[trim:]))
-			encodedHash := base64.StdEncoding.EncodeToString(hash[:])
-			fmt.Println(encodedHash)
-			ctx := r.Context()
-			query := q.CheckIfThaumaturgyAPIKeyExists(ctx, encodedHash)
-
-			return UserInfo{userID: "thaumaturgy", isThaumaturgy: true}, true
-		}
-		return UserInfo{}, false
-	}
-	return return_func
 }
 
 var pgConnString = os.Getenv("DATABASE_CONNECTION_STRING")
@@ -66,17 +46,7 @@ func TestPostgresConnection() (string, error) {
 	return "Success", nil
 }
 
-func defineCrudRoutes(router *mux.Router) {
-	ctx := context.Background()
-
-	// conn, err := pgx.Connect(ctx, "user=pqgotest dbname=pqgotest sslmode=verify-full")
-	conn, err := pgx.Connect(ctx, pgConnString)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
-		return
-	}
-	defer conn.Close(ctx)
-	queries := dbstore.New(conn)
+func defineCrudRoutes(router *mux.Router, queries *dbstore.Queries) {
 	public_subrouter := router.PathPrefix("/public").Subrouter()
 	public_subrouter.HandleFunc("/files/{uuid}", makeFileHandler(queries))
 	public_subrouter.HandleFunc("/files/{uuid}/markdown", makeMarkdownHandler(queries))
