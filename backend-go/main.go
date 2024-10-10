@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -76,6 +77,10 @@ func makeTokenValidator(dbtx_val dbstore.DBTX) func(r *http.Request) UserValidat
 				userID:    "anonomous",
 			}
 		}
+		// Check for "Bearer " prefix in the authorization header (expected format)
+		if !strings.HasPrefix(token, "Bearer ") {
+			return UserValidation{validated: false}
+		}
 		// Validation four our scrapers to add data to the system
 		if strings.HasPrefix(token, "Bearer thaum_") {
 			// TODO: Add a check so that authentication only succeeds if it comes from a tailscale IP.
@@ -92,9 +97,34 @@ func makeTokenValidator(dbtx_val dbstore.DBTX) func(r *http.Request) UserValidat
 			}
 			return UserValidation{validated: false}
 		}
-		// Add validation for supabase users
+
+		tokenString := strings.TrimPrefix(token, "Bearer ")
+
+		// Parse the JWT token
+		parsedToken, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+			// Validate the algorithm
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			}
+			// Return the secret for signature verification
+			return jwtSecret, nil
+		})
+		if err != nil {
+			// Token is not valid or has expired
+			return UserValidation{validated: false}
+		}
+
+		// You can also add claim validation logic here, for example:
+		// Check if claims contain user_id or any custom claim information
+		if claims, ok := parsedToken.Claims.(jwt.MapClaims); ok && parsedToken.Valid {
+			userID := claims["sub"] // JWT 'sub' - typically the user ID
+			// Perform additional checks if necessary
+			return UserValidation{userID: userID.(string), validated: true}
+		}
+
 		return UserValidation{validated: false}
 	}
+
 	return return_func
 }
 

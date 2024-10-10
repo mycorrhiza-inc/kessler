@@ -62,13 +62,13 @@ const featuresData: Feature[] = [
 ];
 
 const futureFeaturesData: Feature[] = [
-  {
-    id: 9,
-    icon: "/landing/images/icon/icon-09.svg",
-    title: "Document Sharing and Revenue Split",
-    description:
-      "Share your government documents with other users and earn revenue from making that data accessible.",
-  },
+  // {
+  //   id: 9,
+  //   icon: "/landing/images/icon/icon-09.svg",
+  //   title: "Document Sharing and Revenue Split",
+  //   description:
+  //     "Share your government documents with other users and earn revenue from making that data accessible.",
+  // },
   {
     id: 10,
     icon: "/landing/images/icon/icon-10.svg",
