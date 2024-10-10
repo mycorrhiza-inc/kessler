@@ -146,30 +146,19 @@ const SingleFeature = ({ feature }: { feature: Feature }) => {
   const { icon, title, description } = feature;
 
   return (
-    <div className="card bg-primary w-96 shadow-xl text-neutral-content">
-      <figure className="px-10 pt-10">
-        <Image
-          src={icon}
-          width={36}
-          height={36}
-          alt={title}
-          className="rounded-xl"
-        />
-      </figure>
-      <div className="card-body items-center text-center text-primary-content">
-        <h2 className="card-title">{title}</h2>
-        <p>{description}</p>
-      </div>
+    <div className="rounded-box  w-auto p-10 m-5 bg-primary shadow-xl text-neutral-content">
+      <h2 className="card-title">{title}</h2>
+      <p>{description}</p>
     </div>
   );
 };
 
-const Feature = () => {
+const Feature = ({ className }: { className: string }) => {
   return (
-    <>
+    <div className={className}>
       {/* <!-- ===== Features Start ===== --> */}
-      <section id="features" className="py-20 lg:py-25 xl:py-30">
-        <div className="mx-auto max-w-c-1315 px-4 md:px-8 xl:px-0">
+      <section id="features">
+        <div className="">
           {/* <!-- Section Title Start --> */}
           <div className="text-center">
             <h2 className="text-4xl font-bold">SOLID FEATURES</h2>
@@ -181,7 +170,7 @@ const Feature = () => {
           </div>
           {/* <!-- Section Title End --> */}
 
-          <div className="mt-12.5 grid grid-cols-1 gap-7.5 md:grid-cols-2 lg:mt-15 lg:grid-cols-3 xl:mt-20 gap-5">
+          <div className="grid grid-cols-1  lg:grid-cols-3 justify-items-center gap-1">
             {/* <!-- Features item Start --> */}
 
             {featuresData.map((feature, key) => (
@@ -193,7 +182,7 @@ const Feature = () => {
       </section>
 
       {/* <!-- ===== Features End ===== --> */}
-    </>
+    </div>
   );
 };
 
