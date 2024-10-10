@@ -16,6 +16,7 @@ import (
 	"github.com/joho/godotenv"
 	"golang.org/x/crypto/blake2b"
 
+	"github.com/mycorrhiza-inc/kessler/backend-go/crud"
 	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
 	"github.com/mycorrhiza-inc/kessler/backend-go/rag"
 	"github.com/mycorrhiza-inc/kessler/backend-go/search"
@@ -76,11 +77,12 @@ func makeTokenValidator(dbtx_val dbstore.DBTX) func(r *http.Request) UserValidat
 			}
 		}
 		if strings.HasPrefix(token, "Bearer thaum_") {
+			// TODO: Add a check so that authentication only succeeds if it comes from a tailscale IP.
 			q := *dbstore.New(dbtx_val)
 			const trim = len("Bearer thaum_")
 			// Replacing this with PBKDF2 or something would be more secure, but it should matter since every API key can be gaurenteed to have at least 128/256 bits of strength.
 			hash := blake2b.Sum256([]byte(token[trim:]))
-			encodedHash := base64.StdEncoding.EncodeToString(hash[:])
+			encodedHash := base64.URLEncoding.EncodeToString(hash[:])
 			fmt.Println(encodedHash)
 			ctx := r.Context()
 			result, err := q.CheckIfThaumaturgyAPIKeyExists(ctx, encodedHash)
@@ -140,30 +142,18 @@ func main() {
 		log.Fatal("Error while creating connection to the database!!")
 	}
 
-	// connection, err := connPool.Acquire(context.Background())
-	// if err != nil {
-	// 	log.Fatal("Error while acquiring connection from the database pool!!")
-	// }
-	//
-	// err = connection.Ping(context.Background())
-	// if err != nil {
-	// 	log.Fatal("Could not ping database")
-	// }
-	//
-	// fmt.Println("Connected to the database!!")
-	// connection.Release()
-
 	defer connPool.Close()
 
 	mux := mux.NewRouter()
-	misc_s := mux.PathPrefix("/api/v2").Subrouter()
-	misc_s.HandleFunc("/search", search.HandleSearchRequest)
-	misc_s.HandleFunc("/rag/basic_chat", rag.HandleBasicChatRequest)
-	misc_s.HandleFunc("/rag/chat", rag.HandleRagChatRequest)
+	crud.DefineCrudRoutes(mux, connPool)
+	mux.HandleFunc("/search", search.HandleSearchRequest)
+	mux.HandleFunc("/rag/basic_chat", rag.HandleBasicChatRequest)
+	mux.HandleFunc("/rag/chat", rag.HandleRagChatRequest)
 	const timeout = time.Second * 10
 
 	muxWithMiddlewares := http.TimeoutHandler(mux, timeout, "Timeout!")
-	handler := corsMiddleware(muxWithMiddlewares)
+	authMiddleware := makeAuthMiddleware(connPool)
+	handler := authMiddleware(corsMiddleware(muxWithMiddlewares))
 
 	server := &http.Server{
 		Addr:         ":4041",

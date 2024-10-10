@@ -45,16 +45,17 @@ func TestPostgresConnection() (string, error) {
 	return "Success", nil
 }
 
-func defineCrudRoutes(router *mux.Router, queries *dbstore.Queries) {
+func DefineCrudRoutes(router *mux.Router, dbtx_val dbstore.DBTX) {
 	public_subrouter := router.PathPrefix("/public").Subrouter()
-	public_subrouter.HandleFunc("/files/{uuid}", makeFileHandler(queries))
-	public_subrouter.HandleFunc("/files/{uuid}/markdown", makeMarkdownHandler(queries))
+	public_subrouter.HandleFunc("/files/{uuid}", makeFileHandler(dbtx_val))
+	public_subrouter.HandleFunc("/files/{uuid}/markdown", makeMarkdownHandler(dbtx_val))
 	// private_subrouter := router.PathPrefix("/private").Subrouter()
 	// private_subrouter.HandleFunc("/files/{uuid}", getPrivateFileHandler)
 }
 
-func makeFileHandler(q *dbstore.Queries) func(w http.ResponseWriter, r *http.Request) {
+func makeFileHandler(dbtx_val dbstore.DBTX) func(w http.ResponseWriter, r *http.Request) {
 	return_func := func(w http.ResponseWriter, r *http.Request) {
+		q := *dbstore.New(dbtx_val)
 		params := mux.Vars(r)
 		fileID := params["uuid"]
 		parsedUUID, err := uuid.Parse(fileID)
@@ -81,8 +82,9 @@ func makeFileHandler(q *dbstore.Queries) func(w http.ResponseWriter, r *http.Req
 	return return_func
 }
 
-func makeMarkdownHandler(q *dbstore.Queries) func(w http.ResponseWriter, r *http.Request) {
+func makeMarkdownHandler(dbtx_val dbstore.DBTX) func(w http.ResponseWriter, r *http.Request) {
 	return_func := func(w http.ResponseWriter, r *http.Request) {
+		q := *dbstore.New(dbtx_val)
 		params := mux.Vars(r)
 		fileID := params["uuid"]
 
