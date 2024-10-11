@@ -49,6 +49,7 @@ func checkPrivateFileAuthorization(q dbstore.Queries, ctx context.Context, objec
 func makeFileHandler(info FileHandlerInfo) func(w http.ResponseWriter, r *http.Request) {
 	private := info.private
 	dbtx_val := info.dbtx_val
+	return_type := info.return_type
 	return_func := func(w http.ResponseWriter, r *http.Request) {
 		q := *dbstore.New(dbtx_val)
 		token := r.Header.Get("Authorization")
@@ -72,55 +73,73 @@ func makeFileHandler(info FileHandlerInfo) func(w http.ResponseWriter, r *http.R
 				fmt.Printf("Ran into the follwing error with authentication $v", err)
 			}
 		}
-		getFile := func(uuid pgtype.UUID) (rawFileSchema, error) {
-			if !private {
-				file, err := q.ReadFile(ctx, pgUUID)
-				if err != nil {
-					return rawFileSchema{}, err
+		// TODO: This is horrible, I need to refactor
+		if return_type == "object" {
+			getFile := func(uuid pgtype.UUID) (rawFileSchema, error) {
+				if !private {
+					file, err := q.ReadFile(ctx, pgUUID)
+					if err != nil {
+						return rawFileSchema{}, err
+					}
+					return PublicFileToSchema(file), nil
+				} else {
+					file, err := q.ReadPrivateFile(ctx, pgUUID)
+					if err != nil {
+						return rawFileSchema{}, err
+					}
+					return PrivateFileToSchema(file), nil
 				}
-				return PublicFileToSchema(file), nil
-			} else {
-				file, err := q.ReadPrivateFile(ctx, pgUUID)
-				if err != nil {
-					return rawFileSchema{}, err
-				}
-				return PrivateFileToSchema(file), nil
 			}
+
+			file, err := getFile(pgUUID)
+			if err != nil {
+				http.Error(w, "File not found", http.StatusNotFound)
+				return
+			}
+
+			// fileSchema := fileToSchema(file)
+			fileSchema, err := RawToFileSchema(file)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			response, _ := json.Marshal(fileSchema)
+
+			w.Header().Set("Content-Type", "application/json")
+			w.Write(response)
+		} else if return_type == "markdown" {
+			originalLang := r.URL.Query().Get("original_lang") == "true"
+			matchLang := r.URL.Query().Get("match_lang")
+
+			ctx := r.Context()
+
+			var texts []dbstore.FileTextSource
+			if originalLang {
+				texts, err = q.ListTextsOfFileOriginal(ctx, pgUUID)
+			} else if matchLang != "" {
+				texts, err = q.ListTextsOfFileWithLanguage(ctx, dbstore.ListTextsOfFileWithLanguageParams{
+					FileID:   pgUUID,
+					Language: matchLang,
+				})
+			} else {
+				texts, err = q.ListTextsOfFile(ctx, pgUUID)
+				matchLang = "en"
+			}
+
+			if err != nil {
+				http.Error(w, "Error retrieving texts", http.StatusInternalServerError)
+				return
+			}
+
+			if len(texts) == 0 {
+				http.Error(w, "No texts found for document", http.StatusNotFound)
+				return
+			}
+
+			markdownText := texts[0].Text
+			w.Header().Set("Content-Type", "text/plain")
+			w.Write([]byte(markdownText.String))
 		}
-
-		file, err := getFile(pgUUID)
-		if err != nil {
-			http.Error(w, "File not found", http.StatusNotFound)
-			return
-		}
-
-		// fileSchema := fileToSchema(file)
-		fileSchema, err := RawToFileSchema(file)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		response, _ := json.Marshal(fileSchema)
-
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(response)
-	}
-	return return_func
-}
-
-func makeMarkdownHandler(dbtx_val dbstore.DBTX) func(w http.ResponseWriter, r *http.Request) {
-	return_func := func(w http.ResponseWriter, r *http.Request) {
-		q := *dbstore.New(dbtx_val)
-		ctx := r.Context()
-		params := mux.Vars(r)
-		fileID := params["uuid"]
-
-		parsedUUID, err := uuid.Parse(fileID) // hypothetical helper function
-		if err != nil {
-			http.Error(w, "Invalid File ID format", http.StatusBadRequest)
-			return
-		}
-		pgUUID := pgtype.UUID{Bytes: parsedUUID, Valid: true}
 	}
 	return return_func
 }
