@@ -1,49 +1,14 @@
 package crud
 
 import (
-	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
-	"os"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
 )
-
-type UserInfo struct {
-	validated     bool
-	userID        string
-	orgID         string
-	isThaumaturgy bool
-	paymentTier   string
-}
-
-func TestPostgresConnection() (string, error) {
-	pgConnString := os.Getenv("DATABASE_CONNECTION_STRING")
-	ctx := context.Background()
-
-	// conn, err := pgx.Connect(ctx, "user=pqgotest dbname=pqgotest sslmode=verify-full")
-	conn, err := pgx.Connect(ctx, pgConnString)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
-		return "", fmt.Errorf("Unable to connect to database")
-	}
-	defer conn.Close(ctx)
-	queries := dbstore.New(conn)
-	files, err := queries.ListFiles(ctx)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error listing files: %v\n", err)
-		return "", fmt.Errorf("Error Found")
-
-	}
-	truncatedFiles := files[:100]
-	fmt.Println("Successfully listed files:", truncatedFiles)
-	return "Success", nil
-}
 
 func DefineCrudRoutes(router *mux.Router, dbtx_val dbstore.DBTX) {
 	public_subrouter := router.PathPrefix("/public").Subrouter()
@@ -53,7 +18,7 @@ func DefineCrudRoutes(router *mux.Router, dbtx_val dbstore.DBTX) {
 	// private_subrouter.HandleFunc("/files/{uuid}", getPrivateFileHandler)
 }
 
-func makeFileHandler(dbtx_val dbstore.DBTX) func(w http.ResponseWriter, r *http.Request) {
+func makeFileHandler(dbtx_val dbstore.DBTX, private bool) func(w http.ResponseWriter, r *http.Request) {
 	return_func := func(w http.ResponseWriter, r *http.Request) {
 		q := *dbstore.New(dbtx_val)
 		params := mux.Vars(r)
@@ -66,7 +31,12 @@ func makeFileHandler(dbtx_val dbstore.DBTX) func(w http.ResponseWriter, r *http.
 		pgUUID := pgtype.UUID{Bytes: parsedUUID, Valid: true}
 		ctx := r.Context()
 
-		file, err := q.ReadFile(ctx, pgUUID)
+		if !private {
+			file, err := q.ReadFile(ctx, pgUUID)
+		} else {
+			file, err := q.ReadPrivateFile(ctx, pgUUID)
+		}
+
 		if err != nil {
 			http.Error(w, "File not found", http.StatusNotFound)
 			return
@@ -126,6 +96,19 @@ func makeMarkdownHandler(dbtx_val dbstore.DBTX) func(w http.ResponseWriter, r *h
 		markdownText := texts[0].Text
 		w.Header().Set("Content-Type", "text/plain")
 		w.Write([]byte(markdownText.String))
+	}
+	return return_func
+}
+
+func makeUpsertHandler(dbtx_val dbstore.DBTX, private bool) func(w http.ResponseWriter, r *http.Request) {
+	return_func := func(w http.ResponseWriter, r *http.Request) {
+		if !strings.HasPrefix(token, "Authorized ") {
+			return UserValidation{validated: false}
+		}
+		userID , err :=
+		if !private && userID !="thaumaturgy"{
+
+		}
 	}
 	return return_func
 }
