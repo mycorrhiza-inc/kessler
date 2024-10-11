@@ -16,10 +16,15 @@ import (
 func DefineCrudRoutes(router *mux.Router, dbtx_val dbstore.DBTX) {
 	public_subrouter := router.PathPrefix("/public").Subrouter()
 
-	pub_file := public_subrouter.HandleFunc("/files/{uuid}", makeFileHandler(FileHandlerInfo{dbtx_val: dbtx_val, private: false, return_type: "object"}))
-	public_subrouter.HandleFunc("/files/{uuid}/markdown", makeFileHandler(FileHandlerInfo{dbtx_val: dbtx_val, private: false, markdown: false}))
-	// private_subrouter := router.PathPrefix("/private").Subrouter()
-	// private_subrouter.HandleFunc("/files/{uuid}", getPrivateFileHandler)
+	public_subrouter.HandleFunc("/files/{uuid}", makeFileHandler(
+		FileHandlerInfo{dbtx_val: dbtx_val, private: false, return_type: "object"}))
+	public_subrouter.HandleFunc("/files/{uuid}/markdown", makeFileHandler(
+		FileHandlerInfo{dbtx_val: dbtx_val, private: false, return_type: "markdown"}))
+	private_subrouter := router.PathPrefix("/private").Subrouter()
+	private_subrouter.HandleFunc("/files/{uuid}", makeFileHandler(
+		FileHandlerInfo{dbtx_val: dbtx_val, private: true, return_type: "object"}))
+	private_subrouter.HandleFunc("/files/{uuid}/markdown", makeFileHandler(
+		FileHandlerInfo{dbtx_val: dbtx_val, private: true, return_type: "markdown"}))
 }
 
 type FileHandlerInfo struct {
@@ -108,37 +113,48 @@ func makeFileHandler(info FileHandlerInfo) func(w http.ResponseWriter, r *http.R
 			w.Header().Set("Content-Type", "application/json")
 			w.Write(response)
 		} else if return_type == "markdown" {
-			originalLang := r.URL.Query().Get("original_lang") == "true"
-			matchLang := r.URL.Query().Get("match_lang")
 
 			ctx := r.Context()
 
-			var texts []dbstore.FileTextSource
-			if originalLang {
-				texts, err = q.ListTextsOfFileOriginal(ctx, pgUUID)
-			} else if matchLang != "" {
-				texts, err = q.ListTextsOfFileWithLanguage(ctx, dbstore.ListTextsOfFileWithLanguageParams{
-					FileID:   pgUUID,
-					Language: matchLang,
-				})
-			} else {
-				texts, err = q.ListTextsOfFile(ctx, pgUUID)
-				matchLang = "en"
+			get_file_texts := func(pgUUID pgtype.UUID) ([]FileTextSchema, error) {
+				if private {
+					texts, err := q.ListPrivateTextsOfFile(ctx, pgUUID)
+					if err != nil {
+						http.Error(w, "Error retrieving texts", http.StatusInternalServerError)
+						return []FileTextSchema{}, err
+					}
+					schemas := make([]FileTextSchema, len(texts))
+					for i, text := range texts {
+						schemas[i] = PrivateTextToSchema(text)
+					}
+					return schemas, nil
+				}
+				texts, err := q.ListTextsOfFile(ctx, pgUUID)
+				if err != nil {
+					http.Error(w, "Error retrieving texts", http.StatusInternalServerError)
+					return []FileTextSchema{}, err
+				}
+				schemas := make([]FileTextSchema, len(texts))
+				for i, text := range texts {
+					schemas[i] = PublicTextToSchema(text)
+				}
+				return schemas, nil
 			}
-
+			texts, err := get_file_texts(pgUUID)
 			if err != nil {
 				http.Error(w, "Error retrieving texts", http.StatusInternalServerError)
 				return
 			}
-
 			if len(texts) == 0 {
 				http.Error(w, "No texts found for document", http.StatusNotFound)
 				return
 			}
-
+			// TODO: Add suport for non english text retrieval and original text retrieval
+			// originalLang := r.URL.Query().Get("original_lang") == "true"
+			// matchLang := r.URL.Query().Get("match_lang")
 			markdownText := texts[0].Text
 			w.Header().Set("Content-Type", "text/plain")
-			w.Write([]byte(markdownText.String))
+			w.Write([]byte(markdownText))
 		}
 	}
 	return return_func
@@ -150,23 +166,23 @@ type UpsertHandlerInfo struct {
 	insert   bool
 }
 
-func makeUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r *http.Request) {
-	dbtx_val := info.dbtx_val
-	private := info.private
-	return_func := func(w http.ResponseWriter, r *http.Request) {
-		q := *dbstore.New(dbtx_val)
-		ctx := r.Context()
-		token := r.Header.Get("Authorization")
-		if !strings.HasPrefix(token, "Authorized ") {
-			http.Error(w, "Forbidden", http.StatusForbidden)
-			return
-		}
-		userID := strings.TrimPrefix(token, "Authorized ")
-		if !private && userID != "thaumaturgy" {
-			http.Error(w, "Forbidden", http.StatusForbidden)
-			return
-		}
-		private_auth := checkPrivateFileAuthorization(q, ctx)
-	}
-	return return_func
-}
+// func makeUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r *http.Request) {
+// 	dbtx_val := info.dbtx_val
+// 	private := info.private
+// 	return_func := func(w http.ResponseWriter, r *http.Request) {
+// 		q := *dbstore.New(dbtx_val)
+// 		ctx := r.Context()
+// 		token := r.Header.Get("Authorization")
+// 		if !strings.HasPrefix(token, "Authorized ") {
+// 			http.Error(w, "Forbidden", http.StatusForbidden)
+// 			return
+// 		}
+// 		userID := strings.TrimPrefix(token, "Authorized ")
+// 		if !private && userID != "thaumaturgy" {
+// 			http.Error(w, "Forbidden", http.StatusForbidden)
+// 			return
+// 		}
+// 		return
+// 	}
+// 	return return_func
+// }
