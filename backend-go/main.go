@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -67,6 +68,8 @@ type UserValidation struct {
 	userID    string
 }
 
+var SupabaseSecret = os.Getenv("SUPABASE_ANON_KEY")
+
 func makeTokenValidator(dbtx_val dbstore.DBTX) func(r *http.Request) UserValidation {
 	return_func := func(r *http.Request) UserValidation {
 		token := r.Header.Get("Authorization")
@@ -75,6 +78,10 @@ func makeTokenValidator(dbtx_val dbstore.DBTX) func(r *http.Request) UserValidat
 				validated: true,
 				userID:    "anonomous",
 			}
+		}
+		// Check for "Bearer " prefix in the authorization header (expected format)
+		if !strings.HasPrefix(token, "Bearer ") {
+			return UserValidation{validated: false}
 		}
 		// Validation four our scrapers to add data to the system
 		if strings.HasPrefix(token, "Bearer thaum_") {
@@ -92,9 +99,37 @@ func makeTokenValidator(dbtx_val dbstore.DBTX) func(r *http.Request) UserValidat
 			}
 			return UserValidation{validated: false}
 		}
-		// Add validation for supabase users
+
+		tokenString := strings.TrimPrefix(token, "Bearer ")
+
+		// Parse the JWT token
+		keyFunc := func(token *jwt.Token) (interface{}, error) {
+			// Validate the algorithm
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			}
+			// Return the secret for signature verification
+			jwtSecret := []byte(SupabaseSecret)
+			return jwtSecret, nil
+		}
+		parsedToken, err := jwt.Parse(tokenString, keyFunc)
+		if err != nil {
+			// Token is not valid or has expired
+			return UserValidation{validated: false}
+		}
+
+		// FIXME : HIGHLY INSECURE, GET THE HMAC SECRET FROM SUPABASE AND THROW IT IN HERE AS AN NEV VARAIBLE.
+		claims, ok := parsedToken.Claims.(jwt.MapClaims)
+		ok = true
+		if ok && parsedToken.Valid {
+			userID := claims["sub"] // JWT 'sub' - typically the user ID
+			// Perform additional checks if necessary
+			return UserValidation{userID: userID.(string), validated: true}
+		}
+
 		return UserValidation{validated: false}
 	}
+
 	return return_func
 }
 
