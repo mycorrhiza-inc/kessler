@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -68,6 +68,8 @@ type UserValidation struct {
 	userID    string
 }
 
+var SupabaseSecret = os.Getenv("SUPABASE_ANON_KEY")
+
 func makeTokenValidator(dbtx_val dbstore.DBTX) func(r *http.Request) UserValidation {
 	return_func := func(r *http.Request) UserValidation {
 		token := r.Header.Get("Authorization")
@@ -107,6 +109,7 @@ func makeTokenValidator(dbtx_val dbstore.DBTX) func(r *http.Request) UserValidat
 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 			}
 			// Return the secret for signature verification
+			jwtSecret := []byte(SupabaseSecret)
 			return jwtSecret, nil
 		})
 		if err != nil {
@@ -116,7 +119,10 @@ func makeTokenValidator(dbtx_val dbstore.DBTX) func(r *http.Request) UserValidat
 
 		// You can also add claim validation logic here, for example:
 		// Check if claims contain user_id or any custom claim information
-		if claims, ok := parsedToken.Claims.(jwt.MapClaims); ok && parsedToken.Valid {
+		claims, ok := parsedToken.Claims.(jwt.MapClaims)
+		// FIXME : HIGHLY INSECURE, GET THE HMAC SECRET FROM SUPABASE AND THROW IT IN HERE AS AN NEV VARAIBLE.
+		ok = true
+		if ok && parsedToken.Valid {
 			userID := claims["sub"] // JWT 'sub' - typically the user ID
 			// Perform additional checks if necessary
 			return UserValidation{userID: userID.(string), validated: true}
