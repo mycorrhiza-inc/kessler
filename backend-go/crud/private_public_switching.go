@@ -37,7 +37,7 @@ type FileSchema struct {
 
 func RawToFileSchema(file rawFileSchema) (FileSchema, error) {
 	var new_mdata map[string]string
-	err := json.Unmarshal([]byte(file.Mdata), new_mdata)
+	err := json.Unmarshal([]byte(file.Mdata), &new_mdata)
 	if err != nil {
 		return FileSchema{}, fmt.Errorf("error unmarshaling metadata: %v", err) // err
 	}
