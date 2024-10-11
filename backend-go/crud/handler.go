@@ -3,6 +3,7 @@ package crud
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -12,13 +13,21 @@ import (
 
 func DefineCrudRoutes(router *mux.Router, dbtx_val dbstore.DBTX) {
 	public_subrouter := router.PathPrefix("/public").Subrouter()
-	public_subrouter.HandleFunc("/files/{uuid}", makeFileHandler(dbtx_val))
-	public_subrouter.HandleFunc("/files/{uuid}/markdown", makeMarkdownHandler(dbtx_val))
+
+  pub_file := 
+	public_subrouter.HandleFunc("/files/{uuid}", makeFileHandler(FileHandlerInfo{dbtx_val: dbtx_val, private: false, return_type: "object"}))
+	public_subrouter.HandleFunc("/files/{uuid}/markdown", makeFileHandler(FileHandlerInfo{dbtx_val: dbtx_val, private: false, markdown: false}))
 	// private_subrouter := router.PathPrefix("/private").Subrouter()
 	// private_subrouter.HandleFunc("/files/{uuid}", getPrivateFileHandler)
 }
 
-func makeFileHandler(dbtx_val dbstore.DBTX, private bool) func(w http.ResponseWriter, r *http.Request) {
+type FileHandlerInfo{
+	dbtx_val dbstore.DBTX
+	private bool
+  return_type string
+}
+
+func makeFileHandler(info FileHandlerInfo) func(w http.ResponseWriter, r *http.Request) {
 	return_func := func(w http.ResponseWriter, r *http.Request) {
 		q := *dbstore.New(dbtx_val)
 		params := mux.Vars(r)
@@ -30,20 +39,37 @@ func makeFileHandler(dbtx_val dbstore.DBTX, private bool) func(w http.ResponseWr
 		}
 		pgUUID := pgtype.UUID{Bytes: parsedUUID, Valid: true}
 		ctx := r.Context()
-
 		if !private {
-			file, err := q.ReadFile(ctx, pgUUID)
-		} else {
-			file, err := q.ReadPrivateFile(ctx, pgUUID)
 		}
 
+		getFile := func(uuid pgtype.UUID) (rawFileSchema, error) {
+			if !private {
+				file, err := q.ReadFile(ctx, pgUUID)
+				if err != nil {
+					return rawFileSchema{}, err
+				}
+				return PublicFileToSchema(file), nil
+			} else {
+				file, err := q.ReadPrivateFile(ctx, pgUUID)
+				if err != nil {
+					return rawFileSchema{}, err
+				}
+				return PrivateFileToSchema(file), nil
+			}
+		}
+
+		file, err := getFile(pgUUID)
 		if err != nil {
 			http.Error(w, "File not found", http.StatusNotFound)
 			return
 		}
 
 		// fileSchema := fileToSchema(file)
-		fileSchema := file
+		fileSchema, err := RawToFileSchema(file)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 		response, _ := json.Marshal(fileSchema)
 
 		w.Header().Set("Content-Type", "application/json")
@@ -100,14 +126,21 @@ func makeMarkdownHandler(dbtx_val dbstore.DBTX) func(w http.ResponseWriter, r *h
 	return return_func
 }
 
-func makeUpsertHandler(dbtx_val dbstore.DBTX, private bool) func(w http.ResponseWriter, r *http.Request) {
+type UpsertHandlerInfo struct {
+  dbtx_val dbstore.DBTX
+  private bool
+	insert bool
+}
+
+func makeUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r *http.Request) {
 	return_func := func(w http.ResponseWriter, r *http.Request) {
 		if !strings.HasPrefix(token, "Authorized ") {
-			return UserValidation{validated: false}
+			http.Error(w, "Forbidden", http.StatusForbidden)
+			return
 		}
-		userID , err :=
-		if !private && userID !="thaumaturgy"{
-
+		if !private && token != "Authorized thaumaturgy" {
+			http.Error(w, "Forbidden", http.StatusForbidden)
+			return
 		}
 	}
 	return return_func
