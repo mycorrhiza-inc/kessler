@@ -20,11 +20,15 @@ func DefineCrudRoutes(router *mux.Router, dbtx_val dbstore.DBTX) {
 		FileHandlerInfo{dbtx_val: dbtx_val, private: false, return_type: "object"}))
 	public_subrouter.HandleFunc("/files/{uuid}/markdown", makeFileHandler(
 		FileHandlerInfo{dbtx_val: dbtx_val, private: false, return_type: "markdown"}))
+	public_subrouter.HandleFunc("/files/{uuid}/raw", makeFileHandler(
+		FileHandlerInfo{dbtx_val: dbtx_val, private: false, return_type: "raw"}))
 	private_subrouter := router.PathPrefix("/private").Subrouter()
 	private_subrouter.HandleFunc("/files/{uuid}", makeFileHandler(
 		FileHandlerInfo{dbtx_val: dbtx_val, private: true, return_type: "object"}))
 	private_subrouter.HandleFunc("/files/{uuid}/markdown", makeFileHandler(
 		FileHandlerInfo{dbtx_val: dbtx_val, private: true, return_type: "markdown"}))
+	private_subrouter.HandleFunc("/files/{uuid}/markdown", makeFileHandler(
+		FileHandlerInfo{dbtx_val: dbtx_val, private: true, return_type: "raw"}))
 }
 
 type FileHandlerInfo struct {
@@ -78,8 +82,12 @@ func makeFileHandler(info FileHandlerInfo) func(w http.ResponseWriter, r *http.R
 				fmt.Printf("Ran into the follwing error with authentication $v", err)
 			}
 		}
+		// Since all three of these methods share the same authentication and database connection prerecs
+		// switching functionality using an if else, or a cases switch lets code get reused
 		// TODO: This is horrible, I need to refactor
-		if return_type == "object" {
+		if return_type == "raw" {
+			http.Error(w, "Retriving raw files from s3 not implemented", http.StatusNotImplemented)
+		} else if return_type == "object" {
 			getFile := func(uuid pgtype.UUID) (rawFileSchema, error) {
 				if !private {
 					file, err := q.ReadFile(ctx, pgUUID)
@@ -166,23 +174,55 @@ type UpsertHandlerInfo struct {
 	insert   bool
 }
 
-// func makeUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r *http.Request) {
-// 	dbtx_val := info.dbtx_val
-// 	private := info.private
-// 	return_func := func(w http.ResponseWriter, r *http.Request) {
-// 		q := *dbstore.New(dbtx_val)
-// 		ctx := r.Context()
-// 		token := r.Header.Get("Authorization")
-// 		if !strings.HasPrefix(token, "Authorized ") {
-// 			http.Error(w, "Forbidden", http.StatusForbidden)
-// 			return
-// 		}
-// 		userID := strings.TrimPrefix(token, "Authorized ")
-// 		if !private && userID != "thaumaturgy" {
-// 			http.Error(w, "Forbidden", http.StatusForbidden)
-// 			return
-// 		}
-// 		return
-// 	}
-// 	return return_func
-// }
+type UpdateDocumentInfo struct {
+	Url          string            `json:"url"`
+	Doctype      string            `json:"doctype"`
+	Lang         string            `json:"lang"`
+	Name         string            `json:"name"`
+	Source       string            `json:"source"`
+	Hash         string            `json:"hash"`
+	Mdata        map[string]string `json:"mdata"`
+	Stage        string            `json:"stage"`
+	Summary      string            `json:"summary"`
+	ShortSummary string            `json:"short_summary"`
+	Private      bool              `json:"private"`
+}
+
+func makeUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r *http.Request) {
+	dbtx_val := info.dbtx_val
+	private := info.private
+	insert := info.insert
+	return_func := func(w http.ResponseWriter, r *http.Request) {
+		var doc_uuid uuid.UUID
+		var err error
+		if insert {
+			doc_uuid = uuid.New()
+		} else {
+			params := mux.Vars(r)
+			fileID := params["uuid"]
+
+			doc_uuid, err = uuid.Parse(fileID)
+			if err != nil {
+				http.Error(w, "Error parsing uuid", http.StatusBadRequest)
+				return
+			}
+		}
+		q := *dbstore.New(dbtx_val)
+		ctx := r.Context()
+		token := r.Header.Get("Authorization")
+		if !strings.HasPrefix(token, "Authorized ") {
+			http.Error(w, "Forbidden", http.StatusForbidden)
+			return
+		}
+		userID := strings.TrimPrefix(token, "Authorized ")
+		if !private && userID != "thaumaturgy" {
+			http.Error(w, "Forbidden", http.StatusForbidden)
+			return
+		}
+		if !insert {
+			checkPrivateFileAuthorization(q, ctx, doc_uuid, userID)
+		}
+		w.Write([]byte("Sucessfully inserted"))
+	}
+	return return_func
+}

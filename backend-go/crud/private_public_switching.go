@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
 )
@@ -22,7 +23,7 @@ type rawFileSchema struct {
 	ShortSummary string
 }
 type FileSchema struct {
-	ID           pgtype.UUID
+	ID           string
 	Url          string
 	Doctype      string
 	Lang         string
@@ -35,6 +36,13 @@ type FileSchema struct {
 	ShortSummary string
 }
 
+// A UUID is a 128 bit (16 byte) Universal Unique IDentifier as defined in RFC
+// 4122.
+// type UUID [16]byte
+func pguuidToString(uuid_pg pgtype.UUID) string {
+	return uuid.UUID(uuid_pg.Bytes).String()
+}
+
 func RawToFileSchema(file rawFileSchema) (FileSchema, error) {
 	var new_mdata map[string]string
 	err := json.Unmarshal([]byte(file.Mdata), &new_mdata)
@@ -42,7 +50,7 @@ func RawToFileSchema(file rawFileSchema) (FileSchema, error) {
 		return FileSchema{}, fmt.Errorf("error unmarshaling metadata: %v", err) // err
 	}
 	return FileSchema{
-		ID:           file.ID,
+		ID:           pguuidToString(file.ID),
 		Url:          file.Url,
 		Doctype:      file.Doctype,
 		Lang:         file.Lang,
