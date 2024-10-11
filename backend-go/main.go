@@ -103,7 +103,7 @@ func makeTokenValidator(dbtx_val dbstore.DBTX) func(r *http.Request) UserValidat
 		tokenString := strings.TrimPrefix(token, "Bearer ")
 
 		// Parse the JWT token
-		parsedToken, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		keyFunc := func(token *jwt.Token) (interface{}, error) {
 			// Validate the algorithm
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -111,16 +111,15 @@ func makeTokenValidator(dbtx_val dbstore.DBTX) func(r *http.Request) UserValidat
 			// Return the secret for signature verification
 			jwtSecret := []byte(SupabaseSecret)
 			return jwtSecret, nil
-		})
+		}
+		parsedToken, err := jwt.Parse(tokenString, keyFunc)
 		if err != nil {
 			// Token is not valid or has expired
 			return UserValidation{validated: false}
 		}
 
-		// You can also add claim validation logic here, for example:
-		// Check if claims contain user_id or any custom claim information
-		claims, ok := parsedToken.Claims.(jwt.MapClaims)
 		// FIXME : HIGHLY INSECURE, GET THE HMAC SECRET FROM SUPABASE AND THROW IT IN HERE AS AN NEV VARAIBLE.
+		claims, ok := parsedToken.Claims.(jwt.MapClaims)
 		ok = true
 		if ok && parsedToken.Valid {
 			userID := claims["sub"] // JWT 'sub' - typically the user ID
