@@ -122,7 +122,18 @@ func PublicTextToSchema(file dbstore.FileTextSource) FileTextSchema {
 	}
 }
 
-func GetTextSchemas(q dbstore.Queries, ctx context.Context, pgUUID pgtype.UUID, private bool) ([]FileTextSchema, error) {
+type GetFileParam struct {
+	q       dbstore.Queries
+	ctx     context.Context
+	pgUUID  pgtype.UUID
+	private bool
+}
+
+func GetTextSchemas(params GetFileParam) ([]FileTextSchema, error) {
+	private := params.private
+	q := params.q
+	ctx := params.ctx
+	pgUUID := params.pgUUID
 	if private {
 		texts, err := q.ListPrivateTextsOfFile(ctx, pgUUID)
 		schemas := make([]FileTextSchema, len(texts))
@@ -143,6 +154,26 @@ func GetTextSchemas(q dbstore.Queries, ctx context.Context, pgUUID pgtype.UUID, 
 		schemas[i] = PublicTextToSchema(text)
 	}
 	return schemas, nil
+}
+
+func GetFileObjectRaw(params GetFileParam) (rawFileSchema, error) {
+	private := params.private
+	q := params.q
+	ctx := params.ctx
+	pgUUID := params.pgUUID
+
+	if !private {
+		file, err := q.ReadFile(ctx, pgUUID)
+		if err != nil {
+			return rawFileSchema{}, err
+		}
+		return PublicFileToSchema(file), nil
+	}
+	file, err := q.ReadPrivateFile(ctx, pgUUID)
+	if err != nil {
+		return rawFileSchema{}, err
+	}
+	return PrivateFileToSchema(file), nil
 }
 
 type FileCreationDataRaw struct {

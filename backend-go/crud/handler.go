@@ -59,7 +59,7 @@ func makeFileHandler(info FileHandlerInfo) func(w http.ResponseWriter, r *http.R
 	private := info.private
 	dbtx_val := info.dbtx_val
 	return_type := info.return_type
-	return_func := func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		q := *dbstore.New(dbtx_val)
 		token := r.Header.Get("Authorization")
 		params := mux.Vars(r)
@@ -85,26 +85,11 @@ func makeFileHandler(info FileHandlerInfo) func(w http.ResponseWriter, r *http.R
 		// Since all three of these methods share the same authentication and database connection prerecs
 		// switching functionality using an if else, or a cases switch lets code get reused
 		// TODO: This is horrible, I need to refactor
-		if return_type == "raw" {
+		switch return_type {
+		case "raw":
 			http.Error(w, "Retriving raw files from s3 not implemented", http.StatusNotImplemented)
-		} else if return_type == "object" {
-			getFile := func(uuid pgtype.UUID) (rawFileSchema, error) {
-				if !private {
-					file, err := q.ReadFile(ctx, pgUUID)
-					if err != nil {
-						return rawFileSchema{}, err
-					}
-					return PublicFileToSchema(file), nil
-				} else {
-					file, err := q.ReadPrivateFile(ctx, pgUUID)
-					if err != nil {
-						return rawFileSchema{}, err
-					}
-					return PrivateFileToSchema(file), nil
-				}
-			}
-
-			file, err := getFile(pgUUID)
+		case "object":
+			file, err := GetFileObjectRaw(pgUUID)
 			if err != nil {
 				http.Error(w, "File not found", http.StatusNotFound)
 				return
@@ -120,18 +105,10 @@ func makeFileHandler(info FileHandlerInfo) func(w http.ResponseWriter, r *http.R
 
 			w.Header().Set("Content-Type", "application/json")
 			w.Write(response)
-		} else if return_type == "markdown" {
-
-			ctx := r.Context()
-
-			}
-			texts, err := GetTextSchemas(q,ctx,pgUUID,private)
-			if err != nil {
-				http.Error(w, "Error retrieving texts", http.StatusInternalServerError)
-				return
-			}
-			if len(texts) == 0 {
-				http.Error(w, "No texts found for document", http.StatusNotFound)
+		case "markdown":
+			texts, err := GetTextSchemas(q, ctx, pgUUID, private)
+			if err != nil  || len(texts) == 0 {{
+				http.Error(w, "Error retrieving texts or no texts found.", http.StatusInternalServerError)
 				return
 			}
 			// TODO: Add suport for non english text retrieval and original text retrieval
@@ -142,7 +119,6 @@ func makeFileHandler(info FileHandlerInfo) func(w http.ResponseWriter, r *http.R
 			w.Write([]byte(markdownText))
 		}
 	}
-	return return_func
 }
 
 type UpsertHandlerInfo struct {
@@ -204,6 +180,7 @@ func makeUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r *ht
 				return
 			}
 		}
+		// TODO: IF user is not a paying user, disable insert functionality
 		w.Write([]byte("Sucessfully inserted"))
 	}
 	return return_func
