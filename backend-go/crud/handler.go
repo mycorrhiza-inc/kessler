@@ -18,24 +18,33 @@ func DefineCrudRoutes(router *mux.Router, dbtx_val dbstore.DBTX) {
 
 	public_subrouter.HandleFunc("/files/insert", makeUpsertHandler(
 		UpsertHandlerInfo{dbtx_val: dbtx_val, private: false, insert: true})).Methods(http.MethodPost)
+
 	public_subrouter.HandleFunc("/files/{uuid}", makeUpsertHandler(
 		UpsertHandlerInfo{dbtx_val: dbtx_val, private: false, insert: false})).Methods(http.MethodPost)
+
 	public_subrouter.HandleFunc("/files/{uuid}", makeFileHandler(
 		FileHandlerInfo{dbtx_val: dbtx_val, private: false, return_type: "object"})).Methods(http.MethodGet)
+
 	public_subrouter.HandleFunc("/files/{uuid}/markdown", makeFileHandler(
 		FileHandlerInfo{dbtx_val: dbtx_val, private: false, return_type: "markdown"})).Methods(http.MethodGet)
+
 	public_subrouter.HandleFunc("/files/{uuid}/raw", makeFileHandler(
 		FileHandlerInfo{dbtx_val: dbtx_val, private: false, return_type: "raw"})).Methods(http.MethodGet)
 
 	private_subrouter := router.PathPrefix("/private").Subrouter()
+
 	private_subrouter.HandleFunc("/files/insert", makeUpsertHandler(
 		UpsertHandlerInfo{dbtx_val: dbtx_val, private: true, insert: true})).Methods(http.MethodPost)
+
 	private_subrouter.HandleFunc("/files/{uuid}", makeUpsertHandler(
 		UpsertHandlerInfo{dbtx_val: dbtx_val, private: true, insert: false})).Methods(http.MethodPost)
+
 	private_subrouter.HandleFunc("/files/{uuid}", makeFileHandler(
 		FileHandlerInfo{dbtx_val: dbtx_val, private: true, return_type: "object"})).Methods(http.MethodGet)
+
 	private_subrouter.HandleFunc("/files/{uuid}/markdown", makeFileHandler(
 		FileHandlerInfo{dbtx_val: dbtx_val, private: true, return_type: "markdown"})).Methods(http.MethodGet)
+
 	private_subrouter.HandleFunc("/files/{uuid}/raw", makeFileHandler(
 		FileHandlerInfo{dbtx_val: dbtx_val, private: true, return_type: "raw"})).Methods(http.MethodGet)
 }
