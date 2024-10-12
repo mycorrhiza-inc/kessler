@@ -24,7 +24,7 @@ type rawFileSchema struct {
 	ShortSummary string
 }
 type FileSchema struct {
-	ID           string
+	ID           uuid.UUID
 	Url          string
 	Doctype      string
 	Lang         string
@@ -51,7 +51,7 @@ func RawToFileSchema(file rawFileSchema) (FileSchema, error) {
 		return FileSchema{}, fmt.Errorf("error unmarshaling metadata: %v", err) // err
 	}
 	return FileSchema{
-		ID:           pguuidToString(file.ID),
+		ID:           file.ID.Bytes,
 		Url:          file.Url,
 		Doctype:      file.Doctype,
 		Lang:         file.Lang,
