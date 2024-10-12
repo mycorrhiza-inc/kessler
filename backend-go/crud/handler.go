@@ -85,11 +85,14 @@ func makeFileHandler(info FileHandlerInfo) func(w http.ResponseWriter, r *http.R
 		// Since all three of these methods share the same authentication and database connection prerecs
 		// switching functionality using an if else, or a cases switch lets code get reused
 		// TODO: This is horrible, I need to refactor
+		file_params := GetFileParam{
+			q, ctx, pgUUID, private,
+		}
 		switch return_type {
 		case "raw":
 			http.Error(w, "Retriving raw files from s3 not implemented", http.StatusNotImplemented)
 		case "object":
-			file, err := GetFileObjectRaw(pgUUID)
+			file, err := GetFileObjectRaw(file_params)
 			if err != nil {
 				http.Error(w, "File not found", http.StatusNotFound)
 				return
@@ -106,8 +109,8 @@ func makeFileHandler(info FileHandlerInfo) func(w http.ResponseWriter, r *http.R
 			w.Header().Set("Content-Type", "application/json")
 			w.Write(response)
 		case "markdown":
-			texts, err := GetTextSchemas(q, ctx, pgUUID, private)
-			if err != nil  || len(texts) == 0 {{
+			texts, err := GetTextSchemas(file_params)
+			if err != nil || len(texts) == 0 {
 				http.Error(w, "Error retrieving texts or no texts found.", http.StatusInternalServerError)
 				return
 			}
@@ -145,7 +148,7 @@ func makeUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r *ht
 	dbtx_val := info.dbtx_val
 	private := info.private
 	insert := info.insert
-	return_func := func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		var doc_uuid uuid.UUID
 		var err error
 		if insert {
@@ -181,7 +184,7 @@ func makeUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r *ht
 			}
 		}
 		// TODO: IF user is not a paying user, disable insert functionality
+
 		w.Write([]byte("Sucessfully inserted"))
 	}
-	return return_func
 }
