@@ -6,7 +6,7 @@ INSERT INTO public.organization (
 		updated_at
 	)
 VALUES ($1, $2, NOW(), NOW())
-RETURNING id;
+RETURNING *;
 -- name: ReadOrganization :one
 SELECT *
 FROM public.organization
@@ -21,19 +21,19 @@ SET name = $1,
 	description = $2,
 	updated_at = NOW()
 WHERE id = $3
-RETURNING id;
+RETURNING *;
 -- name: UpdateOrganizationName :one
 UPDATE public.organization
 SET name = $1,
 	updated_at = NOW()
 WHERE id = $2
-RETURNING id;
+RETURNING *;
 -- name: UpdateOrganizationDescription :one
 UPDATE public.organization
 SET description = $1,
 	updated_at = NOW()
 WHERE id = $2
-RETURNING id;
+RETURNING *;
 -- name: DeleteOrganization :exec
 DELETE FROM public.organization
 WHERE id = $1;

@@ -27,7 +27,7 @@ VALUES (
 		NOW(),
 		NOW()
 	)
-RETURNING id;
+RETURNING *;
 -- name: ReadFile :one
 SELECT *
 FROM public.file
@@ -50,7 +50,7 @@ SET url = $1,
 	short_summary = $10,
 	updated_at = NOW()
 WHERE id = $11
-RETURNING id;
+RETURNING *;
 -- name: DeleteFile :exec
 DELETE FROM public.file
 WHERE id = $1;

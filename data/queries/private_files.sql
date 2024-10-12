@@ -27,7 +27,7 @@ VALUES (
 		NOW(),
 		NOW()
 	)
-RETURNING id;
+RETURNING *;
 -- name: ReadPrivateFile :one
 SELECT *
 FROM userfiles.private_file
@@ -50,7 +50,7 @@ SET url = $1,
 	short_summary = $10,
 	updated_at = NOW()
 WHERE id = $11
-RETURNING id;
+RETURNING *;
 -- name: DeletePrivateFile :exec
 DELETE FROM userfiles.private_file
 WHERE id = $1;

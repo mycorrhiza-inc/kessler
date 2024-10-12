@@ -6,7 +6,7 @@ INSERT INTO public.relation_individuals_events (
 		updated_at
 	)
 VALUES ($1, $2, NOW(), NOW())
-RETURNING id;
+RETURNING *;
 -- name: GetIndividualsAssociatedWithEvent :one
 SELECT individual_id
 FROM public.relation_individuals_events

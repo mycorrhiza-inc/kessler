@@ -6,7 +6,7 @@ INSERT INTO public.faction (
 		updated_at
 	)
 VALUES ($1, $2, NOW(), NOW())
-RETURNING id;
+RETURNING *;
 -- name: ReadFaction :one
 SELECT *
 FROM public.faction
@@ -21,19 +21,19 @@ SET name = $1,
 	description = $2,
 	updated_at = NOW()
 WHERE id = $3
-RETURNING id;
+RETURNING *;
 -- name: UpdateFactionName :one
 UPDATE public.faction
 SET name = $1,
 	updated_at = NOW()
 WHERE id = $2
-RETURNING id;
+RETURNING *;
 -- name: UpdateFactionDescription :one
 UPDATE public.faction
 SET description = $1,
 	updated_at = NOW()
 WHERE id = $2
-RETURNING id;
+RETURNING *;
 -- name: DeleteFaction :exec
 DELETE FROM public.faction
 WHERE id = $1;

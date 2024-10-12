@@ -6,7 +6,7 @@ INSERT INTO public.relation_documents_organizations (
 		updated_at
 	)
 VALUES ($1, $2, NOW(), NOW())
-RETURNING id;
+RETURNING *;
 -- name: ListDocumentIdsByOrganization :many
 SELECT document_id
 FROM public.relation_documents_organizations
@@ -21,8 +21,8 @@ SET document_id = $1,
 	organization_id = $2,
 	updated_at = NOW()
 WHERE id = $3
-RETURNING id;
+RETURNING *;
 -- name: DeleteDocumentAssociatedWithOrganization :one
 DELETE FROM public.relation_documents_organizations
 WHERE id = $1
-RETURNING id;
+RETURNING *;

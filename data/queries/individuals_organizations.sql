@@ -6,7 +6,7 @@ INSERT INTO public.relation_individuals_organizations (
 		updated_at
 	)
 VALUES ($1, $2, NOW(), NOW())
-RETURNING id;
+RETURNING *;
 -- name: ListIndividualsCurrentlyAssociatedWithOrganization :many
 SELECT *
 FROM public.relation_individuals_organizations
@@ -17,7 +17,7 @@ SET individual_id = $1,
 	organization_id = $2,
 	updated_at = NOW()
 WHERE id = $3
-RETURNING id;
+RETURNING *;
 -- name: DeleteIndividualsCurrentlyAssociatedWithOrganization :exec
 DELETE FROM public.relation_individuals_organizations
 WHERE id = $1;
