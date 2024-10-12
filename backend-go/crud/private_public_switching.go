@@ -102,6 +102,7 @@ type FileTextSchema struct {
 	FileID         pgtype.UUID
 	IsOriginalText bool
 	Text           string
+	Language       string
 }
 
 func PrivateTextToSchema(file dbstore.UserfilesPrivateFileTextSource) FileTextSchema {
@@ -110,6 +111,7 @@ func PrivateTextToSchema(file dbstore.UserfilesPrivateFileTextSource) FileTextSc
 		FileID:         file.FileID,
 		IsOriginalText: file.IsOriginalText,
 		Text:           file.Text.String,
+		Language:       file.Language,
 	}
 }
 
@@ -119,6 +121,7 @@ func PublicTextToSchema(file dbstore.FileTextSource) FileTextSchema {
 		FileID:         file.FileID,
 		IsOriginalText: file.IsOriginalText,
 		Text:           file.Text.String,
+		Language:       file.Language,
 	}
 }
 

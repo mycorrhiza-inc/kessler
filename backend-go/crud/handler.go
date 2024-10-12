@@ -129,6 +129,11 @@ type UpsertHandlerInfo struct {
 	private  bool
 	insert   bool
 }
+type DocTextInfo struct {
+	Language       string `json:"language"`
+	Text           string `json:"text"`
+	IsOriginalText bool   `json:"is_original_text"`
+}
 
 type UpdateDocumentInfo struct {
 	Url          string            `json:"url"`
@@ -142,56 +147,27 @@ type UpdateDocumentInfo struct {
 	Summary      string            `json:"summary"`
 	ShortSummary string            `json:"short_summary"`
 	Private      bool              `json:"private"`
+	DocTexts     []DocTextInfo     `json:"doc_texts"`
 }
 
-
 func ConvertToCreationData(updateInfo UpdateDocumentInfo) (FileCreationDataRaw, error) {
-	mdata_string , err := json.Marshal(updateInfo.Mdata)
+	mdata_string, err := json.Marshal(updateInfo.Mdata)
 	if err != nil {
 		return FileCreationDataRaw{}, nil
 	}
 	creationData := FileCreationDataRaw{
-		Url:          pgtype.Text{String :updateInfo.Url, Valid: true},
-		Doctype:      pgtype.Text{String :updateInfo.Doctype, Valid: true},
-		Lang:         pgtype.Text{String :updateInfo.Lang, Valid: true},
-		Name:         pgtype.Text{String :updateInfo.Name, Valid: true},
-		Source:       pgtype.Text{String :updateInfo.Source, Valid: true},
-		Hash:         pgtype.Text{String :updateInfo.Hash, Valid: true},
-		Stage:        pgtype.Text{String :updateInfo.Stage, Valid: true},
-		Summary:      pgtype.Text{String :updateInfo.Summary, Valid: true},
-		ShortSummary: pgtype.Text{String :updateInfo.ShortSummary, Valid: true},
-		Mdata:        pgtype.Text{String :string(mdata_string), Valid: true},
+		Url:          pgtype.Text{String: updateInfo.Url, Valid: true},
+		Doctype:      pgtype.Text{String: updateInfo.Doctype, Valid: true},
+		Lang:         pgtype.Text{String: updateInfo.Lang, Valid: true},
+		Name:         pgtype.Text{String: updateInfo.Name, Valid: true},
+		Source:       pgtype.Text{String: updateInfo.Source, Valid: true},
+		Hash:         pgtype.Text{String: updateInfo.Hash, Valid: true},
+		Stage:        pgtype.Text{String: updateInfo.Stage, Valid: true},
+		Summary:      pgtype.Text{String: updateInfo.Summary, Valid: true},
+		ShortSummary: pgtype.Text{String: updateInfo.ShortSummary, Valid: true},
+		Mdata:        pgtype.Text{String: string(mdata_string), Valid: true},
 	}
 	return creationData, nil
-}
-
-func mapToString(m map[string]string) string {
-	// Implement serialization of mdata map to string
-	// This could be json.Marshal or another method based on your requirements
-}
-
-	}
-
-}
-
-	// creationData.Url.Set(updateInfo.Url)
-	// creationData.Doctype.Set(updateInfo.Doctype)
-	// creationData.Lang.Set(updateInfo.Lang)
-	// creationData.Name.Set(updateInfo.Name)
-	// creationData.Source.Set(updateInfo.Source)
-	// creationData.Hash.Set(updateInfo.Hash)
-	//
-	// mdataJson, err := json.Marshal(updateInfo.Mdata)
-	// if err != nil {
-	// 	return creationData, err
-	// }
-	// creationData.Mdata.Set(string(mdataJson))
-	//
-	// creationData.Stage.Set(updateInfo.Stage)
-	// creationData.Summary.Set(updateInfo.Summary)
-	// creationData.ShortSummary.Set(updateInfo.ShortSummary)
-	//
-	// return creationData, nil
 }
 
 func makeUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r *http.Request) {
