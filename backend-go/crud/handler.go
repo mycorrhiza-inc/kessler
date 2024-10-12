@@ -27,7 +27,7 @@ func DefineCrudRoutes(router *mux.Router, dbtx_val dbstore.DBTX) {
 		FileHandlerInfo{dbtx_val: dbtx_val, private: true, return_type: "object"}))
 	private_subrouter.HandleFunc("/files/{uuid}/markdown", makeFileHandler(
 		FileHandlerInfo{dbtx_val: dbtx_val, private: true, return_type: "markdown"}))
-	private_subrouter.HandleFunc("/files/{uuid}/markdown", makeFileHandler(
+	private_subrouter.HandleFunc("/files/{uuid}/raw", makeFileHandler(
 		FileHandlerInfo{dbtx_val: dbtx_val, private: true, return_type: "raw"}))
 }
 
@@ -144,6 +144,56 @@ type UpdateDocumentInfo struct {
 	Private      bool              `json:"private"`
 }
 
+
+func ConvertToCreationData(updateInfo UpdateDocumentInfo) (FileCreationDataRaw, error) {
+	mdata_string , err := json.Marshal(updateInfo.Mdata)
+	if err != nil {
+		return FileCreationDataRaw{}, nil
+	}
+	creationData := FileCreationDataRaw{
+		Url:          pgtype.Text{String :updateInfo.Url, Valid: true},
+		Doctype:      pgtype.Text{String :updateInfo.Doctype, Valid: true},
+		Lang:         pgtype.Text{String :updateInfo.Lang, Valid: true},
+		Name:         pgtype.Text{String :updateInfo.Name, Valid: true},
+		Source:       pgtype.Text{String :updateInfo.Source, Valid: true},
+		Hash:         pgtype.Text{String :updateInfo.Hash, Valid: true},
+		Stage:        pgtype.Text{String :updateInfo.Stage, Valid: true},
+		Summary:      pgtype.Text{String :updateInfo.Summary, Valid: true},
+		ShortSummary: pgtype.Text{String :updateInfo.ShortSummary, Valid: true},
+		Mdata:        pgtype.Text{String :string(mdata_string), Valid: true},
+	}
+	return creationData, nil
+}
+
+func mapToString(m map[string]string) string {
+	// Implement serialization of mdata map to string
+	// This could be json.Marshal or another method based on your requirements
+}
+
+	}
+
+}
+
+	// creationData.Url.Set(updateInfo.Url)
+	// creationData.Doctype.Set(updateInfo.Doctype)
+	// creationData.Lang.Set(updateInfo.Lang)
+	// creationData.Name.Set(updateInfo.Name)
+	// creationData.Source.Set(updateInfo.Source)
+	// creationData.Hash.Set(updateInfo.Hash)
+	//
+	// mdataJson, err := json.Marshal(updateInfo.Mdata)
+	// if err != nil {
+	// 	return creationData, err
+	// }
+	// creationData.Mdata.Set(string(mdataJson))
+	//
+	// creationData.Stage.Set(updateInfo.Stage)
+	// creationData.Summary.Set(updateInfo.Summary)
+	// creationData.ShortSummary.Set(updateInfo.ShortSummary)
+	//
+	// return creationData, nil
+}
+
 func makeUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r *http.Request) {
 	dbtx_val := info.dbtx_val
 	private := info.private
@@ -151,9 +201,7 @@ func makeUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r *ht
 	return func(w http.ResponseWriter, r *http.Request) {
 		var doc_uuid uuid.UUID
 		var err error
-		if insert {
-			doc_uuid = uuid.New()
-		} else {
+		if !insert {
 			params := mux.Vars(r)
 			fileID := params["uuid"]
 
@@ -184,6 +232,12 @@ func makeUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r *ht
 			}
 		}
 		// TODO: IF user is not a paying user, disable insert functionality
+		var newDocInfo UpdateDocumentInfo
+		if err := json.NewDecoder(r.Body).Decode(&newDocInfo); err != nil {
+
+			http.Error(w, "Invalid request payload", http.StatusBadRequest)
+			return
+		}
 
 		w.Write([]byte("Sucessfully inserted"))
 	}

@@ -223,3 +223,40 @@ func InsertPubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreatio
 	resultSchema := PublicFileToSchema(result)
 	return resultSchema, err
 }
+
+func UpdatePubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreation FileCreationDataRaw, private bool, pgUUID pgtype.UUID) (rawFileSchema, error) {
+	if private {
+		params := dbstore.UpdatePrivateFileParams{
+			Url:          fileCreation.Url,
+			Doctype:      fileCreation.Doctype,
+			Lang:         fileCreation.Lang,
+			Name:         fileCreation.Name,
+			Source:       fileCreation.Source,
+			Hash:         fileCreation.Hash,
+			Mdata:        fileCreation.Mdata,
+			Stage:        fileCreation.Stage,
+			Summary:      fileCreation.Summary,
+			ShortSummary: fileCreation.ShortSummary,
+			ID:           pgUUID,
+		}
+		result, err := q.UpdatePrivateFile(ctx, params)
+		resultSchema := PrivateFileToSchema(result)
+		return resultSchema, err
+	}
+	params := dbstore.UpdateFileParams{
+		Url:          fileCreation.Url,
+		Doctype:      fileCreation.Doctype,
+		Lang:         fileCreation.Lang,
+		Name:         fileCreation.Name,
+		Source:       fileCreation.Source,
+		Hash:         fileCreation.Hash,
+		Mdata:        fileCreation.Mdata,
+		Stage:        fileCreation.Stage,
+		Summary:      fileCreation.Summary,
+		ShortSummary: fileCreation.ShortSummary,
+		ID:           pgUUID,
+	}
+	result, err := q.UpdateFile(ctx, params)
+	resultSchema := PublicFileToSchema(result)
+	return resultSchema, err
+}
