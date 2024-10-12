@@ -123,9 +123,9 @@ func PublicTextToSchema(file dbstore.FileTextSource) FileTextSchema {
 }
 
 func GetTextSchemas(q dbstore.Queries, ctx context.Context, pgUUID pgtype.UUID, private bool) ([]FileTextSchema, error) {
-	schemas := make([]FileTextSchema, len(texts))
 	if private {
 		texts, err := q.ListPrivateTextsOfFile(ctx, pgUUID)
+		schemas := make([]FileTextSchema, len(texts))
 		if err != nil {
 			return []FileTextSchema{}, err
 		}
@@ -135,6 +135,7 @@ func GetTextSchemas(q dbstore.Queries, ctx context.Context, pgUUID pgtype.UUID, 
 		return schemas, nil
 	}
 	texts, err := q.ListTextsOfFile(ctx, pgUUID)
+	schemas := make([]FileTextSchema, len(texts))
 	if err != nil {
 		return []FileTextSchema{}, err
 	}
@@ -144,22 +145,50 @@ func GetTextSchemas(q dbstore.Queries, ctx context.Context, pgUUID pgtype.UUID, 
 	return schemas, nil
 }
 
-type FileCreationData struct {
-	Url          string
-	Doctype      string
-	Lang         string
-	Name         string
-	Source       string
-	Hash         string
-	Mdata        string
-	Stage        string
-	Summary      string
-	ShortSummary string
+type FileCreationDataRaw struct {
+	Url          pgtype.Text
+	Doctype      pgtype.Text
+	Lang         pgtype.Text
+	Name         pgtype.Text
+	Source       pgtype.Text
+	Hash         pgtype.Text
+	Mdata        pgtype.Text
+	Stage        pgtype.Text
+	Summary      pgtype.Text
+	ShortSummary pgtype.Text
 }
 
-func InsertPubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreation FileCreationData, private bool) (rawFileSchema, error) {
+func InsertPubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreation FileCreationDataRaw, private bool) (rawFileSchema, error) {
 	if private {
-		params := dbstore.CreatePrivateFileParams{}
+		params := dbstore.CreatePrivateFileParams{
+			Url:          fileCreation.Url,
+			Doctype:      fileCreation.Doctype,
+			Lang:         fileCreation.Lang,
+			Name:         fileCreation.Name,
+			Source:       fileCreation.Source,
+			Hash:         fileCreation.Hash,
+			Mdata:        fileCreation.Mdata,
+			Stage:        fileCreation.Stage,
+			Summary:      fileCreation.Summary,
+			ShortSummary: fileCreation.ShortSummary,
+		}
 		result, err := q.CreatePrivateFile(ctx, params)
+		resultSchema := PrivateFileToSchema(result)
+		return resultSchema, err
 	}
+	params := dbstore.CreateFileParams{
+		Url:          fileCreation.Url,
+		Doctype:      fileCreation.Doctype,
+		Lang:         fileCreation.Lang,
+		Name:         fileCreation.Name,
+		Source:       fileCreation.Source,
+		Hash:         fileCreation.Hash,
+		Mdata:        fileCreation.Mdata,
+		Stage:        fileCreation.Stage,
+		Summary:      fileCreation.Summary,
+		ShortSummary: fileCreation.ShortSummary,
+	}
+	result, err := q.CreateFile(ctx, params)
+	resultSchema := PublicFileToSchema(result)
+	return resultSchema, err
 }
