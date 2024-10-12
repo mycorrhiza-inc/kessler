@@ -1,6 +1,7 @@
 package crud
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -118,5 +119,47 @@ func PublicTextToSchema(file dbstore.FileTextSource) FileTextSchema {
 		FileID:         file.FileID,
 		IsOriginalText: file.IsOriginalText,
 		Text:           file.Text.String,
+	}
+}
+
+func GetTextSchemas(q dbstore.Queries, ctx context.Context, pgUUID pgtype.UUID, private bool) ([]FileTextSchema, error) {
+	schemas := make([]FileTextSchema, len(texts))
+	if private {
+		texts, err := q.ListPrivateTextsOfFile(ctx, pgUUID)
+		if err != nil {
+			return []FileTextSchema{}, err
+		}
+		for i, text := range texts {
+			schemas[i] = PrivateTextToSchema(text)
+		}
+		return schemas, nil
+	}
+	texts, err := q.ListTextsOfFile(ctx, pgUUID)
+	if err != nil {
+		return []FileTextSchema{}, err
+	}
+	for i, text := range texts {
+		schemas[i] = PublicTextToSchema(text)
+	}
+	return schemas, nil
+}
+
+type FileCreationData struct {
+	Url          string
+	Doctype      string
+	Lang         string
+	Name         string
+	Source       string
+	Hash         string
+	Mdata        string
+	Stage        string
+	Summary      string
+	ShortSummary string
+}
+
+func InsertPubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreation FileCreationData, private bool) (rawFileSchema, error) {
+	if private {
+		params := dbstore.CreatePrivateFileParams{}
+		result, err := q.CreatePrivateFile(ctx, params)
 	}
 }

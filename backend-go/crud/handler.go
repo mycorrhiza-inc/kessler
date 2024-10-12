@@ -124,31 +124,8 @@ func makeFileHandler(info FileHandlerInfo) func(w http.ResponseWriter, r *http.R
 
 			ctx := r.Context()
 
-			get_file_texts := func(pgUUID pgtype.UUID) ([]FileTextSchema, error) {
-				if private {
-					texts, err := q.ListPrivateTextsOfFile(ctx, pgUUID)
-					if err != nil {
-						http.Error(w, "Error retrieving texts", http.StatusInternalServerError)
-						return []FileTextSchema{}, err
-					}
-					schemas := make([]FileTextSchema, len(texts))
-					for i, text := range texts {
-						schemas[i] = PrivateTextToSchema(text)
-					}
-					return schemas, nil
-				}
-				texts, err := q.ListTextsOfFile(ctx, pgUUID)
-				if err != nil {
-					http.Error(w, "Error retrieving texts", http.StatusInternalServerError)
-					return []FileTextSchema{}, err
-				}
-				schemas := make([]FileTextSchema, len(texts))
-				for i, text := range texts {
-					schemas[i] = PublicTextToSchema(text)
-				}
-				return schemas, nil
 			}
-			texts, err := get_file_texts(pgUUID)
+			texts, err := GetTextSchemas(q,ctx,pgUUID,private)
 			if err != nil {
 				http.Error(w, "Error retrieving texts", http.StatusInternalServerError)
 				return
@@ -215,12 +192,17 @@ func makeUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r *ht
 			return
 		}
 		userID := strings.TrimPrefix(token, "Authorized ")
-		if !private && userID != "thaumaturgy" {
+		forbiddenPublic := !private && userID != "thaumaturgy"
+		if forbiddenPublic || userID == "anonomous" {
 			http.Error(w, "Forbidden", http.StatusForbidden)
 			return
 		}
 		if !insert {
-			checkPrivateFileAuthorization(q, ctx, doc_uuid, userID)
+			authorized, err := checkPrivateFileAuthorization(q, ctx, doc_uuid, userID)
+			if !authorized || err == nil {
+				http.Error(w, "Forbidden", http.StatusForbidden)
+				return
+			}
 		}
 		w.Write([]byte("Sucessfully inserted"))
 	}
