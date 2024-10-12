@@ -223,8 +223,29 @@ func makeUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r *ht
 			http.Error(w, "Error inserting/updating document", http.StatusInternalServerError)
 		}
 		texts := newDocInfo.DocTexts
+		doc_uuid = fileSchema.ID.Bytes // Ensure UUID is same as one returned from database
+		doc_pgUUID := pgtype.UUID{Bytes: doc_uuid, Valid: true}
 		if len(texts) != 0 {
-			// Add texts to DB.
+			if !insert {
+				// TODO: Implement this func to Nuke all the previous texts
+				err := NukePriPubFileTexts(q, ctx, doc_pgUUID)
+				if err != nil {
+					fmt.Print("Error deleting old texts, proceeding with new editions")
+				}
+			}
+			// TODO : Make Async at some point in future
+			for _, text := range texts {
+				textRaw := FileTextSchema{
+					FileID:         doc_pgUUID,
+					IsOriginalText: text.IsOriginalText,
+					Language:       text.Language,
+					Text:           text.Text,
+				}
+				err = InsertPriPubFileText(q, ctx, textRaw, private)
+				if err != nil {
+					fmt.Print("Error adding a text value, not doing anything and procceeding since error handling is hard.")
+				}
+			}
 		}
 		response, _ := json.Marshal(fileSchema)
 

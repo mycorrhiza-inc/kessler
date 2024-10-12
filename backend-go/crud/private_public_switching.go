@@ -98,7 +98,6 @@ func PublicFileToSchema(file dbstore.File) rawFileSchema {
 }
 
 type FileTextSchema struct {
-	ID             pgtype.UUID
 	FileID         pgtype.UUID
 	IsOriginalText bool
 	Text           string
@@ -107,7 +106,6 @@ type FileTextSchema struct {
 
 func PrivateTextToSchema(file dbstore.UserfilesPrivateFileTextSource) FileTextSchema {
 	return FileTextSchema{
-		ID:             file.ID,
 		FileID:         file.FileID,
 		IsOriginalText: file.IsOriginalText,
 		Text:           file.Text.String,
@@ -117,7 +115,6 @@ func PrivateTextToSchema(file dbstore.UserfilesPrivateFileTextSource) FileTextSc
 
 func PublicTextToSchema(file dbstore.FileTextSource) FileTextSchema {
 	return FileTextSchema{
-		ID:             file.ID,
 		FileID:         file.FileID,
 		IsOriginalText: file.IsOriginalText,
 		Text:           file.Text.String,
@@ -262,4 +259,29 @@ func UpdatePubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreatio
 	result, err := q.UpdateFile(ctx, params)
 	resultSchema := PublicFileToSchema(result)
 	return resultSchema, err
+}
+
+func NukePriPubFileTexts(q dbstore.Queries, ctx context.Context, pgUUID pgtype.UUID) error {
+	return nil
+}
+
+func InsertPriPubFileText(q dbstore.Queries, ctx context.Context, text FileTextSchema, private bool) error {
+	if private {
+		args := dbstore.CreatePrivateFileTextSourceParams{
+			FileID:         text.FileID,
+			IsOriginalText: text.IsOriginalText,
+			Text:           pgtype.Text{String: text.Text, Valid: true},
+			Language:       text.Language,
+		}
+		_, err := q.CreatePrivateFileTextSource(ctx, args)
+		return err
+	}
+	args := dbstore.CreateFileTextSourceParams{
+		FileID:         text.FileID,
+		IsOriginalText: text.IsOriginalText,
+		Text:           pgtype.Text{String: text.Text, Valid: true},
+		Language:       text.Language,
+	}
+	_, err := q.CreateFileTextSource(ctx, args)
+	return err
 }
