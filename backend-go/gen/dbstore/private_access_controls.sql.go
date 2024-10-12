@@ -41,7 +41,7 @@ INSERT INTO userfiles.private_access_controls (
 		updated_at
 	)
 VALUES ($1, $2,$3, $4, NOW(), NOW())
-RETURNING id
+RETURNING operator_id, operator_table, object_id, object_table, id, created_at, updated_at
 `
 
 type CreatePrivateAccessControlParams struct {
@@ -51,16 +51,24 @@ type CreatePrivateAccessControlParams struct {
 	ObjectTable   string
 }
 
-func (q *Queries) CreatePrivateAccessControl(ctx context.Context, arg CreatePrivateAccessControlParams) (pgtype.UUID, error) {
+func (q *Queries) CreatePrivateAccessControl(ctx context.Context, arg CreatePrivateAccessControlParams) (UserfilesPrivateAccessControl, error) {
 	row := q.db.QueryRow(ctx, createPrivateAccessControl,
 		arg.OperatorID,
 		arg.OperatorTable,
 		arg.ObjectID,
 		arg.ObjectTable,
 	)
-	var id pgtype.UUID
-	err := row.Scan(&id)
-	return id, err
+	var i UserfilesPrivateAccessControl
+	err := row.Scan(
+		&i.OperatorID,
+		&i.OperatorTable,
+		&i.ObjectID,
+		&i.ObjectTable,
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const deleteAccessControl = `-- name: DeleteAccessControl :exec
