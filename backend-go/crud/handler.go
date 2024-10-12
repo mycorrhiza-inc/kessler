@@ -150,11 +150,8 @@ type UpdateDocumentInfo struct {
 	DocTexts     []DocTextInfo     `json:"doc_texts"`
 }
 
-func ConvertToCreationData(updateInfo UpdateDocumentInfo) (FileCreationDataRaw, error) {
-	mdata_string, err := json.Marshal(updateInfo.Mdata)
-	if err != nil {
-		return FileCreationDataRaw{}, nil
-	}
+func ConvertToCreationData(updateInfo UpdateDocumentInfo) FileCreationDataRaw {
+	mdata_string, _ := json.Marshal(updateInfo.Mdata)
 	creationData := FileCreationDataRaw{
 		Url:          pgtype.Text{String: updateInfo.Url, Valid: true},
 		Doctype:      pgtype.Text{String: updateInfo.Doctype, Valid: true},
@@ -167,7 +164,7 @@ func ConvertToCreationData(updateInfo UpdateDocumentInfo) (FileCreationDataRaw, 
 		ShortSummary: pgtype.Text{String: updateInfo.ShortSummary, Valid: true},
 		Mdata:        pgtype.Text{String: string(mdata_string), Valid: true},
 	}
-	return creationData, nil
+	return creationData
 }
 
 func makeUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r *http.Request) {
@@ -214,7 +211,24 @@ func makeUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r *ht
 			http.Error(w, "Invalid request payload", http.StatusBadRequest)
 			return
 		}
+		rawFileData := ConvertToCreationData(newDocInfo)
+		var fileSchema rawFileSchema
+		if insert {
+			fileSchema, err = InsertPubPrivateFileObj(q, ctx, rawFileData, private)
+		} else {
+			pgUUID := pgtype.UUID{doc_uuid, true}
+			fileSchema, err = UpdatePubPrivateFileObj(q, ctx, rawFileData, private, pgUUID)
+		}
+		if err != nil {
+			http.Error(w, "Error inserting/updating document", http.StatusInternalServerError)
+		}
+		texts := newDocInfo.DocTexts
+		if len(texts) != 0 {
+			// Add texts to DB.
+		}
+		response, _ := json.Marshal(fileSchema)
 
-		w.Write([]byte("Sucessfully inserted"))
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(response)
 	}
 }
