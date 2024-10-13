@@ -162,10 +162,10 @@ func makeAuthMiddleware(dbtx_val dbstore.DBTX) func(http.Handler) http.Handler {
 	tokenValidator := makeTokenValidator(dbtx_val)
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			fmt.Println("Authenticating request")
 			userInfo := tokenValidator(r)
 			if userInfo.validated {
 				r.Header.Set("Authorization", fmt.Sprintf("Authenticated %s", userInfo.userID))
+				fmt.Printf("Authenticated Request for user %v\n", userInfo.userID)
 				next.ServeHTTP(w, r)
 
 			} else {
