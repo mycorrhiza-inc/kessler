@@ -52,7 +52,7 @@ func DefineCrudRoutes(router *mux.Router, dbtx_val dbstore.DBTX) {
 type FileHandlerInfo struct {
 	dbtx_val    dbstore.DBTX
 	private     bool
-	return_type string // Can be either markdown or object
+	return_type string // Can be either markdown, object or raw
 }
 
 func checkPrivateFileAuthorization(q dbstore.Queries, ctx context.Context, objectID uuid.UUID, viewerID string) (bool, error) {
@@ -138,6 +138,9 @@ func makeFileHandler(info FileHandlerInfo) func(w http.ResponseWriter, r *http.R
 			markdownText := texts[0].Text
 			w.Header().Set("Content-Type", "text/plain")
 			w.Write([]byte(markdownText))
+		default:
+			fmt.Printf("Encountered unreachable code with file return type %v", return_type)
+			http.Error(w, "Congradulations for encountering unreachable code about support types!", http.StatusInternalServerError)
 		}
 	}
 }
