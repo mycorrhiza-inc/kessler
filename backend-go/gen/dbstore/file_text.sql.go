@@ -21,7 +21,7 @@ INSERT INTO public.file_text_source (
 		updated_at
 	)
 VALUES ($1, $2, $3, $4, NOW(), NOW())
-RETURNING id
+RETURNING file_id, is_original_text, language, text, id, created_at, updated_at
 `
 
 type CreateFileTextSourceParams struct {
@@ -31,16 +31,24 @@ type CreateFileTextSourceParams struct {
 	Text           pgtype.Text
 }
 
-func (q *Queries) CreateFileTextSource(ctx context.Context, arg CreateFileTextSourceParams) (pgtype.UUID, error) {
+func (q *Queries) CreateFileTextSource(ctx context.Context, arg CreateFileTextSourceParams) (FileTextSource, error) {
 	row := q.db.QueryRow(ctx, createFileTextSource,
 		arg.FileID,
 		arg.IsOriginalText,
 		arg.Language,
 		arg.Text,
 	)
-	var id pgtype.UUID
-	err := row.Scan(&id)
-	return id, err
+	var i FileTextSource
+	err := row.Scan(
+		&i.FileID,
+		&i.IsOriginalText,
+		&i.Language,
+		&i.Text,
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const deleteFileTexts = `-- name: DeleteFileTexts :exec

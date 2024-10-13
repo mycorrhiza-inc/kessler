@@ -6,7 +6,7 @@ INSERT INTO public.relation_organizations_factions (
 		updated_at
 	)
 VALUES ($1, $2, NOW(), NOW())
-RETURNING id;
+RETURNING *;
 -- name: ReadOrganizationsInFaction :one
 SELECT *
 FROM public.relation_organizations_factions
@@ -21,7 +21,7 @@ SET faction_id = $1,
 	organization_id = $2,
 	updated_at = NOW()
 WHERE id = $3
-RETURNING id;
+RETURNING *;
 -- name: DeleteOrganizationsInFaction :exec
 DELETE FROM public.relation_organizations_factions
 WHERE id = $1;

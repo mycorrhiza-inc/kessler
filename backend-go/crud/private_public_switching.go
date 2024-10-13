@@ -1,9 +1,11 @@
 package crud
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
 )
@@ -22,7 +24,7 @@ type rawFileSchema struct {
 	ShortSummary string
 }
 type FileSchema struct {
-	ID           pgtype.UUID
+	ID           uuid.UUID
 	Url          string
 	Doctype      string
 	Lang         string
@@ -35,6 +37,13 @@ type FileSchema struct {
 	ShortSummary string
 }
 
+// A UUID is a 128 bit (16 byte) Universal Unique IDentifier as defined in RFC
+// 4122.
+// type UUID [16]byte
+func pguuidToString(uuid_pg pgtype.UUID) string {
+	return uuid.UUID(uuid_pg.Bytes).String()
+}
+
 func RawToFileSchema(file rawFileSchema) (FileSchema, error) {
 	var new_mdata map[string]string
 	err := json.Unmarshal([]byte(file.Mdata), &new_mdata)
@@ -42,7 +51,7 @@ func RawToFileSchema(file rawFileSchema) (FileSchema, error) {
 		return FileSchema{}, fmt.Errorf("error unmarshaling metadata: %v", err) // err
 	}
 	return FileSchema{
-		ID:           file.ID,
+		ID:           file.ID.Bytes,
 		Url:          file.Url,
 		Doctype:      file.Doctype,
 		Lang:         file.Lang,
@@ -89,26 +98,190 @@ func PublicFileToSchema(file dbstore.File) rawFileSchema {
 }
 
 type FileTextSchema struct {
-	ID             pgtype.UUID
 	FileID         pgtype.UUID
 	IsOriginalText bool
 	Text           string
+	Language       string
 }
 
 func PrivateTextToSchema(file dbstore.UserfilesPrivateFileTextSource) FileTextSchema {
 	return FileTextSchema{
-		ID:             file.ID,
 		FileID:         file.FileID,
 		IsOriginalText: file.IsOriginalText,
 		Text:           file.Text.String,
+		Language:       file.Language,
 	}
 }
 
 func PublicTextToSchema(file dbstore.FileTextSource) FileTextSchema {
 	return FileTextSchema{
-		ID:             file.ID,
 		FileID:         file.FileID,
 		IsOriginalText: file.IsOriginalText,
 		Text:           file.Text.String,
+		Language:       file.Language,
 	}
+}
+
+type GetFileParam struct {
+	q       dbstore.Queries
+	ctx     context.Context
+	pgUUID  pgtype.UUID
+	private bool
+}
+
+func GetTextSchemas(params GetFileParam) ([]FileTextSchema, error) {
+	private := params.private
+	q := params.q
+	ctx := params.ctx
+	pgUUID := params.pgUUID
+	if private {
+		texts, err := q.ListPrivateTextsOfFile(ctx, pgUUID)
+		schemas := make([]FileTextSchema, len(texts))
+		if err != nil {
+			return []FileTextSchema{}, err
+		}
+		for i, text := range texts {
+			schemas[i] = PrivateTextToSchema(text)
+		}
+		return schemas, nil
+	}
+	texts, err := q.ListTextsOfFile(ctx, pgUUID)
+	schemas := make([]FileTextSchema, len(texts))
+	if err != nil {
+		return []FileTextSchema{}, err
+	}
+	for i, text := range texts {
+		schemas[i] = PublicTextToSchema(text)
+	}
+	return schemas, nil
+}
+
+func GetFileObjectRaw(params GetFileParam) (rawFileSchema, error) {
+	private := params.private
+	q := params.q
+	ctx := params.ctx
+	pgUUID := params.pgUUID
+
+	if !private {
+		file, err := q.ReadFile(ctx, pgUUID)
+		if err != nil {
+			return rawFileSchema{}, err
+		}
+		return PublicFileToSchema(file), nil
+	}
+	file, err := q.ReadPrivateFile(ctx, pgUUID)
+	if err != nil {
+		return rawFileSchema{}, err
+	}
+	return PrivateFileToSchema(file), nil
+}
+
+type FileCreationDataRaw struct {
+	Url          pgtype.Text
+	Doctype      pgtype.Text
+	Lang         pgtype.Text
+	Name         pgtype.Text
+	Source       pgtype.Text
+	Hash         pgtype.Text
+	Mdata        pgtype.Text
+	Stage        pgtype.Text
+	Summary      pgtype.Text
+	ShortSummary pgtype.Text
+}
+
+func InsertPubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreation FileCreationDataRaw, private bool) (rawFileSchema, error) {
+	if private {
+		params := dbstore.CreatePrivateFileParams{
+			Url:          fileCreation.Url,
+			Doctype:      fileCreation.Doctype,
+			Lang:         fileCreation.Lang,
+			Name:         fileCreation.Name,
+			Source:       fileCreation.Source,
+			Hash:         fileCreation.Hash,
+			Mdata:        fileCreation.Mdata,
+			Stage:        fileCreation.Stage,
+			Summary:      fileCreation.Summary,
+			ShortSummary: fileCreation.ShortSummary,
+		}
+		result, err := q.CreatePrivateFile(ctx, params)
+		resultSchema := PrivateFileToSchema(result)
+		return resultSchema, err
+	}
+	params := dbstore.CreateFileParams{
+		Url:          fileCreation.Url,
+		Doctype:      fileCreation.Doctype,
+		Lang:         fileCreation.Lang,
+		Name:         fileCreation.Name,
+		Source:       fileCreation.Source,
+		Hash:         fileCreation.Hash,
+		Mdata:        fileCreation.Mdata,
+		Stage:        fileCreation.Stage,
+		Summary:      fileCreation.Summary,
+		ShortSummary: fileCreation.ShortSummary,
+	}
+	result, err := q.CreateFile(ctx, params)
+	resultSchema := PublicFileToSchema(result)
+	return resultSchema, err
+}
+
+func UpdatePubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreation FileCreationDataRaw, private bool, pgUUID pgtype.UUID) (rawFileSchema, error) {
+	if private {
+		params := dbstore.UpdatePrivateFileParams{
+			Url:          fileCreation.Url,
+			Doctype:      fileCreation.Doctype,
+			Lang:         fileCreation.Lang,
+			Name:         fileCreation.Name,
+			Source:       fileCreation.Source,
+			Hash:         fileCreation.Hash,
+			Mdata:        fileCreation.Mdata,
+			Stage:        fileCreation.Stage,
+			Summary:      fileCreation.Summary,
+			ShortSummary: fileCreation.ShortSummary,
+			ID:           pgUUID,
+		}
+		result, err := q.UpdatePrivateFile(ctx, params)
+		resultSchema := PrivateFileToSchema(result)
+		return resultSchema, err
+	}
+	params := dbstore.UpdateFileParams{
+		Url:          fileCreation.Url,
+		Doctype:      fileCreation.Doctype,
+		Lang:         fileCreation.Lang,
+		Name:         fileCreation.Name,
+		Source:       fileCreation.Source,
+		Hash:         fileCreation.Hash,
+		Mdata:        fileCreation.Mdata,
+		Stage:        fileCreation.Stage,
+		Summary:      fileCreation.Summary,
+		ShortSummary: fileCreation.ShortSummary,
+		ID:           pgUUID,
+	}
+	result, err := q.UpdateFile(ctx, params)
+	resultSchema := PublicFileToSchema(result)
+	return resultSchema, err
+}
+
+func NukePriPubFileTexts(q dbstore.Queries, ctx context.Context, pgUUID pgtype.UUID) error {
+	return nil
+}
+
+func InsertPriPubFileText(q dbstore.Queries, ctx context.Context, text FileTextSchema, private bool) error {
+	if private {
+		args := dbstore.CreatePrivateFileTextSourceParams{
+			FileID:         text.FileID,
+			IsOriginalText: text.IsOriginalText,
+			Text:           pgtype.Text{String: text.Text, Valid: true},
+			Language:       text.Language,
+		}
+		_, err := q.CreatePrivateFileTextSource(ctx, args)
+		return err
+	}
+	args := dbstore.CreateFileTextSourceParams{
+		FileID:         text.FileID,
+		IsOriginalText: text.IsOriginalText,
+		Text:           pgtype.Text{String: text.Text, Valid: true},
+		Language:       text.Language,
+	}
+	_, err := q.CreateFileTextSource(ctx, args)
+	return err
 }

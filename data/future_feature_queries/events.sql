@@ -23,19 +23,19 @@ SET date = $1,
 	description = $3,
 	updated_at = NOW()
 WHERE id = $4
-RETURNING id;
+RETURNING *;
 -- name: UpdateEventDate :one
 UPDATE public.event
 SET date = $1,
 	updated_at = NOW()
 WHERE id = $2
-RETURNING id;
+RETURNING *;
 -- name: UpdateEventName :one
 UPDATE public.event
 SET name = $1,
 	updated_at = NOW()
 WHERE id = $2
-RETURNING id;
+RETURNING *;
 -- name: DeleteEvent :exec
 DELETE FROM public.event
 WHERE id = $1;

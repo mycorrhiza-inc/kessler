@@ -40,7 +40,7 @@ VALUES (
 		NOW(),
 		NOW()
 	)
-RETURNING id
+RETURNING url, doctype, lang, name, source, hash, mdata, stage, summary, short_summary, id, created_at, updated_at
 `
 
 type CreateFileParams struct {
@@ -56,7 +56,7 @@ type CreateFileParams struct {
 	ShortSummary pgtype.Text
 }
 
-func (q *Queries) CreateFile(ctx context.Context, arg CreateFileParams) (pgtype.UUID, error) {
+func (q *Queries) CreateFile(ctx context.Context, arg CreateFileParams) (File, error) {
 	row := q.db.QueryRow(ctx, createFile,
 		arg.Url,
 		arg.Doctype,
@@ -69,9 +69,23 @@ func (q *Queries) CreateFile(ctx context.Context, arg CreateFileParams) (pgtype.
 		arg.Summary,
 		arg.ShortSummary,
 	)
-	var id pgtype.UUID
-	err := row.Scan(&id)
-	return id, err
+	var i File
+	err := row.Scan(
+		&i.Url,
+		&i.Doctype,
+		&i.Lang,
+		&i.Name,
+		&i.Source,
+		&i.Hash,
+		&i.Mdata,
+		&i.Stage,
+		&i.Summary,
+		&i.ShortSummary,
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const deleteFile = `-- name: DeleteFile :exec
@@ -165,7 +179,7 @@ SET url = $1,
 	short_summary = $10,
 	updated_at = NOW()
 WHERE id = $11
-RETURNING id
+RETURNING url, doctype, lang, name, source, hash, mdata, stage, summary, short_summary, id, created_at, updated_at
 `
 
 type UpdateFileParams struct {
@@ -182,7 +196,7 @@ type UpdateFileParams struct {
 	ID           pgtype.UUID
 }
 
-func (q *Queries) UpdateFile(ctx context.Context, arg UpdateFileParams) (pgtype.UUID, error) {
+func (q *Queries) UpdateFile(ctx context.Context, arg UpdateFileParams) (File, error) {
 	row := q.db.QueryRow(ctx, updateFile,
 		arg.Url,
 		arg.Doctype,
@@ -196,7 +210,21 @@ func (q *Queries) UpdateFile(ctx context.Context, arg UpdateFileParams) (pgtype.
 		arg.ShortSummary,
 		arg.ID,
 	)
-	var id pgtype.UUID
-	err := row.Scan(&id)
-	return id, err
+	var i File
+	err := row.Scan(
+		&i.Url,
+		&i.Doctype,
+		&i.Lang,
+		&i.Name,
+		&i.Source,
+		&i.Hash,
+		&i.Mdata,
+		&i.Stage,
+		&i.Summary,
+		&i.ShortSummary,
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }

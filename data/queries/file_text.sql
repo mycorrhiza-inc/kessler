@@ -8,7 +8,7 @@ INSERT INTO public.file_text_source (
 		updated_at
 	)
 VALUES ($1, $2, $3, $4, NOW(), NOW())
-RETURNING id;
+RETURNING *;
 -- name: ListTextsOfFile :many
 SELECT *
 FROM public.file_text_source

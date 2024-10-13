@@ -6,7 +6,7 @@ INSERT INTO public.relation_organizations_events (
 		updated_at
 	)
 VALUES ($1, $2, NOW(), NOW())
-RETURNING id;
+RETURNING *;
 -- name: ReadOrganizationsAssociatedWithEvent :one
 SELECT *
 FROM public.relation_organizations_events
@@ -21,7 +21,7 @@ SET organization_id = $1,
 	event_id = $2,
 	updated_at = NOW()
 WHERE id = $3
-RETURNING id;
+RETURNING *;
 -- name: DeleteOrganizationsAssociatedWithEvent :exec
 DELETE FROM public.relation_organizations_events
 WHERE id = $1;

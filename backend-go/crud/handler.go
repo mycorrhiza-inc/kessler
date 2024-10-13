@@ -16,15 +16,37 @@ import (
 func DefineCrudRoutes(router *mux.Router, dbtx_val dbstore.DBTX) {
 	public_subrouter := router.PathPrefix("/public").Subrouter()
 
+	public_subrouter.HandleFunc("/files/insert", makeUpsertHandler(
+		UpsertHandlerInfo{dbtx_val: dbtx_val, private: false, insert: true})).Methods(http.MethodPost)
+
+	public_subrouter.HandleFunc("/files/{uuid}", makeUpsertHandler(
+		UpsertHandlerInfo{dbtx_val: dbtx_val, private: false, insert: false})).Methods(http.MethodPost)
+
 	public_subrouter.HandleFunc("/files/{uuid}", makeFileHandler(
-		FileHandlerInfo{dbtx_val: dbtx_val, private: false, return_type: "object"}))
+		FileHandlerInfo{dbtx_val: dbtx_val, private: false, return_type: "object"})).Methods(http.MethodGet)
+
 	public_subrouter.HandleFunc("/files/{uuid}/markdown", makeFileHandler(
-		FileHandlerInfo{dbtx_val: dbtx_val, private: false, return_type: "markdown"}))
+		FileHandlerInfo{dbtx_val: dbtx_val, private: false, return_type: "markdown"})).Methods(http.MethodGet)
+
+	public_subrouter.HandleFunc("/files/{uuid}/raw", makeFileHandler(
+		FileHandlerInfo{dbtx_val: dbtx_val, private: false, return_type: "raw"})).Methods(http.MethodGet)
+
 	private_subrouter := router.PathPrefix("/private").Subrouter()
+
+	private_subrouter.HandleFunc("/files/insert", makeUpsertHandler(
+		UpsertHandlerInfo{dbtx_val: dbtx_val, private: true, insert: true})).Methods(http.MethodPost)
+
+	private_subrouter.HandleFunc("/files/{uuid}", makeUpsertHandler(
+		UpsertHandlerInfo{dbtx_val: dbtx_val, private: true, insert: false})).Methods(http.MethodPost)
+
 	private_subrouter.HandleFunc("/files/{uuid}", makeFileHandler(
-		FileHandlerInfo{dbtx_val: dbtx_val, private: true, return_type: "object"}))
+		FileHandlerInfo{dbtx_val: dbtx_val, private: true, return_type: "object"})).Methods(http.MethodGet)
+
 	private_subrouter.HandleFunc("/files/{uuid}/markdown", makeFileHandler(
-		FileHandlerInfo{dbtx_val: dbtx_val, private: true, return_type: "markdown"}))
+		FileHandlerInfo{dbtx_val: dbtx_val, private: true, return_type: "markdown"})).Methods(http.MethodGet)
+
+	private_subrouter.HandleFunc("/files/{uuid}/raw", makeFileHandler(
+		FileHandlerInfo{dbtx_val: dbtx_val, private: true, return_type: "raw"})).Methods(http.MethodGet)
 }
 
 type FileHandlerInfo struct {
@@ -55,7 +77,7 @@ func makeFileHandler(info FileHandlerInfo) func(w http.ResponseWriter, r *http.R
 	private := info.private
 	dbtx_val := info.dbtx_val
 	return_type := info.return_type
-	return_func := func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		q := *dbstore.New(dbtx_val)
 		token := r.Header.Get("Authorization")
 		params := mux.Vars(r)
@@ -78,25 +100,17 @@ func makeFileHandler(info FileHandlerInfo) func(w http.ResponseWriter, r *http.R
 				fmt.Printf("Ran into the follwing error with authentication $v", err)
 			}
 		}
+		// Since all three of these methods share the same authentication and database connection prerecs
+		// switching functionality using an if else, or a cases switch lets code get reused
 		// TODO: This is horrible, I need to refactor
-		if return_type == "object" {
-			getFile := func(uuid pgtype.UUID) (rawFileSchema, error) {
-				if !private {
-					file, err := q.ReadFile(ctx, pgUUID)
-					if err != nil {
-						return rawFileSchema{}, err
-					}
-					return PublicFileToSchema(file), nil
-				} else {
-					file, err := q.ReadPrivateFile(ctx, pgUUID)
-					if err != nil {
-						return rawFileSchema{}, err
-					}
-					return PrivateFileToSchema(file), nil
-				}
-			}
-
-			file, err := getFile(pgUUID)
+		file_params := GetFileParam{
+			q, ctx, pgUUID, private,
+		}
+		switch return_type {
+		case "raw":
+			http.Error(w, "Retriving raw files from s3 not implemented", http.StatusNotImplemented)
+		case "object":
+			file, err := GetFileObjectRaw(file_params)
 			if err != nil {
 				http.Error(w, "File not found", http.StatusNotFound)
 				return
@@ -112,41 +126,10 @@ func makeFileHandler(info FileHandlerInfo) func(w http.ResponseWriter, r *http.R
 
 			w.Header().Set("Content-Type", "application/json")
 			w.Write(response)
-		} else if return_type == "markdown" {
-
-			ctx := r.Context()
-
-			get_file_texts := func(pgUUID pgtype.UUID) ([]FileTextSchema, error) {
-				if private {
-					texts, err := q.ListPrivateTextsOfFile(ctx, pgUUID)
-					if err != nil {
-						http.Error(w, "Error retrieving texts", http.StatusInternalServerError)
-						return []FileTextSchema{}, err
-					}
-					schemas := make([]FileTextSchema, len(texts))
-					for i, text := range texts {
-						schemas[i] = PrivateTextToSchema(text)
-					}
-					return schemas, nil
-				}
-				texts, err := q.ListTextsOfFile(ctx, pgUUID)
-				if err != nil {
-					http.Error(w, "Error retrieving texts", http.StatusInternalServerError)
-					return []FileTextSchema{}, err
-				}
-				schemas := make([]FileTextSchema, len(texts))
-				for i, text := range texts {
-					schemas[i] = PublicTextToSchema(text)
-				}
-				return schemas, nil
-			}
-			texts, err := get_file_texts(pgUUID)
-			if err != nil {
-				http.Error(w, "Error retrieving texts", http.StatusInternalServerError)
-				return
-			}
-			if len(texts) == 0 {
-				http.Error(w, "No texts found for document", http.StatusNotFound)
+		case "markdown":
+			texts, err := GetTextSchemas(file_params)
+			if err != nil || len(texts) == 0 {
+				http.Error(w, "Error retrieving texts or no texts found.", http.StatusInternalServerError)
 				return
 			}
 			// TODO: Add suport for non english text retrieval and original text retrieval
@@ -157,7 +140,6 @@ func makeFileHandler(info FileHandlerInfo) func(w http.ResponseWriter, r *http.R
 			w.Write([]byte(markdownText))
 		}
 	}
-	return return_func
 }
 
 type UpsertHandlerInfo struct {
@@ -165,24 +147,127 @@ type UpsertHandlerInfo struct {
 	private  bool
 	insert   bool
 }
+type DocTextInfo struct {
+	Language       string `json:"language"`
+	Text           string `json:"text"`
+	IsOriginalText bool   `json:"is_original_text"`
+}
 
-// func makeUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r *http.Request) {
-// 	dbtx_val := info.dbtx_val
-// 	private := info.private
-// 	return_func := func(w http.ResponseWriter, r *http.Request) {
-// 		q := *dbstore.New(dbtx_val)
-// 		ctx := r.Context()
-// 		token := r.Header.Get("Authorization")
-// 		if !strings.HasPrefix(token, "Authorized ") {
-// 			http.Error(w, "Forbidden", http.StatusForbidden)
-// 			return
-// 		}
-// 		userID := strings.TrimPrefix(token, "Authorized ")
-// 		if !private && userID != "thaumaturgy" {
-// 			http.Error(w, "Forbidden", http.StatusForbidden)
-// 			return
-// 		}
-// 		return
-// 	}
-// 	return return_func
-// }
+type UpdateDocumentInfo struct {
+	Url          string            `json:"url"`
+	Doctype      string            `json:"doctype"`
+	Lang         string            `json:"lang"`
+	Name         string            `json:"name"`
+	Source       string            `json:"source"`
+	Hash         string            `json:"hash"`
+	Mdata        map[string]string `json:"mdata"`
+	Stage        string            `json:"stage"`
+	Summary      string            `json:"summary"`
+	ShortSummary string            `json:"short_summary"`
+	Private      bool              `json:"private"`
+	DocTexts     []DocTextInfo     `json:"doc_texts"`
+}
+
+func ConvertToCreationData(updateInfo UpdateDocumentInfo) FileCreationDataRaw {
+	mdata_string, _ := json.Marshal(updateInfo.Mdata)
+	creationData := FileCreationDataRaw{
+		Url:          pgtype.Text{String: updateInfo.Url, Valid: true},
+		Doctype:      pgtype.Text{String: updateInfo.Doctype, Valid: true},
+		Lang:         pgtype.Text{String: updateInfo.Lang, Valid: true},
+		Name:         pgtype.Text{String: updateInfo.Name, Valid: true},
+		Source:       pgtype.Text{String: updateInfo.Source, Valid: true},
+		Hash:         pgtype.Text{String: updateInfo.Hash, Valid: true},
+		Stage:        pgtype.Text{String: updateInfo.Stage, Valid: true},
+		Summary:      pgtype.Text{String: updateInfo.Summary, Valid: true},
+		ShortSummary: pgtype.Text{String: updateInfo.ShortSummary, Valid: true},
+		Mdata:        pgtype.Text{String: string(mdata_string), Valid: true},
+	}
+	return creationData
+}
+
+func makeUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r *http.Request) {
+	dbtx_val := info.dbtx_val
+	private := info.private
+	insert := info.insert
+	return func(w http.ResponseWriter, r *http.Request) {
+		var doc_uuid uuid.UUID
+		var err error
+		if !insert {
+			params := mux.Vars(r)
+			fileID := params["uuid"]
+
+			doc_uuid, err = uuid.Parse(fileID)
+			if err != nil {
+				http.Error(w, "Error parsing uuid", http.StatusBadRequest)
+				return
+			}
+		}
+		q := *dbstore.New(dbtx_val)
+		ctx := r.Context()
+		token := r.Header.Get("Authorization")
+		if !strings.HasPrefix(token, "Authorized ") {
+			http.Error(w, "Forbidden", http.StatusForbidden)
+			return
+		}
+		userID := strings.TrimPrefix(token, "Authorized ")
+		forbiddenPublic := !private && userID != "thaumaturgy"
+		if forbiddenPublic || userID == "anonomous" {
+			http.Error(w, "Forbidden", http.StatusForbidden)
+			return
+		}
+		if !insert {
+			authorized, err := checkPrivateFileAuthorization(q, ctx, doc_uuid, userID)
+			if !authorized || err == nil {
+				http.Error(w, "Forbidden", http.StatusForbidden)
+				return
+			}
+		}
+		// TODO: IF user is not a paying user, disable insert functionality
+		var newDocInfo UpdateDocumentInfo
+		if err := json.NewDecoder(r.Body).Decode(&newDocInfo); err != nil {
+
+			http.Error(w, "Invalid request payload", http.StatusBadRequest)
+			return
+		}
+		rawFileData := ConvertToCreationData(newDocInfo)
+		var fileSchema rawFileSchema
+		if insert {
+			fileSchema, err = InsertPubPrivateFileObj(q, ctx, rawFileData, private)
+		} else {
+			pgUUID := pgtype.UUID{doc_uuid, true}
+			fileSchema, err = UpdatePubPrivateFileObj(q, ctx, rawFileData, private, pgUUID)
+		}
+		if err != nil {
+			http.Error(w, "Error inserting/updating document", http.StatusInternalServerError)
+		}
+		texts := newDocInfo.DocTexts
+		doc_uuid = fileSchema.ID.Bytes // Ensure UUID is same as one returned from database
+		doc_pgUUID := pgtype.UUID{Bytes: doc_uuid, Valid: true}
+		if len(texts) != 0 {
+			if !insert {
+				// TODO: Implement this func to Nuke all the previous texts
+				err := NukePriPubFileTexts(q, ctx, doc_pgUUID)
+				if err != nil {
+					fmt.Print("Error deleting old texts, proceeding with new editions")
+				}
+			}
+			// TODO : Make Async at some point in future
+			for _, text := range texts {
+				textRaw := FileTextSchema{
+					FileID:         doc_pgUUID,
+					IsOriginalText: text.IsOriginalText,
+					Language:       text.Language,
+					Text:           text.Text,
+				}
+				err = InsertPriPubFileText(q, ctx, textRaw, private)
+				if err != nil {
+					fmt.Print("Error adding a text value, not doing anything and procceeding since error handling is hard.")
+				}
+			}
+		}
+		response, _ := json.Marshal(fileSchema)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(response)
+	}
+}
