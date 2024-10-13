@@ -293,12 +293,6 @@ export const CenteredFloatingSearhBox = ({
   const [searchVisible, setSearchVisible] = useState(true);
   const isEverythingMinimized = isSearchMinimized && isUploadMinimized;
 
-  const clickMinimized = () => {
-    if (isSearchMinimized) {
-      setSearchMinimized(false);
-    }
-  };
-
   const handleKeyDown = (event: KeyboardEvent) => {
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
       event.preventDefault();

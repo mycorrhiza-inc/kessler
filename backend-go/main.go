@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -68,6 +69,10 @@ type UserValidation struct {
 	userID    string
 }
 
+type AccessTokenData struct {
+	AccessToken string `json:"access_token"`
+}
+
 // FIXME : HIGHLY INSECURE, GET THE HMAC SECRET FROM SUPABASE AND THROW IT IN HERE AS AN NEV VARAIBLE.
 var SupabaseSecret = os.Getenv("SUPABASE_ANON_KEY")
 
@@ -75,9 +80,28 @@ func makeTokenValidator(dbtx_val dbstore.DBTX) func(r *http.Request) UserValidat
 	return_func := func(r *http.Request) UserValidation {
 		token := r.Header.Get("Authorization")
 		if token == "" {
-			return UserValidation{
-				validated: true,
-				userID:    "anonomous",
+			// Check if the supabase cookie starting with sb-kpvkpczxcclxslabfzeu-auth-token, exists if it does do the decoding and set token equal to Bearer <jwt_token>, otherwise return an anonomous ser
+			//
+			cookie, err := r.Cookie("sb-kpvkpczxcclxslabfzeu-auth-token")
+			if err == nil {
+				// Strip prefix and decode Base64 part.
+				if strings.HasPrefix(cookie.Value, "base64-") {
+					encodedData := strings.TrimPrefix(cookie.Value, "base64-")
+					decodedData, err := base64.StdEncoding.DecodeString(encodedData)
+					if err == nil {
+						var tokenData AccessTokenData
+						err := json.Unmarshal(decodedData, &tokenData)
+						if err == nil {
+							token = fmt.Sprintf("Bearer %s", tokenData.AccessToken)
+						}
+					}
+				}
+			}
+			if token == "" {
+				return UserValidation{
+					validated: true,
+					userID:    "anonomous",
+				}
 			}
 		}
 		// Check for "Bearer " prefix in the authorization header (expected format)
