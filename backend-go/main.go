@@ -94,9 +94,7 @@ func makeTokenValidator(dbtx_val dbstore.DBTX) func(r *http.Request) UserValidat
 				fmt.Println("Cookie is not base64 decodable.")
 			}
 			encodedData := strings.TrimSpace(strings.TrimPrefix(cookie.Value, "base64-"))
-			fmt.Println(encodedData)
 			decodedData, err := base64.URLEncoding.DecodeString(encodedData)
-			fmt.Println(string(decodedData))
 			if err != nil {
 				// Json will catch if invalid
 				fmt.Printf("Error decoding base64 %v\n", err)
@@ -113,6 +111,8 @@ func makeTokenValidator(dbtx_val dbstore.DBTX) func(r *http.Request) UserValidat
 			stringDataStripped := strings.TrimPrefix(stringData, `{"access_token":"`)
 			hopefullyToken := strings.Split(stringDataStripped, `"`)[0]
 			token = fmt.Sprintf("Bearer %s", hopefullyToken)
+			fmt.Println(token)
+
 		}
 		// Check for "Bearer " prefix in the authorization header (expected format)
 		if !strings.HasPrefix(token, "Bearer ") {
@@ -148,15 +148,21 @@ func makeTokenValidator(dbtx_val dbstore.DBTX) func(r *http.Request) UserValidat
 			return jwtSecret, nil
 		}
 		parsedToken, err := jwt.Parse(tokenString, keyFunc)
+		fmt.Println(parsedToken)
 		if err != nil {
 			fmt.Println(err)
-			return UserValidation{validated: false}
+			// FIXME : HIGHLY INSECURE, GET THE HMAC SECRET FROM SUPABASE AND THROW IT IN HERE AS AN NEV VARAIBLE.
+			// return UserValidation{validated: false}
 		}
 
 		// FIXME : HIGHLY INSECURE, GET THE HMAC SECRET FROM SUPABASE AND THROW IT IN HERE AS AN NEV VARAIBLE.
 		claims, ok := parsedToken.Claims.(jwt.MapClaims)
-		ok = true
-		if ok && parsedToken.Valid {
+
+		fmt.Println(claims)
+		ok = ok || !ok
+
+		// if ok && parsedToken.Valid {
+		if ok {
 			userID := claims["sub"] // JWT 'sub' - typically the user ID
 			// Perform additional checks if necessary
 			return UserValidation{userID: userID.(string), validated: true}
