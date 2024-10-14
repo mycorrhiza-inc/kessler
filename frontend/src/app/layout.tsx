@@ -24,11 +24,14 @@ export default function RootLayout({
       // style={{ background-color: "oklch(var(--b1))" }
       suppressHydrationWarning
     >
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      </head>
       <body className="bg-base-100">
         <ThemeProvider>
-          <main className="flex flex-col items-center">
+          <main className="">
             <div className="flex-1 w-100vw flex flex-col items-center">
-              <div className="flex flex-col text-base-content">{children}</div>
+              {children}
             </div>
           </main>
         </ThemeProvider>

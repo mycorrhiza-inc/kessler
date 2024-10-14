@@ -1,0 +1,16 @@
+.landing-grid-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: auto;
+  grid-gap: 20px;
+  padding: 20px;
+  height: full;
+  justify-content: space-between;
+  align: center;
+}
+
+@media (screen and (max-width: 768px)) {
+  .landing-grid-container {
+    grid-template-columns: 1;
+  }
+}

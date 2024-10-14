@@ -2,29 +2,23 @@ import { User } from "@supabase/supabase-js";
 import Feature from "./Features";
 import Hero from "./Hero";
 import Pricing from "./Pricing";
-
+import { SupportedStates } from "@/components/DataSetList";
+import "./Landing.css";
 export default function Landing({ user }: { user: User | null }) {
   const isLoggedIn = user ? true : false;
   return (
-    <main>
+    <>
       <div
-        className="items-center justify-center h-full"
-        style={{
-          width: "100vw",
-          padding: "20",
-        }}
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5"
+        data-theme="light"
       >
-        <div className="items-center justify-center h-full">
+        <div className="items-center justify-center h-full col-span-3 md:col-span-5 sm:col-span-1">
           <Hero isLoggedIn={isLoggedIn}></Hero>
         </div>
 
-        <div
-          className="flex flex-col items-center justify-center w-full"
-          style={{ minWidth: "30vw" }}
-        >
-          <Feature></Feature>
-          <Pricing></Pricing>
-        </div>
+        <Feature className="col-span-1 md:col-start-1 md:col-span-2 lg:col-start-2 lg:col-span-3 sm:col-span-1  " />
+        <SupportedStates className="col-span-3 md:col-start-2 md:col-span-3  sm:col-span-1" />
+        <Pricing className="col-span-3 md:col-span-5 sm:col-span-1" />
       </div>
       <footer className="footer bg-base-200 text-base-content p-10">
         <aside>
@@ -66,6 +60,6 @@ export default function Landing({ user }: { user: User | null }) {
           <a className="link link-hover">Cookie policy</a>
         </nav>
       </footer>
-    </main>
+    </>
   );
 }
