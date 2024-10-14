@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -81,28 +80,39 @@ func makeTokenValidator(dbtx_val dbstore.DBTX) func(r *http.Request) UserValidat
 		token := r.Header.Get("Authorization")
 		if token == "" {
 			// Check if the supabase cookie starting with sb-kpvkpczxcclxslabfzeu-auth-token, exists if it does do the decoding and set token equal to Bearer <jwt_token>, otherwise return an anonomous ser
-			//
 			cookie, err := r.Cookie("sb-kpvkpczxcclxslabfzeu-auth-token")
-			if err == nil {
-				// Strip prefix and decode Base64 part.
-				if strings.HasPrefix(cookie.Value, "base64-") {
-					encodedData := strings.TrimPrefix(cookie.Value, "base64-")
-					decodedData, err := base64.StdEncoding.DecodeString(encodedData)
-					if err == nil {
-						var tokenData AccessTokenData
-						err := json.Unmarshal(decodedData, &tokenData)
-						if err == nil {
-							token = fmt.Sprintf("Bearer %s", tokenData.AccessToken)
-						}
-					}
-				}
-			}
-			if token == "" {
+			if err != nil {
 				return UserValidation{
 					validated: true,
 					userID:    "anonomous",
 				}
 			}
+			fmt.Println("Found cookie and empty auth header, using cookie as auth token")
+			// Strip prefix and decode Base64 part.
+			if !strings.HasPrefix(cookie.Value, "base64-") {
+				// Json will catch if invalid
+				fmt.Println("Cookie is not base64 decodable.")
+			}
+			encodedData := strings.TrimSpace(strings.TrimPrefix(cookie.Value, "base64-"))
+			fmt.Println(encodedData)
+			decodedData, err := base64.URLEncoding.DecodeString(encodedData)
+			fmt.Println(string(decodedData))
+			if err != nil {
+				// Json will catch if invalid
+				fmt.Printf("Error decoding base64 %v\n", err)
+			}
+			stringData := string(decodedData)
+			// var tokenData AccessTokenData
+			// TODO : Fix horrible moneky wrench solution for decoding this with something not shit
+			// err = json.Unmarshal([]byte(string(decodedData)), &tokenData)
+			// if err != nil {
+			// 	fmt.Printf("Error unmarshalling %v\n", err)
+			// 	return UserValidation{validated: false}
+			// }
+			// token = fmt.Sprintf("Bearer %s", tokenData.AccessToken)
+			stringDataStripped := strings.TrimPrefix(stringData, `{"access_token":"`)
+			hopefullyToken := strings.Split(stringDataStripped, `"`)[0]
+			token = fmt.Sprintf("Bearer %s", hopefullyToken)
 		}
 		// Check for "Bearer " prefix in the authorization header (expected format)
 		if !strings.HasPrefix(token, "Bearer ") {
@@ -139,7 +149,7 @@ func makeTokenValidator(dbtx_val dbstore.DBTX) func(r *http.Request) UserValidat
 		}
 		parsedToken, err := jwt.Parse(tokenString, keyFunc)
 		if err != nil {
-			// Token is not valid or has expired
+			fmt.Println(err)
 			return UserValidation{validated: false}
 		}
 
@@ -170,7 +180,7 @@ func makeAuthMiddleware(dbtx_val dbstore.DBTX) func(http.Handler) http.Handler {
 
 			} else {
 				fmt.Println("Auth Failed, for ip address", r.RemoteAddr)
-				http.Error(w, "Forbidden", http.StatusForbidden)
+				http.Error(w, "Authentication failed", http.StatusUnauthorized)
 			}
 		})
 	}

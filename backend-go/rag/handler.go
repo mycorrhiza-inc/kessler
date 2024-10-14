@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/mycorrhiza-inc/kessler/backend-go/search"
 )
@@ -13,8 +14,24 @@ type ChatRequestBody struct {
 	ChatHistory []ChatMessage `json:"chat_history"`
 }
 
+func checkChatAuthorization(token string) (bool, error) {
+	if !strings.HasPrefix(token, "Authenticated") {
+		return false, nil
+	}
+	viewerID := strings.TrimPrefix(token, "Authenticated ")
+	if viewerID != "anonomous" {
+		return true, nil
+	}
+	return false, nil
+}
+
 func HandleBasicChatRequest(w http.ResponseWriter, r *http.Request) {
 	var reqBody ChatRequestBody
+	isAllowed, _ := checkChatAuthorization(r.Header.Get("Authorization"))
+	if !isAllowed {
+		http.Error(w, "Cucumber Water For Customer Only", http.StatusPaymentRequired)
+		return
+	}
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
@@ -40,6 +57,11 @@ type AdvancedRagRequestBody struct {
 }
 
 func HandleRagChatRequest(w http.ResponseWriter, r *http.Request) {
+	isAllowed, _ := checkChatAuthorization(r.Header.Get("Authorization"))
+	if !isAllowed {
+		http.Error(w, "Cucumber Water For Customer Only", http.StatusPaymentRequired)
+		return
+	}
 	var reqBody AdvancedRagRequestBody
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
