@@ -55,7 +55,7 @@ const Pricing = ({ className }: { className: string }) => {
   return (
     <div className={className}>
       <section className="overflow-hidden pb-20 pt-15 lg:pb-25 xl:pb-30">
-        <div className="mx-auto max-w-c-1315 px-4 md:px-8 xl:px-0">
+        <div className="">
           <div className="animate_top mx-auto text-center">
             <div className="text-center">
               <h2 className="text-2xl font-bold">PRICING PLANS</h2>
@@ -68,12 +68,12 @@ const Pricing = ({ className }: { className: string }) => {
           </div>
         </div>
         {/* This should be dryified quite a bit */}
-        <div className="flex flex-wrap justify-center gap-6 mt-15 max-w-[1207px] px-4 md:px-8 xl:mt-20 xl:px-0">
+        <div className="flex flex-wrap justify-between gap-6 mt-15 max-w-[1207px] px-4 md:px-8 xl:mt-20 xl:px-0">
           {pricing_tiers.map(
             ({ key, message, buttonLink, buttonText, indicator }) => (
               <div
                 key={key}
-                className={`card border-secondary border-4  outline-secondary w-96 shadow-xl ${indicator ? "indicator" : ""}`}
+                className={`card grow border-secondary border-4  outline-secondary w-96 shadow-xl ${indicator ? "indicator" : ""}`}
               >
                 {indicator && (
                   <span className="indicator-item badge h-auto badge-accent mr-10 p-2">

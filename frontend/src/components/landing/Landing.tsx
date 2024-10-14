@@ -9,16 +9,16 @@ export default function Landing({ user }: { user: User | null }) {
   return (
     <>
       <div
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7"
         data-theme="light"
       >
-        <div className="items-center justify-center h-full col-span-3 md:col-span-5 sm:col-span-1">
+        <div className="items-center justify-center h-full col-span-3 md:col-span-full sm:col-span-1">
           <Hero isLoggedIn={isLoggedIn}></Hero>
         </div>
 
-        <Feature className="col-span-1 md:col-start-1 md:col-span-2 lg:col-start-2 lg:col-span-3 sm:col-span-1  " />
+        <Feature className="col-span-1 md:col-start-1 md:col-span-2 lg:col-start-2 lg:col-span-5   " />
         <SupportedStates className="col-span-3 md:col-start-2 md:col-span-3  sm:col-span-1" />
-        <Pricing className="col-span-3 md:col-span-5 sm:col-span-1" />
+        <Pricing className="col-span-1 md:col-start-1 md:col-span-2 lg:col-start-2 lg:col-span-5   " />
       </div>
       <footer className="footer bg-base-200 text-base-content p-10">
         <aside>
