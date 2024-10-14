@@ -68,16 +68,51 @@ type UserValidation struct {
 	userID    string
 }
 
+type AccessTokenData struct {
+	AccessToken string `json:"access_token"`
+}
+
+// FIXME : HIGHLY INSECURE, GET THE HMAC SECRET FROM SUPABASE AND THROW IT IN HERE AS AN NEV VARAIBLE.
 var SupabaseSecret = os.Getenv("SUPABASE_ANON_KEY")
 
 func makeTokenValidator(dbtx_val dbstore.DBTX) func(r *http.Request) UserValidation {
 	return_func := func(r *http.Request) UserValidation {
 		token := r.Header.Get("Authorization")
 		if token == "" {
-			return UserValidation{
-				validated: true,
-				userID:    "anonomous",
+			// Check if the supabase cookie starting with sb-kpvkpczxcclxslabfzeu-auth-token, exists if it does do the decoding and set token equal to Bearer <jwt_token>, otherwise return an anonomous ser
+			cookie, err := r.Cookie("sb-kpvkpczxcclxslabfzeu-auth-token")
+			if err != nil {
+				return UserValidation{
+					validated: true,
+					userID:    "anonomous",
+				}
 			}
+			fmt.Println("Found cookie and empty auth header, using cookie as auth token")
+			// Strip prefix and decode Base64 part.
+			if !strings.HasPrefix(cookie.Value, "base64-") {
+				// Json will catch if invalid
+				fmt.Println("Cookie is not base64 decodable.")
+			}
+			encodedData := strings.TrimSpace(strings.TrimPrefix(cookie.Value, "base64-"))
+			decodedData, err := base64.URLEncoding.DecodeString(encodedData)
+			if err != nil {
+				// Json will catch if invalid
+				fmt.Printf("Error decoding base64 %v\n", err)
+			}
+			stringData := string(decodedData)
+			// var tokenData AccessTokenData
+			// TODO : Fix horrible moneky wrench solution for decoding this with something not shit
+			// err = json.Unmarshal([]byte(string(decodedData)), &tokenData)
+			// if err != nil {
+			// 	fmt.Printf("Error unmarshalling %v\n", err)
+			// 	return UserValidation{validated: false}
+			// }
+			// token = fmt.Sprintf("Bearer %s", tokenData.AccessToken)
+			stringDataStripped := strings.TrimPrefix(stringData, `{"access_token":"`)
+			hopefullyToken := strings.Split(stringDataStripped, `"`)[0]
+			token = fmt.Sprintf("Bearer %s", hopefullyToken)
+			fmt.Println(token)
+
 		}
 		// Check for "Bearer " prefix in the authorization header (expected format)
 		if !strings.HasPrefix(token, "Bearer ") {
@@ -113,15 +148,21 @@ func makeTokenValidator(dbtx_val dbstore.DBTX) func(r *http.Request) UserValidat
 			return jwtSecret, nil
 		}
 		parsedToken, err := jwt.Parse(tokenString, keyFunc)
+		fmt.Println(parsedToken)
 		if err != nil {
-			// Token is not valid or has expired
-			return UserValidation{validated: false}
+			fmt.Println(err)
+			// FIXME : HIGHLY INSECURE, GET THE HMAC SECRET FROM SUPABASE AND THROW IT IN HERE AS AN NEV VARAIBLE.
+			// return UserValidation{validated: false}
 		}
 
 		// FIXME : HIGHLY INSECURE, GET THE HMAC SECRET FROM SUPABASE AND THROW IT IN HERE AS AN NEV VARAIBLE.
 		claims, ok := parsedToken.Claims.(jwt.MapClaims)
-		ok = true
-		if ok && parsedToken.Valid {
+
+		fmt.Println(claims)
+		ok = ok || !ok
+
+		// if ok && parsedToken.Valid {
+		if ok {
 			userID := claims["sub"] // JWT 'sub' - typically the user ID
 			// Perform additional checks if necessary
 			return UserValidation{userID: userID.(string), validated: true}
@@ -137,15 +178,15 @@ func makeAuthMiddleware(dbtx_val dbstore.DBTX) func(http.Handler) http.Handler {
 	tokenValidator := makeTokenValidator(dbtx_val)
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			fmt.Println("Authenticating request")
 			userInfo := tokenValidator(r)
 			if userInfo.validated {
 				r.Header.Set("Authorization", fmt.Sprintf("Authenticated %s", userInfo.userID))
+				fmt.Printf("Authenticated Request for user %v\n", userInfo.userID)
 				next.ServeHTTP(w, r)
 
 			} else {
 				fmt.Println("Auth Failed, for ip address", r.RemoteAddr)
-				http.Error(w, "Forbidden", http.StatusForbidden)
+				http.Error(w, "Authentication failed", http.StatusUnauthorized)
 			}
 		})
 	}

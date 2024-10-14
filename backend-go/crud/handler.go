@@ -52,10 +52,14 @@ func DefineCrudRoutes(router *mux.Router, dbtx_val dbstore.DBTX) {
 type FileHandlerInfo struct {
 	dbtx_val    dbstore.DBTX
 	private     bool
-	return_type string // Can be either markdown or object
+	return_type string // Can be either markdown, object or raw
 }
 
-func checkPrivateFileAuthorization(q dbstore.Queries, ctx context.Context, objectID uuid.UUID, viewerID string) (bool, error) {
+func checkPrivateFileAuthorization(q dbstore.Queries, ctx context.Context, objectID uuid.UUID, token string) (bool, error) {
+	if !strings.HasPrefix(token, "Authenticated") {
+		return false, nil
+	}
+	viewerID := strings.TrimPrefix(token, "Authenticated ")
 	if viewerID == "thaumaturgy" {
 		return true, nil
 	}
@@ -91,8 +95,7 @@ func makeFileHandler(info FileHandlerInfo) func(w http.ResponseWriter, r *http.R
 		ctx := r.Context()
 		if private {
 
-			userID := strings.TrimPrefix(token, "Authorized ")
-			isAuthorized, err := checkPrivateFileAuthorization(q, ctx, parsedUUID, userID)
+			isAuthorized, err := checkPrivateFileAuthorization(q, ctx, parsedUUID, token)
 			if !isAuthorized {
 				http.Error(w, "Forbidden", http.StatusForbidden)
 			}
@@ -138,6 +141,9 @@ func makeFileHandler(info FileHandlerInfo) func(w http.ResponseWriter, r *http.R
 			markdownText := texts[0].Text
 			w.Header().Set("Content-Type", "text/plain")
 			w.Write([]byte(markdownText))
+		default:
+			fmt.Printf("Encountered unreachable code with file return type %v", return_type)
+			http.Error(w, "Congradulations for encountering unreachable code about support types!", http.StatusInternalServerError)
 		}
 	}
 }
@@ -205,11 +211,11 @@ func makeUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r *ht
 		q := *dbstore.New(dbtx_val)
 		ctx := r.Context()
 		token := r.Header.Get("Authorization")
-		if !strings.HasPrefix(token, "Authorized ") {
+		if !strings.HasPrefix(token, "Authenticated ") {
 			http.Error(w, "Forbidden", http.StatusForbidden)
 			return
 		}
-		userID := strings.TrimPrefix(token, "Authorized ")
+		userID := strings.TrimPrefix(token, "Authenticated ")
 		forbiddenPublic := !private && userID != "thaumaturgy"
 		if forbiddenPublic || userID == "anonomous" {
 			http.Error(w, "Forbidden", http.StatusForbidden)

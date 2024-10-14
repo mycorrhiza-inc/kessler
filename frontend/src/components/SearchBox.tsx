@@ -1,7 +1,12 @@
 import { Dispatch, SetStateAction, useState, useEffect, useRef } from "react";
 import Tooltip from "@mui/joy/Tooltip";
 import { motion, AnimatePresence } from "framer-motion"; // Import necessary components from framer-motion
-import { CommandIcon, SearchIcon, ChatIcon } from "@/components/Icons";
+import {
+  CommandIcon,
+  SearchIcon,
+  ChatIcon,
+  FileUploadIcon,
+} from "@/components/Icons";
 
 import {
   extraProperties,
@@ -52,7 +57,7 @@ const AdvancedFilters = ({
                     .map((key, index) => {
                       const extraInfo =
                         extraPropertiesInformation[
-                        key as keyof extraProperties
+                          key as keyof extraProperties
                         ];
                       return (
                         <div className="box-border" key={index}>
@@ -139,12 +144,54 @@ const SearchBox = ({
     </div>
   );
 };
+interface UploadBoxProps {}
+const UploadBox = ({}: UploadBoxProps) => {
+  // const textRef = useRef<HTMLInputElement>(null);
+  // const handleEnter = (event: any) => {
+  //   if (event.key === "Enter") {
+  //     // Trigger function when "Enter" is pressed
+  //     handleSearch();
+  //   }
+  // };
+  //
+  // useEffect(() => {
+  //   textRef.current?.focus();
+  // }, []);
+  return (
+    <>
+      <label className="form-control w-full max-w-xs">
+        <div className="label">
+          <span className="label-text">
+            Pick a Folder to Upload all Files in Folder
+          </span>
+        </div>
+        <input
+          type="file"
+          className="file-input file-input-bordered file-input-accent w-full max-w-xs"
+        />
+        <div className="label"></div>
+      </label>
+      <label className="form-control w-full max-w-xs">
+        <div className="label">
+          <span className="label-text">Pick an Individual File to Upload</span>
+        </div>
+        <input
+          type="file"
+          className="file-input file-input-bordered file-input-primary w-full max-w-xs"
+        />
+        <div className="label"></div>
+      </label>
+    </>
+  );
+};
 
 const MinimizedSearchBox = ({
-  setMinimized,
+  setSearchMinimized,
+  setUploadMinimized,
   setChatVisible,
 }: {
-  setMinimized: Dispatch<SetStateAction<boolean>>;
+  setSearchMinimized: Dispatch<SetStateAction<boolean>>;
+  setUploadMinimized: Dispatch<SetStateAction<boolean>>;
   setChatVisible: Dispatch<SetStateAction<boolean>>;
 }) => {
   const [isMacOS, setIsMacOS] = useState(false);
@@ -156,7 +203,13 @@ const MinimizedSearchBox = ({
   }, []);
 
   const handleSearchClick = () => {
-    setMinimized(false);
+    setSearchMinimized(false);
+    setUploadMinimized(true);
+  };
+  const handleUploadClick = () => {
+    setUploadMinimized(false);
+    setSearchMinimized(true);
+    console.log("Uploaded File");
   };
   const handleChatClick = (e: React.MouseEvent<HTMLElement, MouseEvent>) => {
     e.stopPropagation(); // This will prevent the div's onClick from firing
@@ -205,17 +258,23 @@ const MinimizedSearchBox = ({
           <ChatIcon />
         </button>
       </Tooltip>
+      <div className="w-3 h-6  mx-4"></div>
+      <Tooltip title="Upload files here!">
+        <button className="scale-150" onClick={handleUploadClick}>
+          <FileUploadIcon />
+        </button>
+      </Tooltip>
     </div>
   );
 };
 
 const ActionBoxController = ({
-  isMinimized,
+  isSearchMinimized,
   chatVisible,
 }: {
-  isMinimized: boolean;
+  isSearchMinimized: boolean;
   chatVisible: boolean;
-}) => { };
+}) => {};
 
 export const CenteredFloatingSearhBox = ({
   handleSearch,
@@ -228,20 +287,16 @@ export const CenteredFloatingSearhBox = ({
   setQueryOptions,
 }: SearchBoxProps) => {
   const divRef = useRef<HTMLDivElement>(null);
-  const [isMinimized, setIsMinimized] = useState(true);
+  const [isSearchMinimized, setSearchMinimized] = useState(true);
+  const [isUploadMinimized, setUploadMinimized] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [searchVisible, setSearchVisible] = useState(true);
-
-  const clickMinimized = () => {
-    if (isMinimized) {
-      setIsMinimized(false);
-    }
-  };
+  const isEverythingMinimized = isSearchMinimized && isUploadMinimized;
 
   const handleKeyDown = (event: KeyboardEvent) => {
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
       event.preventDefault();
-      setIsMinimized((prevState) => !prevState);
+      setSearchMinimized((prevState) => !prevState);
     }
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "j") {
       event.preventDefault();
@@ -251,7 +306,8 @@ export const CenteredFloatingSearhBox = ({
 
   const clickOutFromSearch = (event: MouseEvent) => {
     if (divRef.current && !divRef.current.contains(event.target as Node)) {
-      setIsMinimized(true);
+      setSearchMinimized(true);
+      setUploadMinimized(true);
     }
   };
   const handleScroll = () => {
@@ -286,13 +342,14 @@ export const CenteredFloatingSearhBox = ({
       style={{
         position: "fixed",
         bottom: "30px",
+        left: "0px",
         zIndex: 1500,
       }}
     >
       <motion.div
         layout
         ref={divRef}
-        data-isOpen={!isMinimized}
+        data-isOpen={!isSearchMinimized}
         initial={{}}
         animate={{
           height: "auto",
@@ -306,14 +363,16 @@ export const CenteredFloatingSearhBox = ({
         }}
         className="parent fixed bottom-7 rounded-lg border-2 border-gray-500 bg-base-200 text-base-content"
       >
-        {isMinimized ? (
+        {isEverythingMinimized && (
           <div>
             <MinimizedSearchBox
-              setMinimized={setIsMinimized}
+              setUploadMinimized={setUploadMinimized}
+              setSearchMinimized={setSearchMinimized}
               setChatVisible={setChatVisible}
             />
           </div>
-        ) : (
+        )}
+        {!isSearchMinimized && (
           <SearchBox
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
@@ -325,6 +384,7 @@ export const CenteredFloatingSearhBox = ({
             queryOptions={queryOptions}
           />
         )}
+        {!isUploadMinimized && <UploadBox />}
       </motion.div>
     </motion.div>
   );
