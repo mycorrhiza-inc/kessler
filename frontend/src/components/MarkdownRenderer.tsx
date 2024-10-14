@@ -72,7 +72,7 @@ E = mc^2
 
 \`\`\`json
 {
-  "name": "John",
+  name: "John",
   "age": 30,
   "city": "New York"
 }

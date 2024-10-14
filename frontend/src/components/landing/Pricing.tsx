@@ -4,7 +4,7 @@ import Image from "next/image";
 import MarkdownRenderer from "../MarkdownRenderer";
 import { BadgeIcon } from "lucide-react";
 
-const Pricing = () => {
+const Pricing = ({ className }: { className: string }) => {
   const pricing_tiers = [
     {
       key: "community",
@@ -53,7 +53,7 @@ const Pricing = () => {
   ];
 
   return (
-    <>
+    <div className={className}>
       <section className="overflow-hidden pb-20 pt-15 lg:pb-25 xl:pb-30">
         <div className="mx-auto max-w-c-1315 px-4 md:px-8 xl:px-0">
           <div className="animate_top mx-auto text-center">
@@ -93,7 +93,7 @@ const Pricing = () => {
           )}
         </div>
       </section>
-    </>
+    </div>
   );
 };
 
