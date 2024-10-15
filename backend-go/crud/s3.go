@@ -1,13 +1,14 @@
 package crud
 
 import (
-	"crypto/blake2b"
 	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"golang.org/x/crypto/blake2b"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -16,30 +17,34 @@ import (
 )
 
 // Configuration constants
-const (
-	CloudRegion   = "us-west-1" // Your region here. Change if needed
-	EndpointURL   = "https://sfo3.digitaloceanspaces.com"
-	S3Bucket      = "kesslerproddocs"
-	S3AccessKey   = "your-access-key"
-	S3SecretKey   = "your-secret-key"
-	RawDir        = "raw/"
-	LocalCacheDir = "/path/to/cache"
-	TmpDir        = os.TempDir()
-)
+const ()
 
 // Client structure for S3
-type S3FileManager struct {
+type KesslerFileManager struct {
 	s3Client *s3.S3
+	S3Bucket string
+	RawDir   string
+	TmpDir   string
 }
 
-func NewS3FileManager() *S3FileManager {
+func NewS3FileManager() *KesslerFileManager {
+	CloudRegion := "us-west-1" // Your region here. Change if needed
+	EndpointURL := "https://sfo3.digitaloceanspaces.com"
+	S3Bucket := "kesslerproddocs"
+	S3AccessKey := "your-access-key"
+	S3SecretKey := "your-secret-key"
+	RawDir := "raw/"
+	TmpDir := os.TempDir()
 	sess := session.Must(session.NewSession(&aws.Config{
 		Region:      aws.String(CloudRegion),
 		Endpoint:    aws.String(EndpointURL),
 		Credentials: credentials.NewStaticCredentials(S3AccessKey, S3SecretKey, ""),
 	}))
-	return &S3FileManager{
+	return &KesslerFileManager{
 		s3Client: s3.New(sess),
+		S3Bucket: S3Bucket,
+		RawDir:   RawDir,
+		TmpDir:   TmpDir,
 	}
 }
 
@@ -51,7 +56,7 @@ func calculateBlake2bHash(filePath string) (string, error) {
 	}
 	defer file.Close()
 
-	hash := blake2b.New512()
+	hash, err := blake2b.New256(file)
 	if _, err := io.Copy(hash, file); err != nil {
 		return "", err
 	}
@@ -59,32 +64,32 @@ func calculateBlake2bHash(filePath string) (string, error) {
 }
 
 // Upload file to S3
-func (manager *S3FileManager) pushFileToS3(filePath, hash string) error {
+func (manager *KesslerFileManager) pushFileToS3(filePath, hash string) error {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
-	filename := RawDir + hash // change the filename accordingly
+	filename := manager.RawDir + hash // change the filename accordingly
 	_, err = manager.s3Client.PutObject(&s3.PutObjectInput{
-		Bucket: aws.String(S3Bucket),
+		Bucket: aws.String(manager.S3Bucket),
 		Key:    aws.String(filename),
 		Body:   file,
 	})
 	return err
 }
 
-func (manager *S3FileManager) downloadFileFromS3(hash string) (string, error) {
-	localFilePath := filepath.Join(LocalCacheDir, hash)
+func (manager *KesslerFileManager) downloadFileFromS3(hash string) (string, error) {
+	localFilePath := filepath.Join(manager.RawDir, hash)
 	if _, err := os.Stat(localFilePath); err == nil {
 		return "", errors.New("file already exists at the path")
 	}
 
-	filename := RawDir + hash
+	filename := manager.RawDir + hash
 	buffer := aws.NewWriteAtBuffer([]byte{})
 	_, err := manager.s3Client.GetObject(&s3.GetObjectInput{
-		Bucket: aws.String(S3Bucket),
+		Bucket: aws.String(manager.S3Bucket),
 		Key:    aws.String(filename),
 	})
 	if err != nil {
