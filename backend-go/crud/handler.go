@@ -277,3 +277,14 @@ func makeUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r *ht
 		w.Write(response)
 	}
 }
+
+func checkPrivateUploadAbility(token string) bool {
+	if !strings.HasPrefix(token, "Authenticated") {
+		return false
+	}
+	viewerID := strings.TrimPrefix(token, "Authenticated ")
+	return viewerID != "anonomous" && viewerID != "thaumaturgy"
+}
+func makePrivateUploadHandler()
+func makeUpsertHandler(dbtx_val dbstore.DBTX) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {}
