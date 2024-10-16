@@ -317,13 +317,13 @@ func makePrivateUploadHandler(dbtx_val dbstore.DBTX) func(w http.ResponseWriter,
 		file, _, err := r.FormFile("file")
 		fileName := r.FormValue("file_name")
 		if err != nil {
-			panic(err)
+			return
 		}
 		defer file.Close()
 		randomFileName := generateRandomString(10) // Function to generate a random string
 		f, err := os.OpenFile(randomFileName, os.O_WRONLY|os.O_CREATE, 0666)
 		if err != nil {
-			panic(err)
+			return
 		}
 		defer f.Close()
 		io.Copy(f, file)
