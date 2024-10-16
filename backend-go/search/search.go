@@ -155,7 +155,7 @@ func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
 
 	request := createQWRequest(queryString)
 	jsonData, err := json.Marshal(request)
-	fmt.Printf("Sending json data to quickwit: \n%s\n", jsonData))
+	fmt.Printf("Sending json data to quickwit: \n%s\n", jsonData)
 	log.Printf("jsondata: \n%s", jsonData)
 	if err != nil {
 		log.Printf("Error Marshalling quickwit request: %s", err)

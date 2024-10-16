@@ -27,7 +27,7 @@ type KesslerFileManager struct {
 	TmpDir   string
 }
 
-func NewS3FileManager() *KesslerFileManager {
+func NewKeFileManager() *KesslerFileManager {
 	CloudRegion := "us-west-1" // Your region here. Change if needed
 	EndpointURL := "https://sfo3.digitaloceanspaces.com"
 	S3Bucket := "kesslerproddocs"
@@ -64,13 +64,13 @@ func calculateBlake2bHash(filePath string) (string, error) {
 }
 
 // Upload file to S3
-func (manager *KesslerFileManager) uploadFileToS3(filePath string) error {
+func (manager *KesslerFileManager) uploadFileToS3(filePath string) (string, error) {
 	// File opened twice, potential for optimisation.
 	hash, err := calculateBlake2bHash(filePath)
 	if err != nil {
-		return fmt.Errorf("Error hashing file: %v", err)
+		return "", fmt.Errorf("Error hashing file: %v", err)
 	}
-	return manager.pushFileToS3GivenHash(filePath, hash)
+	return hash, manager.pushFileToS3GivenHash(filePath, hash)
 }
 
 func (manager *KesslerFileManager) pushFileToS3GivenHash(filePath, hash string) error {

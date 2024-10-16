@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math/rand"
 	"net/http"
 	"os"
 	"strings"
@@ -289,32 +290,48 @@ func checkPrivateUploadAbility(token string) bool {
 }
 
 type FileProcessRequest struct {
-	ID             uuid.UUID
-	Hash           string
-	Private        bool
-	FileUploadName string
-	UserID         uuid.UUID
-	Mdata          map[string]string
+	ID                 uuid.UUID         `json:"id"`
+	Hash               string            `json:"hash"`
+	Private            bool              `json:"private"`
+	FileUploadName     string            `json:"file_upload_name"`
+	UserID             uuid.UUID         `json:"user_id"`
+	Mdata              map[string]string `json:"mdata"`
+	ExistingFileSchema FileSchema        `json:"existing_file_schema"`
 }
 
 func sendFileProcessRequest(req FileProcessRequest) error {
 	return nil
 }
 
+func generateRandomString(n int) string {
+	const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
+}
+
 func makePrivateUploadHandler(dbtx_val dbstore.DBTX) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		file, handler, err := r.FormFile("file")
+		file, _, err := r.FormFile("file")
 		fileName := r.FormValue("file_name")
 		if err != nil {
 			panic(err)
 		}
 		defer file.Close()
-		f, err := os.OpenFile(handler.Filename, os.O_WRONLY|os.O_CREATE, 0666)
+		randomFileName := generateRandomString(10) // Function to generate a random string
+		f, err := os.OpenFile(randomFileName, os.O_WRONLY|os.O_CREATE, 0666)
 		if err != nil {
 			panic(err)
 		}
 		defer f.Close()
 		io.Copy(f, file)
-		w.Write([]byte("File " + fileName + " Uploaded successfully"))
+		keFileMan := NewKeFileManager()
+		hash, err := keFileMan.uploadFileToS3(randomFileName)
+		if err != nil {
+			fmt.Printf("Error uploading to s3, %v", err)
+		}
+		w.Write([]byte(fmt.Sprintf("File %s uploaded successfully with hash %s", fileName, hash)))
 	}
 }
