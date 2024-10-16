@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/google/uuid"
@@ -279,12 +281,40 @@ func makeUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r *ht
 }
 
 func checkPrivateUploadAbility(token string) bool {
-	if !strings.HasPrefix(token, "Authenticated") {
+	if !strings.HasPrefix(token, "Authenticated ") {
 		return false
 	}
 	viewerID := strings.TrimPrefix(token, "Authenticated ")
 	return viewerID != "anonomous" && viewerID != "thaumaturgy"
 }
-func makePrivateUploadHandler()
-func makeUpsertHandler(dbtx_val dbstore.DBTX) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {}
+
+type FileProcessRequest struct {
+	ID             uuid.UUID
+	Hash           string
+	Private        bool
+	FileUploadName string
+	UserID         uuid.UUID
+	Mdata          map[string]string
+}
+
+func sendFileProcessRequest(req FileProcessRequest) error {
+	return nil
+}
+
+func makePrivateUploadHandler(dbtx_val dbstore.DBTX) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		file, handler, err := r.FormFile("file")
+		fileName := r.FormValue("file_name")
+		if err != nil {
+			panic(err)
+		}
+		defer file.Close()
+		f, err := os.OpenFile(handler.Filename, os.O_WRONLY|os.O_CREATE, 0666)
+		if err != nil {
+			panic(err)
+		}
+		defer f.Close()
+		io.Copy(f, file)
+		w.Write([]byte("File " + fileName + " Uploaded successfully"))
+	}
+}

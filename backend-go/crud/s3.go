@@ -55,8 +55,8 @@ func calculateBlake2bHash(filePath string) (string, error) {
 		return "", err
 	}
 	defer file.Close()
-
-	hash, err := blake2b.New256(file)
+	var key []byte
+	hash, err := blake2b.New256(key)
 	if _, err := io.Copy(hash, file); err != nil {
 		return "", err
 	}
@@ -64,7 +64,16 @@ func calculateBlake2bHash(filePath string) (string, error) {
 }
 
 // Upload file to S3
-func (manager *KesslerFileManager) pushFileToS3(filePath, hash string) error {
+func (manager *KesslerFileManager) uploadFileToS3(filePath string) error {
+	// File opened twice, potential for optimisation.
+	hash, err := calculateBlake2bHash(filePath)
+	if err != nil {
+		return fmt.Errorf("Error hashing file: %v", err)
+	}
+	return manager.pushFileToS3GivenHash(filePath, hash)
+}
+
+func (manager *KesslerFileManager) pushFileToS3GivenHash(filePath, hash string) error {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return err
