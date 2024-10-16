@@ -1,13 +1,38 @@
+"use client";
 import { AuroraBackground } from "../aceternity/aurora-background";
 
+import { motion } from "framer-motion";
+import { Highlight } from "../aceternity/hero-highlight";
+
+export function HeroHighlightText() {
+  return (
+    <motion.h1
+      initial={{
+        opacity: 0,
+        y: 20,
+      }}
+      animate={{
+        opacity: 1,
+        y: [20, -5, 0],
+      }}
+      transition={{
+        duration: 0.5,
+        ease: [0.4, 0.0, 0.2, 1],
+      }}
+      className="text-2xl px-4 md:text-4xl lg:text-5xl font-bold text-neutral-700 dark:text-white max-w-4xl leading-relaxed lg:leading-snug text-center mx-auto "
+    >
+      New York PUC Proceedings, now with a{" "}
+      <Highlight className="text-black dark:text-white">
+        Fast, Modern Interface
+      </Highlight>
+    </motion.h1>
+  );
+}
 export default function Hero({ isLoggedIn }: { isLoggedIn: boolean }) {
   // Fix the broken min-h-screen stuff and make it actually work
   return (
-    <AuroraBackground>
-      <h1 className="mb-5 text-5xl font-bold">
-        Welcome to <br /> Kessler
-      </h1>
-      <p className="mb-5">Please use our application 🙏 Namaste</p>
+    <AuroraBackground showRadialGradient={false}>
+      <HeroHighlightText />
       {isLoggedIn ? (
         <div className="flex justify-center space-x-4">
           <a
