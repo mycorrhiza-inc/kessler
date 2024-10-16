@@ -98,7 +98,6 @@ func (s SearchData) String() string {
 // Function to create search data array
 func ExtractSearchData(data quickwitSearchResponse) ([]SearchData, error) {
 	var result []SearchData
-	fmt.Printf("extracting search data:\n%s\n", data)
 
 	// Map snippets text to hit names
 	for i, hit := range data.Hits {
@@ -117,7 +116,6 @@ func ExtractSearchData(data quickwitSearchResponse) ([]SearchData, error) {
 		}
 		result = append(result, sdata)
 	}
-	fmt.Printf("search data:\n%s\n", result)
 
 	return result, nil
 }
@@ -136,11 +134,8 @@ func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
 	}
 
 	filtersString := constructQuickwitMetadataQueryString(r.SearchFilters)
-	fmt.Printf("Constructing Filtered query: %s\n", filtersString)
 
 	queryString = queryString + filtersString
-
-	log.Printf("Query String: %s\n", queryString)
 
 	request := QuickwitSearchRequest{
 		Query:         queryString,
@@ -151,7 +146,6 @@ func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
 	jsonData, err := json.Marshal(request)
 
 	// ===== submit request to quickwit =====
-	fmt.Printf("Sending json data to quickwit: \n%s\n", jsonData)
 	log.Printf("jsondata: \n%s", jsonData)
 	if err != nil {
 		log.Printf("Error Marshalling quickwit request: %s", err)
@@ -159,7 +153,6 @@ func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
 	}
 
 	request_url := fmt.Sprintf("%s/api/v1/dockets/search", quickwitURL)
-	fmt.Printf("request url:\t%s\n", request_url)
 	resp, err := http.Post(
 		request_url,
 		"application/json",
@@ -184,14 +177,12 @@ func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
 		log.Printf("Error unmarshalling quickwit response: %s", err)
 		errturn(err)
 	}
-	fmt.Println("decoded")
 
 	data, err := ExtractSearchData(searchResponse)
 	if err != nil {
 		log.Printf("Error creating response data: %s", err)
 		errturn(err)
 	}
-	fmt.Println("finished search")
 
 	return data, nil
 }
@@ -219,7 +210,6 @@ func constructQuickwitMetadataQueryString(filter Metadata) string {
 		}
 
 		// format each query equality
-		fmt.Printf("getting metadata\nfield: %s\nvalue: %s\n", field.Name, value)
 		s := fmt.Sprintf("metadata.%s:(%s)", tag, value)
 		filters = append(filters, s)
 
@@ -237,7 +227,6 @@ func constructQuickwitMetadataQueryString(filter Metadata) string {
 		// fmt.Printf("got filter: \n%s\n", f)
 		filterQuery += fmt.Sprintf(" AND (%s)", f)
 	}
-	fmt.Printf("%s\n", filterQuery)
 	return filterQuery
 }
 
