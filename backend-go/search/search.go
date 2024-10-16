@@ -149,11 +149,13 @@ func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
 
 	queryString := r.Query
 	filtersString := constructQuickwitMetadataQueryString(r.SearchFilters)
+	fmt.Printf("Constructing Filtered query: %s\n", filtersString)
 
 	queryString += filtersString
 
 	request := createQWRequest(queryString)
 	jsonData, err := json.Marshal(request)
+	fmt.Printf("Sending json data to quickwit: \n%s\n", jsonData)
 	log.Printf("jsondata: \n%s", jsonData)
 	if err != nil {
 		log.Printf("Error Marshalling quickwit request: %s", err)
