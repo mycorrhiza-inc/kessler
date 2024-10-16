@@ -229,3 +229,20 @@ export const emptyExtraProperties: extraProperties = {
   match_document_class: "",
   match_author: "",
 };
+
+
+export interface Filters {
+  author: string
+  date: string
+  docket_id: string
+  doctype: string
+  lang: string
+  language: string
+  source: string
+  title: string
+}
+
+export interface SearchRequest {
+  query: string
+  filters: Filters
+}
