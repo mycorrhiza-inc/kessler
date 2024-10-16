@@ -29,7 +29,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "deck.gl": "^9.0.28",
-    "framer-motion": "^11.3.31",
+    "framer-motion": "^11.11.9",
     "geist": "^1.2.1",
     "lodash-es": "^4.17.21",
     "lucide-react": "^0.436.0",
@@ -63,7 +63,7 @@
     "@types/react-syntax-highlighter": "^15.5.13",
     "daisyui": "^4.12.11",
     "postcss": "8.4.33",
-    "tailwind-merge": "^2.5.2",
+    "tailwind-merge": "^2.5.4",
     "tailwindcss": "3.4.1",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "5.3.3"
