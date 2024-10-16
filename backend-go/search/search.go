@@ -43,6 +43,16 @@ type Metadata struct {
 	Title    string `json:"title"`
 }
 
+func (m Metadata) String() string {
+	// Marshal the struct to JSON format
+	jsonData, err := json.MarshalIndent(m, "", "  ")
+	if err != nil {
+		fmt.Println("Error marshalling JSON:", err)
+	}
+	// Print the formatted JSON string
+	return string(jsonData)
+}
+
 type Snippet struct {
 	Text []string `json:"text"`
 }
@@ -52,22 +62,20 @@ type quickwitSearchResponse struct {
 	Snippets []Snippet `json:"snippets"`
 }
 
+func (s quickwitSearchResponse) String() string {
+	// Marshal the struct to JSON format
+	jsonData, err := json.MarshalIndent(s, "", "  ")
+	if err != nil {
+		fmt.Println("Error marshalling JSON:", err)
+	}
+	// Print the formatted JSON string
+	return string(jsonData)
+}
+
 type QuickwitSearchRequest struct {
 	Query         string `json:"query"`
 	SnippetFields string `json:"snippet_fields"`
 	MaxHits       int    `json:"max_hits"`
-}
-
-func createQWRequest(query string) QuickwitSearchRequest {
-	queryString := fmt.Sprintf("text:(%s) OR name:(%s)", query, query)
-
-	log.Printf("Query String: %s\n", queryString)
-
-	return QuickwitSearchRequest{
-		Query:         queryString,
-		SnippetFields: "text",
-		MaxHits:       20,
-	}
 }
 
 type SearchData struct {
@@ -77,15 +85,32 @@ type SearchData struct {
 	SourceID string `json:"sourceID"`
 }
 
+func (s SearchData) String() string {
+	// Marshal the struct to JSON format
+	jsonData, err := json.MarshalIndent(s, "", "  ")
+	if err != nil {
+		fmt.Println("Error marshalling JSON:", err)
+	}
+	// Print the formatted JSON string
+	return string(jsonData)
+}
+
 // Function to create search data array
 func ExtractSearchData(data quickwitSearchResponse) ([]SearchData, error) {
 	var result []SearchData
 
 	// Map snippets text to hit names
 	for i, hit := range data.Hits {
+		var text string
+		if len(data.Snippets[i].Text) > 0 {
+			text = data.Snippets[i].Text[0]
+		} else {
+			text = ""
+
+		}
 		sdata := SearchData{
 			Name:     hit.Name,
-			Text:     data.Snippets[i].Text[0],
+			Text:     text,
 			DocID:    hit.Metadata.DocketID,
 			SourceID: hit.SourceID,
 		}
@@ -99,63 +124,28 @@ func errturn(err error) ([]SearchData, error) {
 	return nil, err
 }
 
-func constructQuickwitMetadataQueryString(filter Metadata) string {
-	var filterQuery string
-	filters := []string{}
-
-	values := reflect.ValueOf(filter)
-	types := reflect.TypeOf(filter)
-
-	for i := 0; i < types.NumField(); i++ {
-		// get the field and value
-		field := types.Field(i)
-		value := values.Field(i)
-		// Get the json tag value
-		tag := field.Tag.Get("json")
-
-		// skip all non-slice filters and empty slices
-		if value.Kind() != reflect.Slice || value.Len() <= 0 {
-			continue
-		}
-
-		// TODO: handle excluding values from the query
-
-		field_queries := []string{}
-		// format each query equality
-		for j := 0; j < value.Len(); j++ {
-			s := fmt.Sprintf("metadata.%s:(%s)", tag, value.Index(j))
-			field_queries = append(field_queries, s)
-		}
-
-		// construct the filter specific string
-		filterString := field_queries[0]
-		for q := 1; q < len(field_queries); q++ {
-			filterString += fmt.Sprintf(" OR %s", field_queries[q])
-		}
-	}
-	// concat all filters with AND clauses
-	for _, f := range filters {
-		// WARN: This is potentially not safe. TBD if quickwit's query language is
-		// vulnerable to injectable attacks
-		filterQuery += fmt.Sprintf(" AND (%s)", f)
-	}
-	return filterQuery
-}
-
 func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
-	if len(r.Query) <= 0 {
-		return []SearchData{}, nil
+	// ===== construct search request =====
+	query := r.Query
+	fmt.Printf("%s\n", r.SearchFilters)
+	var queryString string
+	if len(r.Query) >= 0 {
+		queryString = fmt.Sprintf("(text:(%s) OR name:(%s))", query, query)
 	}
 
-	queryString := r.Query
 	filtersString := constructQuickwitMetadataQueryString(r.SearchFilters)
-	fmt.Printf("Constructing Filtered query: %s\n", filtersString)
 
-	queryString += filtersString
+	queryString = queryString + filtersString
 
-	request := createQWRequest(queryString)
+	request := QuickwitSearchRequest{
+		Query:         queryString,
+		SnippetFields: "text",
+		MaxHits:       20,
+	}
+
 	jsonData, err := json.Marshal(request)
-	fmt.Printf("Sending json data to quickwit: \n%s\n", jsonData)
+
+	// ===== submit request to quickwit =====
 	log.Printf("jsondata: \n%s", jsonData)
 	if err != nil {
 		log.Printf("Error Marshalling quickwit request: %s", err)
@@ -175,6 +165,7 @@ func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
 
 	defer resp.Body.Close()
 
+	// ===== handle response =====
 	if resp.StatusCode != http.StatusOK {
 		log.Printf("Error: received status code %v", resp.StatusCode)
 		a, e := errturn(fmt.Errorf("received status code %v", resp.StatusCode))
@@ -196,8 +187,51 @@ func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
 	return data, nil
 }
 
+func constructQuickwitMetadataQueryString(filter Metadata) string {
+	var filterQuery string
+	filters := []string{}
+	fmt.Printf("constructing filter of:\n%s\n", filter)
+
+	// ===== reflect the filter metadata =====
+	values := reflect.ValueOf(filter)
+	types := reflect.TypeOf(filter)
+
+	// ===== iterate over metadata for filter =====
+	for i := 0; i < types.NumField(); i++ {
+		// get the field and value
+		field := types.Field(i)
+		value := values.Field(i)
+		// Get the json tag value
+		tag := field.Tag.Get("json")
+
+		// skip all non-slice filters and empty slices
+		if value.Kind() != reflect.String || value.Len() <= 0 {
+			continue
+		}
+
+		// format each query equality
+		s := fmt.Sprintf("metadata.%s:(%s)", tag, value)
+		filters = append(filters, s)
+
+		// TODO: allow for multiple distinct filters per filter segment
+		// construct the filter specific string
+		// filterString := field_queries[0]
+		// for q := 1; q < len(field_queries); q++ {
+		// 	filterString += fmt.Sprintf(" OR %s", field_queries[q])
+		// }
+	}
+	// concat all filters with AND clauses
+	for _, f := range filters {
+		// WARN: This is potentially not safe. TBD if quickwit's query language is
+		// vulnerable to injectable attacks
+		// fmt.Printf("got filter: \n%s\n", f)
+		filterQuery += fmt.Sprintf(" AND (%s)", f)
+	}
+	return filterQuery
+}
+
 func SearchMilvus(request SearchRequest) ([]SearchData, error) {
-	return []SearchData{}, fmt.Errorf("Not implemented")
+	return []SearchData{}, fmt.Errorf("not implemented")
 }
 
 type SearchReturn struct {

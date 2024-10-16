@@ -14,6 +14,10 @@ import {
 } from "@/utils/interfaces";
 import Header from "./Header";
 import { User } from "@supabase/supabase-js";
+
+import { SearchRequest } from "@/utils/interfaces";
+
+
 export default function SearchApp({ user }: { user: User | null }) {
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -50,6 +54,13 @@ export default function SearchApp({ user }: { user: User | null }) {
     try {
       const response = await axios.post("/api/v2/search", {
         query: searchQuery,
+        filters: {
+          name: searchFilters.match_name,
+          author: searchFilters.match_author,
+          docket_id: searchFilters.match_docket_id,
+          doctype: searchFilters.match_doctype,
+          source: searchFilters.match_source,
+        }
       });
       if (response.data.length === 0) {
         return;

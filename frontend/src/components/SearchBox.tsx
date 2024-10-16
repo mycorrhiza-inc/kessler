@@ -13,6 +13,7 @@ import {
   extraPropertiesInformation,
   emptyExtraProperties,
 } from "@/utils/interfaces";
+
 const AdvancedFilters = ({
   queryOptions,
   setQueryOptions,
