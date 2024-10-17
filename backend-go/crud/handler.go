@@ -332,7 +332,7 @@ func makePrivateUploadHandler(dbtx_val dbstore.DBTX) func(w http.ResponseWriter,
 		if err != nil {
 			fmt.Printf("Error uploading to s3, %v", err)
 		}
-		w.Write([]byte(fmt.Sprintf("File %s uploaded successfully with hash %s", fileName, hash)))
+		fmt.Fprintf(w, "File %s uploaded successfully with hash %s", fileName, hash)
 	}
 }
 
