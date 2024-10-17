@@ -49,7 +49,7 @@ func RawToFileSchema(file rawFileSchema) (FileSchema, error) {
 	var new_mdata map[string]string
 	err := json.Unmarshal([]byte(file.Mdata), &new_mdata)
 	if err != nil {
-		fmt.Println("Error unmarhalling Metadata")
+		fmt.Printf("Error unmarhalling Metadata: %v\n", err)
 		return FileSchema{
 			ID:           file.ID.Bytes,
 			Url:          file.Url,
@@ -181,7 +181,7 @@ func GetSpecificFileText(params GetFileParam, lang string, original bool) (strin
 
 	texts, err := GetTextSchemas(params) // Returns a slice of FileTextSchema
 	if err != nil || len(texts) == 0 {
-		return "", fmt.Errorf("Error retrieving texts or no texts found.")
+		return "", fmt.Errorf("Error retrieving texts or no texts found, error: %v", err)
 	}
 	// TODO: Add suport for non english text retrieval and original text retrieval
 	var filteredTexts []FileTextSchema
