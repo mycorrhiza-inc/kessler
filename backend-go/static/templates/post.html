@@ -2,11 +2,9 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <style>
-      {{crate::TAILWIND_CSS}}
-    </style>
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{% block title %} Tryptamine {% endblock %}</title>
+    <title>Kessler Static Resources</title>
   </head>
   <body>
     <div class="navbar bg-base-100">
@@ -42,11 +40,10 @@
     <div class="flex justify-center">
       <div class="max-w-1/2">
         <div class="text-center">
-          <h1 class="text-5xl font-bold">{{ title }}</h1>
-          <h2 class="text-3xl font-semibold">By: {{ author }}</h2>
-          <h3 class="text-xl">{{ date }}</h3>
+          <h1 class="text-5xl font-bold">{{ .Title }}</h1>
+          <h3 class="text-xl">{{ .Date }}</h3>
         </div>
-        <article class="prose" style="maxwidth: 100vw">{{ html }}</article>
+        <article class="prose" style="maxwidth: 100vw">{{ .html }}</article>
       </div>
     </div>
   </body>
