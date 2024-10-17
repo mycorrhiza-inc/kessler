@@ -2,7 +2,7 @@ import { User } from "@supabase/supabase-js";
 import Feature from "./Features";
 import Hero from "./Hero";
 import Pricing from "./Pricing";
-import { SupportedStates } from "@/components/DataSetList";
+import { SupportedStates } from "@/components/landing/DataSetList";
 import { GiMushroomsCluster } from "react-icons/gi";
 import "./Landing.css";
 

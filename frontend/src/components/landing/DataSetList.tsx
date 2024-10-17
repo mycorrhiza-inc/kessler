@@ -47,20 +47,20 @@ export const SupportedStates = ({ className }: { className: string }) => {
     // { name: "North Dakota", abrev: "ND", comments: false, filing: false },
     // { name: "Ohio", abrev: "OH", comments: false, filing: false },
     // { name: "Oklahoma", abrev: "OK", comments: false, filing: false },
-    // { name: "Oregon", abrev: "OR", comments: false, filing: false },
-    // { name: "Pennsylvania", abrev: "PA", comments: false, filing: false },
-    // { name: "Rhode Island", abrev: "RI", comments: false, filing: false },
-    // { name: "South Carolina", abrev: "SC", comments: false, filing: false },
-    // { name: "South Dakota", abrev: "SD", comments: false, filing: false },
-    // { name: "Tennessee", abrev: "TN", comments: false, filing: false },
-    // { name: "Texas", abrev: "TX", comments: false, filing: false },
-    // { name: "Utah", abrev: "UT", comments: false, filing: false },
-    // { name: "Vermont", abrev: "VT", comments: false, filing: false },
-    // { name: "Virginia", abrev: "VA", comments: false, filing: false },
-    // { name: "Washington", abrev: "WA", comments: false, filing: false },
-    // { name: "West Virginia", abrev: "WV", comments: false, filing: false },
-    // { name: "Wisconsin", abrev: "WI", comments: false, filing: false },
-    // { name: "Wyoming", abrev: "WY", comments: false, filing: false }
+    { name: "Oregon", abrev: "OR", comments: false, filing: false },
+    { name: "Pennsylvania", abrev: "PA", comments: false, filing: false },
+    { name: "Rhode Island", abrev: "RI", comments: false, filing: false },
+    { name: "South Carolina", abrev: "SC", comments: false, filing: false },
+    { name: "South Dakota", abrev: "SD", comments: false, filing: false },
+    { name: "Tennessee", abrev: "TN", comments: false, filing: false },
+    { name: "Texas", abrev: "TX", comments: false, filing: false },
+    { name: "Utah", abrev: "UT", comments: false, filing: false },
+    { name: "Vermont", abrev: "VT", comments: false, filing: false },
+    { name: "Virginia", abrev: "VA", comments: false, filing: false },
+    { name: "Washington", abrev: "WA", comments: false, filing: false },
+    { name: "West Virginia", abrev: "WV", comments: false, filing: false },
+    { name: "Wisconsin", abrev: "WI", comments: false, filing: false },
+    { name: "Wyoming", abrev: "WY", comments: false, filing: false },
   ];
 
   return (
@@ -72,7 +72,11 @@ export const SupportedStates = ({ className }: { className: string }) => {
         <div className="mx-auto px-4 md:px-8 xl:px-0">
           {/* <div className="mx-auto max-w-c-1315 px-4 md:px-8 xl:px-0"> */}
           <div id="supported-states-title" className="text-center">
-            <h2 className="text-4xl">Supported States</h2>
+            <h2 className="text-4xl">
+              <br />
+              <br />
+              Supported States
+            </h2>
             <div className="flex row justify-between">
               <div className="flex row">
                 <PublicCommentIcon /> = Public Comments
@@ -83,7 +87,7 @@ export const SupportedStates = ({ className }: { className: string }) => {
             </div>
           </div>
           <div className="divider" />
-          <div className="flex column columns-3" id="states">
+          <div className="flex column columns-" id="states">
             {DataSets.map((state: StateData, _) => (
               <div
                 className="flex row rounded-box border-primary border-4 outline-secondary shadow-xl p-5 w-60"
