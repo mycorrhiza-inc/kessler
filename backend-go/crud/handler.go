@@ -335,3 +335,30 @@ func makePrivateUploadHandler(dbtx_val dbstore.DBTX) func(w http.ResponseWriter,
 		w.Write([]byte(fmt.Sprintf("File %s uploaded successfully with hash %s", fileName, hash)))
 	}
 }
+
+type ReturnFilesSchema struct {
+	Files []FileSchema `json:"files"`
+}
+
+func getListOfAllPublicFiles(dbtx_val dbstore.DBTX) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		q := *dbstore.New(dbtx_val)
+		ctx := r.Context()
+		files, err := q.ListFiles(ctx)
+		if err != nil {
+			fmt.Printf("Encountered error %s while getting all files.")
+			return
+		}
+		var fileSchemas []FileSchema
+		for _, fileRaw := range files {
+			rawSchema := PublicFileToSchema(fileRaw)
+			fileSchema, _ := RawToFileSchema(rawSchema)
+			fileSchemas = append(fileSchemas, fileSchema)
+		}
+		return_schema := ReturnFilesSchema{Files: fileSchemas}
+		response, _ := json.Marshal(return_schema)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(response)
+	}
+}
