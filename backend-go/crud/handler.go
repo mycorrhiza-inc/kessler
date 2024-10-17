@@ -52,6 +52,7 @@ func DefineCrudRoutes(router *mux.Router, dbtx_val dbstore.DBTX) {
 		FileHandlerInfo{dbtx_val: dbtx_val, private: true, return_type: "raw"})).Methods(http.MethodGet)
 }
 
+// CONVERT TO UPPER CASE IF YOU EVER WANT TO USE IT OUTSIDE OF THIS CONTEXT
 type FileHandlerInfo struct {
 	dbtx_val    dbstore.DBTX
 	private     bool
@@ -135,13 +136,12 @@ func makeFileHandler(info FileHandlerInfo) func(w http.ResponseWriter, r *http.R
 		case "markdown":
 			originalLang := r.URL.Query().Get("original_lang") == "true"
 			matchLang := r.URL.Query().Get("match_lang")
-			texts, err := GetTextSchemas(file_params)
-			if err != nil || len(texts) == 0 {
-				http.Error(w, "Error retrieving texts or no texts found.", http.StatusInternalServerError)
+			// TODO: Add suport for non english text retrieval and original text retrieval
+			markdownText, err := GetSpecificFileText(file_params, matchLang, originalLang)
+			if err != nil {
+				http.Error(w, "Error retrieving texts or no texts found that mach query params", http.StatusInternalServerError)
 				return
 			}
-			// TODO: Add suport for non english text retrieval and original text retrieval
-			markdownText := texts[0].Text
 			w.Header().Set("Content-Type", "text/plain")
 			w.Write([]byte(markdownText))
 		default:
@@ -340,7 +340,7 @@ type ReturnFilesSchema struct {
 	Files []FileSchema `json:"files"`
 }
 
-func getListAllFiles(ctx context.Context, q dbstore.Queries) ([]FileSchema, error) {
+func GetListAllFiles(ctx context.Context, q dbstore.Queries) ([]FileSchema, error) {
 	files, err := q.ListFiles(ctx)
 	if err != nil {
 		return []FileSchema{}, err
@@ -358,7 +358,7 @@ func getListOfAllPublicFilesHandler(dbtx_val dbstore.DBTX) func(w http.ResponseW
 	return func(w http.ResponseWriter, r *http.Request) {
 		q := *dbstore.New(dbtx_val)
 		ctx := r.Context()
-		fileSchemas, err := getListAllFiles(ctx, q)
+		fileSchemas, err := GetListAllFiles(ctx, q)
 		if err != nil {
 			http.Error(w, "Encountered db error reading files", http.StatusInternalServerError)
 			return

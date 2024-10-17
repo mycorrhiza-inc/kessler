@@ -123,17 +123,23 @@ func PublicTextToSchema(file dbstore.FileTextSource) FileTextSchema {
 }
 
 type GetFileParam struct {
-	q       dbstore.Queries
-	ctx     context.Context
-	pgUUID  pgtype.UUID
-	private bool
+	Queries dbstore.Queries
+	Context context.Context
+	PgUUID  pgtype.UUID
+	Private bool
 }
 
 func GetTextSchemas(params GetFileParam) ([]FileTextSchema, error) {
-	private := params.private
-	q := params.q
-	ctx := params.ctx
-	pgUUID := params.pgUUID
+	// params_1 := GetFileParam{
+	// 	q:       q,
+	// 	ctx:     ctx,
+	// 	pgUUID:  pgtype.UUID{Bytes: fileSchema.UUID, Valid: true},
+	// 	private: false,
+	// }
+	private := params.Private
+	q := params.Queries
+	ctx := params.Context
+	pgUUID := params.PgUUID
 	if private {
 		texts, err := q.ListPrivateTextsOfFile(ctx, pgUUID)
 		schemas := make([]FileTextSchema, len(texts))
@@ -186,10 +192,10 @@ func GetSpecificFileText(params GetFileParam, lang string, original bool) (strin
 }
 
 func GetFileObjectRaw(params GetFileParam) (rawFileSchema, error) {
-	private := params.private
-	q := params.q
-	ctx := params.ctx
-	pgUUID := params.pgUUID
+	private := params.Private
+	q := params.Queries
+	ctx := params.Context
+	pgUUID := params.PgUUID
 
 	if !private {
 		file, err := q.ReadFile(ctx, pgUUID)
