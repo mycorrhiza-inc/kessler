@@ -3,8 +3,8 @@ package static
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"path"
@@ -35,7 +35,7 @@ func HandleStaticGenerationRouting(router *mux.Router, dbtx_val dbstore.DBTX) {
 }
 
 func GetStaticDir() (string, error) {
-	const static_dir = "/static"
+	const static_dir = "/static/assets"
 	wd, err := os.Getwd()
 	return_dir := path.Join(wd, static_dir)
 	return return_dir, err
@@ -54,7 +54,10 @@ func renderStaticSitemapmMakeHandler(dbtx_val dbstore.DBTX) func(w http.Response
 }
 
 func RenderStaticSitemap(dbtx_val dbstore.DBTX) error {
-	tmpl := template.Must(template.ParseFiles("templates/post.html"))
+	tmpl, err := template.ParseFiles("static/templates/post.html")
+	if err != nil {
+		return err
+	}
 	ctx := context.Background()
 	chanFileList := make(chan []crud.FileSchema)
 	go func() {
@@ -66,6 +69,7 @@ func RenderStaticSitemap(dbtx_val dbstore.DBTX) error {
 		chanFileList <- list_all_files
 	}()
 	allFiles := <-chanFileList
+	fmt.Printf("Generating %v static document pages\n", len(allFiles))
 	proc_func := func(fileSchema crud.FileSchema) error {
 		q := *dbstore.New(dbtx_val)
 		params := crud.GetFileParam{
@@ -76,13 +80,13 @@ func RenderStaticSitemap(dbtx_val dbstore.DBTX) error {
 		}
 		text, err := crud.GetSpecificFileText(params, "", false)
 		if err != nil {
-			fmt.Printf("encountered error processing file with uuid %s", fileSchema.ID)
+			return fmt.Errorf("encountered error processing file with uuid %s", fileSchema.ID)
 		}
 		text_bytes := []byte(text)
 		var html_buffer bytes.Buffer
 		err = goldmark.Convert(text_bytes, &html_buffer)
 		if err != nil {
-			fmt.Printf("Error Converting Markdown to HTML", err)
+			return fmt.Errorf("Error Converting Markdown to HTML", err)
 		}
 		static_doc_data := StaticDocData{
 			HTML:  html_buffer.String(),
@@ -92,13 +96,16 @@ func RenderStaticSitemap(dbtx_val dbstore.DBTX) error {
 		static_dir, _ := GetStaticDir()
 		file_path := path.Join(static_dir, "/"+fileSchema.ID.String())
 
-		html_file, err := os.Open(file_path)
+		err = os.Remove(file_path)
 		if err != nil {
-			fmt.Print(err)
-			log.Fatal(err)
+			return err
+		}
+
+		html_file, err := os.Create(file_path)
+		if err != nil {
+			return err
 		}
 		defer html_file.Close()
-
 		if err := tmpl.Execute(html_file, static_doc_data); err != nil {
 			return err
 		}
@@ -106,11 +113,15 @@ func RenderStaticSitemap(dbtx_val dbstore.DBTX) error {
 	}
 
 	for index, fileSchema := range allFiles {
-		err := proc_func(fileSchema)
+		fmt.Printf("Creating page for file %v, with uuid: %v\n", index, fileSchema.ID)
+		jsonified, err := json.Marshal(fileSchema)
+		fmt.Print(string(jsonified), err)
+		err = proc_func(fileSchema)
 		if err != nil {
 			fmt.Printf("Encountered error on document %v, with error %v ", index, err)
-			return fmt.Errorf("Encountered error on document %v, with error %v ", index, err)
+			return fmt.Errorf("encountered error on document %v, with error %s ", index, err)
 		}
+		fmt.Printf("Created page for file %v, with uuid: %v", index, fileSchema.ID)
 	}
 	return nil
 }
