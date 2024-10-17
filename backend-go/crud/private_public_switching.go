@@ -45,10 +45,24 @@ func pguuidToString(uuid_pg pgtype.UUID) string {
 }
 
 func RawToFileSchema(file rawFileSchema) (FileSchema, error) {
+	// fmt.Println(file.ID)
 	var new_mdata map[string]string
 	err := json.Unmarshal([]byte(file.Mdata), &new_mdata)
 	if err != nil {
-		return FileSchema{}, fmt.Errorf("error unmarshaling metadata: %v", err) // err
+		fmt.Println("Error unmarhalling Metadata")
+		return FileSchema{
+			ID:           file.ID.Bytes,
+			Url:          file.Url,
+			Doctype:      file.Doctype,
+			Lang:         file.Lang,
+			Name:         file.Name,
+			Source:       file.Source,
+			Hash:         file.Hash,
+			Mdata:        map[string]string{},
+			Stage:        file.Stage,
+			Summary:      file.Summary,
+			ShortSummary: file.ShortSummary,
+		}, fmt.Errorf("error unmarshaling metadata: %v", err) // err
 	}
 	return FileSchema{
 		ID:           file.ID.Bytes,
