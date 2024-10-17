@@ -156,6 +156,35 @@ func GetTextSchemas(params GetFileParam) ([]FileTextSchema, error) {
 	return schemas, nil
 }
 
+func GetSpecificFileText(params GetFileParam, lang string, original bool) (string, error) {
+	prioritize_en := !original && lang == ""
+
+	texts, err := GetTextSchemas(params) // Returns a slice of FileTextSchema
+	if err != nil || len(texts) == 0 {
+		return "", fmt.Errorf("Error retrieving texts or no texts found.")
+	}
+	// TODO: Add suport for non english text retrieval and original text retrieval
+	var filteredTexts []FileTextSchema
+
+	for _, text := range texts {
+		if prioritize_en && text.Language == "en" {
+			return text.Text, nil
+		}
+		originalIfUserCares := !original || text.IsOriginalText
+		matchLangIfUserCares := lang == "" || text.Language == lang
+		if originalIfUserCares && matchLangIfUserCares {
+			filteredTexts = append(filteredTexts, text)
+		}
+	}
+	if prioritize_en {
+		return texts[0].Text, nil
+	}
+	if len(filteredTexts) > 0 {
+		return filteredTexts[0].Text, nil
+	}
+	return "", fmt.Errorf("No texts found that mach filter criterion")
+}
+
 func GetFileObjectRaw(params GetFileParam) (rawFileSchema, error) {
 	private := params.private
 	q := params.q

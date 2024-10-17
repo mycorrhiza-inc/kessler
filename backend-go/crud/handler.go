@@ -133,14 +133,14 @@ func makeFileHandler(info FileHandlerInfo) func(w http.ResponseWriter, r *http.R
 			w.Header().Set("Content-Type", "application/json")
 			w.Write(response)
 		case "markdown":
+			originalLang := r.URL.Query().Get("original_lang") == "true"
+			matchLang := r.URL.Query().Get("match_lang")
 			texts, err := GetTextSchemas(file_params)
 			if err != nil || len(texts) == 0 {
 				http.Error(w, "Error retrieving texts or no texts found.", http.StatusInternalServerError)
 				return
 			}
 			// TODO: Add suport for non english text retrieval and original text retrieval
-			// originalLang := r.URL.Query().Get("original_lang") == "true"
-			// matchLang := r.URL.Query().Get("match_lang")
 			markdownText := texts[0].Text
 			w.Header().Set("Content-Type", "text/plain")
 			w.Write([]byte(markdownText))
@@ -340,20 +340,28 @@ type ReturnFilesSchema struct {
 	Files []FileSchema `json:"files"`
 }
 
-func getListOfAllPublicFiles(dbtx_val dbstore.DBTX) func(w http.ResponseWriter, r *http.Request) {
+func getListAllFiles(ctx context.Context, q dbstore.Queries) ([]FileSchema, error) {
+	files, err := q.ListFiles(ctx)
+	if err != nil {
+		return []FileSchema{}, err
+	}
+	var fileSchemas []FileSchema
+	for _, fileRaw := range files {
+		rawSchema := PublicFileToSchema(fileRaw)
+		fileSchema, _ := RawToFileSchema(rawSchema)
+		fileSchemas = append(fileSchemas, fileSchema)
+	}
+	return fileSchemas, nil
+}
+
+func getListOfAllPublicFilesHandler(dbtx_val dbstore.DBTX) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		q := *dbstore.New(dbtx_val)
 		ctx := r.Context()
-		files, err := q.ListFiles(ctx)
+		fileSchemas, err := getListAllFiles(ctx, q)
 		if err != nil {
-			fmt.Printf("Encountered error %s while getting all files.")
+			http.Error(w, "Encountered db error reading files", http.StatusInternalServerError)
 			return
-		}
-		var fileSchemas []FileSchema
-		for _, fileRaw := range files {
-			rawSchema := PublicFileToSchema(fileRaw)
-			fileSchema, _ := RawToFileSchema(rawSchema)
-			fileSchemas = append(fileSchemas, fileSchema)
 		}
 		return_schema := ReturnFilesSchema{Files: fileSchemas}
 		response, _ := json.Marshal(return_schema)
