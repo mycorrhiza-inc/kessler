@@ -1,15 +1,13 @@
 import { FileCheckIcon, PublicCommentIcon } from "@/components/Icons";
 
 interface StateData {
-  name: string
-  abrev: string
-  comments: boolean
-  filing: boolean
+  name: string;
+  abrev: string;
+  comments: boolean;
+  filing: boolean;
 }
 
-const StatesList = () => {
-
-}
+const StatesList = () => {};
 
 export const SupportedStates = ({ className }: { className: string }) => {
   const DataSets = [
@@ -44,7 +42,7 @@ export const SupportedStates = ({ className }: { className: string }) => {
     // { name: "New Hampshire", abrev: "NH", comments: false, filing: false },
     // { name: "New Jersey", abrev: "NJ", comments: false, filing: false },
     // { name: "New Mexico", abrev: "NM", comments: false, filing: false },
-    // { name: "New York", abrev: "NY", comments: false, filing: false },
+    { name: "New York", abrev: "NY", comments: true, filing: true },
     // { name: "North Carolina", abrev: "NC", comments: false, filing: false },
     // { name: "North Dakota", abrev: "ND", comments: false, filing: false },
     // { name: "Ohio", abrev: "OH", comments: false, filing: false },
@@ -66,29 +64,39 @@ export const SupportedStates = ({ className }: { className: string }) => {
   ];
 
   return (
-    <section id="supported-states" className={"pb-20 pt-15 lg:pb-25 xl:pb-30 " + className}>
-      <div className="mx-auto max-w-c-1315 px-4 md:px-8 xl:px-0">
-        <div id="supported-states-title" className="text-center">
-          <h2 className="text-4xl">Supported States</h2>
-          <div className="flex row justify-between">
-            <div className="flex row"><PublicCommentIcon /> = Public Comments</div> <div className="flex row"><FileCheckIcon /> = Filing</div>
-
+    <div className="flex justify-center">
+      <section
+        id="supported-states"
+        className={"pb-20 pt-15 lg:pb-25 xl:pb-30 text-center " + className}
+      >
+        <div className="mx-auto px-4 md:px-8 xl:px-0">
+          {/* <div className="mx-auto max-w-c-1315 px-4 md:px-8 xl:px-0"> */}
+          <div id="supported-states-title" className="text-center">
+            <h2 className="text-4xl">Supported States</h2>
+            <div className="flex row justify-between">
+              <div className="flex row">
+                <PublicCommentIcon /> = Public Comments
+              </div>{" "}
+              <div className="flex row">
+                <FileCheckIcon /> = Filing
+              </div>
+            </div>
+          </div>
+          <div className="divider" />
+          <div className="flex column columns-3" id="states">
+            {DataSets.map((state: StateData, _) => (
+              <div
+                className="flex row rounded-box border-primary border-4 outline-secondary shadow-xl p-5 w-60"
+                key={state.abrev}
+              >
+                <b>{state.name}</b>({state.abrev})
+                {state.comments ? <PublicCommentIcon /> : ""}{" "}
+                {state.comments ? <FileCheckIcon /> : ""}{" "}
+              </div>
+            ))}
           </div>
         </div>
-        <div className="divider" />
-        <div className="flex column columns-3" id="states">
-          {
-            DataSets.map((state: StateData, _) => (
-              <div className="flex row rounded-box border-primary border-4 outline-secondary shadow-xl p-5 w-60" key={state.abrev}>
-                <b>{state.name}</b>
-                ({state.abrev})
-                {state.comments ? <PublicCommentIcon /> : ''} {' '}
-                {state.comments ? <FileCheckIcon /> : ''} {' '}
-              </div>
-            ))
-          }
-        </div>
-      </div>
-    </section>
-  )
-}
+      </section>
+    </div>
+  );
+};
