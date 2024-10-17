@@ -21,6 +21,7 @@ import (
 	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
 	"github.com/mycorrhiza-inc/kessler/backend-go/rag"
 	"github.com/mycorrhiza-inc/kessler/backend-go/search"
+	"github.com/mycorrhiza-inc/kessler/backend-go/static"
 )
 
 func PgPoolConfig() *pgxpool.Config {
@@ -225,6 +226,7 @@ func main() {
 
 	mux := mux.NewRouter()
 	crud.DefineCrudRoutes(mux, connPool)
+	static.HandleStaticGenerationRouting(mux, connPool)
 	mux.HandleFunc("/api/v2/search", search.HandleSearchRequest)
 	mux.HandleFunc("/api/v2/rag/basic_chat", rag.HandleBasicChatRequest)
 	mux.HandleFunc("/api/v2/rag/chat", rag.HandleRagChatRequest)

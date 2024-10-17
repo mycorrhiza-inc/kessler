@@ -17,7 +17,7 @@ import (
 )
 
 func DefineCrudRoutes(router *mux.Router, dbtx_val dbstore.DBTX) {
-	public_subrouter := router.PathPrefix("/public").Subrouter()
+	public_subrouter := router.PathPrefix("/api/v2/public").Subrouter()
 
 	public_subrouter.HandleFunc("/files/insert", makeUpsertHandler(
 		UpsertHandlerInfo{dbtx_val: dbtx_val, private: false, insert: true})).Methods(http.MethodPost)
@@ -34,7 +34,7 @@ func DefineCrudRoutes(router *mux.Router, dbtx_val dbstore.DBTX) {
 	public_subrouter.HandleFunc("/files/{uuid}/raw", makeFileHandler(
 		FileHandlerInfo{dbtx_val: dbtx_val, private: false, return_type: "raw"})).Methods(http.MethodGet)
 
-	private_subrouter := router.PathPrefix("/private").Subrouter()
+	private_subrouter := router.PathPrefix("/api/v2/private").Subrouter()
 
 	private_subrouter.HandleFunc("/files/insert", makeUpsertHandler(
 		UpsertHandlerInfo{dbtx_val: dbtx_val, private: true, insert: true})).Methods(http.MethodPost)

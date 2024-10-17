@@ -29,8 +29,8 @@ type StaticDocData struct {
 	Date  string
 }
 
-func HandleStaticGenerationRouter(router *mux.Router, dbtx_val dbstore.DBTX) {
-	admin_subrouter := router.PathPrefix("/admin").Subrouter()
+func HandleStaticGenerationRouting(router *mux.Router, dbtx_val dbstore.DBTX) {
+	admin_subrouter := router.PathPrefix("/api/v2/admin").Subrouter()
 	admin_subrouter.HandleFunc("/generate-static-site", renderStaticSitemapmMakeHandler(dbtx_val))
 }
 
