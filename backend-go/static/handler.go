@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"sync"
 
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -37,12 +38,21 @@ func GetStaticDir() (string, error) {
 	const static_dir = "/static/assets"
 	wd, err := os.Getwd()
 	return_dir := path.Join(wd, static_dir)
-	return return_dir, err
+	if err != nil {
+		return return_dir, err
+	}
+
+	if _, err := os.Stat(return_dir); os.IsNotExist(err) {
+		if err := os.MkdirAll(return_dir, os.ModePerm); err != nil {
+			return return_dir, err
+		}
+	}
+	return return_dir, nil
 }
 
 func renderStaticSitemapmMakeHandler(dbtx_val dbstore.DBTX) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := RenderStaticSitemap(dbtx_val)
+		err := RenderStaticSitemap(dbtx_val, 10)
 		if err != nil {
 			error_string := fmt.Sprintf("Encountered error while building static site map %v", err)
 			http.Error(w, error_string, http.StatusInternalServerError)
@@ -52,7 +62,7 @@ func renderStaticSitemapmMakeHandler(dbtx_val dbstore.DBTX) func(w http.Response
 	}
 }
 
-func RenderStaticSitemap(dbtx_val dbstore.DBTX) error {
+func RenderStaticSitemap(dbtx_val dbstore.DBTX, max_docs int) error {
 	tmpl, err := template.ParseFiles("static/templates/post.html")
 	if err != nil {
 		return err
@@ -68,12 +78,14 @@ func RenderStaticSitemap(dbtx_val dbstore.DBTX) error {
 		chanFileList <- list_all_files
 	}()
 	allFiles := <-chanFileList
-	fmt.Printf("Generating %v static document pages\n", len(allFiles))
-	proc_func := func(fileSchema crud.FileSchema) error {
-		if fileSchema.Stage != "completed" {
-			// fmt.Printf("Found unprocessed file %s with stage %s doing nothing.\n", fileSchema.ID, fileSchema.Stage)
-			return nil
+	var filteredFiles []crud.FileSchema
+	for _, file := range allFiles {
+		if file.Stage != "completed" {
+			filteredFiles = append(filteredFiles, file)
 		}
+	}
+	fmt.Printf("Generating %v static document pages\n", len(filteredFiles))
+	proc_func := func(fileSchema crud.FileSchema) error {
 		fmt.Printf("Found processed file %s with stage %s doing something.\n", fileSchema.ID, fileSchema.Stage)
 		q := *dbstore.New(dbtx_val)
 		params := crud.GetFileParam{
@@ -110,23 +122,53 @@ func RenderStaticSitemap(dbtx_val dbstore.DBTX) error {
 			return err
 		}
 		defer html_file.Close()
-		if err := tmpl.Execute(html_file, static_doc_data); err != nil {
+		err = tmpl.Execute(html_file, static_doc_data)
+		if err != nil {
 			return err
 		}
 		return nil
 	}
 
-	for index, fileSchema := range allFiles {
-		// fmt.Printf("Creating page for file %v, with uuid: %v\n", index, fileSchema.ID)
-		// jsonified, err := json.Marshal(fileSchema)
-		// fmt.Print(string(jsonified), err)
-		err = proc_func(fileSchema)
-		if err != nil {
-			fmt.Printf("Encountered error on document %v, with error %v ", index, err)
-			return fmt.Errorf("encountered error on document %v, with error %s ", index, err)
+	// // Could you split this for loop so that the task of processing each element with proc_func is evenly distributed across an arbitrary number of goroutines, s
+	// for index, fileSchema := range allFiles {
+	// 	err = proc_func(fileSchema)
+	// 	if err != nil {
+	// 		fmt.Printf("Encountered error on document %v, with error %v ", index, err)
+	// 		return fmt.Errorf("encountered error on document %v, with error %s ", index, err)
+	// 	}
+	// }
+	var wg sync.WaitGroup
+	fileChan := make(chan int)
+
+	// Worker function
+	worker := func() {
+		defer wg.Done()
+		for index := range fileChan {
+			fileSchema := filteredFiles[index]
+			err := proc_func(fileSchema)
+			if err != nil {
+				fmt.Printf("Encountered error on document %v, with error %v ", index, err)
+				// Handle error or return from here if needed
+			}
 		}
-		// fmt.Printf("Created page for file %v, with uuid: %v", index, fileSchema.ID)
 	}
-	fmt.Printf("Successfully built site map")
+
+	numGoroutines := 20 // You can change this number based on your needs or make it configurable
+	// Start workers
+	for i := 0; i < numGoroutines; i++ {
+		wg.Add(1)
+		go worker()
+	}
+
+	// Send work to workers
+	max_files := min(max_docs, len(filteredFiles))
+	for index := range max_files {
+		fileChan <- index
+	}
+
+	// Close channel and wait for workers to finish
+	close(fileChan)
+	wg.Wait()
+	fmt.Printf("Successfully built site map\n")
 	return nil
 }

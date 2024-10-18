@@ -49,7 +49,7 @@ func RawToFileSchema(file rawFileSchema) (FileSchema, error) {
 	var new_mdata map[string]string
 	err := json.Unmarshal([]byte(file.Mdata), &new_mdata)
 	if err != nil {
-		fmt.Printf("Error unmarhalling Metadata: %v\n", err)
+		// fmt.Printf("Error unmarhalling Metadata: %v\n", err)
 		return FileSchema{
 			ID:           file.ID.Bytes,
 			Url:          file.Url,
