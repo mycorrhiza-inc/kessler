@@ -1,20 +1,15 @@
 package static
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"html/template"
 	"net/http"
-	"os"
-	"path"
 	"sync"
 
 	"github.com/gorilla/mux"
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/mycorrhiza-inc/kessler/backend-go/crud"
 	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
-	"github.com/yuin/goldmark"
 )
 
 //	params := crud.GetFileParam{
@@ -23,31 +18,10 @@ import (
 //		pgUUID:  pgtype.UUID{Bytes: fileSchema.ID, Valid: true},
 //		private: false,
 //	}
-type StaticDocData struct {
-	HTML  template.HTML
-	Title string
-	Date  string
-}
 
 func HandleStaticGenerationRouting(router *mux.Router, dbtx_val dbstore.DBTX) {
 	admin_subrouter := router.PathPrefix("/api/v2/admin").Subrouter()
 	admin_subrouter.HandleFunc("/generate-static-site", renderStaticSitemapmMakeHandler(dbtx_val))
-}
-
-func GetStaticDir() (string, error) {
-	const static_dir = "/static/assets"
-	wd, err := os.Getwd()
-	return_dir := path.Join(wd, static_dir)
-	if err != nil {
-		return return_dir, err
-	}
-
-	if _, err := os.Stat(return_dir); os.IsNotExist(err) {
-		if err := os.MkdirAll(return_dir, os.ModePerm); err != nil {
-			return return_dir, err
-		}
-	}
-	return return_dir, nil
 }
 
 func renderStaticSitemapmMakeHandler(dbtx_val dbstore.DBTX) func(w http.ResponseWriter, r *http.Request) {
@@ -60,6 +34,12 @@ func renderStaticSitemapmMakeHandler(dbtx_val dbstore.DBTX) func(w http.Response
 		}
 		w.Write([]byte("Sucessfully built static site map"))
 	}
+}
+
+func RenderStaticKesslerObj(obj crud.KesslerObject, dbtx_val dbstore.DBTX) error {
+	q := dbstore.New(dbtx_val)
+
+	return nil
 }
 
 func RenderStaticSitemap(dbtx_val dbstore.DBTX, max_docs int) error {
@@ -75,59 +55,16 @@ func RenderStaticSitemap(dbtx_val dbstore.DBTX, max_docs int) error {
 		if err != nil {
 			fmt.Printf("Error encountered while getting all files %s", err)
 		}
-		chanFileList <- list_all_files
+		var filteredFiles []crud.FileSchema
+		for _, file := range list_all_files {
+			if file.Stage != "completed" {
+				filteredFiles = append(filteredFiles, file)
+			}
+		}
+		chanFileList <- filteredFiles
 	}()
-	allFiles := <-chanFileList
-	var filteredFiles []crud.FileSchema
-	for _, file := range allFiles {
-		if file.Stage != "completed" {
-			filteredFiles = append(filteredFiles, file)
-		}
-	}
+	filteredFiles := <-chanFileList
 	fmt.Printf("Generating %v static document pages\n", len(filteredFiles))
-	proc_func := func(fileSchema crud.FileSchema) error {
-		fmt.Printf("Found processed file %s with stage %s doing something.\n", fileSchema.ID, fileSchema.Stage)
-		q := *dbstore.New(dbtx_val)
-		params := crud.GetFileParam{
-			Queries: q,
-			Context: ctx,
-			PgUUID:  pgtype.UUID{Bytes: fileSchema.ID, Valid: true},
-			Private: false,
-		}
-		text, err := crud.GetSpecificFileText(params, "", false)
-		if err != nil {
-			return fmt.Errorf("encountered error processing file with uuid %s: %v", fileSchema.ID, err)
-		}
-		text_bytes := []byte(text)
-		var html_buffer bytes.Buffer
-		err = goldmark.Convert(text_bytes, &html_buffer)
-		if err != nil {
-			return fmt.Errorf("Error Converting Markdown to HTML", err)
-		}
-		static_doc_data := StaticDocData{
-			HTML:  template.HTML(html_buffer.String()),
-			Title: "Test Title",
-			Date:  "Test Date",
-		}
-		static_dir, _ := GetStaticDir()
-		file_path := path.Join(static_dir, "/"+fileSchema.ID.String())
-
-		err = os.Remove(file_path)
-		if err != nil {
-			// return err
-		}
-
-		html_file, err := os.Create(file_path)
-		if err != nil {
-			return err
-		}
-		defer html_file.Close()
-		err = tmpl.Execute(html_file, static_doc_data)
-		if err != nil {
-			return err
-		}
-		return nil
-	}
 
 	// // Could you split this for loop so that the task of processing each element with proc_func is evenly distributed across an arbitrary number of goroutines, s
 	// for index, fileSchema := range allFiles {
@@ -145,7 +82,7 @@ func RenderStaticSitemap(dbtx_val dbstore.DBTX, max_docs int) error {
 		defer wg.Done()
 		for index := range fileChan {
 			fileSchema := filteredFiles[index]
-			err := proc_func(fileSchema)
+			err := RenderStaticKesslerObj(fileSchema, dbtx_val)
 			if err != nil {
 				fmt.Printf("Encountered error on document %v, with error %v ", index, err)
 				// Handle error or return from here if needed

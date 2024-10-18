@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"html/template"
+	"io"
 	"os"
 	"path"
 
@@ -15,10 +16,17 @@ import (
 	"github.com/yuin/goldmark"
 )
 
+type StaticDocData struct {
+	HTML  template.HTML
+	Title string
+	Date  string
+}
 type KesslerObject interface {
 	GetShortPath() string
 	GetHTMLString(q dbstore.Queries, ctx context.Context) string
 }
+
+var doc_template = template.Must(template.ParseFiles("crud/templates/doc_template.html"))
 
 func GetStaticDir() (string, error) {
 	const static_dir = "/static/assets"
@@ -36,7 +44,7 @@ func GetStaticDir() (string, error) {
 	return return_dir, nil
 }
 
-func (rawFile rawFileSchema) GetShortPath() string {
+func (rawFile RawFileSchema) GetShortPath() string {
 	uuid_bytes := uuid.UUID(rawFile.ID.Bytes)
 	short_id_bytes := uuid_bytes[:6]
 	short_id_string := base64.URLEncoding.EncodeToString(short_id_bytes)
@@ -45,48 +53,33 @@ func (rawFile rawFileSchema) GetShortPath() string {
 	return "docs/" + source + "/" + name + "-" + short_id_string
 }
 
-func (fileSchema FileSchema) GetHTMLString(q dbstore.Queries, ctx context.Context) (string, error) {
+func (fileSchema FileSchema) WriteHTMLString(wr *io.Writer, q dbstore.Queries, ctx context.Context) error {
 	fmt.Printf("Found processed file %s with stage %s doing something.\n", fileSchema.ID, fileSchema.Stage)
-	q := *dbstore.New(dbtx_val)
-	params := crud.GetFileParam{
+	params := GetFileParam{
 		Queries: q,
 		Context: ctx,
 		PgUUID:  pgtype.UUID{Bytes: fileSchema.ID, Valid: true},
 		Private: false,
 	}
-	text, err := crud.GetSpecificFileText(params, "", false)
+	text, err := GetSpecificFileText(params, "", false)
 	if err != nil {
 		return fmt.Errorf("encountered error processing file with uuid %s: %v", fileSchema.ID, err)
 	}
 	text_bytes := []byte(text)
 	var html_buffer bytes.Buffer
 	err = goldmark.Convert(text_bytes, &html_buffer)
+	html_string := html_buffer.String()
 	if err != nil {
-		return fmt.Errorf("Error Converting Markdown to HTML", err)
+		io.WriteString(*wr, html_string)
+		return fmt.Errorf("error Converting Markdown to HTML: %v", err)
 	}
 	static_doc_data := StaticDocData{
-		HTML:  template.HTML(html_buffer.String()),
+		HTML:  template.HTML(html_string),
 		Title: "Test Title",
 		Date:  "Test Date",
 	}
-	static_dir, _ := GetStaticDir()
-	file_path := path.Join(static_dir, "/"+fileSchema.ID.String())
-
-	err = os.Remove(file_path)
-	if err != nil {
-		// return err
-	}
-
-	html_file, err := os.Create(file_path)
-	if err != nil {
-		return err
-	}
-	defer html_file.Close()
-	err = tmpl.Execute(html_file, static_doc_data)
-	if err != nil {
-		return err
-	}
-	return nil
+	err = doc_template.Execute(*wr, static_doc_data)
+	return err
 }
 
 func getUrl(obj KesslerObject) string {

@@ -239,7 +239,7 @@ func makeUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r *ht
 			return
 		}
 		rawFileData := ConvertToCreationData(newDocInfo)
-		var fileSchema rawFileSchema
+		var fileSchema RawFileSchema
 		if insert {
 			fileSchema, err = InsertPubPrivateFileObj(q, ctx, rawFileData, private)
 		} else {
@@ -340,14 +340,26 @@ type ReturnFilesSchema struct {
 	Files []FileSchema `json:"files"`
 }
 
-func GetListAllFiles(ctx context.Context, q dbstore.Queries) ([]FileSchema, error) {
+func GetListAllRawFiles(ctx context.Context, q dbstore.Queries) ([]RawFileSchema, error) {
 	files, err := q.ListFiles(ctx)
+	if err != nil {
+		return []RawFileSchema{}, err
+	}
+	var fileSchemas []RawFileSchema
+	for _, fileRaw := range files {
+		rawSchema := PublicFileToSchema(fileRaw)
+		fileSchemas = append(fileSchemas, rawSchema)
+	}
+	return fileSchemas, nil
+}
+
+func GetListAllFiles(ctx context.Context, q dbstore.Queries) ([]FileSchema, error) {
+	files, err := GetListAllRawFiles(ctx, q)
 	if err != nil {
 		return []FileSchema{}, err
 	}
 	var fileSchemas []FileSchema
-	for _, fileRaw := range files {
-		rawSchema := PublicFileToSchema(fileRaw)
+	for _, rawSchema := range files {
 		fileSchema, _ := RawToFileSchema(rawSchema)
 		fileSchemas = append(fileSchemas, fileSchema)
 	}
