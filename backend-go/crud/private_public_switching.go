@@ -10,7 +10,7 @@ import (
 	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
 )
 
-type rawFileSchema struct {
+type RawFileSchema struct {
 	ID           pgtype.UUID
 	Url          string
 	Doctype      string
@@ -44,7 +44,7 @@ func pguuidToString(uuid_pg pgtype.UUID) string {
 	return uuid.UUID(uuid_pg.Bytes).String()
 }
 
-func RawToFileSchema(file rawFileSchema) (FileSchema, error) {
+func RawToFileSchema(file RawFileSchema) (FileSchema, error) {
 	// fmt.Println(file.ID)
 	var new_mdata map[string]string
 	err := json.Unmarshal([]byte(file.Mdata), &new_mdata)
@@ -79,8 +79,8 @@ func RawToFileSchema(file rawFileSchema) (FileSchema, error) {
 	}, nil
 }
 
-func PrivateFileToSchema(file dbstore.UserfilesPrivateFile) rawFileSchema {
-	return rawFileSchema{
+func PrivateFileToSchema(file dbstore.UserfilesPrivateFile) RawFileSchema {
+	return RawFileSchema{
 		ID:           file.ID,
 		Url:          file.Url.String,
 		Doctype:      file.Doctype.String,
@@ -95,8 +95,8 @@ func PrivateFileToSchema(file dbstore.UserfilesPrivateFile) rawFileSchema {
 	}
 }
 
-func PublicFileToSchema(file dbstore.File) rawFileSchema {
-	return rawFileSchema{
+func PublicFileToSchema(file dbstore.File) RawFileSchema {
+	return RawFileSchema{
 		ID:           file.ID,
 		Url:          file.Url.String,
 		Doctype:      file.Doctype.String,
@@ -205,7 +205,7 @@ func GetSpecificFileText(params GetFileParam, lang string, original bool) (strin
 	return "", fmt.Errorf("No texts found that mach filter criterion")
 }
 
-func GetFileObjectRaw(params GetFileParam) (rawFileSchema, error) {
+func GetFileObjectRaw(params GetFileParam) (RawFileSchema, error) {
 	private := params.Private
 	q := params.Queries
 	ctx := params.Context
@@ -214,13 +214,13 @@ func GetFileObjectRaw(params GetFileParam) (rawFileSchema, error) {
 	if !private {
 		file, err := q.ReadFile(ctx, pgUUID)
 		if err != nil {
-			return rawFileSchema{}, err
+			return RawFileSchema{}, err
 		}
 		return PublicFileToSchema(file), nil
 	}
 	file, err := q.ReadPrivateFile(ctx, pgUUID)
 	if err != nil {
-		return rawFileSchema{}, err
+		return RawFileSchema{}, err
 	}
 	return PrivateFileToSchema(file), nil
 }
@@ -238,7 +238,7 @@ type FileCreationDataRaw struct {
 	ShortSummary pgtype.Text
 }
 
-func InsertPubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreation FileCreationDataRaw, private bool) (rawFileSchema, error) {
+func InsertPubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreation FileCreationDataRaw, private bool) (RawFileSchema, error) {
 	if private {
 		params := dbstore.CreatePrivateFileParams{
 			Url:          fileCreation.Url,
@@ -273,7 +273,7 @@ func InsertPubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreatio
 	return resultSchema, err
 }
 
-func UpdatePubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreation FileCreationDataRaw, private bool, pgUUID pgtype.UUID) (rawFileSchema, error) {
+func UpdatePubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreation FileCreationDataRaw, private bool, pgUUID pgtype.UUID) (RawFileSchema, error) {
 	if private {
 		params := dbstore.UpdatePrivateFileParams{
 			Url:          fileCreation.Url,
