@@ -40,10 +40,8 @@ func RenderStaticKesslerObj(obj crud.KesslerObject, dbtx_val dbstore.DBTX, ctx c
 	q := dbstore.New(dbtx_val)
 	file_path := crud.GetBaseFilePath(obj)
 
-	err := os.Remove(file_path)
-	if err != nil {
-		// return err
-	}
+	os.Remove(file_path)
+	// This can throw an error, but do nothing, file just didnt exist in all likelyhood.
 
 	html_file, err := os.Create(file_path)
 	if err != nil {
