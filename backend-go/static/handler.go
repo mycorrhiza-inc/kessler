@@ -3,8 +3,8 @@ package static
 import (
 	"context"
 	"fmt"
-	"html/template"
 	"net/http"
+	"os"
 	"sync"
 
 	"github.com/gorilla/mux"
@@ -36,26 +36,37 @@ func renderStaticSitemapmMakeHandler(dbtx_val dbstore.DBTX) func(w http.Response
 	}
 }
 
-func RenderStaticKesslerObj(obj crud.KesslerObject, dbtx_val dbstore.DBTX) error {
+func RenderStaticKesslerObj(obj crud.KesslerObject, dbtx_val dbstore.DBTX, ctx context.Context) error {
 	q := dbstore.New(dbtx_val)
+	file_path := crud.GetBaseFilePath(obj)
 
+	err := os.Remove(file_path)
+	if err != nil {
+		// return err
+	}
+
+	html_file, err := os.Create(file_path)
+	if err != nil {
+		return err
+	}
+	defer html_file.Close()
+	err = obj.WriteHTMLString(html_file, *q, ctx)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 func RenderStaticSitemap(dbtx_val dbstore.DBTX, max_docs int) error {
-	tmpl, err := template.ParseFiles("static/templates/post.html")
-	if err != nil {
-		return err
-	}
 	ctx := context.Background()
-	chanFileList := make(chan []crud.FileSchema)
+	chanFileList := make(chan []crud.RawFileSchema)
 	go func() {
 		q := *dbstore.New(dbtx_val)
-		list_all_files, err := crud.GetListAllFiles(ctx, q)
+		list_all_files, err := crud.GetListAllRawFiles(ctx, q)
 		if err != nil {
 			fmt.Printf("Error encountered while getting all files %s", err)
 		}
-		var filteredFiles []crud.FileSchema
+		var filteredFiles []crud.RawFileSchema
 		for _, file := range list_all_files {
 			if file.Stage != "completed" {
 				filteredFiles = append(filteredFiles, file)
@@ -82,7 +93,7 @@ func RenderStaticSitemap(dbtx_val dbstore.DBTX, max_docs int) error {
 		defer wg.Done()
 		for index := range fileChan {
 			fileSchema := filteredFiles[index]
-			err := RenderStaticKesslerObj(fileSchema, dbtx_val)
+			err := RenderStaticKesslerObj(fileSchema, dbtx_val, ctx)
 			if err != nil {
 				fmt.Printf("Encountered error on document %v, with error %v ", index, err)
 				// Handle error or return from here if needed

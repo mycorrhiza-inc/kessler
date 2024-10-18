@@ -23,7 +23,7 @@ type StaticDocData struct {
 }
 type KesslerObject interface {
 	GetShortPath() string
-	GetHTMLString(q dbstore.Queries, ctx context.Context) string
+	WriteHTMLString(wr io.Writer, q dbstore.Queries, ctx context.Context) error
 }
 
 var doc_template = template.Must(template.ParseFiles("crud/templates/doc_template.html"))
@@ -53,7 +53,7 @@ func (rawFile RawFileSchema) GetShortPath() string {
 	return "docs/" + source + "/" + name + "-" + short_id_string
 }
 
-func (fileSchema FileSchema) WriteHTMLString(wr *io.Writer, q dbstore.Queries, ctx context.Context) error {
+func (fileSchema FileSchema) WriteHTMLString(wr io.Writer, q dbstore.Queries, ctx context.Context) error {
 	fmt.Printf("Found processed file %s with stage %s doing something.\n", fileSchema.ID, fileSchema.Stage)
 	params := GetFileParam{
 		Queries: q,
@@ -70,7 +70,7 @@ func (fileSchema FileSchema) WriteHTMLString(wr *io.Writer, q dbstore.Queries, c
 	err = goldmark.Convert(text_bytes, &html_buffer)
 	html_string := html_buffer.String()
 	if err != nil {
-		io.WriteString(*wr, html_string)
+		io.WriteString(wr, html_string)
 		return fmt.Errorf("error Converting Markdown to HTML: %v", err)
 	}
 	static_doc_data := StaticDocData{
@@ -78,17 +78,17 @@ func (fileSchema FileSchema) WriteHTMLString(wr *io.Writer, q dbstore.Queries, c
 		Title: "Test Title",
 		Date:  "Test Date",
 	}
-	err = doc_template.Execute(*wr, static_doc_data)
+	err = doc_template.Execute(wr, static_doc_data)
 	return err
 }
 
-func getUrl(obj KesslerObject) string {
+func GetUrl(obj KesslerObject) string {
 	shortPath := obj.GetShortPath()
 	urlPath := "/static/" + shortPath
 	return urlPath
 }
 
-func getBaseFilePath(obj KesslerObject) string {
+func GetBaseFilePath(obj KesslerObject) string {
 	static_dir, err := GetStaticDir() // Innefficent
 	if err != nil {
 		fmt.Printf("Error getting base directory %v\n", err)
