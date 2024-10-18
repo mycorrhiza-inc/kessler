@@ -17,7 +17,7 @@ import (
 )
 
 func DefineCrudRoutes(router *mux.Router, dbtx_val dbstore.DBTX) {
-	public_subrouter := router.PathPrefix("/public").Subrouter()
+	public_subrouter := router.PathPrefix("/api/v2/public").Subrouter()
 
 	public_subrouter.HandleFunc("/files/insert", makeUpsertHandler(
 		UpsertHandlerInfo{dbtx_val: dbtx_val, private: false, insert: true})).Methods(http.MethodPost)
@@ -34,7 +34,7 @@ func DefineCrudRoutes(router *mux.Router, dbtx_val dbstore.DBTX) {
 	public_subrouter.HandleFunc("/files/{uuid}/raw", makeFileHandler(
 		FileHandlerInfo{dbtx_val: dbtx_val, private: false, return_type: "raw"})).Methods(http.MethodGet)
 
-	private_subrouter := router.PathPrefix("/private").Subrouter()
+	private_subrouter := router.PathPrefix("/api/v2/private").Subrouter()
 
 	private_subrouter.HandleFunc("/files/insert", makeUpsertHandler(
 		UpsertHandlerInfo{dbtx_val: dbtx_val, private: true, insert: true})).Methods(http.MethodPost)
@@ -52,6 +52,7 @@ func DefineCrudRoutes(router *mux.Router, dbtx_val dbstore.DBTX) {
 		FileHandlerInfo{dbtx_val: dbtx_val, private: true, return_type: "raw"})).Methods(http.MethodGet)
 }
 
+// CONVERT TO UPPER CASE IF YOU EVER WANT TO USE IT OUTSIDE OF THIS CONTEXT
 type FileHandlerInfo struct {
 	dbtx_val    dbstore.DBTX
 	private     bool
@@ -133,15 +134,14 @@ func makeFileHandler(info FileHandlerInfo) func(w http.ResponseWriter, r *http.R
 			w.Header().Set("Content-Type", "application/json")
 			w.Write(response)
 		case "markdown":
-			texts, err := GetTextSchemas(file_params)
-			if err != nil || len(texts) == 0 {
-				http.Error(w, "Error retrieving texts or no texts found.", http.StatusInternalServerError)
+			originalLang := r.URL.Query().Get("original_lang") == "true"
+			matchLang := r.URL.Query().Get("match_lang")
+			// TODO: Add suport for non english text retrieval and original text retrieval
+			markdownText, err := GetSpecificFileText(file_params, matchLang, originalLang)
+			if err != nil {
+				http.Error(w, "Error retrieving texts or no texts found that mach query params", http.StatusInternalServerError)
 				return
 			}
-			// TODO: Add suport for non english text retrieval and original text retrieval
-			// originalLang := r.URL.Query().Get("original_lang") == "true"
-			// matchLang := r.URL.Query().Get("match_lang")
-			markdownText := texts[0].Text
 			w.Header().Set("Content-Type", "text/plain")
 			w.Write([]byte(markdownText))
 		default:
@@ -317,13 +317,13 @@ func makePrivateUploadHandler(dbtx_val dbstore.DBTX) func(w http.ResponseWriter,
 		file, _, err := r.FormFile("file")
 		fileName := r.FormValue("file_name")
 		if err != nil {
-			panic(err)
+			return
 		}
 		defer file.Close()
 		randomFileName := generateRandomString(10) // Function to generate a random string
 		f, err := os.OpenFile(randomFileName, os.O_WRONLY|os.O_CREATE, 0666)
 		if err != nil {
-			panic(err)
+			return
 		}
 		defer f.Close()
 		io.Copy(f, file)
@@ -332,6 +332,41 @@ func makePrivateUploadHandler(dbtx_val dbstore.DBTX) func(w http.ResponseWriter,
 		if err != nil {
 			fmt.Printf("Error uploading to s3, %v", err)
 		}
-		w.Write([]byte(fmt.Sprintf("File %s uploaded successfully with hash %s", fileName, hash)))
+		fmt.Fprintf(w, "File %s uploaded successfully with hash %s", fileName, hash)
+	}
+}
+
+type ReturnFilesSchema struct {
+	Files []FileSchema `json:"files"`
+}
+
+func GetListAllFiles(ctx context.Context, q dbstore.Queries) ([]FileSchema, error) {
+	files, err := q.ListFiles(ctx)
+	if err != nil {
+		return []FileSchema{}, err
+	}
+	var fileSchemas []FileSchema
+	for _, fileRaw := range files {
+		rawSchema := PublicFileToSchema(fileRaw)
+		fileSchema, _ := RawToFileSchema(rawSchema)
+		fileSchemas = append(fileSchemas, fileSchema)
+	}
+	return fileSchemas, nil
+}
+
+func getListOfAllPublicFilesHandler(dbtx_val dbstore.DBTX) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		q := *dbstore.New(dbtx_val)
+		ctx := r.Context()
+		fileSchemas, err := GetListAllFiles(ctx, q)
+		if err != nil {
+			http.Error(w, "Encountered db error reading files", http.StatusInternalServerError)
+			return
+		}
+		return_schema := ReturnFilesSchema{Files: fileSchemas}
+		response, _ := json.Marshal(return_schema)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(response)
 	}
 }

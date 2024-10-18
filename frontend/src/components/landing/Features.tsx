@@ -2,6 +2,7 @@
 import React from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { Meteors } from "../aceternity/meteors";
 type Feature = {
   id: number;
   icon: string;
@@ -144,14 +145,35 @@ const futureFeaturesData: Feature[] = [
 //};
 const SingleFeature = ({ feature }: { feature: Feature }) => {
   const { icon, title, description } = feature;
-
   return (
-    <div className="rounded-box  w-auto p-10 m-5 bg-primary shadow-xl text-neutral-content">
-      <h2 className="card-title">{title}</h2>
-      <p>{description}</p>
+    <div className="">
+      <div className=" w-full relative max-w-xs">
+        <div className="absolute inset-0 h-full w-full bg-gradient-to-r from-blue-500 to-teal-500 transform scale-[0.80] bg-red-500 rounded-full blur-3xl" />
+        <div className="relative shadow-xl bg-gray-900 border border-gray-800  px-4 py-8 h-full overflow-hidden rounded-2xl flex flex-col justify-end items-start">
+          <h1 className="font-bold text-xl text-white mb-4 relative z-50">
+            {title}
+          </h1>
+
+          <p className="font-normal text-base text-slate-500 mb-4 relative z-50">
+            {description}
+          </p>
+
+          {/* Meaty part - Meteor effect */}
+          <Meteors number={20} />
+        </div>
+      </div>
     </div>
   );
 };
+// const SingleFeature = ({ feature }: { feature: Feature }) => {
+//   const { icon, title, description } = feature;
+//   return (
+//     <div className="rounded-box  w-auto p-10 m-5 bg-primary shadow-xl text-neutral-content">
+//       <h2 className="card-title">{title}</h2>
+//       <p>{description}</p> <Meteors number={20} />
+//     </div>
+//   );
+// };
 
 const Feature = ({ className }: { className: string }) => {
   return (
@@ -161,16 +183,22 @@ const Feature = ({ className }: { className: string }) => {
         <div className="">
           {/* <!-- Section Title Start --> */}
           <div className="text-center">
-            <h2 className="text-4xl font-bold">SOLID FEATURES</h2>
-            <h3 className="text-xl mt-4">Core Features of Kessler</h3>
+            <h2 className="text-4xl font-bold">
+              <br />
+              FEATURES
+            </h2>
+            {/* <h3 className="text-xl mt-4">Core Features of Kessler</h3> */}
             <p className="mt-2">
               Kessler is still in beta, but this is what we have implemented so
               far.
+              <br />
+              <br />
+              <br />
             </p>
           </div>
           {/* <!-- Section Title End --> */}
 
-          <div className="grid grid-cols-1  lg:grid-cols-3 justify-items-center gap-1">
+          <div className="grid grid-cols-1  lg:grid-cols-3 justify-items-center gap-x-1 gap-y-9">
             {/* <!-- Features item Start --> */}
 
             {featuresData.map((feature, key) => (

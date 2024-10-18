@@ -68,29 +68,31 @@ const Pricing = ({ className }: { className: string }) => {
           </div>
         </div>
         {/* This should be dryified quite a bit */}
-        <div className="flex flex-wrap justify-between gap-6 mt-15 max-w-[1207px] px-4 md:px-8 xl:mt-20 xl:px-0">
-          {pricing_tiers.map(
-            ({ key, message, buttonLink, buttonText, indicator }) => (
-              <div
-                key={key}
-                className={`card grow border-secondary border-4  outline-secondary w-96 shadow-xl ${indicator ? "indicator" : ""}`}
-              >
-                {indicator && (
-                  <span className="indicator-item badge h-auto badge-accent mr-10 p-2">
-                    {indicator}
-                  </span>
-                )}
-                <div className="card-body">
-                  <MarkdownRenderer>{message}</MarkdownRenderer>
-                  <div className="card-actions justify-end">
-                    <a href={buttonLink} className="btn btn-accent">
-                      {buttonText}
-                    </a>
+        <div className="flex justify-center">
+          <div className="flex flex-wrap justify-center gap-6 mt-15 max-w-[1207px] px-4 md:px-8 xl:mt-20 xl:px-0">
+            {pricing_tiers.map(
+              ({ key, message, buttonLink, buttonText, indicator }) => (
+                <div
+                  key={key}
+                  className={`card grow border-secondary border-4  outline-secondary w-96 shadow-xl ${indicator ? "indicator" : ""}`}
+                >
+                  {indicator && (
+                    <span className="indicator-item badge h-auto badge-accent mr-10 p-2">
+                      {indicator}
+                    </span>
+                  )}
+                  <div className="card-body">
+                    <MarkdownRenderer>{message}</MarkdownRenderer>
+                    <div className="card-actions justify-end">
+                      <a href={buttonLink} className="btn btn-accent">
+                        {buttonText}
+                      </a>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ),
-          )}
+              ),
+            )}
+          </div>
         </div>
       </section>
     </div>

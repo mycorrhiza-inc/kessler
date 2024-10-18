@@ -21,6 +21,7 @@ import (
 	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
 	"github.com/mycorrhiza-inc/kessler/backend-go/rag"
 	"github.com/mycorrhiza-inc/kessler/backend-go/search"
+	"github.com/mycorrhiza-inc/kessler/backend-go/static"
 )
 
 func PgPoolConfig() *pgxpool.Config {
@@ -87,7 +88,6 @@ func makeTokenValidator(dbtx_val dbstore.DBTX) func(r *http.Request) UserValidat
 					userID:    "anonomous",
 				}
 			}
-			fmt.Println("Found cookie and empty auth header, using cookie as auth token")
 			// Strip prefix and decode Base64 part.
 			if !strings.HasPrefix(cookie.Value, "base64-") {
 				// Json will catch if invalid
@@ -150,7 +150,7 @@ func makeTokenValidator(dbtx_val dbstore.DBTX) func(r *http.Request) UserValidat
 		parsedToken, err := jwt.Parse(tokenString, keyFunc)
 		fmt.Println(parsedToken)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Printf("Encountered error with token validation since that functionality hasnt been implemented yet, and the backend assumes every HMAC signature is valid, this is probably good to fix if we dont want to get royally screwed %v", err)
 			// FIXME : HIGHLY INSECURE, GET THE HMAC SECRET FROM SUPABASE AND THROW IT IN HERE AS AN NEV VARAIBLE.
 			// return UserValidation{validated: false}
 		}
@@ -226,6 +226,7 @@ func main() {
 
 	mux := mux.NewRouter()
 	crud.DefineCrudRoutes(mux, connPool)
+	static.HandleStaticGenerationRouting(mux, connPool)
 	mux.HandleFunc("/api/v2/search", search.HandleSearchRequest)
 	mux.HandleFunc("/api/v2/rag/basic_chat", rag.HandleBasicChatRequest)
 	mux.HandleFunc("/api/v2/rag/chat", rag.HandleRagChatRequest)
