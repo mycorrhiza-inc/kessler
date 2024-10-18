@@ -11,7 +11,6 @@ import (
 	"path"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
 	"github.com/yuin/goldmark"
 )
@@ -21,6 +20,7 @@ type StaticDocData struct {
 	Title string
 	Date  string
 }
+
 type KesslerObject interface {
 	GetShortPath() string
 	WriteHTMLString(wr io.Writer, q dbstore.Queries, ctx context.Context) error
@@ -53,12 +53,12 @@ func (rawFile RawFileSchema) GetShortPath() string {
 	return "docs/" + source + "/" + name + "-" + short_id_string
 }
 
-func (fileSchema FileSchema) WriteHTMLString(wr io.Writer, q dbstore.Queries, ctx context.Context) error {
+func (fileSchema RawFileSchema) WriteHTMLString(wr io.Writer, q dbstore.Queries, ctx context.Context) error {
 	fmt.Printf("Found processed file %s with stage %s doing something.\n", fileSchema.ID, fileSchema.Stage)
 	params := GetFileParam{
 		Queries: q,
 		Context: ctx,
-		PgUUID:  pgtype.UUID{Bytes: fileSchema.ID, Valid: true},
+		PgUUID:  fileSchema.ID,
 		Private: false,
 	}
 	text, err := GetSpecificFileText(params, "", false)
