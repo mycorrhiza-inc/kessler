@@ -17,18 +17,6 @@ import (
 	"github.com/yuin/goldmark"
 )
 
-//	params := crud.GetFileParam{
-//		q:       q,
-//		ctx:     ctx,
-//		pgUUID:  pgtype.UUID{Bytes: fileSchema.ID, Valid: true},
-//		private: false,
-//	}
-type StaticDocData struct {
-	HTML  template.HTML
-	Title string
-	Date  string
-}
-
 func HandleStaticGenerationRouting(router *mux.Router, dbtx_val dbstore.DBTX) {
 	admin_subrouter := router.PathPrefix("/api/v2/admin").Subrouter()
 	admin_subrouter.HandleFunc("/generate-static-site", renderStaticSitemapmMakeHandler(dbtx_val))
@@ -129,14 +117,6 @@ func RenderStaticSitemap(dbtx_val dbstore.DBTX, max_docs int) error {
 		return nil
 	}
 
-	// // Could you split this for loop so that the task of processing each element with proc_func is evenly distributed across an arbitrary number of goroutines, s
-	// for index, fileSchema := range allFiles {
-	// 	err = proc_func(fileSchema)
-	// 	if err != nil {
-	// 		fmt.Printf("Encountered error on document %v, with error %v ", index, err)
-	// 		return fmt.Errorf("encountered error on document %v, with error %s ", index, err)
-	// 	}
-	// }
 	var wg sync.WaitGroup
 	fileChan := make(chan int)
 

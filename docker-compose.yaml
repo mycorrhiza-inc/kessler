@@ -1,30 +1,5 @@
 # local development docker compose
 services:
-  frontend:
-    hostname: kessler.xyz
-    image: fractalhuman1/kessler-frontend:latest
-    env_file:
-      - config/global.env
-    volumes:
-      - ./config/frontend.env.local:/app.env.local
-      - ./config/global.env:/app/.env
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`${DOMAIN:-kessler.xyz}`) && PathPrefix(`/`)"
-      - "traefik.http.routers.frontend.entrypoints=websecure"
-      - "traefik.http.routers.frontend.tls.certresolver=myresolver"
-      - "traefik.http.routers.whoami.rule=Host(`${DOMAIN:-kessler.xyz}`)"
-      - "traefik.http.routers.whoami.entrypoints=websecure"
-      - "traefik.http.routers.whoami.tls.certresolver=myresolver"
-    expose:
-      - 3000
-    command:
-      # - "sleep"
-      # - "9999999999d"
-      - "npm"
-      - "run"
-      - "start"
-
   reverse-proxy:
     # official image
     image: traefik:v3.0
@@ -38,6 +13,7 @@ services:
       # - "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
       - "--certificatesresolvers.myresolver.acme.email=mbright@kessler.xyz"
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      - "--providers.file.filename=/etc/traefik/traefik_dynamic.yaml"
     ports:
       - "80:80"
       - "443:443"
@@ -45,7 +21,53 @@ services:
     volumes:
       - "${VOLUMES_DIRECTORY:-./volumes}/letsencrypt:/letsencrypt"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
+  frontend:
+    hostname: kessler.xyz
+    image: fractalhuman1/kessler-frontend:latest
+    env_file:
+      - config/global.env
+    volumes:
+      - ./config/frontend.env.local:/app.env.local
+      - ./config/global.env:/app/.env
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`kessler.xyz`) && PathPrefix(`/`)"
+      - "traefik.http.routers.frontend.rule=HostRegexp(`{state:al|ak|az|ar|ca|co|ct|de|fl|ga|hi|id|il|in|ia|ks|ky|la|me|md|ma|mi|mn|ms|mo|mt|ne|nv|nh|nj|nm|ny|nc|nd|oh|ok|or|pa|ri|sc|sd|tn|tx|ut|vt|va|wa|wv|wi|wy}.kessler.xyz`)"
+      - "traefik.http.routers.frontend.middlewares=state-redirect"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.routers.frontend.tls.certresolver=myresolver"
+      - "traefik.http.routers.whoami.rule=Host(`kessler.xyz`)"
+      - "traefik.http.routers.whoami.entrypoints=websecure"
+      - "traefik.http.routers.whoami.tls.certresolver=myresolver"
+    expose:
+      - 3000
+    command:
+      # - "sleep"
+      # - "9999999999d"
+      - "npm"
+      - "run"
+      - "start"
 
+  backend-go:
+    image: fractalhuman1/kessler-backend-go:latest
+    command:
+      - "go"
+      - "run"
+      - "main.go"
+    env_file:
+      - config/global.env
+    expose:
+      - 4041
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend-go.rule=Host(`kessler.xyz`) && PathPrefix(`/api/v2`)"
+      - "traefik.http.routers.frontend.rule=HostRegexp(`{state:al|ak|az|ar|ca|co|ct|de|fl|ga|hi|id|il|in|ia|ks|ky|la|me|md|ma|mi|mn|ms|mo|mt|ne|nv|nh|nj|nm|ny|nc|nd|oh|ok|or|pa|ri|sc|sd|tn|tx|ut|vt|va|wa|wv|wi|wy}.kessler.xyz`)"
+      - "traefik.http.routers.frontend.middlewares=state-redirect"
+      - "traefik.http.middlewares.test-stripprefix.stripprefix.prefixes=/api/v2"
+      - "traefik.http.routers.backend-go.entrypoints=websecure"
+      - "traefik.http.routers.backend-go.tls.certresolver=myresolver"
+
+  # Already depricated in dev enviorment.
   backend-python:
     image: fractalhuman1/kessler-backend-python:latest
     env_file:
@@ -54,7 +76,7 @@ services:
       - ${VOLUMES_DIRECTORY:-./volumes}/files:/files
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend-python.rule=Host(`${DOMAIN:-kessler.xyz}`) && PathPrefix(`/api/v1`) || PathPrefix(`/schema`)"
+      - "traefik.http.routers.backend-python.rule=Host(`kessler.xyz`) && PathPrefix(`/api/v1`) || PathPrefix(`/schema`)"
       - "traefik.http.routers.backend-python.entrypoints=websecure"
       - "traefik.http.routers.backend-python.tls.certresolver=myresolver"
     command:
@@ -69,19 +91,3 @@ services:
       - "--reload"
     expose:
       - 5505
-  backend-go:
-    image: fractalhuman1/kessler-backend-go:latest
-    command:
-      - "go"
-      - "run"
-      - "main.go"
-    env_file:
-      - config/global.env
-    expose:
-      - 4041
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.backend-go.rule=Host(`${DOMAIN:-kessler.xyz}`) && PathPrefix(`/api/v2`)"
-      - "traefik.http.middlewares.test-stripprefix.stripprefix.prefixes=/api/v2"
-      - "traefik.http.routers.backend-go.entrypoints=websecure"
-      - "traefik.http.routers.backend-go.tls.certresolver=myresolver"
