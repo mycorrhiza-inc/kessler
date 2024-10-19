@@ -23,7 +23,6 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "./traefik_dynamic.yaml:/etc/traefik/traefik_dynamic.yaml:ro"
   frontend:
-    hostname: kessler.xyz
     image: fractalhuman1/kessler-frontend:latest
     env_file:
       - config/global.env
@@ -34,10 +33,9 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.frontend.rule=Host(`kessler.xyz`) && PathPrefix(`/`)"
       - "traefik.http.routers.frontend.rule=HostRegexp(`{state:al|ak|az|ar|ca|co|ct|de|fl|ga|hi|id|il|in|ia|ks|ky|la|me|md|ma|mi|mn|ms|mo|mt|ne|nv|nh|nj|nm|ny|nc|nd|oh|ok|or|pa|ri|sc|sd|tn|tx|ut|vt|va|wa|wv|wi|wy}.kessler.xyz`)"
-      - "traefik.http.routers.frontend.middlewares=state-redirect"
+      - "traefik.http.routers.frontend.middlewares=state-redirect@file"
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.routers.frontend.tls.certresolver=myresolver"
-      - "traefik.http.routers.whoami.rule=Host(`kessler.xyz`)"
       - "traefik.http.routers.whoami.entrypoints=websecure"
       - "traefik.http.routers.whoami.tls.certresolver=myresolver"
     expose:
@@ -63,7 +61,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.backend-go.rule=Host(`kessler.xyz`) && PathPrefix(`/api/v2`)"
       - "traefik.http.routers.backend-go.rule=HostRegexp(`{state:al|ak|az|ar|ca|co|ct|de|fl|ga|hi|id|il|in|ia|ks|ky|la|me|md|ma|mi|mn|ms|mo|mt|ne|nv|nh|nj|nm|ny|nc|nd|oh|ok|or|pa|ri|sc|sd|tn|tx|ut|vt|va|wa|wv|wi|wy}.kessler.xyz`)"
-      - "traefik.http.routers.backend-go.middlewares=state-redirect"
+      - "traefik.http.routers.backend-go.middlewares=state-redirect@file"
       - "traefik.http.middlewares.test-stripprefix.stripprefix.prefixes=/api/v2"
       - "traefik.http.routers.backend-go.entrypoints=websecure"
       - "traefik.http.routers.backend-go.tls.certresolver=myresolver"
