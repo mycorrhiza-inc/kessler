@@ -26,10 +26,6 @@ services:
     command: >
       --api.insecure=true
       --providers.docker
-
-    # --tracing.otlp=true
-    # --tracing.otlp.http=true
-    # --tracing.otlp.http.endpoint=http://jaeger:4318/v1/traces
     expose:
       - 80
       - 443
@@ -38,22 +34,6 @@ services:
       - "${PROXY_UI_PORT:-8083}:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-  #   depends_on:
-  #     - jaeger
-  #   environment:
-  #     - OTEL_PROPAGATORS=b3,jaeger
-  #
-  # jaeger:
-  #   image: jaegertracing/all-in-one:1.27
-  #   ports:
-  #     - "5775:5775/udp"
-  #     - "6831:6831/udp"
-  #     - "6832:6832/udp"
-  #     - "14250:14250"
-  #     - "16686:16686"
-  #     - "14268:14268"
-  #     - "4318:4318" # OpenTelemetry Default HTTP Port
-  #     - "9411:9411"
   backend-go:
     image: cosmtrek/air
     command:
@@ -72,30 +52,3 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.go-backend.rule=PathPrefix(`/api/v2`)"
       - "traefik.http.middlewares.test-stripprefix.stripprefix.prefixes=/api/v2"
-  backend-python:
-    build:
-      context: ./backend-python/
-      dockerfile: ./Dockerfile
-    env_file:
-      - config/global.env
-    environment:
-      - MILVUS_DEV_DIR=/tmp/milvus/
-    volumes:
-      - ./backend-python:/app
-      - ${VOLUMES_DIRECTORY:-./volumes}/instance:/app/instance
-      - ${VOLUMES_DIRECTORY:-./volumes}/files:/files
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.backend-python.rule=PathPrefix(`/api/v1`) || PathPrefix(`/schema/`)"
-    command:
-      - "uvicorn"
-      - "main:app"
-      - "--host"
-      - "0.0.0.0"
-      - "--port"
-      - "5505"
-      - "--workers"
-      - "4"
-      - "--reload"
-    expose:
-      - 5505

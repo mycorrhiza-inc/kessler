@@ -151,7 +151,7 @@ const createNodesAndEdgesFromTurn = (
         id: probNodeId,
         position: { x: 300, y: currentYPosition },
         data: {
-          label: `Prob: ${probability.probability}, Chosen: ${probability.chosen_probability}`,
+          label: `Prob: ${probability.probability}, Chosen: ${action.chosen_probability}`,
         },
       });
 
