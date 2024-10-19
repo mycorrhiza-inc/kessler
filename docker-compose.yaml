@@ -36,6 +36,7 @@ services:
       - "traefik.http.routers.frontend.middlewares=state-redirect@file"
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.routers.frontend.tls.certresolver=myresolver"
+      - "traefik.http.routers.whoami.rule=Host(`kessler.xyz`)"
       - "traefik.http.routers.whoami.entrypoints=websecure"
       - "traefik.http.routers.whoami.tls.certresolver=myresolver"
     expose:
