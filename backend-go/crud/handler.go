@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"os"
@@ -115,7 +116,34 @@ func makeFileHandler(info FileHandlerInfo) func(w http.ResponseWriter, r *http.R
 		}
 		switch return_type {
 		case "raw":
+			// Please go into the file, try to infer the mime type, and then return the file in binary to the user, using something like
+			// w.Header().Set("Content-Type", <Whatever MIME TYPE>)
+			// w.Write(file binary)
 			http.Error(w, "Retriving raw files from s3 not implemented", http.StatusNotImplemented)
+			file, err := GetFileObjectRaw(file_params)
+			if err != nil {
+				http.Error(w, "File not found", http.StatusNotFound)
+				return
+			}
+			filehash := file.Hash
+			kefiles := NewKeFileManager()
+			file_path, err := kefiles.downloadFileFromS3(filehash)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Error encountered when getting file from s3:%v", err), http.StatusInternalServerError)
+			}
+			content, err := ioutil.ReadFile(file_path)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Error reading file: %v", err), http.StatusInternalServerError)
+				return
+			}
+
+			mimeType := http.DetectContentType(content)
+			// if mimeType == "application/octet-stream" {
+			// 	mimeType = "application/pdf" // Default to PDF if mime type can't be determined
+			// }
+
+			w.Header().Set("Content-Type", mimeType)
+			w.Write(content)
 		case "object":
 			file, err := GetFileObjectRaw(file_params)
 			if err != nil {

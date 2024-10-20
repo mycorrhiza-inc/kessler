@@ -1,10 +1,8 @@
 package crud
 
 import (
-	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -92,18 +90,18 @@ func (manager *KesslerFileManager) pushFileToS3GivenHash(filePath, hash string) 
 func (manager *KesslerFileManager) downloadFileFromS3(hash string) (string, error) {
 	localFilePath := filepath.Join(manager.RawDir, hash)
 	if _, err := os.Stat(localFilePath); err == nil {
-		return "", errors.New("file already exists at the path")
+		return localFilePath, nil
+		// return "", errors.New("file already exists at the path")
 	}
 
-	filename := manager.RawDir + hash
 	buffer := aws.NewWriteAtBuffer([]byte{})
 	_, err := manager.s3Client.GetObject(&s3.GetObjectInput{
 		Bucket: aws.String(manager.S3Bucket),
-		Key:    aws.String(filename),
+		Key:    aws.String(hash),
 	})
 	if err != nil {
 		return "", err
 	}
-	err = ioutil.WriteFile(localFilePath, buffer.Bytes(), 0644)
+	err = os.WriteFile(localFilePath, buffer.Bytes(), 0644)
 	return localFilePath, err
 }
