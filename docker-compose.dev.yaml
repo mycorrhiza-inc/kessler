@@ -72,30 +72,30 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.go-backend.rule=PathPrefix(`/api/v2`)"
       - "traefik.http.middlewares.test-stripprefix.stripprefix.prefixes=/api/v2"
-  backend-python:
-    build:
-      context: ./backend-python/
-      dockerfile: ./Dockerfile
-    env_file:
-      - config/global.env
-    environment:
-      - MILVUS_DEV_DIR=/tmp/milvus/
-    volumes:
-      - ./backend-python:/app
-      - ${VOLUMES_DIRECTORY:-./volumes}/instance:/app/instance
-      - ${VOLUMES_DIRECTORY:-./volumes}/files:/files
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.backend-python.rule=PathPrefix(`/api/v1`) || PathPrefix(`/schema/`)"
-    command:
-      - "uvicorn"
-      - "main:app"
-      - "--host"
-      - "0.0.0.0"
-      - "--port"
-      - "5505"
-      - "--workers"
-      - "4"
-      - "--reload"
-    expose:
-      - 5505
+  # backend-python:
+  #   build:
+  #     context: ./backend-python/
+  #     dockerfile: ./Dockerfile
+  #   env_file:
+  #     - config/global.env
+  #   environment:
+  #     - MILVUS_DEV_DIR=/tmp/milvus/
+  #   volumes:
+  #     - ./backend-python:/app
+  #     - ${VOLUMES_DIRECTORY:-./volumes}/instance:/app/instance
+  #     - ${VOLUMES_DIRECTORY:-./volumes}/files:/files
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.http.routers.backend-python.rule=PathPrefix(`/api/v1`) || PathPrefix(`/schema/`)"
+  #   command:
+  #     - "uvicorn"
+  #     - "main:app"
+  #     - "--host"
+  #     - "0.0.0.0"
+  #     - "--port"
+  #     - "5505"
+  #     - "--workers"
+  #     - "4"
+  #     - "--reload"
+  #   expose:
+  #     - 5505

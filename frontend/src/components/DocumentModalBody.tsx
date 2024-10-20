@@ -22,18 +22,20 @@ const DocumentModalBody = ({ open, objectId, children, title }: ModalProps) => {
   const [docMetadata, setDocMetadata] = React.useState({});
 
   const getDocumentMetadata = async () => {
-    const response = await axios.get(`/api/v1/files/metadata/${objectId}`);
+    const response = await axios.get(`/api/v2/public/files/${objectId}`);
     setDocMetadata(response.data);
     console.log(docMetadata);
   };
 
   const getDocumentText = async () => {
-    const response = await axios.get(`/api/v1/files/markdown/${objectId}`);
+    const response = await axios.get(
+      `/api/v2/public/files/${objectId}/markdown`,
+    );
     setDocText(response.data);
   };
 
   useEffect(() => {
-    setPdfUrl(`/api/v1/files/raw/${objectId}`);
+    setPdfUrl(`/api/v2/public/files/${objectId}/raw`);
     getDocumentText();
     getDocumentMetadata();
   }, []);
