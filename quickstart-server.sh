@@ -7,6 +7,7 @@ dnf install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-co
 systemctl start docker
 systemctl enable docker
 
+systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target
 # Package specific stuff
 git clone https://github.com/mycorrhiza-inc/kessler
 cd kessler
