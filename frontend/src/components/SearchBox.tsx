@@ -13,6 +13,7 @@ import {
   extraPropertiesInformation,
   emptyExtraProperties,
 } from "@/utils/interfaces";
+import BasicDocumentFilters from "@/components/DocumentFilters";
 
 const AdvancedFilters = ({
   queryOptions,
@@ -21,13 +22,6 @@ const AdvancedFilters = ({
   queryOptions: extraProperties;
   setQueryOptions: Dispatch<SetStateAction<extraProperties>>;
 }) => {
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setQueryOptions((prevOptions) => ({
-      ...prevOptions,
-      [name]: value,
-    }));
-  };
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   return (
@@ -52,35 +46,10 @@ const AdvancedFilters = ({
                 exit={{ height: 0, width: 0, opacity: 0 }}
                 transition={{ duration: 0.3 }} // Duration of the animation in seconds
               >
-                <div className="grid grid-cols-2 gap-4">
-                  {Object.keys(queryOptions)
-                    .slice(0, 6)
-                    .map((key, index) => {
-                      const extraInfo =
-                        extraPropertiesInformation[
-                          key as keyof extraProperties
-                        ];
-                      return (
-                        <div className="box-border" key={index}>
-                          <div
-                            className="tooltip"
-                            data-tip={extraInfo.description}
-                          >
-                            <p>{extraInfo.displayName}</p>
-                          </div>
-                          <input
-                            className="input input-bordered w-full max-w-xs"
-                            type="text"
-                            id={key}
-                            name={key}
-                            value={queryOptions[key as keyof extraProperties]}
-                            onChange={handleChange}
-                            title={extraInfo.displayName}
-                          />
-                        </div>
-                      );
-                    })}
-                </div>
+                <BasicDocumentFilters
+                  queryOptions={queryOptions}
+                  setQueryOptions={setQueryOptions}
+                />
               </motion.div>
             )}
           </AnimatePresence>
