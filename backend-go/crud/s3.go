@@ -29,8 +29,8 @@ func NewKeFileManager() *KesslerFileManager {
 	CloudRegion := "us-west-1" // Your region here. Change if needed
 	EndpointURL := "https://sfo3.digitaloceanspaces.com"
 	S3Bucket := "kesslerproddocs"
-	S3AccessKey := "your-access-key"
-	S3SecretKey := "your-secret-key"
+	S3AccessKey := os.Getenv("S3_ACCESS_KEY")
+	S3SecretKey := os.Getenv("S3_SECRET_KEY")
 	RawDir := "raw/"
 	TmpDir := os.TempDir()
 	sess := session.Must(session.NewSession(&aws.Config{
