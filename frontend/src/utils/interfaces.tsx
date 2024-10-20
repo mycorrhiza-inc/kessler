@@ -189,38 +189,6 @@ export interface extraProperties {
   match_document_class: string;
   match_author: string;
 }
-export const extraPropertiesInformation = {
-  match_name: {
-    displayName: "Name",
-    description: "The name associated with the search item.",
-    details: "Searches for items approximately matching the title",
-  },
-  match_source: {
-    displayName: "Source",
-    description: "The ",
-    details: "Filters results matching the provided source exactly.",
-  },
-  match_doctype: {
-    displayName: "Document Type",
-    description: "The type or category of the document.",
-    details: "Searches for items that match the specified document type.",
-  },
-  match_docket_id: {
-    displayName: "Docket ID",
-    description: "The unique identifier for the docket.",
-    details: "Filters search results based on the docket ID.",
-  },
-  match_document_class: {
-    displayName: "Document Class",
-    description: "The classification or category of the document.",
-    details: "Searches for documents that fall under the specified class.",
-  },
-  match_author: {
-    displayName: "Author",
-    description: "The author of the document.",
-    details: "Searches for items created or written by the specified author.",
-  },
-};
 export const emptyExtraProperties: extraProperties = {
   match_name: "",
   match_source: "",
@@ -230,19 +198,18 @@ export const emptyExtraProperties: extraProperties = {
   match_author: "",
 };
 
-
 export interface Filters {
-  author: string
-  date: string
-  docket_id: string
-  doctype: string
-  lang: string
-  language: string
-  source: string
-  title: string
+  author: string;
+  date: string;
+  docket_id: string;
+  doctype: string;
+  lang: string;
+  language: string;
+  source: string;
+  title: string;
 }
 
 export interface SearchRequest {
-  query: string
-  filters: Filters
+  query: string;
+  filters: Filters;
 }

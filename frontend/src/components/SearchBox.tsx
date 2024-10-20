@@ -8,11 +8,7 @@ import {
   FileUploadIcon,
 } from "@/components/Icons";
 
-import {
-  extraProperties,
-  extraPropertiesInformation,
-  emptyExtraProperties,
-} from "@/utils/interfaces";
+import { extraProperties, emptyExtraProperties } from "@/utils/interfaces";
 import BasicDocumentFilters from "@/components/DocumentFilters";
 
 const AdvancedFilters = ({
