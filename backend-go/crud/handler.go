@@ -119,7 +119,6 @@ func makeFileHandler(info FileHandlerInfo) func(w http.ResponseWriter, r *http.R
 			// Please go into the file, try to infer the mime type, and then return the file in binary to the user, using something like
 			// w.Header().Set("Content-Type", <Whatever MIME TYPE>)
 			// w.Write(file binary)
-			http.Error(w, "Retriving raw files from s3 not implemented", http.StatusNotImplemented)
 			file, err := GetFileObjectRaw(file_params)
 			if err != nil {
 				http.Error(w, "File not found", http.StatusNotFound)
@@ -130,6 +129,7 @@ func makeFileHandler(info FileHandlerInfo) func(w http.ResponseWriter, r *http.R
 			file_path, err := kefiles.downloadFileFromS3(filehash)
 			if err != nil {
 				http.Error(w, fmt.Sprintf("Error encountered when getting file from s3:%v", err), http.StatusInternalServerError)
+				return
 			}
 			content, err := ioutil.ReadFile(file_path)
 			if err != nil {
