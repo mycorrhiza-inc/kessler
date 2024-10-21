@@ -3,7 +3,7 @@ import { extraProperties, emptyExtraProperties } from "@/utils/interfaces";
 
 import React from "react";
 import Select from "react-select";
-import DatePicker from "react-datepicker";
+import { Calendar } from "react-date-range";
 import "react-datepicker/dist/react-datepicker.css";
 
 // could you rewrite this section of code, to include a valid type for every single option, currently all are text inputs, but we would like to provide a dropdown menu for options such as the document type or document clascould you rewrite this section of code, to include a valid type for every single option, currently all are text inputs, but we would like to provide a dropdown menu for options such as the document type or document class. As well as a date picker for a date field, could you add extra paramaters to extraPropertiesInformation to accomodate this and implement them in the functions. As well as a date picker for a date field, could you add extra paramaters to extraPropertiesInformation to accomodate this and implement them in the function
@@ -111,14 +111,7 @@ function BasicDocumentFilters({
                     title={extraInfo.displayName}
                   />
                 ) : extraInfo.isDate ? (
-                  <DatePicker
-                    className="input input-bordered w-full max-w-xs"
-                    selected={queryOptions[key as keyof extraProperties]}
-                    onChange={(date: Date) =>
-                      handleChange({ target: { name: key, value: date } })
-                    }
-                    title={extraInfo.displayName}
-                  />
+                  <Calendar />
                 ) : (
                   <input
                     className="input input-bordered w-full max-w-xs"
