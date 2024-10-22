@@ -31,7 +31,7 @@ type FileSchema struct {
 	Name         string
 	Source       string
 	Hash         string
-	Mdata        map[string]string
+	Mdata        map[string]any
 	Stage        string
 	Summary      string
 	ShortSummary string
@@ -46,7 +46,7 @@ func pguuidToString(uuid_pg pgtype.UUID) string {
 
 func RawToFileSchema(file RawFileSchema) (FileSchema, error) {
 	// fmt.Println(file.ID)
-	var new_mdata map[string]string
+	var new_mdata map[string]any
 	err := json.Unmarshal([]byte(file.Mdata), &new_mdata)
 	if err != nil {
 		// fmt.Printf("Error unmarhalling Metadata: %v\n", err)
@@ -58,7 +58,7 @@ func RawToFileSchema(file RawFileSchema) (FileSchema, error) {
 			Name:         file.Name,
 			Source:       file.Source,
 			Hash:         file.Hash,
-			Mdata:        map[string]string{},
+			Mdata:        map[string]any{},
 			Stage:        file.Stage,
 			Summary:      file.Summary,
 			ShortSummary: file.ShortSummary,

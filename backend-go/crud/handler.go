@@ -191,18 +191,18 @@ type DocTextInfo struct {
 }
 
 type UpdateDocumentInfo struct {
-	Url          string            `json:"url"`
-	Doctype      string            `json:"doctype"`
-	Lang         string            `json:"lang"`
-	Name         string            `json:"name"`
-	Source       string            `json:"source"`
-	Hash         string            `json:"hash"`
-	Mdata        map[string]string `json:"mdata"`
-	Stage        string            `json:"stage"`
-	Summary      string            `json:"summary"`
-	ShortSummary string            `json:"short_summary"`
-	Private      bool              `json:"private"`
-	DocTexts     []DocTextInfo     `json:"doc_texts"`
+	Url          string         `json:"url"`
+	Doctype      string         `json:"doctype"`
+	Lang         string         `json:"lang"`
+	Name         string         `json:"name"`
+	Source       string         `json:"source"`
+	Hash         string         `json:"hash"`
+	Mdata        map[string]any `json:"mdata"`
+	Stage        string         `json:"stage"`
+	Summary      string         `json:"summary"`
+	ShortSummary string         `json:"short_summary"`
+	Private      bool           `json:"private"`
+	DocTexts     []DocTextInfo  `json:"doc_texts"`
 }
 
 func ConvertToCreationData(updateInfo UpdateDocumentInfo) FileCreationDataRaw {
