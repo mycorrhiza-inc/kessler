@@ -1,7 +1,5 @@
 from util.file_io import S3FileManager
 from vecstore.docprocess import add_document_to_db
-import os
-from pathlib import Path
 from uuid import UUID
 
 from litestar import Controller, Request, Response
@@ -38,14 +36,13 @@ from models.files import (
 from common.file_schemas import FileSchema, DocumentStatus, docstatus_index
 
 
-from typing import List, Optional, Dict, Annotated, Tuple, Any
+from typing import List, Dict, Any
 
 
 import json
 
 from common.niclib import rand_string, paginate_results
 
-from enum import Enum
 
 from sqlalchemy import and_
 

@@ -5,23 +5,15 @@ import yaml
 from common.niclib import rand_string, rand_filepath
 
 
-from typing import Optional, List, Union, Any
+from typing import Optional, Any
 
-import json
-import re
 import logging
 import requests
-import subprocess
-import urllib
-import mimetypes
-import os
 from pathlib import Path
-import shlex
 from common.niclib import rand_string, get_blake2
-from tempfile import TemporaryFile, NamedTemporaryFile, _TemporaryFileWrapper
+from tempfile import TemporaryFile
 
 
-from io import BufferedWriter
 
 
 import shutil

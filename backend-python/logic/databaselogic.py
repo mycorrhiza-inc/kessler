@@ -1,6 +1,6 @@
 from uuid import UUID
 from pydantic import BaseModel
-from typing import Optional, Any, List
+from typing import Optional, List
 from advanced_alchemy.filters import SearchFilter, CollectionFilter
 from models.files import (
     FileModel,
