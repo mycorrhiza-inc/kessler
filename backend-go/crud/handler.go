@@ -191,6 +191,7 @@ type DocTextInfo struct {
 }
 
 type UpdateDocumentInfo struct {
+	ID           uuid.UUID      `json:"id"`
 	Url          string         `json:"url"`
 	Doctype      string         `json:"doctype"`
 	Lang         string         `json:"lang"`
