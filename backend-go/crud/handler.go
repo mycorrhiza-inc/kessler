@@ -243,7 +243,7 @@ func makeUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r *ht
 		q := *dbstore.New(dbtx_val)
 		ctx := r.Context()
 		token := r.Header.Get("Authorization")
-		isForbiddenFunc := func() bool {
+		isAuthorizedFunc := func() bool {
 			// Enable insert auth at some point
 			return true
 			if !strings.HasPrefix(token, "Authenticated ") {
@@ -252,20 +252,20 @@ func makeUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r *ht
 			userID := strings.TrimPrefix(token, "Authenticated ")
 			forbiddenPublic := !private && userID != "thaumaturgy"
 			if forbiddenPublic || userID == "anonomous" {
-				return true
+				return false
 			}
 			if !insert {
 				authorized, err := checkPrivateFileAuthorization(q, ctx, doc_uuid, userID)
 				if !authorized || err == nil {
-					return true
+					return false
 				}
 			}
-			return false
+			return true
 		}
-		isForbidden := isForbiddenFunc()
+		isAuthorized := isAuthorizedFunc()
 
 		// Usage:
-		if isForbidden {
+		if !isAuthorized {
 			http.Error(w, "Forbidden", http.StatusForbidden)
 			return
 		}
