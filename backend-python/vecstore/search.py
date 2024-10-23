@@ -1,6 +1,5 @@
 from embeddings import embed
 from .util import get_milvus_conn
-import os
 from typing import List
 
 from .util import collection_name

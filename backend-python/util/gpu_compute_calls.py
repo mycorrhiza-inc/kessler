@@ -1,4 +1,3 @@
-from typing import Tuple
 from pathlib import Path
 
 from yaml import Mark
@@ -7,16 +6,13 @@ from yaml import Mark
 from .niclib import rand_string
 
 
-import subprocess
 
 import requests
 import logging
 
-from typing import List, Optional, Any
+from typing import Optional, Any
 
-from warnings import warn
 
-import os
 
 import aiohttp
 import asyncio

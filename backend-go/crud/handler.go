@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"os"
@@ -115,7 +116,34 @@ func makeFileHandler(info FileHandlerInfo) func(w http.ResponseWriter, r *http.R
 		}
 		switch return_type {
 		case "raw":
-			http.Error(w, "Retriving raw files from s3 not implemented", http.StatusNotImplemented)
+			// Please go into the file, try to infer the mime type, and then return the file in binary to the user, using something like
+			// w.Header().Set("Content-Type", <Whatever MIME TYPE>)
+			// w.Write(file binary)
+			file, err := GetFileObjectRaw(file_params)
+			if err != nil {
+				http.Error(w, "File not found", http.StatusNotFound)
+				return
+			}
+			filehash := file.Hash
+			kefiles := NewKeFileManager()
+			file_path, err := kefiles.downloadFileFromS3(filehash)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Error encountered when getting file from s3:%v", err), http.StatusInternalServerError)
+				return
+			}
+			content, err := ioutil.ReadFile(file_path)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Error reading file: %v", err), http.StatusInternalServerError)
+				return
+			}
+
+			mimeType := http.DetectContentType(content)
+			// if mimeType == "application/octet-stream" {
+			// 	mimeType = "application/pdf" // Default to PDF if mime type can't be determined
+			// }
+
+			w.Header().Set("Content-Type", mimeType)
+			w.Write(content)
 		case "object":
 			file, err := GetFileObjectRaw(file_params)
 			if err != nil {
@@ -163,18 +191,19 @@ type DocTextInfo struct {
 }
 
 type UpdateDocumentInfo struct {
-	Url          string            `json:"url"`
-	Doctype      string            `json:"doctype"`
-	Lang         string            `json:"lang"`
-	Name         string            `json:"name"`
-	Source       string            `json:"source"`
-	Hash         string            `json:"hash"`
-	Mdata        map[string]string `json:"mdata"`
-	Stage        string            `json:"stage"`
-	Summary      string            `json:"summary"`
-	ShortSummary string            `json:"short_summary"`
-	Private      bool              `json:"private"`
-	DocTexts     []DocTextInfo     `json:"doc_texts"`
+	ID           uuid.UUID      `json:"id"`
+	Url          string         `json:"url"`
+	Doctype      string         `json:"doctype"`
+	Lang         string         `json:"lang"`
+	Name         string         `json:"name"`
+	Source       string         `json:"source"`
+	Hash         string         `json:"hash"`
+	Mdata        map[string]any `json:"mdata"`
+	Stage        string         `json:"stage"`
+	Summary      string         `json:"summary"`
+	ShortSummary string         `json:"short_summary"`
+	Private      bool           `json:"private"`
+	DocTexts     []DocTextInfo  `json:"doc_texts"`
 }
 
 func ConvertToCreationData(updateInfo UpdateDocumentInfo) FileCreationDataRaw {

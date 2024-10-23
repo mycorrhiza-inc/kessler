@@ -1,10 +1,8 @@
 package crud
 
 import (
-	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -31,8 +29,8 @@ func NewKeFileManager() *KesslerFileManager {
 	CloudRegion := "us-west-1" // Your region here. Change if needed
 	EndpointURL := "https://sfo3.digitaloceanspaces.com"
 	S3Bucket := "kesslerproddocs"
-	S3AccessKey := "your-access-key"
-	S3SecretKey := "your-secret-key"
+	S3AccessKey := os.Getenv("S3_ACCESS_KEY")
+	S3SecretKey := os.Getenv("S3_SECRET_KEY")
 	RawDir := "raw/"
 	TmpDir := os.TempDir()
 	sess := session.Must(session.NewSession(&aws.Config{
@@ -92,18 +90,18 @@ func (manager *KesslerFileManager) pushFileToS3GivenHash(filePath, hash string) 
 func (manager *KesslerFileManager) downloadFileFromS3(hash string) (string, error) {
 	localFilePath := filepath.Join(manager.RawDir, hash)
 	if _, err := os.Stat(localFilePath); err == nil {
-		return "", errors.New("file already exists at the path")
+		return localFilePath, nil
+		// return "", errors.New("file already exists at the path")
 	}
 
-	filename := manager.RawDir + hash
 	buffer := aws.NewWriteAtBuffer([]byte{})
 	_, err := manager.s3Client.GetObject(&s3.GetObjectInput{
 		Bucket: aws.String(manager.S3Bucket),
-		Key:    aws.String(filename),
+		Key:    aws.String(hash),
 	})
 	if err != nil {
 		return "", err
 	}
-	err = ioutil.WriteFile(localFilePath, buffer.Bytes(), 0644)
+	err = os.WriteFile(localFilePath, buffer.Bytes(), 0644)
 	return localFilePath, err
 }

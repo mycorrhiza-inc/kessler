@@ -1,6 +1,4 @@
-import os
 import logging
-from time import time
 
 from litestar.types import Receive, Scope, Send, Message
 from litestar import Request

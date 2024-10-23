@@ -54,7 +54,6 @@ import json
 
 from common.niclib import rand_string, paginate_results
 
-from enum import Enum
 
 from sqlalchemy import and_
 

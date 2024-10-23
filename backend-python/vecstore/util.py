@@ -1,5 +1,4 @@
 import os
-import uuid
 from typing import Dict, List, Union
 from pymilvus import MilvusClient, FieldSchema, CollectionSchema, DataType
 
@@ -41,7 +40,6 @@ class MilvusNode(MilvusRow):
 def drop_collection(collection_name=str):
     conn = get_milvus_conn()
     conn.drop_collection(collection_name=collection_name, timeout=10)
-    pass
 
 
 def check_collction_exists(collection_name=str) -> bool:

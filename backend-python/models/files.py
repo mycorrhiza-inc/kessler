@@ -21,7 +21,6 @@ import json
 
 import logging
 
-from enum import Enum
 
 from sqlalchemy import select
 

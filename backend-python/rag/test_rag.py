@@ -1,11 +1,9 @@
-import re
 from typing import Any, Optional
 import pytest
 from rag.SemanticSplitter import split_by_max_tokensize
 from rag.llamaindex import get_llm_from_model_str
 from common.llm_utils import KeChatMessage, ChatRole, sanitzie_chathistory_llamaindex
 
-import asyncio
 
 
 @pytest.mark.parametrize(
