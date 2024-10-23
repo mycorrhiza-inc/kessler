@@ -243,23 +243,32 @@ func makeUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r *ht
 		q := *dbstore.New(dbtx_val)
 		ctx := r.Context()
 		token := r.Header.Get("Authorization")
-		if !strings.HasPrefix(token, "Authenticated ") {
-			http.Error(w, "Forbidden", http.StatusForbidden)
-			return
-		}
-		userID := strings.TrimPrefix(token, "Authenticated ")
-		forbiddenPublic := !private && userID != "thaumaturgy"
-		if forbiddenPublic || userID == "anonomous" {
-			http.Error(w, "Forbidden", http.StatusForbidden)
-			return
-		}
-		if !insert {
-			authorized, err := checkPrivateFileAuthorization(q, ctx, doc_uuid, userID)
-			if !authorized || err == nil {
-				http.Error(w, "Forbidden", http.StatusForbidden)
-				return
+		func isForbidden(token string, private bool, q Query, ctx Context, doc_uuid string, insert bool) bool {
+			// Enable insert auth at some point
+			return true
+			if !strings.HasPrefix(token, "Authenticated ") {
+				return true
 			}
+			userID := strings.TrimPrefix(token, "Authenticated ")
+			forbiddenPublic := !private && userID != "thaumaturgy"
+			if forbiddenPublic || userID == "anonomous" {
+				return true
+			}
+			if !insert {
+				authorized, err := checkPrivateFileAuthorization(q, ctx, doc_uuid, userID)
+				if !authorized || err == nil {
+					return true
+				}
+			}
+			return false
 		}
+		
+		// Usage:
+		if isForbidden(token, private, q, ctx, doc_uuid, insert) {
+			http.Error(w, "Forbidden", http.StatusForbidden)
+			return
+		}
+		// Proceed with the write operation
 		// TODO: IF user is not a paying user, disable insert functionality
 		var newDocInfo UpdateDocumentInfo
 		if err := json.NewDecoder(r.Body).Decode(&newDocInfo); err != nil {
