@@ -1,5 +1,6 @@
 -- name: CreateFile :one
 INSERT INTO public.file (
+    id,
 		url,
 		doctype,
 		lang,
@@ -14,6 +15,7 @@ INSERT INTO public.file (
 		updated_at
 	)
 VALUES (
+    gen_random_uuid(),
 		$1,
 		$2,
 		$3,
