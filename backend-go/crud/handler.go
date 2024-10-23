@@ -286,7 +286,7 @@ func makeUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r *ht
 			fileSchema, err = UpdatePubPrivateFileObj(q, ctx, rawFileData, private, pgUUID)
 		}
 		if err != nil {
-			http.Error(w, "Error inserting/updating document", http.StatusInternalServerError)
+			http.Error(w, fmt.Sprintf("Error inserting/updating document: %v", err), http.StatusInternalServerError)
 		}
 		texts := newDocInfo.DocTexts
 		doc_uuid = fileSchema.ID.Bytes // Ensure UUID is same as one returned from database
