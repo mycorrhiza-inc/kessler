@@ -243,7 +243,7 @@ func makeUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r *ht
 		q := *dbstore.New(dbtx_val)
 		ctx := r.Context()
 		token := r.Header.Get("Authorization")
-		func isForbidden(token string, private bool, q Query, ctx Context, doc_uuid string, insert bool) bool {
+		isForbiddenFunc := func() bool {
 			// Enable insert auth at some point
 			return true
 			if !strings.HasPrefix(token, "Authenticated ") {
@@ -262,9 +262,10 @@ func makeUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r *ht
 			}
 			return false
 		}
-		
+		isForbidden := isForbiddenFunc()
+
 		// Usage:
-		if isForbidden(token, private, q, ctx, doc_uuid, insert) {
+		if isForbidden {
 			http.Error(w, "Forbidden", http.StatusForbidden)
 			return
 		}

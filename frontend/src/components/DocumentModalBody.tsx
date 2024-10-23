@@ -33,9 +33,10 @@ const DocumentModalBody = ({ open, objectId, children, title }: ModalProps) => {
     );
     setDocText(response.data);
   };
-
+  // this feels really bad for perf stuff potentially, using a memo might be better
   useEffect(() => {
-    setPdfUrl(`/api/v2/public/files/${objectId}/raw`);
+    // setPdfUrl(`/api/v2/public/files/${objectId}/raw`);
+    setPdfUrl(`/api/v1/files/${objectId}/raw`);
     getDocumentText();
     getDocumentMetadata();
   }, []);
