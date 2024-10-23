@@ -7,16 +7,11 @@ import { CenteredFloatingSearhBox } from "@/components/SearchBox";
 import SearchResultBox from "@/components/SearchResultBox";
 import ChatBoxInternals from "./ChatBoxInternals";
 
-import {
-  extraProperties,
-  extraPropertiesInformation,
-  emptyExtraProperties,
-} from "@/utils/interfaces";
+import { extraProperties, emptyExtraProperties } from "@/utils/interfaces";
 import Header from "./Header";
 import { User } from "@supabase/supabase-js";
 
 import { SearchRequest } from "@/utils/interfaces";
-
 
 export default function SearchApp({ user }: { user: User | null }) {
   const [isSearching, setIsSearching] = useState(false);
@@ -60,7 +55,7 @@ export default function SearchApp({ user }: { user: User | null }) {
           docket_id: searchFilters.match_docket_id,
           doctype: searchFilters.match_doctype,
           source: searchFilters.match_source,
-        }
+        },
       });
       if (response.data.length === 0) {
         return;
