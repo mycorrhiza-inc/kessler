@@ -3,8 +3,7 @@ import { extraProperties, emptyExtraProperties } from "@/utils/interfaces";
 
 import React from "react";
 import Select from "react-select";
-import { Calendar } from "react-date-range";
-import "react-datepicker/dist/react-datepicker.css";
+// import { Calendar } from "react-date-range";
 
 // could you rewrite this section of code, to include a valid type for every single option, currently all are text inputs, but we would like to provide a dropdown menu for options such as the document type or document clascould you rewrite this section of code, to include a valid type for every single option, currently all are text inputs, but we would like to provide a dropdown menu for options such as the document type or document class. As well as a date picker for a date field, could you add extra paramaters to extraPropertiesInformation to accomodate this and implement them in the functions. As well as a date picker for a date field, could you add extra paramaters to extraPropertiesInformation to accomodate this and implement them in the function
 type ExtraPropertiesInformation = {
@@ -105,13 +104,22 @@ function BasicDocumentFilters({
                     )}
                     onChange={(selectedOption) =>
                       handleChange({
-                        target: { name: key, value: selectedOption?.value },
+                        // @ts-ignore
+                        target: { name: key, value: selectedOption.value },
                       })
                     }
-                    title={extraInfo.displayName}
+                    // title={extraInfo.displayName}
                   />
                 ) : extraInfo.isDate ? (
-                  <Calendar />
+                  <input
+                    className="input input-bordered w-full max-w-xs"
+                    type="text"
+                    id={key}
+                    name={key}
+                    value={queryOptions[key as keyof extraProperties]}
+                    onChange={handleChange}
+                    title={extraInfo.displayName}
+                  />
                 ) : (
                   <input
                     className="input input-bordered w-full max-w-xs"
