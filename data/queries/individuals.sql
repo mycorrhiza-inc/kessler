@@ -7,7 +7,7 @@ INSERT INTO public.individual (
 		updated_at
 	)
 VALUES ($1, $2, $3, NOW(), NOW())
-RETURNING *;
+RETURNING id;
 -- name: ReadIndividual :one
 SELECT *
 FROM public.individual
@@ -23,7 +23,7 @@ SET name = $1,
 	chosen_name = $3,
 	updated_at = NOW()
 WHERE id = $4
-RETURNING *;
+RETURNING id;
 -- name: DeleteIndividual :exec
 DELETE FROM public.individual
 WHERE id = $1;

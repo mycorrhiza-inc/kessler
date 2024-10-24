@@ -6,7 +6,7 @@ INSERT INTO public.relation_factions_encounters (
 		updated_at
 	)
 VALUES ($1, $2, NOW(), NOW())
-RETURNING *;
+RETURNING id;
 -- name: ListFactionsInEncounter :one
 SELECT faction_id
 FROM public.relation_factions_encounters
@@ -21,7 +21,7 @@ SET encounter_id = $1,
 	faction_id = $2,
 	updated_at = NOW()
 WHERE id = $3
-RETURNING *;
+RETURNING id;
 -- name: DeleteEncounterFaction :exec
 DELETE FROM public.relation_factions_encounters
 WHERE faction_id = $1;

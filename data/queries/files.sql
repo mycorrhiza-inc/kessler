@@ -52,7 +52,7 @@ SET url = $1,
 	short_summary = $10,
 	updated_at = NOW()
 WHERE id = $11
-RETURNING *;
+RETURNING id;
 -- name: DeleteFile :exec
 DELETE FROM public.file
 WHERE id = $1;
