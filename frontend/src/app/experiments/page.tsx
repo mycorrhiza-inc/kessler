@@ -9,7 +9,7 @@ export default async function Page() {
   return (
     <div className="flex flex-col justify-center space-y-10">
       <TestFlowVisuals user={user}></TestFlowVisuals>
-      <PlanetStartPage articles={{}} />
+      <PlanetStartPage articles={[]} />
     </div>
   );
 }
