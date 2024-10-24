@@ -167,7 +167,7 @@ SET url = $1,
 	short_summary = $10,
 	updated_at = NOW()
 WHERE id = $11
-RETURNING url, doctype, lang, name, source, hash, mdata, stage, summary, short_summary, id, created_at, updated_at
+RETURNING id
 `
 
 type UpdateFileParams struct {
@@ -184,7 +184,7 @@ type UpdateFileParams struct {
 	ID           pgtype.UUID
 }
 
-func (q *Queries) UpdateFile(ctx context.Context, arg UpdateFileParams) (File, error) {
+func (q *Queries) UpdateFile(ctx context.Context, arg UpdateFileParams) (pgtype.UUID, error) {
 	row := q.db.QueryRow(ctx, updateFile,
 		arg.Url,
 		arg.Doctype,
@@ -198,21 +198,7 @@ func (q *Queries) UpdateFile(ctx context.Context, arg UpdateFileParams) (File, e
 		arg.ShortSummary,
 		arg.ID,
 	)
-	var i File
-	err := row.Scan(
-		&i.Url,
-		&i.Doctype,
-		&i.Lang,
-		&i.Name,
-		&i.Source,
-		&i.Hash,
-		&i.Mdata,
-		&i.Stage,
-		&i.Summary,
-		&i.ShortSummary,
-		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
 }

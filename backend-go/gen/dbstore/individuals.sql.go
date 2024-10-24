@@ -20,7 +20,7 @@ INSERT INTO public.individual (
 		updated_at
 	)
 VALUES ($1, $2, $3, NOW(), NOW())
-RETURNING name, username, chosen_name, id, created_at, updated_at
+RETURNING id
 `
 
 type CreateIndividualParams struct {
@@ -29,18 +29,11 @@ type CreateIndividualParams struct {
 	ChosenName pgtype.Text
 }
 
-func (q *Queries) CreateIndividual(ctx context.Context, arg CreateIndividualParams) (Individual, error) {
+func (q *Queries) CreateIndividual(ctx context.Context, arg CreateIndividualParams) (pgtype.UUID, error) {
 	row := q.db.QueryRow(ctx, createIndividual, arg.Name, arg.Username, arg.ChosenName)
-	var i Individual
-	err := row.Scan(
-		&i.Name,
-		&i.Username,
-		&i.ChosenName,
-		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
 }
 
 const deleteIndividual = `-- name: DeleteIndividual :exec
@@ -113,7 +106,7 @@ SET name = $1,
 	chosen_name = $3,
 	updated_at = NOW()
 WHERE id = $4
-RETURNING name, username, chosen_name, id, created_at, updated_at
+RETURNING id
 `
 
 type UpdateIndividualParams struct {
@@ -123,21 +116,14 @@ type UpdateIndividualParams struct {
 	ID         pgtype.UUID
 }
 
-func (q *Queries) UpdateIndividual(ctx context.Context, arg UpdateIndividualParams) (Individual, error) {
+func (q *Queries) UpdateIndividual(ctx context.Context, arg UpdateIndividualParams) (pgtype.UUID, error) {
 	row := q.db.QueryRow(ctx, updateIndividual,
 		arg.Name,
 		arg.Username,
 		arg.ChosenName,
 		arg.ID,
 	)
-	var i Individual
-	err := row.Scan(
-		&i.Name,
-		&i.Username,
-		&i.ChosenName,
-		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
 }

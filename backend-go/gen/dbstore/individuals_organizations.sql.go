@@ -19,7 +19,7 @@ INSERT INTO public.relation_individuals_organizations (
 		updated_at
 	)
 VALUES ($1, $2, NOW(), NOW())
-RETURNING individual_id, organization_id, id, created_at, updated_at
+RETURNING id
 `
 
 type CreateIndividualsCurrentlyAssociatedWithOrganizationParams struct {
@@ -27,17 +27,11 @@ type CreateIndividualsCurrentlyAssociatedWithOrganizationParams struct {
 	OrganizationID pgtype.UUID
 }
 
-func (q *Queries) CreateIndividualsCurrentlyAssociatedWithOrganization(ctx context.Context, arg CreateIndividualsCurrentlyAssociatedWithOrganizationParams) (RelationIndividualsOrganization, error) {
+func (q *Queries) CreateIndividualsCurrentlyAssociatedWithOrganization(ctx context.Context, arg CreateIndividualsCurrentlyAssociatedWithOrganizationParams) (pgtype.UUID, error) {
 	row := q.db.QueryRow(ctx, createIndividualsCurrentlyAssociatedWithOrganization, arg.IndividualID, arg.OrganizationID)
-	var i RelationIndividualsOrganization
-	err := row.Scan(
-		&i.IndividualID,
-		&i.OrganizationID,
-		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
 }
 
 const deleteIndividualsCurrentlyAssociatedWithOrganization = `-- name: DeleteIndividualsCurrentlyAssociatedWithOrganization :exec
@@ -88,7 +82,7 @@ SET individual_id = $1,
 	organization_id = $2,
 	updated_at = NOW()
 WHERE id = $3
-RETURNING individual_id, organization_id, id, created_at, updated_at
+RETURNING id
 `
 
 type UpdateIndividualsCurrentlyAssociatedWithOrganizationParams struct {
@@ -97,15 +91,9 @@ type UpdateIndividualsCurrentlyAssociatedWithOrganizationParams struct {
 	ID             pgtype.UUID
 }
 
-func (q *Queries) UpdateIndividualsCurrentlyAssociatedWithOrganization(ctx context.Context, arg UpdateIndividualsCurrentlyAssociatedWithOrganizationParams) (RelationIndividualsOrganization, error) {
+func (q *Queries) UpdateIndividualsCurrentlyAssociatedWithOrganization(ctx context.Context, arg UpdateIndividualsCurrentlyAssociatedWithOrganizationParams) (pgtype.UUID, error) {
 	row := q.db.QueryRow(ctx, updateIndividualsCurrentlyAssociatedWithOrganization, arg.IndividualID, arg.OrganizationID, arg.ID)
-	var i RelationIndividualsOrganization
-	err := row.Scan(
-		&i.IndividualID,
-		&i.OrganizationID,
-		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
 }

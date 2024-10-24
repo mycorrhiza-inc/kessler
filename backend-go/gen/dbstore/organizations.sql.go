@@ -19,7 +19,7 @@ INSERT INTO public.organization (
 		updated_at
 	)
 VALUES ($1, $2, NOW(), NOW())
-RETURNING name, description, id, created_at, updated_at
+RETURNING id
 `
 
 type CreateOrganizationParams struct {
@@ -27,17 +27,11 @@ type CreateOrganizationParams struct {
 	Description pgtype.Text
 }
 
-func (q *Queries) CreateOrganization(ctx context.Context, arg CreateOrganizationParams) (Organization, error) {
+func (q *Queries) CreateOrganization(ctx context.Context, arg CreateOrganizationParams) (pgtype.UUID, error) {
 	row := q.db.QueryRow(ctx, createOrganization, arg.Name, arg.Description)
-	var i Organization
-	err := row.Scan(
-		&i.Name,
-		&i.Description,
-		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
 }
 
 const deleteOrganization = `-- name: DeleteOrganization :exec
@@ -107,7 +101,7 @@ SET name = $1,
 	description = $2,
 	updated_at = NOW()
 WHERE id = $3
-RETURNING name, description, id, created_at, updated_at
+RETURNING id
 `
 
 type UpdateOrganizationParams struct {
@@ -116,17 +110,11 @@ type UpdateOrganizationParams struct {
 	ID          pgtype.UUID
 }
 
-func (q *Queries) UpdateOrganization(ctx context.Context, arg UpdateOrganizationParams) (Organization, error) {
+func (q *Queries) UpdateOrganization(ctx context.Context, arg UpdateOrganizationParams) (pgtype.UUID, error) {
 	row := q.db.QueryRow(ctx, updateOrganization, arg.Name, arg.Description, arg.ID)
-	var i Organization
-	err := row.Scan(
-		&i.Name,
-		&i.Description,
-		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
 }
 
 const updateOrganizationDescription = `-- name: UpdateOrganizationDescription :one
@@ -134,7 +122,7 @@ UPDATE public.organization
 SET description = $1,
 	updated_at = NOW()
 WHERE id = $2
-RETURNING name, description, id, created_at, updated_at
+RETURNING id
 `
 
 type UpdateOrganizationDescriptionParams struct {
@@ -142,17 +130,11 @@ type UpdateOrganizationDescriptionParams struct {
 	ID          pgtype.UUID
 }
 
-func (q *Queries) UpdateOrganizationDescription(ctx context.Context, arg UpdateOrganizationDescriptionParams) (Organization, error) {
+func (q *Queries) UpdateOrganizationDescription(ctx context.Context, arg UpdateOrganizationDescriptionParams) (pgtype.UUID, error) {
 	row := q.db.QueryRow(ctx, updateOrganizationDescription, arg.Description, arg.ID)
-	var i Organization
-	err := row.Scan(
-		&i.Name,
-		&i.Description,
-		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
 }
 
 const updateOrganizationName = `-- name: UpdateOrganizationName :one
@@ -160,7 +142,7 @@ UPDATE public.organization
 SET name = $1,
 	updated_at = NOW()
 WHERE id = $2
-RETURNING name, description, id, created_at, updated_at
+RETURNING id
 `
 
 type UpdateOrganizationNameParams struct {
@@ -168,15 +150,9 @@ type UpdateOrganizationNameParams struct {
 	ID   pgtype.UUID
 }
 
-func (q *Queries) UpdateOrganizationName(ctx context.Context, arg UpdateOrganizationNameParams) (Organization, error) {
+func (q *Queries) UpdateOrganizationName(ctx context.Context, arg UpdateOrganizationNameParams) (pgtype.UUID, error) {
 	row := q.db.QueryRow(ctx, updateOrganizationName, arg.Name, arg.ID)
-	var i Organization
-	err := row.Scan(
-		&i.Name,
-		&i.Description,
-		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
 }
