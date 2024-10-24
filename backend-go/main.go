@@ -227,9 +227,9 @@ func main() {
 	mux := mux.NewRouter()
 	crud.DefineCrudRoutes(mux, connPool)
 	static.HandleStaticGenerationRouting(mux, connPool)
-	mux.HandleFunc("/api/v2/search", search.HandleSearchRequest)
-	mux.HandleFunc("/api/v2/rag/basic_chat", rag.HandleBasicChatRequest)
-	mux.HandleFunc("/api/v2/rag/chat", rag.HandleRagChatRequest)
+	mux.HandleFunc("/v2/search", search.HandleSearchRequest)
+	mux.HandleFunc("/v2/rag/basic_chat", rag.HandleBasicChatRequest)
+	mux.HandleFunc("/v2/rag/chat", rag.HandleRagChatRequest)
 	const timeout = time.Second * 10
 
 	muxWithMiddlewares := http.TimeoutHandler(mux, timeout, "Timeout!")

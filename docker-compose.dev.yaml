@@ -50,5 +50,5 @@ services:
       - 4041
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.go-backend.rule=PathPrefix(`/api/v2`)"
-      - "traefik.http.middlewares.test-stripprefix.stripprefix.prefixes=/api/v2"
+      - "traefik.http.routers.go-backend.rule=PathPrefix(`/v2`)"
+      - "traefik.http.middlewares.test-stripprefix.stripprefix.prefixes=/v2"
