@@ -52,9 +52,7 @@ services:
   backend-go:
     image: fractalhuman1/kessler-backend-go:latest
     command:
-      - "go"
-      - "run"
-      - "main.go"
+      - "./kessler-backend-go"
     env_file:
       - config/global.env
     expose:
