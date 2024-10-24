@@ -29,7 +29,7 @@ VALUES (
 		NOW(),
 		NOW()
 	)
-RETURNING *;
+RETURNING id;
 -- name: ReadFile :one
 SELECT *
 FROM public.file

@@ -42,7 +42,7 @@ VALUES (
 		NOW(),
 		NOW()
 	)
-RETURNING url, doctype, lang, name, source, hash, mdata, stage, summary, short_summary, id, created_at, updated_at
+RETURNING id
 `
 
 type CreateFileParams struct {
@@ -58,7 +58,7 @@ type CreateFileParams struct {
 	ShortSummary pgtype.Text
 }
 
-func (q *Queries) CreateFile(ctx context.Context, arg CreateFileParams) (File, error) {
+func (q *Queries) CreateFile(ctx context.Context, arg CreateFileParams) (pgtype.UUID, error) {
 	row := q.db.QueryRow(ctx, createFile,
 		arg.Url,
 		arg.Doctype,
@@ -71,23 +71,9 @@ func (q *Queries) CreateFile(ctx context.Context, arg CreateFileParams) (File, e
 		arg.Summary,
 		arg.ShortSummary,
 	)
-	var i File
-	err := row.Scan(
-		&i.Url,
-		&i.Doctype,
-		&i.Lang,
-		&i.Name,
-		&i.Source,
-		&i.Hash,
-		&i.Mdata,
-		&i.Stage,
-		&i.Summary,
-		&i.ShortSummary,
-		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
 }
 
 const deleteFile = `-- name: DeleteFile :exec
