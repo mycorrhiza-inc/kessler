@@ -47,7 +47,7 @@ export default function SearchApp({ user }: { user: User | null }) {
     setIsSearching(true);
     console.log(`searchhing for ${searchQuery}`);
     try {
-      const response = await axios.post("/api/v2/search", {
+      const response = await axios.post("https://api.kessler.xyz/v2/search", {
         query: searchQuery,
         filters: {
           name: searchFilters.match_name,

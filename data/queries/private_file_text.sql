@@ -8,7 +8,7 @@ INSERT INTO userfiles.private_file_text_source (
     updated_at
 )
 VALUES ($1, $2, $3, $4, NOW(), NOW())
-RETURNING *;
+RETURNING id;
 -- name: ListPrivateTextsOfFileWithLanguage :many
 SELECT *
 FROM userfiles.private_file_text_source

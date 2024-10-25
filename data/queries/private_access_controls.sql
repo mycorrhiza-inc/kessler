@@ -8,7 +8,7 @@ INSERT INTO userfiles.private_access_controls (
 		updated_at
 	)
 VALUES ($1, $2,$3, $4, NOW(), NOW())
-RETURNING *;
+RETURNING id;
 -- name: ListAcessesForOperator :many
 SELECT *
 FROM userfiles.private_access_controls

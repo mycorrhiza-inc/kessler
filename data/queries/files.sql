@@ -29,7 +29,7 @@ VALUES (
 		NOW(),
 		NOW()
 	)
-RETURNING *;
+RETURNING id;
 -- name: ReadFile :one
 SELECT *
 FROM public.file
@@ -37,6 +37,11 @@ WHERE id = $1;
 -- name: ListFiles :many
 SELECT *
 FROM public.file
+ORDER BY created_at DESC;
+-- name: ListUnprocessedFiles :many
+SELECT *
+FROM public.file
+WHERE stage != 'completed'
 ORDER BY created_at DESC;
 -- name: UpdateFile :one
 UPDATE public.file
@@ -52,7 +57,7 @@ SET url = $1,
 	short_summary = $10,
 	updated_at = NOW()
 WHERE id = $11
-RETURNING *;
+RETURNING id;
 -- name: DeleteFile :exec
 DELETE FROM public.file
 WHERE id = $1;

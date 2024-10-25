@@ -99,7 +99,7 @@ const ChatBoxInternals = ({
   const [selectedModel, setSelectedModel] = useState("default");
   const [ragMode, setRagMode] = useState(true);
   const [draftText, setDraftText] = useState("");
-  const chatUrl = ragMode ? "/api/v2/rag/chat" : "/api/v2/rag/basic_chat";
+  const chatUrl = ragMode ? "https://api.kessler.xyz/v2/rag/chat" : "https://api.kessler.xyz/v2/rag/basic_chat";
 
   const getResponse = async (responseText: string) => {
     if (responseText == "") {

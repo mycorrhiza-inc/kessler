@@ -13,7 +13,7 @@ import (
 )
 
 func HandleStaticGenerationRouting(router *mux.Router, dbtx_val dbstore.DBTX) {
-	admin_subrouter := router.PathPrefix("/api/v2/admin").Subrouter()
+	admin_subrouter := router.PathPrefix("/v2/admin").Subrouter()
 	admin_subrouter.HandleFunc("/generate-static-site", renderStaticSitemapmMakeHandler(dbtx_val))
 }
 

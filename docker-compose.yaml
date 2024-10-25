@@ -32,8 +32,9 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.frontend.rule=Host(`kessler.xyz`) && PathPrefix(`/`)"
-      - "traefik.http.routers.frontend.rule=Host(`ny.kessler.xyz`) && PathPrefix(`/`)"
       - "traefik.http.routers.frontend.rule=HostRegexp(`{state:al|ak|az|ar|ca|co|ct|de|fl|ga|hi|id|il|in|ia|ks|ky|la|me|md|ma|mi|mn|ms|mo|mt|ne|nv|nh|nj|nm|ny|nc|nd|oh|ok|or|pa|ri|sc|sd|tn|tx|ut|vt|va|wa|wv|wi|wy}.kessler.xyz`)"
+      - traefik.http.routers.blog.tls.domains[0].main=kessler.xyz
+      - traefik.http.routers.blog.tls.domains[0].sans=*.kessler.xyz
       # - "traefik.http.routers.frontend.middlewares=state-redirect@file"
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.routers.frontend.tls.certresolver=myresolver"
@@ -52,20 +53,16 @@ services:
   backend-go:
     image: fractalhuman1/kessler-backend-go:latest
     command:
-      - "go"
-      - "run"
-      - "main.go"
+      - "./kessler-backend-go"
     env_file:
       - config/global.env
     expose:
       - 4041
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend-go.rule=Host(`kessler.xyz`) && PathPrefix(`/api/v2`)"
-      - "traefik.http.routers.backend-go.rule=Host(`ny.kessler.xyz`) && PathPrefix(`/api/v2`)"
-      - "traefik.http.routers.backend-go.rule=HostRegexp(`{state:al|ak|az|ar|ca|co|ct|de|fl|ga|hi|id|il|in|ia|ks|ky|la|me|md|ma|mi|mn|ms|mo|mt|ne|nv|nh|nj|nm|ny|nc|nd|oh|ok|or|pa|ri|sc|sd|tn|tx|ut|vt|va|wa|wv|wi|wy}.kessler.xyz`) && PathPrefix(`/api/v2`)"
+      - "traefik.http.routers.backend-go.rule=Host(`api.kessler.xyz`) && PathPrefix(`/v2`)"
       # - "traefik.http.routers.backend-go.middlewares=state-redirect@file"
-      - "traefik.http.middlewares.test-stripprefix.stripprefix.prefixes=/api/v2"
+      - "traefik.http.middlewares.test-stripprefix.stripprefix.prefixes=/v2"
       - "traefik.http.routers.backend-go.entrypoints=websecure"
       - "traefik.http.routers.backend-go.tls.certresolver=myresolver"
 
@@ -78,7 +75,7 @@ services:
       - ${VOLUMES_DIRECTORY:-./volumes}/files:/files
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend-python.rule=Host(`kessler.xyz`) && PathPrefix(`/api/v1`) || PathPrefix(`/schema`)"
+      - "traefik.http.routers.backend-python.rule=Host(`api.kessler.xyz`) && PathPrefix(`/v1`) || PathPrefix(`/schema`)"
       - "traefik.http.routers.backend-python.entrypoints=websecure"
       - "traefik.http.routers.backend-python.tls.certresolver=myresolver"
     command:

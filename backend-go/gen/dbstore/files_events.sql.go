@@ -19,7 +19,7 @@ INSERT INTO public.relation_files_events (
 		updated_at
 	)
 VALUES ($1, $2, NOW(), NOW())
-RETURNING file_id, event_id, id, created_at, updated_at
+RETURNING id
 `
 
 type CreateFilesAssociatedWithEventParams struct {
@@ -27,17 +27,11 @@ type CreateFilesAssociatedWithEventParams struct {
 	EventID pgtype.UUID
 }
 
-func (q *Queries) CreateFilesAssociatedWithEvent(ctx context.Context, arg CreateFilesAssociatedWithEventParams) (RelationFilesEvent, error) {
+func (q *Queries) CreateFilesAssociatedWithEvent(ctx context.Context, arg CreateFilesAssociatedWithEventParams) (pgtype.UUID, error) {
 	row := q.db.QueryRow(ctx, createFilesAssociatedWithEvent, arg.FileID, arg.EventID)
-	var i RelationFilesEvent
-	err := row.Scan(
-		&i.FileID,
-		&i.EventID,
-		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
 }
 
 const deleteFilesAssociatedWithEvent = `-- name: DeleteFilesAssociatedWithEvent :exec
@@ -107,7 +101,7 @@ SET file_id = $1,
 	event_id = $2,
 	updated_at = NOW()
 WHERE id = $3
-RETURNING file_id, event_id, id, created_at, updated_at
+RETURNING id
 `
 
 type UpdateFilesAssociatedWithEventParams struct {
@@ -116,15 +110,9 @@ type UpdateFilesAssociatedWithEventParams struct {
 	ID      pgtype.UUID
 }
 
-func (q *Queries) UpdateFilesAssociatedWithEvent(ctx context.Context, arg UpdateFilesAssociatedWithEventParams) (RelationFilesEvent, error) {
+func (q *Queries) UpdateFilesAssociatedWithEvent(ctx context.Context, arg UpdateFilesAssociatedWithEventParams) (pgtype.UUID, error) {
 	row := q.db.QueryRow(ctx, updateFilesAssociatedWithEvent, arg.FileID, arg.EventID, arg.ID)
-	var i RelationFilesEvent
-	err := row.Scan(
-		&i.FileID,
-		&i.EventID,
-		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
 }

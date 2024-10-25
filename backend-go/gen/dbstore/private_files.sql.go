@@ -40,7 +40,7 @@ VALUES (
 		NOW(),
 		NOW()
 	)
-RETURNING url, doctype, lang, name, source, hash, mdata, stage, summary, short_summary, usergroup_id, id, created_at, updated_at
+RETURNING id
 `
 
 type CreatePrivateFileParams struct {
@@ -56,7 +56,7 @@ type CreatePrivateFileParams struct {
 	ShortSummary pgtype.Text
 }
 
-func (q *Queries) CreatePrivateFile(ctx context.Context, arg CreatePrivateFileParams) (UserfilesPrivateFile, error) {
+func (q *Queries) CreatePrivateFile(ctx context.Context, arg CreatePrivateFileParams) (pgtype.UUID, error) {
 	row := q.db.QueryRow(ctx, createPrivateFile,
 		arg.Url,
 		arg.Doctype,
@@ -69,24 +69,9 @@ func (q *Queries) CreatePrivateFile(ctx context.Context, arg CreatePrivateFilePa
 		arg.Summary,
 		arg.ShortSummary,
 	)
-	var i UserfilesPrivateFile
-	err := row.Scan(
-		&i.Url,
-		&i.Doctype,
-		&i.Lang,
-		&i.Name,
-		&i.Source,
-		&i.Hash,
-		&i.Mdata,
-		&i.Stage,
-		&i.Summary,
-		&i.ShortSummary,
-		&i.UsergroupID,
-		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
 }
 
 const deletePrivateFile = `-- name: DeletePrivateFile :exec
@@ -182,7 +167,7 @@ SET url = $1,
 	short_summary = $10,
 	updated_at = NOW()
 WHERE id = $11
-RETURNING url, doctype, lang, name, source, hash, mdata, stage, summary, short_summary, usergroup_id, id, created_at, updated_at
+RETURNING id
 `
 
 type UpdatePrivateFileParams struct {
@@ -199,7 +184,7 @@ type UpdatePrivateFileParams struct {
 	ID           pgtype.UUID
 }
 
-func (q *Queries) UpdatePrivateFile(ctx context.Context, arg UpdatePrivateFileParams) (UserfilesPrivateFile, error) {
+func (q *Queries) UpdatePrivateFile(ctx context.Context, arg UpdatePrivateFileParams) (pgtype.UUID, error) {
 	row := q.db.QueryRow(ctx, updatePrivateFile,
 		arg.Url,
 		arg.Doctype,
@@ -213,22 +198,7 @@ func (q *Queries) UpdatePrivateFile(ctx context.Context, arg UpdatePrivateFilePa
 		arg.ShortSummary,
 		arg.ID,
 	)
-	var i UserfilesPrivateFile
-	err := row.Scan(
-		&i.Url,
-		&i.Doctype,
-		&i.Lang,
-		&i.Name,
-		&i.Source,
-		&i.Hash,
-		&i.Mdata,
-		&i.Stage,
-		&i.Summary,
-		&i.ShortSummary,
-		&i.UsergroupID,
-		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
 }

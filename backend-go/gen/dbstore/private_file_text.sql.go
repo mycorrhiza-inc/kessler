@@ -21,7 +21,7 @@ INSERT INTO userfiles.private_file_text_source (
     updated_at
 )
 VALUES ($1, $2, $3, $4, NOW(), NOW())
-RETURNING file_id, is_original_text, language, text, id, created_at, updated_at
+RETURNING id
 `
 
 type CreatePrivateFileTextSourceParams struct {
@@ -31,24 +31,16 @@ type CreatePrivateFileTextSourceParams struct {
 	Text           pgtype.Text
 }
 
-func (q *Queries) CreatePrivateFileTextSource(ctx context.Context, arg CreatePrivateFileTextSourceParams) (UserfilesPrivateFileTextSource, error) {
+func (q *Queries) CreatePrivateFileTextSource(ctx context.Context, arg CreatePrivateFileTextSourceParams) (pgtype.UUID, error) {
 	row := q.db.QueryRow(ctx, createPrivateFileTextSource,
 		arg.FileID,
 		arg.IsOriginalText,
 		arg.Language,
 		arg.Text,
 	)
-	var i UserfilesPrivateFileTextSource
-	err := row.Scan(
-		&i.FileID,
-		&i.IsOriginalText,
-		&i.Language,
-		&i.Text,
-		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
 }
 
 const deletePrivateFileTexts = `-- name: DeletePrivateFileTexts :exec

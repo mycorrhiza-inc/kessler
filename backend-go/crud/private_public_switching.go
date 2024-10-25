@@ -252,9 +252,12 @@ func InsertPubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreatio
 			Summary:      fileCreation.Summary,
 			ShortSummary: fileCreation.ShortSummary,
 		}
-		result, err := q.CreatePrivateFile(ctx, params)
-		resultSchema := PrivateFileToSchema(result)
-		return resultSchema, err
+		resultID, err := q.CreatePrivateFile(ctx, params)
+		if err != nil {
+			return RawFileSchema{ID: resultID}, err
+		}
+		resultFile, err := q.ReadPrivateFile(ctx, resultID)
+		return PrivateFileToSchema(resultFile), err
 	}
 	params := dbstore.CreateFileParams{
 		Url:          fileCreation.Url,
@@ -268,9 +271,12 @@ func InsertPubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreatio
 		Summary:      fileCreation.Summary,
 		ShortSummary: fileCreation.ShortSummary,
 	}
-	result, err := q.CreateFile(ctx, params)
-	resultSchema := PublicFileToSchema(result)
-	return resultSchema, err
+	resultID, err := q.CreateFile(ctx, params)
+	if err != nil {
+		return RawFileSchema{ID: resultID}, err
+	}
+	resultFile, err := q.ReadFile(ctx, resultID)
+	return PublicFileToSchema(resultFile), err
 }
 
 func UpdatePubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreation FileCreationDataRaw, private bool, pgUUID pgtype.UUID) (RawFileSchema, error) {
@@ -288,9 +294,12 @@ func UpdatePubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreatio
 			ShortSummary: fileCreation.ShortSummary,
 			ID:           pgUUID,
 		}
-		result, err := q.UpdatePrivateFile(ctx, params)
-		resultSchema := PrivateFileToSchema(result)
-		return resultSchema, err
+		resultID, err := q.UpdatePrivateFile(ctx, params)
+		if err != nil {
+			return RawFileSchema{ID: resultID}, err
+		}
+		resultFile, err := q.ReadPrivateFile(ctx, resultID)
+		return PrivateFileToSchema(resultFile), err
 	}
 	params := dbstore.UpdateFileParams{
 		Url:          fileCreation.Url,
@@ -305,9 +314,12 @@ func UpdatePubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreatio
 		ShortSummary: fileCreation.ShortSummary,
 		ID:           pgUUID,
 	}
-	result, err := q.UpdateFile(ctx, params)
-	resultSchema := PublicFileToSchema(result)
-	return resultSchema, err
+	resultID, err := q.UpdateFile(ctx, params)
+	if err != nil {
+		return RawFileSchema{ID: resultID}, err
+	}
+	resultFile, err := q.ReadFile(ctx, resultID)
+	return PublicFileToSchema(resultFile), err
 }
 
 func NukePriPubFileTexts(q dbstore.Queries, ctx context.Context, pgUUID pgtype.UUID) error {

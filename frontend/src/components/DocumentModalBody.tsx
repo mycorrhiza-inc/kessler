@@ -22,20 +22,20 @@ const DocumentModalBody = ({ open, objectId, children, title }: ModalProps) => {
   const [docMetadata, setDocMetadata] = React.useState({});
 
   const getDocumentMetadata = async () => {
-    const response = await axios.get(`/api/v2/public/files/${objectId}`);
+    const response = await axios.get(`https://api.kessler.xyz/v2/public/files/${objectId}`);
     setDocMetadata(response.data);
     console.log(docMetadata);
   };
 
   const getDocumentText = async () => {
     const response = await axios.get(
-      `/api/v2/public/files/${objectId}/markdown`,
+      `https://api.kessler.xyz/v2/public/files/${objectId}/markdown`,
     );
     setDocText(response.data);
   };
   // this feels really bad for perf stuff potentially, using a memo might be better
   useEffect(() => {
-    // setPdfUrl(`/api/v2/public/files/${objectId}/raw`);
+    // setPdfUrl(`https://api.kessler.xyz/v2/public/files/${objectId}/raw`);
     setPdfUrl(`/api/v1/files/${objectId}/raw`);
     getDocumentText();
     getDocumentMetadata();
