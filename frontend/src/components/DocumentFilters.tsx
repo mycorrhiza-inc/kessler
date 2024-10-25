@@ -121,7 +121,7 @@ function BasicDocumentFilters({
                     // title={extraInfo.displayName}
                   />
                 ) : extraInfo.isDate ? (
-                  <Calendar />
+                  <Calendar id={key} name={key} />
                 ) : (
                   <input
                     className="input input-bordered w-full max-w-xs"
