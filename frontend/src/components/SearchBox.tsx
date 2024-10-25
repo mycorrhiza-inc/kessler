@@ -21,7 +21,7 @@ const AdvancedFilters = ({
   queryOptions: QueryFilterFields;
   setQueryOptions: Dispatch<SetStateAction<QueryFilterFields>>;
 }) => {
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(true);
 
   return (
     <>

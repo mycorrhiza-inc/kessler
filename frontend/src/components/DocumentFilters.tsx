@@ -122,14 +122,6 @@ function BasicDocumentFilters({
   queryOptions: QueryFilterFields;
   setQueryOptions: Dispatch<SetStateAction<QueryFilterFields>>;
 }) {
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setQueryOptions((prevOptions) => ({
-      ...prevOptions,
-      [name]: value,
-    }));
-  };
-
   const DocumentFilter = ({
     filterData,
     filterID,
@@ -137,6 +129,13 @@ function BasicDocumentFilters({
     filterData: PropertyInformation;
     filterID: FilterField;
   }) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      setQueryOptions((prevOptions) => ({
+        ...prevOptions,
+        [filterID]: value,
+      }));
+    };
     switch (filterData.type) {
       case InputType.Text:
         return (
@@ -186,7 +185,7 @@ function BasicDocumentFilters({
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-4 gap-4">
         {Object.keys(FilterField).map((key) => {
           const filterId = FilterField[key as keyof typeof FilterField];
           const filterData = queryFiltersInformation[filterId];
