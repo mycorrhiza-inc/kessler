@@ -129,7 +129,9 @@ function BasicDocumentFilters({
     filterData: PropertyInformation;
     filterID: FilterField;
   }) => {
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleChange = (
+      e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+    ) => {
       const value = e.target.value;
       setQueryOptions((prevOptions) => ({
         ...prevOptions,
@@ -157,7 +159,10 @@ function BasicDocumentFilters({
             <div className="tooltip" data-tip={filterData.description}>
               <p>{filterData.displayName}</p>
             </div>
-            <select className="select select-bordered w-full max-w-xs">
+            <select
+              className="select select-bordered w-full max-w-xs"
+              onChange={handleChange}
+            >
               {filterData.options?.map((option, index) => (
                 <option key={option.value} selected={index === 0}>
                   {option.label}
