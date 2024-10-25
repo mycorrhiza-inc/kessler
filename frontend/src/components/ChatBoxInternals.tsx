@@ -2,7 +2,7 @@ import { useState } from "react";
 
 import MarkdownRenderer from "./MarkdownRenderer";
 
-import { extraProperties } from "@/utils/interfaces";
+import { QueryFilterFields } from "@/components/DocumentFilters";
 import { exampleChatHistory, Message } from "@/lib/chat";
 export const ChatMessages = ({
   messages,
@@ -86,7 +86,7 @@ export const ChatMessages = ({
 };
 interface ChatBoxInternalsProps {
   setCitations: (citations: any[]) => void;
-  ragFilters: extraProperties;
+  ragFilters: QueryFilterFields;
 }
 
 const ChatBoxInternals = ({
@@ -99,7 +99,9 @@ const ChatBoxInternals = ({
   const [selectedModel, setSelectedModel] = useState("default");
   const [ragMode, setRagMode] = useState(true);
   const [draftText, setDraftText] = useState("");
-  const chatUrl = ragMode ? "https://api.kessler.xyz/v2/rag/chat" : "https://api.kessler.xyz/v2/rag/basic_chat";
+  const chatUrl = ragMode
+    ? "https://api.kessler.xyz/v2/rag/chat"
+    : "https://api.kessler.xyz/v2/rag/basic_chat";
 
   const getResponse = async (responseText: string) => {
     if (responseText == "") {
