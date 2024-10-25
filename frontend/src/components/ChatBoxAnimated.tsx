@@ -92,7 +92,7 @@ const ChatBox = ({ chatVisible, setChatVisible, parentRef }: ChatBoxProps) => {
       dragControls={controls}
       dragConstraints={parentRef}
       dragMomentum={false}
-      data-isOpen={!chatVisible}
+      data-isopen={!chatVisible}
       style={{
         top: position.y,
         left: position.x,

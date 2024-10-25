@@ -315,7 +315,7 @@ export const CenteredFloatingSearhBox = ({
       <motion.div
         layout
         ref={divRef}
-        data-isOpen={!isSearchMinimized}
+        data-isopen={!isSearchMinimized}
         initial={{}}
         animate={{
           height: "auto",
