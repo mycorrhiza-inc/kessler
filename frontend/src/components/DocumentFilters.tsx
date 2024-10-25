@@ -3,9 +3,8 @@ import { extraProperties, emptyExtraProperties } from "@/utils/interfaces";
 
 import React from "react";
 import Select from "react-select";
-// import { Calendar } from "react-date-range";
+import { Calendar } from "react-date-range";
 
-// could you rewrite this section of code, to include a valid type for every single option, currently all are text inputs, but we would like to provide a dropdown menu for options such as the document type or document clascould you rewrite this section of code, to include a valid type for every single option, currently all are text inputs, but we would like to provide a dropdown menu for options such as the document type or document class. As well as a date picker for a date field, could you add extra paramaters to extraPropertiesInformation to accomodate this and implement them in the functions. As well as a date picker for a date field, could you add extra paramaters to extraPropertiesInformation to accomodate this and implement them in the function
 type ExtraPropertiesInformation = {
   [key: string]: {
     displayName: string;
@@ -37,18 +36,24 @@ function BasicDocumentFilters({
       details: "Searches for items approximately matching the title",
     },
     match_source: {
-      displayName: "Source",
-      description: "The ",
-      details: "Filters results matching the provided source exactly.",
+      displayName: "State",
+      description: "What state do you want to limit your search to?",
+      details: "",
+      options: [
+        { label: "New York", value: "usa-ny" },
+        { label: "Colorado", value: "usa-co" },
+        { label: "California", value: "usa-ca" },
+        { label: "National", value: "usa-national" },
+      ],
     },
     match_doctype: {
-      displayName: "Document Type",
+      displayName: "Document File Type",
       description: "The type or category of the document.",
       details: "Searches for items that match the specified document type.",
       options: [
-        { label: "Report", value: "report" },
-        { label: "Article", value: "article" },
-        { label: "Memo", value: "memo" },
+        { label: "PDF", value: "pdf" },
+        { label: "Docx", value: "docx" },
+        { label: "Xls", value: "xls" },
       ],
     },
     match_docket_id: {
@@ -61,9 +66,14 @@ function BasicDocumentFilters({
       description: "The classification or category of the document.",
       details: "Searches for documents that fall under the specified class.",
       options: [
-        { label: "Confidential", value: "confidential" },
-        { label: "Public", value: "public" },
-        { label: "Internal", value: "internal" },
+        { label: "Correspondence", value: "Correspondence" },
+        { label: "Comments", value: "Comments" },
+        { label: "Reports", value: "Reports" },
+        { label: "Plans and Proposals", value: "Plans and Proposals" },
+        { label: "Motions", value: "Motions" },
+        { label: "Letters", value: "Letters" },
+        { label: "Orders", value: "Orders" },
+        { label: "Notices", value: "Notices" },
       ],
     },
     match_author: {
@@ -111,15 +121,7 @@ function BasicDocumentFilters({
                     // title={extraInfo.displayName}
                   />
                 ) : extraInfo.isDate ? (
-                  <input
-                    className="input input-bordered w-full max-w-xs"
-                    type="text"
-                    id={key}
-                    name={key}
-                    value={queryOptions[key as keyof extraProperties]}
-                    onChange={handleChange}
-                    title={extraInfo.displayName}
-                  />
+                  <Calendar />
                 ) : (
                   <input
                     className="input input-bordered w-full max-w-xs"
