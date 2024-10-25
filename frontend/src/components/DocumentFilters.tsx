@@ -32,6 +32,7 @@ export const emptyQueryOptions: QueryFilterFields = {
 };
 type PropertyInformation = {
   type: InputType;
+  index: number;
   displayName: string;
   description: string;
   details: string;
@@ -44,12 +45,28 @@ type QueryFiltersInformation = {
 const queryFiltersInformation: QueryFiltersInformation = {
   match_name: {
     type: InputType.Text,
+    index: 1,
     displayName: "Name",
     description: "The name associated with the search item.",
     details: "Searches for items approximately matching the title",
   },
+  match_docket_id: {
+    type: InputType.Text,
+    index: 2,
+    displayName: "Docket ID",
+    description: "The unique identifier for the docket.",
+    details: "Filters search results based on the docket ID.",
+  },
+  match_author: {
+    type: InputType.Text,
+    index: 3,
+    displayName: "Author",
+    description: "The author of the document.",
+    details: "Searches for items created or written by the specified author.",
+  },
   match_source: {
     type: InputType.Select,
+    index: 4,
     displayName: "State",
     description: "What state do you want to limit your search to?",
     details: "",
@@ -63,6 +80,7 @@ const queryFiltersInformation: QueryFiltersInformation = {
   },
   match_doctype: {
     type: InputType.Select,
+    index: 5,
     displayName: "Document File Type",
     description: "The type or category of the document.",
     details: "Searches for items that match the specified document type.",
@@ -73,14 +91,9 @@ const queryFiltersInformation: QueryFiltersInformation = {
       { label: "Xls", value: "xls" },
     ],
   },
-  match_docket_id: {
-    type: InputType.Text,
-    displayName: "Docket ID",
-    description: "The unique identifier for the docket.",
-    details: "Filters search results based on the docket ID.",
-  },
   match_document_class: {
     type: InputType.Select,
+    index: 6,
     displayName: "Document Class",
     description: "The classification or category of the document.",
     details: "Searches for documents that fall under the specified class.",
@@ -96,20 +109,16 @@ const queryFiltersInformation: QueryFiltersInformation = {
       { label: "Notices", value: "Notices" },
     ],
   },
-  match_author: {
-    type: InputType.Text,
-    displayName: "Author",
-    description: "The author of the document.",
-    details: "Searches for items created or written by the specified author.",
-  },
   match_before_date: {
     type: InputType.Date,
+    index: 7,
     displayName: "Before Date",
     description: "The date related to the document.",
     details: "Filters results by the specified date.",
   },
   match_after_date: {
     type: InputType.Date,
+    index: 8,
     displayName: "After Date",
     description: "The date related to the document.",
     details: "Filters results by the specified date.",
@@ -188,16 +197,21 @@ function BasicDocumentFilters({
     }
   };
 
+  const sortedFilters = Object.keys(FilterField)
+    .map((key) => {
+      const filterId = FilterField[key as keyof typeof FilterField];
+      const filterData = queryFiltersInformation[filterId];
+      const placementIndex = filterData.index;
+      return { filterId, filterData, placementIndex };
+    })
+    .sort((a, b) => a.placementIndex - b.placementIndex);
+  
   return (
     <>
       <div className="grid grid-cols-4 gap-4">
-        {Object.keys(FilterField).map((key) => {
-          const filterId = FilterField[key as keyof typeof FilterField];
-          const filterData = queryFiltersInformation[filterId];
-          return <DocumentFilter filterData={filterData} filterID={filterId} />;
-        })}
+        {sortedFilters.map(({ filterId, filterData }) => (
+          <DocumentFilter filterData={filterData} filterID={filterId} />
+        ))}
       </div>
     </>
   );
-}
-export default BasicDocumentFilters;
