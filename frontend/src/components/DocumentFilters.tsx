@@ -1,15 +1,35 @@
-import { Dispatch, SetStateAction, useState, useEffect, useRef } from "react";
-import { extraProperties, emptyExtraProperties } from "@/utils/interfaces";
-
 import React from "react";
-import Select from "react-select";
-import { Calendar } from "react-date-range";
+import { Dispatch, SetStateAction, useState, useEffect, useRef } from "react";
+
+export enum FilterField {
+  MatchName = "match_name",
+  MatchSource = "match_source",
+  MatchDoctype = "match_doctype",
+  MatchDocketId = "match_docket_id",
+  MatchDocumentClass = "match_document_class",
+  MatchAuthor = "match_author",
+  MatchBeforeDate = "match_before_date",
+  MatchAfterDate = "match_after_date",
+}
+export type QueryFilterFields = {
+  [key in FilterField]: string;
+};
 
 enum InputType {
   Text = "text",
   Select = "select",
   Date = "date",
 }
+export const emptyQueryOptions: QueryFilterFields = {
+  [FilterField.MatchName]: "",
+  [FilterField.MatchSource]: "",
+  [FilterField.MatchDoctype]: "",
+  [FilterField.MatchDocketId]: "",
+  [FilterField.MatchDocumentClass]: "",
+  [FilterField.MatchAuthor]: "",
+  [FilterField.MatchBeforeDate]: "",
+  [FilterField.MatchAfterDate]: "",
+};
 type PropertyInformation = {
   type: InputType;
   displayName: string;
@@ -18,7 +38,10 @@ type PropertyInformation = {
   options?: { label: string; value: string }[];
   isDate?: boolean;
 };
-const extraPropertiesInformation: ExtraPropertiesInformation = {
+type QueryFiltersInformation = {
+  [key in FilterField]: PropertyInformation;
+};
+const queryFiltersInformation: QueryFiltersInformation = {
   match_name: {
     type: InputType.Text,
     displayName: "Name",
@@ -79,22 +102,25 @@ const extraPropertiesInformation: ExtraPropertiesInformation = {
     description: "The author of the document.",
     details: "Searches for items created or written by the specified author.",
   },
-  match_date: {
+  match_before_date: {
     type: InputType.Date,
-    displayName: "Date",
+    displayName: "Before Date",
     description: "The date related to the document.",
     details: "Filters results by the specified date.",
   },
-};
-type ExtraPropertiesInformation = {
-  [key: string]: PropertyInformation;
+  match_after_date: {
+    type: InputType.Date,
+    displayName: "After Date",
+    description: "The date related to the document.",
+    details: "Filters results by the specified date.",
+  },
 };
 function BasicDocumentFilters({
   queryOptions,
   setQueryOptions,
 }: {
-  queryOptions: extraProperties;
-  setQueryOptions: Dispatch<SetStateAction<extraProperties>>;
+  queryOptions: QueryFilterFields;
+  setQueryOptions: Dispatch<SetStateAction<QueryFilterFields>>;
 }) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -106,66 +132,66 @@ function BasicDocumentFilters({
 
   const DocumentFilter = ({
     filterData,
+    filterID,
   }: {
     filterData: PropertyInformation;
+    filterID: FilterField;
   }) => {
     switch (filterData.type) {
       case InputType.Text:
-        return 3;
+        return (
+          <div className="box-border">
+            <div className="tooltip" data-tip={filterData.description}>
+              <p>{filterData.displayName}</p>
+            </div>
+            <input
+              className="input input-bordered w-full max-w-xs"
+              type="text"
+              onChange={handleChange}
+              title={filterData.displayName}
+            />
+          </div>
+        );
       case InputType.Select:
-        return 4;
+        return (
+          <div className="box-border">
+            <div className="tooltip" data-tip={filterData.description}>
+              <p>{filterData.displayName}</p>
+            </div>
+            <select className="select select-bordered w-full max-w-xs">
+              {filterData.options?.map((option, index) => (
+                <option key={option.value} selected={index === 0}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        );
       case InputType.Date:
-        return 5;
+        return (
+          <div className="box-border">
+            <div className="tooltip" data-tip={filterData.description}>
+              <p>{filterData.displayName}</p>
+            </div>
+            <input
+              className="input input-bordered w-full max-w-xs"
+              type="date"
+              onChange={handleChange}
+              title={filterData.displayName}
+            />
+          </div>
+        );
     }
   };
 
   return (
     <>
       <div className="grid grid-cols-2 gap-4">
-        {Object.keys(queryOptions)
-          .slice(0, 7)
-          .map((key, index) => {
-            const filterData = extraPropertiesInformation[key];
-            return (
-              <div className="box-border" key={index}>
-                <div className="tooltip" data-tip={filterData.description}>
-                  <p>{filterData.displayName}</p>
-                </div>
-                {filterData.options ? (
-                  <Select
-                    className="select select-bordered w-full max-w-xs"
-                    id={key}
-                    name={key}
-                    options={filterData.options}
-                    value={filterData.options.find(
-                      (option) =>
-                        option.value ===
-                        queryOptions[key as keyof extraProperties],
-                    )}
-                    onChange={(selectedOption) =>
-                      handleChange({
-                        // @ts-ignore
-                        target: { name: key, value: selectedOption.value },
-                      })
-                    }
-                    // title={filterData.displayName}
-                  />
-                ) : filterData.isDate ? (
-                  <Calendar id={key} name={key} />
-                ) : (
-                  <input
-                    className="input input-bordered w-full max-w-xs"
-                    type="text"
-                    id={key}
-                    name={key}
-                    value={queryOptions[key as keyof extraProperties]}
-                    onChange={handleChange}
-                    title={filterData.displayName}
-                  />
-                )}
-              </div>
-            );
-          })}
+        {Object.keys(FilterField).map((key) => {
+          const filterId = FilterField[key as keyof typeof FilterField];
+          const filterData = queryFiltersInformation[filterId];
+          return <DocumentFilter filterData={filterData} filterID={filterId} />;
+        })}
       </div>
     </>
   );

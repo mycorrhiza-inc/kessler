@@ -7,7 +7,10 @@ import { CenteredFloatingSearhBox } from "@/components/SearchBox";
 import SearchResultBox from "@/components/SearchResultBox";
 import ChatBoxInternals from "./ChatBoxInternals";
 
-import { extraProperties, emptyExtraProperties } from "@/utils/interfaces";
+import {
+  QueryFilterFields,
+  emptyQueryOptions,
+} from "@/components/DocumentFilters";
 import Header from "./Header";
 import { User } from "@supabase/supabase-js";
 
@@ -21,7 +24,7 @@ export default function SearchApp({ user }: { user: User | null }) {
   const [searchDisplay, setSearchDisplay] = useState<any[]>([]);
   const [resultView, setResultView] = useState(false);
   const [searchFilters, setSearchFilters] =
-    useState<extraProperties>(emptyExtraProperties);
+    useState<QueryFilterFields>(emptyQueryOptions);
   const [showCard, setShowCard] = useState("introduction");
   useEffect(() => {
     if (!chatVisible) {

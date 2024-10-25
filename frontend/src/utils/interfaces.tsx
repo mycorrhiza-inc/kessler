@@ -181,23 +181,6 @@ export const exampleBattles: Battle[] = [
   },
 ];
 
-export interface extraProperties {
-  match_name: string;
-  match_source: string;
-  match_doctype: string;
-  match_docket_id: string;
-  match_document_class: string;
-  match_author: string;
-}
-export const emptyExtraProperties: extraProperties = {
-  match_name: "",
-  match_source: "",
-  match_doctype: "",
-  match_docket_id: "",
-  match_document_class: "",
-  match_author: "",
-};
-
 export interface Filters {
   author: string;
   date: string;

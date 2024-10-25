@@ -8,15 +8,18 @@ import {
   FileUploadIcon,
 } from "@/components/Icons";
 
-import { extraProperties, emptyExtraProperties } from "@/utils/interfaces";
+import {
+  QueryFilterFields,
+  emptyQueryOptions,
+} from "@/components/DocumentFilters";
 import BasicDocumentFilters from "@/components/DocumentFilters";
 
 const AdvancedFilters = ({
   queryOptions,
   setQueryOptions,
 }: {
-  queryOptions: extraProperties;
-  setQueryOptions: Dispatch<SetStateAction<extraProperties>>;
+  queryOptions: QueryFilterFields;
+  setQueryOptions: Dispatch<SetStateAction<QueryFilterFields>>;
 }) => {
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
@@ -62,8 +65,8 @@ interface SearchBoxProps {
   inSearchSession: boolean;
   chatVisible: boolean;
   setChatVisible: Dispatch<SetStateAction<boolean>>;
-  queryOptions: extraProperties;
-  setQueryOptions: Dispatch<SetStateAction<extraProperties>>;
+  queryOptions: QueryFilterFields;
+  setQueryOptions: Dispatch<SetStateAction<QueryFilterFields>>;
 }
 const SearchBox = ({
   handleSearch,
