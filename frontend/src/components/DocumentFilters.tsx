@@ -18,6 +18,7 @@ export type QueryFilterFields = {
 enum InputType {
   Text = "text",
   Select = "select",
+  Datalist = "datalist",
   Date = "date",
 }
 export const emptyQueryOptions: QueryFilterFields = {
@@ -205,7 +206,7 @@ function BasicDocumentFilters({
       return { filterId, filterData, placementIndex };
     })
     .sort((a, b) => a.placementIndex - b.placementIndex);
-  
+
   return (
     <>
       <div className="grid grid-cols-4 gap-4">
@@ -215,3 +216,5 @@ function BasicDocumentFilters({
       </div>
     </>
   );
+}
+export default BasicDocumentFilters;
