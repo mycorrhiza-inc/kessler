@@ -126,6 +126,47 @@ func (q *Queries) ListFiles(ctx context.Context) ([]File, error) {
 	return items, nil
 }
 
+const listUnprocessedFiles = `-- name: ListUnprocessedFiles :many
+SELECT url, doctype, lang, name, source, hash, mdata, stage, summary, short_summary, id, created_at, updated_at
+FROM public.file
+WHERE stage != 'completed'
+ORDER BY created_at DESC
+`
+
+func (q *Queries) ListUnprocessedFiles(ctx context.Context) ([]File, error) {
+	rows, err := q.db.Query(ctx, listUnprocessedFiles)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []File
+	for rows.Next() {
+		var i File
+		if err := rows.Scan(
+			&i.Url,
+			&i.Doctype,
+			&i.Lang,
+			&i.Name,
+			&i.Source,
+			&i.Hash,
+			&i.Mdata,
+			&i.Stage,
+			&i.Summary,
+			&i.ShortSummary,
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const readFile = `-- name: ReadFile :one
 SELECT url, doctype, lang, name, source, hash, mdata, stage, summary, short_summary, id, created_at, updated_at
 FROM public.file

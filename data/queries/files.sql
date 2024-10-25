@@ -38,6 +38,11 @@ WHERE id = $1;
 SELECT *
 FROM public.file
 ORDER BY created_at DESC;
+-- name: ListUnprocessedFiles :many
+SELECT *
+FROM public.file
+WHERE stage != 'completed'
+ORDER BY created_at DESC;
 -- name: UpdateFile :one
 UPDATE public.file
 SET url = $1,
