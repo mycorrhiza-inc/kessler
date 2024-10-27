@@ -36,16 +36,6 @@ CREATE TABLE IF NOT EXISTS public.file (
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-CREATE TABLE IF NOT EXISTS public.file_text_source (
-    file_id UUID NOT NULL,
-    is_original_text BOOLEAN NOT NULL,
-    language VARCHAR NOT NULL,
-    text TEXT,
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    created_at TIMESTAMPTZ DEFAULT now(),
-    updated_at TIMESTAMPTZ DEFAULT now(),
-    FOREIGN KEY (file_id) REFERENCES public.file(id) ON DELETE CASCADE
-);
 CREATE TABLE public.individual (
     name VARCHAR NOT NULL,
     username VARCHAR,
@@ -152,20 +142,21 @@ CREATE TABLE public.relation_organizations_factions (
     FOREIGN KEY (organization_id) REFERENCES public.organization(id) ON DELETE CASCADE
 );
 -- +goose Down
-DROP TABLE IF EXISTS public.relation_organizations_factions;
-DROP TABLE IF EXISTS public.relation_organizations_events;
-DROP TABLE IF EXISTS public.relation_individuals_factions;
-DROP TABLE IF EXISTS public.relation_individuals_organizations;
-DROP TABLE IF EXISTS public.relation_individuals_event;
-DROP TABLE IF EXISTS public.relation_files_events;
-DROP TABLE IF EXISTS public.relation_factions_encounters;
-DROP TABLE IF EXISTS public.relation_documents_encounters;
-DROP TABLE IF EXISTS public.relation_documents_individuals_author;
-DROP TABLE IF EXISTS public.relation_documenst_organizations;
-DROP TABLE IF EXISTS public.organization;
-DROP TABLE IF EXISTS public.individual;
-DROP TABLE IF EXISTS public.file_text_source;
-DROP TABLE IF EXISTS public.file;
-DROP TABLE IF EXISTS public.faction;
-DROP TABLE IF EXISTS public.event;
-DROP TABLE IF EXISTS public.encounter;
+
+DROP TABLE IF EXISTS public.relation_organizations_factions CASCADE;
+DROP TABLE IF EXISTS public.relation_organizations_events CASCADE;
+DROP TABLE IF EXISTS public.relation_individuals_factions CASCADE;
+DROP TABLE IF EXISTS public.relation_individuals_organizations CASCADE;
+DROP TABLE IF EXISTS public.relation_individuals_event CASCADE;
+DROP TABLE IF EXISTS public.relation_files_events CASCADE;
+DROP TABLE IF EXISTS public.relation_factions_encounters CASCADE;
+DROP TABLE IF EXISTS public.relation_documents_encounters CASCADE;
+DROP TABLE IF EXISTS public.relation_documents_individuals_author CASCADE;
+DROP TABLE IF EXISTS public.relation_documents_organizations CASCADE;
+DROP TABLE IF EXISTS public.organization CASCADE;
+DROP TABLE IF EXISTS public.individual CASCADE;
+DROP TABLE IF EXISTS public.file_text_source CASCADE;
+DROP TABLE IF EXISTS public.file CASCADE;
+DROP TABLE IF EXISTS public.faction CASCADE;
+DROP TABLE IF EXISTS public.event CASCADE;
+DROP TABLE IF EXISTS public.encounter CASCADE;
