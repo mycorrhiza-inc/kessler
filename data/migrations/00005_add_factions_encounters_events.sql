@@ -36,16 +36,6 @@ CREATE TABLE IF NOT EXISTS public.file (
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-CREATE TABLE IF NOT EXISTS public.file_text_source (
-    file_id UUID NOT NULL,
-    is_original_text BOOLEAN NOT NULL,
-    language VARCHAR NOT NULL,
-    text TEXT,
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    created_at TIMESTAMPTZ DEFAULT now(),
-    updated_at TIMESTAMPTZ DEFAULT now(),
-    FOREIGN KEY (file_id) REFERENCES public.file(id) ON DELETE CASCADE
-);
 CREATE TABLE public.individual (
     name VARCHAR NOT NULL,
     username VARCHAR,
