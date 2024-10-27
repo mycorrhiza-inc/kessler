@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS public.filestage (
 );
 CREATE TABLE IF NOT EXISTS public.file (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    lang VARCHAR,
     name VARCHAR,
     extension VARCHAR,
     stage_id UUID REFERENCES public.filestage(id),

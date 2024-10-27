@@ -20,5 +20,5 @@ CREATE TABLE IF NOT EXISTS public.relation_users_usergroups (
   FOREIGN KEY (usergroup_id) REFERENCES public.usergroup(id) ON DELETE CASCADE
 );
 -- +goose Down
-DROP TABLE IF EXISTS public.users;
-DROP TABLE IF EXISTS public.usergroup;
+DROP TABLE IF EXISTS public.users CASCADE;
+DROP TABLE IF EXISTS public.usergroup CASCADE;
