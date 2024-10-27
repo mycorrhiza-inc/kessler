@@ -5,8 +5,54 @@
 package dbstore
 
 import (
+	"database/sql/driver"
+	"fmt"
+
 	"github.com/jackc/pgx/v5/pgtype"
 )
+
+type StageState string
+
+const (
+	StageStatePending    StageState = "pending"
+	StageStateProcessing StageState = "processing"
+	StageStateCompleted  StageState = "completed"
+)
+
+func (e *StageState) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = StageState(s)
+	case string:
+		*e = StageState(s)
+	default:
+		return fmt.Errorf("unsupported scan type for StageState: %T", src)
+	}
+	return nil
+}
+
+type NullStageState struct {
+	StageState StageState
+	Valid      bool // Valid is true if StageState is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullStageState) Scan(value interface{}) error {
+	if value == nil {
+		ns.StageState, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.StageState.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullStageState) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.StageState), nil
+}
 
 type Encounter struct {
 	Name        pgtype.Text
@@ -34,19 +80,22 @@ type Faction struct {
 }
 
 type File struct {
-	Url          pgtype.Text
-	Doctype      pgtype.Text
-	Lang         pgtype.Text
-	Name         pgtype.Text
-	Source       pgtype.Text
-	Hash         pgtype.Text
-	Mdata        pgtype.Text
-	Stage        pgtype.Text
-	Summary      pgtype.Text
-	ShortSummary pgtype.Text
-	ID           pgtype.UUID
-	CreatedAt    pgtype.Timestamptz
-	UpdatedAt    pgtype.Timestamptz
+	ID        pgtype.UUID
+	Lang      pgtype.Text
+	Name      pgtype.Text
+	Extension pgtype.Text
+	StageID   pgtype.UUID
+	Isprivate pgtype.Bool
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
+}
+
+type FileMetadatum struct {
+	ID        pgtype.UUID
+	Isprivate pgtype.Bool
+	Mdata     []byte
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
 }
 
 type FileTextSource struct {
@@ -57,6 +106,13 @@ type FileTextSource struct {
 	ID             pgtype.UUID
 	CreatedAt      pgtype.Timestamptz
 	UpdatedAt      pgtype.Timestamptz
+}
+
+type Filestage struct {
+	ID        pgtype.UUID
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
+	Status    NullStageState
 }
 
 type Individual struct {
@@ -74,6 +130,16 @@ type Organization struct {
 	ID          pgtype.UUID
 	CreatedAt   pgtype.Timestamptz
 	UpdatedAt   pgtype.Timestamptz
+}
+
+type PrivateAccessControl struct {
+	OperatorID    pgtype.UUID
+	OperatorTable string
+	ObjectID      pgtype.UUID
+	ObjectTable   string
+	ID            pgtype.UUID
+	CreatedAt     pgtype.Timestamptz
+	UpdatedAt     pgtype.Timestamptz
 }
 
 type RelationDocumentsEncounter struct {
@@ -163,56 +229,20 @@ type RelationUsersUsergroup struct {
 	CreatedAt   pgtype.Timestamp
 }
 
+type StageLog struct {
+	ID        pgtype.UUID
+	StageID   pgtype.UUID
+	Status    NullStageState
+	Log       []byte
+	CreatedAt pgtype.Timestamptz
+}
+
 type User struct {
 	ID        pgtype.UUID
 	Username  pgtype.Text
 	StripeID  pgtype.Text
 	Email     string
 	CreatedAt pgtype.Timestamp
-}
-
-type UserfilesAcl struct {
-	ID          pgtype.UUID
-	UsergroupID pgtype.UUID
-	OwnerID     pgtype.UUID
-	CreatedAt   pgtype.Timestamp
-}
-
-type UserfilesPrivateAccessControl struct {
-	OperatorID    pgtype.UUID
-	OperatorTable string
-	ObjectID      pgtype.UUID
-	ObjectTable   string
-	ID            pgtype.UUID
-	CreatedAt     pgtype.Timestamptz
-	UpdatedAt     pgtype.Timestamptz
-}
-
-type UserfilesPrivateFile struct {
-	Url          pgtype.Text
-	Doctype      pgtype.Text
-	Lang         pgtype.Text
-	Name         pgtype.Text
-	Source       pgtype.Text
-	Hash         pgtype.Text
-	Mdata        pgtype.Text
-	Stage        pgtype.Text
-	Summary      pgtype.Text
-	ShortSummary pgtype.Text
-	UsergroupID  pgtype.UUID
-	ID           pgtype.UUID
-	CreatedAt    pgtype.Timestamptz
-	UpdatedAt    pgtype.Timestamptz
-}
-
-type UserfilesPrivateFileTextSource struct {
-	FileID         pgtype.UUID
-	IsOriginalText bool
-	Language       string
-	Text           pgtype.Text
-	ID             pgtype.UUID
-	CreatedAt      pgtype.Timestamptz
-	UpdatedAt      pgtype.Timestamptz
 }
 
 type UserfilesThaumaturgyApiKey struct {
