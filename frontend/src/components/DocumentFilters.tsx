@@ -1,5 +1,12 @@
 import React from "react";
-import { Dispatch, SetStateAction, useState, useEffect, useRef } from "react";
+import {
+  Dispatch,
+  SetStateAction,
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+} from "react";
 
 export enum FilterField {
   MatchName = "match_name",
@@ -132,74 +139,16 @@ function BasicDocumentFilters({
   queryOptions: QueryFilterFields;
   setQueryOptions: Dispatch<SetStateAction<QueryFilterFields>>;
 }) {
-  const DocumentFilter = ({
-    filterData,
-    filterID,
-  }: {
-    filterData: PropertyInformation;
-    filterID: FilterField;
-  }) => {
-    const handleChange = (
-      e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-    ) => {
-      const value = e.target.value;
-      setQueryOptions((prevOptions) => ({
-        ...prevOptions,
-        [filterID]: value,
-      }));
-    };
-    switch (filterData.type) {
-      case InputType.Text:
-        return (
-          <div className="box-border">
-            <div className="tooltip" data-tip={filterData.description}>
-              <p>{filterData.displayName}</p>
-            </div>
-            <input
-              className="input input-bordered w-full max-w-xs"
-              type="text"
-              value={queryOptions[filterID]}
-              onChange={handleChange}
-              title={filterData.displayName}
-            />
-          </div>
-        );
-      case InputType.Select:
-        return (
-          <div className="box-border">
-            <div className="tooltip" data-tip={filterData.description}>
-              <p>{filterData.displayName}</p>
-            </div>
-            <select
-              className="select select-bordered w-full max-w-xs"
-              value={queryOptions[filterID]}
-              onChange={handleChange}
-            >
-              {filterData.options?.map((option, index) => (
-                <option key={option.value} selected={index === 0}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        );
-      case InputType.Date:
-        return (
-          <div className="box-border">
-            <div className="tooltip" data-tip={filterData.description}>
-              <p>{filterData.displayName}</p>
-            </div>
-            <input
-              className="input input-bordered w-full max-w-xs"
-              type="date"
-              value={queryOptions[filterID]}
-              onChange={handleChange}
-              title={filterData.displayName}
-            />
-          </div>
-        );
-    }
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+    filterID: FilterField,
+  ) => {
+    setDocFilterValues((prevOptions) => ({
+      ...prevOptions,
+      [filterID]: e.target.value,
+    }));
   };
+  const [docFilterValues, setDocFilterValues] = useState(emptyQueryOptions);
 
   const sortedFilters = Object.keys(FilterField)
     .map((key) => {
@@ -213,9 +162,59 @@ function BasicDocumentFilters({
   return (
     <>
       <div className="grid grid-cols-4 gap-4">
-        {sortedFilters.map(({ filterId, filterData }) => (
-          <DocumentFilter filterData={filterData} filterID={filterId} />
-        ))}
+        {sortedFilters.map(({ filterId, filterData }) => {
+          switch (filterData.type) {
+            case InputType.Text:
+              return (
+                <div className="box-border">
+                  <div className="tooltip" data-tip={filterData.description}>
+                    <p>{filterData.displayName}</p>
+                  </div>
+                  <input
+                    className="input input-bordered w-full max-w-xs"
+                    type="text"
+                    value={docFilterValues[filterId]}
+                    onChange={(e) => handleChange(e, filterId)}
+                    title={filterData.displayName}
+                  />
+                </div>
+              );
+            case InputType.Select:
+              return (
+                <div className="box-border">
+                  <div className="tooltip" data-tip={filterData.description}>
+                    <p>{filterData.displayName}</p>
+                  </div>
+                  <select
+                    className="select select-bordered w-full max-w-xs"
+                    value={docFilterValues[filterId]}
+                    onChange={(e) => handleChange(e, filterId)}
+                  >
+                    {filterData.options?.map((option, index) => (
+                      <option key={option.value} selected={index === 0}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              );
+            case InputType.Date:
+              return (
+                <div className="box-border">
+                  <div className="tooltip" data-tip={filterData.description}>
+                    <p>{filterData.displayName}</p>
+                  </div>
+                  <input
+                    className="input input-bordered w-full max-w-xs"
+                    type="date"
+                    value={docFilterValues[filterId]}
+                    onChange={(e) => handleChange(e, filterId)}
+                    title={filterData.displayName}
+                  />
+                </div>
+              );
+          }
+        })}
       </div>
     </>
   );
