@@ -158,6 +158,7 @@ function BasicDocumentFilters({
             <input
               className="input input-bordered w-full max-w-xs"
               type="text"
+              value={queryOptions[filterID]}
               onChange={handleChange}
               title={filterData.displayName}
             />
@@ -171,6 +172,7 @@ function BasicDocumentFilters({
             </div>
             <select
               className="select select-bordered w-full max-w-xs"
+              value={queryOptions[filterID]}
               onChange={handleChange}
             >
               {filterData.options?.map((option, index) => (
@@ -190,6 +192,7 @@ function BasicDocumentFilters({
             <input
               className="input input-bordered w-full max-w-xs"
               type="date"
+              value={queryOptions[filterID]}
               onChange={handleChange}
               title={filterData.displayName}
             />
