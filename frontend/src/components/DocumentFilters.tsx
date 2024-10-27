@@ -7,37 +7,42 @@ import {
   useRef,
   useMemo,
 } from "react";
+import {
+  FilterField,
+  QueryFilterFields,
+  emptyQueryOptions,
+} from "@/lib/filters";
 
-export enum FilterField {
-  MatchName = "match_name",
-  MatchSource = "match_source",
-  MatchDoctype = "match_doctype",
-  MatchDocketId = "match_docket_id",
-  MatchDocumentClass = "match_document_class",
-  MatchAuthor = "match_author",
-  MatchBeforeDate = "match_before_date",
-  MatchAfterDate = "match_after_date",
-}
-export type QueryFilterFields = {
-  [key in FilterField]: string;
-};
-
+// export enum FilterField {
+//   MatchName = "match_name",
+//   MatchSource = "match_source",
+//   MatchDoctype = "match_doctype",
+//   MatchDocketId = "match_docket_id",
+//   MatchDocumentClass = "match_document_class",
+//   MatchAuthor = "match_author",
+//   MatchBeforeDate = "match_before_date",
+//   MatchAfterDate = "match_after_date",
+// }
+// export type QueryFilterFields = {
+//   [key in FilterField]: string;
+// };
+//
+// export const emptyQueryOptions: QueryFilterFields = {
+//   [FilterField.MatchName]: "",
+//   [FilterField.MatchSource]: "",
+//   [FilterField.MatchDoctype]: "",
+//   [FilterField.MatchDocketId]: "",
+//   [FilterField.MatchDocumentClass]: "",
+//   [FilterField.MatchAuthor]: "",
+//   [FilterField.MatchBeforeDate]: "",
+//   [FilterField.MatchAfterDate]: "",
+// };
 enum InputType {
   Text = "text",
   Select = "select",
   Datalist = "datalist",
   Date = "date",
 }
-export const emptyQueryOptions: QueryFilterFields = {
-  [FilterField.MatchName]: "",
-  [FilterField.MatchSource]: "",
-  [FilterField.MatchDoctype]: "",
-  [FilterField.MatchDocketId]: "",
-  [FilterField.MatchDocumentClass]: "",
-  [FilterField.MatchAuthor]: "",
-  [FilterField.MatchBeforeDate]: "",
-  [FilterField.MatchAfterDate]: "",
-};
 type PropertyInformation = {
   type: InputType;
   index: number;
@@ -139,6 +144,9 @@ function BasicDocumentFilters({
   queryOptions: QueryFilterFields;
   setQueryOptions: Dispatch<SetStateAction<QueryFilterFields>>;
 }) {
+  // const [docFilterValues, setDocFilterValues] = useState(emptyQueryOptions);
+  const docFilterValues = queryOptions;
+  const setDocFilterValues = setQueryOptions;
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
     filterID: FilterField,
@@ -148,16 +156,17 @@ function BasicDocumentFilters({
       [filterID]: e.target.value,
     }));
   };
-  const [docFilterValues, setDocFilterValues] = useState(emptyQueryOptions);
 
-  const sortedFilters = Object.keys(FilterField)
-    .map((key) => {
-      const filterId = FilterField[key as keyof typeof FilterField];
-      const filterData = queryFiltersInformation[filterId];
-      const placementIndex = filterData.index;
-      return { filterId, filterData, placementIndex };
-    })
-    .sort((a, b) => a.placementIndex - b.placementIndex);
+  const sortedFilters = useMemo(() => {
+    return Object.keys(FilterField)
+      .map((key) => {
+        const filterId = FilterField[key as keyof typeof FilterField];
+        const filterData = queryFiltersInformation[filterId];
+        const placementIndex = filterData.index;
+        return { filterId, filterData, placementIndex };
+      })
+      .sort((a, b) => a.placementIndex - b.placementIndex);
+  }, [FilterField, queryFiltersInformation]);
 
   return (
     <>
