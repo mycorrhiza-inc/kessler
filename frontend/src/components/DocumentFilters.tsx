@@ -140,9 +140,11 @@ const queryFiltersInformation: QueryFiltersInformation = {
 function BasicDocumentFilters({
   queryOptions,
   setQueryOptions,
+  showQueries,
 }: {
   queryOptions: QueryFilterFields;
   setQueryOptions: Dispatch<SetStateAction<QueryFilterFields>>;
+  showQueries: FilterField[];
 }) {
   // const [docFilterValues, setDocFilterValues] = useState(emptyQueryOptions);
   const docFilterValues = queryOptions;
@@ -158,15 +160,14 @@ function BasicDocumentFilters({
   };
 
   const sortedFilters = useMemo(() => {
-    return Object.keys(FilterField)
-      .map((key) => {
-        const filterId = FilterField[key as keyof typeof FilterField];
+    return showQueries
+      .map((filterId) => {
         const filterData = queryFiltersInformation[filterId];
         const placementIndex = filterData.index;
         return { filterId, filterData, placementIndex };
       })
       .sort((a, b) => a.placementIndex - b.placementIndex);
-  }, [FilterField, queryFiltersInformation]);
+  }, [showQueries, queryFiltersInformation]);
 
   return (
     <>

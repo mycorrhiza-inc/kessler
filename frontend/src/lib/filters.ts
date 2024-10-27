@@ -11,7 +11,7 @@ export enum FilterField {
 export type QueryFilterFields = {
   [key in FilterField]: string;
 };
-
+export const allFilterFields: FilterField[] = Object.values(FilterField);
 export const emptyQueryOptions: QueryFilterFields = {
   [FilterField.MatchName]: "",
   [FilterField.MatchSource]: "",
