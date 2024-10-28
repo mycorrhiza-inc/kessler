@@ -120,16 +120,10 @@ func GetFileObjectRaw(params GetFileParam) (FileSchema, error) {
 }
 
 type FileCreationDataRaw struct {
-	Url          pgtype.Text
-	Extension    pgtype.Text
-	Lang         pgtype.Text
-	Name         pgtype.Text
-	Source       pgtype.Text
-	Hash         pgtype.Text
-	Mdata        pgtype.Text
-	Stage        pgtype.Text
-	Summary      pgtype.Text
-	ShortSummary pgtype.Text
+	Extension pgtype.Text
+	Lang      pgtype.Text
+	Name      pgtype.Text
+	Hash      pgtype.Text
 }
 
 func InsertPubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreation FileCreationDataRaw, private bool) (FileSchema, error) {

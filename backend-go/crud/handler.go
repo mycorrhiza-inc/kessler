@@ -183,44 +183,6 @@ type UpsertHandlerInfo struct {
 	private  bool
 	insert   bool
 }
-type DocTextInfo struct {
-	Language       string `json:"language"`
-	Text           string `json:"text"`
-	IsOriginalText bool   `json:"is_original_text"`
-}
-
-type UpdateDocumentInfo struct {
-	ID           uuid.UUID      `json:"id"`
-	Url          string         `json:"url"`
-	Extension    string         `json:"extension"`
-	Lang         string         `json:"lang"`
-	Name         string         `json:"name"`
-	Source       string         `json:"source"`
-	Hash         string         `json:"hash"`
-	Mdata        map[string]any `json:"mdata"`
-	Stage        string         `json:"stage"`
-	Summary      string         `json:"summary"`
-	ShortSummary string         `json:"short_summary"`
-	Private      bool           `json:"private"`
-	DocTexts     []DocTextInfo  `json:"doc_texts"`
-}
-
-func ConvertToCreationData(updateInfo UpdateDocumentInfo) FileCreationDataRaw {
-	mdata_string, _ := json.Marshal(updateInfo.Mdata)
-	creationData := FileCreationDataRaw{
-		Url:          pgtype.Text{String: updateInfo.Url, Valid: true},
-		Extension:    pgtype.Text{String: updateInfo.Extension, Valid: true},
-		Lang:         pgtype.Text{String: updateInfo.Lang, Valid: true},
-		Name:         pgtype.Text{String: updateInfo.Name, Valid: true},
-		Source:       pgtype.Text{String: updateInfo.Source, Valid: true},
-		Hash:         pgtype.Text{String: updateInfo.Hash, Valid: true},
-		Stage:        pgtype.Text{String: updateInfo.Stage, Valid: true},
-		Summary:      pgtype.Text{String: updateInfo.Summary, Valid: true},
-		ShortSummary: pgtype.Text{String: updateInfo.ShortSummary, Valid: true},
-		Mdata:        pgtype.Text{String: string(mdata_string), Valid: true},
-	}
-	return creationData
-}
 
 func makeUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r *http.Request) {
 	dbtx_val := info.dbtx_val
@@ -270,7 +232,7 @@ func makeUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r *ht
 		}
 		// Proceed with the write operation
 		// TODO: IF user is not a paying user, disable insert functionality
-		var newDocInfo UpdateDocumentInfo
+		var newDocInfo CompleteFileSchema
 		if err := json.NewDecoder(r.Body).Decode(&newDocInfo); err != nil {
 
 			http.Error(w, "Invalid request payload", http.StatusBadRequest)
