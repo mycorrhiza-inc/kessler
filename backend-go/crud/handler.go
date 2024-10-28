@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"os"
@@ -131,7 +130,7 @@ func makeFileHandler(info FileHandlerInfo) func(w http.ResponseWriter, r *http.R
 				http.Error(w, fmt.Sprintf("Error encountered when getting file from s3:%v", err), http.StatusInternalServerError)
 				return
 			}
-			content, err := ioutil.ReadFile(file_path)
+			content, err := os.ReadFile(file_path)
 			if err != nil {
 				http.Error(w, fmt.Sprintf("Error reading file: %v", err), http.StatusInternalServerError)
 				return

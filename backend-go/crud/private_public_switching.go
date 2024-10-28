@@ -9,22 +9,13 @@ import (
 	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
 )
 
-type CompleteFileSchema struct {
-	ID        pgtype.UUID
-	Extension string
-	Lang      string
-	Name      string
-	Hash      string
-	MdataStr  string
-	Texts     []FileTextSchema
-}
-
 type FileSchema struct {
 	ID        uuid.UUID
 	Extension string
 	Lang      string
 	Name      string
 	Hash      string
+	IsPrivate bool
 }
 
 // A UUID is a 128 bit (16 byte) Universal Unique IDentifier as defined in RFC
@@ -41,6 +32,7 @@ func PublicFileToSchema(file dbstore.File) FileSchema {
 		Lang:      file.Lang.String,
 		Name:      file.Name.String,
 		Hash:      file.Hash.String,
+		IsPrivate: file.Isprivate.Bool,
 	}
 }
 
