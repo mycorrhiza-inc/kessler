@@ -39,20 +39,33 @@ type DocProcStage struct {
 	ErrorMsg        string        `json:"error_msg"`
 	ErrorStacktrace string        `json:"error_stacktrace"`
 }
+type FileGeneratedExtras struct {
+	Summary      string `json:"summary"`
+	ShortSummary string `json:"short_summary"`
+	Purpose      string `json:"purpose"`
+}
+
+type AuthorInformation struct {
+	AuthorName string    `json:"author_name"`
+	AuthorID   uuid.UUID `json:"author_id"`
+}
+
 type CompleteFileSchema struct {
-	ID        uuid.UUID
-	Extension string
-	Lang      string
-	Name      string
-	Hash      string
-	IsPrivate bool
-	Mdata     FileMetadataSchema
-	DocTexts  []FileTextSchema
-	Stage     DocProcStage
+	ID        uuid.UUID           `json:"id"`
+	Extension string              `json:"extension"`
+	Lang      string              `json:"lang"`
+	Name      string              `json:"name"`
+	Hash      string              `json:"hash"`
+	IsPrivate bool                `json:"is_private"`
+	Mdata     FileMetadataSchema  `json:"mdata"`
+	DocTexts  []FileTextSchema    `json:"doc_texts"`
+	Stage     DocProcStage        `json:"stage"`
+	Extra     FileGeneratedExtras `json:"extra"`
+	Authors   []AuthorInformation `json:"authors"`
 }
 
 type FileMetadataSchema struct {
-	JsonObj []byte
+	JsonObj []byte `json:"json_obj"`
 }
 
 func CompleteFileSchemaPrune(input CompleteFileSchema) FileSchema {
