@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 
@@ -116,19 +117,19 @@ func makeFileUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r
 		}
 		// Proceed with the write operation
 		// TODO: IF user is not a paying user, disable insert functionality
-		var newDocInfo CompleteFileSchema
 		defer r.Body.Close()
-		err = json.NewDecoder(r.Body).Decode(&newDocInfo)
-		// bodyBytes, err := io.ReadAll(r.Body)
-		// if err != nil {
-		// 	errorstring := fmt.Sprintf("Error reading request body: %v", err)
-		// 	fmt.Println(errorstring)
-		//
-		// 	http.Error(w, errorstring, http.StatusBadRequest)
-		// 	return
-		// }
-		// fmt.Println(string(bodyBytes))
-		// err = json.Unmarshal(bodyBytes, &newDocInfo)
+		var newDocInfo CompleteFileSchema
+		// err = json.NewDecoder(r.Body).Decode(&newDocInfo)
+		bodyBytes, err := io.ReadAll(r.Body)
+		if err != nil {
+			errorstring := fmt.Sprintf("Error reading request body: %v", err)
+			fmt.Println(errorstring)
+
+			http.Error(w, errorstring, http.StatusBadRequest)
+			return
+		}
+		fmt.Println(string(bodyBytes))
+		err = json.Unmarshal(bodyBytes, &newDocInfo)
 		if err != nil {
 			errorstring := fmt.Sprintf("Error reading request body json: %v", err)
 			fmt.Println(errorstring)
