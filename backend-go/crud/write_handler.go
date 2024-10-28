@@ -118,8 +118,10 @@ func makeFileUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r
 		// TODO: IF user is not a paying user, disable insert functionality
 		var newDocInfo CompleteFileSchema
 		if err := json.NewDecoder(r.Body).Decode(&newDocInfo); err != nil {
+			errorstring := fmt.Sprintf("Invalid request payload: %v", err)
+			fmt.Println(errorstring)
 
-			http.Error(w, "Invalid request payload", http.StatusBadRequest)
+			http.Error(w, errorstring, http.StatusBadRequest)
 			return
 		}
 		rawFileData := ConvertToCreationData(newDocInfo)
