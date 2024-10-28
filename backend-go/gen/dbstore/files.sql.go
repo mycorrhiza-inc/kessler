@@ -103,6 +103,56 @@ func (q *Queries) DeleteFile(ctx context.Context, id pgtype.UUID) error {
 	return err
 }
 
+const fetchMetadata = `-- name: FetchMetadata :one
+SELECT id, isprivate, mdata, created_at, updated_at
+FROM public.file_metadata
+WHERE id = $1
+`
+
+func (q *Queries) FetchMetadata(ctx context.Context, id pgtype.UUID) (FileMetadatum, error) {
+	row := q.db.QueryRow(ctx, fetchMetadata, id)
+	var i FileMetadatum
+	err := row.Scan(
+		&i.ID,
+		&i.Isprivate,
+		&i.Mdata,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const insertMetadata = `-- name: InsertMetadata :one
+INSERT INTO public.file_metadata (
+    id,
+    isPrivate,
+    mdata,
+    created_at,
+    updated_at
+)
+VALUES (
+    $1,
+    $2,
+    $3,
+    NOW(),
+    NOW()
+)
+RETURNING id
+`
+
+type InsertMetadataParams struct {
+	ID        pgtype.UUID
+	Isprivate pgtype.Bool
+	Mdata     []byte
+}
+
+func (q *Queries) InsertMetadata(ctx context.Context, arg InsertMetadataParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, insertMetadata, arg.ID, arg.Isprivate, arg.Mdata)
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
 const listFiles = `-- name: ListFiles :many
 SELECT id, lang, name, extension, stage_id, isprivate, created_at, updated_at, hash
 FROM public.file
@@ -321,6 +371,28 @@ func (q *Queries) UpdateFile(ctx context.Context, arg UpdateFileParams) (pgtype.
 		arg.Isprivate,
 		arg.Hash,
 	)
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
+const updateMetadata = `-- name: UpdateMetadata :one
+UPDATE public.file_metadata
+SET isPrivate = $1,
+    mdata = $2,
+    updated_at = NOW()
+WHERE id = $3
+RETURNING id
+`
+
+type UpdateMetadataParams struct {
+	Isprivate pgtype.Bool
+	Mdata     []byte
+	ID        pgtype.UUID
+}
+
+func (q *Queries) UpdateMetadata(ctx context.Context, arg UpdateMetadataParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, updateMetadata, arg.Isprivate, arg.Mdata, arg.ID)
 	var id pgtype.UUID
 	err := row.Scan(&id)
 	return id, err
