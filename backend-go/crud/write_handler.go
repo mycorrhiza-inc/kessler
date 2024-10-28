@@ -20,7 +20,7 @@ type UpsertHandlerInfo struct {
 	insert   bool
 }
 
-func upsertFileTexts(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, texts []FileTextSchema, insert bool) {
+func upsertFileTexts(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, texts []FileChildTextSource, insert bool) {
 	doc_pgUUID := pgtype.UUID{Bytes: doc_uuid, Valid: true}
 	if len(texts) != 0 {
 		if !insert {

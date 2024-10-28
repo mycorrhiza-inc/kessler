@@ -31,6 +31,21 @@ const (
 	Stage1                 DocProcStatus = "stage1"
 )
 
+type FileChildTextSource struct {
+	IsOriginalText bool   `json:"is_original_text"`
+	Text           string `json:"text"`
+	Language       string `json:"language"`
+}
+
+func ChildTextSouceToRealTextSource(child_source FileChildTextSource, id uuid.UUID) FileTextSchema {
+	return FileTextSchema{
+		FileID:         pgtype.UUID{Bytes: id, Valid: true},
+		IsOriginalText: child_source.IsOriginalText,
+		Text:           child_source.Text,
+		Language:       child_source.Language,
+	}
+}
+
 type DocProcStage struct {
 	PGStage         PGStage       `json:"pg_stage"`
 	DocProcStatus   DocProcStatus `json:"docproc_stage"`
@@ -51,17 +66,17 @@ type AuthorInformation struct {
 }
 
 type CompleteFileSchema struct {
-	ID        uuid.UUID           `json:"id"`
-	Extension string              `json:"extension"`
-	Lang      string              `json:"lang"`
-	Name      string              `json:"name"`
-	Hash      string              `json:"hash"`
-	IsPrivate bool                `json:"is_private"`
-	Mdata     FileMetadataSchema  `json:"mdata"`
-	DocTexts  []FileTextSchema    `json:"doc_texts"`
-	Stage     DocProcStage        `json:"stage"`
-	Extra     FileGeneratedExtras `json:"extra"`
-	Authors   []AuthorInformation `json:"authors"`
+	ID        uuid.UUID             `json:"id"`
+	Extension string                `json:"extension"`
+	Lang      string                `json:"lang"`
+	Name      string                `json:"name"`
+	Hash      string                `json:"hash"`
+	IsPrivate bool                  `json:"is_private"`
+	Mdata     FileMetadataSchema    `json:"mdata"`
+	DocTexts  []FileChildTextSource `json:"doc_texts"`
+	Stage     DocProcStage          `json:"stage"`
+	Extra     FileGeneratedExtras   `json:"extra"`
+	Authors   []AuthorInformation   `json:"authors"`
 }
 
 type FileMetadataSchema struct {
