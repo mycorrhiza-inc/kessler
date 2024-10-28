@@ -69,6 +69,7 @@ SET extension = $1,
 	name = $3,
 	stage_id = $4,
 	isPrivate = $5,
+  hash = $6,
 	updated_at = NOW()
 WHERE id = $6
 RETURNING id;

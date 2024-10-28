@@ -79,22 +79,6 @@ func RawToFileSchema(file RawFileSchema) (FileSchema, error) {
 	}, nil
 }
 
-func PrivateFileToSchema(file dbstore.UserfilesPrivateFile) RawFileSchema {
-	return RawFileSchema{
-		ID:           file.ID,
-		Url:          file.Url.String,
-		Doctype:      file.Doctype.String,
-		Lang:         file.Lang.String,
-		Name:         file.Name.String,
-		Source:       file.Source.String,
-		Hash:         file.Hash.String,
-		Mdata:        file.Mdata.String,
-		Stage:        file.Stage.String,
-		Summary:      file.Summary.String,
-		ShortSummary: file.ShortSummary.String,
-	}
-}
-
 func PublicFileToSchema(file dbstore.File) RawFileSchema {
 	return RawFileSchema{
 		ID:           file.ID,

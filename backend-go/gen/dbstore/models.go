@@ -17,6 +17,7 @@ const (
 	StageStatePending    StageState = "pending"
 	StageStateProcessing StageState = "processing"
 	StageStateCompleted  StageState = "completed"
+	StageStateErrored    StageState = "errored"
 )
 
 func (e *StageState) Scan(src interface{}) error {
