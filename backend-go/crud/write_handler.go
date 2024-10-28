@@ -1,6 +1,7 @@
 package crud
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -18,9 +19,49 @@ type UpsertHandlerInfo struct {
 	insert   bool
 }
 
+func upsertFileTexts(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, texts []FileTextSchema, insert bool) {
+	doc_pgUUID := pgtype.UUID{Bytes: doc_uuid, Valid: true}
+	if len(texts) != 0 {
+		if !insert {
+			// TODO: Implement this func to Nuke all the previous texts
+			err := NukePriPubFileTexts(q, ctx, doc_pgUUID)
+			if err != nil {
+				fmt.Print("Error deleting old texts, proceeding with new editions")
+			}
+		}
+		// TODO : Make Async at some point in future
+		for _, text := range texts {
+			textRaw := FileTextSchema{
+				FileID:         doc_pgUUID,
+				IsOriginalText: text.IsOriginalText,
+				Language:       text.Language,
+				Text:           text.Text,
+			}
+			err := InsertPriPubFileText(q, ctx, textRaw, false)
+			if err != nil {
+				fmt.Print("Error adding a text value, not doing anything and procceeding since error handling is hard.")
+			}
+		}
+	}
+}
+
+func upsertFileMetadata(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, metadata FileMetadataSchema, insert bool) {
+	doc_pgUUID := pgtype.UUID{Bytes: doc_uuid, Valid: true}
+	if !insert {
+		// TODO: Implement this func to Nuke all the previous texts
+		err := NukeFileMetadata(q, ctx, doc_pgUUID)
+		if err != nil {
+			fmt.Print("Error deleting old metadata, proceeding with new editions")
+		}
+	}
+	// TODO : Make Async at some point in future
+	err := InsertFileMetadata(q, ctx, FileMetadataSchema{})
+}
+
 func makeFileUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r *http.Request) {
 	dbtx_val := info.dbtx_val
 	private := info.private
+
 	insert := info.insert
 	return func(w http.ResponseWriter, r *http.Request) {
 		var doc_uuid uuid.UUID
@@ -86,29 +127,7 @@ func makeFileUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r
 		}
 		texts := newDocInfo.DocTexts
 		doc_uuid = fileSchema.ID // Ensure UUID is same as one returned from database
-		doc_pgUUID := pgtype.UUID{Bytes: doc_uuid, Valid: true}
-		if len(texts) != 0 {
-			if !insert {
-				// TODO: Implement this func to Nuke all the previous texts
-				err := NukePriPubFileTexts(q, ctx, doc_pgUUID)
-				if err != nil {
-					fmt.Print("Error deleting old texts, proceeding with new editions")
-				}
-			}
-			// TODO : Make Async at some point in future
-			for _, text := range texts {
-				textRaw := FileTextSchema{
-					FileID:         doc_pgUUID,
-					IsOriginalText: text.IsOriginalText,
-					Language:       text.Language,
-					Text:           text.Text,
-				}
-				err = InsertPriPubFileText(q, ctx, textRaw, private)
-				if err != nil {
-					fmt.Print("Error adding a text value, not doing anything and procceeding since error handling is hard.")
-				}
-			}
-		}
+		upsertFileTexts(ctx, q, doc_uuid, texts, insert)
 		response, _ := json.Marshal(fileSchema)
 
 		w.Header().Set("Content-Type", "application/json")
