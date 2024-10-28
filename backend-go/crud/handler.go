@@ -32,25 +32,25 @@ func DefineCrudRoutes(router *mux.Router, dbtx_val dbstore.DBTX) {
 	public_subrouter.HandleFunc("/files/{uuid}/markdown", makeFileHandler(
 		FileHandlerInfo{dbtx_val: dbtx_val, private: false, return_type: "markdown"})).Methods(http.MethodGet)
 
-	public_subrouter.HandleFunc("/files/{uuid}/raw", makeFileHandler(
-		FileHandlerInfo{dbtx_val: dbtx_val, private: false, return_type: "raw"})).Methods(http.MethodGet)
-
-	private_subrouter := router.PathPrefix("/v2/private").Subrouter()
-
-	private_subrouter.HandleFunc("/files/insert", makeUpsertHandler(
-		UpsertHandlerInfo{dbtx_val: dbtx_val, private: true, insert: true})).Methods(http.MethodPost)
-
-	private_subrouter.HandleFunc("/files/{uuid}", makeUpsertHandler(
-		UpsertHandlerInfo{dbtx_val: dbtx_val, private: true, insert: false})).Methods(http.MethodPost)
-
-	private_subrouter.HandleFunc("/files/{uuid}", makeFileHandler(
-		FileHandlerInfo{dbtx_val: dbtx_val, private: true, return_type: "object"})).Methods(http.MethodGet)
-
-	private_subrouter.HandleFunc("/files/{uuid}/markdown", makeFileHandler(
-		FileHandlerInfo{dbtx_val: dbtx_val, private: true, return_type: "markdown"})).Methods(http.MethodGet)
-
-	private_subrouter.HandleFunc("/files/{uuid}/raw", makeFileHandler(
-		FileHandlerInfo{dbtx_val: dbtx_val, private: true, return_type: "raw"})).Methods(http.MethodGet)
+	// public_subrouter.HandleFunc("/files/{uuid}/raw", makeFileHandler(
+	// 	FileHandlerInfo{dbtx_val: dbtx_val, private: false, return_type: "raw"})).Methods(http.MethodGet)
+	//
+	// private_subrouter := router.PathPrefix("/v2/private").Subrouter()
+	//
+	// private_subrouter.HandleFunc("/files/insert", makeUpsertHandler(
+	// 	UpsertHandlerInfo{dbtx_val: dbtx_val, private: true, insert: true})).Methods(http.MethodPost)
+	//
+	// private_subrouter.HandleFunc("/files/{uuid}", makeUpsertHandler(
+	// 	UpsertHandlerInfo{dbtx_val: dbtx_val, private: true, insert: false})).Methods(http.MethodPost)
+	//
+	// private_subrouter.HandleFunc("/files/{uuid}", makeFileHandler(
+	// 	FileHandlerInfo{dbtx_val: dbtx_val, private: true, return_type: "object"})).Methods(http.MethodGet)
+	//
+	// private_subrouter.HandleFunc("/files/{uuid}/markdown", makeFileHandler(
+	// 	FileHandlerInfo{dbtx_val: dbtx_val, private: true, return_type: "markdown"})).Methods(http.MethodGet)
+	//
+	// private_subrouter.HandleFunc("/files/{uuid}/raw", makeFileHandler(
+	// 	FileHandlerInfo{dbtx_val: dbtx_val, private: true, return_type: "raw"})).Methods(http.MethodGet)
 }
 
 // CONVERT TO UPPER CASE IF YOU EVER WANT TO USE IT OUTSIDE OF THIS CONTEXT
@@ -152,7 +152,7 @@ func makeFileHandler(info FileHandlerInfo) func(w http.ResponseWriter, r *http.R
 			}
 
 			// fileSchema := fileToSchema(file)
-			fileSchema, err := RawToFileSchema(file)
+			fileSchema, err := file, nil
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -278,7 +278,7 @@ func makeUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r *ht
 			return
 		}
 		rawFileData := ConvertToCreationData(newDocInfo)
-		var fileSchema RawFileSchema
+		var fileSchema FileSchema
 		if insert {
 			fileSchema, err = InsertPubPrivateFileObj(q, ctx, rawFileData, private)
 		} else {
@@ -290,7 +290,7 @@ func makeUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r *ht
 			http.Error(w, fmt.Sprintf("Error inserting/updating document: %v", err), http.StatusInternalServerError)
 		}
 		texts := newDocInfo.DocTexts
-		doc_uuid = fileSchema.ID.Bytes // Ensure UUID is same as one returned from database
+		doc_uuid = fileSchema.ID // Ensure UUID is same as one returned from database
 		doc_pgUUID := pgtype.UUID{Bytes: doc_uuid, Valid: true}
 		if len(texts) != 0 {
 			if !insert {
@@ -380,12 +380,12 @@ type ReturnFilesSchema struct {
 	Files []FileSchema `json:"files"`
 }
 
-func GetListAllRawFiles(ctx context.Context, q dbstore.Queries) ([]RawFileSchema, error) {
+func GetListAllRawFiles(ctx context.Context, q dbstore.Queries) ([]FileSchema, error) {
 	files, err := q.ListFiles(ctx)
 	if err != nil {
-		return []RawFileSchema{}, err
+		return []FileSchema{}, err
 	}
-	var fileSchemas []RawFileSchema
+	var fileSchemas []FileSchema
 	for _, fileRaw := range files {
 		rawSchema := PublicFileToSchema(fileRaw)
 		fileSchemas = append(fileSchemas, rawSchema)
@@ -400,7 +400,7 @@ func GetListAllFiles(ctx context.Context, q dbstore.Queries) ([]FileSchema, erro
 	}
 	var fileSchemas []FileSchema
 	for _, rawSchema := range files {
-		fileSchema, _ := RawToFileSchema(rawSchema)
+		fileSchema := rawSchema
 		fileSchemas = append(fileSchemas, fileSchema)
 	}
 	return fileSchemas, nil

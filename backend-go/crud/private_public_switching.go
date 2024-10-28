@@ -9,6 +9,16 @@ import (
 	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
 )
 
+type CompleteFileSchema struct {
+	ID        pgtype.UUID
+	Extension string
+	Lang      string
+	Name      string
+	Hash      string
+	MdataStr  string
+	Texts     []FileTextSchema
+}
+
 type FileSchema struct {
 	ID        uuid.UUID
 	Extension string
