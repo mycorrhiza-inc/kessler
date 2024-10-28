@@ -1,5 +1,5 @@
 -- +goose Up
 ALTER TABLE public.file
-ADD COLUMN status hash DEFAULT '';
+ADD COLUMN file hash DEFAULT '';
 -- +goose Down
-ALTER TABLE public.filestage DROP COLUMN status;
+ALTER TABLE public.file DROP COLUMN hash;
