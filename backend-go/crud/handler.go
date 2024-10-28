@@ -12,7 +12,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
 )
 
@@ -63,21 +62,22 @@ func checkPrivateFileAuthorization(q dbstore.Queries, ctx context.Context, objec
 	if !strings.HasPrefix(token, "Authenticated") {
 		return false, nil
 	}
-	viewerID := strings.TrimPrefix(token, "Authenticated ")
-	if viewerID == "thaumaturgy" {
-		return true, nil
-	}
-	viewerUUID, err := uuid.Parse(viewerID)
-	if err != nil {
-		return false, err
-	}
-	viewerPgUUID := pgtype.UUID{Bytes: viewerUUID, Valid: true}
-	objectPgUUID := pgtype.UUID{Bytes: objectID, Valid: true}
-	auth_params := dbstore.CheckOperatorAccessToObjectParams{viewerPgUUID, objectPgUUID}
-	auth_result, err := q.CheckOperatorAccessToObject(ctx, auth_params)
-	if err != nil {
-		return false, err
-	}
+	// viewerID := strings.TrimPrefix(token, "Authenticated ")
+	// if viewerID == "thaumaturgy" {
+	// 	return true, nil
+	// }
+	// viewerUUID, err := uuid.Parse(viewerID)
+	// if err != nil {
+	// 	return false, err
+	// }
+	// viewerPgUUID := pgtype.UUID{Bytes: viewerUUID, Valid: true}
+	// objectPgUUID := pgtype.UUID{Bytes: objectID, Valid: true}
+	// auth_params := dbstore.CheckOperatorAccessToObjectParams{viewerPgUUID, objectPgUUID}
+	// auth_result, err := q.CheckOperatorAccessToObject(ctx, auth_params)
+	// if err != nil {
+	// 	return false, err
+	// }
+	auth_result := false
 	return auth_result, nil
 }
 

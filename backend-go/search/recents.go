@@ -38,7 +38,6 @@ func GetRecentCaseData(page int) ([]CaseFile, error) {
 		"application/json",
 		bytes.NewBuffer(jsonData),
 	)
-
 	if err != nil {
 		return nil, err
 	}
@@ -77,13 +76,14 @@ func convertToUTC(dateStr string) (string, error) {
 }
 
 func GetCaseDataSince(date string, page int) ([]CaseFile, error) {
+	// Go was complaining about unutilized code, assume this is someone in the middle of something, feel free to continue.
 	// parse the date string
 	//
-	parsedDate, err := convertToUTC(date)
+	// parsedDate, err := convertToUTC(date)
 
-	if err != nil {
-		return nil, err
-	}
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	// if the date string is incorrect return a failure
 	// the failure should be handled on the frontend
@@ -110,7 +110,6 @@ func GetCaseDataSince(date string, page int) ([]CaseFile, error) {
 		"application/json",
 		bytes.NewBuffer(jsonData),
 	)
-
 	if err != nil {
 		return nil, err
 	}

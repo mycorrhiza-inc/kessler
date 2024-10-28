@@ -161,16 +161,16 @@ func NukePriPubFileTexts(q dbstore.Queries, ctx context.Context, pgUUID pgtype.U
 }
 
 func InsertPriPubFileText(q dbstore.Queries, ctx context.Context, text FileTextSchema, private bool) error {
-	if private {
-		args := dbstore.CreatePrivateFileTextSourceParams{
-			FileID:         text.FileID,
-			IsOriginalText: text.IsOriginalText,
-			Text:           pgtype.Text{String: text.Text, Valid: true},
-			Language:       text.Language,
-		}
-		_, err := q.CreatePrivateFileTextSource(ctx, args)
-		return err
-	}
+	// if private {
+	// 	args := dbstore.CreatePrivateFileTextSourceParams{
+	// 		FileID:         text.FileID,
+	// 		IsOriginalText: text.IsOriginalText,
+	// 		Text:           pgtype.Text{String: text.Text, Valid: true},
+	// 		Language:       text.Language,
+	// 	}
+	// 	_, err := q.CreatePrivateFileTextSource(ctx, args)
+	// 	return err
+	// }
 	args := dbstore.CreateFileTextSourceParams{
 		FileID:         text.FileID,
 		IsOriginalText: text.IsOriginalText,
