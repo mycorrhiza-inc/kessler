@@ -6,6 +6,7 @@ INSERT INTO public.file (
 		name,
 		stage_id,
 		isPrivate,
+    hash,
 		created_at,
 		updated_at
 	)
@@ -16,6 +17,7 @@ VALUES (
 		$3,
 		$4,
 		$5,
+    $6
 		NOW(),
 		NOW()
 	)
