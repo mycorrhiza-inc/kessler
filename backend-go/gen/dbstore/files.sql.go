@@ -52,6 +52,7 @@ INSERT INTO public.file (
 		name,
 		stage_id,
 		isPrivate,
+    hash,
 		created_at,
 		updated_at
 	)
@@ -62,6 +63,7 @@ VALUES (
 		$3,
 		$4,
 		$5,
+    $6,
 		NOW(),
 		NOW()
 	)
@@ -74,6 +76,7 @@ type CreateFileParams struct {
 	Name      pgtype.Text
 	StageID   pgtype.UUID
 	Isprivate pgtype.Bool
+	Hash      pgtype.Text
 }
 
 func (q *Queries) CreateFile(ctx context.Context, arg CreateFileParams) (pgtype.UUID, error) {
@@ -83,6 +86,7 @@ func (q *Queries) CreateFile(ctx context.Context, arg CreateFileParams) (pgtype.
 		arg.Name,
 		arg.StageID,
 		arg.Isprivate,
+		arg.Hash,
 	)
 	var id pgtype.UUID
 	err := row.Scan(&id)
@@ -100,7 +104,7 @@ func (q *Queries) DeleteFile(ctx context.Context, id pgtype.UUID) error {
 }
 
 const listFiles = `-- name: ListFiles :many
-SELECT id, lang, name, extension, stage_id, isprivate, created_at, updated_at
+SELECT id, lang, name, extension, stage_id, isprivate, created_at, updated_at, hash
 FROM public.file
 ORDER BY updated_at DESC
 `
@@ -123,6 +127,7 @@ func (q *Queries) ListFiles(ctx context.Context) ([]File, error) {
 			&i.Isprivate,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.Hash,
 		); err != nil {
 			return nil, err
 		}
@@ -135,7 +140,7 @@ func (q *Queries) ListFiles(ctx context.Context) ([]File, error) {
 }
 
 const listUnprocessedFiles = `-- name: ListUnprocessedFiles :many
-SELECT file.id, lang, name, extension, file.stage_id, isprivate, file.created_at, updated_at, sl.id, sl.stage_id, status, log, sl.created_at
+SELECT file.id, lang, name, extension, file.stage_id, isprivate, file.created_at, updated_at, hash, sl.id, sl.stage_id, status, log, sl.created_at
 FROM public.file
 	LEFT JOIN public.stage_log sl ON f.stage_id = sl.stage_id
 WHERE sl.status != 'completed'
@@ -151,6 +156,7 @@ type ListUnprocessedFilesRow struct {
 	Isprivate   pgtype.Bool
 	CreatedAt   pgtype.Timestamptz
 	UpdatedAt   pgtype.Timestamptz
+	Hash        pgtype.Text
 	ID_2        pgtype.UUID
 	StageID_2   pgtype.UUID
 	Status      NullStageState
@@ -178,6 +184,7 @@ func (q *Queries) ListUnprocessedFiles(ctx context.Context) ([]ListUnprocessedFi
 			&i.Isprivate,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.Hash,
 			&i.ID_2,
 			&i.StageID_2,
 			&i.Status,
@@ -195,7 +202,7 @@ func (q *Queries) ListUnprocessedFiles(ctx context.Context) ([]ListUnprocessedFi
 }
 
 const listUnprocessedFilesPagnated = `-- name: ListUnprocessedFilesPagnated :many
-SELECT file.id, lang, name, extension, file.stage_id, isprivate, file.created_at, updated_at, sl.id, sl.stage_id, status, log, sl.created_at
+SELECT file.id, lang, name, extension, file.stage_id, isprivate, file.created_at, updated_at, hash, sl.id, sl.stage_id, status, log, sl.created_at
 FROM public.file
 	LEFT JOIN public.stage_log sl ON f.stage_id = sl.stage_id
 WHERE sl.status != 'completed'
@@ -217,6 +224,7 @@ type ListUnprocessedFilesPagnatedRow struct {
 	Isprivate   pgtype.Bool
 	CreatedAt   pgtype.Timestamptz
 	UpdatedAt   pgtype.Timestamptz
+	Hash        pgtype.Text
 	ID_2        pgtype.UUID
 	StageID_2   pgtype.UUID
 	Status      NullStageState
@@ -242,6 +250,7 @@ func (q *Queries) ListUnprocessedFilesPagnated(ctx context.Context, arg ListUnpr
 			&i.Isprivate,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.Hash,
 			&i.ID_2,
 			&i.StageID_2,
 			&i.Status,
@@ -259,7 +268,7 @@ func (q *Queries) ListUnprocessedFilesPagnated(ctx context.Context, arg ListUnpr
 }
 
 const readFile = `-- name: ReadFile :one
-SELECT id, lang, name, extension, stage_id, isprivate, created_at, updated_at
+SELECT id, lang, name, extension, stage_id, isprivate, created_at, updated_at, hash
 FROM public.file
 WHERE id = $1
 `
@@ -276,6 +285,7 @@ func (q *Queries) ReadFile(ctx context.Context, id pgtype.UUID) (File, error) {
 		&i.Isprivate,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Hash,
 	)
 	return i, err
 }
@@ -287,6 +297,7 @@ SET extension = $1,
 	name = $3,
 	stage_id = $4,
 	isPrivate = $5,
+  hash = $6,
 	updated_at = NOW()
 WHERE id = $6
 RETURNING id
@@ -298,7 +309,7 @@ type UpdateFileParams struct {
 	Name      pgtype.Text
 	StageID   pgtype.UUID
 	Isprivate pgtype.Bool
-	ID        pgtype.UUID
+	Hash      pgtype.Text
 }
 
 func (q *Queries) UpdateFile(ctx context.Context, arg UpdateFileParams) (pgtype.UUID, error) {
@@ -308,7 +319,7 @@ func (q *Queries) UpdateFile(ctx context.Context, arg UpdateFileParams) (pgtype.
 		arg.Name,
 		arg.StageID,
 		arg.Isprivate,
-		arg.ID,
+		arg.Hash,
 	)
 	var id pgtype.UUID
 	err := row.Scan(&id)

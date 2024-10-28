@@ -89,6 +89,7 @@ type File struct {
 	Isprivate pgtype.Bool
 	CreatedAt pgtype.Timestamptz
 	UpdatedAt pgtype.Timestamptz
+	Hash      pgtype.Text
 }
 
 type FileMetadatum struct {
