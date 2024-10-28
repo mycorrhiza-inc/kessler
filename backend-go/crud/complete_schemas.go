@@ -51,17 +51,17 @@ type AuthorInformation struct {
 }
 
 type CompleteFileSchema struct {
-	ID        uuid.UUID `json:"id"`
-	Extension string    `json:"extension"`
-	Lang      string    `json:"lang"`
-	Name      string    `json:"name"`
-	Hash      string    `json:"hash"`
-	IsPrivate bool      `json:"is_private"`
-	// Mdata     FileMetadataSchema  `json:"mdata"`
-	DocTexts []FileTextSchema    `json:"doc_texts"`
-	Stage    DocProcStage        `json:"stage"`
-	Extra    FileGeneratedExtras `json:"extra"`
-	Authors  []AuthorInformation `json:"authors"`
+	ID        uuid.UUID           `json:"id"`
+	Extension string              `json:"extension"`
+	Lang      string              `json:"lang"`
+	Name      string              `json:"name"`
+	Hash      string              `json:"hash"`
+	IsPrivate bool                `json:"is_private"`
+	Mdata     FileMetadataSchema  `json:"mdata"`
+	DocTexts  []FileTextSchema    `json:"doc_texts"`
+	Stage     DocProcStage        `json:"stage"`
+	Extra     FileGeneratedExtras `json:"extra"`
+	Authors   []AuthorInformation `json:"authors"`
 }
 
 type FileMetadataSchema struct {
