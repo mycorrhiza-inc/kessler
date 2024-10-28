@@ -122,17 +122,18 @@ func makeFileUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r
 		// err = json.NewDecoder(r.Body).Decode(&newDocInfo)
 		bodyBytes, err := io.ReadAll(r.Body)
 		if err != nil {
-			errorstring := fmt.Sprintf("Error reading request body: %v", err)
+			errorstring := fmt.Sprintf("Error reading request body: %v\n", err)
 			fmt.Println(errorstring)
 
 			http.Error(w, errorstring, http.StatusBadRequest)
 			return
 		}
-		blah := fmt.Sprintln("=" + string(bodyBytes))
-		fmt.Println(blah)
+		blah := fmt.Sprintln(string(bodyBytes))
+		fmt.Printf("%v\n", blah)
+		fmt.Printf("%v\n", bodyBytes)
 		err = json.Unmarshal([]byte(blah), &newDocInfo)
 		if err != nil {
-			errorstring := fmt.Sprintf("Error reading request body json: %v", err)
+			errorstring := fmt.Sprintf("Error reading request body json: %v\n", err)
 			fmt.Println(errorstring)
 
 			http.Error(w, errorstring, http.StatusBadRequest)
