@@ -117,7 +117,6 @@ func makeFileUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r
 		}
 		// Proceed with the write operation
 		// TODO: IF user is not a paying user, disable insert functionality
-		fmt.Println(r.Body)
 		bodyBytes, err := io.ReadAll(r.Body)
 		if err != nil {
 			errorstring := fmt.Sprintf("Error reading request body: %v", err)
@@ -126,11 +125,11 @@ func makeFileUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r
 			http.Error(w, errorstring, http.StatusBadRequest)
 			return
 		}
-		fmt.Print(string(bodyBytes))
+		fmt.Println(string(bodyBytes))
 		var newDocInfo CompleteFileSchema
 		err = json.Unmarshal(bodyBytes, &newDocInfo)
 		if err != nil {
-			errorstring := fmt.Sprintf("Invalid request payload: %v", err)
+			errorstring := fmt.Sprintf("Error reading request body json: %v", err)
 			fmt.Println(errorstring)
 
 			http.Error(w, errorstring, http.StatusBadRequest)
