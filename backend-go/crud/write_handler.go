@@ -129,6 +129,7 @@ func makeFileUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r
 			return
 		}
 		blah := fmt.Sprintln(string(bodyBytes))
+		fmt.Println(blah)
 		err = json.Unmarshal([]byte(blah), &newDocInfo)
 		if err != nil {
 			errorstring := fmt.Sprintf("Error reading request body json: %v", err)
