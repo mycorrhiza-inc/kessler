@@ -14,7 +14,6 @@ import "@xyflow/react/dist/style.css";
 import { User } from "@supabase/supabase-js";
 import Header from "../Header";
 import { useTheme } from "next-themes";
-import { themeDataDictionary } from "../ThemeSelector";
 
 interface SeriousGame {
   teams: SeriousGameTeam[];
@@ -211,7 +210,6 @@ const TestFlowVisuals = ({ user }: { user: User | null }) => {
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   // Fix Later
   // @ts-ignore
-  const themeLightDark = themeDataDictionary[theme].lightdark || "dark";
   const onConnect = useCallback(
     (params: any) => setEdges((eds) => addEdge(params, eds)),
     [setEdges],
@@ -227,7 +225,6 @@ const TestFlowVisuals = ({ user }: { user: User | null }) => {
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
-          colorMode={themeLightDark}
         >
           <Controls />
           <MiniMap />
