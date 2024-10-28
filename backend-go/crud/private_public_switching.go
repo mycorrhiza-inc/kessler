@@ -13,7 +13,7 @@ import (
 type RawFileSchema struct {
 	ID           pgtype.UUID
 	Url          string
-	Doctype      string
+	Extension      string
 	Lang         string
 	Name         string
 	Source       string
@@ -26,7 +26,7 @@ type RawFileSchema struct {
 type FileSchema struct {
 	ID           uuid.UUID
 	Url          string
-	Doctype      string
+	Extension      string
 	Lang         string
 	Name         string
 	Source       string
@@ -53,7 +53,7 @@ func RawToFileSchema(file RawFileSchema) (FileSchema, error) {
 		return FileSchema{
 			ID:           file.ID.Bytes,
 			Url:          file.Url,
-			Doctype:      file.Doctype,
+			Extension:      file.Extension,
 			Lang:         file.Lang,
 			Name:         file.Name,
 			Source:       file.Source,
@@ -67,7 +67,7 @@ func RawToFileSchema(file RawFileSchema) (FileSchema, error) {
 	return FileSchema{
 		ID:           file.ID.Bytes,
 		Url:          file.Url,
-		Doctype:      file.Doctype,
+		Extension:      file.Extension,
 		Lang:         file.Lang,
 		Name:         file.Name,
 		Source:       file.Source,
@@ -83,7 +83,7 @@ func PublicFileToSchema(file dbstore.File) RawFileSchema {
 	return RawFileSchema{
 		ID:           file.ID,
 		Url:          file.Url.String,
-		Doctype:      file.Doctype.String,
+		Extension:    file.Extension.String,
 		Lang:         file.Lang.String,
 		Name:         file.Name.String,
 		Source:       file.Source.String,
@@ -211,7 +211,7 @@ func GetFileObjectRaw(params GetFileParam) (RawFileSchema, error) {
 
 type FileCreationDataRaw struct {
 	Url          pgtype.Text
-	Doctype      pgtype.Text
+	Extension      pgtype.Text
 	Lang         pgtype.Text
 	Name         pgtype.Text
 	Source       pgtype.Text
@@ -226,7 +226,7 @@ func InsertPubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreatio
 	if private {
 		params := dbstore.CreatePrivateFileParams{
 			Url:          fileCreation.Url,
-			Doctype:      fileCreation.Doctype,
+			Extension:      fileCreation.Extension,
 			Lang:         fileCreation.Lang,
 			Name:         fileCreation.Name,
 			Source:       fileCreation.Source,
@@ -245,7 +245,7 @@ func InsertPubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreatio
 	}
 	params := dbstore.CreateFileParams{
 		Url:          fileCreation.Url,
-		Doctype:      fileCreation.Doctype,
+		Extension:      fileCreation.Extension,
 		Lang:         fileCreation.Lang,
 		Name:         fileCreation.Name,
 		Source:       fileCreation.Source,
@@ -267,7 +267,7 @@ func UpdatePubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreatio
 	if private {
 		params := dbstore.UpdatePrivateFileParams{
 			Url:          fileCreation.Url,
-			Doctype:      fileCreation.Doctype,
+			Extension:      fileCreation.Extension,
 			Lang:         fileCreation.Lang,
 			Name:         fileCreation.Name,
 			Source:       fileCreation.Source,
@@ -287,7 +287,7 @@ func UpdatePubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreatio
 	}
 	params := dbstore.UpdateFileParams{
 		Url:          fileCreation.Url,
-		Doctype:      fileCreation.Doctype,
+		Extension:      fileCreation.Extension,
 		Lang:         fileCreation.Lang,
 		Name:         fileCreation.Name,
 		Source:       fileCreation.Source,

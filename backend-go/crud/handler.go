@@ -193,7 +193,7 @@ type DocTextInfo struct {
 type UpdateDocumentInfo struct {
 	ID           uuid.UUID      `json:"id"`
 	Url          string         `json:"url"`
-	Doctype      string         `json:"doctype"`
+	Extension    string         `json:"extension"`
 	Lang         string         `json:"lang"`
 	Name         string         `json:"name"`
 	Source       string         `json:"source"`
@@ -210,7 +210,7 @@ func ConvertToCreationData(updateInfo UpdateDocumentInfo) FileCreationDataRaw {
 	mdata_string, _ := json.Marshal(updateInfo.Mdata)
 	creationData := FileCreationDataRaw{
 		Url:          pgtype.Text{String: updateInfo.Url, Valid: true},
-		Doctype:      pgtype.Text{String: updateInfo.Doctype, Valid: true},
+		Extension:    pgtype.Text{String: updateInfo.Extension, Valid: true},
 		Lang:         pgtype.Text{String: updateInfo.Lang, Valid: true},
 		Name:         pgtype.Text{String: updateInfo.Name, Valid: true},
 		Source:       pgtype.Text{String: updateInfo.Source, Valid: true},
