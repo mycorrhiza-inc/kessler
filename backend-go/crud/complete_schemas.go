@@ -38,6 +38,10 @@ type CompleteFileSchema struct {
 	Stage     DocProcStage
 }
 
+type FileMetadataSchema struct {
+	JsonObj []byte
+}
+
 func CompleteFileSchemaPrune(input CompleteFileSchema) FileSchema {
 	return FileSchema{
 		ID:        input.ID,

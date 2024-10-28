@@ -45,17 +45,26 @@ func upsertFileTexts(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID,
 	}
 }
 
-func upsertFileMetadata(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, metadata FileMetadataSchema, insert bool) {
+func upsertFileMetadata(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, metadata FileMetadataSchema, insert bool) error {
 	doc_pgUUID := pgtype.UUID{Bytes: doc_uuid, Valid: true}
-	if !insert {
-		// TODO: Implement this func to Nuke all the previous texts
-		err := NukeFileMetadata(q, ctx, doc_pgUUID)
+	json_obj := metadata.JsonObj
+	pgPrivate := pgtype.Bool{false, true}
+	if insert {
+		args := dbstore.InsertMetadataParams{ID: doc_pgUUID, Isprivate: pgPrivate, Mdata: json_obj}
+		_, err := q.InsertMetadata(
+			ctx, args)
 		if err != nil {
-			fmt.Print("Error deleting old metadata, proceeding with new editions")
+			return err
 		}
+		return nil
 	}
-	// TODO : Make Async at some point in future
-	err := InsertFileMetadata(q, ctx, FileMetadataSchema{})
+	args := dbstore.UpdateMetadataParams{ID: doc_pgUUID, Isprivate: pgPrivate, Mdata: json_obj}
+	_, err := q.UpdateMetadata(
+		ctx, args)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func makeFileUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r *http.Request) {
