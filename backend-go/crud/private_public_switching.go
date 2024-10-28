@@ -37,10 +37,10 @@ func PublicFileToSchema(file dbstore.File) FileSchema {
 }
 
 type FileTextSchema struct {
-	FileID         pgtype.UUID
-	IsOriginalText bool
-	Text           string
-	Language       string
+	FileID         pgtype.UUID `json:"file_id"`
+	IsOriginalText bool        `json:"is_original_text"`
+	Text           string      `json:"text"`
+	Language       string      `json:"language"`
 }
 
 func PublicTextToSchema(file dbstore.FileTextSource) FileTextSchema {
