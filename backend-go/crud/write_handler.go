@@ -134,9 +134,12 @@ func makeFileUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r
 			fmt.Printf("Error inserting/updating document: %v", err)
 			http.Error(w, fmt.Sprintf("Error inserting/updating document: %v", err), http.StatusInternalServerError)
 		}
-		texts := newDocInfo.DocTexts
 		doc_uuid = fileSchema.ID // Ensure UUID is same as one returned from database
-		upsertFileTexts(ctx, q, doc_uuid, texts, insert)
+
+		upsertFileTexts(ctx, q, doc_uuid, newDocInfo.DocTexts, insert)
+
+		upsertFileMetadata(ctx, q, doc_uuid, newDocInfo.Mdata, insert)
+
 		response, _ := json.Marshal(fileSchema)
 
 		w.Header().Set("Content-Type", "application/json")
