@@ -82,7 +82,7 @@ func makeFileUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r
 
 			doc_uuid, err = uuid.Parse(fileIDString)
 			if err != nil {
-				http.Error(w, fmt.Sprintf("Error parsing uuid: %s", fileIDString), http.StatusBadRequest)
+				http.Error(w, fmt.Sprintf("Error parsing uuid: %s\n", fileIDString), http.StatusBadRequest)
 				return
 			}
 		}
@@ -153,8 +153,10 @@ func makeFileUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r
 			fileSchema, err = UpdatePubPrivateFileObj(q, ctx, rawFileData, private, pgUUID)
 		}
 		if err != nil {
-			fmt.Printf("Error inserting/updating document: %v", err)
-			http.Error(w, fmt.Sprintf("Error inserting/updating document: %v", err), http.StatusInternalServerError)
+			errorstring := fmt.Sprintf("Error inserting/updating document: %v\n", err)
+			fmt.Print(errorstring)
+			http.Error(w, errorstring, http.StatusInternalServerError)
+			return
 		}
 		doc_uuid = fileSchema.ID // Ensure UUID is same as one returned from database
 		newDocInfo.ID = doc_uuid

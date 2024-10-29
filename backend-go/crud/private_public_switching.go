@@ -124,6 +124,7 @@ type FileCreationDataRaw struct {
 	Lang      pgtype.Text
 	Name      pgtype.Text
 	Hash      pgtype.Text
+	IsPrivate pgtype.Bool
 }
 
 func InsertPubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreation FileCreationDataRaw, private bool) (FileSchema, error) {
