@@ -130,7 +130,6 @@ func makeFileUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r
 		}
 		blah := fmt.Sprintln(string(bodyBytes))
 		fmt.Printf("%v\n", blah)
-		fmt.Printf("%v\n", bodyBytes)
 		var testUnmarshal TestCompleteFileSchema
 		err = json.Unmarshal([]byte(blah), &testUnmarshal)
 		// err = json.Unmarshal([]byte(blah), &newDocInfo)
@@ -141,7 +140,9 @@ func makeFileUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r
 			http.Error(w, errorstring, http.StatusBadRequest)
 			return
 		}
-		fmt.Printf("Sucess Doing the file thing")
+		fmt.Println("Sucess Doing the file thing")
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte("Yay Victory"))
 		return
 		rawFileData := ConvertToCreationData(newDocInfo)
 		var fileSchema FileSchema
