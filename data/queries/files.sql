@@ -66,7 +66,7 @@ SET extension = $1,
 	isPrivate = $4,
   hash = $5,
 	updated_at = NOW()
-WHERE id = $6
+WHERE public.file.id = $6
 RETURNING id;
 -- name: DeleteFile :exec
 DELETE FROM public.file
