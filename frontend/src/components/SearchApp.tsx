@@ -7,10 +7,7 @@ import { CenteredFloatingSearhBox } from "@/components/SearchBox";
 import SearchResultBox from "@/components/SearchResultBox";
 import ChatBoxInternals from "./ChatBoxInternals";
 
-import {
-  QueryFilterFields,
-  emptyQueryOptions,
-} from "@/components/DocumentFilters";
+import { QueryFilterFields, emptyQueryOptions } from "@/lib/filters";
 import Header from "./Header";
 import { User } from "@supabase/supabase-js";
 

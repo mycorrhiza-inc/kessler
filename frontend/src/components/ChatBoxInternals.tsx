@@ -2,7 +2,7 @@ import { useState } from "react";
 
 import MarkdownRenderer from "./MarkdownRenderer";
 
-import { QueryFilterFields } from "@/components/DocumentFilters";
+import { QueryFilterFields } from "@/lib/filters";
 import { exampleChatHistory, Message } from "@/lib/chat";
 export const ChatMessages = ({
   messages,

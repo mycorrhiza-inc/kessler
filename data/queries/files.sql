@@ -6,6 +6,7 @@ INSERT INTO public.file (
 		name,
 		stage_id,
 		isPrivate,
+    hash,
 		created_at,
 		updated_at
 	)
@@ -16,6 +17,7 @@ VALUES (
 		$3,
 		$4,
 		$5,
+    $6,
 		NOW(),
 		NOW()
 	)
@@ -69,9 +71,37 @@ SET extension = $1,
 	name = $3,
 	stage_id = $4,
 	isPrivate = $5,
+  hash = $6,
 	updated_at = NOW()
 WHERE id = $6
 RETURNING id;
 -- name: DeleteFile :exec
 DELETE FROM public.file
+WHERE id = $1;
+-- name: InsertMetadata :one
+INSERT INTO public.file_metadata (
+    id,
+    isPrivate,
+    mdata,
+    created_at,
+    updated_at
+)
+VALUES (
+    $1,
+    $2,
+    $3,
+    NOW(),
+    NOW()
+)
+RETURNING id;
+-- name: UpdateMetadata :one
+UPDATE public.file_metadata
+SET isPrivate = $1,
+    mdata = $2,
+    updated_at = NOW()
+WHERE id = $3
+RETURNING id;
+-- name: FetchMetadata :one
+SELECT *
+FROM public.file_metadata
 WHERE id = $1;

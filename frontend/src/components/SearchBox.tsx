@@ -11,7 +11,8 @@ import {
 import {
   QueryFilterFields,
   emptyQueryOptions,
-} from "@/components/DocumentFilters";
+  allFilterFields,
+} from "@/lib/filters";
 import BasicDocumentFilters from "@/components/DocumentFilters";
 
 const AdvancedFilters = ({
@@ -48,6 +49,7 @@ const AdvancedFilters = ({
                 <BasicDocumentFilters
                   queryOptions={queryOptions}
                   setQueryOptions={setQueryOptions}
+                  showQueries={allFilterFields}
                 />
               </motion.div>
             )}

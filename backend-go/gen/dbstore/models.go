@@ -17,6 +17,7 @@ const (
 	StageStatePending    StageState = "pending"
 	StageStateProcessing StageState = "processing"
 	StageStateCompleted  StageState = "completed"
+	StageStateErrored    StageState = "errored"
 )
 
 func (e *StageState) Scan(src interface{}) error {
@@ -88,6 +89,7 @@ type File struct {
 	Isprivate pgtype.Bool
 	CreatedAt pgtype.Timestamptz
 	UpdatedAt pgtype.Timestamptz
+	Hash      pgtype.Text
 }
 
 type FileMetadatum struct {

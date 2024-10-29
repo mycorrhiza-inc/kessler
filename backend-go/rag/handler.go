@@ -33,7 +33,9 @@ func HandleBasicChatRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		errorstring := fmt.Sprintf("Invalid request payload: %v", err)
+		fmt.Println(errorstring)
+		http.Error(w, errorstring, http.StatusBadRequest)
 		return
 	}
 	llmObject := LLMModel{reqBody.Model}
@@ -64,7 +66,9 @@ func HandleRagChatRequest(w http.ResponseWriter, r *http.Request) {
 	}
 	var reqBody AdvancedRagRequestBody
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		errorstring := fmt.Sprintf("Invalid request payload: %v", err)
+		fmt.Println(errorstring)
+		http.Error(w, errorstring, http.StatusBadRequest)
 		return
 	}
 	llmObject := LLMModel{reqBody.Model}

@@ -3,7 +3,7 @@ FROM golang:1-alpine3.20 AS builder
 WORKDIR /app
 COPY go.mod /app
 COPY go.sum /app
-RUN go mod tidy && go install
+RUN go mod download
 COPY . /app
 RUN go build -o kessler-backend-go
 

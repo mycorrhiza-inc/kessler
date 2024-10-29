@@ -1,36 +1,48 @@
 import React from "react";
-import { Dispatch, SetStateAction, useState, useEffect, useRef } from "react";
+import {
+  Dispatch,
+  SetStateAction,
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+} from "react";
+import {
+  FilterField,
+  QueryFilterFields,
+  emptyQueryOptions,
+} from "@/lib/filters";
 
-export enum FilterField {
-  MatchName = "match_name",
-  MatchSource = "match_source",
-  MatchDoctype = "match_doctype",
-  MatchDocketId = "match_docket_id",
-  MatchDocumentClass = "match_document_class",
-  MatchAuthor = "match_author",
-  MatchBeforeDate = "match_before_date",
-  MatchAfterDate = "match_after_date",
-}
-export type QueryFilterFields = {
-  [key in FilterField]: string;
-};
-
+// export enum FilterField {
+//   MatchName = "match_name",
+//   MatchSource = "match_source",
+//   MatchDoctype = "match_doctype",
+//   MatchDocketId = "match_docket_id",
+//   MatchDocumentClass = "match_document_class",
+//   MatchAuthor = "match_author",
+//   MatchBeforeDate = "match_before_date",
+//   MatchAfterDate = "match_after_date",
+// }
+// export type QueryFilterFields = {
+//   [key in FilterField]: string;
+// };
+//
+// export const emptyQueryOptions: QueryFilterFields = {
+//   [FilterField.MatchName]: "",
+//   [FilterField.MatchSource]: "",
+//   [FilterField.MatchDoctype]: "",
+//   [FilterField.MatchDocketId]: "",
+//   [FilterField.MatchDocumentClass]: "",
+//   [FilterField.MatchAuthor]: "",
+//   [FilterField.MatchBeforeDate]: "",
+//   [FilterField.MatchAfterDate]: "",
+// };
 enum InputType {
   Text = "text",
   Select = "select",
   Datalist = "datalist",
   Date = "date",
 }
-export const emptyQueryOptions: QueryFilterFields = {
-  [FilterField.MatchName]: "",
-  [FilterField.MatchSource]: "",
-  [FilterField.MatchDoctype]: "",
-  [FilterField.MatchDocketId]: "",
-  [FilterField.MatchDocumentClass]: "",
-  [FilterField.MatchAuthor]: "",
-  [FilterField.MatchBeforeDate]: "",
-  [FilterField.MatchAfterDate]: "",
-};
 type PropertyInformation = {
   type: InputType;
   index: number;
@@ -128,91 +140,91 @@ const queryFiltersInformation: QueryFiltersInformation = {
 function BasicDocumentFilters({
   queryOptions,
   setQueryOptions,
+  showQueries,
 }: {
   queryOptions: QueryFilterFields;
   setQueryOptions: Dispatch<SetStateAction<QueryFilterFields>>;
+  showQueries: FilterField[];
 }) {
-  const DocumentFilter = ({
-    filterData,
-    filterID,
-  }: {
-    filterData: PropertyInformation;
-    filterID: FilterField;
-  }) => {
-    const handleChange = (
-      e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-    ) => {
-      const value = e.target.value;
-      setQueryOptions((prevOptions) => ({
-        ...prevOptions,
-        [filterID]: value,
-      }));
-    };
-    switch (filterData.type) {
-      case InputType.Text:
-        return (
-          <div className="box-border">
-            <div className="tooltip" data-tip={filterData.description}>
-              <p>{filterData.displayName}</p>
-            </div>
-            <input
-              className="input input-bordered w-full max-w-xs"
-              type="text"
-              onChange={handleChange}
-              title={filterData.displayName}
-            />
-          </div>
-        );
-      case InputType.Select:
-        return (
-          <div className="box-border">
-            <div className="tooltip" data-tip={filterData.description}>
-              <p>{filterData.displayName}</p>
-            </div>
-            <select
-              className="select select-bordered w-full max-w-xs"
-              onChange={handleChange}
-            >
-              {filterData.options?.map((option, index) => (
-                <option key={option.value} selected={index === 0}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        );
-      case InputType.Date:
-        return (
-          <div className="box-border">
-            <div className="tooltip" data-tip={filterData.description}>
-              <p>{filterData.displayName}</p>
-            </div>
-            <input
-              className="input input-bordered w-full max-w-xs"
-              type="date"
-              onChange={handleChange}
-              title={filterData.displayName}
-            />
-          </div>
-        );
-    }
+  // const [docFilterValues, setDocFilterValues] = useState(emptyQueryOptions);
+  const docFilterValues = queryOptions;
+  const setDocFilterValues = setQueryOptions;
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+    filterID: FilterField,
+  ) => {
+    setDocFilterValues((prevOptions) => ({
+      ...prevOptions,
+      [filterID]: e.target.value,
+    }));
   };
 
-  const sortedFilters = Object.keys(FilterField)
-    .map((key) => {
-      const filterId = FilterField[key as keyof typeof FilterField];
-      const filterData = queryFiltersInformation[filterId];
-      const placementIndex = filterData.index;
-      return { filterId, filterData, placementIndex };
-    })
-    .sort((a, b) => a.placementIndex - b.placementIndex);
+  const sortedFilters = useMemo(() => {
+    return showQueries
+      .map((filterId) => {
+        const filterData = queryFiltersInformation[filterId];
+        const placementIndex = filterData.index;
+        return { filterId, filterData, placementIndex };
+      })
+      .sort((a, b) => a.placementIndex - b.placementIndex);
+  }, [showQueries, queryFiltersInformation]);
 
   return (
     <>
       <div className="grid grid-cols-4 gap-4">
-        {sortedFilters.map(({ filterId, filterData }) => (
-          <DocumentFilter filterData={filterData} filterID={filterId} />
-        ))}
+        {sortedFilters.map(({ filterId, filterData }) => {
+          switch (filterData.type) {
+            case InputType.Text:
+              return (
+                <div className="box-border">
+                  <div className="tooltip" data-tip={filterData.description}>
+                    <p>{filterData.displayName}</p>
+                  </div>
+                  <input
+                    className="input input-bordered w-full max-w-xs"
+                    type="text"
+                    value={docFilterValues[filterId]}
+                    onChange={(e) => handleChange(e, filterId)}
+                    title={filterData.displayName}
+                  />
+                </div>
+              );
+            case InputType.Select:
+              return (
+                <div className="box-border">
+                  <div className="tooltip" data-tip={filterData.description}>
+                    <p>{filterData.displayName}</p>
+                  </div>
+                  <select
+                    className="select select-bordered w-full max-w-xs"
+                    value={docFilterValues[filterId]}
+                    onChange={(e) => handleChange(e, filterId)}
+                  >
+                    {filterData.options?.map((option, index) => (
+                      <option key={option.value} selected={index === 0}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              );
+            case InputType.Date:
+              return (
+                <div className="box-border">
+                  <div className="tooltip" data-tip={filterData.description}>
+                    <p>{filterData.displayName}</p>
+                  </div>
+                  <input
+                    className="input input-bordered w-full max-w-xs"
+                    type="date"
+                    value={docFilterValues[filterId]}
+                    onChange={(e) => handleChange(e, filterId)}
+                    title={filterData.displayName}
+                  />
+                </div>
+              );
+          }
+        })}
       </div>
     </>
   );
