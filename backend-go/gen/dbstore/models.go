@@ -85,7 +85,6 @@ type File struct {
 	Lang      pgtype.Text
 	Name      pgtype.Text
 	Extension pgtype.Text
-	StageID   pgtype.UUID
 	Isprivate pgtype.Bool
 	CreatedAt pgtype.Timestamptz
 	UpdatedAt pgtype.Timestamptz
@@ -108,13 +107,6 @@ type FileTextSource struct {
 	ID             pgtype.UUID
 	CreatedAt      pgtype.Timestamptz
 	UpdatedAt      pgtype.Timestamptz
-}
-
-type Filestage struct {
-	ID        pgtype.UUID
-	CreatedAt pgtype.Timestamptz
-	UpdatedAt pgtype.Timestamptz
-	Status    NullStageState
 }
 
 type Individual struct {
@@ -233,10 +225,10 @@ type RelationUsersUsergroup struct {
 
 type StageLog struct {
 	ID        pgtype.UUID
-	StageID   pgtype.UUID
 	Status    NullStageState
 	Log       []byte
 	CreatedAt pgtype.Timestamptz
+	FileID    pgtype.UUID
 }
 
 type User struct {
