@@ -79,6 +79,17 @@ type CompleteFileSchema struct {
 	Authors   []AuthorInformation   `json:"authors"`
 }
 
+type TestCompleteFileSchema struct {
+	ID        uuid.UUID           `json:"id"`
+	Extension string              `json:"extension"`
+	Lang      string              `json:"lang"`
+	Name      string              `json:"name"`
+	Hash      string              `json:"hash"`
+	IsPrivate bool                `json:"is_private"`
+	Extra     FileGeneratedExtras `json:"extra"`
+	Authors   []AuthorInformation `json:"authors"`
+}
+
 type FileMetadataSchema struct {
 	JsonObj []byte `json:"json_obj"`
 }

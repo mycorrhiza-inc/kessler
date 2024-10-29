@@ -131,9 +131,9 @@ func makeFileUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r
 		blah := fmt.Sprintln(string(bodyBytes))
 		fmt.Printf("%v\n", blah)
 		fmt.Printf("%v\n", bodyBytes)
-		// var testUnmarshal map[string]interface{}
-		// err = json.Unmarshal([]byte(blah), &testUnmarshal)
-		err = json.Unmarshal([]byte(blah), &newDocInfo)
+		var testUnmarshal TestCompleteFileSchema
+		err = json.Unmarshal([]byte(blah), &testUnmarshal)
+		// err = json.Unmarshal([]byte(blah), &newDocInfo)
 		if err != nil {
 			errorstring := fmt.Sprintf("Error reading request body json: %v\n", err)
 			fmt.Println(errorstring)
@@ -141,6 +141,8 @@ func makeFileUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r
 			http.Error(w, errorstring, http.StatusBadRequest)
 			return
 		}
+		fmt.Printf("Sucess Doing the file thing")
+		return
 		rawFileData := ConvertToCreationData(newDocInfo)
 		var fileSchema FileSchema
 		if insert {
