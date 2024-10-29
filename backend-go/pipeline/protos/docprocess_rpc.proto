@@ -1,0 +1,22 @@
+service Thaumaturgy {
+
+}
+
+message ParseDoc {
+    hash: string;
+}
+
+message ParseDocResponse {
+    hash: string;
+    parsed: string;
+}
+
+message ParseDocError {
+    hash: string;
+    error: string;
+}
+
+message ParseDocRequest {
+    hash: string;
+    key: string;
+}
