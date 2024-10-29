@@ -4,7 +4,6 @@ INSERT INTO public.file (
 		extension,
 		lang,
 		name,
-		stage_id,
 		isPrivate,
     hash,
 		created_at,
@@ -17,7 +16,6 @@ VALUES (
 		$3,
 		$4,
 		$5,
-    $6,
 		NOW(),
 		NOW()
 	)
@@ -57,7 +55,7 @@ WITH inserted_log AS (
 		)
 	VALUES ($1, $2, $3)
 	RETURNING id,
-		stage_id,
+		file_id,
 		status
 )
 -- name: UpdateFile :one

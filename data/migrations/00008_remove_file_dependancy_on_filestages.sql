@@ -1,7 +1,7 @@
 -- +goose Up
-DROP TABLE IF EXISTS public.filestage;
 ALTER TABLE public.stage_log DROP COLUMN stage_id;
 ALTER TABLE public.file DROP COLUMN stage_id;
+DROP TABLE IF EXISTS public.filestage;
 ALTER TABLE public.stage_log
 ADD COLUMN file_id UUID REFERENCES public.file(id);
 -- +goose Down
