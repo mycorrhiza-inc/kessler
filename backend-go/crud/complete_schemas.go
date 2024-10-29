@@ -80,18 +80,20 @@ type CompleteFileSchema struct {
 }
 
 type TestCompleteFileSchema struct {
-	ID        uuid.UUID           `json:"id"`
-	Extension string              `json:"extension"`
-	Lang      string              `json:"lang"`
-	Name      string              `json:"name"`
-	Hash      string              `json:"hash"`
-	IsPrivate bool                `json:"is_private"`
-	Extra     FileGeneratedExtras `json:"extra"`
-	Authors   []AuthorInformation `json:"authors"`
+	ID        uuid.UUID             `json:"id"`
+	Extension string                `json:"extension"`
+	Lang      string                `json:"lang"`
+	Name      string                `json:"name"`
+	Hash      string                `json:"hash"`
+	IsPrivate bool                  `json:"is_private"`
+	DocTexts  []FileChildTextSource `json:"doc_texts"`
+	Stage     DocProcStage          `json:"stage"`
+	Extra     FileGeneratedExtras   `json:"extra"`
+	Authors   []AuthorInformation   `json:"authors"`
 }
 
 type FileMetadataSchema struct {
-	JsonObj []byte `json:"json_obj"`
+	JsonObj string `json:"json_obj"`
 }
 
 func CompleteFileSchemaPrune(input CompleteFileSchema) FileSchema {
