@@ -6,11 +6,13 @@ import { useState } from "react";
 import Modal from "./styled-components/Modal";
 import SettingsContent from "./SettingsContent";
 import { User } from "@supabase/supabase-js";
+import { useBearStore } from "@/lib/store";
 
 function HeaderAuth({ user }: { user: User | null }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const globalStore = useBearStore();
 
-  return user ? (
+  return globalStore.isLoggedIn ? (
     <>
       <div
         tabIndex={0}
@@ -25,7 +27,7 @@ function HeaderAuth({ user }: { user: User | null }) {
         setOpen={setSettingsOpen}
         uuid="user-settings-menu-header-auth"
       >
-        <SettingsContent user={user} />
+        <SettingsContent />
       </Modal>
     </>
   ) : (
@@ -39,7 +41,7 @@ function HeaderAuth({ user }: { user: User | null }) {
     </div>
   );
 }
-const Header = ({ user }: { user: User | null }) => {
+const Navbar = ({ user }: { user: User | null }) => {
   return (
     <nav
       className="w-full flex justify-center border-b border-b-foreground/10 h-16 bg-base-200 text-base-content"
@@ -57,4 +59,4 @@ const Header = ({ user }: { user: User | null }) => {
     </nav>
   );
 };
-export default Header;
+export default Navbar;

@@ -12,9 +12,9 @@ export default async function Page() {
   return (
     <div className="w-full">
       {isLoggedIn ? (
-        <SearchApp user={user}></SearchApp>
+        <SearchApp />
       ) : (
-        <Landing user={user}></Landing>
+        <Landing />
       )}
     </div>
   );

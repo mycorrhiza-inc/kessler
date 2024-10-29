@@ -8,12 +8,12 @@ import SearchResultBox from "@/components/SearchResultBox";
 import ChatBoxInternals from "./ChatBoxInternals";
 
 import { QueryFilterFields, emptyQueryOptions } from "@/lib/filters";
-import Header from "./Header";
 import { User } from "@supabase/supabase-js";
 
 import { SearchRequest } from "@/utils/interfaces";
+import Navbar from "./Navbar";
 
-export default function SearchApp({ user }: { user: User | null }) {
+export default function SearchApp() {
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [chatVisible, setChatVisible] = useState(false);
@@ -79,7 +79,6 @@ export default function SearchApp({ user }: { user: User | null }) {
 
   return (
     <>
-      <Header user={user} />
       <div
         className="searchContainer"
         ref={divRef}

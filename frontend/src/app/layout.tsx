@@ -3,6 +3,7 @@ import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import { PHProvider } from "./providers";
 import dynamic from "next/dynamic";
+import Navbar from "@/components/Navbar";
 
 const PostHogPageView = dynamic(() => import("./PostHogPageView"), {
   ssr: false,
@@ -42,6 +43,7 @@ export default function RootLayout({
           <ThemeProvider>
             <PostHogPageView />
             <main className="">
+              <Navbar />
               <div className="flex-1 w-100vw flex flex-col items-center">
                 {children}
               </div>

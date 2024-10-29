@@ -15,6 +15,7 @@ import { User } from "@supabase/supabase-js";
 import Header from "../Header";
 import { useTheme } from "next-themes";
 import { themeDataDictionary } from "../ThemeSelector";
+import Navbar from "../Navbar";
 
 interface SeriousGame {
   teams: SeriousGameTeam[];
@@ -219,7 +220,6 @@ const TestFlowVisuals = ({ user }: { user: User | null }) => {
 
   return (
     <div>
-      <Header user={user} />
       <div style={{ width: "90vw", height: "80vh" }}>
         <ReactFlow
           nodes={nodes}
