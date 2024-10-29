@@ -78,11 +78,11 @@ func makeFileUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r
 		var err error
 		if !insert {
 			params := mux.Vars(r)
-			fileID := params["uuid"]
+			fileIDString := params["uuid"]
 
-			doc_uuid, err = uuid.Parse(fileID)
+			doc_uuid, err = uuid.Parse(fileIDString)
 			if err != nil {
-				http.Error(w, "Error parsing uuid", http.StatusBadRequest)
+				http.Error(w, fmt.Sprintf("Error parsing uuid: %s", fileIDString), http.StatusBadRequest)
 				return
 			}
 		}
