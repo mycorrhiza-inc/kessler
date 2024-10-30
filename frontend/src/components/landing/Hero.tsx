@@ -4,9 +4,11 @@ import { AuroraBackground } from "../aceternity/aurora-background";
 import { motion } from "framer-motion";
 import { Highlight } from "../aceternity/hero-highlight";
 import { Compare } from "../aceternity/compare";
+import { useKesslerStore } from "@/lib/store";
 
-export default function Hero({ isLoggedIn }: { isLoggedIn: boolean }) {
+export default function Hero() {
   // Fix the broken min-h-screen stuff and make it actually work
+  const globalStore = useKesslerStore();
   return (
     <AuroraBackground showRadialGradient={false}>
       <motion.h1
@@ -41,7 +43,7 @@ export default function Hero({ isLoggedIn }: { isLoggedIn: boolean }) {
           />
         </div>
         {/* </div> */}
-        {isLoggedIn ? (
+        {globalStore.isLoggedIn ? (
           <div className="flex justify-center space-x-4">
             <a
               href="/app"

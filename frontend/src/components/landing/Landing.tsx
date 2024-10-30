@@ -6,7 +6,7 @@ import { SupportedStates } from "@/components/landing/DataSetList";
 import { GiMushroomsCluster } from "react-icons/gi";
 import "./Landing.css";
 
-function LandingFooter({}) {
+function LandingFooter() {
   return (
     <>
       <footer className="footer bg-base-200 text-base-content p-10">
@@ -45,12 +45,11 @@ function LandingFooter({}) {
   );
 }
 
-export default function Landing({ user }: { user: User | null }) {
-  const isLoggedIn = user ? true : false;
+export default function Landing() {
   return (
     <>
       <div data-theme="light">
-        <Hero isLoggedIn={isLoggedIn} data-theme="light"></Hero>
+        <Hero data-theme="light"></Hero>
         <div
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 "
           data-theme="light"

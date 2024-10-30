@@ -2,15 +2,20 @@
 // Is this even a good idea/acceptable?
 import { createClient } from "@/utils/supabase/server";
 import { UserIcon } from "@/components/Icons";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Modal from "./styled-components/Modal";
 import SettingsContent from "./SettingsContent";
 import { User } from "@supabase/supabase-js";
+import { useKesslerStore } from "@/lib/store";
 
 function HeaderAuth({ user }: { user: User | null }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const globalStore = useKesslerStore();
 
-  return user ? (
+  useEffect(() => {
+    console.log('Is logged in:', globalStore.isLoggedIn);
+  }, [user]);
+  return globalStore.isLoggedIn ? (
     <>
       <div
         tabIndex={0}
@@ -25,7 +30,7 @@ function HeaderAuth({ user }: { user: User | null }) {
         setOpen={setSettingsOpen}
         uuid="user-settings-menu-header-auth"
       >
-        <SettingsContent user={user} />
+        <SettingsContent />
       </Modal>
     </>
   ) : (
@@ -39,22 +44,19 @@ function HeaderAuth({ user }: { user: User | null }) {
     </div>
   );
 }
-const Header = ({ user }: { user: User | null }) => {
+const Navbar = ({ user }: { user: User | null }) => {
   return (
-    <nav
-      className="w-full flex justify-center border-b border-b-foreground/10 h-16 bg-base-200 text-base-content"
-      style={{ zIndex: 3000 }}
+    <div
+      className="navbar bg-base-200 w-max-50"
     >
-      <div
-        className="w-full max-w-5xl flex justify-between items-center bg-base-200 p-3 px-5 text-sm"
-        style={{ zIndex: 3000 }}
-      >
-        <div className="flex gap-5 items-center font-semibold">
-          <a href="/">Kessler</a>
-        </div>
+      <div className="flex-1 font-semibold">
+        <a href="/">Kessler</a>
+      </div>
+      <div className="flex-none">
+
         <HeaderAuth user={user} />
       </div>
-    </nav>
+    </div>
   );
 };
-export default Header;
+export default Navbar;

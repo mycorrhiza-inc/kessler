@@ -217,7 +217,6 @@ const TestFlowVisuals = ({ user }: { user: User | null }) => {
 
   return (
     <div>
-      <Header user={user} />
       <div style={{ width: "90vw", height: "80vh" }}>
         <ReactFlow
           nodes={nodes}
