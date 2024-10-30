@@ -12,7 +12,6 @@ import {
 
 import "@xyflow/react/dist/style.css";
 import { User } from "@supabase/supabase-js";
-import Header from "../Header";
 import { useTheme } from "next-themes";
 
 interface SeriousGame {

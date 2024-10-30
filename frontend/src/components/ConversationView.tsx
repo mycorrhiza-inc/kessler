@@ -17,6 +17,7 @@ export const ConversationView = ({
     : [];
   return (
     <>
+      <Navbar user={user} />
       <div
         className="conversationContainer contents-center"
         style={{
