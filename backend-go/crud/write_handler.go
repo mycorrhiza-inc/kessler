@@ -164,10 +164,6 @@ func makeFileUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r
 			http.Error(w, errorstring, http.StatusBadRequest)
 			return
 		}
-		// fmt.Println("Sucess Doing the file thing")
-		// w.Header().Set("Content-Type", "application/json")
-		// w.Write([]byte("Yay Victory"))
-		// return
 		rawFileData := ConvertToCreationData(newDocInfo)
 		var fileSchema FileSchema
 		if insert {
