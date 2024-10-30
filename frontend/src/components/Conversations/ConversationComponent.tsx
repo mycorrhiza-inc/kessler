@@ -1,25 +1,6 @@
 "use client";
 "use client";
 import React, { Dispatch, SetStateAction, useState, useRef } from "react";
-import { ConversationView } from "../ConversationVeiw";
-import { type ClassValue } from "clsx";
-import {
-  Box,
-  TextField,
-  Typography,
-  Container,
-  Grid,
-  Paper,
-} from "@mui/material";
-import {
-  article,
-  exampleBattles,
-  Organization,
-  Battle,
-  Faction,
-  Action,
-} from "@/utils/interfaces";
-import test from "node:test";
 import { BasicDocumentFiltersList } from "@/components/DocumentFilters";
 import {
   emptyQueryOptions,
@@ -132,11 +113,11 @@ const FilingTable = ({ filings }: { filings: Filing[] }) => {
   );
 };
 const ConversationComponent: React.FC = ({}) => {
+  const [disabledFilters, setDisabledFilters] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchFilters, setSearchFilters] =
     useState<QueryFilterFields>(emptyQueryOptions);
   const [isFocused, setIsFocused] = useState(false);
-  const divRef = useRef(null);
 
   const showFilters = () => {
     setIsFocused(!isFocused);
@@ -177,6 +158,7 @@ const ConversationComponent: React.FC = ({}) => {
               queryOptions={searchFilters}
               setQueryOptions={setSearchFilters}
               showQueries={CaseFilterFields}
+              disabledQueries={disabledFilters}
             />
           </motion.div>
         )}
@@ -202,4 +184,3 @@ const ConversationComponent: React.FC = ({}) => {
 };
 
 export default ConversationComponent;
-
