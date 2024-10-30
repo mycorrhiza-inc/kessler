@@ -91,6 +91,16 @@ type File struct {
 	Hash      pgtype.Text
 }
 
+type FileExtra struct {
+	ID           pgtype.UUID
+	Isprivate    pgtype.Bool
+	Summary      pgtype.Text
+	ShortSummary pgtype.Text
+	Purpose      pgtype.Text
+	CreatedAt    pgtype.Timestamptz
+	UpdatedAt    pgtype.Timestamptz
+}
+
 type FileMetadatum struct {
 	ID        pgtype.UUID
 	Isprivate pgtype.Bool

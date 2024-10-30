@@ -81,3 +81,37 @@ RETURNING id;
 SELECT *
 FROM public.file_metadata
 WHERE id = $1;
+
+-- name: ExtrasFileCreate :one
+INSERT INTO public.file_extras (
+    id,
+    isPrivate,
+    summary,
+    short_summary,
+    purpose,
+    created_at,
+    updated_at
+)
+VALUES (
+    $1,
+    $2,
+    $3,
+    $4,
+    $5,
+    NOW(),
+    NOW()
+)
+RETURNING id;
+-- name: ExtrasFileUpdate :one
+UPDATE public.file_extras
+SET isPrivate = $1,
+    summary = $2,
+    short_summary = $3,
+    purpose = $4,
+    updated_at = NOW()
+WHERE id = $5
+RETURNING id;
+-- name: ExtrasFileFetch :one
+SELECT *
+FROM public.file_metadata
+WHERE id = $1;

@@ -68,6 +68,30 @@ func upsertFileMetadata(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UU
 	return nil
 }
 
+func upsertFileExtras(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, extras FileGeneratedExtras, insert bool) error {
+	doc_pgUUID := pgtype.UUID{Bytes: doc_uuid, Valid: true}
+	summary_text := pgtype.Text{String: extras.Summary}
+	short_summaries_text := pgtype.Text{String: extras.ShortSummary}
+	purpose_text := pgtype.Text{String: extras.Purpose}
+	pgPrivate := pgtype.Bool{false, true}
+	if insert {
+		args := dbstore.ExtrasFileCreateParams{ID: doc_pgUUID, Isprivate: pgPrivate, Summary: summary_text, ShortSummary: short_summaries_text, Purpose: purpose_text}
+		_, err := q.ExtrasFileCreate(
+			ctx, args)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+	args := dbstore.ExtrasFileUpdateParams{ID: doc_pgUUID, Isprivate: pgPrivate, Summary: summary_text, ShortSummary: short_summaries_text, Purpose: purpose_text}
+	_, err := q.ExtrasFileUpdate(
+		ctx, args)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func makeFileUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r *http.Request) {
 	dbtx_val := info.dbtx_val
 	private := info.private
@@ -140,10 +164,6 @@ func makeFileUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r
 			http.Error(w, errorstring, http.StatusBadRequest)
 			return
 		}
-		// fmt.Println("Sucess Doing the file thing")
-		// w.Header().Set("Content-Type", "application/json")
-		// w.Write([]byte("Yay Victory"))
-		// return
 		rawFileData := ConvertToCreationData(newDocInfo)
 		var fileSchema FileSchema
 		if insert {
@@ -164,6 +184,7 @@ func makeFileUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r
 		upsertFileTexts(ctx, q, doc_uuid, newDocInfo.DocTexts, insert)
 
 		upsertFileMetadata(ctx, q, doc_uuid, newDocInfo.Mdata, insert)
+		upsertFileExtras(ctx, q, doc_uuid, newDocInfo.Extra, insert)
 
 		response, _ := json.Marshal(fileSchema)
 
