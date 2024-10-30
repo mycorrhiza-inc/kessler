@@ -146,15 +146,17 @@ export function BasicDocumentFiltersList({
   setQueryOptions: Dispatch<SetStateAction<QueryFilterFields>>;
   showQueries: FilterField[];
 }) {
-  return <>
+  return (
+    <>
       <div className="grid grid-flow-row auto-rows-max gap-4">
-      <BasicDocumentFilters
-        queryOptions={queryOptions}
-        setQueryOptions={setQueryOptions}
-        showQueries={showQueries}
-      />
+        <BasicDocumentFilters
+          queryOptions={queryOptions}
+          setQueryOptions={setQueryOptions}
+          showQueries={showQueries}
+        />
       </div>
-  </>
+    </>
+  );
 }
 export function BasicDocumentFiltersGrid({
   queryOptions,
@@ -165,15 +167,17 @@ export function BasicDocumentFiltersGrid({
   setQueryOptions: Dispatch<SetStateAction<QueryFilterFields>>;
   showQueries: FilterField[];
 }) {
-  return <>
+  return (
+    <>
       <div className="grid grid-cols-4 gap-4">
-      <BasicDocumentFilters
-        queryOptions={queryOptions}
-        setQueryOptions={setQueryOptions}
-        showQueries={showQueries}
-      />
+        <BasicDocumentFilters
+          queryOptions={queryOptions}
+          setQueryOptions={setQueryOptions}
+          showQueries={showQueries}
+        />
       </div>
-  </>
+    </>
+  );
 }
 export function BasicDocumentFilters({
   queryOptions,
@@ -209,59 +213,62 @@ export function BasicDocumentFilters({
 
   return (
     <>
-        {sortedFilters.map(({ filterId, filterData }) => {
-          switch (filterData.type) {
-            case InputType.Text:
-              return (
-                <div className="box-border">
-                  <div className="tooltip" data-tip={filterData.description}>
-                    <p>{filterData.displayName}</p>
-                  </div>
-                  <input
-                    className="input input-bordered w-full max-w-xs"
-                    type="text"
-                    value={docFilterValues[filterId]}
-                    onChange={(e) => handleChange(e, filterId)}
-                    title={filterData.displayName}
-                  />
+      {sortedFilters.map(({ filterId, filterData }) => {
+        switch (filterData.type) {
+          case InputType.Text:
+            return (
+              <div className="box-border">
+                <div className="tooltip" data-tip={filterData.description}>
+                  <p>{filterData.displayName}</p>
                 </div>
-              );
-            case InputType.Select:
-              return (
-                <div className="box-border">
-                  <div className="tooltip" data-tip={filterData.description}>
-                    <p>{filterData.displayName}</p>
-                  </div><br/>
-                  <select
-                    className="select select-bordered w-full max-w-xs"
-                    value={docFilterValues[filterId]}
-                    onChange={(e) => handleChange(e, filterId)}
-                  >
-                    {filterData.options?.map((option, index) => (
-                      <option key={option.value} selected={index === 0}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
+                <br />
+                <input
+                  className="input input-bordered w-full max-w-xs"
+                  type="text"
+                  value={docFilterValues[filterId]}
+                  onChange={(e) => handleChange(e, filterId)}
+                  title={filterData.displayName}
+                />
+              </div>
+            );
+          case InputType.Select:
+            return (
+              <div className="box-border">
+                <div className="tooltip" data-tip={filterData.description}>
+                  <p>{filterData.displayName}</p>
                 </div>
-              );
-            case InputType.Date:
-              return (
-                <div className="box-border">
-                  <div className="tooltip" data-tip={filterData.description}>
-                    <p>{filterData.displayName}</p>
-                  </div><br/>
-                  <input
-                    className="input input-bordered w-full max-w-xs"
-                    type="date"
-                    value={docFilterValues[filterId]}
-                    onChange={(e) => handleChange(e, filterId)}
-                    title={filterData.displayName}
-                  />
+                <br />
+                <select
+                  className="select select-bordered w-full max-w-xs"
+                  value={docFilterValues[filterId]}
+                  onChange={(e) => handleChange(e, filterId)}
+                >
+                  {filterData.options?.map((option, index) => (
+                    <option key={option.value} selected={index === 0}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            );
+          case InputType.Date:
+            return (
+              <div className="box-border">
+                <div className="tooltip" data-tip={filterData.description}>
+                  <p>{filterData.displayName}</p>
                 </div>
-              );
-          }
-        })}
+                <br />
+                <input
+                  className="input input-bordered w-full max-w-xs"
+                  type="date"
+                  value={docFilterValues[filterId]}
+                  onChange={(e) => handleChange(e, filterId)}
+                  title={filterData.displayName}
+                />
+              </div>
+            );
+        }
+      })}
     </>
   );
 }
