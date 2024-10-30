@@ -124,7 +124,7 @@ const ConversationComponent: React.FC = ({
   };
 
   return (
-    <div className="w-full h-full p-10 card grid grid-flow-col auto-cols-2 box-border border-2 border-black-200 ">
+    <div className="w-full h-full p-10 card grid grid-flow-col auto-cols-2 box-border border-2 border-black ">
       <div
         style={{
           display: isFocused ? 'block' : 'none',
