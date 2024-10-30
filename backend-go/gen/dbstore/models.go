@@ -97,14 +97,15 @@ type Faction struct {
 }
 
 type File struct {
-	ID        pgtype.UUID
-	Lang      pgtype.Text
-	Name      pgtype.Text
-	Extension pgtype.Text
-	Isprivate pgtype.Bool
-	CreatedAt pgtype.Timestamptz
-	UpdatedAt pgtype.Timestamptz
-	Hash      pgtype.Text
+	ID         pgtype.UUID
+	Lang       pgtype.Text
+	Name       pgtype.Text
+	Extension  pgtype.Text
+	Isprivate  pgtype.Bool
+	CreatedAt  pgtype.Timestamptz
+	UpdatedAt  pgtype.Timestamptz
+	Hash       pgtype.Text
+	MetadataID pgtype.UUID
 }
 
 type FileExtra struct {
