@@ -206,21 +206,14 @@ export function BasicDocumentFilters({
 
   return (
     <>
-        {sortedFilters.map(({ filterId, filterData }) => {
-          switch (filterData.type) {
-            case InputType.Text:
-              return (
-                <div className="box-border">
-                  <div className="tooltip" data-tip={filterData.description}>
-                    <p>{filterData.displayName}</p>
-                  </div><br/>
-                  <input
-                    className="input input-bordered w-full max-w-xs"
-                    type="text"
-                    value={docFilterValues[filterId]}
-                    onChange={(e) => handleChange(e, filterId)}
-                    title={filterData.displayName}
-                  />
+      {sortedFilters.map(({ filterId, filterData }) => {
+        const isDisabled = disabledQueriesDict[filterId] || false;
+        switch (filterData.type) {
+          case InputType.Text:
+            return (
+              <div className="box-border">
+                <div className="tooltip" data-tip={filterData.description}>
+                  <p>{filterData.displayName}</p>
                 </div>
                 <br />
                 <input

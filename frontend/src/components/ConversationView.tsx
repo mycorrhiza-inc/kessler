@@ -1,9 +1,9 @@
 // we want to load the most recent conversations in the database
 
 import ConversationComponent from "@/components/Conversations/ConversationComponent";
-import Header from "./Header";
 import { User } from "@supabase/supabase-js";
 import { FilterField, InheritedFilterValues } from "@/lib/filters";
+import Navbar from "./Navbar";
 
 export const ConversationView = ({
   conversation_id,
@@ -17,7 +17,6 @@ export const ConversationView = ({
     : [];
   return (
     <>
-      <Header user={user} />
       <div
         className="conversationContainer contents-center"
         style={{

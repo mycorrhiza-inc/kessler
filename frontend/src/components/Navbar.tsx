@@ -14,7 +14,7 @@ function HeaderAuth({ user }: { user: User | null }) {
   const globalStore = useKesslerStore();
 
   useEffect(() => {
-    console.log('Is logged in:', globalStore.isLoggedIn);
+    console.log("Is logged in:", globalStore.isLoggedIn);
   }, [user]);
   return globalStore.isLoggedIn ? (
     <>
@@ -27,7 +27,7 @@ function HeaderAuth({ user }: { user: User | null }) {
         <UserIcon />
       </div>
       <Modal open={settingsOpen} setOpen={setSettingsOpen}>
-        <SettingsContent user={user} />
+        <SettingsContent />
       </Modal>
     </>
   ) : (
@@ -43,14 +43,11 @@ function HeaderAuth({ user }: { user: User | null }) {
 }
 const Navbar = ({ user }: { user: User | null }) => {
   return (
-    <div
-      className="navbar bg-base-200 w-max-50"
-    >
+    <div className="navbar bg-base-200 w-max-50">
       <div className="flex-1 font-semibold">
-        <a href="/">Kessler</a>
+        <Link href="/">Kessler</Link>
       </div>
       <div className="flex-none">
-
         <HeaderAuth user={user} />
       </div>
     </div>

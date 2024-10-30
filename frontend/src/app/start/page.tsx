@@ -8,7 +8,7 @@ export default async function Page() {
   } = await supabase.auth.getUser();
   return (
     <div className="w-full">
-      <Landing user={user}></Landing>
+      <Landing></Landing>
     </div>
   );
 }
