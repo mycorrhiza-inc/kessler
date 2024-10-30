@@ -33,7 +33,7 @@ const SearchResult = ({ data }: SearchResultProps) => {
           <p>{data.docketID}</p>
         </div>
       </div>
-      <Modal open={open} setOpen={setOpen} uuid={data.sourceID}>
+      <Modal open={open} setOpen={setOpen}>
         <DocumentModalBody open={open} objectId={data.sourceID} />
       </Modal>
     </>

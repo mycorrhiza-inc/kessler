@@ -81,7 +81,7 @@ const TableRow = ({ filing }: { filing: Filing }) => {
       <tr
         className="border-b border-gray-200"
         onClick={() => {
-          setOpen(true);
+          setOpen((previous) => !previous);
         }}
       >
         <td>{filing.date}</td>
