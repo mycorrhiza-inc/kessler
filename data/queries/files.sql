@@ -81,3 +81,37 @@ RETURNING id;
 SELECT *
 FROM public.file_metadata
 WHERE id = $1;
+
+-- name: InsertMetadata :one
+INSERT INTO public.file_metadata (
+    id,
+    isPrivate,
+    summary,
+    short_summary,
+    purpose,
+    created_at,
+    updated_at
+)
+VALUES (
+    $1,
+    $2,
+    $3,
+    $4,
+    $5,
+    NOW(),
+    NOW()
+)
+RETURNING id;
+-- name: UpdateMetadata :one
+UPDATE public.file_metadata
+SET isPrivate = $1,
+    summary = $2,
+    short_summary = $3,
+    purpose = $4,
+    updated_at = NOW()
+WHERE id = $5
+RETURNING id;
+-- name: FetchMetadata :one
+SELECT *
+FROM public.file_metadata
+WHERE id = $1;
