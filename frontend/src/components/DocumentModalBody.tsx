@@ -22,7 +22,9 @@ const DocumentModalBody = ({ open, objectId, children, title }: ModalProps) => {
   const [docMetadata, setDocMetadata] = React.useState({});
 
   const getDocumentMetadata = async () => {
-    const response = await axios.get(`https://api.kessler.xyz/v2/public/files/${objectId}`);
+    const response = await axios.get(
+      `https://api.kessler.xyz/v2/public/files/${objectId}`,
+    );
     setDocMetadata(response.data);
     console.log(docMetadata);
   };

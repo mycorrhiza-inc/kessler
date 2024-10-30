@@ -13,7 +13,7 @@ export const checkLoggedIn = async () => {
     data: { user },
   } = await supabase.auth.getUser();
   const userPresent = Boolean(user);
-  return userPresent
+  return userPresent;
 };
 
 export default async function Page() {

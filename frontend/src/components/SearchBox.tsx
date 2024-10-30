@@ -13,7 +13,7 @@ import {
   emptyQueryOptions,
   allFilterFields,
 } from "@/lib/filters";
-import {BasicDocumentFiltersGrid} from "@/components/DocumentFilters";
+import { BasicDocumentFiltersGrid } from "@/components/DocumentFilters";
 
 const AdvancedFilters = ({
   queryOptions,
