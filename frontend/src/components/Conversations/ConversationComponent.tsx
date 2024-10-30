@@ -1,11 +1,18 @@
 "use client";
 "use client";
-import React, { Dispatch, SetStateAction, useState, useRef } from "react";
+import React, {
+  Dispatch,
+  SetStateAction,
+  useState,
+  useRef,
+  useMemo,
+} from "react";
 import { BasicDocumentFiltersList } from "@/components/DocumentFilters";
 import {
   emptyQueryOptions,
   QueryFilterFields,
   CaseFilterFields,
+  InheritedFilterValues,
 } from "@/lib/filters";
 import Modal from "../styled-components/Modal";
 import DocumentModalBody from "../DocumentModalBody";
@@ -112,11 +119,27 @@ const FilingTable = ({ filings }: { filings: Filing[] }) => {
     </div>
   );
 };
-const ConversationComponent: React.FC = ({}) => {
-  const [disabledFilters, setDisabledFilters] = useState([]);
+const ConversationComponent = ({
+  inheritedFilters,
+}: {
+  inheritedFilters: InheritedFilterValues;
+}) => {
+  const disabledFilters = useMemo(() => {
+    return inheritedFilters.map((val) => {
+      return val.filter;
+    });
+  }, [inheritedFilters]);
+
+  const initialFilterState = useMemo(() => {
+    var initialFilters = emptyQueryOptions;
+    inheritedFilters.map((val) => {
+      initialFilters[val.filter] = val.value;
+    });
+    return initialFilters;
+  }, [inheritedFilters]);
   const [loading, setLoading] = useState(false);
   const [searchFilters, setSearchFilters] =
-    useState<QueryFilterFields>(emptyQueryOptions);
+    useState<QueryFilterFields>(initialFilterState);
   const [isFocused, setIsFocused] = useState(false);
   const showFilters = () => {
     setIsFocused(!isFocused);
