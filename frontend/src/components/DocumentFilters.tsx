@@ -216,7 +216,7 @@ export function BasicDocumentFilters({
                 <div className="box-border">
                   <div className="tooltip" data-tip={filterData.description}>
                     <p>{filterData.displayName}</p>
-                  </div>
+                  </div><br/>
                   <input
                     className="input input-bordered w-full max-w-xs"
                     type="text"
