@@ -137,7 +137,45 @@ const queryFiltersInformation: QueryFiltersInformation = {
     details: "Filters results by the specified date.",
   },
 };
-function BasicDocumentFilters({
+export function BasicDocumentFiltersList({
+  queryOptions,
+  setQueryOptions,
+  showQueries,
+}: {
+  queryOptions: QueryFilterFields;
+  setQueryOptions: Dispatch<SetStateAction<QueryFilterFields>>;
+  showQueries: FilterField[];
+}) {
+  return <>
+      <div className="grid grid-flow-row auto-rows-max gap-4">
+      <BasicDocumentFilters
+        queryOptions={queryOptions}
+        setQueryOptions={setQueryOptions}
+        showQueries={showQueries}
+      />
+      </div>
+  </>
+}
+export function BasicDocumentFiltersGrid({
+  queryOptions,
+  setQueryOptions,
+  showQueries,
+}: {
+  queryOptions: QueryFilterFields;
+  setQueryOptions: Dispatch<SetStateAction<QueryFilterFields>>;
+  showQueries: FilterField[];
+}) {
+  return <>
+      <div className="grid grid-cols-4 gap-4">
+      <BasicDocumentFilters
+        queryOptions={queryOptions}
+        setQueryOptions={setQueryOptions}
+        showQueries={showQueries}
+      />
+      </div>
+  </>
+}
+export function BasicDocumentFilters({
   queryOptions,
   setQueryOptions,
   showQueries,
@@ -171,7 +209,6 @@ function BasicDocumentFilters({
 
   return (
     <>
-      <div className="grid grid-cols-4 gap-4">
         {sortedFilters.map(({ filterId, filterData }) => {
           switch (filterData.type) {
             case InputType.Text:
@@ -194,7 +231,7 @@ function BasicDocumentFilters({
                 <div className="box-border">
                   <div className="tooltip" data-tip={filterData.description}>
                     <p>{filterData.displayName}</p>
-                  </div>
+                  </div><br/>
                   <select
                     className="select select-bordered w-full max-w-xs"
                     value={docFilterValues[filterId]}
@@ -213,7 +250,7 @@ function BasicDocumentFilters({
                 <div className="box-border">
                   <div className="tooltip" data-tip={filterData.description}>
                     <p>{filterData.displayName}</p>
-                  </div>
+                  </div><br/>
                   <input
                     className="input input-bordered w-full max-w-xs"
                     type="date"
@@ -225,7 +262,6 @@ function BasicDocumentFilters({
               );
           }
         })}
-      </div>
     </>
   );
 }
