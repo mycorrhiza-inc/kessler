@@ -51,14 +51,14 @@ func upsertFileMetadata(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UU
 	json_obj := []byte(metadata.JsonObj)
 	pgPrivate := pgtype.Bool{false, true}
 	if insert {
-		args := dbstore.InsertMetadataParams{ID: doc_pgUUID, Isprivate: pgPrivate, Mdata: json_obj}
+		insert_args := dbstore.InsertMetadataParams{ID: doc_pgUUID, Isprivate: pgPrivate, Mdata: json_obj}
 		metadata_id, err := q.InsertMetadata(
-			ctx, args)
+			ctx, insert_args)
 		if err != nil {
 			return err
 		}
-		args2 := dbstore.AddMetadataToFileParams{ID: doc_pgUUID, MetadataID: metadata_id}
-		_, err = q.AddMetadataToFile(ctx, args2)
+		add_meta_args := dbstore.AddMetadataToFileParams{ID: doc_pgUUID, MetadataID: metadata_id}
+		_, err = q.AddMetadataToFile(ctx, add_meta_args)
 		if err != nil {
 			return err
 		}
