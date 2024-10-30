@@ -17,6 +17,7 @@ import {
 import Modal from "../styled-components/Modal";
 import DocumentModalBody from "../DocumentModalBody";
 import { AnimatePresence, motion } from "framer-motion";
+import axios from "axios";
 
 type Filing = {
   id: string;
@@ -140,10 +141,48 @@ const ConversationComponent = ({
   const [loading, setLoading] = useState(false);
   const [searchFilters, setSearchFilters] =
     useState<QueryFilterFields>(initialFilterState);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+
+  const handleSearch = async () => {
+    setSearchResults([]);
+    console.log(`searchhing for ${searchQuery}`);
+    try {
+      const response = await axios.post("https://api.kessler.xyz/v2/search", {
+        query: searchQuery,
+        filters: {
+          name: searchFilters.match_name,
+          author: searchFilters.match_author,
+          docket_id: searchFilters.match_docket_id,
+          doctype: searchFilters.match_doctype,
+          source: searchFilters.match_source,
+        },
+      });
+      if (response.data.length === 0) {
+        return;
+      }
+      if (typeof response.data === "string") {
+        setSearchResults([]);
+        return;
+      }
+      console.log("getting data");
+      console.log(response.data);
+      setSearchResults(response.data);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+
   const [isFocused, setIsFocused] = useState(false);
   const showFilters = () => {
     setIsFocused(!isFocused);
   };
+
 
   return (
     <div className="w-full h-full p-10 card grid grid-flow-col auto-cols-2 box-border border-2 border-black ">
