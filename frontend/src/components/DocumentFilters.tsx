@@ -13,30 +13,6 @@ import {
   emptyQueryOptions,
 } from "@/lib/filters";
 
-// export enum FilterField {
-//   MatchName = "match_name",
-//   MatchSource = "match_source",
-//   MatchDoctype = "match_doctype",
-//   MatchDocketId = "match_docket_id",
-//   MatchDocumentClass = "match_document_class",
-//   MatchAuthor = "match_author",
-//   MatchBeforeDate = "match_before_date",
-//   MatchAfterDate = "match_after_date",
-// }
-// export type QueryFilterFields = {
-//   [key in FilterField]: string;
-// };
-//
-// export const emptyQueryOptions: QueryFilterFields = {
-//   [FilterField.MatchName]: "",
-//   [FilterField.MatchSource]: "",
-//   [FilterField.MatchDoctype]: "",
-//   [FilterField.MatchDocketId]: "",
-//   [FilterField.MatchDocumentClass]: "",
-//   [FilterField.MatchAuthor]: "",
-//   [FilterField.MatchBeforeDate]: "",
-//   [FilterField.MatchAfterDate]: "",
-// };
 enum InputType {
   Text = "text",
   Select = "select",
@@ -141,10 +117,12 @@ export function BasicDocumentFiltersList({
   queryOptions,
   setQueryOptions,
   showQueries,
+  disabledQueries,
 }: {
   queryOptions: QueryFilterFields;
   setQueryOptions: Dispatch<SetStateAction<QueryFilterFields>>;
   showQueries: FilterField[];
+  disabledQueries?: FilterField[];
 }) {
   return (
     <>
@@ -153,6 +131,7 @@ export function BasicDocumentFiltersList({
           queryOptions={queryOptions}
           setQueryOptions={setQueryOptions}
           showQueries={showQueries}
+          disabledQueries={disabledQueries}
         />
       </div>
     </>
@@ -162,10 +141,12 @@ export function BasicDocumentFiltersGrid({
   queryOptions,
   setQueryOptions,
   showQueries,
+  disabledQueries,
 }: {
   queryOptions: QueryFilterFields;
   setQueryOptions: Dispatch<SetStateAction<QueryFilterFields>>;
   showQueries: FilterField[];
+  disabledQueries?: FilterField[];
 }) {
   return (
     <>
@@ -174,6 +155,7 @@ export function BasicDocumentFiltersGrid({
           queryOptions={queryOptions}
           setQueryOptions={setQueryOptions}
           showQueries={showQueries}
+          disabledQueries={disabledQueries}
         />
       </div>
     </>
@@ -183,12 +165,23 @@ export function BasicDocumentFilters({
   queryOptions,
   setQueryOptions,
   showQueries,
+  disabledQueries,
 }: {
   queryOptions: QueryFilterFields;
   setQueryOptions: Dispatch<SetStateAction<QueryFilterFields>>;
   showQueries: FilterField[];
+  disabledQueries?: FilterField[];
 }) {
   // const [docFilterValues, setDocFilterValues] = useState(emptyQueryOptions);
+  const disabledQueriesDict = useMemo(() => {
+    const dict: Partial<Record<FilterField, boolean>> = {};
+    if (disabledQueries) {
+      disabledQueries.forEach((query) => {
+        dict[query] = true;
+      });
+    }
+    return dict;
+  }, [disabledQueries]);
   const docFilterValues = queryOptions;
   const setDocFilterValues = setQueryOptions;
   const handleChange = (
@@ -214,6 +207,7 @@ export function BasicDocumentFilters({
   return (
     <>
       {sortedFilters.map(({ filterId, filterData }) => {
+        const isDisabled = disabledQueriesDict[filterId] || false;
         switch (filterData.type) {
           case InputType.Text:
             return (
@@ -225,6 +219,7 @@ export function BasicDocumentFilters({
                 <input
                   className="input input-bordered w-full max-w-xs"
                   type="text"
+                  disabled={isDisabled}
                   value={docFilterValues[filterId]}
                   onChange={(e) => handleChange(e, filterId)}
                   title={filterData.displayName}
@@ -239,6 +234,7 @@ export function BasicDocumentFilters({
                 </div>
                 <br />
                 <select
+                  disabled={isDisabled}
                   className="select select-bordered w-full max-w-xs"
                   value={docFilterValues[filterId]}
                   onChange={(e) => handleChange(e, filterId)}
@@ -261,6 +257,7 @@ export function BasicDocumentFilters({
                 <input
                   className="input input-bordered w-full max-w-xs"
                   type="date"
+                  disabled={isDisabled}
                   value={docFilterValues[filterId]}
                   onChange={(e) => handleChange(e, filterId)}
                   title={filterData.displayName}
