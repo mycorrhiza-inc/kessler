@@ -7,16 +7,15 @@ import { redirect } from "next/navigation";
 import { useKesslerStore } from "@/lib/store";
 import AuthGuard from "@/components/AuthGuard";
 
-export const checkLoggedIn = async () => {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const userPresent = Boolean(user);
-  return userPresent;
-};
-
 export default async function Page() {
+  const checkLoggedIn = async () => {
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    const userPresent = Boolean(user);
+    return userPresent;
+  };
   const isLoggedIn = await checkLoggedIn();
   return (
     <div className="w-full">
