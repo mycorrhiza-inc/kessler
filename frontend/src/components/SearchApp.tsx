@@ -79,6 +79,7 @@ export default function SearchApp() {
 
   return (
     <>
+      <Navbar user={user} />
       <div
         className="searchContainer"
         ref={divRef}
@@ -148,28 +149,3 @@ export default function SearchApp() {
     </>
   );
 }
-
-// <AnimatePresence>
-//   {chatVisible && (
-//     <motion.div
-//       key="chat-box"
-//       className="chat-box"
-//       initial={{ x: "110%" }}
-//       animate={{ x: 0 }}
-//       exit={{ x: "110%" }}
-//       transition={{ type: "tween", stiffness: 200 }}
-//       style={{
-//         position: "fixed",
-//         right: 0,
-//         bottom: 0,
-//         height: "auto",
-//         width: "35%",
-//         overflowY: "visible",
-//       }}
-//     >
-//       <ChatBoxInternals
-//         setCitations={setSearchDisplay}
-//       ></ChatBoxInternals>
-//     </motion.div>
-//   )}
-// </AnimatePresence>
