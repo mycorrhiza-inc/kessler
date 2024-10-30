@@ -1,7 +1,8 @@
 "use client";
 "use client";
-import React from "react";
+import React, { Dispatch, SetStateAction, useState, useRef } from "react";
 import { ConversationView } from '../ConversationVeiw';
+import { type ClassValue } from 'clsx';
 import {
   Box,
   TextField,
@@ -18,131 +19,159 @@ import {
   Faction,
   Action,
 } from "@/utils/interfaces";
+import test from "node:test";
+import { BasicDocumentFiltersList } from '@/components/DocumentFilters';
+import { emptyQueryOptions, QueryFilterFields, CaseFilterFields } from "@/lib/filters";
 
 
-const ConversationComponent: React.FC<{ battle: Battle | undefined; childBattles: Battle[] | undefined }> = ({
-  battle,
-  childBattles,
+
+type Filing = {
+  id: string;
+  lang: string;
+  title: string;
+  date: string;
+  author: string;
+  source: string;
+  language: string;
+  extension: string;
+  file_class: string;
+  item_number: string;
+  author_organisation: string;
+  url: string;
+};
+
+const testFiling: Filing = {
+  "id": "0",
+  "url": "https://documents.dps.ny.gov/public/Common/ViewDoc.aspx?DocRefId={7F4AA7FC-CF71-4C2B-8752-A1681D8F9F46}",
+  "date": "05/12/2022",
+  "lang": "en",
+  "title": "Press Release - PSC Announces CLCPA Tracking Initiative",
+  "author": "Public Service Commission",
+  "source": "Public Service Commission",
+  "language": "en",
+  "extension": "pdf",
+  "file_class": "Press Releases",
+  "item_number": "3",
+  "author_organisation": "Public Service Commission"
+}
+
+const filings: Filing[] = [testFiling];
+
+const TableFilters = ({ searchFilters, setSearchFilters }: { searchFilters: QueryFilterFields, setSearchFilters: Dispatch<SetStateAction<QueryFilterFields>> }) => {
+  return (
+    <div className="collapse w-auto ">
+      <input type="checkbox" />
+      <div className="collapse-title font-medium">Filters</div>
+      <div className="collapse-content flex flex-col space-y-1 sm:space-y-2 md:space-y-3 items-center  justify-center">
+        <BasicDocumentFiltersList
+          queryOptions={searchFilters}
+          setQueryOptions={setSearchFilters}
+          showQueries={CaseFilterFields}
+        />
+      </div>
+    </div>
+  );
+}
+
+const TableRow = ({ filing }: { filing: Filing }) => {
+  return (
+    <tr className="border-b border-gray-200">
+      <td style={{ borderRight: 'solid 1px #f00', borderLeft: 'solid 1px #f00' }}>{filing.date}</td>
+      <td style={{ borderRight: 'solid 1px #f00', borderLeft: 'solid 1px #f00' }}>{filing.title}</td>
+      <td style={{ borderRight: 'solid 1px #f00', borderLeft: 'solid 1px #f00' }}>{filing.author}</td>
+      <td style={{ borderRight: 'solid 1px #f00', borderLeft: 'solid 1px #f00' }}>{filing.source}</td>
+      <td style={{ borderRight: 'solid 1px #f00', borderLeft: 'solid 1px #f00' }}>{filing.item_number}</td>
+      <td style={{ borderRight: 'solid 1px #f00', borderLeft: 'solid 1px #f00' }}><a href={filing.url}>View</a></td>
+    </tr>
+  )
+}
+const FilingTable = ({ filings }: { filings: Filing[] }) => {
+  return (
+    <div className="overflow-x-scroll max-h-[500px] overflow-y-auto">
+      <table className="w-full divide-y divide-gray-200 table">
+        <tbody>
+          <tr className="border-b border-gray-200">
+            <th className="text-left p-2 sticky top-0 bg-white">Date Filed</th>
+            <th className="text-left p-2 sticky top-0 bg-white">Title</th>
+            <th className="text-left p-2 sticky top-0 bg-white">Author</th>
+            <th className="text-left p-2 sticky top-0 bg-white">Source</th>
+            <th className="text-left p-2 sticky top-0 bg-white">Item Number</th>
+          </tr>
+          {filings.map((filing) => (
+            <tr className="border-b border-gray-200">
+              <td>{filing.date}</td>
+              <td>{filing.title}</td>
+              <td>{filing.author}</td>
+              <td>{filing.source}</td>
+              <td>{filing.item_number}</td>
+              <td><a href={filing.url} target="_blank" rel="noopener noreferrer">View</a></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+const ConversationComponent: React.FC = ({
 }) => {
-  const factionColors = [
-    "oklch(87% 0.1 0)",
-    "oklch(87% 0.1 200)",
-    "oklch(87% 0.1 140)",
-    "oklch(87% 0.1 80)",
-  ]; // Example colors
-  console.log(battle);
-  console.log(childBattles);
+  const [loading, setLoading] = useState(false);
+  const [searchFilters, setSearchFilters] = useState<QueryFilterFields>(emptyQueryOptions);
+  const [isFocused, setIsFocused] = useState(false);
+  const divRef = useRef(null);
+
+  const showFilters = () => {
+    setIsFocused(!isFocused);
+  };
 
   return (
-    <Paper elevation={3} style={{ padding: "20px", borderRadius: "15px" }}>
-      {/* <Typography variant="h4">{battle.title}</Typography>
-      <Typography variant="body1">{battle.description}</Typography> */}
-
-      {/* {battle?.actions?.length > 0 && (
-        <Grid container spacing={2} mt={2}>
-          {battle.actions
-            .sort((a, b) => a.date.getTime() - b.date.getTime())
-            .map((action) => (
-              <Grid item xs={12} sm={6} md={4} key={action.id}>
-                <ActionCard action={action} />
-              </Grid>
-            ))}
-        </Grid>
-      )}
-      {childBattles?.length > 0 && (
-        <Grid container spacing={2} mt={2}>
-          {childBattles.map((action) => (
-            <Grid item xs={12} sm={6} md={4} key={action.id}>
-              <BattleCardPreview battle={action} />
-            </Grid>
-          ))}
-        </Grid>
-      )}
-      {battle?.factions?.length > 0 && (
-        <Grid container spacing={2} mt={2}>
-          {battle.factions.map((faction, index) => (
-            <Grid item xs={12} sm={6} md={4} key={faction.id}>
-              <FactionBox
-                faction={faction}
-                color={factionColors[index % factionColors.length]}
-              />
-            </Grid>
-          ))}
-        </Grid>
-      )} */}
-
-      {/* <Grid container spacing={2} mt={2}>
-        <Grid item xs={12}>
-          <Box
-            display="flex"
-            justifyContent="space-between"
-            alignItems="stretch"
-          >
-            <Box width="50%">
-              <Typography variant="h6" gutterBottom>
-                Calendar
-              </Typography>
-              <Box height="100%">
-              </Box>
-            </Box>
-            <Box width="50%">
-              <Typography variant="h6" gutterBottom>
-                Test Juristiction Viewer
-              </Typography>
-            </Box>
-          </Box>
-        </Grid> 
-      </Grid> */}
-		<Grid container spacing={2} mt={2} className="contents-center">
-			A Conversation	
-
-		</Grid>
-    </Paper>
+    <div className="w-full h-full p-10 card grid grid-flow-col auto-cols-2 box-border border-2 border-black-200 ">
+      <div
+        style={{
+          display: isFocused ? 'block' : 'none',
+          padding: '10px',
+          transition: 'width 0.3s ease-in-out'
+        }}
+      >
+        <button onClick={showFilters} className="btn "
+          style={{
+            display: isFocused ? 'flex' : 'none',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="32"
+            height="32"
+            viewBox="0 0 512 512">
+            <polygon
+              points="400 145.49 366.51 112 256 222.51 145.49 112 112 145.49 222.51 256 112 366.51 145.49 400 256 289.49 366.51 400 400 366.51 289.49 256 400 145.49" />
+          </svg>
+        </button>
+        <BasicDocumentFiltersList
+          queryOptions={searchFilters}
+          setQueryOptions={setSearchFilters}
+          showQueries={CaseFilterFields}
+        />
+      </div>
+      <div className=" p-10">
+        <div id="conversation-header p-10 justify-between">
+        </div>
+        <h1 className=" text-2xl font-bold">Conversation</h1>
+        <button onClick={showFilters} className="btn btn-outline"
+          style={{
+            display: !isFocused ? 'inline-block' : 'none',
+          }}
+        >
+          Filters
+        </button>
+        <div className="w-full overflow-x-scroll">
+          {loading ? <div>Loading...</div> : <FilingTable filings={filings} />}
+        </div>
+      </div>
+    </div>
   );
 };
 
-const OrganizationCard: React.FC<{ organization: Organization }> = ({
-  organization,
-}) => (
-  <Paper elevation={3} style={{ padding: "20px", marginBottom: "20px" }}>
-    <Typography variant="h6">{organization.name}</Typography>
-    <Typography variant="body2">{organization.description}</Typography>
-  </Paper>
-);
-
-const ActionCard: React.FC<{ action: Action }> = ({ action }) => (
-  <Paper elevation={3} style={{ padding: "20px", marginBottom: "20px" }}>
-    <Typography variant="h6">{action.organization.name}</Typography>
-    <Typography variant="body2">{action.date.toDateString()}</Typography>
-    <Typography variant="caption">{action.description}</Typography>
-  </Paper>
-);
-
-const BattleCardPreview: React.FC<{ battle: Battle }> = ({ battle }) => (
-  <Paper elevation={3} style={{ padding: "20px", marginBottom: "20px" }}>
-    <Typography variant="h4">{battle.title}</Typography>
-    <Typography variant="body1">{battle.description}</Typography>
-  </Paper>
-);
-//
-
-const FactionBox: React.FC<{ faction: Faction; color: string }> = ({
-  faction,
-  color,
-}) => (
-  <Paper
-    elevation={3}
-    style={{ padding: "20px", marginBottom: "20px", backgroundColor: color }}
-  >
-    <Typography variant="h5">{faction.title}</Typography>
-    <Typography>{faction.description}</Typography>
-    <Box mt={2}>
-      {faction?.organizations?.length > 0 &&
-        faction.organizations.map((org) => (
-          <OrganizationCard key={org.id} organization={org} />
-        ))}
-    </Box>
-  </Paper>
-);
 
 export default ConversationComponent;
