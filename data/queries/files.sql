@@ -82,8 +82,8 @@ SELECT *
 FROM public.file_metadata
 WHERE id = $1;
 
--- name: InsertMetadata :one
-INSERT INTO public.file_metadata (
+-- name: ExtrasFileCreate :one
+INSERT INTO public.file_extras (
     id,
     isPrivate,
     summary,
@@ -102,8 +102,8 @@ VALUES (
     NOW()
 )
 RETURNING id;
--- name: UpdateMetadata :one
-UPDATE public.file_metadata
+-- name: ExtrasFileUpdate :one
+UPDATE public.file_extras
 SET isPrivate = $1,
     summary = $2,
     short_summary = $3,
@@ -111,7 +111,7 @@ SET isPrivate = $1,
     updated_at = NOW()
 WHERE id = $5
 RETURNING id;
--- name: FetchMetadata :one
+-- name: ExtrasFileFetch :one
 SELECT *
 FROM public.file_metadata
 WHERE id = $1;
