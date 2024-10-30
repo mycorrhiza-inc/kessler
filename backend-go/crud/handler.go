@@ -30,8 +30,8 @@ func DefineCrudRoutes(router *mux.Router, dbtx_val dbstore.DBTX) {
 	public_subrouter.HandleFunc("/files/{uuid}/markdown", makeReadFileHandler(
 		FileHandlerInfo{dbtx_val: dbtx_val, private: false, return_type: "markdown"})).Methods(http.MethodGet)
 
-	// public_subrouter.HandleFunc("/files/{uuid}/raw", makeReadFileHandler(
-	// 	FileHandlerInfo{dbtx_val: dbtx_val, private: false, return_type: "raw"})).Methods(http.MethodGet)
+	public_subrouter.HandleFunc("/files/{uuid}/raw", makeReadFileHandler(
+		FileHandlerInfo{dbtx_val: dbtx_val, private: false, return_type: "raw"})).Methods(http.MethodGet)
 	//
 	// private_subrouter := router.PathPrefix("/v2/private").Subrouter()
 	//

@@ -10,11 +10,18 @@ import { testMarkdownContent } from "./MarkdownRenderer";
 type ModalProps = {
   open: boolean;
   objectId?: string;
+  overridePDFUrl?: string;
   children?: React.ReactNode;
   title?: string;
 };
 
-const DocumentModalBody = ({ open, objectId, children, title }: ModalProps) => {
+const DocumentModalBody = ({
+  open,
+  objectId,
+  children,
+  title,
+  overridePDFUrl,
+}: ModalProps) => {
   const [loading, setLoading] = React.useState(false);
 
   const [docText, setDocText] = React.useState("Loading Document Text");
@@ -37,8 +44,10 @@ const DocumentModalBody = ({ open, objectId, children, title }: ModalProps) => {
   };
   // this feels really bad for perf stuff potentially, using a memo might be better
   useEffect(() => {
+    console.log("Use effect that gets the document text is being run");
+    const generatedPDFUrl = overridePDFUrl || `/api/v1/files/${objectId}/raw`;
     // setPdfUrl(`https://api.kessler.xyz/v2/public/files/${objectId}/raw`);
-    setPdfUrl(`/api/v1/files/${objectId}/raw`);
+    setPdfUrl(generatedPDFUrl);
     getDocumentText();
     getDocumentMetadata();
   }, []);

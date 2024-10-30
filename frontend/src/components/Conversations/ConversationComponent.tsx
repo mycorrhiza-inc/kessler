@@ -94,7 +94,11 @@ const TableRow = ({ filing }: { filing: Filing }) => {
         </td>
       </tr>
       <Modal open={open} setOpen={setOpen}>
-        <DocumentModalBody open={open} objectId={filing.uuid} />
+        <DocumentModalBody
+          open={open}
+          objectId={filing.uuid}
+          overridePDFUrl={filing.url}
+        />
       </Modal>
     </>
   );
