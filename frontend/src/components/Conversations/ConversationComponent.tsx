@@ -118,7 +118,6 @@ const ConversationComponent: React.FC = ({}) => {
   const [searchFilters, setSearchFilters] =
     useState<QueryFilterFields>(emptyQueryOptions);
   const [isFocused, setIsFocused] = useState(false);
-
   const showFilters = () => {
     setIsFocused(!isFocused);
   };

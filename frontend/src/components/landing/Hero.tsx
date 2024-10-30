@@ -4,6 +4,7 @@ import { AuroraBackground } from "../aceternity/aurora-background";
 import { motion } from "framer-motion";
 import { Highlight } from "../aceternity/hero-highlight";
 import { Compare } from "../aceternity/compare";
+import Link from "next/link";
 
 export default function Hero({ isLoggedIn }: { isLoggedIn: boolean }) {
   // Fix the broken min-h-screen stuff and make it actually work
@@ -43,30 +44,30 @@ export default function Hero({ isLoggedIn }: { isLoggedIn: boolean }) {
         {/* </div> */}
         {isLoggedIn ? (
           <div className="flex justify-center space-x-4">
-            <a
+            <Link
               href="/app"
               className="btn glass shadow-xl btn-lg btn-outline btn-neutral"
             >
               Go To App
-            </a>
+            </Link>
           </div>
         ) : (
           <>
             <div className="flex justify-center space-x-4">
-              <a
+              <Link
                 href="/demo"
                 className="btn glass shadow-xl btn-lg btn-outline btn-neutral"
               >
                 Try Now!
-              </a>
+              </Link>
             </div>
             <div className="flex justify-center space-x-4">
-              <a href="/sign-in" className="btn glass shadow-xl">
+              <Link href="/sign-in" className="btn glass shadow-xl">
                 Sign In
-              </a>
-              <a href="/sign-up" className="btn glass shadow-xl">
+              </Link>
+              <Link href="/sign-up" className="btn glass shadow-xl">
                 Sign Up
-              </a>
+              </Link>
             </div>
           </>
         )}
