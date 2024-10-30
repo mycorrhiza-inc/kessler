@@ -43,7 +43,7 @@ export default function RootLayout({
           <ThemeProvider>
             <PostHogPageView />
             <main className="">
-              <Navbar />
+              {/* <Navbar user={user} /> */}
               <div className="flex-1 w-100vw flex flex-col items-center">
                 {children}
               </div>
