@@ -4,11 +4,11 @@ import { AuroraBackground } from "../aceternity/aurora-background";
 import { motion } from "framer-motion";
 import { Highlight } from "../aceternity/hero-highlight";
 import { Compare } from "../aceternity/compare";
-import { useBearStore } from "@/lib/store";
+import { useKesslerStore } from "@/lib/store";
 
 export default function Hero() {
   // Fix the broken min-h-screen stuff and make it actually work
-  const globalStore = useBearStore();
+  const globalStore = useKesslerStore();
   return (
     <AuroraBackground showRadialGradient={false}>
       <motion.h1
