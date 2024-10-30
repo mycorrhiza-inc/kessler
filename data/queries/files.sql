@@ -4,7 +4,6 @@ INSERT INTO public.file (
 		extension,
 		lang,
 		name,
-		stage_id,
 		isPrivate,
     hash,
 		created_at,
@@ -17,67 +16,44 @@ VALUES (
 		$3,
 		$4,
 		$5,
-    $6,
 		NOW(),
 		NOW()
 	)
 RETURNING id;
--- name: ReadFile :one
-SELECT *
-FROM public.file
-WHERE id = $1;
--- name: ListFiles :many
-SELECT *
-FROM public.file
-ORDER BY updated_at DESC;
--- name: ListUnprocessedFiles :many
--- get all files that are not in the completed stage
--- use a left join to get the stage status
-SELECT *
-FROM public.file
-	LEFT JOIN public.stage_log sl ON f.stage_id = sl.stage_id
-WHERE sl.status != 'completed'
-ORDER BY sl.created_at DESC;
-
--- name: ListUnprocessedFilesPagnated :many
-SELECT *
-FROM public.file
-	LEFT JOIN public.stage_log sl ON f.stage_id = sl.stage_id
-WHERE sl.status != 'completed'
-ORDER BY sl.created_at DESC
-LIMIT $1 OFFSET $2;
--- name: AddStageLog :one
--- used to log the state of a file processing stage and update filestage status
-WITH inserted_log AS (
-	INSERT INTO public.stage_log (
-			stage_id,
-			status,
-			log
-		)
-	VALUES ($1, $2, $3)
-	RETURNING id,
-		stage_id,
-		status
-)
-UPDATE public.filestage fs
-SET status = il.status
-FROM inserted_log il
-WHERE fs.id = il.stage_id
-RETURNING il.id;
 -- name: UpdateFile :one
 UPDATE public.file
 SET extension = $1,
 	lang = $2,
 	name = $3,
-	stage_id = $4,
-	isPrivate = $5,
-  hash = $6,
+	isPrivate = $4,
+  hash = $5,
 	updated_at = NOW()
-WHERE id = $6
+WHERE public.file.id = $6
 RETURNING id;
--- name: DeleteFile :exec
-DELETE FROM public.file
+-- name: ReadFile :one
+SELECT *
+FROM public.file
 WHERE id = $1;
+
+-- name: ListFiles :many
+SELECT *
+FROM public.file
+ORDER BY updated_at DESC;
+-- name: AddStageLog :one
+-- used to log the state of a file processing stage and update filestage status
+INSERT INTO public.stage_log (
+    file_id,
+    status,
+    log
+  )
+VALUES ($1, $2, $3)
+RETURNING id,
+  file_id,
+  status;
+
+
+-- name: DeleteFile :exec
+DELETE FROM public.file WHERE id = $1;
 -- name: InsertMetadata :one
 INSERT INTO public.file_metadata (
     id,
@@ -102,6 +78,40 @@ SET isPrivate = $1,
 WHERE id = $3
 RETURNING id;
 -- name: FetchMetadata :one
+SELECT *
+FROM public.file_metadata
+WHERE id = $1;
+
+-- name: ExtrasFileCreate :one
+INSERT INTO public.file_extras (
+    id,
+    isPrivate,
+    summary,
+    short_summary,
+    purpose,
+    created_at,
+    updated_at
+)
+VALUES (
+    $1,
+    $2,
+    $3,
+    $4,
+    $5,
+    NOW(),
+    NOW()
+)
+RETURNING id;
+-- name: ExtrasFileUpdate :one
+UPDATE public.file_extras
+SET isPrivate = $1,
+    summary = $2,
+    short_summary = $3,
+    purpose = $4,
+    updated_at = NOW()
+WHERE id = $5
+RETURNING id;
+-- name: ExtrasFileFetch :one
 SELECT *
 FROM public.file_metadata
 WHERE id = $1;

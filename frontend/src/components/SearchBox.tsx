@@ -13,7 +13,7 @@ import {
   emptyQueryOptions,
   allFilterFields,
 } from "@/lib/filters";
-import BasicDocumentFilters from "@/components/DocumentFilters";
+import {BasicDocumentFiltersGrid} from "@/components/DocumentFilters";
 
 const AdvancedFilters = ({
   queryOptions,
@@ -46,7 +46,7 @@ const AdvancedFilters = ({
                 exit={{ height: 0, width: 0, opacity: 0 }}
                 transition={{ duration: 0.3 }} // Duration of the animation in seconds
               >
-                <BasicDocumentFilters
+                <BasicDocumentFiltersGrid
                   queryOptions={queryOptions}
                   setQueryOptions={setQueryOptions}
                   showQueries={allFilterFields}

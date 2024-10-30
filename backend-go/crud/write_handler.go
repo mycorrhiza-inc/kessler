@@ -20,7 +20,7 @@ type UpsertHandlerInfo struct {
 	insert   bool
 }
 
-func upsertFileTexts(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, texts []FileTextSchema, insert bool) {
+func upsertFileTexts(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, texts []FileChildTextSource, insert bool) {
 	doc_pgUUID := pgtype.UUID{Bytes: doc_uuid, Valid: true}
 	if len(texts) != 0 {
 		if !insert {
@@ -48,7 +48,7 @@ func upsertFileTexts(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID,
 
 func upsertFileMetadata(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, metadata FileMetadataSchema, insert bool) error {
 	doc_pgUUID := pgtype.UUID{Bytes: doc_uuid, Valid: true}
-	json_obj := metadata.JsonObj
+	json_obj := []byte(metadata.JsonObj)
 	pgPrivate := pgtype.Bool{false, true}
 	if insert {
 		args := dbstore.InsertMetadataParams{ID: doc_pgUUID, Isprivate: pgPrivate, Mdata: json_obj}
@@ -68,6 +68,30 @@ func upsertFileMetadata(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UU
 	return nil
 }
 
+func upsertFileExtras(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, extras FileGeneratedExtras, insert bool) error {
+	doc_pgUUID := pgtype.UUID{Bytes: doc_uuid, Valid: true}
+	summary_text := pgtype.Text{String: extras.Summary}
+	short_summaries_text := pgtype.Text{String: extras.ShortSummary}
+	purpose_text := pgtype.Text{String: extras.Purpose}
+	pgPrivate := pgtype.Bool{false, true}
+	if insert {
+		args := dbstore.ExtrasFileCreateParams{ID: doc_pgUUID, Isprivate: pgPrivate, Summary: summary_text, ShortSummary: short_summaries_text, Purpose: purpose_text}
+		_, err := q.ExtrasFileCreate(
+			ctx, args)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+	args := dbstore.ExtrasFileUpdateParams{ID: doc_pgUUID, Isprivate: pgPrivate, Summary: summary_text, ShortSummary: short_summaries_text, Purpose: purpose_text}
+	_, err := q.ExtrasFileUpdate(
+		ctx, args)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func makeFileUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r *http.Request) {
 	dbtx_val := info.dbtx_val
 	private := info.private
@@ -78,11 +102,11 @@ func makeFileUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r
 		var err error
 		if !insert {
 			params := mux.Vars(r)
-			fileID := params["uuid"]
+			fileIDString := params["uuid"]
 
-			doc_uuid, err = uuid.Parse(fileID)
+			doc_uuid, err = uuid.Parse(fileIDString)
 			if err != nil {
-				http.Error(w, "Error parsing uuid", http.StatusBadRequest)
+				http.Error(w, fmt.Sprintf("Error parsing uuid: %s\n", fileIDString), http.StatusBadRequest)
 				return
 			}
 		}
@@ -117,20 +141,24 @@ func makeFileUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r
 		}
 		// Proceed with the write operation
 		// TODO: IF user is not a paying user, disable insert functionality
-		fmt.Println(r.Body)
+		defer r.Body.Close()
+		var newDocInfo CompleteFileSchema
+		// err = json.NewDecoder(r.Body).Decode(&newDocInfo)
 		bodyBytes, err := io.ReadAll(r.Body)
 		if err != nil {
-			errorstring := fmt.Sprintf("Error reading request body: %v", err)
+			errorstring := fmt.Sprintf("Error reading request body: %v\n", err)
 			fmt.Println(errorstring)
 
 			http.Error(w, errorstring, http.StatusBadRequest)
 			return
 		}
-		fmt.Print(string(bodyBytes))
-		var newDocInfo CompleteFileSchema
-		err = json.Unmarshal(bodyBytes, &newDocInfo)
+		blah := fmt.Sprintln(string(bodyBytes))
+		fmt.Printf("%v\n", blah)
+		// var testUnmarshal TestCompleteFileSchema
+		// err = json.Unmarshal([]byte(blah), &testUnmarshal)
+		err = json.Unmarshal([]byte(blah), &newDocInfo)
 		if err != nil {
-			errorstring := fmt.Sprintf("Invalid request payload: %v", err)
+			errorstring := fmt.Sprintf("Error reading request body json: %v\n", err)
 			fmt.Println(errorstring)
 
 			http.Error(w, errorstring, http.StatusBadRequest)
@@ -145,8 +173,10 @@ func makeFileUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r
 			fileSchema, err = UpdatePubPrivateFileObj(q, ctx, rawFileData, private, pgUUID)
 		}
 		if err != nil {
-			fmt.Printf("Error inserting/updating document: %v", err)
-			http.Error(w, fmt.Sprintf("Error inserting/updating document: %v", err), http.StatusInternalServerError)
+			errorstring := fmt.Sprintf("Error inserting/updating document: %v\n", err)
+			fmt.Print(errorstring)
+			http.Error(w, errorstring, http.StatusInternalServerError)
+			return
 		}
 		doc_uuid = fileSchema.ID // Ensure UUID is same as one returned from database
 		newDocInfo.ID = doc_uuid
@@ -154,6 +184,7 @@ func makeFileUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r
 		upsertFileTexts(ctx, q, doc_uuid, newDocInfo.DocTexts, insert)
 
 		upsertFileMetadata(ctx, q, doc_uuid, newDocInfo.Mdata, insert)
+		upsertFileExtras(ctx, q, doc_uuid, newDocInfo.Extra, insert)
 
 		response, _ := json.Marshal(fileSchema)
 

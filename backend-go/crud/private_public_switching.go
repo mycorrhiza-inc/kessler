@@ -10,12 +10,12 @@ import (
 )
 
 type FileSchema struct {
-	ID        uuid.UUID
-	Extension string
-	Lang      string
-	Name      string
-	Hash      string
-	IsPrivate bool
+	ID        uuid.UUID `json:"id"`
+	Extension string    `json:"extension"`
+	Lang      string    `json:"lang"`
+	Name      string    `json:"name"`
+	Hash      string    `json:"hash"`
+	IsPrivate bool      `json:"is_private"`
 }
 
 // A UUID is a 128 bit (16 byte) Universal Unique IDentifier as defined in RFC
@@ -37,10 +37,10 @@ func PublicFileToSchema(file dbstore.File) FileSchema {
 }
 
 type FileTextSchema struct {
-	FileID         pgtype.UUID
-	IsOriginalText bool
-	Text           string
-	Language       string
+	FileID         pgtype.UUID `json:"file_id"`
+	IsOriginalText bool        `json:"is_original_text"`
+	Text           string      `json:"text"`
+	Language       string      `json:"language"`
 }
 
 func PublicTextToSchema(file dbstore.FileTextSource) FileTextSchema {
@@ -124,6 +124,7 @@ type FileCreationDataRaw struct {
 	Lang      pgtype.Text
 	Name      pgtype.Text
 	Hash      pgtype.Text
+	IsPrivate pgtype.Bool
 }
 
 func InsertPubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreation FileCreationDataRaw, private bool) (FileSchema, error) {
