@@ -7,6 +7,7 @@ import Modal from "./styled-components/Modal";
 import SettingsContent from "./SettingsContent";
 import { User } from "@supabase/supabase-js";
 import { useKesslerStore } from "@/lib/store";
+import Link from "next/link";
 
 function HeaderAuth({ user }: { user: User | null }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -25,22 +26,18 @@ function HeaderAuth({ user }: { user: User | null }) {
       >
         <UserIcon />
       </div>
-      <Modal
-        open={settingsOpen}
-        setOpen={setSettingsOpen}
-        uuid="user-settings-menu-header-auth"
-      >
-        <SettingsContent />
+      <Modal open={settingsOpen} setOpen={setSettingsOpen}>
+        <SettingsContent user={user} />
       </Modal>
     </>
   ) : (
     <div className="flex gap-2">
-      <a href="/sign-in" className="btn btn-outline btn-secondary">
+      <Link href="/sign-in" className="btn btn-outline btn-secondary">
         Sign in
-      </a>
-      <a href="/sign-up" className="btn btn-outline btn-secondary">
+      </Link>
+      <Link href="/sign-up" className="btn btn-outline btn-secondary">
         Sign up
-      </a>
+      </Link>
     </div>
   );
 }

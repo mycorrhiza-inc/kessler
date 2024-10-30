@@ -6,6 +6,7 @@ import {
 import { SubmitButton } from "@/components/supabasetutorial/submit-button";
 import { Input } from "@/components/supabasetutorial/ui/input";
 import { Label } from "@/components/supabasetutorial/ui/label";
+import Link from "next/link";
 
 export default function Signup({ searchParams }: { searchParams: Message }) {
   if ("message" in searchParams) {
@@ -22,9 +23,9 @@ export default function Signup({ searchParams }: { searchParams: Message }) {
         <h1 className="text-2xl font-medium">Sign up</h1>
         <p className="text-sm text-base-content">
           Already have an account?{" "}
-          <a className="font-medium underline" href="/sign-in">
+          <Link className="font-medium underline" href="/sign-in">
             Sign in
-          </a>
+          </Link>
         </p>
         <div className="flex flex-col gap-2 [&>input]:mb-3 mt-8">
           <Label htmlFor="email">Email</Label>

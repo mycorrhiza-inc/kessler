@@ -4,6 +4,7 @@ import ThemeSelector from "./ThemeSelector";
 import { createClient } from "@/utils/supabase/server";
 import { signOutAction } from "@/app/actions";
 import { useKesslerStore } from "@/lib/store";
+import Link from "next/link";
 // The password reset is horribly insecure, but it was horribly insecure before and did allow a password reset with a stolen cookie, but now there is a button that does the same thing. Welp...
 const SettingsContent = () => {
   const globalStore = useKesslerStore();
@@ -15,15 +16,15 @@ const SettingsContent = () => {
       {/*   className="btn btn-outline btn-secondary" */}
       {/*   onClick={signOutAction} */}
       {/* ></button> */}
-      <a href="/sign-out" className="btn btn-outline btn-secondary">
+      <Link href="/sign-out" className="btn btn-outline btn-secondary">
         Sign Out
-      </a>
-      <a
+      </Link>
+      <Link
         href="/protected/reset-password"
         className="btn btn-outline btn-secondary"
       >
         Reset Password
-      </a>
+      </Link>
       <ThemeSelector />
     </div>
   );

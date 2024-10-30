@@ -13,30 +13,6 @@ import {
   emptyQueryOptions,
 } from "@/lib/filters";
 
-// export enum FilterField {
-//   MatchName = "match_name",
-//   MatchSource = "match_source",
-//   MatchDoctype = "match_doctype",
-//   MatchDocketId = "match_docket_id",
-//   MatchDocumentClass = "match_document_class",
-//   MatchAuthor = "match_author",
-//   MatchBeforeDate = "match_before_date",
-//   MatchAfterDate = "match_after_date",
-// }
-// export type QueryFilterFields = {
-//   [key in FilterField]: string;
-// };
-//
-// export const emptyQueryOptions: QueryFilterFields = {
-//   [FilterField.MatchName]: "",
-//   [FilterField.MatchSource]: "",
-//   [FilterField.MatchDoctype]: "",
-//   [FilterField.MatchDocketId]: "",
-//   [FilterField.MatchDocumentClass]: "",
-//   [FilterField.MatchAuthor]: "",
-//   [FilterField.MatchBeforeDate]: "",
-//   [FilterField.MatchAfterDate]: "",
-// };
 enum InputType {
   Text = "text",
   Select = "select",
@@ -141,50 +117,71 @@ export function BasicDocumentFiltersList({
   queryOptions,
   setQueryOptions,
   showQueries,
+  disabledQueries,
 }: {
   queryOptions: QueryFilterFields;
   setQueryOptions: Dispatch<SetStateAction<QueryFilterFields>>;
   showQueries: FilterField[];
+  disabledQueries?: FilterField[];
 }) {
-  return <>
+  return (
+    <>
       <div className="grid grid-flow-row auto-rows-max gap-4">
-      <BasicDocumentFilters
-        queryOptions={queryOptions}
-        setQueryOptions={setQueryOptions}
-        showQueries={showQueries}
-      />
+        <BasicDocumentFilters
+          queryOptions={queryOptions}
+          setQueryOptions={setQueryOptions}
+          showQueries={showQueries}
+          disabledQueries={disabledQueries}
+        />
       </div>
-  </>
+    </>
+  );
 }
 export function BasicDocumentFiltersGrid({
   queryOptions,
   setQueryOptions,
   showQueries,
+  disabledQueries,
 }: {
   queryOptions: QueryFilterFields;
   setQueryOptions: Dispatch<SetStateAction<QueryFilterFields>>;
   showQueries: FilterField[];
+  disabledQueries?: FilterField[];
 }) {
-  return <>
+  return (
+    <>
       <div className="grid grid-cols-4 gap-4">
-      <BasicDocumentFilters
-        queryOptions={queryOptions}
-        setQueryOptions={setQueryOptions}
-        showQueries={showQueries}
-      />
+        <BasicDocumentFilters
+          queryOptions={queryOptions}
+          setQueryOptions={setQueryOptions}
+          showQueries={showQueries}
+          disabledQueries={disabledQueries}
+        />
       </div>
-  </>
+    </>
+  );
 }
 export function BasicDocumentFilters({
   queryOptions,
   setQueryOptions,
   showQueries,
+  disabledQueries,
 }: {
   queryOptions: QueryFilterFields;
   setQueryOptions: Dispatch<SetStateAction<QueryFilterFields>>;
   showQueries: FilterField[];
+  disabledQueries?: FilterField[];
 }) {
   // const [docFilterValues, setDocFilterValues] = useState(emptyQueryOptions);
+  const disabledQueriesDict = useMemo(() => {
+    const dict: Partial<Record<FilterField, boolean>> = {};
+    if (disabledQueries) {
+      disabledQueries.forEach((query) => {
+        dict[query] = true;
+      });
+    }
+    return dict;
+  }, [disabledQueries]);
   const docFilterValues = queryOptions;
   const setDocFilterValues = setQueryOptions;
   const handleChange = (
@@ -225,43 +222,57 @@ export function BasicDocumentFilters({
                     title={filterData.displayName}
                   />
                 </div>
-              );
-            case InputType.Select:
-              return (
-                <div className="box-border">
-                  <div className="tooltip" data-tip={filterData.description}>
-                    <p>{filterData.displayName}</p>
-                  </div><br/>
-                  <select
-                    className="select select-bordered w-full max-w-xs"
-                    value={docFilterValues[filterId]}
-                    onChange={(e) => handleChange(e, filterId)}
-                  >
-                    {filterData.options?.map((option, index) => (
-                      <option key={option.value} selected={index === 0}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
+                <br />
+                <input
+                  className="input input-bordered w-full max-w-xs"
+                  type="text"
+                  disabled={isDisabled}
+                  value={docFilterValues[filterId]}
+                  onChange={(e) => handleChange(e, filterId)}
+                  title={filterData.displayName}
+                />
+              </div>
+            );
+          case InputType.Select:
+            return (
+              <div className="box-border">
+                <div className="tooltip" data-tip={filterData.description}>
+                  <p>{filterData.displayName}</p>
                 </div>
-              );
-            case InputType.Date:
-              return (
-                <div className="box-border">
-                  <div className="tooltip" data-tip={filterData.description}>
-                    <p>{filterData.displayName}</p>
-                  </div><br/>
-                  <input
-                    className="input input-bordered w-full max-w-xs"
-                    type="date"
-                    value={docFilterValues[filterId]}
-                    onChange={(e) => handleChange(e, filterId)}
-                    title={filterData.displayName}
-                  />
+                <br />
+                <select
+                  disabled={isDisabled}
+                  className="select select-bordered w-full max-w-xs"
+                  value={docFilterValues[filterId]}
+                  onChange={(e) => handleChange(e, filterId)}
+                >
+                  {filterData.options?.map((option, index) => (
+                    <option key={option.value} selected={index === 0}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            );
+          case InputType.Date:
+            return (
+              <div className="box-border">
+                <div className="tooltip" data-tip={filterData.description}>
+                  <p>{filterData.displayName}</p>
                 </div>
-              );
-          }
-        })}
+                <br />
+                <input
+                  className="input input-bordered w-full max-w-xs"
+                  type="date"
+                  disabled={isDisabled}
+                  value={docFilterValues[filterId]}
+                  onChange={(e) => handleChange(e, filterId)}
+                  title={filterData.displayName}
+                />
+              </div>
+            );
+        }
+      })}
     </>
   );
 }

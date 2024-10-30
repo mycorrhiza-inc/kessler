@@ -1,28 +1,27 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId } from "react";
 const Modal = ({
   children,
   open,
   setOpen,
-  uuid,
 }: {
   children: React.ReactNode;
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  uuid: string;
 }) => {
+  const modalID = useId();
   useEffect(() => {
     if (open) {
-      // Oh come on, the uuid is always not null, its defined right below you
+      // Confused as to why these are still necessary
       // @ts-ignore
-      document.getElementById(`modal_${uuid}`).showModal();
+      document.getElementById(modalID).showModal();
     } else {
-      // Oh come on, the uuid is always not null, its defined right below you
+      // Confused as to why these are still necessary
       // @ts-ignore
-      document.getElementById(`modal_${uuid}`).close();
+      document.getElementById(modalID).close();
     }
   }, [open]);
   return (
-    <dialog id={`modal_${uuid}`} className="modal ">
+    <dialog id={modalID} className="modal ">
       <div
         className="modal-box bg-base-100 "
         style={{

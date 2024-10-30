@@ -18,6 +18,11 @@ export enum CaseFilterField {
   MatchAfterDate = "match_after_date",
 }
 
+export type InheritedFilterValues = Array<{
+  filter: FilterField;
+  value: string;
+}>;
+
 export type QueryFilterFields = {
   [key in FilterField]: string;
 };
@@ -26,6 +31,7 @@ export const CaseFilterFields: FilterField[] = [
   FilterField.MatchName,
   FilterField.MatchDocketId,
   FilterField.MatchAuthor,
+  FilterField.MatchDocumentClass,
   FilterField.MatchBeforeDate,
   FilterField.MatchAfterDate,
 ];
