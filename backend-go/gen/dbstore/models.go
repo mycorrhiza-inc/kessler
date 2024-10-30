@@ -55,6 +55,22 @@ func (ns NullStageState) Value() (driver.Value, error) {
 	return string(ns.StageState), nil
 }
 
+type DocketConversation struct {
+	ID        pgtype.UUID
+	DocketID  string
+	State     string
+	CreatedAt pgtype.Timestamp
+	UpdatedAt pgtype.Timestamp
+	DeletedAt pgtype.Timestamp
+}
+
+type DocketDocument struct {
+	DocketID  pgtype.UUID
+	FileID    pgtype.UUID
+	CreatedAt pgtype.Timestamp
+	UpdatedAt pgtype.Timestamp
+}
+
 type Encounter struct {
 	Name        pgtype.Text
 	Description pgtype.Text
