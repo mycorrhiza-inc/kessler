@@ -51,7 +51,11 @@ func verifyAuthorOrganizationUUID(ctx context.Context, q dbstore.Queries, author
 	return *author_info, nil
 }
 
-func fileAuthorsInsert(ctx context.Context, q dbstore.Queries, authors_info []AuthorInformation, doc_id uuid.UUID) error {
+func fileAuthorsUpsert(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, authors_info []AuthorInformation, insert bool) error {
+	if !insert {
+		// TODO: Delete all the authors for the file before adding new ones
+		return fmt.Errorf("updating authors not implemented, just delete all the old authors before adding the new ones")
+	}
 	fileAuthorInsert := func(author_info AuthorInformation) error {
 		new_author_info, err := verifyAuthorOrganizationUUID(ctx, q, &author_info)
 		if err != nil {
@@ -63,7 +67,7 @@ func fileAuthorsInsert(ctx context.Context, q dbstore.Queries, authors_info []Au
 		}
 
 		author_params := dbstore.AuthorshipDocumentOrganizationInsertParams{
-			DocumentID:      pgtype.UUID{Bytes: doc_id, Valid: true},
+			DocumentID:      pgtype.UUID{Bytes: doc_uuid, Valid: true},
 			OrganizationID:  pgtype.UUID{Bytes: new_author_info.AuthorID, Valid: true},
 			IsPrimaryAuthor: pgtype.Bool{Bool: new_author_info.IsPrimaryAuthor, Valid: true},
 		}
@@ -77,7 +81,7 @@ func fileAuthorsInsert(ctx context.Context, q dbstore.Queries, authors_info []Au
 	for _, author_info := range authors_info {
 		err := fileAuthorInsert(author_info)
 		if err != nil {
-			fmt.Printf("Encountered error while inserting author for document %s, ignoring and continuing: %v", doc_id, err)
+			fmt.Printf("Encountered error while inserting author for document %s, ignoring and continuing: %v", doc_uuid, err)
 		}
 	}
 

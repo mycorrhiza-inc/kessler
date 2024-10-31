@@ -96,6 +96,20 @@ func upsertFileExtras(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID
 	return nil
 }
 
+func fileStatusInsert(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, stage DocProcStage, insert bool) error {
+	stage_json, err := json.Marshal(stage)
+	if err != nil {
+		return err
+	}
+	params := dbstore.AddStageLogParams{
+		FileID: pgtype.UUID{Bytes: doc_uuid, Valid: true},
+		Status: dbstore.NullStageState{StageState: dbstore.StageState(stage.PGStage)},
+		Log:    stage_json,
+	}
+	_, err = q.AddStageLog(ctx, params)
+	return err
+}
+
 func makeFileUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r *http.Request) {
 	dbtx_val := info.dbtx_val
 	private := info.private
@@ -184,13 +198,25 @@ func makeFileUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r
 		}
 		doc_uuid = fileSchema.ID // Ensure UUID is same as one returned from database
 		newDocInfo.ID = doc_uuid
+		empty_uuid, _ := uuid.Parse("00000000-0000-0000-0000-000000000000")
+		if newDocInfo.ID == empty_uuid {
+			err := fmt.Errorf("ASSERT FAILURE: docUUID should never have a null uuid.")
+			errorstring := fmt.Sprint(err)
+			fmt.Println(errorstring)
+			http.Error(w, errorstring, http.StatusInternalServerError)
+			return
+		}
+
+		fileStatusInsert(ctx, q, doc_uuid, newDocInfo.Stage, insert)
 
 		upsertFileTexts(ctx, q, doc_uuid, newDocInfo.DocTexts, insert)
 
 		upsertFileMetadata(ctx, q, doc_uuid, newDocInfo.Mdata, insert)
 		upsertFileExtras(ctx, q, doc_uuid, newDocInfo.Extra, insert)
+		// TODO: Implement update functionality
+		fileAuthorsUpsert(ctx, q, doc_uuid, newDocInfo.Authors, insert)
 
-		response, _ := json.Marshal(fileSchema)
+		response, _ := json.Marshal(newDocInfo)
 
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(response)
