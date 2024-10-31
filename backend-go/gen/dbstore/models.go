@@ -135,6 +135,18 @@ type FileTextSource struct {
 	UpdatedAt      pgtype.Timestamptz
 }
 
+type JuristictionInformation struct {
+	ID             pgtype.UUID
+	Country        pgtype.Text
+	State          pgtype.Text
+	Municipality   pgtype.Text
+	Agency         pgtype.Text
+	ProceedingName pgtype.Text
+	Extra          []byte
+	CreatedAt      pgtype.Timestamptz
+	UpdatedAt      pgtype.Timestamptz
+}
+
 type Organization struct {
 	Name        string
 	Description pgtype.Text
