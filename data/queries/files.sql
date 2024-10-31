@@ -116,11 +116,11 @@ SELECT *
 FROM public.file_metadata
 WHERE id = $1;
 
--- name: AddMetadataToFile :one
-UPDATE public.file
-SET metadata_id = $1
-WHERE id = $2
-RETURNING id;
+-- -- name: AddMetadataToFile :one
+-- UPDATE public.file
+-- SET metadata_id = $1
+-- WHERE id = $2
+-- RETURNING id;
 
 -- name: GetFileMetadata :one
 SELECT * FROM public.file_metadata WHERE id = $1;

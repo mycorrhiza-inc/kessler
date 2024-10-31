@@ -1,6 +1,5 @@
 -- +goose Up
-ALTER TABLE IF EXISTS public.relation_documents_organizations 
-RENAME TO public.relation_documents_organizations_authorship;
+ALTER TABLE IF EXISTS public.relation_documents_organizations RENAME TO relation_documents_organizations_authorship;
 
 
 ALTER TABLE public.organization

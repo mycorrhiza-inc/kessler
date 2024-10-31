@@ -1,4 +1,4 @@
--- name: AuthorshipDocumentOrganizationInsert: one
+-- name: AuthorshipDocumentOrganizationInsert :one
 INSERT INTO public.relation_documents_organizations_authorship (
 		document_id,
 		organization_id,
@@ -8,7 +8,7 @@ INSERT INTO public.relation_documents_organizations_authorship (
 	)
 VALUES ($1, $2, $3, NOW(), NOW())
 RETURNING id;
--- name: AuthorshipDocumentDeleteAll:exec
+-- name: AuthorshipDocumentDeleteAll :exec
 DELETE FROM public.relation_documents_organizations_authorship
 WHERE document_id = $1;
 -- name: CreateOrganization :one
@@ -21,7 +21,7 @@ INSERT INTO public.organization (
 	)
 VALUES ($1, $2, $3, NOW(), NOW())
 RETURNING id;
--- name: OrganizationFetchByNameMatch : many
+-- name: OrganizationFetchByNameMatch :many
 SELECT *
 FROM public.organization
 WHERE name = $1;
@@ -37,7 +37,7 @@ ORDER BY created_at DESC;
 UPDATE public.organization
 SET name = $1,
 	description = $2,
-  is_person = $3
+  is_person = $3,
 	updated_at = NOW()
 WHERE id = $4
 RETURNING id;
