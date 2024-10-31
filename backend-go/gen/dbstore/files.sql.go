@@ -11,25 +11,6 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const addMetadataToFile = `-- name: AddMetadataToFile :one
-UPDATE public.file
-SET metadata_id = $1
-WHERE id = $2
-RETURNING id
-`
-
-type AddMetadataToFileParams struct {
-	MetadataID pgtype.UUID
-	ID         pgtype.UUID
-}
-
-func (q *Queries) AddMetadataToFile(ctx context.Context, arg AddMetadataToFileParams) (pgtype.UUID, error) {
-	row := q.db.QueryRow(ctx, addMetadataToFile, arg.MetadataID, arg.ID)
-	var id pgtype.UUID
-	err := row.Scan(&id)
-	return id, err
-}
-
 const addStageLog = `-- name: AddStageLog :one
 INSERT INTO public.stage_log (
     file_id,
@@ -230,9 +211,15 @@ func (q *Queries) FetchMetadata(ctx context.Context, id pgtype.UUID) (FileMetada
 }
 
 const getFileMetadata = `-- name: GetFileMetadata :one
+
 SELECT id, isprivate, mdata, created_at, updated_at FROM public.file_metadata WHERE id = $1
 `
 
+// -- name: AddMetadataToFile :one
+// UPDATE public.file
+// SET metadata_id = $1
+// WHERE id = $2
+// RETURNING id;
 func (q *Queries) GetFileMetadata(ctx context.Context, id pgtype.UUID) (FileMetadatum, error) {
 	row := q.db.QueryRow(ctx, getFileMetadata, id)
 	var i FileMetadatum
@@ -278,7 +265,7 @@ func (q *Queries) InsertMetadata(ctx context.Context, arg InsertMetadataParams) 
 }
 
 const listFiles = `-- name: ListFiles :many
-SELECT id, lang, name, extension, isprivate, created_at, updated_at, hash, metadata_id
+SELECT id, lang, name, extension, isprivate, created_at, updated_at, hash
 FROM public.file
 ORDER BY updated_at DESC
 `
@@ -301,7 +288,6 @@ func (q *Queries) ListFiles(ctx context.Context) ([]File, error) {
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.Hash,
-			&i.MetadataID,
 		); err != nil {
 			return nil, err
 		}
@@ -314,7 +300,7 @@ func (q *Queries) ListFiles(ctx context.Context) ([]File, error) {
 }
 
 const readFile = `-- name: ReadFile :one
-SELECT id, lang, name, extension, isprivate, created_at, updated_at, hash, metadata_id
+SELECT id, lang, name, extension, isprivate, created_at, updated_at, hash
 FROM public.file
 WHERE id = $1
 `
@@ -331,7 +317,6 @@ func (q *Queries) ReadFile(ctx context.Context, id pgtype.UUID) (File, error) {
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Hash,
-		&i.MetadataID,
 	)
 	return i, err
 }

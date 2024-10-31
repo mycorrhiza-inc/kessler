@@ -11,24 +11,61 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const authorshipDocumentDeleteAll = `-- name: AuthorshipDocumentDeleteAll :exec
+DELETE FROM public.relation_documents_organizations_authorship
+WHERE document_id = $1
+`
+
+func (q *Queries) AuthorshipDocumentDeleteAll(ctx context.Context, documentID pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, authorshipDocumentDeleteAll, documentID)
+	return err
+}
+
+const authorshipDocumentOrganizationInsert = `-- name: AuthorshipDocumentOrganizationInsert :one
+INSERT INTO public.relation_documents_organizations_authorship (
+		document_id,
+		organization_id,
+    is_primary_author,
+		created_at,
+		updated_at
+	)
+VALUES ($1, $2, $3, NOW(), NOW())
+RETURNING id
+`
+
+type AuthorshipDocumentOrganizationInsertParams struct {
+	DocumentID      pgtype.UUID
+	OrganizationID  pgtype.UUID
+	IsPrimaryAuthor pgtype.Bool
+}
+
+func (q *Queries) AuthorshipDocumentOrganizationInsert(ctx context.Context, arg AuthorshipDocumentOrganizationInsertParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, authorshipDocumentOrganizationInsert, arg.DocumentID, arg.OrganizationID, arg.IsPrimaryAuthor)
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
 const createOrganization = `-- name: CreateOrganization :one
 INSERT INTO public.organization (
 		name,
 		description,
+    is_person,
 		created_at,
 		updated_at
 	)
-VALUES ($1, $2, NOW(), NOW())
+VALUES ($1, $2, $3, NOW(), NOW())
 RETURNING id
 `
 
 type CreateOrganizationParams struct {
 	Name        string
 	Description pgtype.Text
+	IsPerson    pgtype.Bool
 }
 
 func (q *Queries) CreateOrganization(ctx context.Context, arg CreateOrganizationParams) (pgtype.UUID, error) {
-	row := q.db.QueryRow(ctx, createOrganization, arg.Name, arg.Description)
+	row := q.db.QueryRow(ctx, createOrganization, arg.Name, arg.Description, arg.IsPerson)
 	var id pgtype.UUID
 	err := row.Scan(&id)
 	return id, err
@@ -45,7 +82,7 @@ func (q *Queries) DeleteOrganization(ctx context.Context, id pgtype.UUID) error 
 }
 
 const listOrganizations = `-- name: ListOrganizations :many
-SELECT name, description, id, created_at, updated_at
+SELECT name, description, id, created_at, updated_at, is_person
 FROM public.organization
 ORDER BY created_at DESC
 `
@@ -65,6 +102,40 @@ func (q *Queries) ListOrganizations(ctx context.Context) ([]Organization, error)
 			&i.ID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.IsPerson,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const organizationFetchByNameMatch = `-- name: OrganizationFetchByNameMatch :many
+SELECT name, description, id, created_at, updated_at, is_person
+FROM public.organization
+WHERE name = $1
+`
+
+func (q *Queries) OrganizationFetchByNameMatch(ctx context.Context, name string) ([]Organization, error) {
+	rows, err := q.db.Query(ctx, organizationFetchByNameMatch, name)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Organization
+	for rows.Next() {
+		var i Organization
+		if err := rows.Scan(
+			&i.Name,
+			&i.Description,
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.IsPerson,
 		); err != nil {
 			return nil, err
 		}
@@ -77,7 +148,7 @@ func (q *Queries) ListOrganizations(ctx context.Context) ([]Organization, error)
 }
 
 const readOrganization = `-- name: ReadOrganization :one
-SELECT name, description, id, created_at, updated_at
+SELECT name, description, id, created_at, updated_at, is_person
 FROM public.organization
 WHERE id = $1
 `
@@ -91,6 +162,7 @@ func (q *Queries) ReadOrganization(ctx context.Context, id pgtype.UUID) (Organiz
 		&i.ID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.IsPerson,
 	)
 	return i, err
 }
@@ -99,59 +171,26 @@ const updateOrganization = `-- name: UpdateOrganization :one
 UPDATE public.organization
 SET name = $1,
 	description = $2,
+  is_person = $3,
 	updated_at = NOW()
-WHERE id = $3
+WHERE id = $4
 RETURNING id
 `
 
 type UpdateOrganizationParams struct {
 	Name        string
 	Description pgtype.Text
+	IsPerson    pgtype.Bool
 	ID          pgtype.UUID
 }
 
 func (q *Queries) UpdateOrganization(ctx context.Context, arg UpdateOrganizationParams) (pgtype.UUID, error) {
-	row := q.db.QueryRow(ctx, updateOrganization, arg.Name, arg.Description, arg.ID)
-	var id pgtype.UUID
-	err := row.Scan(&id)
-	return id, err
-}
-
-const updateOrganizationDescription = `-- name: UpdateOrganizationDescription :one
-UPDATE public.organization
-SET description = $1,
-	updated_at = NOW()
-WHERE id = $2
-RETURNING id
-`
-
-type UpdateOrganizationDescriptionParams struct {
-	Description pgtype.Text
-	ID          pgtype.UUID
-}
-
-func (q *Queries) UpdateOrganizationDescription(ctx context.Context, arg UpdateOrganizationDescriptionParams) (pgtype.UUID, error) {
-	row := q.db.QueryRow(ctx, updateOrganizationDescription, arg.Description, arg.ID)
-	var id pgtype.UUID
-	err := row.Scan(&id)
-	return id, err
-}
-
-const updateOrganizationName = `-- name: UpdateOrganizationName :one
-UPDATE public.organization
-SET name = $1,
-	updated_at = NOW()
-WHERE id = $2
-RETURNING id
-`
-
-type UpdateOrganizationNameParams struct {
-	Name string
-	ID   pgtype.UUID
-}
-
-func (q *Queries) UpdateOrganizationName(ctx context.Context, arg UpdateOrganizationNameParams) (pgtype.UUID, error) {
-	row := q.db.QueryRow(ctx, updateOrganizationName, arg.Name, arg.ID)
+	row := q.db.QueryRow(ctx, updateOrganization,
+		arg.Name,
+		arg.Description,
+		arg.IsPerson,
+		arg.ID,
+	)
 	var id pgtype.UUID
 	err := row.Scan(&id)
 	return id, err

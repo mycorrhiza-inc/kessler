@@ -97,15 +97,14 @@ type Faction struct {
 }
 
 type File struct {
-	ID         pgtype.UUID
-	Lang       pgtype.Text
-	Name       pgtype.Text
-	Extension  pgtype.Text
-	Isprivate  pgtype.Bool
-	CreatedAt  pgtype.Timestamptz
-	UpdatedAt  pgtype.Timestamptz
-	Hash       pgtype.Text
-	MetadataID pgtype.UUID
+	ID        pgtype.UUID
+	Lang      pgtype.Text
+	Name      pgtype.Text
+	Extension pgtype.Text
+	Isprivate pgtype.Bool
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
+	Hash      pgtype.Text
 }
 
 type FileExtra struct {
@@ -136,21 +135,13 @@ type FileTextSource struct {
 	UpdatedAt      pgtype.Timestamptz
 }
 
-type Individual struct {
-	Name       string
-	Username   pgtype.Text
-	ChosenName pgtype.Text
-	ID         pgtype.UUID
-	CreatedAt  pgtype.Timestamptz
-	UpdatedAt  pgtype.Timestamptz
-}
-
 type Organization struct {
 	Name        string
 	Description pgtype.Text
 	ID          pgtype.UUID
 	CreatedAt   pgtype.Timestamptz
 	UpdatedAt   pgtype.Timestamptz
+	IsPerson    pgtype.Bool
 }
 
 type PrivateAccessControl struct {
@@ -171,20 +162,13 @@ type RelationDocumentsEncounter struct {
 	UpdatedAt   pgtype.Timestamptz
 }
 
-type RelationDocumentsIndividualsAuthor struct {
-	DocumentID   pgtype.UUID
-	IndividualID pgtype.UUID
-	ID           pgtype.UUID
-	CreatedAt    pgtype.Timestamptz
-	UpdatedAt    pgtype.Timestamptz
-}
-
-type RelationDocumentsOrganization struct {
-	DocumentID     pgtype.UUID
-	OrganizationID pgtype.UUID
-	ID             pgtype.UUID
-	CreatedAt      pgtype.Timestamptz
-	UpdatedAt      pgtype.Timestamptz
+type RelationDocumentsOrganizationsAuthorship struct {
+	DocumentID      pgtype.UUID
+	OrganizationID  pgtype.UUID
+	ID              pgtype.UUID
+	CreatedAt       pgtype.Timestamptz
+	UpdatedAt       pgtype.Timestamptz
+	IsPrimaryAuthor pgtype.Bool
 }
 
 type RelationFactionsEncounter struct {
@@ -209,22 +193,6 @@ type RelationIndividualsEvent struct {
 	ID           pgtype.UUID
 	CreatedAt    pgtype.Timestamptz
 	UpdatedAt    pgtype.Timestamptz
-}
-
-type RelationIndividualsFaction struct {
-	FactionID    pgtype.UUID
-	IndividualID pgtype.UUID
-	ID           pgtype.UUID
-	CreatedAt    pgtype.Timestamptz
-	UpdatedAt    pgtype.Timestamptz
-}
-
-type RelationIndividualsOrganization struct {
-	IndividualID   pgtype.UUID
-	OrganizationID pgtype.UUID
-	ID             pgtype.UUID
-	CreatedAt      pgtype.Timestamptz
-	UpdatedAt      pgtype.Timestamptz
 }
 
 type RelationOrganizationsEvent struct {
