@@ -48,8 +48,8 @@ func upsertFileTexts(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID,
 
 func upsertFileMetadata(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, metadata FileMetadataSchema, insert bool) error {
 	doc_pgUUID := pgtype.UUID{Bytes: doc_uuid, Valid: true}
-	metadata.MdataObj["id"] = doc_uuid.String()
-	json_obj, err := json.Marshal(metadata.MdataObj)
+	metadata.MdataObject["id"] = doc_uuid.String()
+	json_obj, err := json.Marshal(metadata.MdataObject)
 	if err != nil {
 		return err
 	}
@@ -65,6 +65,50 @@ func upsertFileMetadata(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UU
 	args := dbstore.UpdateMetadataParams{ID: doc_pgUUID, Isprivate: pgPrivate, Mdata: json_obj}
 	_, err = q.UpdateMetadata(
 		ctx, args)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func juristictionFileUpsert(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, juristiction_info JuristictionInformation, insert bool) error {
+	json_obj, err := json.Marshal(juristiction_info.ExtraObject)
+	if err != nil {
+		return err
+	}
+	doc_pgUUID := pgtype.UUID{Bytes: doc_uuid, Valid: true}
+	country := pgtype.Text{String: juristiction_info.Country}
+	state := pgtype.Text{String: juristiction_info.State}
+	municipality := pgtype.Text{String: juristiction_info.Municipality}
+	agency := pgtype.Text{String: juristiction_info.Agency}
+	proceeding_name := pgtype.Text{String: juristiction_info.ProceedingName}
+
+	if insert {
+		insert_args := dbstore.JuristictionFileInsertParams{
+			ID:             doc_pgUUID,
+			Country:        country,
+			State:          state,
+			Municipality:   municipality,
+			Agency:         agency,
+			ProceedingName: proceeding_name,
+			Extra:          json_obj,
+		}
+		_, err := q.JuristictionFileInsert(ctx, insert_args)
+		if err != nil {
+			return err
+		}
+	}
+	update_args := dbstore.JuristictionFileUpdateParams{
+		ID:             doc_pgUUID,
+		Country:        country,
+		State:          state,
+		Municipality:   municipality,
+		Agency:         agency,
+		ProceedingName: proceeding_name,
+		Extra:          json_obj,
+	}
+	_, err = q.JuristictionFileUpdate(ctx, update_args)
 	if err != nil {
 		return err
 	}
@@ -207,6 +251,7 @@ func makeFileUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r
 			return
 		}
 
+		// TODO: Implement error handling for any of these.
 		fileStatusInsert(ctx, q, doc_uuid, newDocInfo.Stage, insert)
 
 		upsertFileTexts(ctx, q, doc_uuid, newDocInfo.DocTexts, insert)
@@ -215,6 +260,7 @@ func makeFileUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r
 		upsertFileExtras(ctx, q, doc_uuid, newDocInfo.Extra, insert)
 		// TODO: Implement update functionality
 		fileAuthorsUpsert(ctx, q, doc_uuid, newDocInfo.Authors, insert)
+		juristictionFileUpsert(ctx, q, doc_uuid, newDocInfo.Juristiction, insert)
 
 		response, _ := json.Marshal(newDocInfo)
 

@@ -67,22 +67,32 @@ type AuthorInformation struct {
 	AuthorID        uuid.UUID `json:"author_id"`
 }
 
+type JuristictionInformation struct {
+	Country        string                 `json:"country"`
+	State          string                 `json:"state"`
+	Municipality   string                 `json:"municipality"`
+	Agency         string                 `json:"agency"`
+	ProceedingName string                 `json:"proceeding_name"`
+	ExtraObject    map[string]interface{} `json:"extra_object"`
+}
+
 type CompleteFileSchema struct {
-	ID        uuid.UUID             `json:"id"`
-	Extension string                `json:"extension"`
-	Lang      string                `json:"lang"`
-	Name      string                `json:"name"`
-	Hash      string                `json:"hash"`
-	IsPrivate bool                  `json:"is_private"`
-	Mdata     FileMetadataSchema    `json:"mdata"`
-	DocTexts  []FileChildTextSource `json:"doc_texts"`
-	Stage     DocProcStage          `json:"stage"`
-	Extra     FileGeneratedExtras   `json:"extra"`
-	Authors   []AuthorInformation   `json:"authors"`
+	ID           uuid.UUID               `json:"id"`
+	Extension    string                  `json:"extension"`
+	Lang         string                  `json:"lang"`
+	Name         string                  `json:"name"`
+	Hash         string                  `json:"hash"`
+	IsPrivate    bool                    `json:"is_private"`
+	Mdata        FileMetadataSchema      `json:"mdata"`
+	DocTexts     []FileChildTextSource   `json:"doc_texts"`
+	Stage        DocProcStage            `json:"stage"`
+	Extra        FileGeneratedExtras     `json:"extra"`
+	Authors      []AuthorInformation     `json:"authors"`
+	Juristiction JuristictionInformation `json:"juristiction"`
 }
 
 type FileMetadataSchema struct {
-	MdataObj map[string]interface{} `json:"metadata_object"`
+	MdataObject map[string]interface{} `json:"metadata_object"`
 }
 
 func CompleteFileSchemaPrune(input CompleteFileSchema) FileSchema {
