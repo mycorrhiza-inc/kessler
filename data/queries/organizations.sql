@@ -2,11 +2,16 @@
 INSERT INTO public.organization (
 		name,
 		description,
+    is_person,
 		created_at,
 		updated_at
 	)
-VALUES ($1, $2, NOW(), NOW())
+VALUES ($1, $2, $3, NOW(), NOW())
 RETURNING id;
+-- name: OrganizationFetchByNameMatch : many
+SELECT *
+FROM public.organization
+WHERE name = $1;
 -- name: ReadOrganization :one
 SELECT *
 FROM public.organization
@@ -19,8 +24,9 @@ ORDER BY created_at DESC;
 UPDATE public.organization
 SET name = $1,
 	description = $2,
+  is_person = $3
 	updated_at = NOW()
-WHERE id = $3
+WHERE id = $4
 RETURNING id;
 -- name: UpdateOrganizationName :one
 UPDATE public.organization
