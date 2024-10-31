@@ -48,24 +48,22 @@ func upsertFileTexts(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID,
 
 func upsertFileMetadata(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, metadata FileMetadataSchema, insert bool) error {
 	doc_pgUUID := pgtype.UUID{Bytes: doc_uuid, Valid: true}
-	json_obj := []byte(metadata.JsonObj)
+	metadata.MdataObj["id"] = doc_uuid.String()
+	json_obj, err := json.Marshal(metadata.MdataObj)
+	if err != nil {
+		return err
+	}
 	pgPrivate := pgtype.Bool{false, true}
 	if insert {
 		insert_args := dbstore.InsertMetadataParams{ID: doc_pgUUID, Isprivate: pgPrivate, Mdata: json_obj}
-		metadata_id, err := q.InsertMetadata(
+		_, err := q.InsertMetadata(
 			ctx, insert_args)
 		if err != nil {
 			return err
 		}
-		add_meta_args := dbstore.AddMetadataToFileParams{ID: doc_pgUUID, MetadataID: metadata_id}
-		_, err = q.AddMetadataToFile(ctx, add_meta_args)
-		if err != nil {
-			return err
-		}
-		return nil
 	}
 	args := dbstore.UpdateMetadataParams{ID: doc_pgUUID, Isprivate: pgPrivate, Mdata: json_obj}
-	_, err := q.UpdateMetadata(
+	_, err = q.UpdateMetadata(
 		ctx, args)
 	if err != nil {
 		return err

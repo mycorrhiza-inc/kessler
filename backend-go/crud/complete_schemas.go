@@ -80,7 +80,7 @@ type CompleteFileSchema struct {
 }
 
 type FileMetadataSchema struct {
-	JsonObj string `json:"json_obj"`
+	MdataObj map[string]interface{} `json:"metadata_object"`
 }
 
 func CompleteFileSchemaPrune(input CompleteFileSchema) FileSchema {
