@@ -77,7 +77,7 @@ SET isPrivate = $1,
     updated_at = NOW()
 WHERE id = $3
 RETURNING id;
--- name: FetchMetadata :one
+-- name: FetchMetadata :many
 SELECT *
 FROM public.file_metadata
 WHERE id = $1;
