@@ -1,3 +1,16 @@
+-- name: AuthorshipDocumentOrganizationInsert: one
+INSERT INTO public.relation_documents_organizations_authorship (
+		document_id,
+		organization_id,
+    is_primary_author,
+		created_at,
+		updated_at
+	)
+VALUES ($1, $2, $3, NOW(), NOW())
+RETURNING id;
+-- name: AuthorshipDocumentDeleteAll:exec
+DELETE FROM public.relation_documents_organizations_authorship
+WHERE document_id = $1;
 -- name: CreateOrganization :one
 INSERT INTO public.organization (
 		name,
@@ -27,18 +40,6 @@ SET name = $1,
   is_person = $3
 	updated_at = NOW()
 WHERE id = $4
-RETURNING id;
--- name: UpdateOrganizationName :one
-UPDATE public.organization
-SET name = $1,
-	updated_at = NOW()
-WHERE id = $2
-RETURNING id;
--- name: UpdateOrganizationDescription :one
-UPDATE public.organization
-SET description = $1,
-	updated_at = NOW()
-WHERE id = $2
 RETURNING id;
 -- name: DeleteOrganization :exec
 DELETE FROM public.organization
