@@ -61,9 +61,10 @@ type FileGeneratedExtras struct {
 }
 
 type AuthorInformation struct {
-	AuthorName string    `json:"author_name"`
-	IsPerson   bool      `json:"is_person"`
-	AuthorID   uuid.UUID `json:"author_id"`
+	AuthorName      string    `json:"author_name"`
+	IsPerson        bool      `json:"is_person"`
+	IsPrimaryAuthor bool      `json:"is_primary_author"`
+	AuthorID        uuid.UUID `json:"author_id"`
 }
 
 type CompleteFileSchema struct {
