@@ -6,6 +6,7 @@ import React, {
   useState,
   useRef,
   useMemo,
+  useEffect,
 } from "react";
 import { BasicDocumentFiltersList } from "@/components/DocumentFilters";
 import {
@@ -19,20 +20,20 @@ import DocumentModalBody from "../DocumentModalBody";
 import { AnimatePresence, motion } from "framer-motion";
 import axios from "axios";
 
-type Filing = {
-  id: string;
-  lang: string;
-  title: string;
-  date: string;
-  author: string;
-  source: string;
-  language: string;
-  extension: string;
-  file_class: string;
-  item_number: string;
-  author_organisation: string;
-  url: string;
-  uuid: string;
+export type Filing = {
+  id?: string;
+  lang?: string;
+  title?: string;
+  date?: string;
+  author?: string;
+  source?: string;
+  language?: string;
+  extension?: string;
+  file_class?: string;
+  item_number?: string;
+  author_organisation?: string;
+  url?: string;
+  uuid?: string;
 };
 
 const testFiling: Filing = {
@@ -104,9 +105,15 @@ const TableRow = ({ filing }: { filing: Filing }) => {
     </>
   );
 };
-const FilingTable = ({ filings }: { filings: Filing[] }) => {
+export const FilingTable = ({ filings,  }: { filings: Filing[] }) => {
+  const getFilingData = async (id: string) => {
+    const response = await axios.post("http://localhost/v2/filing_data", {
+      id: id,
+    });
+    return response.data;
+  };
   return (
-    <div className="overflow-x-scroll max-h-[500px] overflow-y-auto">
+    <div className="overflow-x-scroll max-h-[600px] overflow-y-auto">
       <table className="w-full divide-y divide-gray-200 table">
         <tbody>
           <tr className="border-b border-gray-200">
@@ -115,6 +122,7 @@ const FilingTable = ({ filings }: { filings: Filing[] }) => {
             <th className="text-left p-2 sticky top-0 bg-white">Author</th>
             <th className="text-left p-2 sticky top-0 bg-white">Source</th>
             <th className="text-left p-2 sticky top-0 bg-white">Item Number</th>
+            <th className="text-left p-2 sticky top-0 bg-white">File</th>
           </tr>
           {filings.map((filing) => (
             <TableRow filing={filing} />
@@ -228,7 +236,7 @@ const ConversationComponent = ({
           </motion.div>
         )}
       </AnimatePresence>
-      <div className=" p-10">
+      <div className="p-10">
         <div id="conversation-header p-10 justify-between"></div>
         <h1 className=" text-2xl font-bold">Conversation</h1>
         <button

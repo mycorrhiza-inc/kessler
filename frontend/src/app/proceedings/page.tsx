@@ -1,4 +1,5 @@
 import { ConversationView } from "@/components/ConversationView";
+import Navbar from "@/components/Navbar";
 import { createClient } from "@/utils/supabase/server";
 export default async function Page({
   params,
@@ -9,5 +10,10 @@ export default async function Page({
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  return <ConversationView user={user} />;
+  return (
+    <>
+      <Navbar user={user} />
+      <ConversationView />
+    </>
+  );
 }
