@@ -79,7 +79,7 @@ export default function SearchApp() {
 
   return (
     <>
-      <Navbar user={user} />
+      {/* <Navbar user={user} /> */}
       <div
         className="searchContainer"
         ref={divRef}
