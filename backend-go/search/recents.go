@@ -6,76 +6,27 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"time"
 )
 
-type CaseFile struct {
-	DocketId string `json:"docket_id"`
-	FileId   string `json:"file_id"`
-}
-
-func GetRecentCaseData(page int) ([]CaseFile, error) {
-	request := QuickwitSearchRequest{
-		Query:         "",
-		SnippetFields: "text",
-		MaxHits:       20,
-	}
-
-	jsonData, err := json.Marshal(request)
-
-	// ===== submit request to quickwit =====
-	log.Printf("jsondata: \n%s", jsonData)
-	if err != nil {
-		log.Printf("Error Marshalling quickwit request: %s", err)
-		return nil, err
-	}
-
-	offset := page * 20
+func GetRecentCaseData(page int) ([]SearchData, error) {
 	// get all documents with a metadata.date_filed since (x)
-	request_url := fmt.Sprintf("%s/api/v1/dockets/search?sort_by=date_filed?max_hits=20?start_offset=%d", quickwitURL, offset)
-	resp, err := http.Post(
-		request_url,
-		"application/json",
-		bytes.NewBuffer(jsonData),
-	)
+	log.Printf("gettings ssssssflkjadflhdsfuhlifadlhf")
+	request := SearchRequest{
+		Index:       "NY_PUC",
+		Query:       "",
+		SortBy:      []string{"date_filed"},
+		MaxHits:     20,
+		StartOffset: page,
+	}
+	data, err := SearchQuickwit(request)
 	if err != nil {
 		return nil, err
 	}
-
-	defer resp.Body.Close()
-	cases := []CaseFile{}
-
-	return cases, nil
+	log.Printf("data: \n%v", data)
+	return data, nil
 }
 
-func convertToUTC(dateStr string) (string, error) {
-	// Define common date formats to try
-	formats := []string{
-		time.RFC3339,           // 2024-10-23T14:35:22Z
-		time.RFC1123,           // Mon, 02 Jan 2006 15:04:05 MST
-		"2006-01-02 15:04:05",  // 2024-10-23 14:35:22
-		"02/01/2006 15:04:05",  // 23/10/2024 14:35:22
-		"02 Jan 2006 15:04:05", // 23 Oct 2024 14:35:22
-		"2006-01-02",           // 2024-10-23
-		"02/01/2006",           // 23/10/2024
-	}
-
-	var parsedTime time.Time
-	var err error
-
-	// Attempt to parse the date string with each format
-	for _, layout := range formats {
-		parsedTime, err = time.Parse(layout, dateStr)
-		if err == nil {
-			// Successfully parsed, convert to UTC
-			return parsedTime.UTC().Format(time.RFC3339), nil
-		}
-	}
-
-	return "", fmt.Errorf("could not parse date: %s", dateStr)
-}
-
-func GetCaseDataSince(date string, page int) ([]CaseFile, error) {
+func GetCaseDataSince(date string, page int) ([]Hit, error) {
 	// Go was complaining about unutilized code, assume this is someone in the middle of something, feel free to continue.
 	// parse the date string
 	//
@@ -105,6 +56,7 @@ func GetCaseDataSince(date string, page int) ([]CaseFile, error) {
 	offset := page * 20
 	// get all documents with a metadata.date_filed since (x)
 	request_url := fmt.Sprintf("%s/api/v1/dockets/search?sort_by=date_filed?max_hits=20?start_offset=%d", quickwitURL, offset)
+	log.Printf("request_url: \n%s", request_url)
 	resp, err := http.Post(
 		request_url,
 		"application/json",
@@ -113,9 +65,10 @@ func GetCaseDataSince(date string, page int) ([]CaseFile, error) {
 	if err != nil {
 		return nil, err
 	}
+	log.Printf("response: \n%v", resp)
 
 	defer resp.Body.Close()
-	cases := []CaseFile{}
+	cases := []Hit{}
 
 	return cases, nil
 }
