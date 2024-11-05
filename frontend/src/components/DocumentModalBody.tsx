@@ -1,11 +1,11 @@
-// Modal.js
-import React, { useEffect, useRef } from "react";
+import React, { Suspense } from "react";
 import * as Tabs from "@radix-ui/react-tabs";
-import axios from "axios";
+import { fetchDocumentData } from "../utils/documentLoader";
 
 import PDFViewer from "./PDFViewer";
 import MarkdownRenderer from "./MarkdownRenderer";
 import { testMarkdownContent } from "./MarkdownRenderer";
+import { LoadingSpinner } from "./styled-components/LoadingSpinner";
 
 type ModalProps = {
   open: boolean;
@@ -22,42 +22,19 @@ const DocumentModalBody = ({
   title,
   overridePDFUrl,
 }: ModalProps) => {
-  const [loading, setLoading] = React.useState(false);
+  const resource = React.useMemo(
+    () => fetchDocumentData(objectId!, overridePDFUrl),
+    [objectId, overridePDFUrl],
+  );
 
-  const [docText, setDocText] = React.useState("Loading Document Text");
-  const [pdfUrl, setPdfUrl] = React.useState("");
-  const [docMetadata, setDocMetadata] = React.useState({});
-
-  const getDocumentMetadata = async () => {
-    const response = await axios.get(
-      `https://api.kessler.xyz/v2/public/files/${objectId}`,
-    );
-    setDocMetadata(response.data);
-    console.log(docMetadata);
-  };
-
-  const getDocumentText = async () => {
-    const response = await axios.get(
-      `https://api.kessler.xyz/v2/public/files/${objectId}/markdown`,
-    );
-    setDocText(response.data);
-  };
-  // this feels really bad for perf stuff potentially, using a memo might be better
-  useEffect(() => {
-    console.log("Use effect that gets the document text is being run");
-    const generatedPDFUrl = overridePDFUrl || `/api/v1/files/${objectId}/raw`;
-    // setPdfUrl(`https://api.kessler.xyz/v2/public/files/${objectId}/raw`);
-    setPdfUrl(generatedPDFUrl);
-    getDocumentText();
-    getDocumentMetadata();
-  }, []);
+  const { text: docText, metadata: docMetadata, pdfUrl } = resource.read();
 
   return (
     <div className="modal-content standard-box ">
       <></>
       {/* children are components passed to result modals from special searches */}
       <div className="card-title">
-        {!loading ? <h1>{title}</h1> : <h1>{title}</h1>}
+        <h1>{title}</h1>
       </div>
       {/* REFACTOR MODALS to fix stupid BS with MUI       {children ? <div>{children}</div> : null}*/}
       {/* Deleted all the MUI stuff, this should absolutely be refactored into its own styled component soonish*/}
@@ -79,30 +56,38 @@ const DocumentModalBody = ({
           </Tabs.Trigger>
         </Tabs.List>
         <Tabs.Content className="TabsContent" value="tab1">
-          <PDFViewer file={pdfUrl}></PDFViewer>
+          <Suspense fallback={<LoadingSpinner text="Loading PDF" />}>
+            <PDFViewer file={pdfUrl}></PDFViewer>
+          </Suspense>
         </Tabs.Content>
         <Tabs.Content className="TabsContent" value="tab2">
-          <MarkdownRenderer>{docText}</MarkdownRenderer>
+          <Suspense fallback={<LoadingSpinner text="Loading Document Text" />}>
+            <MarkdownRenderer>{docText}</MarkdownRenderer>
+          </Suspense>
         </Tabs.Content>
         <Tabs.Content className="TabsContent" value="tab3">
           <div className="overflow-x-auto">
-            <table className="table table-zebra">
-              {/* head */}
-              <thead>
-                <tr>
-                  <th>Field</th>
-                  <th>Value</th>
-                </tr>
-              </thead>
-              <tbody>
-                {Object.entries(docMetadata).map(([key, value]) => (
-                  <tr key={key}>
-                    <td>{key}</td>
-                    <td>{String(value)}</td>
+            <Suspense
+              fallback={<LoadingSpinner text="Loading Document Metadata" />}
+            >
+              <table className="table table-zebra">
+                {/* head */}
+                <thead>
+                  <tr>
+                    <th>Field</th>
+                    <th>Value</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {Object.entries(docMetadata).map(([key, value]) => (
+                    <tr key={key}>
+                      <td>{key}</td>
+                      <td>{String(value)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </Suspense>
           </div>
         </Tabs.Content>
       </Tabs.Root>
