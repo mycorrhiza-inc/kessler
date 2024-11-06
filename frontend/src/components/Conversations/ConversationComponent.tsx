@@ -6,6 +6,7 @@ import React, {
   useState,
   useRef,
   useMemo,
+  Suspense,
 } from "react";
 import { BasicDocumentFiltersList } from "@/components/DocumentFilters";
 import {
@@ -142,13 +143,11 @@ const ConversationComponent = ({
     });
     return initialFilters;
   }, [inheritedFilters]);
-  const [loading, setLoading] = useState(false);
   const [searchFilters, setSearchFilters] =
     useState<QueryFilterFields>(initialFilterState);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-
 
   const handleSearch = async () => {
     setSearchResults([]);
@@ -181,12 +180,10 @@ const ConversationComponent = ({
     }
   };
 
-
   const [isFocused, setIsFocused] = useState(false);
   const showFilters = () => {
     setIsFocused(!isFocused);
   };
-
 
   return (
     <div className="w-full h-full p-10 card grid grid-flow-col auto-cols-2 box-border border-2 border-black ">
@@ -241,7 +238,15 @@ const ConversationComponent = ({
           Filters
         </button>
         <div className="w-full overflow-x-scroll">
-          {loading ? <div>Loading...</div> : <FilingTable filings={filings} />}
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center p-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+              </div>
+            }
+          >
+            <FilingTable filings={filings} />
+          </Suspense>
         </div>
       </div>
     </div>
