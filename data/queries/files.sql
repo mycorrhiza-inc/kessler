@@ -82,9 +82,7 @@ WHERE id = $1;
 INSERT INTO public.file_extras (
     id,
     isPrivate,
-    summary,
-    short_summary,
-    purpose,
+    extra_obj,
     created_at,
     updated_at
   )
@@ -92,8 +90,6 @@ VALUES (
     $1,
     $2,
     $3,
-    $4,
-    $5,
     NOW(),
     NOW()
   )
@@ -101,15 +97,13 @@ RETURNING id;
 -- name: ExtrasFileUpdate :one
 UPDATE public.file_extras
 SET isPrivate = $1,
-  summary = $2,
-  short_summary = $3,
-  purpose = $4,
+  extra_obj = $2,
   updated_at = NOW()
 WHERE id = $5
 RETURNING id;
 -- name: ExtrasFileFetch :one
 SELECT *
-FROM public.file_metadata
+FROM public.file_extras
 WHERE id = $1;
 -- -- name: AddMetadataToFile :one
 -- UPDATE public.file

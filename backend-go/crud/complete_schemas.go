@@ -55,9 +55,10 @@ type DocProcStage struct {
 	ErrorStacktrace string        `json:"error_stacktrace"`
 }
 type FileGeneratedExtras struct {
-	Summary      string `json:"summary"`
-	ShortSummary string `json:"short_summary"`
-	Purpose      string `json:"purpose"`
+	Summary        string  `json:"summary"`
+	ShortSummary   string  `json:"short_summary"`
+	Purpose        string  `json:"purpose"`
+	Impressiveness float64 `json:"impressiveness"`
 }
 
 type AuthorInformation struct {
@@ -91,9 +92,7 @@ type CompleteFileSchema struct {
 	Juristiction JuristictionInformation `json:"juristiction"`
 }
 
-type FileMetadataSchema struct {
-	MdataObject map[string]interface{} `json:"metadata_object"`
-}
+type FileMetadataSchema map[string]interface{}
 
 func CompleteFileSchemaPrune(input CompleteFileSchema) FileSchema {
 	return FileSchema{
