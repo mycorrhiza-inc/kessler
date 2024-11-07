@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 
 import { useKesslerStore } from "@/lib/store";
 import AuthGuard from "@/components/AuthGuard";
+import RecentUpdatesView from "@/components/RecentUpdates/RecentUpdatesView";
 
 export default async function Page() {
   const checkLoggedIn = async () => {
@@ -21,7 +22,7 @@ export default async function Page() {
     <div className="w-full">
       {isLoggedIn ? (
         <AuthGuard isLoggedIn={isLoggedIn}>
-          <SearchApp />
+          <RecentUpdatesView />
         </AuthGuard>
       ) : (
         <Landing />

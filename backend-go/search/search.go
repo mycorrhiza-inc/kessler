@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"reflect"
+	"time"
 )
 
 var quickwitURL = os.Getenv("QUICKWIT_ENDPOINT")
@@ -17,9 +18,9 @@ type Hit struct {
 	Doctype       string   `json:"doctype"`
 	Hash          string   `json:"hash"`
 	Lang          string   `json:"lang"`
+	DateFiled     string   `json:"updated_at"`
 	Metadata      Metadata `json:"metadata"`
 	Name          string   `json:"name"`
-	OriginalText  *string  `json:"original_text"`
 	SaOrmSentinel *string  `json:"sa_orm_sentinel"`
 	ShortSummary  *string  `json:"short_summary"`
 	Source        string   `json:"source"`
@@ -28,7 +29,6 @@ type Hit struct {
 	Summary       *string  `json:"summary"`
 	Text          string   `json:"text"`
 	Timestamp     string   `json:"timestamp"`
-	UpdatedAt     string   `json:"updated_at"`
 	URL           string   `json:"url"`
 }
 
@@ -41,6 +41,12 @@ type Metadata struct {
 	Language string `json:"language"`
 	Source   string `json:"source"`
 	Title    string `json:"title"`
+}
+
+type FilterFields struct {
+	Metadata
+	DateFrom string `json:"date_from"`
+	DateTo   string `json:"date_to"`
 }
 
 func (m Metadata) String() string {
@@ -73,14 +79,16 @@ func (s quickwitSearchResponse) String() string {
 }
 
 type QuickwitSearchRequest struct {
-	Query         string `json:"query"`
-	SnippetFields string `json:"snippet_fields"`
+	Query         string `json:"query,omitempty"`
+	SnippetFields string `json:"snippet_fields,omitempty"`
 	MaxHits       int    `json:"max_hits"`
+	StartOffset   int    `json:"start_offset"`
+	SortBy        string `json:"sort_by"`
 }
 
 type SearchData struct {
 	Name     string `json:"name"`
-	Text     string `json:"text"`
+	Snippet  string `json:"snippet,omitempty"`
 	DocID    string `json:"docID"`
 	SourceID string `json:"sourceID"`
 }
@@ -101,16 +109,13 @@ func ExtractSearchData(data quickwitSearchResponse) ([]SearchData, error) {
 
 	// Map snippets text to hit names
 	for i, hit := range data.Hits {
-		var text string
-		if len(data.Snippets[i].Text) > 0 {
-			text = data.Snippets[i].Text[0]
-		} else {
-			text = ""
-
+		var snippet string
+		if len(data.Snippets) > 0 {
+			snippet = data.Snippets[i].Text[0]
 		}
 		sdata := SearchData{
 			Name:     hit.Name,
-			Text:     text,
+			Snippet:  snippet,
 			DocID:    hit.Metadata.DocketID,
 			SourceID: hit.SourceID,
 		}
@@ -124,23 +129,74 @@ func errturn(err error) ([]SearchData, error) {
 	return nil, err
 }
 
+func convertToRFC3339(date string) (string, error) {
+	parsedDate, err := time.Parse(time.RFC3339, date)
+	if err != nil {
+		return "", fmt.Errorf("invalid date format: %v", err)
+	}
+	parsedDateString := parsedDate.Format(time.RFC3339)
+	return parsedDateString, nil
+
+}
+
 func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
+	search_index := r.Index
 	// ===== construct search request =====
 	query := r.Query
 	fmt.Printf("%s\n", r.SearchFilters)
 	var queryString string
+	// construct date query
+	fromDate := "*"
+	toDate := "*"
+
+	if r.SearchFilters.DateFrom != "" || r.SearchFilters.DateTo != "" {
+		var err error
+		if r.SearchFilters.DateFrom != "" {
+			fromDate, err = convertToRFC3339(r.SearchFilters.DateFrom)
+			if err != nil {
+				return nil, fmt.Errorf("invalid date format for DateFrom: %v", err)
+			}
+			r.SearchFilters.DateFrom = ""
+		}
+		if r.SearchFilters.DateTo != "" {
+			toDate, err = convertToRFC3339(r.SearchFilters.DateTo)
+			if err != nil {
+				return nil, fmt.Errorf("invalid date format for DateTo: %v", err)
+			}
+			r.SearchFilters.DateTo = ""
+		}
+	}
+	dateQuery := fmt.Sprintf("date_filed:[%s TO %s]", fromDate, toDate)
+
 	if len(r.Query) >= 0 {
-		queryString = fmt.Sprintf("(text:(%s) OR name:(%s))", query, query)
+		queryString = fmt.Sprintf("((text:(%s) OR name:(%s)) AND %s)", query, query, dateQuery)
 	}
 
 	filtersString := constructQuickwitMetadataQueryString(r.SearchFilters)
 
 	queryString = queryString + filtersString
 
+	// construct sortby string
+	sortbyStr := ""
+	if len(r.SortBy) <= 1 {
+		sortbyStr = r.SortBy[0]
+	} else {
+		for _, sortby := range r.SortBy {
+			sortbyStr += fmt.Sprintf("metadata.%s,", sortby)
+		}
+	}
+	snippetFields := "text"
+	if !r.GetText {
+		snippetFields = ""
+	}
+
+	// construct request
 	request := QuickwitSearchRequest{
 		Query:         queryString,
-		SnippetFields: "text",
-		MaxHits:       20,
+		MaxHits:       r.MaxHits,
+		SnippetFields: snippetFields,
+		StartOffset:   r.StartOffset,
+		SortBy:        sortbyStr,
 	}
 
 	jsonData, err := json.Marshal(request)
@@ -152,7 +208,7 @@ func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
 		return nil, err
 	}
 
-	request_url := fmt.Sprintf("%s/api/v1/dockets/search", quickwitURL)
+	request_url := fmt.Sprintf("%s/api/v1/%s/search", quickwitURL, search_index)
 	resp, err := http.Post(
 		request_url,
 		"application/json",
@@ -187,7 +243,7 @@ func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
 	return data, nil
 }
 
-func constructQuickwitMetadataQueryString(filter Metadata) string {
+func constructQuickwitMetadataQueryString(filter FilterFields) string {
 	var filterQuery string
 	filters := []string{}
 	fmt.Printf("constructing filter of:\n%s\n", filter)
@@ -279,8 +335,9 @@ func FormatSearchResults(searchResults []SearchData, query string) string {
 	searchResultsString := fmt.Sprintf("Query: %s\n", query)
 	for _, result := range searchResults {
 		searchResultsString += fmt.Sprintf("Name: %s\n", result.Name)
-		searchResultsString += fmt.Sprintf("Text: %s\n", result.Text)
-		// searchResultsString += fmt.Sprintf("DocID: %s\n", result.DocID)
+		// searchResultsString += fmt.Sprintf("Text: %s\n", result.Text)
+		searchResultsString += fmt.Sprintf("DocID: %s\n", result.DocID)
+		searchResultsString += fmt.Sprintf("SourceID: %s\n", result.SourceID)
 	}
 	return searchResultsString
 }

@@ -111,7 +111,7 @@ const ConversationComponent = ({
           </motion.div>
         )}
       </AnimatePresence>
-      <div className=" p-10">
+      <div className="p-10">
         <div id="conversation-header p-10 justify-between"></div>
         <h1 className=" text-2xl font-bold">Conversation</h1>
         <button

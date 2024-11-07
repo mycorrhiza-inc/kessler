@@ -18,20 +18,65 @@ import (
 func DefineCrudRoutes(router *mux.Router, dbtx_val dbstore.DBTX) {
 	public_subrouter := router.PathPrefix("/v2/public").Subrouter()
 
-	public_subrouter.HandleFunc("/files/insert", makeFileUpsertHandler(
-		UpsertHandlerInfo{dbtx_val: dbtx_val, private: false, insert: true})).Methods(http.MethodPost)
+	public_subrouter.HandleFunc(
+		"/files/insert",
+		makeFileUpsertHandler(
+			UpsertHandlerConfig{
+				dbtx_val: dbtx_val,
+				private:  false,
+				insert:   true,
+			},
+		)).Methods(http.MethodPost)
 
-	public_subrouter.HandleFunc("/files/{uuid}", makeFileUpsertHandler(
-		UpsertHandlerInfo{dbtx_val: dbtx_val, private: false, insert: false})).Methods(http.MethodPost)
+	public_subrouter.HandleFunc(
+		"/files/{uuid}/upsert",
+		makeFileUpsertHandler(
+			UpsertHandlerConfig{
+				dbtx_val: dbtx_val,
+				private:  false,
+				insert:   false,
+			},
+		)).Methods(http.MethodPost)
 
-	public_subrouter.HandleFunc("/files/{uuid}", makeReadFileHandler(
-		FileHandlerInfo{dbtx_val: dbtx_val, private: false, return_type: "object"})).Methods(http.MethodGet)
+	public_subrouter.HandleFunc(
+		"/files/{uuid}",
+		ReadFileHandlerFactory(
+			FileHandlerConfig{
+				dbtx_val:    dbtx_val,
+				private:     false,
+				return_type: "object",
+			},
+		)).Methods(http.MethodGet)
 
-	public_subrouter.HandleFunc("/files/{uuid}/markdown", makeReadFileHandler(
-		FileHandlerInfo{dbtx_val: dbtx_val, private: false, return_type: "markdown"})).Methods(http.MethodGet)
+	public_subrouter.HandleFunc(
+		"/files/{uuid}/markdown",
+		ReadFileHandlerFactory(
+			FileHandlerConfig{
+				dbtx_val:    dbtx_val,
+				private:     false,
+				return_type: "markdown",
+			},
+		)).Methods(http.MethodGet)
 
-	public_subrouter.HandleFunc("/files/{uuid}/raw", makeReadFileHandler(
-		FileHandlerInfo{dbtx_val: dbtx_val, private: false, return_type: "raw"})).Methods(http.MethodGet)
+	public_subrouter.HandleFunc(
+		"/files/{uuid}/raw",
+		ReadFileHandlerFactory(
+			FileHandlerConfig{
+				dbtx_val:    dbtx_val,
+				private:     false,
+				return_type: "raw",
+			},
+		)).Methods(http.MethodGet)
+
+	public_subrouter.HandleFunc(
+		"/files/{uuid}/metadata",
+		GetFileWithMeta(
+			FileHandlerConfig{
+				dbtx_val: dbtx_val,
+				private:  false,
+			},
+		)).Methods(http.MethodGet)
+
 	//
 	// private_subrouter := router.PathPrefix("/v2/private").Subrouter()
 	//
@@ -52,7 +97,7 @@ func DefineCrudRoutes(router *mux.Router, dbtx_val dbstore.DBTX) {
 }
 
 // CONVERT TO UPPER CASE IF YOU EVER WANT TO USE IT OUTSIDE OF THIS CONTEXT
-type FileHandlerInfo struct {
+type FileHandlerConfig struct {
 	dbtx_val    dbstore.DBTX
 	private     bool
 	return_type string // Can be either markdown, object or raw
@@ -112,7 +157,7 @@ func generateRandomString(n int) string {
 	return string(b)
 }
 
-func makePrivateUploadHandler(dbtx_val dbstore.DBTX) func(w http.ResponseWriter, r *http.Request) {
+func rivateUploadFactory(dbtx_val dbstore.DBTX) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		file, _, err := r.FormFile("file")
 		fileName := r.FormValue("file_name")

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -14,7 +13,7 @@ import (
 	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
 )
 
-type UpsertHandlerInfo struct {
+type UpsertHandlerConfig struct {
 	dbtx_val dbstore.DBTX
 	private  bool
 	insert   bool
@@ -53,7 +52,10 @@ func upsertFileMetadata(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UU
 	if err != nil {
 		return err
 	}
-	pgPrivate := pgtype.Bool{false, true}
+	pgPrivate := pgtype.Bool{
+		Bool:  false,
+		Valid: true,
+	}
 	if insert {
 		insert_args := dbstore.InsertMetadataParams{ID: doc_pgUUID, Isprivate: pgPrivate, Mdata: json_obj}
 		_, err := q.InsertMetadata(
@@ -121,7 +123,10 @@ func upsertFileExtras(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID
 	summary_text := pgtype.Text{String: extras.Summary}
 	short_summaries_text := pgtype.Text{String: extras.ShortSummary}
 	purpose_text := pgtype.Text{String: extras.Purpose}
-	pgPrivate := pgtype.Bool{false, true}
+	pgPrivate := pgtype.Bool{
+		Bool:  false,
+		Valid: true,
+	}
 	if insert {
 		args := dbstore.ExtrasFileCreateParams{ID: doc_pgUUID, Isprivate: pgPrivate, Summary: summary_text, ShortSummary: short_summaries_text, Purpose: purpose_text}
 		_, err := q.ExtrasFileCreate(
@@ -154,11 +159,10 @@ func fileStatusInsert(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID
 	return err
 }
 
-func makeFileUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r *http.Request) {
-	dbtx_val := info.dbtx_val
-	private := info.private
-
-	insert := info.insert
+func makeFileUpsertHandler(config UpsertHandlerConfig) func(w http.ResponseWriter, r *http.Request) {
+	dbtx_val := config.dbtx_val
+	private := config.private
+	insert := config.insert
 	return func(w http.ResponseWriter, r *http.Request) {
 		var doc_uuid uuid.UUID
 		var err error
@@ -174,25 +178,25 @@ func makeFileUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r
 		}
 		q := *dbstore.New(dbtx_val)
 		ctx := r.Context()
-		token := r.Header.Get("Authorization")
+		// TODO!!!!!: Enable insert auth at some point
+		// token := r.Header.Get("Authorization")
 		isAuthorizedFunc := func() bool {
-			// Enable insert auth at some point
 			return true
-			if !strings.HasPrefix(token, "Authenticated ") {
-				return true
-			}
-			userID := strings.TrimPrefix(token, "Authenticated ")
-			forbiddenPublic := !private && userID != "thaumaturgy"
-			if forbiddenPublic || userID == "anonomous" {
-				return false
-			}
-			if !insert {
-				authorized, err := checkPrivateFileAuthorization(q, ctx, doc_uuid, userID)
-				if !authorized || err == nil {
-					return false
-				}
-			}
-			return true
+			// if !strings.HasPrefix(token, "Authenticated ") {
+			// 	return true
+			// }
+			// userID := strings.TrimPrefix(token, "Authenticated ")
+			// forbiddenPublic := !private && userID != "thaumaturgy"
+			// if forbiddenPublic || userID == "anonomous" {
+			// 	return false
+			// }
+			// if !insert {
+			// 	authorized, err := checkPrivateFileAuthorization(q, ctx, doc_uuid, userID)
+			// 	if !authorized || err == nil {
+			// 		return false
+			// 	}
+			// }
+			// return true
 		}
 		isAuthorized := isAuthorizedFunc()
 
@@ -231,7 +235,10 @@ func makeFileUpsertHandler(info UpsertHandlerInfo) func(w http.ResponseWriter, r
 		if insert {
 			fileSchema, err = InsertPubPrivateFileObj(q, ctx, rawFileData, private)
 		} else {
-			pgUUID := pgtype.UUID{doc_uuid, true}
+			pgUUID := pgtype.UUID{
+				Bytes: doc_uuid,
+				Valid: true,
+			}
 			fileSchema, err = UpdatePubPrivateFileObj(q, ctx, rawFileData, private, pgUUID)
 		}
 		if err != nil {

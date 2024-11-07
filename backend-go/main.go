@@ -131,7 +131,7 @@ func makeTokenValidator(dbtx_val dbstore.DBTX) func(r *http.Request) UserValidat
 			// if result.KeyBlake3Hash == encodedHash && err != nil {
 			// 	return UserValidation{userID: "thaumaturgy", validated: true}
 			// }
-			return UserValidation{validated: false}
+			// return UserValidation{validated: false}
 		}
 
 		tokenString := strings.TrimPrefix(token, "Bearer ")
@@ -210,6 +210,13 @@ func corsMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+// Middleware to handle the connection pool dependency injection
+func ConnPoolMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		next.ServeHTTP(w, r)
+	})
+}
+
 func main() {
 	err := godotenv.Load()
 	if err != nil {
@@ -229,6 +236,7 @@ func main() {
 	mux.HandleFunc("/v2/search", search.HandleSearchRequest)
 	mux.HandleFunc("/v2/rag/basic_chat", rag.HandleBasicChatRequest)
 	mux.HandleFunc("/v2/rag/chat", rag.HandleRagChatRequest)
+	mux.HandleFunc("/v2/recent_updates", search.HandleRecentUpdatesRequest)
 	const timeout = time.Second * 10
 
 	muxWithMiddlewares := http.TimeoutHandler(mux, timeout, "Timeout!")
