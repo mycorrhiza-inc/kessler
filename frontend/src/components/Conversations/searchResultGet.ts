@@ -1,10 +1,9 @@
-import { QueryFilterFields } from "@/lib/filters";
+import { QueryDataFile, QueryFilterFields } from "@/lib/filters";
 import axios from "axios";
 
-const searchResultsGet = async (
-  searchFilters: QueryFilterFields,
-  searchQuery: string,
-) => {
+const searchResultsGet = async (queryData: QueryDataFile) => {
+  const searchQuery = queryData.query;
+  const searchFilters = queryData.filters;
   console.log(`searchhing for ${searchQuery}`);
   try {
     const response = await axios.post("https://api.kessler.xyz/v2/search", {

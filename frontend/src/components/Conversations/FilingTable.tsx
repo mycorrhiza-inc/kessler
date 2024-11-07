@@ -3,6 +3,7 @@ import Modal from "../styled-components/Modal";
 import DocumentModalBody from "../DocumentModalBody";
 import { Filing } from "./conversationTypes";
 import { QueryDataFile, QueryFilterFields } from "@/lib/filters";
+import searchResultsGet from "./searchResultGet";
 
 const TableRow = ({ filing }: { filing: Filing }) => {
   const [open, setOpen] = useState(false);
@@ -58,4 +59,9 @@ const FilingTableQuery = async ({
   queryData,
 }: {
   queryData: QueryDataFile;
-}) => {};
+}) => {
+  const filings = await searchResultsGet(queryData);
+  return <FilingTable filings={filings} />;
+};
+
+export default FilingTableQuery;

@@ -16,9 +16,8 @@ import {
   FilterField,
   QueryDataFile,
 } from "@/lib/filters";
-import Modal from "../styled-components/Modal";
-import DocumentModalBody from "../DocumentModalBody";
 import { AnimatePresence, motion } from "framer-motion";
+import FilingTableQuery from "./FilingTable";
 
 const TableFilters = ({
   searchFilters,
@@ -88,7 +87,7 @@ const ConversationComponent = ({
   const queryData: QueryDataFile = {
     filters: searchFilters,
     query: "",
-  } as QueryData;
+  };
 
   return (
     <div className="w-full h-full p-10 card grid grid-flow-col auto-cols-2 box-border border-2 border-black ">
@@ -126,7 +125,7 @@ const ConversationComponent = ({
         </button>
         <div className="w-full overflow-x-scroll">
           <Suspense fallback={<div>Loading...</div>}>
-            <FilingTable filings={filings} />
+            <FilingTableQuery queryData={queryData} />
           </Suspense>
         </div>
       </div>
