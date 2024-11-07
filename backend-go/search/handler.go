@@ -8,8 +8,17 @@ import (
 )
 
 type SearchRequest struct {
-	Query          string   `json:"query"`
-	SearchFilters Metadata `json:"filters"`
+	Index         string       `json:"index"`
+	Query         string       `json:"query"`
+	SearchFilters FilterFields `json:"filters"`
+	SortBy        []string     `json:"sort_by"`
+	MaxHits       int          `json:"max_hits"`
+	StartOffset   int          `json:"start_offset"`
+	GetText       bool         `json:"get_text"`
+}
+
+type RecentUpdatesRequest struct {
+	Page int `json:"page"`
 }
 
 func HandleSearchRequest(w http.ResponseWriter, r *http.Request) {
@@ -52,5 +61,43 @@ func HandleSearchRequest(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "DELETE request")
 	default:
 		http.Error(w, "Unsupported request method", http.StatusMethodNotAllowed)
+	}
+}
+
+func HandleRecentUpdatesRequest(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		data, err := GetRecentCaseData(0)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		respString, err := json.Marshal(data)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		fmt.Fprint(w, string(respString))
+	case http.MethodPost:
+		var request RecentUpdatesRequest
+		err := json.NewDecoder(r.Body).Decode(&request)
+		if err != nil {
+			http.Error(w, "Error decoding JSON", http.StatusBadRequest)
+			return
+		}
+		data, err := GetRecentCaseData(request.Page)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		respString, err := json.Marshal(data)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		fmt.Fprint(w, string(respString))
+	default:
+		http.Error(w, "Unsupported request method", http.StatusMethodNotAllowed)
+
 	}
 }

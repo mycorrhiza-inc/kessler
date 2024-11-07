@@ -129,7 +129,7 @@ func rag_query_func_generated_from_filters(filters search.Metadata) func(query_j
 		if !ok {
 			return ToolCallResults{}, fmt.Errorf("query field is missing in query_json")
 		}
-		search_request := search.SearchRequest{search_query, filters}
+		search_request := search.SearchRequest{Index: "NY_PUC", Query: search_query, SearchFilters: search.FilterFields{Metadata: filters}}
 		search_results, err := search.SearchQuickwit(search_request)
 		if err != nil {
 			return ToolCallResults{}, err
@@ -156,7 +156,8 @@ func rag_func_call_filters(filters search.Metadata) FunctionCall {
 	}
 }
 
-var rag_func_call_no_filters = rag_func_call_filters(search.Metadata{})
+// TODO: Add this back in when we have a use case for it.
+// var rag_func_call_no_filters = rag_func_call_filters(search.Metadata{})
 
 func (model_name LLMModel) RagChat(chatHistory []ChatMessage, filters search.Metadata) (ChatMessage, error) {
 	requestMultiplex := MultiplexerChatCompletionRequest{

@@ -12,10 +12,44 @@ import (
 	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
 )
 
-func makeReadFileHandler(info FileHandlerInfo) func(w http.ResponseWriter, r *http.Request) {
-	private := info.private
-	dbtx_val := info.dbtx_val
-	return_type := info.return_type
+func GetFileWithMeta(config FileHandlerConfig) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		q := *dbstore.New(config.dbtx_val)
+		token := r.Header.Get("Authorization")
+		params := mux.Vars(r)
+		fileID := params["uuid"]
+		parsedUUID, err := uuid.Parse(fileID)
+		if err != nil {
+			http.Error(w, "Invalid File ID format", http.StatusBadRequest)
+			return
+		}
+		pgUUID := pgtype.UUID{Bytes: parsedUUID, Valid: true}
+		ctx := r.Context()
+		if config.private {
+			isAuthorized, err := checkPrivateFileAuthorization(q, ctx, parsedUUID, token)
+			if !isAuthorized {
+				http.Error(w, "Forbidden", http.StatusForbidden)
+			}
+			if err != nil {
+				fmt.Printf("Ran into the follwing error with authentication %v", err)
+			}
+		}
+		file, err := q.GetFileWithMetadata(ctx, pgUUID)
+		if err != nil {
+			http.Error(w, "File not found", http.StatusNotFound)
+			return
+		}
+		response, _ := json.Marshal(file)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(response)
+	}
+}
+
+func ReadFileHandlerFactory(config FileHandlerConfig) http.HandlerFunc {
+	private := config.private
+	dbtx_val := config.dbtx_val
+	return_type := config.return_type
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		q := *dbstore.New(dbtx_val)
 		token := r.Header.Get("Authorization")
