@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Modal from "../styled-components/Modal";
-import DocumentModalBody from "../DocumentModalBody";
+import DocumentModalBody from "../Document/DocumentModalBody";
 import { Filing } from "./conversationTypes";
 import { QueryDataFile, QueryFilterFields } from "@/lib/filters";
 import searchResultsGet from "./searchResultGet";

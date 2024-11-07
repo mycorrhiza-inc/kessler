@@ -1,9 +1,9 @@
 import React, { Suspense } from "react";
 import * as Tabs from "@radix-ui/react-tabs";
-import { fetchDocumentData } from "../utils/documentLoader";
+import { fetchDocumentData } from "@/utils/documentLoader";
 
 import PDFViewer from "./PDFViewer";
-import MarkdownRenderer from "./MarkdownRenderer";
+import MarkdownRenderer from "@/bin/MarkdownRenderer";
 import { testMarkdownContent } from "./MarkdownRenderer";
 import { LoadingSpinner } from "./styled-components/LoadingSpinner";
 
