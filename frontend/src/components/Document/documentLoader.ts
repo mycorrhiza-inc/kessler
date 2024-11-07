@@ -1,11 +1,5 @@
 import axios from "axios";
 
-type DocumentData = {
-  text: string;
-  metadata: any;
-  pdfUrl: string;
-};
-
 export const fetchTextDataFromURL = async (url: string) => {
   const response = await axios.get(url);
   if (response.status !== 200) {
