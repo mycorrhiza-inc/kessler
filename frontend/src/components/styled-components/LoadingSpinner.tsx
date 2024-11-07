@@ -1,13 +1,10 @@
-export const LoadingSpinner = ({ text }: { text?: string }) => {
-  text = text || "Loading...";
+const LoadingSpinner = () => {
   return (
-    <div className="">
-      <span className="loading loading-spinner text-primary"></span>
-      <span className="loading loading-spinner text-secondary"></span>
-      <span className="loading loading-spinner text-accent"></span>
-      <span className="loading loading-spinner text-neutral"></span>
-      <br />
-      <p>{text}</p>
-    </div>
+    <>
+      <span className="loading loading-infinity loading-lg text-primary"></span>
+      <span className="loading loading-infinity loading-lg text-secondary"></span>
+      <span className="loading loading-infinity loading-lg text-accent"></span>
+    </>
   );
 };
+export default LoadingSpinner;

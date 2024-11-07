@@ -149,8 +149,7 @@ const ConversationComponent = ({
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const handleSearch = async () => {
-    setSearchResults([]);
+  const searchResultsGet = async () => {
     console.log(`searchhing for ${searchQuery}`);
     try {
       const response = await axios.post("https://api.kessler.xyz/v2/search", {
@@ -172,12 +171,14 @@ const ConversationComponent = ({
       }
       console.log("getting data");
       console.log(response.data);
-      setSearchResults(response.data);
+      return response.data;
     } catch (error) {
       console.log(error);
-    } finally {
-      setIsSearching(false);
     }
+  };
+  // This should work with the async promises for
+  const searchResultsHandler = async () => {
+    setSearchResults(await searchResultsGet());
   };
 
   const [isFocused, setIsFocused] = useState(false);
@@ -238,13 +239,7 @@ const ConversationComponent = ({
           Filters
         </button>
         <div className="w-full overflow-x-scroll">
-          <Suspense
-            fallback={
-              <div className="flex items-center justify-center p-4">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-              </div>
-            }
-          >
+          <Suspense fallback={<div>Loading...</div>}>
             <FilingTable filings={filings} />
           </Suspense>
         </div>
