@@ -1,5 +1,6 @@
 import TestFlowVisuals from "@/components/SeriousGaming/SeriousGameAdmin";
 import PlanetStartPage from "@/components/experiments/PlanetHomepage";
+import SuspenseTest from "@/components/experiments/SuspenseTesting";
 import { createClient } from "@/utils/supabase/server";
 export default async function Page() {
   const supabase = createClient();
@@ -10,6 +11,7 @@ export default async function Page() {
     <div className="flex flex-col justify-center space-y-10">
       <TestFlowVisuals user={user}></TestFlowVisuals>
       <PlanetStartPage articles={[]} />
+      <SuspenseTest />
     </div>
   );
 }
