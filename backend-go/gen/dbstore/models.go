@@ -108,13 +108,11 @@ type File struct {
 }
 
 type FileExtra struct {
-	ID           pgtype.UUID
-	Isprivate    pgtype.Bool
-	Summary      pgtype.Text
-	ShortSummary pgtype.Text
-	Purpose      pgtype.Text
-	CreatedAt    pgtype.Timestamptz
-	UpdatedAt    pgtype.Timestamptz
+	ID        pgtype.UUID
+	Isprivate pgtype.Bool
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
+	ExtraObj  []byte
 }
 
 type FileMetadatum struct {

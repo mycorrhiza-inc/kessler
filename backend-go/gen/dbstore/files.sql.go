@@ -98,9 +98,7 @@ const extrasFileCreate = `-- name: ExtrasFileCreate :one
 INSERT INTO public.file_extras (
     id,
     isPrivate,
-    summary,
-    short_summary,
-    purpose,
+    extra_obj,
     created_at,
     updated_at
   )
@@ -108,8 +106,6 @@ VALUES (
     $1,
     $2,
     $3,
-    $4,
-    $5,
     NOW(),
     NOW()
   )
@@ -117,41 +113,33 @@ RETURNING id
 `
 
 type ExtrasFileCreateParams struct {
-	ID           pgtype.UUID
-	Isprivate    pgtype.Bool
-	Summary      pgtype.Text
-	ShortSummary pgtype.Text
-	Purpose      pgtype.Text
+	ID        pgtype.UUID
+	Isprivate pgtype.Bool
+	ExtraObj  []byte
 }
 
 func (q *Queries) ExtrasFileCreate(ctx context.Context, arg ExtrasFileCreateParams) (pgtype.UUID, error) {
-	row := q.db.QueryRow(ctx, extrasFileCreate,
-		arg.ID,
-		arg.Isprivate,
-		arg.Summary,
-		arg.ShortSummary,
-		arg.Purpose,
-	)
+	row := q.db.QueryRow(ctx, extrasFileCreate, arg.ID, arg.Isprivate, arg.ExtraObj)
 	var id pgtype.UUID
 	err := row.Scan(&id)
 	return id, err
 }
 
 const extrasFileFetch = `-- name: ExtrasFileFetch :one
-SELECT id, isprivate, mdata, created_at, updated_at
-FROM public.file_metadata
+SELECT id, isprivate, created_at, updated_at, extra_obj
+FROM public.file_extras
 WHERE id = $1
 `
 
-func (q *Queries) ExtrasFileFetch(ctx context.Context, id pgtype.UUID) (FileMetadatum, error) {
+func (q *Queries) ExtrasFileFetch(ctx context.Context, id pgtype.UUID) (FileExtra, error) {
 	row := q.db.QueryRow(ctx, extrasFileFetch, id)
-	var i FileMetadatum
+	var i FileExtra
 	err := row.Scan(
 		&i.ID,
 		&i.Isprivate,
-		&i.Mdata,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.ExtraObj,
 	)
 	return i, err
 }
@@ -159,30 +147,20 @@ func (q *Queries) ExtrasFileFetch(ctx context.Context, id pgtype.UUID) (FileMeta
 const extrasFileUpdate = `-- name: ExtrasFileUpdate :one
 UPDATE public.file_extras
 SET isPrivate = $1,
-  summary = $2,
-  short_summary = $3,
-  purpose = $4,
+  extra_obj = $2,
   updated_at = NOW()
-WHERE id = $5
+WHERE id = $3
 RETURNING id
 `
 
 type ExtrasFileUpdateParams struct {
-	Isprivate    pgtype.Bool
-	Summary      pgtype.Text
-	ShortSummary pgtype.Text
-	Purpose      pgtype.Text
-	ID           pgtype.UUID
+	Isprivate pgtype.Bool
+	ExtraObj  []byte
+	ID        pgtype.UUID
 }
 
 func (q *Queries) ExtrasFileUpdate(ctx context.Context, arg ExtrasFileUpdateParams) (pgtype.UUID, error) {
-	row := q.db.QueryRow(ctx, extrasFileUpdate,
-		arg.Isprivate,
-		arg.Summary,
-		arg.ShortSummary,
-		arg.Purpose,
-		arg.ID,
-	)
+	row := q.db.QueryRow(ctx, extrasFileUpdate, arg.Isprivate, arg.ExtraObj, arg.ID)
 	var id pgtype.UUID
 	err := row.Scan(&id)
 	return id, err
