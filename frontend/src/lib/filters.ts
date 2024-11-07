@@ -26,6 +26,12 @@ export type InheritedFilterValues = Array<{
 export type QueryFilterFields = {
   [key in FilterField]: string;
 };
+
+export type QueryDataFile = {
+  filters: QueryFilterFields;
+  query: string;
+};
+
 export const allFilterFields: FilterField[] = Object.values(FilterField);
 export const CaseFilterFields: FilterField[] = [
   FilterField.MatchName,
