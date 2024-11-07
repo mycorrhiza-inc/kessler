@@ -99,7 +99,7 @@ UPDATE public.file_extras
 SET isPrivate = $1,
   extra_obj = $2,
   updated_at = NOW()
-WHERE id = $5
+WHERE id = $3
 RETURNING id;
 -- name: ExtrasFileFetch :one
 SELECT *
