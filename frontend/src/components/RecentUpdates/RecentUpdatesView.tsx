@@ -22,7 +22,7 @@ export default function RecentUpdatesView() {
 		setIsSearching(true);
 		console.log("getting recent updates");
 		try {
-			const response = await axios.post("http://localhost/v2/recent_updates", {
+			const response = await axios.post("http://api.kessler.xyz/v2/recent_updates", {
 				page: 0,
 			});
 			console.log(response.data);
@@ -40,7 +40,7 @@ export default function RecentUpdatesView() {
 		setIsSearching(true);
 		try {
 			console.log("getting page ", page + 1);
-			const response = await axios.post("http://localhost/v2/recent_updates", {
+			const response = await axios.post("http://api.kessler.xyz/v2/recent_updates", {
 				page: page + 1,
 			});
 			setPage(page + 1);

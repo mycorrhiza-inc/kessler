@@ -110,42 +110,41 @@ export const FilingTable = ({ filing_ids }: { filing_ids: string[] }) => {
   const [filings, setFilings] = useState<Filing[]>([]);
 
   const getFilingData = async (id: string) => {
-    const response = await axios.get(`http://localhost/v2/public/files/${id}/metadata`)
+    const response = await axios.get(`http://api.kessler.xyz/v2/public/files/${id}/metadata`)
     return response.data;
   };
   useEffect(() => {
     if (!filing_ids) {
       return;
     }
-    filing_ids.map(async (id) => {
-      const filing_data  = await getFilingData(id);
-      console.log("filing data", filing_data)
-      console.log("filing metadata: ", atob(filing_data.Mdata))
-      const metadata = atob(filing_data.Mdata)
 
-      const filing: Filing = {
-        id: filing_data.ID,
-        title: filing_data.Name,
-        metadata: JSON.parse(metadata),
-      }
-      if (filing_data) {
-        // print the data
-        console.log(filing)
-        setFilings((previous) => {
-          // Check if filing with this ID already exists
-          const exists = previous.some(f => f.id === filing.id);
-          if (exists) {
-            return previous; // Don't add duplicate
-          }
-          return [...previous, filing];
-        });
-        console.log(filings)
-      }
-    });
+    const fetchFilings = async () => {
+      const newFilings = await Promise.all(
+        filing_ids.map(async (id) => {
+          const filing_data = await getFilingData(id);
+          const metadata = atob(filing_data.Mdata);
+          return {
+            id: filing_data.ID,
+            title: filing_data.Name,
+            metadata: JSON.parse(metadata),
+          };
+        })
+      );
+
+      setFilings((previous) => {
+        const existingIds = new Set(previous.map(f => f.id));
+        const uniqueNewFilings = newFilings.filter(f => !existingIds.has(f.id));
+        console.log(" uniques: ", uniqueNewFilings);
+        console.log("all data: ", [...previous, ...uniqueNewFilings])
+        return [...previous, ...uniqueNewFilings];
+      });
+    };
+
+    fetchFilings();
   }, [filing_ids]);
 
   return (
-    <div className="overflow-x-scroll max-h-[600px] overflow-y-auto">
+    <div className=" min-h-[600px] overflow-y-auto">
       <table className="w-full divide-y divide-gray-200 table">
         <tbody>
           <tr className="border-b border-gray-200">
