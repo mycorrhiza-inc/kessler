@@ -143,7 +143,7 @@ func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
 	search_index := r.Index
 	// ===== construct search request =====
 	query := r.Query
-	fmt.Printf("%s\n", r.SearchFilters)
+	log.Printf("search filters: %s\n", r.SearchFilters)
 	var queryString string
 	// construct date query
 	fromDate := "*"
@@ -175,6 +175,7 @@ func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
 	filtersString := constructQuickwitMetadataQueryString(r.SearchFilters)
 
 	queryString = queryString + filtersString
+	log.Printf("full query string: %s\n", queryString)
 
 	// construct sortby string
 	sortbyStr := ""
