@@ -30,6 +30,7 @@ export type Filing = {
   language?: string;
   extension?: string;
   file_class?: string;
+  metadata?: any;
   item_number?: string;
   author_organisation?: string;
   url?: string;
@@ -52,7 +53,7 @@ const testFiling: Filing = {
   uuid: "3c4ba5f3-febc-41f2-aa86-2820db2b459a",
 };
 
-const filings: Filing[] = [testFiling];
+// const filings: Filing[] = [testFiling];
 
 const TableFilters = ({
   searchFilters,
@@ -86,11 +87,11 @@ const TableRow = ({ filing }: { filing: Filing }) => {
           setOpen((previous) => !previous);
         }}
       >
-        <td>{filing.date}</td>
-        <td>{filing.title}</td>
-        <td>{filing.author}</td>
-        <td>{filing.source}</td>
-        <td>{filing.item_number}</td>
+        <td>{filing.metadata.date}</td>
+        <td>{filing.metadata.title}</td>
+        <td>{filing.metadata.author}</td>
+        <td>{filing.metadata.source}</td>
+        <td>{filing.metadata.item_number}</td>
         <td>
           <a href={filing.url}>View</a>
         </td>
@@ -105,13 +106,44 @@ const TableRow = ({ filing }: { filing: Filing }) => {
     </>
   );
 };
-export const FilingTable = ({ filings,  }: { filings: Filing[] }) => {
+export const FilingTable = ({ filing_ids }: { filing_ids: string[] }) => {
+  const [filings, setFilings] = useState<Filing[]>([]);
+
   const getFilingData = async (id: string) => {
-    const response = await axios.post("http://localhost/v2/filing_data", {
-      id: id,
-    });
+    const response = await axios.get(`http://localhost/v2/public/files/${id}/metadata`)
     return response.data;
   };
+  useEffect(() => {
+    if (!filing_ids) {
+      return;
+    }
+    filing_ids.map(async (id) => {
+      const filing_data  = await getFilingData(id);
+      console.log("filing data", filing_data)
+      console.log("filing metadata: ", atob(filing_data.Mdata))
+      const metadata = atob(filing_data.Mdata)
+
+      const filing: Filing = {
+        id: filing_data.ID,
+        title: filing_data.Name,
+        metadata: JSON.parse(metadata),
+      }
+      if (filing_data) {
+        // print the data
+        console.log(filing)
+        setFilings((previous) => {
+          // Check if filing with this ID already exists
+          const exists = previous.some(f => f.id === filing.id);
+          if (exists) {
+            return previous; // Don't add duplicate
+          }
+          return [...previous, filing];
+        });
+        console.log(filings)
+      }
+    });
+  }, [filing_ids]);
+
   return (
     <div className="overflow-x-scroll max-h-[600px] overflow-y-auto">
       <table className="w-full divide-y divide-gray-200 table">
@@ -125,7 +157,7 @@ export const FilingTable = ({ filings,  }: { filings: Filing[] }) => {
             <th className="text-left p-2 sticky top-0 bg-white">File</th>
           </tr>
           {filings.map((filing) => (
-            <TableRow filing={filing} />
+            <TableRow key={filing.id} filing={filing} />
           ))}
         </tbody>
       </table>
@@ -153,7 +185,8 @@ const ConversationComponent = ({
   const [loading, setLoading] = useState(false);
   const [searchFilters, setSearchFilters] =
     useState<QueryFilterFields>(initialFilterState);
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<string[]>([]);
+  const [filing_ids, setFilingIds] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -181,7 +214,8 @@ const ConversationComponent = ({
       }
       console.log("getting data");
       console.log(response.data);
-      setSearchResults(response.data);
+      const ids = response.data.map((filing: any) => filing.id);
+      setFilingIds(ids);
     } catch (error) {
       console.log(error);
     } finally {
@@ -249,7 +283,7 @@ const ConversationComponent = ({
           Filters
         </button>
         <div className="w-full overflow-x-scroll">
-          {loading ? <div>Loading...</div> : <FilingTable filings={filings} />}
+          {loading ? <div>Loading...</div> : <FilingTable filing_ids={filing_ids} />}
         </div>
       </div>
     </div>

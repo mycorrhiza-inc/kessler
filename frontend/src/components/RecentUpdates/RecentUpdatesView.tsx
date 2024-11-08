@@ -7,7 +7,7 @@ import Navbar from "../Navbar";
 
 function ConvertToFiling(data: any): Filing {
 	const newFiling: Filing = {
-		id: data.source_id,
+		id: data.sourceID,
 	};
 
 	return newFiling;
@@ -16,7 +16,7 @@ function ConvertToFiling(data: any): Filing {
 export default function RecentUpdatesView() {
 	const [searchResults, setSearchResults] = useState([]);
 	const [isSearching, setIsSearching] = useState(false);
-	const [filings, setFilings] = useState<Filing[]>([]);
+	const [filing_ids, setFilingIds] = useState<string[]>([]);
 	const [page, setPage] = useState(0);
 	const getRecentUpdates = async () => {
 		setIsSearching(true);
@@ -27,7 +27,7 @@ export default function RecentUpdatesView() {
 			});
 			console.log(response.data);
 			if (response.data.length > 0) {
-				setFilings(response.data);
+				setFilingIds(response.data.map((item: any) => item.sourceID));
 			}
 		} catch (error) {
 			console.log(error);
@@ -46,7 +46,7 @@ export default function RecentUpdatesView() {
 			setPage(page + 1);
 			console.log(response.data);
 			if (response.data.length > 0) {
-				setFilings([filings, ...response.data]);
+				setFilingIds([...filing_ids, ...response.data.map((item: any) => item.sourceID)]);
 			}
 		} catch (error) {
 			console.log(error);
@@ -66,7 +66,7 @@ export default function RecentUpdatesView() {
 			<div className="w-full h-full p-20">
 				<div className="w-full h-full p-10 card grid grid-flow-rows box-border border-2 border-black ">
 					<h1 className=" text-2xl font-bold">Recent Updates</h1>
-					<FilingTable filings={filings} />
+					<FilingTable filing_ids={filing_ids} />
 					<button onClick={() => getMore()}>Get More</button>
 				</div>
 			</div>
