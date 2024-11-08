@@ -17,7 +17,6 @@ import {
   QueryDataFile,
 } from "@/lib/filters";
 import { AnimatePresence, motion } from "framer-motion";
-<<<<<<< HEAD
 import axios from "axios";
 
 export type Filing = {
