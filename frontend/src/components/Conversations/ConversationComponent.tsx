@@ -4,9 +4,8 @@ import React, {
   Dispatch,
   SetStateAction,
   useState,
-  useRef,
   useMemo,
-  useEffect,
+  Suspense,
 } from "react";
 import { BasicDocumentFiltersList } from "@/components/DocumentFilters";
 import {
@@ -14,10 +13,11 @@ import {
   QueryFilterFields,
   CaseFilterFields,
   InheritedFilterValues,
+  FilterField,
+  QueryDataFile,
 } from "@/lib/filters";
-import Modal from "../styled-components/Modal";
-import DocumentModalBody from "../DocumentModalBody";
 import { AnimatePresence, motion } from "framer-motion";
+<<<<<<< HEAD
 import axios from "axios";
 
 export type Filing = {
@@ -53,116 +53,49 @@ const testFiling: Filing = {
   uuid: "3c4ba5f3-febc-41f2-aa86-2820db2b459a",
 };
 
-// const filings: Filing[] = [testFiling];
+import FilingTableQuery from "./FilingTable";
+
 
 const TableFilters = ({
   searchFilters,
   setSearchFilters,
+  disabledFilters,
+  toggleFilters,
 }: {
   searchFilters: QueryFilterFields;
   setSearchFilters: Dispatch<SetStateAction<QueryFilterFields>>;
+  disabledFilters: FilterField[];
+  toggleFilters: () => void;
 }) => {
   return (
-    <div className="collapse w-auto ">
-      <input type="checkbox" />
-      <div className="collapse-title font-medium">Filters</div>
-      <div className="collapse-content flex flex-col space-y-1 sm:space-y-2 md:space-y-3 items-center  justify-center">
-        <BasicDocumentFiltersList
-          queryOptions={searchFilters}
-          setQueryOptions={setSearchFilters}
-          showQueries={CaseFilterFields}
-        />
-      </div>
-    </div>
-  );
-};
-
-const TableRow = ({ filing }: { filing: Filing }) => {
-  const [open, setOpen] = useState(false);
-  return (
     <>
-      <tr
-        className="border-b border-gray-200"
-        onClick={() => {
-          setOpen((previous) => !previous);
+      <button
+        onClick={toggleFilters}
+        className="btn "
+        style={{
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
-        <td>{filing.metadata.date}</td>
-        <td>{filing.metadata.title}</td>
-        <td>{filing.metadata.author}</td>
-        <td>{filing.metadata.source}</td>
-        <td>{filing.metadata.item_number}</td>
-        <td>
-          <a href={filing.url}>View</a>
-        </td>
-      </tr>
-      <Modal open={open} setOpen={setOpen}>
-        <DocumentModalBody
-          open={open}
-          objectId={filing.uuid}
-          overridePDFUrl={filing.url}
-        />
-      </Modal>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="32"
+          height="32"
+          viewBox="0 0 512 512"
+        >
+          <polygon points="400 145.49 366.51 112 256 222.51 145.49 112 112 145.49 222.51 256 112 366.51 145.49 400 256 289.49 366.51 400 400 366.51 289.49 256 400 145.49" />
+        </svg>
+      </button>
+      <BasicDocumentFiltersList
+        queryOptions={searchFilters}
+        setQueryOptions={setSearchFilters}
+        showQueries={CaseFilterFields}
+        disabledQueries={disabledFilters}
+      />
     </>
   );
 };
-export const FilingTable = ({ filing_ids }: { filing_ids: string[] }) => {
-  const [filings, setFilings] = useState<Filing[]>([]);
 
-  const getFilingData = async (id: string) => {
-    const response = await axios.get(`http://api.kessler.xyz/v2/public/files/${id}/metadata`)
-    return response.data;
-  };
-  useEffect(() => {
-    if (!filing_ids) {
-      return;
-    }
-
-    const fetchFilings = async () => {
-      const newFilings = await Promise.all(
-        filing_ids.map(async (id) => {
-          const filing_data = await getFilingData(id);
-          const metadata = atob(filing_data.Mdata);
-          return {
-            id: filing_data.ID,
-            title: filing_data.Name,
-            metadata: JSON.parse(metadata),
-          };
-        })
-      );
-
-      setFilings((previous) => {
-        const existingIds = new Set(previous.map(f => f.id));
-        const uniqueNewFilings = newFilings.filter(f => !existingIds.has(f.id));
-        console.log(" uniques: ", uniqueNewFilings);
-        console.log("all data: ", [...previous, ...uniqueNewFilings])
-        return [...previous, ...uniqueNewFilings];
-      });
-    };
-
-    fetchFilings();
-  }, [filing_ids]);
-
-  return (
-    <div className=" min-h-[600px] overflow-y-auto">
-      <table className="w-full divide-y divide-gray-200 table">
-        <tbody>
-          <tr className="border-b border-gray-200">
-            <th className="text-left p-2 sticky top-0 bg-white">Date Filed</th>
-            <th className="text-left p-2 sticky top-0 bg-white">Title</th>
-            <th className="text-left p-2 sticky top-0 bg-white">Author</th>
-            <th className="text-left p-2 sticky top-0 bg-white">Source</th>
-            <th className="text-left p-2 sticky top-0 bg-white">Item Number</th>
-            <th className="text-left p-2 sticky top-0 bg-white">File</th>
-          </tr>
-          {filings.map((filing) => (
-            <TableRow key={filing.id} filing={filing} />
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-};
 const ConversationComponent = ({
   inheritedFilters,
 }: {
@@ -181,7 +114,6 @@ const ConversationComponent = ({
     });
     return initialFilters;
   }, [inheritedFilters]);
-  const [loading, setLoading] = useState(false);
   const [searchFilters, setSearchFilters] =
     useState<QueryFilterFields>(initialFilterState);
   const [searchResults, setSearchResults] = useState<string[]>([]);
@@ -224,10 +156,13 @@ const ConversationComponent = ({
 
 
   const [isFocused, setIsFocused] = useState(false);
-  const showFilters = () => {
+  const toggleFilters = () => {
     setIsFocused(!isFocused);
   };
-
+  const queryData: QueryDataFile = {
+    filters: searchFilters,
+    query: "",
+  };
 
   return (
     <div className="w-full h-full p-10 card grid grid-flow-col auto-cols-2 box-border border-2 border-black ">
@@ -242,29 +177,11 @@ const ConversationComponent = ({
             animate={{ x: "0" }}
             exit={{ x: "-50%", opacity: 0 }}
           >
-            <button
-              onClick={showFilters}
-              className="btn "
-              style={{
-                display: isFocused ? "flex" : "none",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="32"
-                height="32"
-                viewBox="0 0 512 512"
-              >
-                <polygon points="400 145.49 366.51 112 256 222.51 145.49 112 112 145.49 222.51 256 112 366.51 145.49 400 256 289.49 366.51 400 400 366.51 289.49 256 400 145.49" />
-              </svg>
-            </button>
-            <BasicDocumentFiltersList
-              queryOptions={searchFilters}
-              setQueryOptions={setSearchFilters}
-              showQueries={CaseFilterFields}
-              disabledQueries={disabledFilters}
+            <TableFilters
+              searchFilters={searchFilters}
+              setSearchFilters={setSearchFilters}
+              disabledFilters={disabledFilters}
+              toggleFilters={toggleFilters}
             />
           </motion.div>
         )}
@@ -273,7 +190,7 @@ const ConversationComponent = ({
         <div id="conversation-header p-10 justify-between"></div>
         <h1 className=" text-2xl font-bold">Conversation</h1>
         <button
-          onClick={showFilters}
+          onClick={toggleFilters}
           className="btn btn-outline"
           style={{
             display: !isFocused ? "inline-block" : "none",
@@ -282,7 +199,9 @@ const ConversationComponent = ({
           Filters
         </button>
         <div className="w-full overflow-x-scroll">
-          {loading ? <div>Loading...</div> : <FilingTable filing_ids={filing_ids} />}
+          <Suspense fallback={<div>Loading...</div>}>
+            <FilingTableQuery queryData={queryData} />
+          </Suspense>
         </div>
       </div>
     </div>

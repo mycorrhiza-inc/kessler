@@ -27,11 +27,12 @@ func checkChatAuthorization(token string) (bool, error) {
 
 func HandleBasicChatRequest(w http.ResponseWriter, r *http.Request) {
 	var reqBody ChatRequestBody
-	isAllowed, _ := checkChatAuthorization(r.Header.Get("Authorization"))
-	if !isAllowed {
-		http.Error(w, "Cucumber Water For Customer Only", http.StatusPaymentRequired)
-		return
-	}
+	// EVERYONE CAN USE BASIC CHAT FOR NOW
+	// isAllowed, _ := checkChatAuthorization(r.Header.Get("Authorization"))
+	// if !isAllowed {
+	// 	http.Error(w, "Cucumber Water For Customer Only", http.StatusPaymentRequired)
+	// 	return
+	// }
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
 		errorstring := fmt.Sprintf("Invalid request payload: %v", err)
 		fmt.Println(errorstring)
@@ -59,11 +60,12 @@ type AdvancedRagRequestBody struct {
 }
 
 func HandleRagChatRequest(w http.ResponseWriter, r *http.Request) {
-	isAllowed, _ := checkChatAuthorization(r.Header.Get("Authorization"))
-	if !isAllowed {
-		http.Error(w, "Cucumber Water For Customer Only", http.StatusPaymentRequired)
-		return
-	}
+	// EVERYONE CAN USE RAG FOR NOW!
+	// isAllowed, _ := checkChatAuthorization(r.Header.Get("Authorization"))
+	// if !isAllowed {
+	// 	http.Error(w, "Cucumber Water For Customer Only", http.StatusPaymentRequired)
+	// 	return
+	// }
 	var reqBody AdvancedRagRequestBody
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
 		errorstring := fmt.Sprintf("Invalid request payload: %v", err)
