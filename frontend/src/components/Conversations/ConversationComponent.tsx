@@ -84,10 +84,12 @@ const ConversationComponent = ({
   const toggleFilters = () => {
     setIsFocused(!isFocused);
   };
-  const queryData: QueryDataFile = {
-    filters: searchFilters,
-    query: "",
-  };
+  const queryData: QueryDataFile = useMemo(() => {
+    return {
+      filters: searchFilters,
+      query: "",
+    };
+  }, [searchFilters]);
 
   return (
     <div className="w-full h-full p-10 card grid grid-flow-col auto-cols-2 box-border border-2 border-black ">
