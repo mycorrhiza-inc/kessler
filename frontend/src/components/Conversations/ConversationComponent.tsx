@@ -18,6 +18,7 @@ import {
 } from "@/lib/filters";
 import { AnimatePresence, motion } from "framer-motion";
 import FilingTableQuery from "./FilingTable";
+import LoadingSpinner from "../styled-components/LoadingSpinner";
 
 const TableFilters = ({
   searchFilters,
@@ -126,7 +127,11 @@ const ConversationComponent = ({
           Filters
         </button>
         <div className="w-full overflow-x-scroll">
-          <Suspense fallback={<div>Loading...</div>}>
+          <Suspense
+            fallback={
+              <LoadingSpinner loadingText="Loading Search Results..." />
+            }
+          >
             <FilingTableQuery queryData={queryData} />
           </Suspense>
         </div>
