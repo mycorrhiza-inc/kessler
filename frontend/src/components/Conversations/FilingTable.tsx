@@ -60,8 +60,20 @@ const FilingTableQuery = async ({
 }: {
   queryData: QueryDataFile;
 }) => {
-  const filings = await searchResultsGet(queryData);
-  return <FilingTable filings={filings} />;
+  try {
+    const filings: Filing[] = await searchResultsGet(queryData);
+    if (filings == undefined) {
+      return <p>Filings returned from server is undefined.</p>;
+    }
+    return <FilingTable filings={filings} />;
+  } catch (error) {
+    return (
+      <p>
+        Encountered an Error getting files from the server. <br />
+        {String(error)}
+      </p>
+    );
+  }
 };
 
 export default FilingTableQuery;
