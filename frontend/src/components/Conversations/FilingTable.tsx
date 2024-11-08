@@ -4,7 +4,7 @@ import DocumentModalBody from "../Document/DocumentModalBody";
 import { Filing } from "./conversationTypes";
 import { QueryDataFile, QueryFilterFields } from "@/lib/filters";
 import searchResultsGet from "./searchResultGet";
-
+import { memo } from "react";
 const TableRow = ({ filing }: { filing: Filing }) => {
   const [open, setOpen] = useState(false);
   return (
@@ -55,25 +55,23 @@ const FilingTable = ({ filings }: { filings: Filing[] }) => {
   );
 };
 
-const FilingTableQuery = async ({
-  queryData,
-}: {
-  queryData: QueryDataFile;
-}) => {
-  try {
-    const filings: Filing[] = await searchResultsGet(queryData);
-    if (filings == undefined) {
-      return <p>Filings returned from server is undefined.</p>;
+const FilingTableQuery = memo(
+  async ({ queryData }: { queryData: QueryDataFile }) => {
+    try {
+      const filings: Filing[] = await searchResultsGet(queryData);
+      if (filings == undefined) {
+        return <p>Filings returned from server is undefined.</p>;
+      }
+      return <FilingTable filings={filings} />;
+    } catch (error) {
+      return (
+        <p>
+          Encountered an Error getting files from the server. <br />
+          {String(error)}
+        </p>
+      );
     }
-    return <FilingTable filings={filings} />;
-  } catch (error) {
-    return (
-      <p>
-        Encountered an Error getting files from the server. <br />
-        {String(error)}
-      </p>
-    );
-  }
-};
+  },
+);
 
 export default FilingTableQuery;
