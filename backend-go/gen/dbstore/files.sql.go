@@ -226,11 +226,6 @@ FROM public.file_metadata
 WHERE id = $1
 `
 
-// -- name: AddMetadataToFile :one
-// UPDATE public.file
-// SET metadata_id = $1
-// WHERE id = $2
-// RETURNING id;
 func (q *Queries) GetFileMetadata(ctx context.Context, id pgtype.UUID) (FileMetadatum, error) {
 	row := q.db.QueryRow(ctx, getFileMetadata, id)
 	var i FileMetadatum
