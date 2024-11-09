@@ -109,7 +109,7 @@ func makeTokenValidator(dbtx_val dbstore.DBTX) func(r *http.Request) UserValidat
 			stringDataStripped := strings.TrimPrefix(stringData, `{"access_token":"`)
 			hopefullyToken := strings.Split(stringDataStripped, `"`)[0]
 			token = fmt.Sprintf("Bearer %s", hopefullyToken)
-			fmt.Println(token)
+			// fmt.Println(token)
 
 		}
 		// Check for "Bearer " prefix in the authorization header (expected format)
@@ -147,7 +147,7 @@ func makeTokenValidator(dbtx_val dbstore.DBTX) func(r *http.Request) UserValidat
 			return jwtSecret, nil
 		}
 		parsedToken, err := jwt.Parse(tokenString, keyFunc)
-		fmt.Println(parsedToken)
+		// fmt.Println(parsedToken)
 		if err != nil {
 			fmt.Printf("Encountered error with token validation since that functionality hasnt been implemented yet, and the backend assumes every HMAC signature is valid, this is probably good to fix if we dont want to get royally screwed %v", err)
 			// FIXME : HIGHLY INSECURE, GET THE HMAC SECRET FROM SUPABASE AND THROW IT IN HERE AS AN NEV VARAIBLE.

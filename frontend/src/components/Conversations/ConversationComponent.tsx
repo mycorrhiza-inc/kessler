@@ -135,7 +135,7 @@ const ConversationComponent = ({
     }
   };
 
-  const [isFocused, setIsFocused] = useState(false);
+  const [isFocused, setIsFocused] = useState(true);
   const toggleFilters = () => {
     setIsFocused(!isFocused);
   };
@@ -147,58 +147,56 @@ const ConversationComponent = ({
   }, [searchFilters]);
 
   return (
-    <div className="w-full h-full p-10 card relative box-border border-2 border-black">
-      <div className="flex">
-        <AnimatePresence mode="sync">
-          {isFocused && (
-            <motion.div
-              className="flex-none"
-              style={{ padding: "10px" }}
-              initial={{ width: 0, opacity: 0 }}
-              animate={{ width: "300px", opacity: 1 }}
-              exit={{ width: 0, opacity: 0 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-            >
-              <TableFilters
-                searchFilters={searchFilters}
-                setSearchFilters={setSearchFilters}
-                disabledFilters={disabledFilters}
-                toggleFilters={toggleFilters}
-              />
-            </motion.div>
-          )}
+    <div className="w-full h-full p-10 card relative box-border border-2 border-black flex flex-row">
+      <AnimatePresence mode="sync">
+        {isFocused && (
           <motion.div
-            className="flex-grow p-10"
-            layout
-            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="flex-none"
+            style={{ padding: "10px" }}
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: "500px", opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            // transition={{ duration: 0.3, ease: "easeInOut" }}
           >
-            <div
-              id="conversation-header"
-              className="flex justify-between items-center mb-4"
-            >
-              <h1 className="text-2xl font-bold">Conversation</h1>
-              <button
-                onClick={toggleFilters}
-                className="btn btn-outline"
-                style={{
-                  display: !isFocused ? "inline-block" : "none",
-                }}
-              >
-                Filters
-              </button>
-            </div>
-            <div className="w-full overflow-x-scroll">
-              <Suspense
-                fallback={
-                  <LoadingSpinner loadingText="Loading Search Results..." />
-                }
-              >
-                <FilingTableQuery queryData={queryData} />
-              </Suspense>
-            </div>
+            <TableFilters
+              searchFilters={searchFilters}
+              setSearchFilters={setSearchFilters}
+              disabledFilters={disabledFilters}
+              toggleFilters={toggleFilters}
+            />
           </motion.div>
-        </AnimatePresence>
-      </div>
+        )}
+        <motion.div
+          className="flex-grow p-10"
+          layout
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+        >
+          <div
+            id="conversation-header"
+            className="flex justify-between items-center mb-4"
+          >
+            <h1 className="text-2xl font-bold">Conversation</h1>
+            <button
+              onClick={toggleFilters}
+              className="btn btn-outline"
+              style={{
+                display: !isFocused ? "inline-block" : "none",
+              }}
+            >
+              Filters
+            </button>
+          </div>
+          <div className="w-full overflow-x-scroll">
+            <Suspense
+              fallback={
+                <LoadingSpinner loadingText="Loading Search Results..." />
+              }
+            >
+              <FilingTableQuery queryData={queryData} />
+            </Suspense>
+          </div>
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 };
