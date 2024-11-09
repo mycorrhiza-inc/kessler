@@ -5,6 +5,7 @@ import { Filing } from "../../lib/types/FilingTypes";
 import { QueryDataFile, QueryFilterFields } from "@/lib/filters";
 import { getSearchResults } from "@/lib/requests/search";
 import { memo } from "react";
+import useSWR from "swr";
 const TableRow = ({ filing }: { filing: Filing }) => {
   const [open, setOpen] = useState(false);
   return (
@@ -34,9 +35,20 @@ const TableRow = ({ filing }: { filing: Filing }) => {
     </>
   );
 };
-export const FilingTable = ({ filings, scroll }: { filings: Filing[], scroll?: boolean }) => {
+export const FilingTable = ({
+  filings,
+  scroll,
+}: {
+  filings: Filing[];
+  scroll?: boolean;
+}) => {
   return (
-    <div className={"min-h-[500px] overflow-y-auto" + (scroll ? "max-h-[500px] overflow-x-scroll" : "")}>
+    <div
+      className={
+        "min-h-[500px] overflow-y-auto" +
+        (scroll ? "max-h-[500px] overflow-x-scroll" : "")
+      }
+    >
       <table className="w-full divide-y divide-gray-200 table">
         <tbody>
           <tr className="border-b border-gray-200">
@@ -58,7 +70,8 @@ export const FilingTable = ({ filings, scroll }: { filings: Filing[], scroll?: b
 const FilingTableQuery = memo(
   async ({ queryData }: { queryData: QueryDataFile }) => {
     try {
-      const filings: Filing[] = await getSearchResults(queryData);
+      const { data } = useSWR(queryData, getSearchResults, { suspense: true });
+      const filings = data;
       if (filings == undefined) {
         return <p>Filings returned from server is undefined.</p>;
       }
