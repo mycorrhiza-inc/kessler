@@ -82,7 +82,7 @@ func rerankStringsAndQueryPermutation(ctx context.Context, query string, documen
 func rerankSearchResults(searchResults []SearchData, query string) ([]SearchData, error) {
 	var documents []string
 	for _, result := range searchResults {
-		documents = append(documents, result.Text)
+		documents = append(documents, result.Snippet)
 	}
 	permutation, err := rerankStringsAndQueryPermutation(context.Background(), query, documents)
 	if err != nil {
