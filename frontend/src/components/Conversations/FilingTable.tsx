@@ -2,9 +2,6 @@ import { useState } from "react";
 import Modal from "../styled-components/Modal";
 import DocumentModalBody from "../Document/DocumentModalBody";
 import { Filing } from "../../lib/types/FilingTypes";
-import { QueryDataFile, QueryFilterFields } from "@/lib/filters";
-import { getSearchResults } from "@/lib/requests/search";
-import { memo } from "react";
 const TableRow = ({ filing }: { filing: Filing }) => {
   const [open, setOpen] = useState(false);
   return (
@@ -34,9 +31,20 @@ const TableRow = ({ filing }: { filing: Filing }) => {
     </>
   );
 };
-export const FilingTable = ({ filings, scroll }: { filings: Filing[], scroll?: boolean }) => {
+export const FilingTable = ({
+  filings,
+  scroll,
+}: {
+  filings: Filing[];
+  scroll?: boolean;
+}) => {
   return (
-    <div className={"min-h-[500px] overflow-y-auto" + (scroll ? "max-h-[500px] overflow-x-scroll" : "")}>
+    <div
+      className={
+        "min-h-[500px] overflow-y-auto" +
+        (scroll ? "max-h-[500px] overflow-x-scroll" : "")
+      }
+    >
       <table className="w-full divide-y divide-gray-200 table">
         <tbody>
           <tr className="border-b border-gray-200">
@@ -54,24 +62,4 @@ export const FilingTable = ({ filings, scroll }: { filings: Filing[], scroll?: b
     </div>
   );
 };
-
-const FilingTableQuery = memo(
-  async ({ queryData }: { queryData: QueryDataFile }) => {
-    try {
-      const filings: Filing[] = await getSearchResults(queryData);
-      if (filings == undefined) {
-        return <p>Filings returned from server is undefined.</p>;
-      }
-      return <FilingTable filings={filings} />;
-    } catch (error) {
-      return (
-        <p>
-          Encountered an Error getting files from the server. <br />
-          {String(error)}
-        </p>
-      );
-    }
-  },
-);
-
-export default FilingTableQuery;
+export default FilingTable;
