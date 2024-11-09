@@ -139,6 +139,10 @@ func convertToRFC3339(date string) (string, error) {
 }
 
 func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
+	// TODO: Cleanup default value if not gotten from request, just for bugfixing - Nicole
+	if r.MaxHits == 0 {
+		r.MaxHits = 100
+	}
 	search_index := r.Index
 	// ===== construct search request =====
 	query := r.Query
