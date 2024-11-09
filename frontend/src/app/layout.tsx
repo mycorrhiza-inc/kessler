@@ -40,7 +40,7 @@ export default function RootLayout({
           />
         </head>
         <body className="bg-base-100">
-          <ThemeProvider>
+          <ThemeProvider defaultTheme="light">
             <PostHogPageView />
             <main className="">
               {/* <Navbar user={user} /> */}

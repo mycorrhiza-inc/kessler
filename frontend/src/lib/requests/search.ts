@@ -3,7 +3,7 @@ import { Filing } from "@/lib/types/FilingTypes";
 import axios from "axios";
 import { metadata } from "../../../../archive/old-frontend/src/app/layout";
 
-const getSearchResults = async (queryData: QueryDataFile) => {
+export const getSearchResults = async (queryData: QueryDataFile) => {
   const searchQuery = queryData.query;
   const searchFilters = queryData.filters;
   console.log(`searchhing for ${searchQuery}`);

@@ -22,6 +22,7 @@ import {
 import { AnimatePresence, motion } from "framer-motion";
 import axios from "axios";
 import FilingTableQuery from "./FilingTable";
+import LoadingSpinner from "../styled-components/LoadingSpinner";
 
 
 const testFiling: Filing = {
@@ -144,10 +145,12 @@ const ConversationComponent = ({
   const toggleFilters = () => {
     setIsFocused(!isFocused);
   };
-  const queryData: QueryDataFile = {
-    filters: searchFilters,
-    query: "",
-  };
+  const queryData: QueryDataFile = useMemo(() => {
+    return {
+      filters: searchFilters,
+      query: "",
+    };
+  }, [searchFilters]);
 
   return (
     <div className="w-full h-full p-10 card grid grid-flow-col auto-cols-2 box-border border-2 border-black ">
@@ -184,7 +187,11 @@ const ConversationComponent = ({
           Filters
         </button>
         <div className="w-full overflow-x-scroll">
-          <Suspense fallback={<div>Loading...</div>}>
+          <Suspense
+            fallback={
+              <LoadingSpinner loadingText="Loading Search Results..." />
+            }
+          >
             <FilingTableQuery queryData={queryData} />
           </Suspense>
         </div>
