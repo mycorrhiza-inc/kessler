@@ -1,9 +1,9 @@
 import { useState } from "react";
 import Modal from "../styled-components/Modal";
 import DocumentModalBody from "../Document/DocumentModalBody";
-import { Filing } from "./conversationTypes";
+import { Filing } from "../../lib/types/FilingTypes";
 import { QueryDataFile, QueryFilterFields } from "@/lib/filters";
-import searchResultsGet from "./searchResultGet";
+import getSearchResults from "./searchResultGet";
 
 const TableRow = ({ filing }: { filing: Filing }) => {
   const [open, setOpen] = useState(false);
@@ -27,16 +27,16 @@ const TableRow = ({ filing }: { filing: Filing }) => {
       <Modal open={open} setOpen={setOpen}>
         <DocumentModalBody
           open={open}
-          objectId={filing.uuid}
+          objectId={filing.id}
           overridePDFUrl={filing.url}
         />
       </Modal>
     </>
   );
 };
-const FilingTable = ({ filings }: { filings: Filing[] }) => {
+export const FilingTable = ({ filings, scroll }: { filings: Filing[], scroll?: boolean }) => {
   return (
-    <div className="overflow-x-scroll max-h-[500px] overflow-y-auto">
+    <div className={"min-h-[500px] overflow-y-auto"+(scroll?"max-h-[500px] overflow-x-scroll":"")}>
       <table className="w-full divide-y divide-gray-200 table">
         <tbody>
           <tr className="border-b border-gray-200">
@@ -58,10 +58,14 @@ const FilingTable = ({ filings }: { filings: Filing[] }) => {
 const FilingTableQuery = async ({
   queryData,
 }: {
-  queryData: QueryDataFile;
+  queryData?: QueryDataFile;
 }) => {
-  const filings = await searchResultsGet(queryData);
-  return <FilingTable filings={filings} />;
+  if (queryData) {
+    const filings = await getSearchResults(queryData);
+    return <FilingTable filings={filings} scroll={true} />;
+
+  }
+  return <FilingTable filings={[]} />;
 };
 
 export default FilingTableQuery;

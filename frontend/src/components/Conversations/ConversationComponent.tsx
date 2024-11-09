@@ -16,25 +16,13 @@ import {
   FilterField,
   QueryDataFile,
 } from "@/lib/filters";
+import {
+  Filing
+} from "@/lib/types/FilingTypes";
 import { AnimatePresence, motion } from "framer-motion";
 import axios from "axios";
+import FilingTableQuery from "./FilingTable";
 
-export type Filing = {
-  id?: string;
-  lang?: string;
-  title?: string;
-  date?: string;
-  author?: string;
-  source?: string;
-  language?: string;
-  extension?: string;
-  file_class?: string;
-  metadata?: any;
-  item_number?: string;
-  author_organisation?: string;
-  url?: string;
-  uuid?: string;
-};
 
 const testFiling: Filing = {
   id: "0",
@@ -49,10 +37,8 @@ const testFiling: Filing = {
   file_class: "Press Releases",
   item_number: "3",
   author_organisation: "Public Service Commission",
-  uuid: "3c4ba5f3-febc-41f2-aa86-2820db2b459a",
+  // uuid?: "3c4ba5f3-febc-41f2-aa86-2820db2b459a",
 };
-
-import FilingTableQuery from "./FilingTable";
 
 
 const TableFilters = ({

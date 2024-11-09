@@ -1,6 +1,8 @@
 import { QueryDataFile, QueryFilterFields } from "@/lib/filters";
 import { Filing } from "@/lib/types/FilingTypes";
 import axios from "axios";
+import { metadata } from "../../../../archive/old-frontend/src/app/layout";
+
 const getSearchResults = async (queryData: QueryDataFile) => {
   const searchQuery = queryData.query;
   const searchFilters = queryData.filters;
@@ -49,7 +51,7 @@ export const getRecentFilings = async (page?: number) => {
       page: page,
     }
   );
-  console.log(response.data);
+  console.log("recent data", response.data);
   if (response.data.length > 0) {
     return response.data;
   }
@@ -60,22 +62,26 @@ export const getFilingMetadata = async (id: string) => {
     // `http://api.kessler.xyz/v2/public/files/${id}/metadata`
     `http://localhost/v2/public/files/${id}/metadata`
   );
-  return ParseFilingData([response.data]);
+  return ParseFilingData([response.data])[0];
 };
 
-export const ParseFilingData = (data: any) => {
-  const filings = data.map((f: any) => {
+export const ParseFilingData = (filingData: any) => {
+  const filings = filingData.map((f: any) => {
+    console.log("fdata", f)
+		const metadata = JSON.parse(atob(f.Mdata));
+    console.log("metadata: ", metadata)
+    f.metadata = metadata 
     const newFiling: Filing = {
-      id: data.sourceID,
-      lang: data.metadata.lang,
-      title: data.title,
-      date: data.medata.date,
-      author: data.medata.author,
-      source: data.metadata.source,
-      language: data.metadata.language,
-      item_number: data.medata.item_number,
-      author_organisation: data.medata.author_organizatino,
-      url: data.medata.url,
+      id: f.ID,
+      lang: f.metadata.lang,
+      title: f.Name,
+      date: f.metadata.date,
+      author: f.metadata.author,
+      source: f.metadata.source,
+      language: f.metadata.language,
+      item_number: f.metadata.item_number,
+      author_organisation: f.metadata.author_organizatino,
+      url: f.metadata.url,
     };
     return newFiling;
   });
