@@ -1,4 +1,4 @@
-import React, { Suspense } from "react";
+import React, { Suspense, memo } from "react";
 import * as Tabs from "@radix-ui/react-tabs";
 
 import PDFViewer from "./PDFViewer";
@@ -15,14 +15,14 @@ type ModalProps = {
   title?: string;
 };
 
-const MarkdownContent = async ({ docUUID }: { docUUID: string }) => {
+const MarkdownContent = memo(async ({ docUUID }: { docUUID: string }) => {
   const markdown_url = `${apiURL}/v2/public/files/${docUUID}/markdown`;
   // axios.get(`https://api.kessler.xyz/v2/public/files/${objectid}/markdown`),
   const text = await fetchTextDataFromURL(markdown_url);
   return <MarkdownRenderer>{text}</MarkdownRenderer>;
-};
+});
 
-const MetadataContent = async ({ docUUID }: { docUUID: string }) => {
+const MetadataContent = memo(async ({ docUUID }: { docUUID: string }) => {
   const object_url = `${apiURL}/v2/public/files/${docUUID}/markdown`;
   // axios.get(`https://api.kessler.xyz/v2/public/files/${objectid}/markdown`),
   const mdata = await fetchObjectDataFromURL(object_url);
@@ -46,7 +46,7 @@ const MetadataContent = async ({ docUUID }: { docUUID: string }) => {
       </tbody>
     </table>
   );
-};
+});
 const PDFContent = ({
   docUUID,
   overridePDFUrl,

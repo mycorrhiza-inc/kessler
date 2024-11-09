@@ -120,15 +120,18 @@ func juristictionFileUpsert(ctx context.Context, q dbstore.Queries, doc_uuid uui
 
 func upsertFileExtras(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, extras FileGeneratedExtras, insert bool) error {
 	doc_pgUUID := pgtype.UUID{Bytes: doc_uuid, Valid: true}
-	summary_text := pgtype.Text{String: extras.Summary}
-	short_summaries_text := pgtype.Text{String: extras.ShortSummary}
-	purpose_text := pgtype.Text{String: extras.Purpose}
+	extras_json_obj, err := json.Marshal(extras)
+	if err != nil {
+		err = fmt.Errorf("error marshalling extras json object, to my understanding this should be absolutely impossible: %v", err)
+		fmt.Println(err)
+		panic(err)
+	}
 	pgPrivate := pgtype.Bool{
 		Bool:  false,
 		Valid: true,
 	}
 	if insert {
-		args := dbstore.ExtrasFileCreateParams{ID: doc_pgUUID, Isprivate: pgPrivate, Summary: summary_text, ShortSummary: short_summaries_text, Purpose: purpose_text}
+		args := dbstore.ExtrasFileCreateParams{ID: doc_pgUUID, Isprivate: pgPrivate, ExtraObj: extras_json_obj}
 		_, err := q.ExtrasFileCreate(
 			ctx, args)
 		if err != nil {
@@ -136,8 +139,8 @@ func upsertFileExtras(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID
 		}
 		return nil
 	}
-	args := dbstore.ExtrasFileUpdateParams{ID: doc_pgUUID, Isprivate: pgPrivate, Summary: summary_text, ShortSummary: short_summaries_text, Purpose: purpose_text}
-	_, err := q.ExtrasFileUpdate(
+	args := dbstore.ExtrasFileUpdateParams{ID: doc_pgUUID, Isprivate: pgPrivate, ExtraObj: extras_json_obj}
+	_, err = q.ExtrasFileUpdate(
 		ctx, args)
 	if err != nil {
 		return err

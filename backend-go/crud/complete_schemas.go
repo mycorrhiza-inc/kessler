@@ -55,9 +55,10 @@ type DocProcStage struct {
 	ErrorStacktrace string        `json:"error_stacktrace"`
 }
 type FileGeneratedExtras struct {
-	Summary      string `json:"summary"`
-	ShortSummary string `json:"short_summary"`
-	Purpose      string `json:"purpose"`
+	Summary        string  `json:"summary"`
+	ShortSummary   string  `json:"short_summary"`
+	Purpose        string  `json:"purpose"`
+	Impressiveness float64 `json:"impressiveness"`
 }
 
 type AuthorInformation struct {
@@ -84,16 +85,28 @@ type CompleteFileSchema struct {
 	Hash         string                  `json:"hash"`
 	IsPrivate    bool                    `json:"is_private"`
 	Mdata        FileMetadataSchema      `json:"mdata"`
-	DocTexts     []FileChildTextSource   `json:"doc_texts"`
+	Stage        DocProcStage            `json:"stage"`
+	Extra        FileGeneratedExtras     `json:"extra"`
+	Authors      []AuthorInformation     `json:"authors"`
+	Juristiction JuristictionInformation `json:"juristiction"`
+	// To heavy to include in a default file schema unless the user specifies they want it
+	DocTexts []FileChildTextSource `json:"doc_texts"`
+}
+
+type SemiCompleteFileSchema struct {
+	ID           uuid.UUID               `json:"id"`
+	Extension    string                  `json:"extension"`
+	Lang         string                  `json:"lang"`
+	Name         string                  `json:"name"`
+	Hash         string                  `json:"hash"`
+	IsPrivate    bool                    `json:"is_private"`
+	Mdata        FileMetadataSchema      `json:"mdata"`
 	Stage        DocProcStage            `json:"stage"`
 	Extra        FileGeneratedExtras     `json:"extra"`
 	Authors      []AuthorInformation     `json:"authors"`
 	Juristiction JuristictionInformation `json:"juristiction"`
 }
-
-type FileMetadataSchema struct {
-	MdataObject map[string]interface{} `json:"metadata_object"`
-}
+type FileMetadataSchema map[string]interface{}
 
 func CompleteFileSchemaPrune(input CompleteFileSchema) FileSchema {
 	return FileSchema{
