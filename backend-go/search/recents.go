@@ -11,12 +11,14 @@ import (
 func GetRecentCaseData(page int) ([]SearchData, error) {
 	// get all documents with a metadata.date_filed since (x)
 	log.Printf("gettings ssssssflkjadflhdsfuhlifadlhf")
+	maxHits := 10
+	offset := page * maxHits
 	request := SearchRequest{
 		Index:       "NY_PUC",
 		Query:       "",
 		SortBy:      []string{"date_filed"},
-		MaxHits:     20,
-		StartOffset: page,
+		MaxHits:     maxHits,
+		StartOffset: offset,
 	}
 	data, err := SearchQuickwit(request)
 	if err != nil {

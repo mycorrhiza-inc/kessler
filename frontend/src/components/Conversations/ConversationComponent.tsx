@@ -16,9 +16,31 @@ import {
   FilterField,
   QueryDataFile,
 } from "@/lib/filters";
+import {
+  Filing
+} from "@/lib/types/FilingTypes";
 import { AnimatePresence, motion } from "framer-motion";
+import axios from "axios";
 import FilingTableQuery from "./FilingTable";
 import LoadingSpinner from "../styled-components/LoadingSpinner";
+
+
+const testFiling: Filing = {
+  id: "0",
+  url: "https://documents.dps.ny.gov/public/Common/ViewDoc.aspx?DocRefId={7F4AA7FC-CF71-4C2B-8752-A1681D8F9F46}",
+  date: "05/12/2022",
+  lang: "en",
+  title: "Press Release - PSC Announces CLCPA Tracking Initiative",
+  author: "Public Service Commission",
+  source: "Public Service Commission",
+  language: "en",
+  extension: "pdf",
+  file_class: "Press Releases",
+  item_number: "3",
+  author_organisation: "Public Service Commission",
+  // uuid?: "3c4ba5f3-febc-41f2-aa86-2820db2b459a",
+};
+
 
 const TableFilters = ({
   searchFilters,
@@ -80,6 +102,44 @@ const ConversationComponent = ({
   }, [inheritedFilters]);
   const [searchFilters, setSearchFilters] =
     useState<QueryFilterFields>(initialFilterState);
+  const [searchResults, setSearchResults] = useState<string[]>([]);
+  const [filing_ids, setFilingIds] = useState<string[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+
+  const handleSearch = async () => {
+    setSearchResults([]);
+    console.log(`searchhing for ${searchQuery}`);
+    try {
+      const response = await axios.post("https://api.kessler.xyz/v2/search", {
+        query: searchQuery,
+        filters: {
+          name: searchFilters.match_name,
+          author: searchFilters.match_author,
+          docket_id: searchFilters.match_docket_id,
+          doctype: searchFilters.match_doctype,
+          source: searchFilters.match_source,
+        },
+      });
+      if (response.data.length === 0) {
+        return;
+      }
+      if (typeof response.data === "string") {
+        setSearchResults([]);
+        return;
+      }
+      console.log("getting data");
+      console.log(response.data);
+      const ids = response.data.map((filing: any) => filing.id);
+      setFilingIds(ids);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
 
   const [isFocused, setIsFocused] = useState(false);
   const toggleFilters = () => {

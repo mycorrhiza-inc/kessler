@@ -3,6 +3,7 @@ package crud
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 
@@ -14,6 +15,7 @@ import (
 
 func GetFileWithMeta(config FileHandlerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("Getting file with metadata")
 		q := *dbstore.New(config.dbtx_val)
 		token := r.Header.Get("Authorization")
 		params := mux.Vars(r)
