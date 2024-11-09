@@ -5,6 +5,7 @@ import React, {
   SetStateAction,
   useState,
   useMemo,
+  useEffect,
   Suspense,
 } from "react";
 import { BasicDocumentFiltersList } from "@/components/DocumentFilters";
@@ -19,8 +20,9 @@ import {
 import { Filing } from "@/lib/types/FilingTypes";
 import { AnimatePresence, motion } from "framer-motion";
 import axios from "axios";
-import FilingTableQuery from "./FilingTableQuery";
+import { FilingTable } from "./FilingTable";
 import LoadingSpinner from "../styled-components/LoadingSpinner";
+import {getSearchResults, getFilingMetadata} from "@/lib/requests/search";
 
 const testFiling: Filing = {
   id: "0",
@@ -100,12 +102,50 @@ const ConversationComponent = ({
     useState<QueryFilterFields>(initialFilterState);
   const [searchResults, setSearchResults] = useState<string[]>([]);
   const [filing_ids, setFilingIds] = useState<string[]>([]);
+  const [filings, setFilings] = useState<Filing[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
+	const getUpdates = async () => {
+		setIsSearching(true);
+		console.log("getting recent updates");
+		const data = await getSearchResults(queryData);
+		console.log()
+		
+		const ids = data.map((item: any) => item.sourceID);
+		console.log("ids", ids);
+		setFilingIds(ids);
+		setIsSearching(false);
+	};
+	useEffect(() => {
+		if (!filing_ids) {
+			return;
+		}
+
+		const fetchFilings = async () => {
+			const newFilings = await Promise.all(
+				filing_ids.map(async (id) => {
+					const filing_data = await getFilingMetadata(id);
+					console.log("new filings", filing_data)
+					return filing_data
+				})
+			);
+
+			setFilings((previous) => {
+				const existingIds = new Set(previous.map(f => f.id));
+				const uniqueNewFilings = newFilings.filter(f => !existingIds.has(f.id));
+				console.log(" uniques: ", uniqueNewFilings);
+				console.log("all data: ", [...previous, ...uniqueNewFilings])
+				return [...previous, ...uniqueNewFilings];
+			});
+		};
+
+		fetchFilings();
+	}, [filing_ids]);
+
   const handleSearch = async () => {
     setSearchResults([]);
-    console.log(`searchhing for ${searchQuery}`);
+    console.log(`searching for ${searchQuery}`);
     try {
       const response = await axios.post("https://api.kessler.xyz/v2/search", {
         query: searchQuery,
@@ -156,7 +196,6 @@ const ConversationComponent = ({
             initial={{ width: 0, opacity: 0 }}
             animate={{ width: "500px", opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
-            // transition={{ duration: 0.3, ease: "easeInOut" }}
           >
             <TableFilters
               searchFilters={searchFilters}
@@ -187,7 +226,13 @@ const ConversationComponent = ({
             </button>
           </div>
           <div className="w-full overflow-x-scroll">
-            <FilingTableQuery queryData={queryData} />
+            <Suspense
+              fallback={
+                <LoadingSpinner loadingText="Loading Search Results..." />
+              }
+            >
+              <FilingTable filings={filings} />
+            </Suspense>
           </div>
         </motion.div>
       </AnimatePresence>
