@@ -47,8 +47,8 @@ func upsertFileTexts(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID,
 
 func upsertFileMetadata(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, metadata FileMetadataSchema, insert bool) error {
 	doc_pgUUID := pgtype.UUID{Bytes: doc_uuid, Valid: true}
-	metadata.MdataObject["id"] = doc_uuid.String()
-	json_obj, err := json.Marshal(metadata.MdataObject)
+	metadata["id"] = doc_uuid.String()
+	json_obj, err := json.Marshal(metadata)
 	if err != nil {
 		return err
 	}
