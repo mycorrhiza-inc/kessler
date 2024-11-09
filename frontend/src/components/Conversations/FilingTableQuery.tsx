@@ -10,7 +10,6 @@ const FilingTableQueryRaw = memo(
   ({ queryData }: { queryData: QueryDataFile }) => {
     const { data, error } = useSWR(queryData, getSearchResults, {
       suspense: true,
-      fallback: [],
     });
     if (error) {
       return (
