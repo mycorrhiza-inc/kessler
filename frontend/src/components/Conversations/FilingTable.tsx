@@ -2,10 +2,6 @@ import { useState } from "react";
 import Modal from "../styled-components/Modal";
 import DocumentModalBody from "../Document/DocumentModalBody";
 import { Filing } from "../../lib/types/FilingTypes";
-import { QueryDataFile, QueryFilterFields } from "@/lib/filters";
-import { getSearchResults } from "@/lib/requests/search";
-import { memo } from "react";
-import useSWR from "swr";
 const TableRow = ({ filing }: { filing: Filing }) => {
   const [open, setOpen] = useState(false);
   return (
@@ -66,25 +62,4 @@ export const FilingTable = ({
     </div>
   );
 };
-
-const FilingTableQuery = memo(
-  async ({ queryData }: { queryData: QueryDataFile }) => {
-    try {
-      const { data } = useSWR(queryData, getSearchResults, { suspense: true });
-      const filings = data;
-      if (filings == undefined) {
-        return <p>Filings returned from server is undefined.</p>;
-      }
-      return <FilingTable filings={filings} />;
-    } catch (error) {
-      return (
-        <p>
-          Encountered an Error getting files from the server. <br />
-          {String(error)}
-        </p>
-      );
-    }
-  },
-);
-
-export default FilingTableQuery;
+export default FilingTable;

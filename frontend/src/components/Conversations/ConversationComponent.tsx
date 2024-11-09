@@ -19,7 +19,7 @@ import {
 import { Filing } from "@/lib/types/FilingTypes";
 import { AnimatePresence, motion } from "framer-motion";
 import axios from "axios";
-import FilingTableQuery from "./FilingTable";
+import FilingTableQuery from "./FilingTableQuery";
 import LoadingSpinner from "../styled-components/LoadingSpinner";
 
 const testFiling: Filing = {
