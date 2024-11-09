@@ -16,14 +16,11 @@ import {
   FilterField,
   QueryDataFile,
 } from "@/lib/filters";
-import {
-  Filing
-} from "@/lib/types/FilingTypes";
+import { Filing } from "@/lib/types/FilingTypes";
 import { AnimatePresence, motion } from "framer-motion";
 import axios from "axios";
 import FilingTableQuery from "./FilingTable";
 import LoadingSpinner from "../styled-components/LoadingSpinner";
-
 
 const testFiling: Filing = {
   id: "0",
@@ -40,7 +37,6 @@ const testFiling: Filing = {
   author_organisation: "Public Service Commission",
   // uuid?: "3c4ba5f3-febc-41f2-aa86-2820db2b459a",
 };
-
 
 const TableFilters = ({
   searchFilters,
@@ -107,7 +103,6 @@ const ConversationComponent = ({
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-
   const handleSearch = async () => {
     setSearchResults([]);
     console.log(`searchhing for ${searchQuery}`);
@@ -140,7 +135,6 @@ const ConversationComponent = ({
     }
   };
 
-
   const [isFocused, setIsFocused] = useState(false);
   const toggleFilters = () => {
     setIsFocused(!isFocused);
@@ -153,48 +147,57 @@ const ConversationComponent = ({
   }, [searchFilters]);
 
   return (
-    <div className="w-full h-full p-10 card grid grid-flow-col auto-cols-2 box-border border-2 border-black ">
-      <AnimatePresence>
-        {isFocused && (
+    <div className="w-full h-full p-10 card relative box-border border-2 border-black">
+      <div className="flex">
+        <AnimatePresence mode="sync">
+          {isFocused && (
+            <motion.div
+              className="flex-none"
+              style={{ padding: "10px" }}
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: "300px", opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              <TableFilters
+                searchFilters={searchFilters}
+                setSearchFilters={setSearchFilters}
+                disabledFilters={disabledFilters}
+                toggleFilters={toggleFilters}
+              />
+            </motion.div>
+          )}
           <motion.div
-            style={{
-              padding: "10px",
-              transition: "width 0.3s ease-in-out",
-            }}
-            initial={{ x: "-50%" }}
-            animate={{ x: "0" }}
-            exit={{ x: "-50%", opacity: 0 }}
+            className="flex-grow p-10"
+            layout
+            transition={{ duration: 0.3, ease: "easeInOut" }}
           >
-            <TableFilters
-              searchFilters={searchFilters}
-              setSearchFilters={setSearchFilters}
-              disabledFilters={disabledFilters}
-              toggleFilters={toggleFilters}
-            />
+            <div
+              id="conversation-header"
+              className="flex justify-between items-center mb-4"
+            >
+              <h1 className="text-2xl font-bold">Conversation</h1>
+              <button
+                onClick={toggleFilters}
+                className="btn btn-outline"
+                style={{
+                  display: !isFocused ? "inline-block" : "none",
+                }}
+              >
+                Filters
+              </button>
+            </div>
+            <div className="w-full overflow-x-scroll">
+              <Suspense
+                fallback={
+                  <LoadingSpinner loadingText="Loading Search Results..." />
+                }
+              >
+                <FilingTableQuery queryData={queryData} />
+              </Suspense>
+            </div>
           </motion.div>
-        )}
-      </AnimatePresence>
-      <div className="p-10">
-        <div id="conversation-header p-10 justify-between"></div>
-        <h1 className=" text-2xl font-bold">Conversation</h1>
-        <button
-          onClick={toggleFilters}
-          className="btn btn-outline"
-          style={{
-            display: !isFocused ? "inline-block" : "none",
-          }}
-        >
-          Filters
-        </button>
-        <div className="w-full overflow-x-scroll">
-          <Suspense
-            fallback={
-              <LoadingSpinner loadingText="Loading Search Results..." />
-            }
-          >
-            <FilingTableQuery queryData={queryData} />
-          </Suspense>
-        </div>
+        </AnimatePresence>
       </div>
     </div>
   );
