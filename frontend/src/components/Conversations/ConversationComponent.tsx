@@ -187,13 +187,7 @@ const ConversationComponent = ({
             </button>
           </div>
           <div className="w-full overflow-x-scroll">
-            <Suspense
-              fallback={
-                <LoadingSpinner loadingText="Loading Search Results..." />
-              }
-            >
-              <FilingTableQuery queryData={queryData} />
-            </Suspense>
+            <FilingTableQuery queryData={queryData} />
           </div>
         </motion.div>
       </AnimatePresence>
