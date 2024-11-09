@@ -59,6 +59,7 @@
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.0",
     "remark-math": "^6.0.0",
+    "swr": "^2.2.5",
     "theme-change": "^2.5.0",
     "zustand": "^4.5.5"
   },
