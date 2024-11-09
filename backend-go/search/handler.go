@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 )
 
 type SearchRequest struct {
@@ -15,6 +16,19 @@ type SearchRequest struct {
 	MaxHits       int          `json:"max_hits"`
 	StartOffset   int          `json:"start_offset"`
 	GetText       bool         `json:"get_text"`
+}
+
+func (s SearchRequest) String() string {
+	return fmt.Sprintf(
+		"SearchRequest: {\nIndex: %s\n\tQuery: %s\n\tFilters: %s\n\tSortBy: %s\n\tMaxHits: %d\n\tStartOffset: %d\nGetText: %t\n}\n",
+		s.Index,
+		s.Query,
+		s.SearchFilters,
+		strings.Join(s.SortBy, ", "),
+		s.MaxHits,
+		s.StartOffset,
+		s.GetText,
+	)
 }
 
 type RecentUpdatesRequest struct {

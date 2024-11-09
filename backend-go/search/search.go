@@ -43,12 +43,6 @@ type Metadata struct {
 	Title    string `json:"title"`
 }
 
-type FilterFields struct {
-	Metadata
-	DateFrom string `json:"date_from"`
-	DateTo   string `json:"date_to"`
-}
-
 func (m Metadata) String() string {
 	// Marshal the struct to JSON format
 	jsonData, err := json.MarshalIndent(m, "", "  ")
@@ -56,6 +50,21 @@ func (m Metadata) String() string {
 		fmt.Println("Error marshalling JSON:", err)
 	}
 	// Print the formatted JSON string
+	return string(jsonData)
+}
+
+type FilterFields struct {
+	Metadata
+	DateFrom string `json:"date_from"`
+	DateTo   string `json:"date_to"`
+}
+
+// String method for FilterFields struct
+func (f FilterFields) String() string {
+	jsonData, err := json.MarshalIndent(f, "", "  ")
+	if err != nil {
+		fmt.Println("Error marshalling JSON:", err)
+	}
 	return string(jsonData)
 }
 
@@ -83,7 +92,7 @@ type QuickwitSearchRequest struct {
 	SnippetFields string `json:"snippet_fields,omitempty"`
 	MaxHits       int    `json:"max_hits"`
 	StartOffset   int    `json:"start_offset"`
-	SortBy        string `json:"sort_by"`
+	SortBy        string `json:"sort_by,omitempty"`
 }
 
 type SearchData struct {
@@ -95,6 +104,7 @@ type SearchData struct {
 
 func (s SearchData) String() string {
 	// Marshal the struct to JSON format
+	fmt.Println("searchdata: ")
 	jsonData, err := json.MarshalIndent(s, "", "  ")
 	if err != nil {
 		fmt.Println("Error marshalling JSON:", err)
@@ -138,35 +148,45 @@ func convertToRFC3339(date string) (string, error) {
 	return parsedDateString, nil
 }
 
-func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
-	search_index := r.Index
-	// ===== construct search request =====
-	query := r.Query
-	log.Printf("search filters: %s\n", r.SearchFilters)
-	var queryString string
+func ConstructDateQuery(DateFrom string, DateTo string) (string, error) {
 	// construct date query
 	fromDate := "*"
 	toDate := "*"
 
-	if r.SearchFilters.DateFrom != "" || r.SearchFilters.DateTo != "" {
+	if DateFrom != "" || DateTo != "" {
 		var err error
-		if r.SearchFilters.DateFrom != "" {
-			fromDate, err = convertToRFC3339(r.SearchFilters.DateFrom)
+		if DateFrom != "" {
+			fromDate, err = convertToRFC3339(DateFrom)
 			if err != nil {
-				return nil, fmt.Errorf("invalid date format for DateFrom: %v", err)
+				return "", fmt.Errorf("invalid date format for DateFrom: %v", err)
 			}
-			r.SearchFilters.DateFrom = ""
+			DateFrom = ""
 		}
-		if r.SearchFilters.DateTo != "" {
-			toDate, err = convertToRFC3339(r.SearchFilters.DateTo)
+		if DateTo != "" {
+			toDate, err = convertToRFC3339(DateTo)
 			if err != nil {
-				return nil, fmt.Errorf("invalid date format for DateTo: %v", err)
+				return "", fmt.Errorf("invalid date format for DateTo: %v", err)
 			}
-			r.SearchFilters.DateTo = ""
+			DateTo = ""
 		}
 	}
 	dateQuery := fmt.Sprintf("date_filed:[%s TO %s]", fromDate, toDate)
+	return dateQuery, nil
+}
 
+func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
+	fmt.Printf("%s", r)
+	r.Index = "NY_PUC"
+	search_index := r.Index
+	// ===== construct search request =====
+	query := r.Query
+	log.Printf("search filters: %s\n", r.SearchFilters)
+
+	var queryString string
+	dateQuery, err := ConstructDateQuery(r.SearchFilters.DateFrom, r.SearchFilters.DateTo)
+	if err != nil {
+		log.Printf("error constructing date query: %v", err)
+	}
 	if len(r.Query) >= 0 {
 		queryString = fmt.Sprintf("((text:(%s) OR name:(%s)) AND %s)", query, query, dateQuery)
 	}
@@ -191,6 +211,9 @@ func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
 		snippetFields = ""
 	}
 
+	if r.MaxHits == 0 {
+		r.MaxHits = 20
+	}
 	// construct request
 	request := QuickwitSearchRequest{
 		Query:         queryString,
