@@ -2,9 +2,9 @@
 import { Suspense, memo } from "react";
 import useSWR from "swr";
 import FilingTable from "./FilingTable";
-import getSearchResults from "./searchResultGet";
 import { QueryDataFile } from "@/lib/filters";
 import LoadingSpinner from "../styled-components/LoadingSpinner";
+import getSearchResults from "@/lib/requests/search";
 
 const FilingTableQueryRaw = memo(
   ({ queryData }: { queryData: QueryDataFile }) => {

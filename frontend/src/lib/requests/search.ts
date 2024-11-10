@@ -1,7 +1,6 @@
 import { QueryDataFile, QueryFilterFields } from "@/lib/filters";
 import { Filing } from "@/lib/types/FilingTypes";
 import axios from "axios";
-import { metadata } from "../../../../archive/old-frontend/src/app/layout";
 
 export const getSearchResults = async (queryData: QueryDataFile) => {
   const searchQuery = queryData.query;
@@ -49,7 +48,7 @@ export const getRecentFilings = async (page?: number) => {
     // "http://api.kessler.xyz/v2/recent_updates",
     {
       page: page,
-    }
+    },
   );
   console.log("recent data", response.data);
   if (response.data.length > 0) {
@@ -60,17 +59,17 @@ export const getRecentFilings = async (page?: number) => {
 export const getFilingMetadata = async (id: string) => {
   const response = await axios.get(
     // `http://api.kessler.xyz/v2/public/files/${id}/metadata`
-    `http://localhost/v2/public/files/${id}/metadata`
+    `http://localhost/v2/public/files/${id}/metadata`,
   );
   return ParseFilingData([response.data])[0];
 };
 
 export const ParseFilingData = (filingData: any) => {
   const filings = filingData.map((f: any) => {
-    console.log("fdata", f)
-		const metadata = JSON.parse(atob(f.Mdata));
-    console.log("metadata: ", metadata)
-    f.metadata = metadata 
+    console.log("fdata", f);
+    const metadata = JSON.parse(atob(f.Mdata));
+    console.log("metadata: ", metadata);
+    f.metadata = metadata;
     const newFiling: Filing = {
       id: f.ID,
       lang: f.metadata.lang,
