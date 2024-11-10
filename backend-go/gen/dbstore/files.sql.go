@@ -220,6 +220,32 @@ func (q *Queries) GetFile(ctx context.Context, id pgtype.UUID) (File, error) {
 	return i, err
 }
 
+const getFileIdsByHash = `-- name: GetFileIdsByHash :many
+SELECT id
+FROM public.file
+Where public.file.hash = $1
+`
+
+func (q *Queries) GetFileIdsByHash(ctx context.Context, hash pgtype.Text) ([]pgtype.UUID, error) {
+	rows, err := q.db.Query(ctx, getFileIdsByHash, hash)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []pgtype.UUID
+	for rows.Next() {
+		var id pgtype.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getFileMetadata = `-- name: GetFileMetadata :one
 SELECT id, isprivate, mdata, created_at, updated_at
 FROM public.file_metadata
