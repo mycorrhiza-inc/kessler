@@ -22,7 +22,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import axios from "axios";
 import { FilingTable } from "./FilingTable";
 import LoadingSpinner from "../styled-components/LoadingSpinner";
-import {getSearchResults, getFilingMetadata} from "@/lib/requests/search";
+import { getSearchResults, getFilingMetadata } from "@/lib/requests/search";
 
 const testFiling: Filing = {
   id: "0",
@@ -106,74 +106,76 @@ const ConversationComponent = ({
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-	const getUpdates = async () => {
-		setIsSearching(true);
-		console.log("getting recent updates");
-		const data = await getSearchResults(queryData);
-		console.log()
-		
-		const ids = data.map((item: any) => item.sourceID);
-		console.log("ids", ids);
-		setFilingIds(ids);
-		setIsSearching(false);
-	};
-	useEffect(() => {
-		if (!filing_ids) {
-			return;
-		}
+  const getUpdates = async () => {
+    setIsSearching(true);
+    console.log("getting recent updates");
+    const data = await getSearchResults(queryData);
+    console.log();
 
-		const fetchFilings = async () => {
-			const newFilings = await Promise.all(
-				filing_ids.map(async (id) => {
-					const filing_data = await getFilingMetadata(id);
-					console.log("new filings", filing_data)
-					return filing_data
-				})
-			);
-
-			setFilings((previous) => {
-				const existingIds = new Set(previous.map(f => f.id));
-				const uniqueNewFilings = newFilings.filter(f => !existingIds.has(f.id));
-				console.log(" uniques: ", uniqueNewFilings);
-				console.log("all data: ", [...previous, ...uniqueNewFilings])
-				return [...previous, ...uniqueNewFilings];
-			});
-		};
-
-		fetchFilings();
-	}, [filing_ids]);
-
-  const handleSearch = async () => {
-    setSearchResults([]);
-    console.log(`searching for ${searchQuery}`);
-    try {
-      const response = await axios.post("https://api.kessler.xyz/v2/search", {
-        query: searchQuery,
-        filters: {
-          name: searchFilters.match_name,
-          author: searchFilters.match_author,
-          docket_id: searchFilters.match_docket_id,
-          doctype: searchFilters.match_doctype,
-          source: searchFilters.match_source,
-        },
-      });
-      if (response.data.length === 0) {
-        return;
-      }
-      if (typeof response.data === "string") {
-        setSearchResults([]);
-        return;
-      }
-      console.log("getting data");
-      console.log(response.data);
-      const ids = response.data.map((filing: any) => filing.id);
-      setFilingIds(ids);
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setIsSearching(false);
-    }
+    const ids = data.map((item: any) => item.sourceID);
+    console.log("ids", ids);
+    setFilingIds(ids);
+    setIsSearching(false);
   };
+  useEffect(() => {
+    if (!filing_ids) {
+      return;
+    }
+
+    const fetchFilings = async () => {
+      const newFilings = await Promise.all(
+        filing_ids.map(async (id) => {
+          const filing_data = await getFilingMetadata(id);
+          console.log("new filings", filing_data);
+          return filing_data;
+        }),
+      );
+
+      setFilings((previous) => {
+        const existingIds = new Set(previous.map((f) => f.id));
+        const uniqueNewFilings = newFilings.filter(
+          (f) => !existingIds.has(f.id),
+        );
+        console.log(" uniques: ", uniqueNewFilings);
+        console.log("all data: ", [...previous, ...uniqueNewFilings]);
+        return [...previous, ...uniqueNewFilings];
+      });
+    };
+
+    fetchFilings();
+  }, [filing_ids]);
+
+  // const handleSearch = async () => {
+  //   setSearchResults([]);
+  //   console.log(`searching for ${searchQuery}`);
+  //   try {
+  //     const response = await axios.post("https://api.kessler.xyz/v2/search", {
+  //       query: searchQuery,
+  //       filters: {
+  //         name: searchFilters.match_name,
+  //         author: searchFilters.match_author,
+  //         docket_id: searchFilters.match_docket_id,
+  //         doctype: searchFilters.match_doctype,
+  //         source: searchFilters.match_source,
+  //       },
+  //     });
+  //     if (response.data.length === 0) {
+  //       return;
+  //     }
+  //     if (typeof response.data === "string") {
+  //       setSearchResults([]);
+  //       return;
+  //     }
+  //     console.log("getting data");
+  //     console.log(response.data);
+  //     const ids = response.data.map((filing: any) => filing.id);
+  //     setFilingIds(ids);
+  //   } catch (error) {
+  //     console.log(error);
+  //   } finally {
+  //     setIsSearching(false);
+  //   }
+  // };
 
   const [isFocused, setIsFocused] = useState(true);
   const toggleFilters = () => {
