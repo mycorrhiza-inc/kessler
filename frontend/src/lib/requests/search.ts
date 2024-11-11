@@ -1,6 +1,7 @@
 import { QueryDataFile, QueryFilterFields } from "@/lib/filters";
 import { Filing } from "@/lib/types/FilingTypes";
 import axios from "axios";
+import { apiURL } from "../env_variables";
 
 export const getSearchResults = async (queryData: QueryDataFile) => {
   const searchQuery = queryData.query;
@@ -9,7 +10,7 @@ export const getSearchResults = async (queryData: QueryDataFile) => {
   try {
     const response = await axios
       // .post("https://api.kessler.xyz/v2/search", {
-      .post("http://localhost/v2/search", {
+      .post(`${apiURL}/v2/search`, {
         query: searchQuery,
         filters: {
           name: searchFilters.match_name,
@@ -44,7 +45,7 @@ export const getRecentFilings = async (page?: number) => {
     page = 0;
   }
   const response = await axios.post(
-    "http://localhost/v2/recent_updates",
+    `${apiURL}/v2/recent_updates`,
     // "http://api.kessler.xyz/v2/recent_updates",
     {
       page: page,
@@ -59,7 +60,7 @@ export const getRecentFilings = async (page?: number) => {
 export const getFilingMetadata = async (id: string) => {
   const response = await axios.get(
     // `http://api.kessler.xyz/v2/public/files/${id}/metadata`
-    `http://localhost/v2/public/files/${id}/metadata`,
+    `${apiURL}/v2/public/files/${id}/metadata`,
   );
   return ParseFilingData([response.data])[0];
 };

@@ -20,6 +20,12 @@ export default class Bookmark implements BookmarkInterface {
   type: BookmarkType = undefined;
   title?: string | undefined;
   UpdateBookmarkTitle = async (bookmarkId: string) => {
+    console.error(
+      "Inserting to quickwit directly seems bad, currently it only does localhost, if you see this error and need to use it, its probably a good idea to refactor it to use the backend go api - Nicole",
+    );
+    throw new Error(
+      "Inserting to quickwit directly seems bad, currently it only does localhost, if you see this error and need to use it, its probably a good idea to refactor it to use the backend go api - Nicole",
+    );
     axios
       .post("http://localhost:4041/bookmarks/", {
         id: bookmarkId,
