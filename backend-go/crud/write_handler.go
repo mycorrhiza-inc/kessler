@@ -97,10 +97,25 @@ func makeFileUpsertHandler(config UpsertHandlerConfig) func(w http.ResponseWrite
 			fmt.Println(err)
 			http.Error(w, fmt.Sprintf("Error inserting/updating document: %v\n", err), http.StatusBadRequest)
 			return
-
 		}
 		if insert && deduplicate_with_respect_to_hash {
-			hash := i
+			ids, err := HashGetUUIDsFile(q, ctx, hash)
+			if err != nil {
+				errorstring := fmt.Sprintf("Error getting document ids from hash for deduplication: %v\n", err)
+				fmt.Println(errorstring)
+				http.Error(w, errorstring, http.StatusInternalServerError)
+				return
+			}
+			if len(ids) > 0 {
+				id := ids[0]
+				if len(ids) > 1 {
+					fmt.Printf("More than one document with this hash, this shouldnt happen, continuing deduplication with id: %s\n", id)
+				}
+				insert = false
+				doc_uuid = id
+				newDocInfo.ID = id
+
+			}
 		}
 
 		rawFileData := ConvertToCreationData(newDocInfo)
