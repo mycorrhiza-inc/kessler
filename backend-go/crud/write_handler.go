@@ -22,6 +22,7 @@ func makeFileUpsertHandler(config UpsertHandlerConfig) func(w http.ResponseWrite
 	dbtx_val := config.dbtx_val
 	private := config.private
 	insert := config.insert
+	deduplicate_with_respect_to_hash := true
 	return func(w http.ResponseWriter, r *http.Request) {
 		var doc_uuid uuid.UUID
 		var err error
@@ -89,6 +90,19 @@ func makeFileUpsertHandler(config UpsertHandlerConfig) func(w http.ResponseWrite
 			http.Error(w, errorstring, http.StatusBadRequest)
 			return
 		}
+		// Deduplicate with respect to hash
+		hash := newDocInfo.Hash
+		if hash == "" { // Maybe replace with a comprehensive check to see if the hash is a valid 256 bit base 64 hash
+			err := fmt.Errorf("hash is empty, cannot insert document without hash")
+			fmt.Println(err)
+			http.Error(w, fmt.Sprintf("Error inserting/updating document: %v\n", err), http.StatusBadRequest)
+			return
+
+		}
+		if insert && deduplicate_with_respect_to_hash {
+			hash := i
+		}
+
 		rawFileData := ConvertToCreationData(newDocInfo)
 		var fileSchema FileSchema
 		if insert {

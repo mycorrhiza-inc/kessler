@@ -181,3 +181,17 @@ func InsertPriPubFileText(q dbstore.Queries, ctx context.Context, text FileTextS
 	_, err := q.CreateFileTextSource(ctx, args)
 	return err
 }
+
+func GetUUIDsFromHash(q dbstore.Queries, ctx context.Context, hash string) ([]uuid.UUID, error) {
+	pgHash := pgtype.Text{String: hash, Valid: true}
+	filePGUUIDs, err := q.HashGetFileID(ctx, pgHash)
+	if err != nil {
+		return nil, err
+	}
+	var fileIDs []uuid.UUID
+	for _, file := range filePGUUIDs {
+		fileUUID := uuid.UUID(file.Bytes)
+		fileIDs = append(fileIDs, fileUUID)
+	}
+	return fileIDs, nil
+}
