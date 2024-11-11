@@ -29,7 +29,7 @@ SELECT *
 FROM public.file
   LEFT JOIN public.file_metadata ON public.file.id = public.file_metadata.id
 WHERE public.file.id = $1;
--- name: GetFileIdsByHash :many 
+-- name: HashGetFileID :many 
 SELECT id
 FROM public.file
 Where public.file.hash = $1;
