@@ -23,6 +23,7 @@ func makeFileUpsertHandler(config UpsertHandlerConfig) func(w http.ResponseWrite
 	private := config.private
 	insert := config.insert
 	deduplicate_with_respect_to_hash := true
+	empty_uuid, _ := uuid.Parse("00000000-0000-0000-0000-000000000000")
 	return func(w http.ResponseWriter, r *http.Request) {
 		var doc_uuid uuid.UUID
 		var err error
@@ -114,7 +115,6 @@ func makeFileUpsertHandler(config UpsertHandlerConfig) func(w http.ResponseWrite
 				insert = false
 				doc_uuid = id
 				newDocInfo.ID = id
-
 			}
 		}
 
@@ -123,6 +123,13 @@ func makeFileUpsertHandler(config UpsertHandlerConfig) func(w http.ResponseWrite
 		if insert {
 			fileSchema, err = InsertPubPrivateFileObj(q, ctx, rawFileData, private)
 		} else {
+			if doc_uuid == empty_uuid {
+				err := fmt.Errorf("ASSERT FAILURE: docUUID should never have a null uuid, when updating document.")
+				errorstring := fmt.Sprint(err)
+				fmt.Println(errorstring)
+				http.Error(w, errorstring, http.StatusInternalServerError)
+				return
+			}
 			pgUUID := pgtype.UUID{
 				Bytes: doc_uuid,
 				Valid: true,
@@ -137,7 +144,6 @@ func makeFileUpsertHandler(config UpsertHandlerConfig) func(w http.ResponseWrite
 		}
 		doc_uuid = fileSchema.ID // Ensure UUID is same as one returned from database
 		newDocInfo.ID = doc_uuid
-		empty_uuid, _ := uuid.Parse("00000000-0000-0000-0000-000000000000")
 		if newDocInfo.ID == empty_uuid {
 			err := fmt.Errorf("ASSERT FAILURE: docUUID should never have a null uuid.")
 			errorstring := fmt.Sprint(err)
