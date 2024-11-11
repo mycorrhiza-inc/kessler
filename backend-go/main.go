@@ -108,7 +108,8 @@ func makeTokenValidator(dbtx_val dbstore.DBTX) func(r *http.Request) UserValidat
 			// token = fmt.Sprintf("Bearer %s", tokenData.AccessToken)
 			stringDataStripped := strings.TrimPrefix(stringData, `{"access_token":"`)
 			hopefullyToken := strings.Split(stringDataStripped, `"`)[0]
-			token = fmt.Sprintf("Bearer %s", hopefullyToken)
+			_ = hopefullyToken // here to prevent the compiler from complaining
+			// token = fmt.Sprintf("Bearer %s", hopefullyToken)
 			// fmt.Println(token)
 
 		}
