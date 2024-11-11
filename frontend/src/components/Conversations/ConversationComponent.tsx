@@ -100,7 +100,7 @@ const ConversationComponent = ({
   }, [inheritedFilters]);
   const [searchFilters, setSearchFilters] =
     useState<QueryFilterFields>(initialFilterState);
-  const [searchResults, setSearchResults] = useState<string[]>([]);
+  // const [searchResults, setSearchResults] = useState<string[]>([]);
   const [filing_ids, setFilingIds] = useState<string[]>([]);
   const [filings, setFilings] = useState<Filing[]>([]);
   const [isSearching, setIsSearching] = useState(false);

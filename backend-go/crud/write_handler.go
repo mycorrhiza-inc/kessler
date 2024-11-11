@@ -19,30 +19,39 @@ type UpsertHandlerConfig struct {
 	insert   bool
 }
 
-func upsertFileTexts(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, texts []FileChildTextSource, insert bool) {
+func upsertFileTexts(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, texts []FileChildTextSource, insert bool) error {
 	doc_pgUUID := pgtype.UUID{Bytes: doc_uuid, Valid: true}
-	if len(texts) != 0 {
-		if !insert {
-			// TODO: Implement this func to Nuke all the previous texts
-			err := NukePriPubFileTexts(q, ctx, doc_pgUUID)
-			if err != nil {
-				fmt.Print("Error deleting old texts, proceeding with new editions")
-			}
-		}
-		// TODO : Make Async at some point in future
-		for _, text := range texts {
-			textRaw := FileTextSchema{
-				FileID:         doc_pgUUID,
-				IsOriginalText: text.IsOriginalText,
-				Language:       text.Language,
-				Text:           text.Text,
-			}
-			err := InsertPriPubFileText(q, ctx, textRaw, false)
-			if err != nil {
-				fmt.Print("Error adding a text value, not doing anything and procceeding since error handling is hard.")
-			}
+
+	if len(texts) == 0 {
+		return nil
+	}
+	if !insert {
+		// TODO: Implement this func to Nuke all the previous texts
+		err := NukePriPubFileTexts(q, ctx, doc_pgUUID)
+		if err != nil {
+			fmt.Print("Error deleting old texts, proceeding with new editions")
+			return err
 		}
 	}
+	// TODO : Make Async at some point in future
+	error_list := []error{}
+	for _, text := range texts {
+		textRaw := FileTextSchema{
+			FileID:         doc_pgUUID,
+			IsOriginalText: text.IsOriginalText,
+			Language:       text.Language,
+			Text:           text.Text,
+		}
+		err := InsertPriPubFileText(q, ctx, textRaw, false)
+		if err != nil {
+			fmt.Print("Error adding a text value, not doing anything and procceeding since error handling is hard.")
+			error_list = append(error_list, err)
+		}
+	}
+	if len(error_list) > 0 {
+		return error_list[0]
+	}
+	return nil
 }
 
 func upsertFileMetadata(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, metadata FileMetadataSchema, insert bool) error {
@@ -262,17 +271,55 @@ func makeFileUpsertHandler(config UpsertHandlerConfig) func(w http.ResponseWrite
 		}
 
 		// TODO: Implement error handling for any of these.
-		fileStatusInsert(ctx, q, doc_uuid, newDocInfo.Stage, insert)
+		if err := fileStatusInsert(ctx, q, doc_uuid, newDocInfo.Stage, insert); err != nil {
+			errorstring := fmt.Sprintf("Error in fileStatusInsert: %v", err)
+			fmt.Println(errorstring)
+			// http.Error(w, errorstring, http.StatusInternalServerError)
+			// return
+		}
 
-		upsertFileTexts(ctx, q, doc_uuid, newDocInfo.DocTexts, insert)
+		if err := upsertFileTexts(ctx, q, doc_uuid, newDocInfo.DocTexts, insert); err != nil {
+			errorstring := fmt.Sprintf("Error in upsertFileTexts: %v", err)
+			fmt.Println(errorstring)
+			// http.Error(w, errorstring, http.StatusInternalServerError)
+			// return
+		}
 
-		upsertFileMetadata(ctx, q, doc_uuid, newDocInfo.Mdata, insert)
-		upsertFileExtras(ctx, q, doc_uuid, newDocInfo.Extra, insert)
-		// TODO: Implement update functionality
-		fileAuthorsUpsert(ctx, q, doc_uuid, newDocInfo.Authors, insert)
-		juristictionFileUpsert(ctx, q, doc_uuid, newDocInfo.Juristiction, insert)
+		if err := upsertFileMetadata(ctx, q, doc_uuid, newDocInfo.Mdata, insert); err != nil {
+			errorstring := fmt.Sprintf("Error in upsertFileMetadata: %v", err)
+			fmt.Println(errorstring)
+			// http.Error(w, errorstring, http.StatusInternalServerError)
+			// return
+		}
 
-		response, _ := json.Marshal(newDocInfo)
+		if err := upsertFileExtras(ctx, q, doc_uuid, newDocInfo.Extra, insert); err != nil {
+			errorstring := fmt.Sprintf("Error in upsertFileExtras: %v", err)
+			fmt.Println(errorstring)
+			// http.Error(w, errorstring, http.StatusInternalServerError)
+			// return
+		}
+
+		if err := fileAuthorsUpsert(ctx, q, doc_uuid, newDocInfo.Authors, insert); err != nil {
+			errorstring := fmt.Sprintf("Error in fileAuthorsUpsert: %v", err)
+			fmt.Println(errorstring)
+			// http.Error(w, errorstring, http.StatusInternalServerError)
+			// return
+		}
+
+		if err := juristictionFileUpsert(ctx, q, doc_uuid, newDocInfo.Juristiction, insert); err != nil {
+			errorstring := fmt.Sprintf("Error in juristictionFileUpsert: %v", err)
+			fmt.Println(errorstring)
+			// http.Error(w, errorstring, http.StatusInternalServerError)
+			// return
+		}
+
+		response, err := json.Marshal(newDocInfo)
+		if err != nil {
+			errorstring := fmt.Sprintf("Error marshalling response: %v", err)
+			fmt.Println(errorstring)
+			// http.Error(w, errorstring, http.StatusInternalServerError)
+			// return
+		}
 
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(response)
