@@ -8,6 +8,8 @@ import { apiURL } from "@/lib/env_variables";
 import { fetchObjectDataFromURL, fetchTextDataFromURL } from "./documentLoader";
 import useSWR from "swr";
 
+// import { ErrorBoundary } from "react-error-boundary";
+
 type ModalProps = {
   open: boolean;
   objectId: string;
@@ -38,20 +40,24 @@ const MarkdownContent = (props: { docUUID: string }) => {
 };
 
 const MetadataContentRaw = memo(async ({ docUUID }: { docUUID: string }) => {
-  const object_url = `${apiURL}/v2/public/files/${docUUID}/markdown`;
+  const object_url = `${apiURL}/v2/public/files/${docUUID}/metadata`;
   // axios.get(`https://api.kessler.xyz/v2/public/files/${objectid}/markdown`),
   const { data, error } = useSWR(object_url, fetchObjectDataFromURL, {
     suspense: true,
   });
-  const mdata = data;
   if (error) {
     return <p>Encountered an error getting text from the server.</p>;
   }
-  if (typeof mdata !== "object") {
-    console.log("mdata type: ", typeof mdata);
-    console.log("mdata: ", mdata);
+  if (typeof data !== "object") {
+    console.log("mdata type: ", typeof data);
+    console.log("mdata: ", data);
     return <p>Expected an object for metadata, got something else.</p>;
   }
+  const mdata_str = atob(data.Mdata);
+  console.log("mdata str: ", mdata_str);
+  const mdata = JSON.parse(mdata_str);
+  console.log("metadata: ", mdata);
+  // mdata.Mdata = metadata;
 
   return (
     <div className="overflow-x-auto">
