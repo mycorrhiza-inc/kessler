@@ -176,7 +176,13 @@ func ConstructDateQuery(DateFrom string, DateTo string) (string, error) {
 
 func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
 	fmt.Printf("%s", r)
-	r.Index = "NY_PUC"
+	if r.Index == "" {
+		r.Index = "NY_PUC"
+	}
+	if r.MaxHits == 0 {
+		r.MaxHits = 20
+	}
+
 	search_index := r.Index
 	// ===== construct search request =====
 	query := r.Query
@@ -199,21 +205,20 @@ func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
 	// construct sortby string
 	sortbyStr := ""
 	// Changing this to be a greater than or equal to 1, instead of a less than or equal to 1, trying to track down an out of index thing - Nic
-	if len(r.SortBy) >= 1 {
+	if len(r.SortBy) == 1 {
 		sortbyStr = r.SortBy[0]
-	} else {
+	} else if len(r.SortBy) > 1 {
 		for _, sortby := range r.SortBy {
-			sortbyStr += fmt.Sprintf("metadata.%s,", sortby)
+			sortbyStr += fmt.Sprintf("%s,", sortby)
 		}
+	} else {
+		sortbyStr = "date_filed"
 	}
 	snippetFields := "text"
 	if !r.GetText {
 		snippetFields = ""
 	}
 
-	if r.MaxHits == 0 {
-		r.MaxHits = 20
-	}
 	// construct request
 	request := QuickwitSearchRequest{
 		Query:         queryString,
