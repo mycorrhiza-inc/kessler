@@ -18,7 +18,8 @@ const TableRow = ({ filing }: { filing: Filing }) => {
         <td>{filing.source}</td>
         <td>{filing.item_number}</td>
         <td>
-          <a href={filing.url}>View</a>
+          {/* <a href={filing.url}>View</a> */}
+          View
         </td>
       </tr>
       <Modal open={open} setOpen={setOpen}>

@@ -47,6 +47,9 @@ const MetadataContentRaw = memo(async ({ docUUID }: { docUUID: string }) => {
   if (error) {
     return <p>Encountered an error getting text from the server.</p>;
   }
+  if (typeof mdata !== "object") {
+    return <p>Expected an object for metadata, got something else.</p>;
+  }
 
   return (
     <div className="overflow-x-auto">
@@ -86,12 +89,14 @@ const PDFContent = ({
   overridePDFUrl?: string;
 }) => {
   const pdfUrl = overridePDFUrl || `${apiURL}/v2/public/files/${docUUID}/raw`;
-  return (
-    <a className="btn btn-primary" href={pdfUrl} target="_blank">
-      Download PDF
-    </a>
-  );
+  // const pdfUrl = `${apiURL}/v2/public/files/${docUUID}/raw`;
+  // return (
+  //   <a className="btn btn-primary" href={pdfUrl} target="_blank">
+  //     PDF Viewer coming soon
+  //   </a>
+  // );
   // return <PDFViewer file={pdfUrl}></PDFViewer>;
+  return <LoadingSpinner loadingText="PDF Viewer coming soon" />;
 };
 
 const DocumentModalBody = ({
@@ -101,6 +106,7 @@ const DocumentModalBody = ({
   title,
   overridePDFUrl,
 }: ModalProps) => {
+  const pdfUrl = overridePDFUrl || `${apiURL}/v2/public/files/${docUUID}/raw`;
   return (
     <div className="modal-content standard-box ">
       {/* children are components passed to result modals from special searches */}
@@ -108,6 +114,10 @@ const DocumentModalBody = ({
         <h1>{title}</h1>
       </div>
       {/* Deleted all the MUI stuff, this should absolutely be refactored into its own styled component soonish*/}
+
+      <a className="btn btn-primary" href={pdfUrl} target="_blank">
+        Download PDF
+      </a>
 
       <Tabs.Root
         className="TabsRoot"
