@@ -63,7 +63,8 @@ export const getFilingMetadata = async (id: string): Promise<Filing> => {
     // `http://api.kessler.xyz/v2/public/files/${id}/metadata`
     `${apiURL}/v2/public/files/${id}/metadata`,
   );
-  return ParseFilingData([response.data])[0];
+  const filings = await ParseFilingData([response.data]);
+  return filings[0];
 };
 
 export const ParseFilingData = async (filingData: any) => {
