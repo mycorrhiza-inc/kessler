@@ -104,7 +104,12 @@ const PDFContent = ({
   //   </a>
   // );
   // return <PDFViewer file={pdfUrl}></PDFViewer>;
-  return <LoadingSpinner loadingText="PDF Viewer coming soon" />;
+  return (
+    <>
+      <LoadingSpinner loadingText="PDF Viewer coming soon" />
+      <PDFViewer file={pdfUrl}></PDFViewer>
+    </>
+  );
 };
 
 const DocumentModalBody = ({
@@ -114,7 +119,7 @@ const DocumentModalBody = ({
   title,
   overridePDFUrl,
 }: ModalProps) => {
-  const pdfUrl = overridePDFUrl || `${apiURL}/v2/public/files/${docUUID}/raw`;
+  const pdfUrl = overridePDFUrl || `${apiURL}/v2/public/files/${objectId}/raw`;
   return (
     <div className="modal-content standard-box ">
       {/* children are components passed to result modals from special searches */}
@@ -130,17 +135,17 @@ const DocumentModalBody = ({
       <Tabs.Root
         className="TabsRoot"
         role="tablist tabs tabs-bordered tabs-lg"
-        defaultValue="tab1"
+        defaultValue="tab2"
       >
         <Tabs.List className="TabsList" aria-label="What Documents ">
-          <Tabs.Trigger className="TabsTrigger tab" value="tab1">
-            Document
-          </Tabs.Trigger>
           <Tabs.Trigger className="TabsTrigger tab" value="tab2">
             Document Text
           </Tabs.Trigger>
           <Tabs.Trigger className="TabsTrigger tab" value="tab3">
             Metadata
+          </Tabs.Trigger>
+          <Tabs.Trigger className="TabsTrigger tab" value="tab1">
+            Document
           </Tabs.Trigger>
         </Tabs.List>
         <Tabs.Content className="TabsContent" value="tab1">
