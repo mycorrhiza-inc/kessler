@@ -107,6 +107,7 @@ const PDFContent = ({
   return (
     <>
       <LoadingSpinner loadingText="PDF Viewer coming soon" />
+      {/* This apparently gets an undefined network error when trying to fetch the pdf from their website not exactly sure why, we need to get the s3 fetch working in golang */}
       <PDFViewer file={pdfUrl}></PDFViewer>
     </>
   );

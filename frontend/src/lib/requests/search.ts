@@ -3,12 +3,14 @@ import { Filing } from "@/lib/types/FilingTypes";
 import axios from "axios";
 import { apiURL } from "../env_variables";
 
-export const getSearchResults = async (queryData: QueryDataFile) => {
+export const getSearchResults = async (
+  queryData: QueryDataFile,
+): Promise<Filing[]> => {
   const searchQuery = queryData.query;
   const searchFilters = queryData.filters;
   console.log(`searchhing for ${searchQuery}`);
   try {
-    const response = await axios
+    const searchResults = await axios
       // .post("https://api.kessler.xyz/v2/search", {
       .post(`${apiURL}/v2/search`, {
         query: searchQuery,
@@ -25,12 +27,12 @@ export const getSearchResults = async (queryData: QueryDataFile) => {
         if (response.data.length === 0 || typeof response.data === "string") {
           return [];
         }
-        const filings = ParseFilingData(response.data);
+        const filings: Filing[] = ParseFilingData(response.data);
         return filings;
       });
     console.log("getting data");
-    console.log(response);
-    return response.data;
+    console.log(searchResults);
+    return searchResults;
   } catch (error) {
     console.log(error);
     throw error;
@@ -67,9 +69,11 @@ export const ParseFilingData = (filingData: any) => {
     console.log("fdata", f);
     const mdata_str = f.Mdata;
     if (!mdata_str) {
+      console.log("no metadata string");
       const newFiling: Filing = {
-        id: f.ID,
-        title: f.Name,
+        id: f.docID,
+        title: f.name,
+        source: f.sourceID,
         // lang: f.metadata.lang,
         // date: f.metadata.date,
         // author: f.metadata.author,
@@ -84,18 +88,17 @@ export const ParseFilingData = (filingData: any) => {
     console.log("metadata string: ", mdata_str);
     const metadata = JSON.parse(atob(f.Mdata));
     console.log("metadata: ", metadata);
-    f.metadata = metadata;
     const newFiling: Filing = {
-      id: f.ID,
-      title: f.Name,
-      lang: f.metadata.lang,
-      date: f.metadata.date,
-      author: f.metadata.author,
-      source: f.metadata.source,
-      language: f.metadata.language,
-      item_number: f.metadata.item_number,
-      author_organisation: f.metadata.author_organizatino,
-      url: f.metadata.url,
+      id: f.docID,
+      title: f.name,
+      source: f.sourceID,
+      lang: metadata.lang,
+      date: metadata.date,
+      author: metadata.author,
+      language: metadata.language,
+      item_number: metadata.item_number,
+      author_organisation: metadata.author_organizatino,
+      url: metadata.url,
     };
     return newFiling;
   });
