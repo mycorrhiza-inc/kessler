@@ -10,7 +10,7 @@ export const getSearchResults = async (
   const searchFilters = queryData.filters;
   console.log(`searchhing for ${searchQuery}`);
   try {
-    const searchResults = await axios
+    const searchResults: Filing[] = await axios
       // .post("https://api.kessler.xyz/v2/search", {
       .post(`${apiURL}/v2/search`, {
         query: searchQuery,
@@ -27,8 +27,10 @@ export const getSearchResults = async (
         if (response.data.length === 0 || typeof response.data === "string") {
           return [];
         }
-        const filings: Filing[] = ParseFilingData(response.data);
-        return filings;
+        const filings_promise: Promise<Filing[]> = ParseFilingData(
+          response.data,
+        );
+        return filings_promise;
       });
     console.log("getting data");
     console.log(searchResults);
@@ -61,16 +63,7 @@ export const getFilingMetadata = async (id: string) => {
     // `http://api.kessler.xyz/v2/public/files/${id}/metadata`
     `${apiURL}/v2/public/files/${id}/metadata`,
   );
-  return ParseFilingData([response.data])[0];
-};
-
-export const ParseFilingDataFetchMdata = async (filingData: any) => {
-  const metadata_filings = filingData.map(async (f: any) => {
-    const docID = f.sourceID;
-    const filing: Filing = await getFilingMetadata(docID);
-    return filing;
-  });
-  return metadata_filings;
+  return ParseFilingData([response.data]);
 };
 
 export const ParseFilingData = async (filingData: any) => {
