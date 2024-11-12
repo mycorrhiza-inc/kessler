@@ -18,33 +18,39 @@ type ModalProps = {
   title?: string;
 };
 
-const MarkdownContentRaw = memo(async ({ docUUID }: { docUUID: string }) => {
+const MarkdownContentRaw = memo(({ docUUID }: { docUUID: string }) => {
   const markdown_url = `${apiURL}/v2/public/files/${docUUID}/markdown`;
   // axios.get(`https://api.kessler.xyz/v2/public/files/${objectid}/markdown`),
-  const { data, error } = useSWR(markdown_url, fetchTextDataFromURL, {
-    suspense: true,
-  });
+  const { data, error, isLoading } = useSWR(markdown_url, fetchTextDataFromURL);
+  if (isLoading) {
+    return <LoadingSpinner loadingText="Loading Document" />;
+  }
   const text = data;
   if (error) {
-    return <p>Encountered an error getting text from the server.</p>;
+    return (
+      <p>
+        Encountered an error getting text from the server.
+        <br /> {String(error)}
+      </p>
+    );
+  }
+  if (text == undefined) {
+    return <p>Document text is undefined.</p>;
   }
   return <MarkdownRenderer>{text}</MarkdownRenderer>;
 });
 
 const MarkdownContent = (props: { docUUID: string }) => {
-  return (
-    <Suspense fallback={<LoadingSpinner />}>
-      <MarkdownContentRaw {...props} />
-    </Suspense>
-  );
+  return <MarkdownContentRaw {...props} />;
 };
 
-const MetadataContentRaw = memo(async ({ docUUID }: { docUUID: string }) => {
+const MetadataContentRaw = memo(({ docUUID }: { docUUID: string }) => {
   const object_url = `${apiURL}/v2/public/files/${docUUID}/metadata`;
   // axios.get(`https://api.kessler.xyz/v2/public/files/${objectid}/markdown`),
-  const { data, error } = useSWR(object_url, fetchObjectDataFromURL, {
-    suspense: true,
-  });
+  const { data, error, isLoading } = useSWR(object_url, fetchObjectDataFromURL);
+  if (isLoading) {
+    return <LoadingSpinner loadingText="Loading Document Metadata" />;
+  }
   if (error) {
     return <p>Encountered an error getting text from the server.</p>;
   }
@@ -83,11 +89,7 @@ const MetadataContentRaw = memo(async ({ docUUID }: { docUUID: string }) => {
 });
 
 const MetadataContent = (props: { docUUID: string }) => {
-  return (
-    <Suspense fallback={<LoadingSpinner />}>
-      <MetadataContentRaw {...props} />
-    </Suspense>
-  );
+  return <MetadataContentRaw {...props} />;
 };
 const PDFContent = ({
   docUUID,
