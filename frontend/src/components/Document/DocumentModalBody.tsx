@@ -86,7 +86,12 @@ const PDFContent = ({
   overridePDFUrl?: string;
 }) => {
   const pdfUrl = overridePDFUrl || `${apiURL}/v2/public/files/${docUUID}/raw`;
-  return <PDFViewer file={pdfUrl}></PDFViewer>;
+  return (
+    <a className="btn btn-primary" href={pdfUrl} target="_blank">
+      Download PDF
+    </a>
+  );
+  // return <PDFViewer file={pdfUrl}></PDFViewer>;
 };
 
 const DocumentModalBody = ({
