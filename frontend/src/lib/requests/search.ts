@@ -58,12 +58,12 @@ export const getRecentFilings = async (page?: number) => {
   }
 };
 
-export const getFilingMetadata = async (id: string) => {
+export const getFilingMetadata = async (id: string): Promise<Filing> => {
   const response = await axios.get(
     // `http://api.kessler.xyz/v2/public/files/${id}/metadata`
     `${apiURL}/v2/public/files/${id}/metadata`,
   );
-  return ParseFilingData([response.data]);
+  return ParseFilingData([response.data])[0];
 };
 
 export const ParseFilingData = async (filingData: any) => {

@@ -126,6 +126,7 @@ const ConversationComponent = ({
     const fetchFilings = async () => {
       const newFilings = await Promise.all(
         filing_ids.map(async (id) => {
+          //
           const filing_data = await getFilingMetadata(id);
           console.log("new filings", filing_data);
           return filing_data;
@@ -134,7 +135,7 @@ const ConversationComponent = ({
 
       setFilings((previous) => {
         const existingIds = new Set(previous.map((f) => f.id));
-        const uniqueNewFilings = newFilings.filter(
+        const uniqueNewFilings: Filing[] = newFilings.filter(
           (f) => !existingIds.has(f.id),
         );
         console.log(" uniques: ", uniqueNewFilings);
