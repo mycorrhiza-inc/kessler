@@ -1,6 +1,6 @@
 "use client";
 import { Suspense, memo } from "react";
-import useSWR from "swr";
+import useSWRImmutable from "swr";
 import FilingTable from "./FilingTable";
 import { QueryDataFile } from "@/lib/filters";
 import LoadingSpinner from "../styled-components/LoadingSpinner";
@@ -8,9 +8,14 @@ import getSearchResults from "@/lib/requests/search";
 
 const FilingTableQueryRaw = memo(
   ({ queryData }: { queryData: QueryDataFile }) => {
-    const { data, error } = useSWR(queryData, getSearchResults, {
-      suspense: true,
-    });
+    const { data, error, isLoading } = useSWRImmutable(
+      queryData,
+      getSearchResults,
+    );
+    console.log("data: ", data);
+    if (isLoading) {
+      return <LoadingSpinner />;
+    }
     if (error) {
       return (
         <p>
@@ -28,12 +33,6 @@ const FilingTableQueryRaw = memo(
 );
 
 const FilingTableQuery = ({ queryData }: { queryData: QueryDataFile }) => {
-  return (
-    <Suspense
-      fallback={<LoadingSpinner loadingText="Loading Search Results..." />}
-    >
-      <FilingTableQueryRaw queryData={queryData} />
-    </Suspense>
-  );
+  return <FilingTableQueryRaw queryData={queryData} />;
 };
 export default FilingTableQuery;

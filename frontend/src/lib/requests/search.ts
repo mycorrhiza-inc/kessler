@@ -25,11 +25,7 @@ export const getSearchResults = async (queryData: QueryDataFile) => {
         if (response.data.length === 0 || typeof response.data === "string") {
           return [];
         }
-        return response.data;
-      })
-      // coerce Filing typ
-      .then((data) => {
-        const filings = ParseFilingData(data);
+        const filings = ParseFilingData(response.data);
         return filings;
       });
     console.log("getting data");
@@ -37,6 +33,7 @@ export const getSearchResults = async (queryData: QueryDataFile) => {
     return response.data;
   } catch (error) {
     console.log(error);
+    throw error;
   }
 };
 
@@ -68,13 +65,30 @@ export const getFilingMetadata = async (id: string) => {
 export const ParseFilingData = (filingData: any) => {
   const filings = filingData.map((f: any) => {
     console.log("fdata", f);
+    const mdata_str = f.Mdata;
+    if (!mdata_str) {
+      const newFiling: Filing = {
+        id: f.ID,
+        title: f.Name,
+        // lang: f.metadata.lang,
+        // date: f.metadata.date,
+        // author: f.metadata.author,
+        // source: f.metadata.source,
+        // language: f.metadata.language,
+        // item_number: f.metadata.item_number,
+        // author_organisation: f.metadata.author_organizatino,
+        // url: f.metadata.url,
+      };
+      return newFiling;
+    }
+    console.log("metadata string: ", mdata_str);
     const metadata = JSON.parse(atob(f.Mdata));
     console.log("metadata: ", metadata);
     f.metadata = metadata;
     const newFiling: Filing = {
       id: f.ID,
-      lang: f.metadata.lang,
       title: f.Name,
+      lang: f.metadata.lang,
       date: f.metadata.date,
       author: f.metadata.author,
       source: f.metadata.source,

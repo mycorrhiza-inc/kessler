@@ -23,6 +23,7 @@ import axios from "axios";
 import { FilingTable } from "./FilingTable";
 import LoadingSpinner from "../styled-components/LoadingSpinner";
 import { getSearchResults, getFilingMetadata } from "@/lib/requests/search";
+import FilingTableQuery from "./FilingTableQuery";
 
 const testFiling: Filing = {
   id: "0",
@@ -228,13 +229,7 @@ const ConversationComponent = ({
             </button>
           </div>
           <div className="w-full overflow-x-scroll">
-            <Suspense
-              fallback={
-                <LoadingSpinner loadingText="Loading Search Results..." />
-              }
-            >
-              <FilingTable filings={filings} />
-            </Suspense>
+            <FilingTableQuery queryData={queryData} />
           </div>
         </motion.div>
       </AnimatePresence>
