@@ -48,6 +48,8 @@ const MetadataContentRaw = memo(async ({ docUUID }: { docUUID: string }) => {
     return <p>Encountered an error getting text from the server.</p>;
   }
   if (typeof mdata !== "object") {
+    console.log("mdata type: ", typeof mdata);
+    console.log("mdata: ", mdata);
     return <p>Expected an object for metadata, got something else.</p>;
   }
 
