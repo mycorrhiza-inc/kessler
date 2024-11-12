@@ -64,24 +64,41 @@ export const getFilingMetadata = async (id: string) => {
   return ParseFilingData([response.data])[0];
 };
 
-export const ParseFilingData = (filingData: any) => {
-  const filings = filingData.map((f: any) => {
+export const ParseFilingDataFetchMdata = async (filingData: any) => {
+  const metadata_filings = filingData.map(async (f: any) => {
+    const docID = f.sourceID;
+    const filing: Filing = await getFilingMetadata(docID);
+    return filing;
+  });
+  return metadata_filings;
+};
+
+export const ParseFilingData = async (filingData: any) => {
+  const filings_promises: Promise<Filing>[] = filingData.map(async (f: any) => {
     console.log("fdata", f);
     const mdata_str = f.Mdata;
     if (!mdata_str) {
-      console.log("no metadata string");
+      console.log("no metadata string, fetching from source");
+      const docID = f.sourceID;
+
+      const response = await axios.get(
+        // `http://api.kessler.xyz/v2/public/files/${id}/metadata`
+        `${apiURL}/v2/public/files/${docID}/metadata`,
+      );
+      const metadata = JSON.parse(atob(response.data.Mdata));
+      console.log("metadata: ", metadata);
       const newFiling: Filing = {
-        id: f.docID,
+        // These names are swaped in the backend, maybe change later
+        id: f.sourceID,
         title: f.name,
-        source: f.sourceID,
-        // lang: f.metadata.lang,
-        // date: f.metadata.date,
-        // author: f.metadata.author,
-        // source: f.metadata.source,
-        // language: f.metadata.language,
-        // item_number: f.metadata.item_number,
-        // author_organisation: f.metadata.author_organizatino,
-        // url: f.metadata.url,
+        source: f.docID,
+        lang: metadata.lang,
+        date: metadata.date,
+        author: metadata.author,
+        language: metadata.language,
+        item_number: metadata.item_number,
+        author_organisation: metadata.author_organizatino,
+        url: metadata.url,
       };
       return newFiling;
     }
@@ -89,9 +106,9 @@ export const ParseFilingData = (filingData: any) => {
     const metadata = JSON.parse(atob(f.Mdata));
     console.log("metadata: ", metadata);
     const newFiling: Filing = {
-      id: f.docID,
-      title: f.name,
-      source: f.sourceID,
+      id: metadata.id,
+      title: metadata.title,
+      source: metadata.docket_id,
       lang: metadata.lang,
       date: metadata.date,
       author: metadata.author,
@@ -102,6 +119,7 @@ export const ParseFilingData = (filingData: any) => {
     };
     return newFiling;
   });
+  const filings: Filing[] = await Promise.all(filings_promises);
   return filings;
 };
 
