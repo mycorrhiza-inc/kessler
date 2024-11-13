@@ -153,11 +153,11 @@ func fileStatusInsert(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID
 	if err != nil {
 		return err
 	}
-	params := dbstore.AddStageLogParams{
+	params := dbstore.StageLogAddParams{
 		FileID: pgtype.UUID{Bytes: doc_uuid, Valid: true},
 		Status: dbstore.NullStageState{StageState: dbstore.StageState(stage.PGStage)},
 		Log:    stage_json,
 	}
-	_, err = q.AddStageLog(ctx, params)
+	_, err = q.StageLogAdd(ctx, params)
 	return err
 }
