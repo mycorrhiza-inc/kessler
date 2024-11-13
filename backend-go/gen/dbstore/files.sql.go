@@ -11,34 +11,6 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const addStageLog = `-- name: AddStageLog :one
-INSERT INTO public.stage_log (file_id, status, log)
-VALUES ($1, $2, $3)
-RETURNING id,
-  file_id,
-  status
-`
-
-type AddStageLogParams struct {
-	FileID pgtype.UUID
-	Status NullStageState
-	Log    []byte
-}
-
-type AddStageLogRow struct {
-	ID     pgtype.UUID
-	FileID pgtype.UUID
-	Status NullStageState
-}
-
-// used to log the state of a file processing stage and update filestage status
-func (q *Queries) AddStageLog(ctx context.Context, arg AddStageLogParams) (AddStageLogRow, error) {
-	row := q.db.QueryRow(ctx, addStageLog, arg.FileID, arg.Status, arg.Log)
-	var i AddStageLogRow
-	err := row.Scan(&i.ID, &i.FileID, &i.Status)
-	return i, err
-}
-
 const createFile = `-- name: CreateFile :one
 INSERT INTO public.file (
     id,
@@ -220,25 +192,6 @@ func (q *Queries) GetFile(ctx context.Context, id pgtype.UUID) (File, error) {
 	return i, err
 }
 
-const getFileMetadata = `-- name: GetFileMetadata :one
-SELECT id, isprivate, mdata, created_at, updated_at
-FROM public.file_metadata
-WHERE id = $1
-`
-
-func (q *Queries) GetFileMetadata(ctx context.Context, id pgtype.UUID) (FileMetadatum, error) {
-	row := q.db.QueryRow(ctx, getFileMetadata, id)
-	var i FileMetadatum
-	err := row.Scan(
-		&i.ID,
-		&i.Isprivate,
-		&i.Mdata,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
 const getFileWithMetadata = `-- name: GetFileWithMetadata :one
 SELECT file.id, lang, name, extension, file.isprivate, file.created_at, file.updated_at, hash, file_metadata.id, file_metadata.isprivate, mdata, file_metadata.created_at, file_metadata.updated_at
 FROM public.file
@@ -387,6 +340,55 @@ func (q *Queries) ReadFile(ctx context.Context, id pgtype.UUID) (File, error) {
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Hash,
+	)
+	return i, err
+}
+
+const stageLogAdd = `-- name: StageLogAdd :one
+INSERT INTO public.stage_log (file_id, status, log)
+VALUES ($1, $2, $3)
+RETURNING id,
+  file_id,
+  status
+`
+
+type StageLogAddParams struct {
+	FileID pgtype.UUID
+	Status NullStageState
+	Log    []byte
+}
+
+type StageLogAddRow struct {
+	ID     pgtype.UUID
+	FileID pgtype.UUID
+	Status NullStageState
+}
+
+// used to log the state of a file processing stage and update filestage status
+func (q *Queries) StageLogAdd(ctx context.Context, arg StageLogAddParams) (StageLogAddRow, error) {
+	row := q.db.QueryRow(ctx, stageLogAdd, arg.FileID, arg.Status, arg.Log)
+	var i StageLogAddRow
+	err := row.Scan(&i.ID, &i.FileID, &i.Status)
+	return i, err
+}
+
+const stageLogFileGetLatest = `-- name: StageLogFileGetLatest :one
+SELECT id, status, log, created_at, file_id
+FROM public.stage_log
+WHERE file_id = $1
+ORDER BY created_at DESC
+LIMIT 1
+`
+
+func (q *Queries) StageLogFileGetLatest(ctx context.Context, fileID pgtype.UUID) (StageLog, error) {
+	row := q.db.QueryRow(ctx, stageLogFileGetLatest, fileID)
+	var i StageLog
+	err := row.Scan(
+		&i.ID,
+		&i.Status,
+		&i.Log,
+		&i.CreatedAt,
+		&i.FileID,
 	)
 	return i, err
 }
