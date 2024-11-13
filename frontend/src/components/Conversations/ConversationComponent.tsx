@@ -210,13 +210,13 @@ const ConversationComponent = ({
           </motion.div>
         )}
         <motion.div
-          // className="flex-grow p-10"
+          className="flex-grow p-10"
           layout
           transition={{ duration: 0.3, ease: "easeInOut" }}
         >
           <div
             id="conversation-header"
-            className="justify-between items-center mb-4"
+            className="flex justify-between items-center mb-4"
           >
             <h1 className="text-2xl font-bold">Conversation</h1>
             <button
