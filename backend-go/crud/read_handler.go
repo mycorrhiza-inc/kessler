@@ -133,7 +133,7 @@ func ReadFileHandlerFactory(config FileHandlerConfig) http.HandlerFunc {
 			// TODO: Add suport for non english text retrieval and original text retrieval
 			markdownText, err := GetSpecificFileText(file_params, matchLang, originalLang)
 			if err != nil {
-				http.Error(w, "Error retrieving texts or no texts found that mach query params", http.StatusInternalServerError)
+				http.Error(w, "Error retrieving texts or no texts found that mach query params", http.StatusNotFound)
 				return
 			}
 			w.Header().Set("Content-Type", "text/plain")
