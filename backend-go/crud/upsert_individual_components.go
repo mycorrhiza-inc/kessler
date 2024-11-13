@@ -161,3 +161,17 @@ func fileStatusInsert(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID
 	_, err = q.StageLogAdd(ctx, params)
 	return err
 }
+
+func fileStatusGetLatestStage(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID) (DocProcStage, error) {
+	result_pgschema, err := q.StageLogFileGetLatest(ctx, pgtype.UUID{Bytes: doc_uuid, Valid: true})
+	return_obj := DocProcStage{}
+	if err != nil {
+		return DocProcStage{}, err
+	}
+	result_json := result_pgschema.Log
+	err = json.Unmarshal(result_json, &return_obj)
+	if err != nil {
+		return DocProcStage{}, err
+	}
+	return return_obj, nil
+}
