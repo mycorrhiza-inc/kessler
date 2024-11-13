@@ -229,7 +229,7 @@ const ConversationComponent = ({
               Filters
             </button>
           </div>
-          <div className="w-full overflow-x-scroll">
+          <div className="w-full h-full">
             <FilingTableQuery queryData={queryData} scroll={true} />
           </div>
         </motion.div>
