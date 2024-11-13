@@ -51,13 +51,19 @@ WHERE id = $1;
 SELECT *
 FROM public.file
 ORDER BY updated_at DESC;
--- name: AddStageLog :one
+-- name: StageLogAdd :one
 -- used to log the state of a file processing stage and update filestage status
 INSERT INTO public.stage_log (file_id, status, log)
 VALUES ($1, $2, $3)
 RETURNING id,
   file_id,
   status;
+-- name: StageLogFileGetLatest :one
+SELECT *
+FROM public.stage_log
+WHERE file_id = $1
+ORDER BY created_at DESC
+LIMIT 1;
 -- name: DeleteFile :exec
 DELETE FROM public.file
 WHERE id = $1;
@@ -108,8 +114,4 @@ RETURNING id;
 -- name: ExtrasFileFetch :one
 SELECT *
 FROM public.file_extras
-WHERE id = $1;
--- name: GetFileMetadata :one
-SELECT *
-FROM public.file_metadata
 WHERE id = $1;
