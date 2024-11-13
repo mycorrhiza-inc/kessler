@@ -18,8 +18,7 @@ const TableRow = ({ filing }: { filing: Filing }) => {
         <td>{filing.source}</td>
         <td>{filing.item_number}</td>
         <td>
-          {/* <a href={filing.url}>View</a> */}
-          View
+          <a href={filing.url}>View</a>
         </td>
       </tr>
       <Modal open={open} setOpen={setOpen}>
@@ -41,10 +40,7 @@ export const FilingTable = ({
 }) => {
   return (
     <div
-      className={
-        "min-h-[500px] overflow-y-auto" +
-        (scroll ? "max-h-[500px] overflow-x-scroll" : "")
-      }
+        className={scroll? "max-h-[500px] overflow-y-auto overflow-x-scroll": "max-h-[500px] overflow-y-auto"}
     >
       <table className="w-full divide-y divide-gray-200 table">
         <tbody>
