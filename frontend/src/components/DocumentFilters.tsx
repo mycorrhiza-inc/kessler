@@ -35,7 +35,7 @@ const queryFiltersInformation: QueryFiltersInformation = {
   match_name: {
     type: InputType.Text,
     index: 1,
-    displayName: "Name",
+    displayName: "Title",
     description: "The name associated with the search item.",
     details: "Searches for items approximately matching the title",
   },
