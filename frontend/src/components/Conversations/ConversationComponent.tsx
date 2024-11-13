@@ -191,7 +191,7 @@ const ConversationComponent = ({
   }, [searchFilters]);
 
   return (
-    <div className="w-full h-full p-10 card relative box-border border-2 border-black flex flex-row">
+    <div className="w-full h-full p-10 card relative box-border border-4 border-black flex flex-row overflow-hidden">
       <AnimatePresence mode="sync">
         {isFocused && (
           <motion.div
@@ -210,13 +210,13 @@ const ConversationComponent = ({
           </motion.div>
         )}
         <motion.div
-          className="flex-grow p-10"
+          // className="flex-grow p-10"
           layout
           transition={{ duration: 0.3, ease: "easeInOut" }}
         >
           <div
             id="conversation-header"
-            className="flex justify-between items-center mb-4"
+            className="justify-between items-center mb-4"
           >
             <h1 className="text-2xl font-bold">Conversation</h1>
             <button
@@ -230,7 +230,7 @@ const ConversationComponent = ({
             </button>
           </div>
           <div className="w-full overflow-x-scroll">
-            <FilingTableQuery queryData={queryData} />
+            <FilingTableQuery queryData={queryData} scroll={true} />
           </div>
         </motion.div>
       </AnimatePresence>
