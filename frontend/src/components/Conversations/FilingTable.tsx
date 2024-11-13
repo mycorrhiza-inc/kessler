@@ -17,9 +17,8 @@ const TableRow = ({ filing }: { filing: Filing }) => {
         <td>{filing.author}</td>
         <td>{filing.source}</td>
         <td>{filing.item_number}</td>
-        <td>
-          <a href={filing.url}>View</a>
-        </td>
+        {/* This entire table row is clickable and opens the modal, so adding an href around view results in a document opening in a new tab and opening the modal */}
+        <td>View</td>
       </tr>
       <Modal open={open} setOpen={setOpen}>
         <DocumentModalBody
@@ -40,7 +39,11 @@ export const FilingTable = ({
 }) => {
   return (
     <div
-        className={scroll? "max-h-[500px] overflow-y-auto overflow-x-scroll": "max-h-[500px] overflow-y-auto"}
+      className={
+        scroll
+          ? "max-h-[500px] overflow-y-auto overflow-x-scroll"
+          : "max-h-[500px] overflow-y-auto"
+      }
     >
       <table className="w-full divide-y divide-gray-200 table">
         <tbody>
