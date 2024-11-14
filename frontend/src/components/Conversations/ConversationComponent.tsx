@@ -24,6 +24,7 @@ import { FilingTable } from "./FilingTable";
 import LoadingSpinner from "../styled-components/LoadingSpinner";
 import { getSearchResults, getFilingMetadata } from "@/lib/requests/search";
 import FilingTableQuery from "./FilingTableQuery";
+import { PageContext } from "../NavigationHeader";
 
 const testFiling: Filing = {
   id: "0",
@@ -82,10 +83,11 @@ const TableFilters = ({
 };
 
 const ConversationComponent = ({
-  inheritedFilters,
+  pageContext,
 }: {
-  inheritedFilters: InheritedFilterValues;
+  pageContext: PageContext;
 }) => {
+  const conversation_id = pageContext.final_slug;
   const disabledFilters = useMemo(() => {
     return inheritedFilters.map((val) => {
       return val.filter;

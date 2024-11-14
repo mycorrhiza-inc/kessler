@@ -10,7 +10,7 @@ interface FilingTableQueryProps {
   queryData: QueryDataFile;
   scroll?: boolean;
 }
-const FilingTableQueryRaw = memo(
+const FilingTableQuery = memo(
   ({ queryData, scroll }: FilingTableQueryProps) => {
     const { data, error, isLoading } = useSWRImmutable(
       queryData,
@@ -36,7 +36,4 @@ const FilingTableQueryRaw = memo(
   },
 );
 
-const FilingTableQuery = (params: FilingTableQueryProps) => {
-  return <FilingTableQueryRaw {...params} />;
-};
 export default FilingTableQuery;
