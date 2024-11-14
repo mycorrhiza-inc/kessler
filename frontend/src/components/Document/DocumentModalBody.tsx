@@ -1,3 +1,5 @@
+"use client";
+// TODO: change the network fetch stuff so that this can be SSR'd
 import React, { Suspense, memo } from "react";
 import * as Tabs from "@radix-ui/react-tabs";
 
