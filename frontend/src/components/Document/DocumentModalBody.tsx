@@ -91,14 +91,8 @@ const MetadataContentRaw = memo(({ docUUID }: { docUUID: string }) => {
 const MetadataContent = (props: { docUUID: string }) => {
   return <MetadataContentRaw {...props} />;
 };
-const PDFContent = ({
-  docUUID,
-  overridePDFUrl,
-}: {
-  docUUID: string;
-  overridePDFUrl?: string;
-}) => {
-  const pdfUrl = overridePDFUrl || `${apiURL}/v2/public/files/${docUUID}/raw`;
+const PDFContent = ({ docUUID }: { docUUID: string }) => {
+  const pdfUrl = `${apiURL}/v2/public/files/${docUUID}/raw`;
   // const pdfUrl = `${apiURL}/v2/public/files/${docUUID}/raw`;
   // return (
   //   <a className="btn btn-primary" href={pdfUrl} target="_blank">
@@ -108,21 +102,16 @@ const PDFContent = ({
   // return <PDFViewer file={pdfUrl}></PDFViewer>;
   return (
     <>
-      <LoadingSpinner loadingText="PDF Viewer coming soon" />
       {/* This apparently gets an undefined network error when trying to fetch the pdf from their website not exactly sure why, we need to get the s3 fetch working in golang */}
       <PDFViewer file={pdfUrl}></PDFViewer>
+
+      <LoadingSpinner loadingText="PDF Viewer Loading" />
     </>
   );
 };
 
-const DocumentModalBody = ({
-  open,
-  objectId,
-  children,
-  title,
-  overridePDFUrl,
-}: ModalProps) => {
-  const pdfUrl = overridePDFUrl || `${apiURL}/v2/public/files/${objectId}/raw`;
+const DocumentModalBody = ({ open, objectId, children, title }: ModalProps) => {
+  const fileUrl = `${apiURL}/v2/public/files/${objectId}/raw`;
   return (
     <div className="modal-content standard-box ">
       {/* children are components passed to result modals from special searches */}
@@ -131,28 +120,28 @@ const DocumentModalBody = ({
       </div>
       {/* Deleted all the MUI stuff, this should absolutely be refactored into its own styled component soonish*/}
 
-      <a className="btn btn-primary" href={pdfUrl} target="_blank">
-        Download PDF
+      <a className="btn btn-primary" href={fileUrl} target="_blank">
+        Download File
       </a>
 
       <Tabs.Root
         className="TabsRoot"
         role="tablist tabs tabs-bordered tabs-lg"
-        defaultValue="tab2"
+        defaultValue="tab1"
       >
         <Tabs.List className="TabsList" aria-label="What Documents ">
+          <Tabs.Trigger className="TabsTrigger tab" value="tab1">
+            Document
+          </Tabs.Trigger>
           <Tabs.Trigger className="TabsTrigger tab" value="tab2">
             Document Text
           </Tabs.Trigger>
           <Tabs.Trigger className="TabsTrigger tab" value="tab3">
             Metadata
           </Tabs.Trigger>
-          <Tabs.Trigger className="TabsTrigger tab" value="tab1">
-            Document
-          </Tabs.Trigger>
         </Tabs.List>
         <Tabs.Content className="TabsContent" value="tab1">
-          <PDFContent docUUID={objectId} overridePDFUrl={overridePDFUrl} />
+          <PDFContent docUUID={objectId} />
         </Tabs.Content>
         <Tabs.Content className="TabsContent" value="tab2">
           <MarkdownContent docUUID={objectId} />
