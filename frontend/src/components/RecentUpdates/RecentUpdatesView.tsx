@@ -6,6 +6,9 @@ import { FilingTable } from "../Conversations/FilingTable";
 import Navbar from "../Navbar";
 import { getFilingMetadata, getRecentFilings } from "@/lib/requests/search";
 
+import InfiniteScroll from "react-infinite-scroll-component";
+import LoadingSpinner from "../styled-components/LoadingSpinner";
+
 function ConvertToFiling(data: any): Filing {
   const newFiling: Filing = {
     id: data.sourceID,
@@ -92,7 +95,14 @@ export default function RecentUpdatesView() {
       <div className="w-full h-full p-20">
         <div className="w-full h-full p-10 card grid grid-flow-rows box-border border-2 border-black ">
           <h1 className=" text-2xl font-bold">Recent Updates</h1>
-          <FilingTable filings={filings} scroll={false} />
+          <InfiniteScroll
+            dataLength={filings.length}
+            next={getMore}
+            hasMore={true}
+            loader={<LoadingSpinner loadingText="Loading Files" />}
+          >
+            <FilingTable filings={filings} scroll={false} />
+          </InfiniteScroll>
           <button onClick={() => getMore()}>Get More</button>
         </div>
       </div>
