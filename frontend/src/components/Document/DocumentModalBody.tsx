@@ -8,7 +8,7 @@ import MarkdownRenderer from "@/components/MarkdownRenderer";
 import LoadingSpinner from "@/components/styled-components/LoadingSpinner";
 import { apiURL } from "@/lib/env_variables";
 import { fetchObjectDataFromURL, fetchTextDataFromURL } from "./documentLoader";
-import useSWR from "swr";
+import useSWRImmutable from "swr";
 
 // import { ErrorBoundary } from "react-error-boundary";
 
@@ -23,7 +23,10 @@ type ModalProps = {
 const MarkdownContent = memo(({ docUUID }: { docUUID: string }) => {
   const markdown_url = `${apiURL}/v2/public/files/${docUUID}/markdown`;
   // axios.get(`https://api.kessler.xyz/v2/public/files/${objectid}/markdown`),
-  const { data, error, isLoading } = useSWR(markdown_url, fetchTextDataFromURL);
+  const { data, error, isLoading } = useSWRImmutable(
+    markdown_url,
+    fetchTextDataFromURL,
+  );
   if (isLoading) {
     return <LoadingSpinner loadingText="Loading Document" />;
   }
@@ -45,7 +48,10 @@ const MarkdownContent = memo(({ docUUID }: { docUUID: string }) => {
 const MetadataContent = memo(({ docUUID }: { docUUID: string }) => {
   const object_url = `${apiURL}/v2/public/files/${docUUID}/metadata`;
   // axios.get(`https://api.kessler.xyz/v2/public/files/${objectid}/markdown`),
-  const { data, error, isLoading } = useSWR(object_url, fetchObjectDataFromURL);
+  const { data, error, isLoading } = useSWRImmutable(
+    object_url,
+    fetchObjectDataFromURL,
+  );
   if (isLoading) {
     return <LoadingSpinner loadingText="Loading Document Metadata" />;
   }
