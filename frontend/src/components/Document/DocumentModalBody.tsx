@@ -20,7 +20,7 @@ type ModalProps = {
   title?: string;
 };
 
-const MarkdownContentRaw = memo(({ docUUID }: { docUUID: string }) => {
+const MarkdownContent = memo(({ docUUID }: { docUUID: string }) => {
   const markdown_url = `${apiURL}/v2/public/files/${docUUID}/markdown`;
   // axios.get(`https://api.kessler.xyz/v2/public/files/${objectid}/markdown`),
   const { data, error, isLoading } = useSWR(markdown_url, fetchTextDataFromURL);
@@ -42,11 +42,7 @@ const MarkdownContentRaw = memo(({ docUUID }: { docUUID: string }) => {
   return <MarkdownRenderer>{text}</MarkdownRenderer>;
 });
 
-const MarkdownContent = (props: { docUUID: string }) => {
-  return <MarkdownContentRaw {...props} />;
-};
-
-const MetadataContentRaw = memo(({ docUUID }: { docUUID: string }) => {
+const MetadataContent = memo(({ docUUID }: { docUUID: string }) => {
   const object_url = `${apiURL}/v2/public/files/${docUUID}/metadata`;
   // axios.get(`https://api.kessler.xyz/v2/public/files/${objectid}/markdown`),
   const { data, error, isLoading } = useSWR(object_url, fetchObjectDataFromURL);
@@ -70,7 +66,6 @@ const MetadataContentRaw = memo(({ docUUID }: { docUUID: string }) => {
   return (
     <div className="overflow-x-auto">
       <table className="table table-zebra">
-        {/* head */}
         <thead>
           <tr>
             <th>Field</th>
@@ -90,18 +85,8 @@ const MetadataContentRaw = memo(({ docUUID }: { docUUID: string }) => {
   );
 });
 
-const MetadataContent = (props: { docUUID: string }) => {
-  return <MetadataContentRaw {...props} />;
-};
 const PDFContent = ({ docUUID }: { docUUID: string }) => {
   const pdfUrl = `${apiURL}/v2/public/files/${docUUID}/raw`;
-  // const pdfUrl = `${apiURL}/v2/public/files/${docUUID}/raw`;
-  // return (
-  //   <a className="btn btn-primary" href={pdfUrl} target="_blank">
-  //     PDF Viewer coming soon
-  //   </a>
-  // );
-  // return <PDFViewer file={pdfUrl}></PDFViewer>;
   return (
     <>
       {/* This apparently gets an undefined network error when trying to fetch the pdf from their website not exactly sure why, we need to get the s3 fetch working in golang */}
