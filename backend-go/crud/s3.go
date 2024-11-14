@@ -70,7 +70,7 @@ func (manager *KesslerFileManager) getS3KeyFromHash(hash string) string {
 
 // Upload file to S3
 func (manager *KesslerFileManager) uploadFileToS3(filePath string) (string, error) {
-	// File opened twice, potential for optimisation.
+	// F_ile opened twice, potential for optimisation.
 	hash, err := calculateBlake2bHash(filePath)
 	if err != nil {
 		return "", fmt.Errorf("Error hashing file: %v", err)
@@ -95,21 +95,33 @@ func (manager *KesslerFileManager) pushFileToS3GivenHash(filePath, hash string) 
 }
 
 func (manager *KesslerFileManager) downloadFileFromS3(hash string) (string, error) {
+	// listInput := s3.ListObjectsInput{Bucket: aws.String(manager.S3Bucket)}
+	// result, err := manager.S3Client.ListObjects(&listInput)
+	// fmt.Printf("result: %v\nerror: %v\n", result, err)
 	localFilePath := filepath.Join(manager.RawDir, hash)
 	if _, err := os.Stat(localFilePath); err == nil {
 		return localFilePath, nil
-		// return "", errors.New("file already exists at the path")
 	}
-
 	fileKey := manager.getS3KeyFromHash(hash)
-	buffer := aws.NewWriteAtBuffer([]byte{})
-	_, err := manager.S3Client.GetObject(&s3.GetObjectInput{
+	fmt.Printf("Attempting to download %s from s3 bucket %s\n", fileKey, manager.S3Bucket)
+	result_s3, err := manager.S3Client.GetObject(&s3.GetObjectInput{
 		Bucket: aws.String(manager.S3Bucket),
 		Key:    aws.String(fileKey),
 	})
 	if err != nil {
 		return "", err
 	}
-	err = os.WriteFile(localFilePath, buffer.Bytes(), 0644)
+	var body io.ReadCloser = result_s3.Body
+	defer body.Close()
+
+	// Create the file
+	out, err := os.Create(localFilePath)
+	if err != nil {
+		return "", err
+	}
+	defer out.Close()
+
+	// Copy the body to the file
+	_, err = io.Copy(out, body)
 	return localFilePath, err
 }
