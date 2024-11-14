@@ -13,7 +13,8 @@ export default async function Page({
   const slug = slugs?.[0];
   const headersList = headers();
   const host = headersList.get("host") || "";
-  const state = host.split(".")[0];
+  const hostsplits = host.split(".");
+  const state = hostsplits.length > 1 ? hostsplits[0] : undefined;
   const pageContext: PageContext = {
     state: state,
     slug: ["proceedings", slug],

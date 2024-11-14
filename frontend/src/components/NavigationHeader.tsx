@@ -7,7 +7,7 @@ export const ConversationHeader = ({ context }: { context: PageContext }) => {
     <div className="breadcrumbs text-xl">
       <ul>
         <li>
-          <a>{displayState}</a>
+          <Link{displayState}
         </li>
         <li>
           <a>Proceedings</a>

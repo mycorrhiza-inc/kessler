@@ -40,7 +40,7 @@ export const FilingTable = ({
       className={
         scroll
           ? "max-h-[500px] overflow-y-auto overflow-x-scroll"
-          : "max-h-[500px] overflow-y-auto"
+          : "overflow-y-auto"
       }
     >
       <table className="w-full divide-y divide-gray-200 table">
