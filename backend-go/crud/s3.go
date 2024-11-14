@@ -19,18 +19,20 @@ const ()
 
 // Client structure for S3
 type KesslerFileManager struct {
-	s3Client *s3.S3
+	S3Client *s3.S3
 	S3Bucket string
+	S3RawDir string
 	RawDir   string
 	TmpDir   string
 }
 
 func NewKeFileManager() *KesslerFileManager {
-	CloudRegion := "us-west-1" // Your region here. Change if needed
+	CloudRegion := "sfo3" // Your region here. Change if needed
 	EndpointURL := "https://sfo3.digitaloceanspaces.com"
 	S3Bucket := "kesslerproddocs"
 	S3AccessKey := os.Getenv("S3_ACCESS_KEY")
 	S3SecretKey := os.Getenv("S3_SECRET_KEY")
+	S3RawDir := "raw/"
 	RawDir := "raw/"
 	TmpDir := os.TempDir()
 	sess := session.Must(session.NewSession(&aws.Config{
@@ -39,8 +41,9 @@ func NewKeFileManager() *KesslerFileManager {
 		Credentials: credentials.NewStaticCredentials(S3AccessKey, S3SecretKey, ""),
 	}))
 	return &KesslerFileManager{
-		s3Client: s3.New(sess),
+		S3Client: s3.New(sess),
 		S3Bucket: S3Bucket,
+		S3RawDir: S3RawDir,
 		RawDir:   RawDir,
 		TmpDir:   TmpDir,
 	}
@@ -61,6 +64,10 @@ func calculateBlake2bHash(filePath string) (string, error) {
 	return fmt.Sprintf("%x", hash.Sum(nil)), nil
 }
 
+func (manager *KesslerFileManager) getS3KeyFromHash(hash string) string {
+	return filepath.Join(manager.S3RawDir, hash)
+}
+
 // Upload file to S3
 func (manager *KesslerFileManager) uploadFileToS3(filePath string) (string, error) {
 	// File opened twice, potential for optimisation.
@@ -78,10 +85,10 @@ func (manager *KesslerFileManager) pushFileToS3GivenHash(filePath, hash string) 
 	}
 	defer file.Close()
 
-	filename := manager.RawDir + hash // change the filename accordingly
-	_, err = manager.s3Client.PutObject(&s3.PutObjectInput{
+	fileKey := manager.getS3KeyFromHash(hash)
+	_, err = manager.S3Client.PutObject(&s3.PutObjectInput{
 		Bucket: aws.String(manager.S3Bucket),
-		Key:    aws.String(filename),
+		Key:    aws.String(fileKey),
 		Body:   file,
 	})
 	return err
@@ -94,10 +101,11 @@ func (manager *KesslerFileManager) downloadFileFromS3(hash string) (string, erro
 		// return "", errors.New("file already exists at the path")
 	}
 
+	fileKey := manager.getS3KeyFromHash(hash)
 	buffer := aws.NewWriteAtBuffer([]byte{})
-	_, err := manager.s3Client.GetObject(&s3.GetObjectInput{
+	_, err := manager.S3Client.GetObject(&s3.GetObjectInput{
 		Bucket: aws.String(manager.S3Bucket),
-		Key:    aws.String(hash),
+		Key:    aws.String(fileKey),
 	})
 	if err != nil {
 		return "", err
