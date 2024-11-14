@@ -93,18 +93,19 @@ export default function RecentUpdatesView() {
       <Navbar user={null} />
 
       <div className="w-full h-full p-20">
-        <div className="w-full h-full p-10 card grid grid-flow-rows box-border border-2 border-black ">
-          <h1 className=" text-2xl font-bold">Recent Updates</h1>
-          <InfiniteScroll
-            dataLength={filings.length}
-            next={getMore}
-            hasMore={true}
-            loader={<LoadingSpinner loadingText="Loading Files" />}
-          >
-            <FilingTable filings={filings} scroll={false} />
-          </InfiniteScroll>
-          <button onClick={() => getMore()}>Get More</button>
-        </div>
+        <h1 className=" text-2xl font-bold">Recent Updates</h1>
+        <InfiniteScroll
+          dataLength={filings.length}
+          next={getMore}
+          hasMore={true}
+          loader={
+            <div onClick={getMore}>
+              <LoadingSpinner loadingText="Loading Files" />
+            </div>
+          }
+        >
+          <FilingTable filings={filings} scroll={false} />
+        </InfiniteScroll>
       </div>
     </>
   );
