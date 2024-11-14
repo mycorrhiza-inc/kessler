@@ -7,7 +7,7 @@ const TableRow = ({ filing }: { filing: Filing }) => {
   return (
     <>
       <tr
-        className="border-b border-base-300 hover:bg-base-200 transition duration-200 ease-in-out"
+        className="border-b border-base-300 hover:bg-base-200 transition duration-500 ease-out"
         onClick={() => {
           setOpen((previous) => !previous);
         }}
