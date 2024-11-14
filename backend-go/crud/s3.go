@@ -98,7 +98,8 @@ func (manager *KesslerFileManager) downloadFileFromS3(hash string) (string, erro
 	// listInput := s3.ListObjectsInput{Bucket: aws.String(manager.S3Bucket)}
 	// result, err := manager.S3Client.ListObjects(&listInput)
 	// fmt.Printf("result: %v\nerror: %v\n", result, err)
-	localFilePath := filepath.Join(manager.RawDir, hash)
+
+	localFilePath := filepath.Join("/", manager.RawDir, hash)
 	if _, err := os.Stat(localFilePath); err == nil {
 		return localFilePath, nil
 	}
@@ -111,17 +112,28 @@ func (manager *KesslerFileManager) downloadFileFromS3(hash string) (string, erro
 	if err != nil {
 		return "", err
 	}
+	fmt.Printf("Got file from s3 successfully\n")
 	var body io.ReadCloser = result_s3.Body
 	defer body.Close()
 
 	// Create the file
+	//
+	// Ensure the directory structure exists
+	if err := os.MkdirAll(filepath.Dir(localFilePath), os.ModePerm); err != nil {
+		return "", fmt.Errorf("failed to create directories for %s: %v", localFilePath, err)
+	}
 	out, err := os.Create(localFilePath)
 	if err != nil {
 		return "", err
 	}
+	fmt.Printf("Created local file successfully\n")
 	defer out.Close()
 
 	// Copy the body to the file
 	_, err = io.Copy(out, body)
-	return localFilePath, err
+	if err != nil {
+		return "", err
+	}
+	fmt.Printf("Copied file successfully\n")
+	return localFilePath, nil
 }
