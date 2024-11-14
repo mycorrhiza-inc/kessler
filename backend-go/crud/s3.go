@@ -117,7 +117,7 @@ func (manager *KesslerFileManager) downloadFileFromS3(hash string) (string, erro
 	defer body.Close()
 
 	// Create the file
-	//
+	// TODO: Move this directory code so that it only runs on startup or something.
 	// Ensure the directory structure exists
 	if err := os.MkdirAll(filepath.Dir(localFilePath), os.ModePerm); err != nil {
 		return "", fmt.Errorf("failed to create directories for %s: %v", localFilePath, err)
