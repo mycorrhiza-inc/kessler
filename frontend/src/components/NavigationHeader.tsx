@@ -1,17 +1,6 @@
-export type PageContext = {
-  state?: string;
-  slug: string[];
-  final_identifier?: string;
-};
+import { PageContext, getStateDisplayName } from "@/lib/page_context";
 
-const getStateDisplayName = (state?: string) => {
-  if (state === "ny") {
-    return "New York State";
-  }
-  return "Unknown";
-};
-
-const ConversationHeader = ({ context }: { context: PageContext }) => {
+export const ConversationHeader = ({ context }: { context: PageContext }) => {
   const displayState = getStateDisplayName(context.state);
   const proceeding_id = context.final_identifier;
   return (

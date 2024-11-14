@@ -24,7 +24,8 @@ import { FilingTable } from "./FilingTable";
 import LoadingSpinner from "../styled-components/LoadingSpinner";
 import { getSearchResults, getFilingMetadata } from "@/lib/requests/search";
 import FilingTableQuery from "./FilingTableQuery";
-import { PageContext } from "../NavigationHeader";
+import { ConversationHeader } from "../NavigationHeader";
+import { PageContext } from "@/lib/page_context";
 
 const testFiling: Filing = {
   id: "0",
@@ -83,11 +84,12 @@ const TableFilters = ({
 };
 
 const ConversationComponent = ({
+  inheritedFilters,
   pageContext,
 }: {
+  inheritedFilters: InheritedFilterValues;
   pageContext: PageContext;
 }) => {
-  const conversation_id = pageContext.final_slug;
   const disabledFilters = useMemo(() => {
     return inheritedFilters.map((val) => {
       return val.filter;
@@ -149,38 +151,6 @@ const ConversationComponent = ({
     fetchFilings();
   }, [filing_ids]);
 
-  // const handleSearch = async () => {
-  //   setSearchResults([]);
-  //   console.log(`searching for ${searchQuery}`);
-  //   try {
-  //     const response = await axios.post("https://api.kessler.xyz/v2/search", {
-  //       query: searchQuery,
-  //       filters: {
-  //         name: searchFilters.match_name,
-  //         author: searchFilters.match_author,
-  //         docket_id: searchFilters.match_docket_id,
-  //         doctype: searchFilters.match_doctype,
-  //         source: searchFilters.match_source,
-  //       },
-  //     });
-  //     if (response.data.length === 0) {
-  //       return;
-  //     }
-  //     if (typeof response.data === "string") {
-  //       setSearchResults([]);
-  //       return;
-  //     }
-  //     console.log("getting data");
-  //     console.log(response.data);
-  //     const ids = response.data.map((filing: any) => filing.id);
-  //     setFilingIds(ids);
-  //   } catch (error) {
-  //     console.log(error);
-  //   } finally {
-  //     setIsSearching(false);
-  //   }
-  // };
-
   const [isFocused, setIsFocused] = useState(true);
   const toggleFilters = () => {
     setIsFocused(!isFocused);
@@ -200,8 +170,7 @@ const ConversationComponent = ({
           id="conversation-header"
           className="flex justify-between items-center mb-4"
         >
-          <h1 className="text-2xl font-bold">Conversation</h1>
-
+          <ConversationHeader context={pageContext} />
           <label htmlFor="my-drawer" className="btn btn-primary drawer-button">
             Filters
           </label>

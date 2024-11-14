@@ -2,12 +2,14 @@
 
 import ConversationComponent from "@/components/Conversations/ConversationComponent";
 import { FilterField, InheritedFilterValues } from "@/lib/filters";
+import { PageContext } from "@/lib/page_context";
 
 export const ConversationView = ({
-  conversation_id,
+  pageContext,
 }: {
-  conversation_id?: string;
+  pageContext: PageContext;
 }) => {
+  const conversation_id = pageContext.final_identifier;
   const inheritedFilters: InheritedFilterValues = conversation_id
     ? [{ filter: FilterField.MatchDocketId, value: conversation_id }]
     : [];
@@ -23,7 +25,10 @@ export const ConversationView = ({
           overflow: "scroll",
         }}
       >
-        <ConversationComponent inheritedFilters={inheritedFilters} />
+        <ConversationComponent
+          inheritedFilters={inheritedFilters}
+          pageContext={pageContext}
+        />
       </div>
     </>
   );

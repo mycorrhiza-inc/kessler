@@ -1,6 +1,8 @@
-import { ConversationView } from "@/components/ConversationView";
+import { ConversationView } from "@/components/Conversations/ConversationView";
 import Navbar from "@/components/Navbar";
+import { PageContext } from "@/lib/page_context";
 import { createClient } from "@/utils/supabase/server";
+import { headers } from "next/headers";
 export default async function Page({
   params,
 }: {
@@ -9,13 +11,21 @@ export default async function Page({
   const supabase = createClient();
   const slugs = (await params).conversation_id;
   const slug = slugs?.[0];
+  const headersList = headers();
+  const host = headersList.get("host") || "";
+  const state = host.split(".")[0];
+  const pageContext: PageContext = {
+    state: state,
+    slug: ["proceedings", slug],
+    final_identifier: slug,
+  };
   const {
     data: { user },
   } = await supabase.auth.getUser();
   return (
     <>
       <Navbar user={user} />
-      <ConversationView conversation_id={slug} />
+      <ConversationView pageContext={pageContext} />
     </>
   );
 }
