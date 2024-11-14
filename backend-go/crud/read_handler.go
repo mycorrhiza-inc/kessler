@@ -82,9 +82,6 @@ func ReadFileHandlerFactory(config FileHandlerConfig) http.HandlerFunc {
 		}
 		switch return_type {
 		case "raw":
-			// Please go into the file, try to infer the mime type, and then return the file in binary to the user, using something like
-			// w.Header().Set("Content-Type", <Whatever MIME TYPE>)
-			// w.Write(file binary)
 			file, err := GetFileObjectRaw(file_params)
 			if err != nil {
 				http.Error(w, "File not found", http.StatusNotFound)
@@ -94,7 +91,7 @@ func ReadFileHandlerFactory(config FileHandlerConfig) http.HandlerFunc {
 			kefiles := NewKeFileManager()
 			file_path, err := kefiles.downloadFileFromS3(filehash)
 			if err != nil {
-				http.Error(w, fmt.Sprintf("Error encountered when getting file from s3:%v", err), http.StatusInternalServerError)
+				http.Error(w, fmt.Sprintf("Error encountered when getting file with hash %v from s3:%v", filehash, err), http.StatusInternalServerError)
 				return
 			}
 			content, err := os.ReadFile(file_path)

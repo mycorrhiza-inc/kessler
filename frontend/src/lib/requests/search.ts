@@ -92,6 +92,7 @@ export const ParseFilingData = async (filingData: any) => {
         language: metadata.language,
         item_number: metadata.item_number,
         author_organisation: metadata.author_organizatino,
+        file_class: metadata.file_class,
         url: metadata.url,
       };
       return newFiling;
@@ -109,6 +110,7 @@ export const ParseFilingData = async (filingData: any) => {
       language: metadata.language,
       item_number: metadata.item_number,
       author_organisation: metadata.author_organizatino,
+      file_class: metadata.file_class,
       url: metadata.url,
     };
     return newFiling;

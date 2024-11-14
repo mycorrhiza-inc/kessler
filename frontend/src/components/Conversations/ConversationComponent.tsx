@@ -24,6 +24,8 @@ import { FilingTable } from "./FilingTable";
 import LoadingSpinner from "../styled-components/LoadingSpinner";
 import { getSearchResults, getFilingMetadata } from "@/lib/requests/search";
 import FilingTableQuery from "./FilingTableQuery";
+import { ConversationHeader } from "../NavigationHeader";
+import { PageContext } from "@/lib/page_context";
 
 const testFiling: Filing = {
   id: "0",
@@ -83,8 +85,10 @@ const TableFilters = ({
 
 const ConversationComponent = ({
   inheritedFilters,
+  pageContext,
 }: {
   inheritedFilters: InheritedFilterValues;
+  pageContext: PageContext;
 }) => {
   const disabledFilters = useMemo(() => {
     return inheritedFilters.map((val) => {
@@ -147,38 +151,6 @@ const ConversationComponent = ({
     fetchFilings();
   }, [filing_ids]);
 
-  // const handleSearch = async () => {
-  //   setSearchResults([]);
-  //   console.log(`searching for ${searchQuery}`);
-  //   try {
-  //     const response = await axios.post("https://api.kessler.xyz/v2/search", {
-  //       query: searchQuery,
-  //       filters: {
-  //         name: searchFilters.match_name,
-  //         author: searchFilters.match_author,
-  //         docket_id: searchFilters.match_docket_id,
-  //         doctype: searchFilters.match_doctype,
-  //         source: searchFilters.match_source,
-  //       },
-  //     });
-  //     if (response.data.length === 0) {
-  //       return;
-  //     }
-  //     if (typeof response.data === "string") {
-  //       setSearchResults([]);
-  //       return;
-  //     }
-  //     console.log("getting data");
-  //     console.log(response.data);
-  //     const ids = response.data.map((filing: any) => filing.id);
-  //     setFilingIds(ids);
-  //   } catch (error) {
-  //     console.log(error);
-  //   } finally {
-  //     setIsSearching(false);
-  //   }
-  // };
-
   const [isFocused, setIsFocused] = useState(true);
   const toggleFilters = () => {
     setIsFocused(!isFocused);
@@ -191,51 +163,100 @@ const ConversationComponent = ({
   }, [searchFilters]);
 
   return (
-    <div className="w-full h-full p-10 card relative box-border border-4 border-black flex flex-row overflow-hidden">
-      <AnimatePresence mode="sync">
-        {isFocused && (
-          <motion.div
-            className="flex-none"
-            style={{ padding: "10px" }}
-            initial={{ width: 0, opacity: 0 }}
-            animate={{ width: "500px", opacity: 1 }}
-            exit={{ width: 0, opacity: 0 }}
-          >
-            <TableFilters
-              searchFilters={searchFilters}
-              setSearchFilters={setSearchFilters}
-              disabledFilters={disabledFilters}
-              toggleFilters={toggleFilters}
-            />
-          </motion.div>
-        )}
-        <motion.div
-          className="flex-grow p-10"
-          layout
-          transition={{ duration: 0.3, ease: "easeInOut" }}
+    <div className="drawer">
+      <input id="my-drawer" type="checkbox" className="drawer-toggle" />
+      <div className="drawer-content">
+        <div
+          id="conversation-header"
+          className="flex justify-between items-center mb-4"
         >
-          <div
-            id="conversation-header"
-            className="flex justify-between items-center mb-4"
+          <ConversationHeader context={pageContext} />
+          <label htmlFor="my-drawer" className="btn btn-primary drawer-button">
+            Filters
+          </label>
+          <button
+            onClick={toggleFilters}
+            className="btn btn-outline"
+            style={{
+              display: !isFocused ? "inline-block" : "none",
+            }}
           >
-            <h1 className="text-2xl font-bold">Conversation</h1>
-            <button
-              onClick={toggleFilters}
-              className="btn btn-outline"
-              style={{
-                display: !isFocused ? "inline-block" : "none",
-              }}
-            >
-              Filters
-            </button>
-          </div>
-          <div className="w-full h-full">
-            <FilingTableQuery queryData={queryData} scroll={true} />
-          </div>
-        </motion.div>
-      </AnimatePresence>
+            Filters
+          </button>
+        </div>
+        <div className="w-full h-full">
+          <FilingTableQuery queryData={queryData} scroll={true} />
+        </div>
+      </div>
+      <div className="drawer-side">
+        <label
+          htmlFor="my-drawer"
+          aria-label="close sidebar"
+          className="drawer-overlay"
+        ></label>
+        <ul className="menu bg-base-200 text-base-content min-h-full w-80 p-4">
+          <TableFilters
+            searchFilters={searchFilters}
+            setSearchFilters={setSearchFilters}
+            disabledFilters={disabledFilters}
+            toggleFilters={toggleFilters}
+          />
+          {/* Sidebar content here */}
+          <li>
+            <a>Sidebar Item 1</a>
+          </li>
+          <li>
+            <a>Sidebar Item 2</a>
+          </li>
+        </ul>
+      </div>
     </div>
   );
 };
 
 export default ConversationComponent;
+
+// <div className="w-full h-full p-10 card relative box-border border-4 border-black flex flex-row overflow-hidden">
+//   <AnimatePresence mode="sync">
+//     {isFocused && (
+//       <motion.div
+//         className="flex-none"
+//         style={{ padding: "10px" }}
+//         initial={{ width: 0, opacity: 0 }}
+//         animate={{ width: "500px", opacity: 1 }}
+//         exit={{ width: 0, opacity: 0 }}
+//       >
+//         <TableFilters
+//           searchFilters={searchFilters}
+//           setSearchFilters={setSearchFilters}
+//           disabledFilters={disabledFilters}
+//           toggleFilters={toggleFilters}
+//         />
+//       </motion.div>
+//     )}
+//     <motion.div
+//       className="flex-grow p-10"
+//       layout
+//       transition={{ duration: 0.3, ease: "easeInOut" }}
+//     >
+//       <div
+//         id="conversation-header"
+//         className="flex justify-between items-center mb-4"
+//       >
+//         <h1 className="text-2xl font-bold">Conversation</h1>
+//         <button
+//           onClick={toggleFilters}
+//           className="btn btn-outline"
+//           style={{
+//             display: !isFocused ? "inline-block" : "none",
+//           }}
+//         >
+//           Filters
+//         </button>
+//       </div>
+//       <div className="w-full h-full">
+//         <FilingTableQuery queryData={queryData} scroll={true} />
+//       </div>
+//     </motion.div>
+//   </AnimatePresence>
+// </div>
