@@ -115,7 +115,10 @@ func makeTokenValidator(dbtx_val dbstore.DBTX) func(r *http.Request) UserValidat
 		}
 		// Check for "Bearer " prefix in the authorization header (expected format)
 		if !strings.HasPrefix(token, "Bearer ") {
-			return UserValidation{validated: false}
+			return UserValidation{
+				validated: true,
+				userID:    "anonomous",
+			}
 		}
 		// Validation four our scrapers to add data to the system
 		if strings.HasPrefix(token, "Bearer thaum_") {
