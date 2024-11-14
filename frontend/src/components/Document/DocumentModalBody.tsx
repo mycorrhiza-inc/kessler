@@ -122,7 +122,12 @@ const DocumentModalBody = ({ open, objectId, children, title }: ModalProps) => {
       </div>
       {/* Deleted all the MUI stuff, this should absolutely be refactored into its own styled component soonish*/}
 
-      <a className="btn btn-primary" href={fileUrl} target="_blank">
+      <a
+        className="btn btn-primary"
+        href={fileUrl}
+        target="_blank"
+        download={title}
+      >
         Download File
       </a>
 
