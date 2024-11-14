@@ -1,4 +1,5 @@
 import { PageContext, getStateDisplayName } from "@/lib/page_context";
+import Link from "next/link";
 
 export const ConversationHeader = ({ context }: { context: PageContext }) => {
   const displayState = getStateDisplayName(context.state);
@@ -7,10 +8,10 @@ export const ConversationHeader = ({ context }: { context: PageContext }) => {
     <div className="breadcrumbs text-xl">
       <ul>
         <li>
-          <Link{displayState}
+          <Link href="/">{displayState}</Link>
         </li>
         <li>
-          <a>Proceedings</a>
+          <Link href="/proceedings">Proceedings</Link>
         </li>
         {proceeding_id && <li>{proceeding_id}</li>}
       </ul>
