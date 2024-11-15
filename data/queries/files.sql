@@ -6,6 +6,7 @@ INSERT INTO public.file (
     name,
     isPrivate,
     hash,
+    verified,
     created_at,
     updated_at
   )
@@ -16,6 +17,7 @@ VALUES (
     $3,
     $4,
     $5,
+    $6,
     NOW(),
     NOW()
   )
@@ -40,8 +42,9 @@ SET extension = $1,
   name = $3,
   isPrivate = $4,
   hash = $5,
+  verified = $6,
   updated_at = NOW()
-WHERE public.file.id = $6
+WHERE public.file.id = $7
 RETURNING id;
 -- name: ReadFile :one
 SELECT *
@@ -51,6 +54,15 @@ WHERE id = $1;
 SELECT *
 FROM public.file
 ORDER BY updated_at DESC;
+-- name: DeleteFile :exec
+DELETE FROM public.file
+WHERE id = $1;
+-- name: FileVerifiedUpdate :one
+UPDATE public.file
+SET verified = $1,
+  updated_at = NOW()
+WHERE public.file.id = $2
+RETURNING id;
 -- name: StageLogAdd :one
 -- used to log the state of a file processing stage and update filestage status
 INSERT INTO public.stage_log (file_id, status, log)
@@ -64,9 +76,6 @@ FROM public.stage_log
 WHERE file_id = $1
 ORDER BY created_at DESC
 LIMIT 1;
--- name: DeleteFile :exec
-DELETE FROM public.file
-WHERE id = $1;
 -- name: InsertMetadata :one
 INSERT INTO public.file_metadata (
     id,

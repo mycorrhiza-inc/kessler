@@ -53,8 +53,10 @@ func verifyAuthorOrganizationUUID(ctx context.Context, q dbstore.Queries, author
 
 func fileAuthorsUpsert(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, authors_info []AuthorInformation, insert bool) error {
 	if !insert {
-		// TODO: Delete all the authors for the file before adding new ones
-		return fmt.Errorf("updating authors not implemented, just delete all the old authors before adding the new ones")
+		err := q.AuthorshipDocumentDeleteAll(ctx, pgtype.UUID{Bytes: doc_uuid, Valid: true})
+		if err != nil {
+			return err
+		}
 	}
 	fileAuthorInsert := func(author_info AuthorInformation) error {
 		new_author_info, err := verifyAuthorOrganizationUUID(ctx, q, &author_info)

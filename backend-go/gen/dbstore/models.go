@@ -105,6 +105,7 @@ type File struct {
 	CreatedAt pgtype.Timestamptz
 	UpdatedAt pgtype.Timestamptz
 	Hash      pgtype.Text
+	Verified  pgtype.Bool
 }
 
 type FileExtra struct {

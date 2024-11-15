@@ -11,6 +11,7 @@ import (
 
 type FileSchema struct {
 	ID        uuid.UUID `json:"id"`
+	Verified  bool      `json:"verified"`
 	Extension string    `json:"extension"`
 	Lang      string    `json:"lang"`
 	Name      string    `json:"name"`
@@ -28,6 +29,7 @@ func pguuidToString(uuid_pg pgtype.UUID) string {
 func PublicFileToSchema(file dbstore.File) FileSchema {
 	return FileSchema{
 		ID:        file.ID.Bytes,
+		Verified:  file.Verified.Bool,
 		Extension: file.Extension.String,
 		Lang:      file.Lang.String,
 		Name:      file.Name.String,
@@ -125,6 +127,7 @@ type FileCreationDataRaw struct {
 	Name      pgtype.Text
 	Hash      pgtype.Text
 	IsPrivate pgtype.Bool
+	Verified  pgtype.Bool
 }
 
 func InsertPubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreation FileCreationDataRaw, private bool) (FileSchema, error) {
@@ -132,7 +135,9 @@ func InsertPubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreatio
 		Extension: fileCreation.Extension,
 		Lang:      fileCreation.Lang,
 		Name:      fileCreation.Name,
+		Isprivate: fileCreation.IsPrivate,
 		Hash:      fileCreation.Hash,
+		Verified:  fileCreation.Verified,
 	}
 	resultID, err := q.CreateFile(ctx, params)
 	if err != nil {
@@ -147,7 +152,9 @@ func UpdatePubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreatio
 		Extension: fileCreation.Extension,
 		Lang:      fileCreation.Lang,
 		Name:      fileCreation.Name,
+		Isprivate: fileCreation.IsPrivate,
 		Hash:      fileCreation.Hash,
+		Verified:  fileCreation.Verified,
 	}
 	resultID, err := q.UpdateFile(ctx, params)
 	if err != nil {
@@ -162,16 +169,6 @@ func NukePriPubFileTexts(q dbstore.Queries, ctx context.Context, pgUUID pgtype.U
 }
 
 func InsertPriPubFileText(q dbstore.Queries, ctx context.Context, text FileTextSchema, private bool) error {
-	// if private {
-	// 	args := dbstore.CreatePrivateFileTextSourceParams{
-	// 		FileID:         text.FileID,
-	// 		IsOriginalText: text.IsOriginalText,
-	// 		Text:           pgtype.Text{String: text.Text, Valid: true},
-	// 		Language:       text.Language,
-	// 	}
-	// 	_, err := q.CreatePrivateFileTextSource(ctx, args)
-	// 	return err
-	// }
 	args := dbstore.CreateFileTextSourceParams{
 		FileID:         text.FileID,
 		IsOriginalText: text.IsOriginalText,

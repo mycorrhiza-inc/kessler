@@ -47,12 +47,12 @@ func ChildTextSouceToRealTextSource(child_source FileChildTextSource, id uuid.UU
 }
 
 type DocProcStage struct {
-	PGStage         PGStage       `json:"pg_stage"`
-	DocProcStatus   DocProcStatus `json:"docproc_stage"`
-	IsErrored       bool          `json:"is_errored"`
-	IsCompleted     bool          `json:"is_completed"`
-	ErrorMsg        string        `json:"error_msg"`
-	ErrorStacktrace string        `json:"error_stacktrace"`
+	PGStage            PGStage       `json:"pg_stage"`
+	DocProcStatus      DocProcStatus `json:"docproc_stage"`
+	IsErrored          bool          `json:"is_errored"`
+	IsCompleted        bool          `json:"is_completed"`
+	ProcessingErrorMsg string        `json:"processing_error_msg"`
+	DatabaseErrorMsg   string        `json:"database_error_msg"`
 }
 type FileGeneratedExtras struct {
 	Summary        string  `json:"summary"`
@@ -79,6 +79,7 @@ type JuristictionInformation struct {
 
 type CompleteFileSchema struct {
 	ID           uuid.UUID               `json:"id"`
+	Verified     bool                    `json:"verified"`
 	Extension    string                  `json:"extension"`
 	Lang         string                  `json:"lang"`
 	Name         string                  `json:"name"`
@@ -95,6 +96,7 @@ type CompleteFileSchema struct {
 
 type SemiCompleteFileSchema struct {
 	ID           uuid.UUID               `json:"id"`
+	Verified     bool                    `json:"verified"`
 	Extension    string                  `json:"extension"`
 	Lang         string                  `json:"lang"`
 	Name         string                  `json:"name"`
@@ -138,6 +140,7 @@ func ConvertToCreationData(updateInfo CompleteFileSchema) FileCreationDataRaw {
 		Lang:      pgtype.Text{String: updateInfo.Lang, Valid: true},
 		Name:      pgtype.Text{String: updateInfo.Name, Valid: true},
 		Hash:      pgtype.Text{String: updateInfo.Hash, Valid: true},
+		Verified:  pgtype.Bool{Bool: updateInfo.Verified, Valid: true},
 	}
 	return creationData
 }
