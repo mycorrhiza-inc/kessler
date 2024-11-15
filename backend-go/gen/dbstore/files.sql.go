@@ -174,6 +174,26 @@ func (q *Queries) FetchMetadata(ctx context.Context, id pgtype.UUID) ([]FileMeta
 	return items, nil
 }
 
+const fileVerifiedUpdate = `-- name: FileVerifiedUpdate :one
+UPDATE public.file
+SET verified = $1,
+  updated_at = NOW()
+WHERE public.file.id = $2
+RETURNING id
+`
+
+type FileVerifiedUpdateParams struct {
+	Verified pgtype.Bool
+	ID       pgtype.UUID
+}
+
+func (q *Queries) FileVerifiedUpdate(ctx context.Context, arg FileVerifiedUpdateParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, fileVerifiedUpdate, arg.Verified, arg.ID)
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
 const getFile = `-- name: GetFile :one
 SELECT id, lang, name, extension, isprivate, created_at, updated_at, hash, verified
 FROM public.file
