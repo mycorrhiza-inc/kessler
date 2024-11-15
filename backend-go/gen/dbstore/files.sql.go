@@ -19,6 +19,7 @@ INSERT INTO public.file (
     name,
     isPrivate,
     hash,
+    verified,
     created_at,
     updated_at
   )
@@ -29,6 +30,7 @@ VALUES (
     $3,
     $4,
     $5,
+    $6,
     NOW(),
     NOW()
   )
@@ -41,6 +43,7 @@ type CreateFileParams struct {
 	Name      pgtype.Text
 	Isprivate pgtype.Bool
 	Hash      pgtype.Text
+	Verified  pgtype.Bool
 }
 
 func (q *Queries) CreateFile(ctx context.Context, arg CreateFileParams) (pgtype.UUID, error) {
@@ -50,6 +53,7 @@ func (q *Queries) CreateFile(ctx context.Context, arg CreateFileParams) (pgtype.
 		arg.Name,
 		arg.Isprivate,
 		arg.Hash,
+		arg.Verified,
 	)
 	var id pgtype.UUID
 	err := row.Scan(&id)
@@ -171,7 +175,7 @@ func (q *Queries) FetchMetadata(ctx context.Context, id pgtype.UUID) ([]FileMeta
 }
 
 const getFile = `-- name: GetFile :one
-SELECT id, lang, name, extension, isprivate, created_at, updated_at, hash
+SELECT id, lang, name, extension, isprivate, created_at, updated_at, hash, verified
 FROM public.file
 WHERE id = $1
 `
@@ -188,12 +192,13 @@ func (q *Queries) GetFile(ctx context.Context, id pgtype.UUID) (File, error) {
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Hash,
+		&i.Verified,
 	)
 	return i, err
 }
 
 const getFileWithMetadata = `-- name: GetFileWithMetadata :one
-SELECT file.id, lang, name, extension, file.isprivate, file.created_at, file.updated_at, hash, file_metadata.id, file_metadata.isprivate, mdata, file_metadata.created_at, file_metadata.updated_at
+SELECT file.id, lang, name, extension, file.isprivate, file.created_at, file.updated_at, hash, verified, file_metadata.id, file_metadata.isprivate, mdata, file_metadata.created_at, file_metadata.updated_at
 FROM public.file
   LEFT JOIN public.file_metadata ON public.file.id = public.file_metadata.id
 WHERE public.file.id = $1
@@ -208,6 +213,7 @@ type GetFileWithMetadataRow struct {
 	CreatedAt   pgtype.Timestamptz
 	UpdatedAt   pgtype.Timestamptz
 	Hash        pgtype.Text
+	Verified    pgtype.Bool
 	ID_2        pgtype.UUID
 	Isprivate_2 pgtype.Bool
 	Mdata       []byte
@@ -227,6 +233,7 @@ func (q *Queries) GetFileWithMetadata(ctx context.Context, id pgtype.UUID) (GetF
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Hash,
+		&i.Verified,
 		&i.ID_2,
 		&i.Isprivate_2,
 		&i.Mdata,
@@ -288,7 +295,7 @@ func (q *Queries) InsertMetadata(ctx context.Context, arg InsertMetadataParams) 
 }
 
 const listFiles = `-- name: ListFiles :many
-SELECT id, lang, name, extension, isprivate, created_at, updated_at, hash
+SELECT id, lang, name, extension, isprivate, created_at, updated_at, hash, verified
 FROM public.file
 ORDER BY updated_at DESC
 `
@@ -311,6 +318,7 @@ func (q *Queries) ListFiles(ctx context.Context) ([]File, error) {
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.Hash,
+			&i.Verified,
 		); err != nil {
 			return nil, err
 		}
@@ -323,7 +331,7 @@ func (q *Queries) ListFiles(ctx context.Context) ([]File, error) {
 }
 
 const readFile = `-- name: ReadFile :one
-SELECT id, lang, name, extension, isprivate, created_at, updated_at, hash
+SELECT id, lang, name, extension, isprivate, created_at, updated_at, hash, verified
 FROM public.file
 WHERE id = $1
 `
@@ -340,6 +348,7 @@ func (q *Queries) ReadFile(ctx context.Context, id pgtype.UUID) (File, error) {
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Hash,
+		&i.Verified,
 	)
 	return i, err
 }
@@ -400,8 +409,9 @@ SET extension = $1,
   name = $3,
   isPrivate = $4,
   hash = $5,
+  verified = $6,
   updated_at = NOW()
-WHERE public.file.id = $6
+WHERE public.file.id = $7
 RETURNING id
 `
 
@@ -411,6 +421,7 @@ type UpdateFileParams struct {
 	Name      pgtype.Text
 	Isprivate pgtype.Bool
 	Hash      pgtype.Text
+	Verified  pgtype.Bool
 	ID        pgtype.UUID
 }
 
@@ -421,6 +432,7 @@ func (q *Queries) UpdateFile(ctx context.Context, arg UpdateFileParams) (pgtype.
 		arg.Name,
 		arg.Isprivate,
 		arg.Hash,
+		arg.Verified,
 		arg.ID,
 	)
 	var id pgtype.UUID

@@ -6,6 +6,7 @@ INSERT INTO public.file (
     name,
     isPrivate,
     hash,
+    verified,
     created_at,
     updated_at
   )
@@ -16,6 +17,7 @@ VALUES (
     $3,
     $4,
     $5,
+    $6,
     NOW(),
     NOW()
   )
@@ -40,8 +42,9 @@ SET extension = $1,
   name = $3,
   isPrivate = $4,
   hash = $5,
+  verified = $6,
   updated_at = NOW()
-WHERE public.file.id = $6
+WHERE public.file.id = $7
 RETURNING id;
 -- name: ReadFile :one
 SELECT *
