@@ -104,7 +104,7 @@ const PDFContent = ({ docUUID }: { docUUID: string }) => {
 };
 
 const DocumentModalBody = ({ open, objectId, children, title }: ModalProps) => {
-  const fileUrl = `${apiURL}/v2/public/files/${objectId}/raw`;
+  const fileUrlNamedDownload = `${apiURL}/v2/public/files/${objectId}/raw/${title}`;
   return (
     <div className="modal-content standard-box ">
       {/* children are components passed to result modals from special searches */}
@@ -115,7 +115,7 @@ const DocumentModalBody = ({ open, objectId, children, title }: ModalProps) => {
 
       <a
         className="btn btn-primary"
-        href={fileUrl}
+        href={fileUrlNamedDownload}
         target="_blank"
         download={title}
       >

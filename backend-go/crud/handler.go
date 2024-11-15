@@ -57,9 +57,19 @@ func DefineCrudRoutes(router *mux.Router, dbtx_val dbstore.DBTX) {
 				return_type: "markdown",
 			},
 		)).Methods(http.MethodGet)
-
+	// These shouldnt have to be duplicated, but such is life.
 	public_subrouter.HandleFunc(
 		"/files/{uuid}/raw/{filename}",
+		ReadFileHandlerFactory(
+			FileHandlerConfig{
+				dbtx_val:    dbtx_val,
+				private:     false,
+				return_type: "raw",
+			},
+		)).Methods(http.MethodGet)
+
+	public_subrouter.HandleFunc(
+		"/files/{uuid}/raw/",
 		ReadFileHandlerFactory(
 			FileHandlerConfig{
 				dbtx_val:    dbtx_val,
