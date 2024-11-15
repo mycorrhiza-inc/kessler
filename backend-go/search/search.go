@@ -175,7 +175,7 @@ func ConstructDateQuery(DateFrom string, DateTo string) (string, error) {
 }
 
 func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
-	fmt.Printf("%s", r)
+	fmt.Printf("searching quickwit:\n%s", r)
 	r.Index = "NY_PUC"
 	search_index := r.Index
 	// ===== construct search request =====
@@ -191,13 +191,13 @@ func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
 		queryString = fmt.Sprintf("((text:(%s) OR name:(%s)) AND %s)", query, query, dateQuery)
 	}
 
-	filtersString := constructQuickwitMetadataQueryString(r.SearchFilters)
+	filtersString := constructQuickwitMetadataQueryString(r.SearchFilters.Metadata)
 
 	queryString = queryString + filtersString
 	log.Printf("full query string: %s\n", queryString)
 
 	// construct sortby string
-	sortbyStr := ""
+	sortbyStr := "date_filed"
 	// Changing this to be a greater than or equal to 1, instead of a less than or equal to 1, trying to track down an out of index thing - Nic
 	if len(r.SortBy) >= 1 {
 		sortbyStr = r.SortBy[0]
@@ -267,22 +267,24 @@ func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
 	return data, nil
 }
 
-func constructQuickwitMetadataQueryString(filter FilterFields) string {
+func constructQuickwitMetadataQueryString(meta Metadata) string {
 	var filterQuery string
 	filters := []string{}
-	fmt.Printf("constructing filter of:\n%s\n", filter)
 
 	// ===== reflect the filter metadata =====
-	values := reflect.ValueOf(filter)
-	types := reflect.TypeOf(filter)
+	values := reflect.ValueOf(meta)
+	types := reflect.TypeOf(meta)
+	fmt.Printf("values: %v\n", values)
+	fmt.Printf("types: %v\n", types)
 
 	// ===== iterate over metadata for filter =====
 	for i := 0; i < types.NumField(); i++ {
 		// get the field and value
 		field := types.Field(i)
 		value := values.Field(i)
-		// Get the json tag value
 		tag := field.Tag.Get("json")
+		fmt.Printf("tag: %v\nfield: %v\nvalue: %v\n", tag, field, value)
+		// Get the json tag value
 
 		// skip all non-slice filters and empty slices
 		if value.Kind() != reflect.String || value.Len() <= 0 {
@@ -307,6 +309,7 @@ func constructQuickwitMetadataQueryString(filter FilterFields) string {
 		// fmt.Printf("got filter: \n%s\n", f)
 		filterQuery += fmt.Sprintf(" AND (%s)", f)
 	}
+	fmt.Printf("filter query: %s\n", filterQuery)
 	return filterQuery
 }
 
