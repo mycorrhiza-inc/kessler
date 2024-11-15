@@ -140,6 +140,7 @@ func ConvertToCreationData(updateInfo CompleteFileSchema) FileCreationDataRaw {
 		Lang:      pgtype.Text{String: updateInfo.Lang, Valid: true},
 		Name:      pgtype.Text{String: updateInfo.Name, Valid: true},
 		Hash:      pgtype.Text{String: updateInfo.Hash, Valid: true},
+		Verified:  pgtype.Bool{Bool: updateInfo.Verified, Valid: true},
 	}
 	return creationData
 }
