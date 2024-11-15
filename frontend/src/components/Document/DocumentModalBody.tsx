@@ -1,3 +1,5 @@
+"use client";
+// TODO: change the network fetch stuff so that this can be SSR'd
 import React, { Suspense, memo } from "react";
 import * as Tabs from "@radix-ui/react-tabs";
 
@@ -6,7 +8,7 @@ import MarkdownRenderer from "@/components/MarkdownRenderer";
 import LoadingSpinner from "@/components/styled-components/LoadingSpinner";
 import { apiURL } from "@/lib/env_variables";
 import { fetchObjectDataFromURL, fetchTextDataFromURL } from "./documentLoader";
-import useSWR from "swr";
+import useSWRImmutable from "swr";
 
 // import { ErrorBoundary } from "react-error-boundary";
 
@@ -18,10 +20,13 @@ type ModalProps = {
   title?: string;
 };
 
-const MarkdownContentRaw = memo(({ docUUID }: { docUUID: string }) => {
+const MarkdownContent = memo(({ docUUID }: { docUUID: string }) => {
   const markdown_url = `${apiURL}/v2/public/files/${docUUID}/markdown`;
   // axios.get(`https://api.kessler.xyz/v2/public/files/${objectid}/markdown`),
-  const { data, error, isLoading } = useSWR(markdown_url, fetchTextDataFromURL);
+  const { data, error, isLoading } = useSWRImmutable(
+    markdown_url,
+    fetchTextDataFromURL,
+  );
   if (isLoading) {
     return <LoadingSpinner loadingText="Loading Document" />;
   }
@@ -40,14 +45,13 @@ const MarkdownContentRaw = memo(({ docUUID }: { docUUID: string }) => {
   return <MarkdownRenderer>{text}</MarkdownRenderer>;
 });
 
-const MarkdownContent = (props: { docUUID: string }) => {
-  return <MarkdownContentRaw {...props} />;
-};
-
-const MetadataContentRaw = memo(({ docUUID }: { docUUID: string }) => {
+const MetadataContent = memo(({ docUUID }: { docUUID: string }) => {
   const object_url = `${apiURL}/v2/public/files/${docUUID}/metadata`;
   // axios.get(`https://api.kessler.xyz/v2/public/files/${objectid}/markdown`),
-  const { data, error, isLoading } = useSWR(object_url, fetchObjectDataFromURL);
+  const { data, error, isLoading } = useSWRImmutable(
+    object_url,
+    fetchObjectDataFromURL,
+  );
   if (isLoading) {
     return <LoadingSpinner loadingText="Loading Document Metadata" />;
   }
@@ -68,7 +72,6 @@ const MetadataContentRaw = memo(({ docUUID }: { docUUID: string }) => {
   return (
     <div className="overflow-x-auto">
       <table className="table table-zebra">
-        {/* head */}
         <thead>
           <tr>
             <th>Field</th>
@@ -88,41 +91,20 @@ const MetadataContentRaw = memo(({ docUUID }: { docUUID: string }) => {
   );
 });
 
-const MetadataContent = (props: { docUUID: string }) => {
-  return <MetadataContentRaw {...props} />;
-};
-const PDFContent = ({
-  docUUID,
-  overridePDFUrl,
-}: {
-  docUUID: string;
-  overridePDFUrl?: string;
-}) => {
-  const pdfUrl = overridePDFUrl || `${apiURL}/v2/public/files/${docUUID}/raw`;
-  // const pdfUrl = `${apiURL}/v2/public/files/${docUUID}/raw`;
-  // return (
-  //   <a className="btn btn-primary" href={pdfUrl} target="_blank">
-  //     PDF Viewer coming soon
-  //   </a>
-  // );
-  // return <PDFViewer file={pdfUrl}></PDFViewer>;
+const PDFContent = ({ docUUID }: { docUUID: string }) => {
+  const pdfUrl = `${apiURL}/v2/public/files/${docUUID}/raw`;
   return (
     <>
-      <LoadingSpinner loadingText="PDF Viewer coming soon" />
       {/* This apparently gets an undefined network error when trying to fetch the pdf from their website not exactly sure why, we need to get the s3 fetch working in golang */}
       <PDFViewer file={pdfUrl}></PDFViewer>
+
+      <LoadingSpinner loadingText="PDF Viewer Loading" />
     </>
   );
 };
 
-const DocumentModalBody = ({
-  open,
-  objectId,
-  children,
-  title,
-  overridePDFUrl,
-}: ModalProps) => {
-  const pdfUrl = overridePDFUrl || `${apiURL}/v2/public/files/${objectId}/raw`;
+const DocumentModalBody = ({ open, objectId, children, title }: ModalProps) => {
+  const fileUrl = `${apiURL}/v2/public/files/${objectId}/raw`;
   return (
     <div className="modal-content standard-box ">
       {/* children are components passed to result modals from special searches */}
@@ -131,28 +113,33 @@ const DocumentModalBody = ({
       </div>
       {/* Deleted all the MUI stuff, this should absolutely be refactored into its own styled component soonish*/}
 
-      <a className="btn btn-primary" href={pdfUrl} target="_blank">
-        Download PDF
+      <a
+        className="btn btn-primary"
+        href={fileUrl}
+        target="_blank"
+        download={title}
+      >
+        Download File
       </a>
 
       <Tabs.Root
         className="TabsRoot"
         role="tablist tabs tabs-bordered tabs-lg"
-        defaultValue="tab2"
+        defaultValue="tab1"
       >
         <Tabs.List className="TabsList" aria-label="What Documents ">
+          <Tabs.Trigger className="TabsTrigger tab" value="tab1">
+            Document
+          </Tabs.Trigger>
           <Tabs.Trigger className="TabsTrigger tab" value="tab2">
             Document Text
           </Tabs.Trigger>
           <Tabs.Trigger className="TabsTrigger tab" value="tab3">
             Metadata
           </Tabs.Trigger>
-          <Tabs.Trigger className="TabsTrigger tab" value="tab1">
-            Document
-          </Tabs.Trigger>
         </Tabs.List>
         <Tabs.Content className="TabsContent" value="tab1">
-          <PDFContent docUUID={objectId} overridePDFUrl={overridePDFUrl} />
+          <PDFContent docUUID={objectId} />
         </Tabs.Content>
         <Tabs.Content className="TabsContent" value="tab2">
           <MarkdownContent docUUID={objectId} />

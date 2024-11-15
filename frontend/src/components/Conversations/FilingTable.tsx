@@ -13,9 +13,9 @@ const TableRow = ({ filing }: { filing: Filing }) => {
         }}
       >
         <td>{filing.date}</td>
+        <td>{filing.file_class}</td>
         <td>{filing.title}</td>
         <td>{filing.author}</td>
-        <td>{filing.file_class}</td>
         <td>{filing.item_number}</td>
       </tr>
       <Modal open={open} setOpen={setOpen}>
@@ -39,7 +39,7 @@ export const FilingTable = ({
     <div
       className={
         scroll
-          ? "max-h-[500px] overflow-y-auto overflow-x-scroll"
+          ? "max-h-[1000px] overflow-y-auto overflow-x-scroll"
           : "overflow-y-auto"
       }
     >
@@ -47,11 +47,11 @@ export const FilingTable = ({
         <tbody>
           <tr className="border-b border-gray-200">
             <th className="text-left p-2 sticky top-0 bg-white">Date Filed</th>
-            <th className="text-left p-2 sticky top-0 bg-white">Title</th>
-            <th className="text-left p-2 sticky top-0 bg-white">Author</th>
             <th className="text-left p-2 sticky top-0 bg-white">
               Document Class
             </th>
+            <th className="text-left p-2 sticky top-0 bg-white">Title</th>
+            <th className="text-left p-2 sticky top-0 bg-white">Author</th>
             <th className="text-left p-2 sticky top-0 bg-white">Item Number</th>
           </tr>
           {filings.map((filing) => (
