@@ -43,21 +43,6 @@ func makeFileUpsertHandler(config UpsertHandlerConfig) func(w http.ResponseWrite
 		// token := r.Header.Get("Authorization")
 		isAuthorizedFunc := func() bool {
 			return true
-			// if !strings.HasPrefix(token, "Authenticated ") {
-			// 	return true
-			// }
-			// userID := strings.TrimPrefix(token, "Authenticated ")
-			// forbiddenPublic := !private && userID != "thaumaturgy"
-			// if forbiddenPublic || userID == "anonomous" {
-			// 	return false
-			// }
-			// if !insert {
-			// 	authorized, err := checkPrivateFileAuthorization(q, ctx, doc_uuid, userID)
-			// 	if !authorized || err == nil {
-			// 		return false
-			// 	}
-			// }
-			// return true
 		}
 		isAuthorized := isAuthorizedFunc()
 
@@ -70,24 +55,17 @@ func makeFileUpsertHandler(config UpsertHandlerConfig) func(w http.ResponseWrite
 		// TODO: IF user is not a paying user, disable insert functionality
 		defer r.Body.Close()
 		var newDocInfo CompleteFileSchema
-		// err = json.NewDecoder(r.Body).Decode(&newDocInfo)
 		bodyBytes, err := io.ReadAll(r.Body)
 		if err != nil {
 			errorstring := fmt.Sprintf("Error reading request body: %v\n", err)
 			fmt.Println(errorstring)
-
 			http.Error(w, errorstring, http.StatusBadRequest)
 			return
 		}
-		blah := fmt.Sprintln(string(bodyBytes))
-		fmt.Printf("%v\n", blah)
-		// var testUnmarshal TestCompleteFileSchema
-		// err = json.Unmarshal([]byte(blah), &testUnmarshal)
-		err = json.Unmarshal([]byte(blah), &newDocInfo)
+		err = json.Unmarshal(bodyBytes, &newDocInfo)
 		if err != nil {
 			errorstring := fmt.Sprintf("Error reading request body json: %v\n", err)
 			fmt.Println(errorstring)
-
 			http.Error(w, errorstring, http.StatusBadRequest)
 			return
 		}
@@ -118,10 +96,13 @@ func makeFileUpsertHandler(config UpsertHandlerConfig) func(w http.ResponseWrite
 			}
 		}
 
-		rawFileData := ConvertToCreationData(newDocInfo)
+		rawFileCreationData := ConvertToCreationData(newDocInfo)
+		// If we complete all other parts of the file upload process we can set this to true
+		// but assuming some parts fail we want the process to fail safe.
+		rawFileCreationData.Verified = pgtype.Bool{Bool: false, Valid: true}
 		var fileSchema FileSchema
 		if insert {
-			fileSchema, err = InsertPubPrivateFileObj(q, ctx, rawFileData, private)
+			fileSchema, err = InsertPubPrivateFileObj(q, ctx, rawFileCreationData, private)
 		} else {
 			if doc_uuid == empty_uuid {
 				err := fmt.Errorf("ASSERT FAILURE: docUUID should never have a null uuid, when updating document.")
@@ -134,7 +115,7 @@ func makeFileUpsertHandler(config UpsertHandlerConfig) func(w http.ResponseWrite
 				Bytes: doc_uuid,
 				Valid: true,
 			}
-			fileSchema, err = UpdatePubPrivateFileObj(q, ctx, rawFileData, private, pgUUID)
+			fileSchema, err = UpdatePubPrivateFileObj(q, ctx, rawFileCreationData, private, pgUUID)
 		}
 		if err != nil {
 			errorstring := fmt.Sprintf("Error inserting/updating document: %v\n", err)
@@ -151,48 +132,63 @@ func makeFileUpsertHandler(config UpsertHandlerConfig) func(w http.ResponseWrite
 			http.Error(w, errorstring, http.StatusInternalServerError)
 			return
 		}
+		has_db_errored := false
+		db_error_string := ""
 
 		// TODO: Implement error handling for any of these.
-		if err := fileStatusInsert(ctx, q, doc_uuid, newDocInfo.Stage, insert); err != nil {
-			errorstring := fmt.Sprintf("Error in fileStatusInsert: %v", err)
-			fmt.Println(errorstring)
-			// http.Error(w, errorstring, http.StatusInternalServerError)
-			// return
-		}
 
 		if err := upsertFileTexts(ctx, q, doc_uuid, newDocInfo.DocTexts, insert); err != nil {
 			errorstring := fmt.Sprintf("Error in upsertFileTexts: %v", err)
 			fmt.Println(errorstring)
-			// http.Error(w, errorstring, http.StatusInternalServerError)
-			// return
+			has_db_errored = true
+			db_error_string = db_error_string + errorstring + "\n"
 		}
 
 		if err := upsertFileMetadata(ctx, q, doc_uuid, newDocInfo.Mdata, insert); err != nil {
 			errorstring := fmt.Sprintf("Error in upsertFileMetadata: %v", err)
 			fmt.Println(errorstring)
-			// http.Error(w, errorstring, http.StatusInternalServerError)
-			// return
+			has_db_errored = true
+			db_error_string = db_error_string + errorstring + "\n"
 		}
 
 		if err := upsertFileExtras(ctx, q, doc_uuid, newDocInfo.Extra, insert); err != nil {
 			errorstring := fmt.Sprintf("Error in upsertFileExtras: %v", err)
 			fmt.Println(errorstring)
-			// http.Error(w, errorstring, http.StatusInternalServerError)
-			// return
+			has_db_errored = true
+			db_error_string = db_error_string + errorstring + "\n"
 		}
 
 		if err := fileAuthorsUpsert(ctx, q, doc_uuid, newDocInfo.Authors, insert); err != nil {
 			errorstring := fmt.Sprintf("Error in fileAuthorsUpsert: %v", err)
 			fmt.Println(errorstring)
-			// http.Error(w, errorstring, http.StatusInternalServerError)
-			// return
+			has_db_errored = true
+			db_error_string = db_error_string + errorstring + "\n"
 		}
 
 		if err := juristictionFileUpsert(ctx, q, doc_uuid, newDocInfo.Juristiction, insert); err != nil {
 			errorstring := fmt.Sprintf("Error in juristictionFileUpsert: %v", err)
 			fmt.Println(errorstring)
-			// http.Error(w, errorstring, http.StatusInternalServerError)
-			// return
+			has_db_errored = true
+			db_error_string = db_error_string + errorstring + "\n"
+		}
+		// Incorperate DB errors into filestatus
+		newDocInfo.Stage.IsErrored = newDocInfo.Stage.IsErrored || has_db_errored
+		newDocInfo.Stage.DatabaseErrorMsg = db_error_string
+
+		if err := fileStatusInsert(ctx, q, doc_uuid, newDocInfo.Stage, insert); err != nil {
+			errorstring := fmt.Sprintf("Error in fileStatusInsert: %v", err)
+			fmt.Println(errorstring)
+			has_db_errored = true
+			// db_error_string = db_error_string + errorstring + "\n"
+		}
+		encountered_error := newDocInfo.Stage.IsErrored || has_db_errored
+		if !encountered_error {
+			newDocInfo.Verified = true
+			params := dbstore.FileVerifiedUpdateParams{
+				Verified: pgtype.Bool{Bool: true, Valid: true},
+				ID:       pgtype.UUID{Bytes: doc_uuid, Valid: true},
+			}
+			q.FileVerifiedUpdate(ctx, params)
 		}
 
 		response, err := json.Marshal(newDocInfo)
