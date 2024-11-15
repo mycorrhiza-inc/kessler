@@ -1,8 +1,6 @@
 package crud
 
 import (
-	"fmt"
-
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -108,7 +106,7 @@ func CompleteFileSchemaPrune(input CompleteFileSchema) FileSchema {
 	}
 }
 
-func FileSchemaToComplete(input FileSchema) (CompleteFileSchema, error) {
+func CompleteFileSchemaInflateFromPartialSchema(input FileSchema) CompleteFileSchema {
 	return_schema := CompleteFileSchema{
 		ID:        input.ID,
 		Verified:  input.Verified,
@@ -119,7 +117,7 @@ func FileSchemaToComplete(input FileSchema) (CompleteFileSchema, error) {
 		IsPrivate: input.IsPrivate,
 	}
 	// TODO: Query Metadata json and also get other stuff
-	return return_schema, fmt.Errorf("not implemented")
+	return return_schema
 }
 
 func ConvertToCreationData(updateInfo CompleteFileSchema) FileCreationDataRaw {

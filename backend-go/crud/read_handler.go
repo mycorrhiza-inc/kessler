@@ -107,23 +107,6 @@ func ReadFileHandlerFactory(config FileHandlerConfig) http.HandlerFunc {
 
 			w.Header().Set("Content-Type", mimeType)
 			w.Write(content)
-		case "object":
-			file, err := GetFileObjectRaw(file_params)
-			if err != nil {
-				http.Error(w, "File not found", http.StatusNotFound)
-				return
-			}
-
-			// fileSchema := fileToSchema(file)
-			fileSchema, err := file, nil
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			response, _ := json.Marshal(fileSchema)
-
-			w.Header().Set("Content-Type", "application/json")
-			w.Write(response)
 		case "markdown":
 			originalLang := r.URL.Query().Get("original_lang") == "true"
 			matchLang := r.URL.Query().Get("match_lang")
@@ -135,6 +118,18 @@ func ReadFileHandlerFactory(config FileHandlerConfig) http.HandlerFunc {
 			}
 			w.Header().Set("Content-Type", "text/plain")
 			w.Write([]byte(markdownText))
+		case "object-minimal":
+			file, err := GetFileObjectRaw(file_params)
+			if err != nil {
+				http.Error(w, "File not found", http.StatusNotFound)
+				return
+			}
+			inflated_schema := CompleteFileSchemaInflateFromPartialSchema(file)
+
+			response, _ := json.Marshal(inflated_schema)
+
+			w.Header().Set("Content-Type", "application/json")
+			w.Write(response)
 		default:
 			fmt.Printf("Encountered unreachable code with file return type %v", return_type)
 			http.Error(w, "Congradulations for encountering unreachable code about support types!", http.StatusInternalServerError)
