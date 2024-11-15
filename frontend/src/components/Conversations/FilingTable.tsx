@@ -21,6 +21,7 @@ const TableRow = ({ filing }: { filing: Filing }) => {
       <Modal open={open} setOpen={setOpen}>
         <DocumentModalBody
           open={open}
+          title={filing.title}
           objectId={filing.id}
           overridePDFUrl={filing.url}
         />

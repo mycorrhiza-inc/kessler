@@ -104,7 +104,8 @@ const PDFContent = ({ docUUID }: { docUUID: string }) => {
 };
 
 const DocumentModalBody = ({ open, objectId, children, title }: ModalProps) => {
-  const fileUrlNamedDownload = `${apiURL}/v2/public/files/${objectId}/raw/${title}`;
+  const underscoredTitle = title ? title.replace(/ /g, "_") : "Unkown_Document";
+  const fileUrlNamedDownload = `${apiURL}/v2/public/files/${objectId}/raw/${underscoredTitle}.pdf`;
   return (
     <div className="modal-content standard-box ">
       {/* children are components passed to result modals from special searches */}
