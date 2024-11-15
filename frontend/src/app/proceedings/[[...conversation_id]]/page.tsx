@@ -10,7 +10,7 @@ export default async function Page({
 }) {
   const supabase = createClient();
   const slugs = (await params).conversation_id;
-  const slug = slugs?.[0];
+  const slug = slugs?.[0].toUpperCase();
   const headersList = headers();
   const host = headersList.get("host") || "";
   const hostsplits = host.split(".");
