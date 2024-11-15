@@ -95,10 +95,10 @@ func makeFileUpsertHandler(config UpsertHandlerConfig) func(w http.ResponseWrite
 				newDocInfo.ID = id
 			}
 		}
-
 		rawFileCreationData := ConvertToCreationData(newDocInfo)
 		// If we complete all other parts of the file upload process we can set this to true
 		// but assuming some parts fail we want the process to fail safe.
+		newDocInfo.Verified = false
 		rawFileCreationData.Verified = pgtype.Bool{Bool: false, Valid: true}
 		var fileSchema FileSchema
 		if insert {
