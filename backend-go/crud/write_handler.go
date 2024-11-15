@@ -188,7 +188,11 @@ func makeFileUpsertHandler(config UpsertHandlerConfig) func(w http.ResponseWrite
 				Verified: pgtype.Bool{Bool: true, Valid: true},
 				ID:       pgtype.UUID{Bytes: doc_uuid, Valid: true},
 			}
-			q.FileVerifiedUpdate(ctx, params)
+			_, err := q.FileVerifiedUpdate(ctx, params)
+			if err != nil {
+				errorstring := fmt.Sprintf("Error in FileVerifiedUpdate, this shouldnt effect anything, but might mean something weird is going on, since this code is only called if every other DB operation succeeded: %v", err)
+				fmt.Println(errorstring)
+			}
 		}
 
 		response, err := json.Marshal(newDocInfo)
