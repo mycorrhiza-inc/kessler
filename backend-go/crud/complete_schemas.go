@@ -94,25 +94,12 @@ type CompleteFileSchema struct {
 	DocTexts []FileChildTextSource `json:"doc_texts"`
 }
 
-type SemiCompleteFileSchema struct {
-	ID           uuid.UUID               `json:"id"`
-	Verified     bool                    `json:"verified"`
-	Extension    string                  `json:"extension"`
-	Lang         string                  `json:"lang"`
-	Name         string                  `json:"name"`
-	Hash         string                  `json:"hash"`
-	IsPrivate    bool                    `json:"is_private"`
-	Mdata        FileMetadataSchema      `json:"mdata"`
-	Stage        DocProcStage            `json:"stage"`
-	Extra        FileGeneratedExtras     `json:"extra"`
-	Authors      []AuthorInformation     `json:"authors"`
-	Juristiction JuristictionInformation `json:"juristiction"`
-}
 type FileMetadataSchema map[string]interface{}
 
 func CompleteFileSchemaPrune(input CompleteFileSchema) FileSchema {
 	return FileSchema{
 		ID:        input.ID,
+		Verified:  input.Verified,
 		Extension: input.Extension,
 		Lang:      input.Lang,
 		Name:      input.Name,
@@ -124,6 +111,7 @@ func CompleteFileSchemaPrune(input CompleteFileSchema) FileSchema {
 func FileSchemaToComplete(input FileSchema) (CompleteFileSchema, error) {
 	return_schema := CompleteFileSchema{
 		ID:        input.ID,
+		Verified:  input.Verified,
 		Extension: input.Extension,
 		Lang:      input.Lang,
 		Name:      input.Name,
