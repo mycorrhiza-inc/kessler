@@ -156,11 +156,25 @@ func UpdatePubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreatio
 		Hash:      fileCreation.Hash,
 		Verified:  fileCreation.Verified,
 	}
-	resultID, err := q.UpdateFile(ctx, params)
+	resultIDs, err := q.UpdateFile(ctx, params)
 	if err != nil {
 		fmt.Printf("Error updating file: %v\n", err)
-		return FileSchema{ID: resultID.Bytes}, err
+		return FileSchema{}, err
 	}
+	if len(resultIDs) == 0 {
+		err = fmt.Errorf("no files found to update")
+		return FileSchema{}, err
+	}
+	if len(resultIDs) > 1 {
+		err = fmt.Errorf("ASSERTION ERROR: multiple files found to update, dispite the file id being unique, something is probably wrong")
+		return FileSchema{}, err
+	}
+	resultID := resultIDs[0]
+	if resultID != pgUUID {
+		err = fmt.Errorf("ASSERTION ERROR: file id does not match the one passed in, the sql should never allow this, something is very wrong")
+		return FileSchema{}, err
+	}
+
 	resultFile, err := q.ReadFile(ctx, resultID)
 	if err != nil {
 		fmt.Printf("Error reading file after update: %v\n", err)
