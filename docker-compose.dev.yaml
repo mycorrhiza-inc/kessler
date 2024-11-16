@@ -13,6 +13,7 @@ services:
       - ./frontend/src/:/app/src
     labels:
       - "traefik.enable=true"
+      - "traefik.namespace=kessler"
       - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
     expose:
       - 3000
@@ -23,9 +24,10 @@ services:
 
   reverse-proxy:
     image: traefik:v3.1.2
-    command: >
-      --api.insecure=true
-      --providers.docker
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.constraints=Label(`traefik.namespace`,`kessler`)"
     expose:
       - 80
       - 443
@@ -50,5 +52,6 @@ services:
       - 4041
     labels:
       - "traefik.enable=true"
+      - "traefik.namespace=kessler"
       - "traefik.http.routers.go-backend.rule=PathPrefix(`/v2`)"
       - "traefik.http.middlewares.test-stripprefix.stripprefix.prefixes=/v2"

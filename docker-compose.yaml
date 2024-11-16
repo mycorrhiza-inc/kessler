@@ -7,6 +7,7 @@ services:
       # - "--log.level=DEBUG"
       - "--api.insecure=true"
       - "--providers.docker=true"
+      - "--providers.docker.constraints=Label(`traefik.namespace`,`kessler`)"
       - "--providers.docker.exposedbydefault=false"
       - "--entryPoints.websecure.address=:443"
       - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
@@ -31,6 +32,7 @@ services:
       - ./config/global.env:/app/.env
     labels:
       - "traefik.enable=true"
+      - "traefik.namespace=kessler"
       - "traefik.http.routers.frontend.rule=Host(`kessler.xyz`) && PathPrefix(`/`)"
       - "traefik.http.routers.frontend.rule=HostRegexp(`{state:al|ak|az|ar|ca|co|ct|de|fl|ga|hi|id|il|in|ia|ks|ky|la|me|md|ma|mi|mn|ms|mo|mt|ne|nv|nh|nj|nm|ny|nc|nd|oh|ok|or|pa|ri|sc|sd|tn|tx|ut|vt|va|wa|wv|wi|wy}.kessler.xyz`)"
       - traefik.http.routers.blog.tls.domains[0].main=kessler.xyz
@@ -60,6 +62,7 @@ services:
       - 4041
     labels:
       - "traefik.enable=true"
+      - "traefik.namespace=kessler"
       - "traefik.http.routers.backend-go.rule=Host(`api.kessler.xyz`) && PathPrefix(`/v2`)"
       # - "traefik.http.routers.backend-go.middlewares=state-redirect@file"
       - "traefik.http.middlewares.test-stripprefix.stripprefix.prefixes=/v2"
