@@ -34,7 +34,7 @@ WHERE public.file.id = $1;
 -- name: HashGetFileID :many 
 SELECT id
 FROM public.file
-Where public.file.hash = $1;
+WHERE public.file.hash = $1;
 -- name: UpdateFile :exec
 UPDATE public.file
 SET extension = $1,
@@ -44,7 +44,7 @@ SET extension = $1,
   hash = $5,
   verified = $6,
   updated_at = NOW()
-WHERE public.file.id = $7;
+WHERE id = $7;
 -- name: ReadFile :one
 SELECT *
 FROM public.file

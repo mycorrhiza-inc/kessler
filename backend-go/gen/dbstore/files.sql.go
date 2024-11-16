@@ -266,7 +266,7 @@ func (q *Queries) GetFileWithMetadata(ctx context.Context, id pgtype.UUID) (GetF
 const hashGetFileID = `-- name: HashGetFileID :many
 SELECT id
 FROM public.file
-Where public.file.hash = $1
+WHERE public.file.hash = $1
 `
 
 func (q *Queries) HashGetFileID(ctx context.Context, hash pgtype.Text) ([]pgtype.UUID, error) {
@@ -431,7 +431,7 @@ SET extension = $1,
   hash = $5,
   verified = $6,
   updated_at = NOW()
-WHERE public.file.id = $7
+WHERE id = $7
 `
 
 type UpdateFileParams struct {
