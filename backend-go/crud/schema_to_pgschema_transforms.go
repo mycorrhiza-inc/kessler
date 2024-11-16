@@ -156,30 +156,31 @@ func UpdatePubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreatio
 		Hash:      fileCreation.Hash,
 		Verified:  fileCreation.Verified,
 	}
-	resultIDs, err := q.UpdateFile(ctx, params)
+	err := q.UpdateFile(ctx, params)
 	if err != nil {
 		fmt.Printf("Error updating file: %v\n", err)
 		return FileSchema{}, err
 	}
-	if len(resultIDs) == 0 {
-		err = fmt.Errorf("no files found to update")
+
+	resultFile, err := q.ReadFile(ctx, pgUUID)
+	if err != nil {
+		fmt.Printf("Error reading file after update: %v\n", err)
 		return FileSchema{}, err
 	}
-	if len(resultIDs) > 1 {
-		err = fmt.Errorf("ASSERTION ERROR: multiple files found to update, dispite the file id being unique, something is probably wrong")
-		return FileSchema{}, err
+	update_succeded_check := func(updatedFile dbstore.File, fileCreated FileCreationDataRaw) bool {
+		private_same := updatedFile.Isprivate != fileCreated.IsPrivate
+		lang_same := updatedFile.Lang == fileCreated.Lang
+		name_same := updatedFile.Name == fileCreated.Name
+		hash_same := updatedFile.Hash == fileCreated.Hash
+		verified_same := updatedFile.Verified == fileCreated.Verified
+		everything_same := private_same && lang_same && name_same && hash_same && verified_same
+		return everything_same
 	}
-	resultID := resultIDs[0]
-	if resultID != pgUUID {
-		err = fmt.Errorf("ASSERTION ERROR: file id does not match the one passed in, the sql should never allow this, something is very wrong")
+	if !update_succeded_check(resultFile, fileCreation) {
+		err := fmt.Errorf("File has been updated, but not all fields have been updated")
 		return FileSchema{}, err
 	}
 
-	resultFile, err := q.ReadFile(ctx, resultID)
-	if err != nil {
-		fmt.Printf("Error reading file after update: %v\n", err)
-		return FileSchema{ID: resultID.Bytes}, err
-	}
 	return PublicFileToSchema(resultFile), nil
 }
 
