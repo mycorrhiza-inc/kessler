@@ -432,7 +432,7 @@ SET extension = $1,
   verified = $6,
   updated_at = NOW()
 WHERE public.file.id = $7
-RETURNING id
+RETURNING public.file.id
 `
 
 type UpdateFileParams struct {
