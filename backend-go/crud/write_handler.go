@@ -182,7 +182,8 @@ func makeFileUpsertHandler(config UpsertHandlerConfig) func(w http.ResponseWrite
 			// db_error_string = db_error_string + errorstring + "\n"
 		}
 		encountered_error := newDocInfo.Stage.IsErrored || has_db_errored
-		if !encountered_error {
+		completed_successfully := !encountered_error && newDocInfo.Stage.IsCompleted
+		if completed_successfully {
 			newDocInfo.Verified = true
 			params := dbstore.FileVerifiedUpdateParams{
 				Verified: pgtype.Bool{Bool: true, Valid: true},
