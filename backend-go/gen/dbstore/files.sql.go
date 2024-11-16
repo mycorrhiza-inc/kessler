@@ -422,7 +422,7 @@ func (q *Queries) StageLogFileGetLatest(ctx context.Context, fileID pgtype.UUID)
 	return i, err
 }
 
-const updateFile = `-- name: UpdateFile :many
+const updateFile = `-- name: UpdateFile :exec
 UPDATE public.file
 SET extension = $1,
   lang = $2,
@@ -432,7 +432,6 @@ SET extension = $1,
   verified = $6,
   updated_at = NOW()
 WHERE public.file.id = $7
-RETURNING public.file.id
 `
 
 type UpdateFileParams struct {
@@ -445,8 +444,8 @@ type UpdateFileParams struct {
 	ID        pgtype.UUID
 }
 
-func (q *Queries) UpdateFile(ctx context.Context, arg UpdateFileParams) ([]pgtype.UUID, error) {
-	rows, err := q.db.Query(ctx, updateFile,
+func (q *Queries) UpdateFile(ctx context.Context, arg UpdateFileParams) error {
+	_, err := q.db.Exec(ctx, updateFile,
 		arg.Extension,
 		arg.Lang,
 		arg.Name,
@@ -455,22 +454,7 @@ func (q *Queries) UpdateFile(ctx context.Context, arg UpdateFileParams) ([]pgtyp
 		arg.Verified,
 		arg.ID,
 	)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []pgtype.UUID
-	for rows.Next() {
-		var id pgtype.UUID
-		if err := rows.Scan(&id); err != nil {
-			return nil, err
-		}
-		items = append(items, id)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
+	return err
 }
 
 const updateMetadata = `-- name: UpdateMetadata :one
