@@ -158,10 +158,15 @@ func UpdatePubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreatio
 	}
 	resultID, err := q.UpdateFile(ctx, params)
 	if err != nil {
+		fmt.Printf("Error updating file: %v\n", err)
 		return FileSchema{ID: resultID.Bytes}, err
 	}
 	resultFile, err := q.ReadFile(ctx, resultID)
-	return PublicFileToSchema(resultFile), err
+	if err != nil {
+		fmt.Printf("Error reading file after update: %v\n", err)
+		return FileSchema{ID: resultID.Bytes}, err
+	}
+	return PublicFileToSchema(resultFile), nil
 }
 
 func NukePriPubFileTexts(q dbstore.Queries, ctx context.Context, pgUUID pgtype.UUID) error {
