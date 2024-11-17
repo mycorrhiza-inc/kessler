@@ -56,17 +56,17 @@ func upsertFileMetadata(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UU
 		Bool:  false,
 		Valid: true,
 	}
-	if insert {
-		insert_args := dbstore.InsertMetadataParams{ID: doc_pgUUID, Isprivate: pgPrivate, Mdata: json_obj}
-		_, err := q.InsertMetadata(
-			ctx, insert_args)
-		if err != nil {
+	if !insert {
+		args := dbstore.UpdateMetadataParams{ID: doc_pgUUID, Isprivate: pgPrivate, Mdata: json_obj}
+		_, err = q.UpdateMetadata(
+			ctx, args)
+		if (err != nil) && (err.Error() != "no rows in result set") {
 			return err
 		}
 	}
-	args := dbstore.UpdateMetadataParams{ID: doc_pgUUID, Isprivate: pgPrivate, Mdata: json_obj}
-	_, err = q.UpdateMetadata(
-		ctx, args)
+	insert_args := dbstore.InsertMetadataParams{ID: doc_pgUUID, Isprivate: pgPrivate, Mdata: json_obj}
+	_, err = q.InsertMetadata(
+		ctx, insert_args)
 	if err != nil {
 		return err
 	}
@@ -86,8 +86,8 @@ func juristictionFileUpsert(ctx context.Context, q dbstore.Queries, doc_uuid uui
 	agency := pgtype.Text{String: juristiction_info.Agency}
 	proceeding_name := pgtype.Text{String: juristiction_info.ProceedingName}
 
-	if insert {
-		insert_args := dbstore.JuristictionFileInsertParams{
+	if !insert {
+		update_args := dbstore.JuristictionFileUpdateParams{
 			ID:             doc_pgUUID,
 			Country:        country,
 			State:          state,
@@ -96,12 +96,12 @@ func juristictionFileUpsert(ctx context.Context, q dbstore.Queries, doc_uuid uui
 			ProceedingName: proceeding_name,
 			Extra:          json_obj,
 		}
-		_, err := q.JuristictionFileInsert(ctx, insert_args)
-		if err != nil {
+		_, err = q.JuristictionFileUpdate(ctx, update_args)
+		if (err != nil) && (err.Error() != "no rows in result set") {
 			return err
 		}
 	}
-	update_args := dbstore.JuristictionFileUpdateParams{
+	insert_args := dbstore.JuristictionFileInsertParams{
 		ID:             doc_pgUUID,
 		Country:        country,
 		State:          state,
@@ -110,7 +110,7 @@ func juristictionFileUpsert(ctx context.Context, q dbstore.Queries, doc_uuid uui
 		ProceedingName: proceeding_name,
 		Extra:          json_obj,
 	}
-	_, err = q.JuristictionFileUpdate(ctx, update_args)
+	_, err = q.JuristictionFileInsert(ctx, insert_args)
 	if err != nil {
 		return err
 	}
@@ -130,17 +130,16 @@ func upsertFileExtras(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID
 		Bool:  false,
 		Valid: true,
 	}
-	if insert {
-		args := dbstore.ExtrasFileCreateParams{ID: doc_pgUUID, Isprivate: pgPrivate, ExtraObj: extras_json_obj}
-		_, err := q.ExtrasFileCreate(
+	if !insert {
+		args := dbstore.ExtrasFileUpdateParams{ID: doc_pgUUID, Isprivate: pgPrivate, ExtraObj: extras_json_obj}
+		_, err = q.ExtrasFileUpdate(
 			ctx, args)
-		if err != nil {
+		if (err != nil) && (err.Error() != "no rows in result set") {
 			return err
 		}
-		return nil
 	}
-	args := dbstore.ExtrasFileUpdateParams{ID: doc_pgUUID, Isprivate: pgPrivate, ExtraObj: extras_json_obj}
-	_, err = q.ExtrasFileUpdate(
+	args := dbstore.ExtrasFileCreateParams{ID: doc_pgUUID, Isprivate: pgPrivate, ExtraObj: extras_json_obj}
+	_, err = q.ExtrasFileCreate(
 		ctx, args)
 	if err != nil {
 		return err
