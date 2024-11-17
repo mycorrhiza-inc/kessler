@@ -155,6 +155,7 @@ func UpdatePubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreatio
 		Isprivate: fileCreation.IsPrivate,
 		Hash:      fileCreation.Hash,
 		Verified:  fileCreation.Verified,
+		ID:        pgUUID,
 	}
 	err := q.UpdateFile(ctx, params)
 	if err != nil {
