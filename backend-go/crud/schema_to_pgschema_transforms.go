@@ -168,17 +168,29 @@ func UpdatePubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreatio
 		fmt.Printf("Error reading file after update: %v\n", err)
 		return FileSchema{}, err
 	}
-	update_succeded_check := func(updatedFile dbstore.File, fileCreated FileCreationDataRaw) bool {
-		private_same := updatedFile.Isprivate != fileCreated.IsPrivate
-		lang_same := updatedFile.Lang == fileCreated.Lang
-		name_same := updatedFile.Name == fileCreated.Name
-		hash_same := updatedFile.Hash == fileCreated.Hash
-		verified_same := updatedFile.Verified == fileCreated.Verified
-		everything_same := private_same && lang_same && name_same && hash_same && verified_same
-		return everything_same
+	update_succeded_check := func(updatedFile dbstore.File, fileCreated FileCreationDataRaw) error {
+		var mismatches []string
+		if updatedFile.Isprivate != fileCreated.IsPrivate {
+			mismatches = append(mismatches, fmt.Sprintf("private (got: %v, want: %v)", updatedFile.Isprivate, fileCreated.IsPrivate))
+		}
+		if updatedFile.Lang != fileCreated.Lang {
+			mismatches = append(mismatches, fmt.Sprintf("lang (got: %v, want: %v)", updatedFile.Lang, fileCreated.Lang))
+		}
+		if updatedFile.Name != fileCreated.Name {
+			mismatches = append(mismatches, fmt.Sprintf("name (got: %v, want: %v)", updatedFile.Name, fileCreated.Name))
+		}
+		if updatedFile.Hash != fileCreated.Hash {
+			mismatches = append(mismatches, fmt.Sprintf("hash (got: %v, want: %v)", updatedFile.Hash, fileCreated.Hash))
+		}
+		if updatedFile.Verified != fileCreated.Verified {
+			mismatches = append(mismatches, fmt.Sprintf("verified (got: %v, want: %v)", updatedFile.Verified, fileCreated.Verified))
+		}
+		if len(mismatches) > 0 {
+			return fmt.Errorf("Encountered Mismatched fields while updating: %v", mismatches)
+		}
+		return nil
 	}
-	if !update_succeded_check(resultFile, fileCreation) {
-		err := fmt.Errorf("File has been updated, but not all fields have been updated")
+	if err := update_succeded_check(resultFile, fileCreation); err != nil {
 		return FileSchema{}, err
 	}
 
