@@ -52,7 +52,6 @@ func makeFileUpsertHandler(config UpsertHandlerConfig) func(w http.ResponseWrite
 			return
 		}
 		// Proceed with the write operation
-		// TODO: IF user is not a paying user, disable insert functionality
 		defer r.Body.Close()
 		var newDocInfo CompleteFileSchema
 		bodyBytes, err := io.ReadAll(r.Body)
@@ -101,6 +100,8 @@ func makeFileUpsertHandler(config UpsertHandlerConfig) func(w http.ResponseWrite
 		newDocInfo.Verified = false
 		rawFileCreationData.Verified = pgtype.Bool{Bool: false, Valid: true}
 		var fileSchema FileSchema
+		// TODO : For print debugging only, might be a good idea to put these in a deubug logger with lowest priority??
+		fmt.Printf("Inserting document with uuid: %s\n", doc_uuid)
 		if insert {
 			fileSchema, err = InsertPubPrivateFileObj(q, ctx, rawFileCreationData, private)
 		} else {
@@ -135,8 +136,8 @@ func makeFileUpsertHandler(config UpsertHandlerConfig) func(w http.ResponseWrite
 		has_db_errored := false
 		db_error_string := ""
 
-		// TODO: Implement error handling for any of these.
-
+		// TODO : For print debugging only, might be a good idea to put these in a deubug logger with lowest priority??
+		fmt.Printf("Attempting to insert all file extras, texts, metadata for uuid: %s\n", doc_uuid)
 		if err := upsertFileTexts(ctx, q, doc_uuid, newDocInfo.DocTexts, insert); err != nil {
 			errorstring := fmt.Sprintf("Error in upsertFileTexts: %v", err)
 			fmt.Println(errorstring)
@@ -195,6 +196,9 @@ func makeFileUpsertHandler(config UpsertHandlerConfig) func(w http.ResponseWrite
 				fmt.Println(errorstring)
 			}
 		}
+
+		// TODO : For print debugging only, might be a good idea to put these in a deubug logger with lowest priority??
+		fmt.Printf("Completed all DB Operations for uuid, returning schema: %s\n", doc_uuid)
 
 		response, err := json.Marshal(newDocInfo)
 		if err != nil {
