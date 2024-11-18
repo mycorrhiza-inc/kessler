@@ -11,7 +11,8 @@ import (
 )
 
 func upsertFileTexts(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, texts []FileChildTextSource, insert bool) error {
-	// FIXME: Sometimes this is getting called with an insert when the metadata already exists in the table, this causes a PGERROR, since it violates uniqueness. However, setting it up so it tries to update will fall back to insert if the file doesnt exist. Its probably a good idea to remove this and debug what is causing the new file thing at some point.
+	// Sometimes this is getting called with an insert when the metadata already exists in the table, this causes a PGERROR, since it violates uniqueness. However, setting it up so it tries to update will fall back to insert if the file doesnt exist. Its probably a good idea to remove this and debug what is causing the new file thing at some point.
+	// I think I might have solved the error, it was only happenining in the other ones so its added here for an abundance of safety and only degrades perf slightly
 	insert = false
 	doc_pgUUID := pgtype.UUID{Bytes: doc_uuid, Valid: true}
 
@@ -48,7 +49,7 @@ func upsertFileTexts(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID,
 }
 
 func upsertFileMetadata(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, metadata FileMetadataSchema, insert bool) error {
-	// FIXME: Sometimes this is getting called with an insert when the metadata already exists in the table, this causes a PGERROR, since it violates uniqueness. However, setting it up so it tries to update will fall back to insert if the file doesnt exist. Its probably a good idea to remove this and debug what is causing the new file thing at some point.
+	// Sometimes this is getting called with an insert when the metadata already exists in the table, this causes a PGERROR, since it violates uniqueness. However, setting it up so it tries to update will fall back to insert if the file doesnt exist. Its probably a good idea to remove this and debug what is causing the new file thing at some point.
 	// UPDATE: I am pretty sure I solved it this should be safe to take out soon - nic
 	insert = false
 	doc_pgUUID := pgtype.UUID{Bytes: doc_uuid, Valid: true}
@@ -77,7 +78,7 @@ func upsertFileMetadata(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UU
 }
 
 func juristictionFileUpsert(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, juristiction_info JuristictionInformation, insert bool) error {
-	// FIXME: Sometimes this is getting called with an insert when the metadata already exists in the table, this causes a PGERROR, since it violates uniqueness. However, setting it up so it tries to update will fall back to insert if the file doesnt exist. Its probably a good idea to remove this and debug what is causing the new file thing at some point.
+	// Sometimes this is getting called with an insert when the metadata already exists in the table, this causes a PGERROR, since it violates uniqueness. However, setting it up so it tries to update will fall back to insert if the file doesnt exist. Its probably a good idea to remove this and debug what is causing the new file thing at some point.
 	// UPDATE: I am pretty sure I solved it this should be safe to take out soon - nic
 	insert = false
 	json_obj, err := json.Marshal(juristiction_info.ExtraObject)
@@ -122,7 +123,7 @@ func juristictionFileUpsert(ctx context.Context, q dbstore.Queries, doc_uuid uui
 }
 
 func upsertFileExtras(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, extras FileGeneratedExtras, insert bool) error {
-	// FIXME: Sometimes this is getting called with an insert when the metadata already exists in the table, this causes a PGERROR, since it violates uniqueness. However, setting it up so it tries to update will fall back to insert if the file doesnt exist. Its probably a good idea to remove this and debug what is causing the new file thing at some point.
+	// Sometimes this is getting called with an insert when the metadata already exists in the table, this causes a PGERROR, since it violates uniqueness. However, setting it up so it tries to update will fall back to insert if the file doesnt exist. Its probably a good idea to remove this and debug what is causing the new file thing at some point.
 	// UPDATE: I am pretty sure I solved it this should be safe to take out soon - nic
 	insert = false
 	doc_pgUUID := pgtype.UUID{Bytes: doc_uuid, Valid: true}
