@@ -175,7 +175,7 @@ func makeFileUpsertHandler(config UpsertHandlerConfig) func(w http.ResponseWrite
 		newDocInfo.Stage.IsErrored = newDocInfo.Stage.IsErrored || has_db_errored
 		newDocInfo.Stage.DatabaseErrorMsg = db_error_string
 
-		if err := fileStatusInsert(ctx, q, doc_uuid, newDocInfo.Stage, insert); err != nil {
+		if err := fileStatusInsert(ctx, q, doc_uuid, newDocInfo.Stage); err != nil {
 			errorstring := fmt.Sprintf("Error in fileStatusInsert: %v", err)
 			fmt.Println(errorstring)
 			has_db_errored = true
