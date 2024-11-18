@@ -97,6 +97,7 @@ func verifyConversationUUID(ctx context.Context, q dbstore.Queries, conv_info *C
 	}
 
 	// Try to find existing conversation for this docket
+	// TODO: Change query to also match state if state exists
 	results, err := q.DocketConversationFetchByDocketIdMatch(ctx, conv_info.DocketID)
 	if err != nil {
 		return *conv_info, err
@@ -125,7 +126,7 @@ func verifyConversationUUID(ctx context.Context, q dbstore.Queries, conv_info *C
 	return *conv_info, nil
 }
 
-func conversationUpsert(ctx context.Context, q dbstore.Queries, conv_info ConversationInformation, insert bool) error {
+func fileConversationUpsert(ctx context.Context, q dbstore.Queries, file_id uuid.UUID, conv_info ConversationInformation, insert bool) error {
 	if !insert {
 		err := q.DocketConversationDelete(ctx, pgtype.UUID{Bytes: conv_info.ID, Valid: true})
 		if err != nil {
@@ -143,12 +144,10 @@ func conversationUpsert(ctx context.Context, q dbstore.Queries, conv_info Conver
 		return fmt.Errorf("ASSERT FAILURE: verifyConversationUUID should never return a null uuid")
 	}
 
-	update_params := dbstore.DocketConversationUpdateParams{
-		DocketID: new_conv_info.DocketID,
-		State:    new_conv_info.State,
-		ID:       pgtype.UUID{Bytes: new_conv_info.ID, Valid: true},
+	insert_params := dbstore.DocketDocumentInsertParams{
+		DocketID: pgtype.UUID{Bytes: new_conv_info.ID, Valid: true},
+		FileID:   pgtype.UUID{Bytes: file_id, Valid: true},
 	}
-
-	_, err = q.DocketConversationUpdate(ctx, update_params)
+	_, err = q.DocketDocumentInsert(ctx, insert_params)
 	return err
 }

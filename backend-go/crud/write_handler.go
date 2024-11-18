@@ -198,6 +198,12 @@ func makeFileUpsertHandler(config UpsertHandlerConfig) func(w http.ResponseWrite
 			has_db_errored = true
 			db_error_string = db_error_string + errorstring + "\n"
 		}
+		if err := fileConversationUpsert(ctx, q, doc_uuid, newDocInfo.Conversation, insert); err != nil {
+			errorstring := fmt.Sprintf("Error in fileCitationsUpsert: %v", err)
+			fmt.Println(errorstring)
+			has_db_errored = true
+			db_error_string = db_error_string + errorstring + "\n"
+		}
 
 		fmt.Printf("Starting juristictionFileUpsert for uuid: %s\n", doc_uuid)
 		if err := juristictionFileUpsert(ctx, q, doc_uuid, newDocInfo.Juristiction, insert); err != nil {
