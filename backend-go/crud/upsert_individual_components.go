@@ -49,6 +49,7 @@ func upsertFileTexts(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID,
 
 func upsertFileMetadata(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, metadata FileMetadataSchema, insert bool) error {
 	// FIXME: Sometimes this is getting called with an insert when the metadata already exists in the table, this causes a PGERROR, since it violates uniqueness. However, setting it up so it tries to update will fall back to insert if the file doesnt exist. Its probably a good idea to remove this and debug what is causing the new file thing at some point.
+	// UPDATE: I am pretty sure I solved it this should be safe to take out soon - nic
 	insert = false
 	doc_pgUUID := pgtype.UUID{Bytes: doc_uuid, Valid: true}
 	metadata["id"] = doc_uuid.String()
@@ -65,22 +66,19 @@ func upsertFileMetadata(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UU
 		_, err = q.UpdateMetadata(
 			ctx, args)
 		// If encounter a not found error, break error handling control flow and inserting the file metadata.
-		if (err != nil) && (err.Error() != "no rows in result set") {
+		if err.Error() != "no rows in result set" {
 			return err
 		}
 	}
 	insert_args := dbstore.InsertMetadataParams{ID: doc_pgUUID, Isprivate: pgPrivate, Mdata: json_obj}
 	_, err = q.InsertMetadata(
 		ctx, insert_args)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func juristictionFileUpsert(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, juristiction_info JuristictionInformation, insert bool) error {
 	// FIXME: Sometimes this is getting called with an insert when the metadata already exists in the table, this causes a PGERROR, since it violates uniqueness. However, setting it up so it tries to update will fall back to insert if the file doesnt exist. Its probably a good idea to remove this and debug what is causing the new file thing at some point.
+	// UPDATE: I am pretty sure I solved it this should be safe to take out soon - nic
 	insert = false
 	json_obj, err := json.Marshal(juristiction_info.ExtraObject)
 	if err != nil {
@@ -105,7 +103,8 @@ func juristictionFileUpsert(ctx context.Context, q dbstore.Queries, doc_uuid uui
 		}
 		_, err = q.JuristictionFileUpdate(ctx, update_args)
 		// If encounter a not found error, break error handling control flow and inserting object
-		if (err != nil) && (err.Error() != "no rows in result set") {
+		if err.Error() != "no rows in result set" {
+			// If the error is nil, this still returns the error
 			return err
 		}
 	}
@@ -119,15 +118,12 @@ func juristictionFileUpsert(ctx context.Context, q dbstore.Queries, doc_uuid uui
 		Extra:          json_obj,
 	}
 	_, err = q.JuristictionFileInsert(ctx, insert_args)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func upsertFileExtras(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, extras FileGeneratedExtras, insert bool) error {
 	// FIXME: Sometimes this is getting called with an insert when the metadata already exists in the table, this causes a PGERROR, since it violates uniqueness. However, setting it up so it tries to update will fall back to insert if the file doesnt exist. Its probably a good idea to remove this and debug what is causing the new file thing at some point.
+	// UPDATE: I am pretty sure I solved it this should be safe to take out soon - nic
 	insert = false
 	doc_pgUUID := pgtype.UUID{Bytes: doc_uuid, Valid: true}
 	extras_json_obj, err := json.Marshal(extras)
@@ -144,17 +140,15 @@ func upsertFileExtras(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID
 		args := dbstore.ExtrasFileUpdateParams{ID: doc_pgUUID, Isprivate: pgPrivate, ExtraObj: extras_json_obj}
 		_, err = q.ExtrasFileUpdate(ctx, args)
 		// If encounter a not found error, break error handling control flow and inserting object
-		if (err != nil) && (err.Error() != "no rows in result set") {
+		if err.Error() != "no rows in result set" {
+			// If the error is nil, this still returns the error
 			return err
 		}
 	}
 	args := dbstore.ExtrasFileCreateParams{ID: doc_pgUUID, Isprivate: pgPrivate, ExtraObj: extras_json_obj}
 	_, err = q.ExtrasFileCreate(
 		ctx, args)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func fileStatusInsert(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, stage DocProcStage) error {
