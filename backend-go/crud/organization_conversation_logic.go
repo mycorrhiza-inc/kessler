@@ -63,8 +63,7 @@ func fileAuthorsUpsert(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUI
 		if err != nil {
 			return err
 		}
-		empty_uuid, _ := uuid.Parse("00000000-0000-0000-0000-000000000000")
-		if new_author_info.AuthorID == empty_uuid {
+		if new_author_info.AuthorID == uuid.Nil {
 			return fmt.Errorf("ASSERT FAILURE: verifyAuthorOrganizationUUID should never return a null uuid.")
 		}
 
@@ -91,8 +90,7 @@ func fileAuthorsUpsert(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUI
 }
 
 func verifyConversationUUID(ctx context.Context, q dbstore.Queries, conv_info *ConversationInformation) (ConversationInformation, error) {
-	empty_uuid, _ := uuid.Parse("00000000-0000-0000-0000-000000000000")
-	if conv_info.ID != empty_uuid {
+	if conv_info.ID != uuid.Nil {
 		return *conv_info, nil
 	}
 
@@ -127,6 +125,10 @@ func verifyConversationUUID(ctx context.Context, q dbstore.Queries, conv_info *C
 }
 
 func fileConversationUpsert(ctx context.Context, q dbstore.Queries, file_id uuid.UUID, conv_info ConversationInformation, insert bool) error {
+	shouldnt_process := conv_info.ID == uuid.Nil && conv_info.DocketID == ""
+	if shouldnt_process {
+		return nil
+	}
 	if !insert {
 		err := q.DocketConversationDelete(ctx, pgtype.UUID{Bytes: conv_info.ID, Valid: true})
 		if err != nil {
@@ -139,8 +141,7 @@ func fileConversationUpsert(ctx context.Context, q dbstore.Queries, file_id uuid
 		return err
 	}
 
-	empty_uuid, _ := uuid.Parse("00000000-0000-0000-0000-000000000000")
-	if new_conv_info.ID == empty_uuid {
+	if new_conv_info.ID == uuid.Nil {
 		return fmt.Errorf("ASSERT FAILURE: verifyConversationUUID should never return a null uuid")
 	}
 
