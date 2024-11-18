@@ -55,6 +55,7 @@ func upsertFileMetadata(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UU
 	doc_pgUUID := pgtype.UUID{Bytes: doc_uuid, Valid: true}
 	metadata["id"] = doc_uuid.String()
 	fmt.Printf("Is it the json marshall?\n")
+
 	json_obj, err := json.Marshal(metadata)
 	if err != nil {
 		return err
@@ -70,9 +71,10 @@ func upsertFileMetadata(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UU
 		fmt.Printf("Defined args successfully\n")
 		_, err = q.UpdateMetadata(ctx, args)
 		// If encounter a not found error, break error handling control flow and inserting the file metadata.
-		fmt.Printf("Very confused, it wasnt any of the db operations either.\n")
+		if err == nil {
+			return nil
+		}
 		if err.Error() != "no rows in result set" {
-			fmt.Printf("Its throwing an error\n")
 			return err
 		}
 	}
@@ -110,6 +112,9 @@ func juristictionFileUpsert(ctx context.Context, q dbstore.Queries, doc_uuid uui
 		}
 		_, err = q.JuristictionFileUpdate(ctx, update_args)
 		// If encounter a not found error, break error handling control flow and inserting object
+		if err == nil {
+			return nil
+		}
 		if err.Error() != "no rows in result set" {
 			// If the error is nil, this still returns the error
 			return err
@@ -147,6 +152,9 @@ func upsertFileExtras(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID
 		args := dbstore.ExtrasFileUpdateParams{ID: doc_pgUUID, Isprivate: pgPrivate, ExtraObj: extras_json_obj}
 		_, err = q.ExtrasFileUpdate(ctx, args)
 		// If encounter a not found error, break error handling control flow and inserting object
+		if err == nil {
+			return nil
+		}
 		if err.Error() != "no rows in result set" {
 			// If the error is nil, this still returns the error
 			return err
