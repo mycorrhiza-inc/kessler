@@ -21,13 +21,22 @@ type UpsertHandlerConfig struct {
 func makeFileUpsertHandler(config UpsertHandlerConfig) func(w http.ResponseWriter, r *http.Request) {
 	dbtx_val := config.dbtx_val
 	private := config.private
-	insert := config.insert
+	insert_parent := config.insert
 	deduplicate_with_respect_to_hash := true
 	empty_uuid, _ := uuid.Parse("00000000-0000-0000-0000-000000000000")
 	return func(w http.ResponseWriter, r *http.Request) {
+		// Maybe mutating the underlying parent value is a bit of a problem when it comes to unreachable control code pathways
+		insert := insert_parent && true
 		var doc_uuid uuid.UUID
 		var err error
+		if !insert && r.URL.Path == "/v2/public/files/insert" {
+			errorstring := "UNREACHABLE CODE: Using insert endpoint with update configuration"
+			fmt.Println(errorstring)
+			http.Error(w, errorstring, http.StatusInternalServerError)
+			return
+		}
 		if !insert {
+
 			params := mux.Vars(r)
 			fileIDString := params["uuid"]
 
