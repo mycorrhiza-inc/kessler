@@ -6,8 +6,13 @@ import (
 )
 
 var example_search_request = SearchRequest{
-	"Marshall Fire",
-	Metadata{},
+	Index:         "Marshall Fire",
+	Query:         "",
+	SearchFilters: FilterFields{},
+	SortBy:        []string{},
+	MaxHits:       10,
+	StartOffset:   0,
+	GetText:       false,
 }
 
 func TestQuickwit(t *testing.T) {

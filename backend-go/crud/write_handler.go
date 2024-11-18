@@ -21,13 +21,22 @@ type UpsertHandlerConfig struct {
 func makeFileUpsertHandler(config UpsertHandlerConfig) func(w http.ResponseWriter, r *http.Request) {
 	dbtx_val := config.dbtx_val
 	private := config.private
-	insert := config.insert
+	insert_parent := config.insert
 	deduplicate_with_respect_to_hash := true
 	empty_uuid, _ := uuid.Parse("00000000-0000-0000-0000-000000000000")
 	return func(w http.ResponseWriter, r *http.Request) {
+		// Maybe mutating the underlying parent value is a bit of a problem when it comes to unreachable control code pathways
+		insert := insert_parent && true
 		var doc_uuid uuid.UUID
 		var err error
+		if !insert && r.URL.Path == "/v2/public/files/insert" {
+			errorstring := "UNREACHABLE CODE: Using insert endpoint with update configuration"
+			fmt.Println(errorstring)
+			http.Error(w, errorstring, http.StatusInternalServerError)
+			return
+		}
 		if !insert {
+
 			params := mux.Vars(r)
 			fileIDString := params["uuid"]
 
@@ -52,7 +61,6 @@ func makeFileUpsertHandler(config UpsertHandlerConfig) func(w http.ResponseWrite
 			return
 		}
 		// Proceed with the write operation
-		// TODO: IF user is not a paying user, disable insert functionality
 		defer r.Body.Close()
 		var newDocInfo CompleteFileSchema
 		bodyBytes, err := io.ReadAll(r.Body)
@@ -101,6 +109,8 @@ func makeFileUpsertHandler(config UpsertHandlerConfig) func(w http.ResponseWrite
 		newDocInfo.Verified = false
 		rawFileCreationData.Verified = pgtype.Bool{Bool: false, Valid: true}
 		var fileSchema FileSchema
+		// TODO : For print debugging only, might be a good idea to put these in a deubug logger with lowest priority??
+		fmt.Printf("Inserting document with uuid: %s\n", doc_uuid)
 		if insert {
 			fileSchema, err = InsertPubPrivateFileObj(q, ctx, rawFileCreationData, private)
 		} else {
@@ -135,8 +145,29 @@ func makeFileUpsertHandler(config UpsertHandlerConfig) func(w http.ResponseWrite
 		has_db_errored := false
 		db_error_string := ""
 
-		// TODO: Implement error handling for any of these.
-
+		// TODO : For print debugging only, might be a good idea to put these in a deubug logger with lowest priority??
+		fmt.Printf("Attempting to insert all file extras, texts, metadata for uuid: %s\n", doc_uuid)
+		// 		somewhere after this line, but before the end of the block I am getting the following panic, do you have any idea what I could do to fix it?
+		// backend-go-1     | Inserting document with uuid: 8cff332d-e3de-47bc-933f-90ecdd875e7e
+		// backend-go-1     | Attempting to insert all file extras, texts, metadata for uuid: 8cff332d-e3de-47bc-933f-90ecdd875e7e
+		// backend-go-1     | 2024/11/18 02:16:03 http: panic serving 172.18.0.3:44332: runtime error: invalid memory address or nil pointer dereference
+		// backend-go-1     | goroutine 8 [running]:
+		// backend-go-1     | net/http.(*conn).serve.func1()
+		// backend-go-1     |      /usr/local/go/src/net/http/server.go:1947 +0xbe
+		// backend-go-1     | panic({0xabee60?, 0x125eb80?})
+		// backend-go-1     |      /usr/local/go/src/runtime/panic.go:785 +0x132
+		// backend-go-1     | net/http.(*timeoutHandler).ServeHTTP(0xc0000b74c0, {0xd99d00, 0xc0004d4000}, 0xc00049e000)
+		// backend-go-1     |      /usr/local/go/src/net/http/server.go:3675 +0x768
+		// backend-go-1     | main.main.corsMiddleware.func1({0xd99d00, 0xc0004d4000}, 0xc00049e000)
+		// backend-go-1     |      /app/main.go:84 +0x10d
+		// backend-go-1     | net/http.HandlerFunc.ServeHTTP(0x40f105?, {0xd99d00?, 0xc0004d4000?}, 0x0?)
+		// backend-go-1     |      /usr/local/go/src/net/http/server.go:2220 +0x29
+		// backend-go-1     | net/http.serverHandler.ServeHTTP({0xd96b70?}, {0xd99d00?, 0xc0004d4000?}, 0x6?)
+		// backend-go-1     |      /usr/local/go/src/net/http/server.go:3210 +0x8e
+		// backend-go-1     | net/http.(*conn).serve(0xc000446120, {0xd9aef8, 0xc0004058c0})
+		// backend-go-1     |      /usr/local/go/src/net/http/server.go:2092 +0x5d0
+		// backend-go-1     | created by net/http.(*Server).Serve in goroutine 1
+		// backend-go-1     |      /usr/local/go/src/net/http/server.go:3360 +0x485
 		if err := upsertFileTexts(ctx, q, doc_uuid, newDocInfo.DocTexts, insert); err != nil {
 			errorstring := fmt.Sprintf("Error in upsertFileTexts: %v", err)
 			fmt.Println(errorstring)
@@ -144,13 +175,16 @@ func makeFileUpsertHandler(config UpsertHandlerConfig) func(w http.ResponseWrite
 			db_error_string = db_error_string + errorstring + "\n"
 		}
 
+		fmt.Printf("Starting upsertFileMetadata for uuid: %s\n", doc_uuid)
 		if err := upsertFileMetadata(ctx, q, doc_uuid, newDocInfo.Mdata, insert); err != nil {
+			fmt.Printf("Is it getting past the if block?")
 			errorstring := fmt.Sprintf("Error in upsertFileMetadata: %v", err)
 			fmt.Println(errorstring)
 			has_db_errored = true
 			db_error_string = db_error_string + errorstring + "\n"
 		}
 
+		fmt.Printf("Starting upsertFileExtras for uuid: %s\n", doc_uuid)
 		if err := upsertFileExtras(ctx, q, doc_uuid, newDocInfo.Extra, insert); err != nil {
 			errorstring := fmt.Sprintf("Error in upsertFileExtras: %v", err)
 			fmt.Println(errorstring)
@@ -158,6 +192,7 @@ func makeFileUpsertHandler(config UpsertHandlerConfig) func(w http.ResponseWrite
 			db_error_string = db_error_string + errorstring + "\n"
 		}
 
+		fmt.Printf("Starting fileAuthorsUpsert for uuid: %s\n", doc_uuid)
 		if err := fileAuthorsUpsert(ctx, q, doc_uuid, newDocInfo.Authors, insert); err != nil {
 			errorstring := fmt.Sprintf("Error in fileAuthorsUpsert: %v", err)
 			fmt.Println(errorstring)
@@ -165,6 +200,7 @@ func makeFileUpsertHandler(config UpsertHandlerConfig) func(w http.ResponseWrite
 			db_error_string = db_error_string + errorstring + "\n"
 		}
 
+		fmt.Printf("Starting juristictionFileUpsert for uuid: %s\n", doc_uuid)
 		if err := juristictionFileUpsert(ctx, q, doc_uuid, newDocInfo.Juristiction, insert); err != nil {
 			errorstring := fmt.Sprintf("Error in juristictionFileUpsert: %v", err)
 			fmt.Println(errorstring)
@@ -175,7 +211,7 @@ func makeFileUpsertHandler(config UpsertHandlerConfig) func(w http.ResponseWrite
 		newDocInfo.Stage.IsErrored = newDocInfo.Stage.IsErrored || has_db_errored
 		newDocInfo.Stage.DatabaseErrorMsg = db_error_string
 
-		if err := fileStatusInsert(ctx, q, doc_uuid, newDocInfo.Stage, insert); err != nil {
+		if err := fileStatusInsert(ctx, q, doc_uuid, newDocInfo.Stage); err != nil {
 			errorstring := fmt.Sprintf("Error in fileStatusInsert: %v", err)
 			fmt.Println(errorstring)
 			has_db_errored = true
@@ -195,6 +231,9 @@ func makeFileUpsertHandler(config UpsertHandlerConfig) func(w http.ResponseWrite
 				fmt.Println(errorstring)
 			}
 		}
+
+		// TODO : For print debugging only, might be a good idea to put these in a deubug logger with lowest priority??
+		fmt.Printf("Completed all DB Operations for uuid, returning schema: %s\n", doc_uuid)
 
 		response, err := json.Marshal(newDocInfo)
 		if err != nil {
