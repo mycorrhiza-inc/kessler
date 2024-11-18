@@ -29,7 +29,7 @@ func DefineCrudRoutes(router *mux.Router, dbtx_val dbstore.DBTX) {
 		)).Methods(http.MethodPost)
 
 	public_subrouter.HandleFunc(
-		"/files/{uuid}/upsert",
+		"/files/{uuid}/update",
 		makeFileUpsertHandler(
 			UpsertHandlerConfig{
 				dbtx_val: dbtx_val,
