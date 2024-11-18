@@ -54,6 +54,7 @@ func upsertFileMetadata(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UU
 	insert = false
 	doc_pgUUID := pgtype.UUID{Bytes: doc_uuid, Valid: true}
 	metadata["id"] = doc_uuid.String()
+	fmt.Printf("Is it the json marshall?\n")
 	json_obj, err := json.Marshal(metadata)
 	if err != nil {
 		return err
@@ -62,18 +63,23 @@ func upsertFileMetadata(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UU
 		Bool:  false,
 		Valid: true,
 	}
+
+	fmt.Printf("Wasnt it, is it any of the db operations?\n")
 	if !insert {
 		args := dbstore.UpdateMetadataParams{ID: doc_pgUUID, Isprivate: pgPrivate, Mdata: json_obj}
-		_, err = q.UpdateMetadata(
-			ctx, args)
+		fmt.Printf("Defined args successfully\n")
+		_, err = q.UpdateMetadata(ctx, args)
 		// If encounter a not found error, break error handling control flow and inserting the file metadata.
+		fmt.Printf("Very confused, it wasnt any of the db operations either.\n")
 		if err.Error() != "no rows in result set" {
+			fmt.Printf("Its throwing an error\n")
 			return err
 		}
 	}
+	fmt.Printf("Failed and trying to insert metadta instead")
 	insert_args := dbstore.InsertMetadataParams{ID: doc_pgUUID, Isprivate: pgPrivate, Mdata: json_obj}
-	_, err = q.InsertMetadata(
-		ctx, insert_args)
+	_, err = q.InsertMetadata(ctx, insert_args)
+	fmt.Printf("What the actual fuck is going on?")
 	return err
 }
 
