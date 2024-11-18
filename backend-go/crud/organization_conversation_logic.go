@@ -89,3 +89,66 @@ func fileAuthorsUpsert(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUI
 
 	return nil
 }
+
+func verifyConversationUUID(ctx context.Context, q dbstore.Queries, conv_info *ConversationInformation) (ConversationInformation, error) {
+	empty_uuid, _ := uuid.Parse("00000000-0000-0000-0000-000000000000")
+	if conv_info.ID != empty_uuid {
+		return *conv_info, nil
+	}
+
+	// Try to find existing conversation for this docket
+	results, err := q.DocketConversationFetchByDocketIdMatch(ctx, conv_info.DocketID)
+	if err != nil {
+		return *conv_info, err
+	}
+
+	// If conversation exists, return it
+	if len(results) > 0 {
+		conv := results[0]
+		conv_info.ID = uuid.UUID(conv.ID.Bytes)
+		conv_info.State = conv.State
+		return *conv_info, nil
+	}
+
+	// Create new conversation if none exists
+	create_params := dbstore.DocketConversationCreateParams{
+		DocketID: conv_info.DocketID,
+		State:    conv_info.State,
+	}
+
+	conv_id, err := q.DocketConversationCreate(ctx, create_params)
+	if err != nil {
+		return *conv_info, err
+	}
+
+	conv_info.ID = uuid.UUID(conv_id.Bytes)
+	return *conv_info, nil
+}
+
+func conversationUpsert(ctx context.Context, q dbstore.Queries, conv_info ConversationInformation, insert bool) error {
+	if !insert {
+		err := q.DocketConversationDelete(ctx, pgtype.UUID{Bytes: conv_info.ID, Valid: true})
+		if err != nil {
+			return err
+		}
+	}
+
+	new_conv_info, err := verifyConversationUUID(ctx, q, &conv_info)
+	if err != nil {
+		return err
+	}
+
+	empty_uuid, _ := uuid.Parse("00000000-0000-0000-0000-000000000000")
+	if new_conv_info.ID == empty_uuid {
+		return fmt.Errorf("ASSERT FAILURE: verifyConversationUUID should never return a null uuid")
+	}
+
+	update_params := dbstore.DocketConversationUpdateParams{
+		DocketID: new_conv_info.DocketID,
+		State:    new_conv_info.State,
+		ID:       pgtype.UUID{Bytes: new_conv_info.ID, Valid: true},
+	}
+
+	_, err = q.DocketConversationUpdate(ctx, update_params)
+	return err
+}
