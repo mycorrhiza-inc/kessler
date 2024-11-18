@@ -175,7 +175,7 @@ func makeFileUpsertHandler(config UpsertHandlerConfig) func(w http.ResponseWrite
 			db_error_string = db_error_string + errorstring + "\n"
 		}
 
-		fmt.Printf("Starting upsertFileMetadata for uuid: %s\n", doc_uuid)
+		// fmt.Printf("Starting upsertFileMetadata for uuid: %s\n", doc_uuid)
 		if err := upsertFileMetadata(ctx, q, doc_uuid, newDocInfo.Mdata, insert); err != nil {
 			fmt.Printf("Is it getting past the if block?")
 			errorstring := fmt.Sprintf("Error in upsertFileMetadata: %v", err)
@@ -184,7 +184,6 @@ func makeFileUpsertHandler(config UpsertHandlerConfig) func(w http.ResponseWrite
 			db_error_string = db_error_string + errorstring + "\n"
 		}
 
-		fmt.Printf("Starting upsertFileExtras for uuid: %s\n", doc_uuid)
 		if err := upsertFileExtras(ctx, q, doc_uuid, newDocInfo.Extra, insert); err != nil {
 			errorstring := fmt.Sprintf("Error in upsertFileExtras: %v", err)
 			fmt.Println(errorstring)
@@ -192,7 +191,7 @@ func makeFileUpsertHandler(config UpsertHandlerConfig) func(w http.ResponseWrite
 			db_error_string = db_error_string + errorstring + "\n"
 		}
 
-		fmt.Printf("Starting fileAuthorsUpsert for uuid: %s\n", doc_uuid)
+		// fmt.Printf("Starting fileAuthorsUpsert for uuid: %s\n", doc_uuid)
 		if err := fileAuthorsUpsert(ctx, q, doc_uuid, newDocInfo.Authors, insert); err != nil {
 			errorstring := fmt.Sprintf("Error in fileAuthorsUpsert: %v", err)
 			fmt.Println(errorstring)
