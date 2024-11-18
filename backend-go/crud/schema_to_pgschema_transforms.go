@@ -197,10 +197,6 @@ func UpdatePubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreatio
 	return PublicFileToSchema(resultFile), nil
 }
 
-func NukePriPubFileTexts(q dbstore.Queries, ctx context.Context, pgUUID pgtype.UUID) error {
-	return nil
-}
-
 func InsertPriPubFileText(q dbstore.Queries, ctx context.Context, text FileTextSchema, private bool) error {
 	args := dbstore.CreateFileTextSourceParams{
 		FileID:         text.FileID,

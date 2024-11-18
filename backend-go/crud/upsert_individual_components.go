@@ -21,11 +21,11 @@ func upsertFileTexts(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID,
 	}
 	if !insert {
 		// TODO: Implement this func to Nuke all the previous texts
-		err := NukePriPubFileTexts(q, ctx, doc_pgUUID)
-		if err != nil {
-			fmt.Print("Error deleting old texts, proceeding with new editions")
-			return err
-		}
+		// err := NukePriPubFileTexts(q, ctx, doc_pgUUID)
+		// if err != nil {
+		// 	fmt.Print("Error deleting old texts, proceeding with new editions")
+		// 	return err
+		// }
 	}
 	// TODO : Make Async at some point in future
 	error_list := []error{}
