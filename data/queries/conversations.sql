@@ -13,7 +13,7 @@ RETURNING docket_id;
 DELETE FROM public.docket_documents
 WHERE docket_id = $1;
 
--- name: CreateDocketConversation :one
+-- name: DocketConversationCreate :one
 INSERT INTO public.docket_conversations (
 		docket_id,
 		state,
@@ -28,17 +28,13 @@ SELECT *
 FROM public.docket_conversations
 WHERE docket_id = $1;
 
--- name: ReadDocketConversation :one
+-- name: DocketConversationRead :one
 SELECT *
 FROM public.docket_conversations
 WHERE id = $1;
 
--- name: ListDocketConversations :many
-SELECT *
-FROM public.docket_conversations
-ORDER BY created_at DESC;
 
--- name: UpdateDocketConversation :one
+-- name: DocketConversationUpdate :one
 UPDATE public.docket_conversations
 SET docket_id = $1,
 	state = $2,
@@ -46,6 +42,6 @@ SET docket_id = $1,
 WHERE id = $3
 RETURNING id;
 
--- name: DeleteDocketConversation :exec
+-- name: DocketConversationDelete :exec
 DELETE FROM public.docket_conversations
 WHERE id = $1;
