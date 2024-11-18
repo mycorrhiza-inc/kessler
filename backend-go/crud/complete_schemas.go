@@ -75,6 +75,12 @@ type JuristictionInformation struct {
 	ExtraObject    map[string]interface{} `json:"extra_object"`
 }
 
+type ConversationInformation struct {
+	ID       uuid.UUID `json:"id"`
+	DocketID string    `json:"docket_id"`
+	State    string    `json:"state"`
+}
+
 type CompleteFileSchema struct {
 	ID           uuid.UUID               `json:"id"`
 	Verified     bool                    `json:"verified"`
@@ -88,6 +94,7 @@ type CompleteFileSchema struct {
 	Extra        FileGeneratedExtras     `json:"extra"`
 	Authors      []AuthorInformation     `json:"authors"`
 	Juristiction JuristictionInformation `json:"juristiction"`
+	Conversation ConversationInformation `json:"conversation"`
 	// To heavy to include in a default file schema unless the user specifies they want it
 	DocTexts []FileChildTextSource `json:"doc_texts"`
 }
