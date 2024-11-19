@@ -333,6 +333,7 @@ func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
 		log.Printf("Error creating response data: %s", err)
 		errturn(err)
 	}
+	validated_data := ValidateSearchData(data, r)
 
 	return data, nil
 }
