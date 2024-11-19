@@ -307,13 +307,13 @@ func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
 		log.Printf("Error unmarshalling quickwit response: %s", err)
 		errturn(err)
 	}
+	validated_response := ValidateSearchRequest(r, searchResponse)
 
-	data, err := ExtractSearchData(searchResponse)
+	data, err := ExtractSearchData(validated_response)
 	if err != nil {
 		log.Printf("Error creating response data: %s", err)
 		errturn(err)
 	}
-	validated_data := ValidateSearchData(data, r)
 
 	return data, nil
 }
