@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"reflect"
+	"strings"
 	"time"
 )
 
@@ -111,6 +112,42 @@ func (s SearchData) String() string {
 	}
 	// Print the formatted JSON string
 	return string(jsonData)
+}
+
+// write a function that will take in a searchRequest and searchResults and create a new quickwitSearchResponse then for each hit and snippet in the passed in search results, make sure all the filters in search request are valid for that, if it is valid append it to the return searchResponse, else skip it and print a scary error message, then return the list of validated results
+func ValidateSearchRequest(searchRequest QuickwitSearchRequest, searchResults quickwitSearchResponse) quickwitSearchResponse {
+	var validatedResponse quickwitSearchResponse
+
+	for i, hit := range searchResults.Hits {
+		isValid := true
+
+		// Validate query matches if present
+		if searchRequest.Query != "" {
+			if !strings.Contains(strings.ToLower(hit.Text), strings.ToLower(searchRequest.Query)) &&
+				!strings.Contains(strings.ToLower(hit.Name), strings.ToLower(searchRequest.Query)) {
+				log.Printf("❌ WARNING: Hit %d failed query validation", i)
+				isValid = false
+			}
+		}
+
+		// // Validate sort field exists if specified
+		// if searchRequest.SortBy != "" {
+		// 	if !reflect.ValueOf(hit).FieldByName(searchRequest.SortBy).IsValid() {
+		// 		log.Printf("❌ WARNING: Hit %d missing required sort field: %s", i, searchRequest.SortBy)
+		// 		isValid = false
+		// 	}
+		// }
+
+		// If all validations pass, append to response
+		if isValid {
+			validatedResponse.Hits = append(validatedResponse.Hits, hit)
+			if i < len(searchResults.Snippets) {
+				validatedResponse.Snippets = append(validatedResponse.Snippets, searchResults.Snippets[i])
+			}
+		}
+	}
+
+	return validatedResponse
 }
 
 // Function to create search data array
