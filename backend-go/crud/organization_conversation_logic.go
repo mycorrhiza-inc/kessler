@@ -131,20 +131,27 @@ func fileConversationUpsert(ctx context.Context, q dbstore.Queries, file_id uuid
 	if shouldnt_process {
 		return nil
 	}
-	if !insert {
-		err := q.DocketConversationDelete(ctx, pgtype.UUID{Bytes: file_id, Valid: true})
-		if err != nil {
-			return err
-		}
-	}
-
 	new_conv_info, err := verifyConversationUUID(ctx, q, &conv_info)
 	if err != nil {
 		return err
 	}
-
 	if new_conv_info.ID == uuid.Nil {
 		return fmt.Errorf("ASSERT FAILURE: verifyConversationUUID should never return a null uuid")
+	}
+	if !insert {
+		args := dbstore.DocketDocumentUpdateParams{
+			DocketID: pgtype.UUID{Bytes: new_conv_info.ID, Valid: true},
+			FileID:   pgtype.UUID{Bytes: file_id, Valid: true},
+		}
+		_, err = q.DocketDocumentUpdate(ctx, args)
+		// If encounter a not found error, break error handling control flow and inserting object
+		if err == nil {
+			return nil
+		}
+		if err.Error() != "no rows in result set" {
+			// If the error is nil, this still returns the error
+			return err
+		}
 	}
 
 	insert_params := dbstore.DocketDocumentInsertParams{
