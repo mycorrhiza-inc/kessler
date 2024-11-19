@@ -115,7 +115,9 @@ func (s SearchData) String() string {
 }
 
 // write a function that will take in a searchRequest and searchResults and create a new quickwitSearchResponse then for each hit and snippet in the passed in search results, make sure all the filters in search request are valid for that, if it is valid append it to the return searchResponse, else skip it and print a scary error message, then return the list of validated results
-func ValidateSearchRequest(searchRequest QuickwitSearchRequest, searchResults quickwitSearchResponse) quickwitSearchResponse {
+func ValidateSearchRequest(searchRequest SearchRequest, searchResults quickwitSearchResponse) quickwitSearchResponse {
+	filters := searchRequest.SearchFilters
+	metadata_filters := filters.Metadata
 	var validatedResponse quickwitSearchResponse
 
 	for i, hit := range searchResults.Hits {
@@ -129,6 +131,37 @@ func ValidateSearchRequest(searchRequest QuickwitSearchRequest, searchResults qu
 				isValid = false
 			}
 		}
+
+		// Claude writes some interesting go code lol - nic
+		// Validate metadata filters
+		v := reflect.ValueOf(metadata_filters)
+		t := reflect.TypeOf(metadata_filters)
+		for j := 0; j < t.NumField(); j++ {
+			field := t.Field(j)
+			value := v.Field(j)
+			
+			// Skip empty string fields
+			if value.Kind() == reflect.String && value.String() != "" {
+				hitValue := reflect.ValueOf(hit.Metadata).FieldByName(field.Name)
+				if !hitValue.IsValid() || hitValue.String() != value.String() {
+					log.Printf("❌ WARNING: Hit %d failed metadata validation for field %s", i, field.Name)
+					isValid = false
+					break
+				}
+			}
+		}
+
+		// If all validations pass, append to response
+		if isValid {
+			validatedResponse.Hits = append(validatedResponse.Hits, hit)
+			if i < len(searchResults.Snippets) {
+				validatedResponse.Snippets = append(validatedResponse.Snippets, searchResults.Snippets[i])
+			}
+		}
+	}
+
+	return validatedResponse
+}
 
 		// // Validate sort field exists if specified
 		// if searchRequest.SortBy != "" {
