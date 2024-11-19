@@ -205,13 +205,14 @@ func makeFileUpsertHandler(config UpsertHandlerConfig) func(w http.ResponseWrite
 			db_error_string = db_error_string + errorstring + "\n"
 		}
 
-		fmt.Printf("Starting juristictionFileUpsert for uuid: %s\n", doc_uuid)
-		if err := juristictionFileUpsert(ctx, q, doc_uuid, newDocInfo.Juristiction, insert); err != nil {
-			errorstring := fmt.Sprintf("Error in juristictionFileUpsert: %v", err)
-			fmt.Println(errorstring)
-			has_db_errored = true
-			db_error_string = db_error_string + errorstring + "\n"
-		}
+		// fmt.Printf("Starting juristictionFileUpsert for uuid: %s\n", doc_uuid)
+		// This doesnt do anything for the time being, so its better to exclude imho
+		// if err := juristictionFileUpsert(ctx, q, doc_uuid, newDocInfo.Juristiction, insert); err != nil {
+		// 	errorstring := fmt.Sprintf("Error in juristictionFileUpsert: %v", err)
+		// 	fmt.Println(errorstring)
+		// 	has_db_errored = true
+		// 	db_error_string = db_error_string + errorstring + "\n"
+		// }
 		// Incorperate DB errors into filestatus
 		newDocInfo.Stage.IsErrored = newDocInfo.Stage.IsErrored || has_db_errored
 		newDocInfo.Stage.DatabaseErrorMsg = db_error_string

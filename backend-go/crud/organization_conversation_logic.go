@@ -125,6 +125,8 @@ func verifyConversationUUID(ctx context.Context, q dbstore.Queries, conv_info *C
 }
 
 func fileConversationUpsert(ctx context.Context, q dbstore.Queries, file_id uuid.UUID, conv_info ConversationInformation, insert bool) error {
+	// Sometimes this is getting called with an insert when the metadata already exists in the table, this causes a PGERROR, since it violates uniqueness. However, setting it up so it tries to update will fall back to insert if the file doesnt exist. Its probably a good idea to remove this and debug what is causing the new file thing at some point.
+	insert = false
 	shouldnt_process := conv_info.ID == uuid.Nil && conv_info.DocketID == ""
 	if shouldnt_process {
 		return nil
