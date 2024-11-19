@@ -151,3 +151,24 @@ func (q *Queries) DocketDocumentInsert(ctx context.Context, arg DocketDocumentIn
 	err := row.Scan(&docket_id)
 	return docket_id, err
 }
+
+const docketDocumentUpdate = `-- name: DocketDocumentUpdate :one
+UPDATE public.docket_documents 
+SET
+		docket_id = $1,
+		updated_at = NOW()
+WHERE file_id = $2
+RETURNING file_id
+`
+
+type DocketDocumentUpdateParams struct {
+	DocketID pgtype.UUID
+	FileID   pgtype.UUID
+}
+
+func (q *Queries) DocketDocumentUpdate(ctx context.Context, arg DocketDocumentUpdateParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, docketDocumentUpdate, arg.DocketID, arg.FileID)
+	var file_id pgtype.UUID
+	err := row.Scan(&file_id)
+	return file_id, err
+}

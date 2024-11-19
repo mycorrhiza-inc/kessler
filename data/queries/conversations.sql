@@ -9,6 +9,14 @@ INSERT INTO public.docket_documents (
 VALUES ($1, $2, NOW(), NOW())
 RETURNING docket_id;
 
+-- name: DocketDocumentUpdate :one
+UPDATE public.docket_documents 
+SET
+		docket_id = $1,
+		updated_at = NOW()
+WHERE file_id = $2
+RETURNING file_id;
+
 -- name: DocketDocumentDeleteAll :exec
 DELETE FROM public.docket_documents
 WHERE docket_id = $1;
