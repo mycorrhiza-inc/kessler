@@ -199,7 +199,7 @@ func makeFileUpsertHandler(config UpsertHandlerConfig) func(w http.ResponseWrite
 			db_error_string = db_error_string + errorstring + "\n"
 		}
 		if err := fileConversationUpsert(ctx, q, doc_uuid, newDocInfo.Conversation, insert); err != nil {
-			errorstring := fmt.Sprintf("Error in fileCitationsUpsert: %v", err)
+			errorstring := fmt.Sprintf("Error in fileConversationUpsert: %v", err)
 			fmt.Println(errorstring)
 			has_db_errored = true
 			db_error_string = db_error_string + errorstring + "\n"

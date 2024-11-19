@@ -130,7 +130,7 @@ func fileConversationUpsert(ctx context.Context, q dbstore.Queries, file_id uuid
 		return nil
 	}
 	if !insert {
-		err := q.DocketConversationDelete(ctx, pgtype.UUID{Bytes: conv_info.ID, Valid: true})
+		err := q.DocketConversationDelete(ctx, pgtype.UUID{Bytes: file_id, Valid: true})
 		if err != nil {
 			return err
 		}
