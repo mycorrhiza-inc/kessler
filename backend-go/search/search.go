@@ -139,7 +139,7 @@ func ValidateSearchRequest(searchRequest SearchRequest, searchResults quickwitSe
 		for j := 0; j < t.NumField(); j++ {
 			field := t.Field(j)
 			value := v.Field(j)
-			
+
 			// Skip empty string fields
 			if value.Kind() == reflect.String && value.String() != "" {
 				hitValue := reflect.ValueOf(hit.Metadata).FieldByName(field.Name)
@@ -150,26 +150,6 @@ func ValidateSearchRequest(searchRequest SearchRequest, searchResults quickwitSe
 				}
 			}
 		}
-
-		// If all validations pass, append to response
-		if isValid {
-			validatedResponse.Hits = append(validatedResponse.Hits, hit)
-			if i < len(searchResults.Snippets) {
-				validatedResponse.Snippets = append(validatedResponse.Snippets, searchResults.Snippets[i])
-			}
-		}
-	}
-
-	return validatedResponse
-}
-
-		// // Validate sort field exists if specified
-		// if searchRequest.SortBy != "" {
-		// 	if !reflect.ValueOf(hit).FieldByName(searchRequest.SortBy).IsValid() {
-		// 		log.Printf("❌ WARNING: Hit %d missing required sort field: %s", i, searchRequest.SortBy)
-		// 		isValid = false
-		// 	}
-		// }
 
 		// If all validations pass, append to response
 		if isValid {
