@@ -58,17 +58,6 @@ export const getRecentFilings = async (page?: number) => {
   }
 };
 
-export const getOrganizationInfo = async (orgID: string) => {
-  const response = await axios.post(
-    `${apiURL}v2/public/organizations/${orgID}`,
-    // "http://api.kessler.xyz/v2/recent_updates",
-  );
-  console.log("recent data", response.data);
-  if (response.data.length > 0) {
-    return response.data;
-  }
-};
-
 export const getFilingMetadata = async (id: string): Promise<Filing> => {
   const response = await axios.get(
     // `http://api.kessler.xyz/v2/public/files/${id}/metadata`

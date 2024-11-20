@@ -8,6 +8,7 @@ import { getFilingMetadata, getRecentFilings } from "@/lib/requests/search";
 
 import InfiniteScroll from "react-infinite-scroll-component";
 import LoadingSpinner from "../styled-components/LoadingSpinner";
+import { getOrganizationInfo } from "@/lib/requests/organizations";
 
 function ConvertToFiling(data: any): Filing {
   const newFiling: Filing = {
@@ -17,9 +18,11 @@ function ConvertToFiling(data: any): Filing {
   return newFiling;
 }
 
-export default function OrgPage() {
+export default function OrgPage({ orgId }: { orgId: string }) {
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
+  // FIXME: this is horrible, please fix this right after the mid nov jvp meeting
+  const [authorInfo, setAuthorInfo] = useState<any>({});
   const [filing_ids, setFilingIds] = useState<string[]>([]);
   const [filings, setFilings] = useState<Filing[]>([]);
   const [page, setPage] = useState(0);
@@ -27,10 +30,11 @@ export default function OrgPage() {
   const getUpdates = async () => {
     setIsSearching(true);
     console.log("getting recent updates");
-    const data = await getRecentFilings();
-    console.log();
+    const data = await getOrganizationInfo(orgId);
+    console.log(data);
+    setAuthorInfo(data);
 
-    const ids = data.map((item: any) => item.sourceID);
+    const ids = data.files_authored_ids;
     console.log("ids", ids);
     setFilingIds(ids);
     setIsSearching(false);
@@ -64,9 +68,9 @@ export default function OrgPage() {
     fetchFilings();
   }, [filing_ids]);
 
-  useEffect(() => {
-    getUpdates();
-  }, []);
+  // useEffect(() => {
+  //   getUpdates();
+  // }, []);
 
   return (
     <>
@@ -74,7 +78,11 @@ export default function OrgPage() {
 
       <div className="w-full h-full p-20">
         <h1 className=" text-2xl font-bold">Recent Updates</h1>
-        <FilingTable filings={filings} scroll={false} />
+        {isSearching ? (
+          <LoadingSpinner />
+        ) : (
+          <FilingTable filings={filings} scroll={false} />
+        )}
       </div>
     </>
   );
