@@ -18,7 +18,7 @@ function ConvertToFiling(data: any): Filing {
   return newFiling;
 }
 
-export default function OrgPage({ orgId }: { orgId: string }) {
+export default function OrganizationPage({ orgId }: { orgId: string }) {
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   // FIXME: this is horrible, please fix this right after the mid nov jvp meeting
