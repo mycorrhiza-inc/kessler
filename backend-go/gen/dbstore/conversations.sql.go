@@ -77,6 +77,39 @@ func (q *Queries) DocketConversationFetchByDocketIdMatch(ctx context.Context, do
 	return items, nil
 }
 
+const docketConversationList = `-- name: DocketConversationList :many
+SELECT id, docket_id, state, created_at, updated_at, deleted_at
+FROM public.docket_conversations
+ORDER BY created_at DESC
+`
+
+func (q *Queries) DocketConversationList(ctx context.Context) ([]DocketConversation, error) {
+	rows, err := q.db.Query(ctx, docketConversationList)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []DocketConversation
+	for rows.Next() {
+		var i DocketConversation
+		if err := rows.Scan(
+			&i.ID,
+			&i.DocketID,
+			&i.State,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const docketConversationRead = `-- name: DocketConversationRead :one
 SELECT id, docket_id, state, created_at, updated_at, deleted_at
 FROM public.docket_conversations

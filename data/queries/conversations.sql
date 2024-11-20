@@ -41,6 +41,10 @@ SELECT *
 FROM public.docket_conversations
 WHERE id = $1;
 
+-- name: DocketConversationList :many
+SELECT *
+FROM public.docket_conversations
+ORDER BY created_at DESC;
 
 -- name: DocketConversationUpdate :one
 UPDATE public.docket_conversations
