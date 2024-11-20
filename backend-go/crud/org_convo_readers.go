@@ -27,7 +27,12 @@ func GetOrgWithFiles(dbtx_val dbstore.DBTX) http.HandlerFunc {
 		// TODO: Get these 2 requests to happen in the same query, and or run concurrently
 		org_info, err := q.OrganizationRead(ctx, pgUUID)
 		if err != nil {
-			http.Error(w, "Organization not found", http.StatusNotFound)
+			log.Printf("Error reading organization: %v", err)
+			if err.Error() == "no rows in result set" {
+				http.Error(w, err.Error(), http.StatusNotFound)
+				return
+			}
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		response, _ := json.Marshal(org_info)
