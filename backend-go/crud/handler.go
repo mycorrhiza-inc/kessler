@@ -21,7 +21,7 @@ func DefineCrudRoutes(router *mux.Router, dbtx_val dbstore.DBTX) {
 	public_subrouter.HandleFunc(
 		"/files/insert",
 		makeFileUpsertHandler(
-			UpsertHandlerConfig{
+			FileUpsertHandlerConfig{
 				dbtx_val: dbtx_val,
 				private:  false,
 				insert:   true,
@@ -31,7 +31,7 @@ func DefineCrudRoutes(router *mux.Router, dbtx_val dbstore.DBTX) {
 	public_subrouter.HandleFunc(
 		"/files/{uuid}/update",
 		makeFileUpsertHandler(
-			UpsertHandlerConfig{
+			FileUpsertHandlerConfig{
 				dbtx_val: dbtx_val,
 				private:  false,
 				insert:   false,
