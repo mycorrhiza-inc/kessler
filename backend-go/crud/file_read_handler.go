@@ -15,11 +15,11 @@ import (
 
 func GetFileWithMeta(config FileHandlerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("Getting file with metadata")
 		q := *dbstore.New(config.dbtx_val)
 		params := mux.Vars(r)
 		fileID := params["uuid"]
 		parsedUUID, err := uuid.Parse(fileID)
+		log.Printf("Getting file with metadata %v", fileID)
 		if err != nil {
 			http.Error(w, "Invalid File ID format", http.StatusBadRequest)
 			return

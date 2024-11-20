@@ -191,7 +191,10 @@ func errturn(err error) ([]SearchData, error) {
 }
 
 func convertToRFC3339(date string) (string, error) {
-	parsedDate, err := time.Parse(time.RFC3339, date)
+	layout := "2006-01-02"
+
+	parsedDate, err := time.Parse(layout, date)
+
 	if err != nil {
 		return "", fmt.Errorf("invalid date format: %v", err)
 	}
@@ -203,20 +206,22 @@ func ConstructDateQuery(DateFrom string, DateTo string) (string, error) {
 	// construct date query
 	fromDate := "*"
 	toDate := "*"
+	log.Printf("building date from: %s\n", DateFrom)
+	log.Printf("building date to: %s\n", DateTo)
 
 	if DateFrom != "" || DateTo != "" {
 		var err error
 		if DateFrom != "" {
 			fromDate, err = convertToRFC3339(DateFrom)
 			if err != nil {
-				return "", fmt.Errorf("invalid date format for DateFrom: %v", err)
+				return "date_filed:[* TO *]", fmt.Errorf("invalid date format for DateFrom: %v", err)
 			}
 			DateFrom = ""
 		}
 		if DateTo != "" {
 			toDate, err = convertToRFC3339(DateTo)
 			if err != nil {
-				return "", fmt.Errorf("invalid date format for DateTo: %v", err)
+				return "date_filed:[* TO *]", fmt.Errorf("invalid date format for DateTo: %v", err)
 			}
 			DateTo = ""
 		}

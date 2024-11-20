@@ -66,7 +66,6 @@ const MetadataContent = memo(({ docUUID }: { docUUID: string }) => {
   const mdata_str = atob(data.Mdata);
   console.log("mdata str: ", mdata_str);
   const mdata = JSON.parse(mdata_str);
-  console.log("metadata: ", mdata);
   // mdata.Mdata = metadata;
 
   return (

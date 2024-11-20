@@ -30,6 +30,7 @@ export type QueryFilterFields = {
 export type QueryDataFile = {
   filters: QueryFilterFields;
   query: string;
+  start_offset: number;
 };
 
 export const allFilterFields: FilterField[] = Object.values(FilterField);

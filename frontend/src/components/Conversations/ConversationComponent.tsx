@@ -21,11 +21,13 @@ import { Filing } from "@/lib/types/FilingTypes";
 import { AnimatePresence, motion } from "framer-motion";
 import axios from "axios";
 import { FilingTable } from "./FilingTable";
-import LoadingSpinner from "../styled-components/LoadingSpinner";
 import { getSearchResults, getFilingMetadata } from "@/lib/requests/search";
 import FilingTableQuery from "./FilingTableQuery";
 import { ConversationHeader } from "../NavigationHeader";
 import { PageContext } from "@/lib/page_context";
+import InfiniteScroll from "react-infinite-scroll-component";
+import LoadingSpinner from "@/components/styled-components/LoadingSpinner";
+import { set } from "date-fns";
 
 const testFiling: Filing = {
   id: "0",
@@ -98,8 +100,17 @@ const ConversationComponent = ({
   // const [searchResults, setSearchResults] = useState<string[]>([]);
   const [filing_ids, setFilingIds] = useState<string[]>([]);
   const [filings, setFilings] = useState<Filing[]>([]);
+  const [page, setPage] = useState(0);
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const queryData: QueryDataFile = useMemo(() => {
+    return {
+      filters: searchFilters,
+      query: searchQuery,
+      start_offset: 0,
+    };
+  }, [searchFilters]);
+
 
   const getUpdates = async () => {
     setIsSearching(true);
@@ -107,20 +118,47 @@ const ConversationComponent = ({
     const data = await getSearchResults(queryData);
     console.log();
 
-    const ids = data.map((item: any) => item.sourceID);
+    const ids = data.map((item: any) => item.id);
     console.log("ids", ids);
     setFilingIds(ids);
     setIsSearching(false);
   };
+
+  const getMore = async () => {
+    setIsSearching(true);
+    try {
+      const data = await getSearchResults({ ...queryData, start_offset: page + 20 });
+      setPage(page + 20);
+      console.log('data', data);
+      if (data.length > 0) {
+        setFilingIds([
+          ...filing_ids,
+          ...data.map((item: any) => item.id),
+        ]);
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
   useEffect(() => {
-    if (!filing_ids) {
+    setIsSearching(true);
+    console.log("search filters changed", searchFilters);
+    setFilingIds([]);
+    setFilings([]);
+    getUpdates();
+  }, [searchFilters]);
+
+  useEffect(() => {
+    if (!filing_ids || isSearching) {
       return;
     }
 
     const fetchFilings = async () => {
       const newFilings = await Promise.all(
         filing_ids.map(async (id) => {
-          //
           const filing_data = await getFilingMetadata(id);
           console.log("new filings", filing_data);
           return filing_data;
@@ -129,7 +167,7 @@ const ConversationComponent = ({
 
       setFilings((previous) => {
         const existingIds = new Set(previous.map((f) => f.id));
-        const uniqueNewFilings: Filing[] = newFilings.filter(
+        const uniqueNewFilings = newFilings.filter(
           (f) => !existingIds.has(f.id),
         );
         console.log(" uniques: ", uniqueNewFilings);
@@ -145,12 +183,7 @@ const ConversationComponent = ({
   const toggleFilters = () => {
     setIsFocused(!isFocused);
   };
-  const queryData: QueryDataFile = useMemo(() => {
-    return {
-      filters: searchFilters,
-      query: "",
-    };
-  }, [searchFilters]);
+
 
   return (
     <div className="drawer drawer-end">
@@ -175,7 +208,19 @@ const ConversationComponent = ({
           </button>
         </div>
         <div className="w-full h-full">
-          <FilingTableQuery queryData={queryData} scroll={true} />
+          <InfiniteScroll
+            dataLength={filings.length}
+            next={getMore}
+            hasMore={true}
+            loader={
+              <div onClick={getMore}>
+                <LoadingSpinner loadingText="Loading Files" />
+              </div>
+            }
+          >
+            <FilingTable filings={filings} scroll={false} />
+          </InfiniteScroll>
+
         </div>
       </div>
       <div className="drawer-side">
@@ -199,6 +244,9 @@ const ConversationComponent = ({
 
 export default ConversationComponent;
 
+// ----------
+// OLD ANIMATED FILTER VIEW 
+// ----------
 // <div className="w-full h-full p-10 card relative box-border border-4 border-black flex flex-row overflow-hidden">
 //   <AnimatePresence mode="sync">
 //     {isFocused && (
