@@ -8,7 +8,7 @@ export const getSearchResults = async (
 ): Promise<Filing[]> => {
   const searchQuery = queryData.query;
   const searchFilters = queryData.filters;
-  console.log(`searchhing for ${searchQuery}`);
+  console.log('searchhing for', searchFilters);
   try {
     const searchResults: Filing[] = await axios
       // .post("https://api.kessler.xyz/v2/search", {
@@ -18,6 +18,7 @@ export const getSearchResults = async (
           name: searchFilters.match_name,
           author: searchFilters.match_author,
           docket_id: searchFilters.match_docket_id,
+          file_class: searchFilters.match_file_class,
           doctype: searchFilters.match_doctype,
           source: searchFilters.match_source,
         },
@@ -33,7 +34,7 @@ export const getSearchResults = async (
         return filings_promise;
       });
     console.log("getting data");
-    console.log(searchResults);
+    // console.log(searchResults);
     return searchResults;
   } catch (error) {
     console.log(error);
@@ -69,7 +70,6 @@ export const getFilingMetadata = async (id: string): Promise<Filing> => {
 
 export const ParseFilingData = async (filingData: any) => {
   const filings_promises: Promise<Filing>[] = filingData.map(async (f: any) => {
-    console.log("fdata", f);
     const mdata_str = f.Mdata;
     if (!mdata_str) {
       console.log("no metadata string, fetching from source");
@@ -80,7 +80,6 @@ export const ParseFilingData = async (filingData: any) => {
         `${apiURL}/v2/public/files/${docID}/metadata`,
       );
       const metadata = JSON.parse(atob(response.data.Mdata));
-      console.log("metadata: ", metadata);
       const newFiling: Filing = {
         // These names are swaped in the backend, maybe change later
         id: f.sourceID,
@@ -97,9 +96,7 @@ export const ParseFilingData = async (filingData: any) => {
       };
       return newFiling;
     }
-    console.log("metadata string: ", mdata_str);
     const metadata = JSON.parse(atob(f.Mdata));
-    console.log("metadata: ", metadata);
     const newFiling: Filing = {
       id: metadata.id,
       title: metadata.title,
