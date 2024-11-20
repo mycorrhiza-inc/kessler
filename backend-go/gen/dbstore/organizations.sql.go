@@ -46,6 +46,26 @@ func (q *Queries) AuthorshipDocumentOrganizationInsert(ctx context.Context, arg 
 	return id, err
 }
 
+const authorshipOrganizationListDocuments = `-- name: AuthorshipOrganizationListDocuments :one
+SELECT document_id, organization_id, id, created_at, updated_at, is_primary_author 
+FROM public.relation_documents_organizations_authorship 
+WHERE organization_id = $1
+`
+
+func (q *Queries) AuthorshipOrganizationListDocuments(ctx context.Context, organizationID pgtype.UUID) (RelationDocumentsOrganizationsAuthorship, error) {
+	row := q.db.QueryRow(ctx, authorshipOrganizationListDocuments, organizationID)
+	var i RelationDocumentsOrganizationsAuthorship
+	err := row.Scan(
+		&i.DocumentID,
+		&i.OrganizationID,
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.IsPrimaryAuthor,
+	)
+	return i, err
+}
+
 const createOrganization = `-- name: CreateOrganization :one
 INSERT INTO public.organization (
 		name,

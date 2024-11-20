@@ -8,6 +8,11 @@ INSERT INTO public.relation_documents_organizations_authorship (
 	)
 VALUES ($1, $2, $3, NOW(), NOW())
 RETURNING id;
+
+-- name: AuthorshipOrganizationListDocuments :one
+SELECT * 
+FROM public.relation_documents_organizations_authorship 
+WHERE organization_id = $1;
 -- name: AuthorshipDocumentDeleteAll :exec
 DELETE FROM public.relation_documents_organizations_authorship
 WHERE document_id = $1;
