@@ -35,7 +35,31 @@ func GetOrgWithFiles(dbtx_val dbstore.DBTX) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		response, _ := json.Marshal(org_info)
+		org_files_raw, err := q.AuthorshipOrganizationListDocuments(
+			ctx,
+			pgUUID)
+		if err != nil {
+			log.Printf("Error reading organization: %v", err)
+			if err.Error() == "no rows in result set" {
+				http.Error(w, err.Error(), http.StatusNotFound)
+				return
+			}
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		org_files := make([]FileSchema, len(org_files_raw))
+		for i, f := range org_files_raw {
+			org_files[i] = FileSchema{
+				ID: f.DocumentID.Bytes,
+			}
+		}
+		complete_org_info := OrganizationSchemaComplete{
+			ID:            parsedUUID,
+			Name:          org_info.Name,
+			FilesAuthored: org_files,
+		}
+
+		response, _ := json.Marshal(complete_org_info)
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(response)
 	}
