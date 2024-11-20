@@ -1,6 +1,6 @@
 import logging
-import psycopg
 import requests
+import psycopg
 import json
 import time
 import os
@@ -12,7 +12,7 @@ QUICKWIT_ENDPOINT = "http://quickwit-main:7280"
 
 logger = logging.getLogger(__name__)
 
-db_string = os.environ["DB_STRING"]
+db_string = os.environ["DATABASE_CONNECTION_STRING"]
 
 
 def print_response(r):
