@@ -1,0 +1,2 @@
+psycopg==3.2.3
+typing-extensions==4.12.2
