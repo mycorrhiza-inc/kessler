@@ -84,7 +84,9 @@ func ReadFileHandlerFactory(config FileHandlerConfig) http.HandlerFunc {
 		case "raw":
 			file, err := GetFileObjectRaw(file_params)
 			if err != nil {
-				http.Error(w, "File not found", http.StatusNotFound)
+				error_string := fmt.Sprintf("Error retrieving file object %v", err)
+				fmt.Println(error_string)
+				http.Error(w, error_string, http.StatusNotFound)
 				return
 			}
 			filehash := file.Hash

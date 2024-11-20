@@ -44,7 +44,7 @@ func DefineCrudRoutes(router *mux.Router, dbtx_val dbstore.DBTX) {
 			FileHandlerConfig{
 				dbtx_val:    dbtx_val,
 				private:     false,
-				return_type: "object",
+				return_type: "object-minimal",
 			},
 		)).Methods(http.MethodGet)
 
@@ -69,7 +69,7 @@ func DefineCrudRoutes(router *mux.Router, dbtx_val dbstore.DBTX) {
 		)).Methods(http.MethodGet)
 
 	public_subrouter.HandleFunc(
-		"/files/{uuid}/raw/",
+		"/files/{uuid}/raw",
 		ReadFileHandlerFactory(
 			FileHandlerConfig{
 				dbtx_val:    dbtx_val,
