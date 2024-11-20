@@ -3,7 +3,7 @@ export enum FilterField {
   MatchSource = "match_source",
   MatchDoctype = "match_doctype",
   MatchDocketId = "match_docket_id",
-  MatchDocumentClass = "match_document_class",
+  MatchDocumentClass = "match_file_class",
   MatchAuthor = "match_author",
   MatchBeforeDate = "match_before_date",
   MatchAfterDate = "match_after_date",
@@ -12,7 +12,7 @@ export enum CaseFilterField {
   MatchName = "match_name",
   MatchDoctype = "match_doctype",
   MatchDocketId = "match_docket_id",
-  MatchDocumentClass = "match_document_class",
+  MatchDocumentClass = "match_file_class",
   MatchAuthor = "match_author",
   MatchBeforeDate = "match_before_date",
   MatchAfterDate = "match_after_date",
@@ -30,6 +30,7 @@ export type QueryFilterFields = {
 export type QueryDataFile = {
   filters: QueryFilterFields;
   query: string;
+  start_offset: number;
 };
 
 export const allFilterFields: FilterField[] = Object.values(FilterField);

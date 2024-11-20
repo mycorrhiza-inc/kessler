@@ -80,7 +80,7 @@ const queryFiltersInformation: QueryFiltersInformation = {
       { label: "Xls", value: "xls" },
     ],
   },
-  match_document_class: {
+  match_file_class: {
     type: InputType.Select,
     index: 6,
     displayName: "Document Class",

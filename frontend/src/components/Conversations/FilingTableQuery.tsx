@@ -16,7 +16,6 @@ const FilingTableQuery = memo(
       queryData,
       getSearchResults,
     );
-    console.log("data: ", data);
     if (isLoading) {
       return <LoadingSpinner />;
     }

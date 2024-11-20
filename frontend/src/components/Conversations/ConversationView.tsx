@@ -22,7 +22,7 @@ export const ConversationView = ({
           width: "99vw",
           height: "90vh",
           padding: "20px",
-          overflow: "scroll",
+          // overflow: "scroll",
         }}
       >
         <ConversationComponent
