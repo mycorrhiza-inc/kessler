@@ -17,7 +17,6 @@ func GetFileWithMeta(config FileHandlerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Getting file with metadata")
 		q := *dbstore.New(config.dbtx_val)
-		token := r.Header.Get("Authorization")
 		params := mux.Vars(r)
 		fileID := params["uuid"]
 		parsedUUID, err := uuid.Parse(fileID)
@@ -27,15 +26,16 @@ func GetFileWithMeta(config FileHandlerConfig) http.HandlerFunc {
 		}
 		pgUUID := pgtype.UUID{Bytes: parsedUUID, Valid: true}
 		ctx := r.Context()
-		if config.private {
-			isAuthorized, err := checkPrivateFileAuthorization(q, ctx, parsedUUID, token)
-			if !isAuthorized {
-				http.Error(w, "Forbidden", http.StatusForbidden)
-			}
-			if err != nil {
-				fmt.Printf("Ran into the follwing error with authentication %v", err)
-			}
-		}
+		// if config.private {
+		// 	token := r.Header.Get("Authorization")
+		// 	isAuthorized, err := checkPrivateFileAuthorization(q, ctx, parsedUUID, token)
+		// 	if !isAuthorized {
+		// 		http.Error(w, "Forbidden", http.StatusForbidden)
+		// 	}
+		// 	if err != nil {
+		// 		fmt.Printf("Ran into the follwing error with authentication %v", err)
+		// 	}
+		// }
 		file, err := q.GetFileWithMetadata(ctx, pgUUID)
 		if err != nil {
 			http.Error(w, "File not found", http.StatusNotFound)
