@@ -90,7 +90,7 @@ func OrgListAllFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 	}
 }
 
-func ProceedingsListAllFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
+func ConversationListAllFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Getting all proceedings")
 		q := *dbstore.New(dbtx_val)
