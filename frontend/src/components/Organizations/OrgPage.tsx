@@ -32,6 +32,7 @@ export default function OrganizationPage({ orgId }: { orgId: string }) {
     console.log("getting recent updates");
     const data = await getOrganizationInfo(orgId);
     console.log(data);
+    data.description = "lorem ipsum dolor sit amet";
     setAuthorInfo(data);
 
     const ids = data.files_authored_ids;
@@ -68,16 +69,18 @@ export default function OrganizationPage({ orgId }: { orgId: string }) {
     fetchFilings();
   }, [filing_ids]);
 
-  // useEffect(() => {
-  //   getUpdates();
-  // }, []);
+  useEffect(() => {
+    getUpdates();
+  }, []);
 
   return (
     <>
       <Navbar user={null} />
 
       <div className="w-full h-full p-20">
-        <h1 className=" text-2xl font-bold">Recent Updates</h1>
+        <h1 className=" text-2xl font-bold">Organization: {authorInfo.name}</h1>
+        <p> {authorInfo.description}</p>
+        <h1 className=" text-2xl font-bold">Authored Documents</h1>
         {isSearching ? (
           <LoadingSpinner />
         ) : (
