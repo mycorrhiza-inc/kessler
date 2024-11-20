@@ -238,7 +238,7 @@ func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
 		log.Printf("error constructing date query: %v", err)
 	}
 	if len(r.Query) >= 0 {
-		queryString = fmt.Sprintf("((text:(%s) OR name:(%s)) AND %s)", query, query, dateQuery)
+		queryString = fmt.Sprintf("((text:(%s) OR name:(%s)) AND verified:true AND %s)", query, query, dateQuery)
 	}
 
 	filtersString := constructQuickwitMetadataQueryString(r.SearchFilters.Metadata)
