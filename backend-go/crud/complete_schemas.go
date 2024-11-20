@@ -29,6 +29,16 @@ const (
 	Stage1                 DocProcStatus = "stage1"
 )
 
+type FileSchema struct {
+	ID        uuid.UUID `json:"id"`
+	Verified  bool      `json:"verified"`
+	Extension string    `json:"extension"`
+	Lang      string    `json:"lang"`
+	Name      string    `json:"name"`
+	Hash      string    `json:"hash"`
+	IsPrivate bool      `json:"is_private"`
+}
+
 type FileChildTextSource struct {
 	IsOriginalText bool   `json:"is_original_text"`
 	Text           string `json:"text"`
@@ -59,13 +69,6 @@ type FileGeneratedExtras struct {
 	Impressiveness float64 `json:"impressiveness"`
 }
 
-type AuthorInformation struct {
-	AuthorName      string    `json:"author_name"`
-	IsPerson        bool      `json:"is_person"`
-	IsPrimaryAuthor bool      `json:"is_primary_author"`
-	AuthorID        uuid.UUID `json:"author_id"`
-}
-
 type JuristictionInformation struct {
 	Country        string                 `json:"country"`
 	State          string                 `json:"state"`
@@ -81,6 +84,12 @@ type ConversationInformation struct {
 	State    string    `json:"state"`
 }
 
+type AuthorInformation struct {
+	AuthorName      string    `json:"author_name"`
+	IsPerson        bool      `json:"is_person"`
+	IsPrimaryAuthor bool      `json:"is_primary_author"`
+	AuthorID        uuid.UUID `json:"author_id"`
+}
 type CompleteFileSchema struct {
 	ID           uuid.UUID               `json:"id"`
 	Verified     bool                    `json:"verified"`
@@ -97,6 +106,14 @@ type CompleteFileSchema struct {
 	Conversation ConversationInformation `json:"conversation"`
 	// To heavy to include in a default file schema unless the user specifies they want it
 	DocTexts []FileChildTextSource `json:"doc_texts"`
+}
+
+// Organization Schemas
+
+type OrganizationSchemaComplete struct {
+	ID            uuid.UUID    `json:"id"`
+	Name          string       `json:"name"`
+	FilesAuthored []FileSchema `json:"files_authored"`
 }
 
 type FileMetadataSchema map[string]interface{}

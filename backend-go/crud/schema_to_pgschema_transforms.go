@@ -9,16 +9,6 @@ import (
 	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
 )
 
-type FileSchema struct {
-	ID        uuid.UUID `json:"id"`
-	Verified  bool      `json:"verified"`
-	Extension string    `json:"extension"`
-	Lang      string    `json:"lang"`
-	Name      string    `json:"name"`
-	Hash      string    `json:"hash"`
-	IsPrivate bool      `json:"is_private"`
-}
-
 // A UUID is a 128 bit (16 byte) Universal Unique IDentifier as defined in RFC
 // 4122.
 // type UUID [16]byte
