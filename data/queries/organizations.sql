@@ -25,15 +25,15 @@ RETURNING id;
 SELECT *
 FROM public.organization
 WHERE name = $1;
--- name: ReadOrganization :one
+-- name: OrganizationRead :one
 SELECT *
 FROM public.organization
 WHERE id = $1;
--- name: ListOrganizations :many
+-- name: OrganizationList :many
 SELECT *
 FROM public.organization
 ORDER BY created_at DESC;
--- name: UpdateOrganization :one
+-- name: OrganizationUpdate :one
 UPDATE public.organization
 SET name = $1,
 	description = $2,
@@ -41,6 +41,6 @@ SET name = $1,
 	updated_at = NOW()
 WHERE id = $4
 RETURNING id;
--- name: DeleteOrganization :exec
+-- name: OrganizationDelete :exec
 DELETE FROM public.organization
 WHERE id = $1;
