@@ -9,7 +9,7 @@ INSERT INTO public.relation_documents_organizations_authorship (
 VALUES ($1, $2, $3, NOW(), NOW())
 RETURNING id;
 
--- name: AuthorshipOrganizationListDocuments :one
+-- name: AuthorshipOrganizationListDocuments :many
 SELECT * 
 FROM public.relation_documents_organizations_authorship 
 WHERE organization_id = $1;

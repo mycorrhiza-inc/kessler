@@ -46,24 +46,37 @@ func (q *Queries) AuthorshipDocumentOrganizationInsert(ctx context.Context, arg 
 	return id, err
 }
 
-const authorshipOrganizationListDocuments = `-- name: AuthorshipOrganizationListDocuments :one
+const authorshipOrganizationListDocuments = `-- name: AuthorshipOrganizationListDocuments :many
 SELECT document_id, organization_id, id, created_at, updated_at, is_primary_author 
 FROM public.relation_documents_organizations_authorship 
 WHERE organization_id = $1
 `
 
-func (q *Queries) AuthorshipOrganizationListDocuments(ctx context.Context, organizationID pgtype.UUID) (RelationDocumentsOrganizationsAuthorship, error) {
-	row := q.db.QueryRow(ctx, authorshipOrganizationListDocuments, organizationID)
-	var i RelationDocumentsOrganizationsAuthorship
-	err := row.Scan(
-		&i.DocumentID,
-		&i.OrganizationID,
-		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.IsPrimaryAuthor,
-	)
-	return i, err
+func (q *Queries) AuthorshipOrganizationListDocuments(ctx context.Context, organizationID pgtype.UUID) ([]RelationDocumentsOrganizationsAuthorship, error) {
+	rows, err := q.db.Query(ctx, authorshipOrganizationListDocuments, organizationID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []RelationDocumentsOrganizationsAuthorship
+	for rows.Next() {
+		var i RelationDocumentsOrganizationsAuthorship
+		if err := rows.Scan(
+			&i.DocumentID,
+			&i.OrganizationID,
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.IsPrimaryAuthor,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const createOrganization = `-- name: CreateOrganization :one
