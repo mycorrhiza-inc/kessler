@@ -11,7 +11,7 @@ import (
 	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
 )
 
-func GetOrgWithFiles(dbtx_val dbstore.DBTX) http.HandlerFunc {
+func GetOrgWithFilesFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Getting file with metadata")
 		q := *dbstore.New(dbtx_val)
