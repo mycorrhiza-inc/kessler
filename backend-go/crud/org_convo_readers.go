@@ -68,3 +68,45 @@ func GetOrgWithFilesFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 		w.Write(response)
 	}
 }
+
+func OrgListAllFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("Getting all organizations")
+		q := *dbstore.New(dbtx_val)
+		ctx := r.Context()
+		organizations, err := q.OrganizationList(ctx)
+		if err != nil {
+			log.Printf("Error reading organization: %v", err)
+			if err.Error() == "no rows in result set" {
+				http.Error(w, err.Error(), http.StatusNotFound)
+				return
+			}
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		response, _ := json.Marshal(organizations)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(response)
+	}
+}
+
+func ProceedingsListAllFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("Getting all proceedings")
+		q := *dbstore.New(dbtx_val)
+		ctx := r.Context()
+		proceedings, err := q.DocketConversationList(ctx)
+		if err != nil {
+			log.Printf("Error reading organization: %v", err)
+			if err.Error() == "no rows in result set" {
+				http.Error(w, err.Error(), http.StatusNotFound)
+				return
+			}
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		response, _ := json.Marshal(proceedings)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(response)
+	}
+}
