@@ -71,47 +71,14 @@ func (q *Queries) CreateOrganization(ctx context.Context, arg CreateOrganization
 	return id, err
 }
 
-const deleteOrganization = `-- name: DeleteOrganization :exec
+const organizationDelete = `-- name: OrganizationDelete :exec
 DELETE FROM public.organization
 WHERE id = $1
 `
 
-func (q *Queries) DeleteOrganization(ctx context.Context, id pgtype.UUID) error {
-	_, err := q.db.Exec(ctx, deleteOrganization, id)
+func (q *Queries) OrganizationDelete(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, organizationDelete, id)
 	return err
-}
-
-const listOrganizations = `-- name: ListOrganizations :many
-SELECT name, description, id, created_at, updated_at, is_person
-FROM public.organization
-ORDER BY created_at DESC
-`
-
-func (q *Queries) ListOrganizations(ctx context.Context) ([]Organization, error) {
-	rows, err := q.db.Query(ctx, listOrganizations)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []Organization
-	for rows.Next() {
-		var i Organization
-		if err := rows.Scan(
-			&i.Name,
-			&i.Description,
-			&i.ID,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.IsPerson,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
 }
 
 const organizationFetchByNameMatch = `-- name: OrganizationFetchByNameMatch :many
@@ -147,14 +114,47 @@ func (q *Queries) OrganizationFetchByNameMatch(ctx context.Context, name string)
 	return items, nil
 }
 
-const readOrganization = `-- name: ReadOrganization :one
+const organizationList = `-- name: OrganizationList :many
+SELECT name, description, id, created_at, updated_at, is_person
+FROM public.organization
+ORDER BY created_at DESC
+`
+
+func (q *Queries) OrganizationList(ctx context.Context) ([]Organization, error) {
+	rows, err := q.db.Query(ctx, organizationList)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Organization
+	for rows.Next() {
+		var i Organization
+		if err := rows.Scan(
+			&i.Name,
+			&i.Description,
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.IsPerson,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const organizationRead = `-- name: OrganizationRead :one
 SELECT name, description, id, created_at, updated_at, is_person
 FROM public.organization
 WHERE id = $1
 `
 
-func (q *Queries) ReadOrganization(ctx context.Context, id pgtype.UUID) (Organization, error) {
-	row := q.db.QueryRow(ctx, readOrganization, id)
+func (q *Queries) OrganizationRead(ctx context.Context, id pgtype.UUID) (Organization, error) {
+	row := q.db.QueryRow(ctx, organizationRead, id)
 	var i Organization
 	err := row.Scan(
 		&i.Name,
@@ -167,7 +167,7 @@ func (q *Queries) ReadOrganization(ctx context.Context, id pgtype.UUID) (Organiz
 	return i, err
 }
 
-const updateOrganization = `-- name: UpdateOrganization :one
+const organizationUpdate = `-- name: OrganizationUpdate :one
 UPDATE public.organization
 SET name = $1,
 	description = $2,
@@ -177,15 +177,15 @@ WHERE id = $4
 RETURNING id
 `
 
-type UpdateOrganizationParams struct {
+type OrganizationUpdateParams struct {
 	Name        string
 	Description pgtype.Text
 	IsPerson    pgtype.Bool
 	ID          pgtype.UUID
 }
 
-func (q *Queries) UpdateOrganization(ctx context.Context, arg UpdateOrganizationParams) (pgtype.UUID, error) {
-	row := q.db.QueryRow(ctx, updateOrganization,
+func (q *Queries) OrganizationUpdate(ctx context.Context, arg OrganizationUpdateParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, organizationUpdate,
 		arg.Name,
 		arg.Description,
 		arg.IsPerson,
