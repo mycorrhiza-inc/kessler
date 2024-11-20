@@ -48,15 +48,19 @@ func GetOrgWithFilesFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 			return
 		}
 		org_files := make([]FileSchema, len(org_files_raw))
+		org_file_ids := make([]uuid.UUID, len(org_files_raw))
 		for i, f := range org_files_raw {
+			file_uuid := f.DocumentID.Bytes
 			org_files[i] = FileSchema{
-				ID: f.DocumentID.Bytes,
+				ID: file_uuid,
 			}
+			org_file_ids[i] = file_uuid
 		}
 		complete_org_info := OrganizationSchemaComplete{
-			ID:            parsedUUID,
-			Name:          org_info.Name,
-			FilesAuthored: org_files,
+			ID:               parsedUUID,
+			Name:             org_info.Name,
+			FilesAuthored:    org_files,
+			FilesAuthoredIDs: org_file_ids,
 		}
 
 		response, _ := json.Marshal(complete_org_info)

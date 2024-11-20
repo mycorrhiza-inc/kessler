@@ -111,9 +111,10 @@ type CompleteFileSchema struct {
 // Organization Schemas
 
 type OrganizationSchemaComplete struct {
-	ID            uuid.UUID    `json:"id"`
-	Name          string       `json:"name"`
-	FilesAuthored []FileSchema `json:"files_authored"`
+	ID               uuid.UUID    `json:"id"`
+	Name             string       `json:"name"`
+	FilesAuthored    []FileSchema `json:"files_authored"`
+	FilesAuthoredIDs []uuid.UUID  `json:"files_authored_ids"`
 }
 
 type FileMetadataSchema map[string]interface{}
