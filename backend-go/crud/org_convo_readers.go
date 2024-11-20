@@ -25,12 +25,12 @@ func GetOrgWithFiles(dbtx_val dbstore.DBTX) http.HandlerFunc {
 		pgUUID := pgtype.UUID{Bytes: parsedUUID, Valid: true}
 		ctx := r.Context()
 		// TODO: Get these 2 requests to happen in the same query, and or run concurrently
-		org_name, err := q.ReadOrganization(ctx context.Context, id pgtype.UUID)r
+		org_info, err := q.OrganizationRead(ctx, pgUUID)
 		if err != nil {
-			http.Error(w, "File not found", http.StatusNotFound)
+			http.Error(w, "Organization not found", http.StatusNotFound)
 			return
 		}
-		response, _ := json.Marshal(file)
+		response, _ := json.Marshal(org_info)
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(response)
 	}
