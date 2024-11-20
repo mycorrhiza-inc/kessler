@@ -10,8 +10,7 @@ export default async function Page({
   params: Promise<{ organization_id: string }>;
 }) {
   const supabase = createClient();
-  const slugs = (await params).organization_id;
-  const slug = slugs?.[0].toUpperCase();
+  const slug = (await params).organization_id;
   const headersList = headers();
   const host = headersList.get("host") || "";
   const hostsplits = host.split(".");
