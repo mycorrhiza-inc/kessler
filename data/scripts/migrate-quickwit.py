@@ -1,3 +1,4 @@
+# All this code is mirri's I just copied it into the main repo - nic
 import logging
 import requests
 import psycopg
