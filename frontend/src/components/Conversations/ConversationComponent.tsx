@@ -110,7 +110,6 @@ const ConversationComponent = ({
     };
   }, [searchFilters]);
 
-
   const getUpdates = async () => {
     setIsSearching(true);
     console.log("getting recent updates");
@@ -126,14 +125,14 @@ const ConversationComponent = ({
   const getMore = async () => {
     setIsSearching(true);
     try {
-      const data = await getSearchResults({ ...queryData, start_offset: page + 20 });
+      const data = await getSearchResults({
+        ...queryData,
+        start_offset: page + 20,
+      });
       setPage(page + 20);
-      console.log('data', data);
+      console.log("data", data);
       if (data.length > 0) {
-        setFilingIds([
-          ...filing_ids,
-          ...data.map((item: any) => item.id),
-        ]);
+        setFilingIds([...filing_ids, ...data.map((item: any) => item.id)]);
       }
     } catch (error) {
       console.log(error);
@@ -183,7 +182,6 @@ const ConversationComponent = ({
     setIsFocused(!isFocused);
   };
 
-
   return (
     <div className="drawer drawer-end">
       <input id="my-drawer" type="checkbox" className="drawer-toggle" />
@@ -192,7 +190,6 @@ const ConversationComponent = ({
           id="conversation-header"
           className="flex justify-between items-center mb-4"
         >
-          <ConversationHeader context={pageContext} />
           <label htmlFor="my-drawer" className="btn btn-primary drawer-button">
             Filters
           </label>
@@ -219,7 +216,6 @@ const ConversationComponent = ({
           >
             <FilingTable filings={filings} scroll={false} />
           </InfiniteScroll>
-
         </div>
       </div>
       <div className="drawer-side">
@@ -244,7 +240,7 @@ const ConversationComponent = ({
 export default ConversationComponent;
 
 // ----------
-// OLD ANIMATED FILTER VIEW 
+// OLD ANIMATED FILTER VIEW
 // ----------
 // <div className="w-full h-full p-10 card relative box-border border-4 border-black flex flex-row overflow-hidden">
 //   <AnimatePresence mode="sync">

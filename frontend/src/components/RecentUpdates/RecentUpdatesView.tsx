@@ -90,7 +90,7 @@ export default function RecentUpdatesView() {
 
   return (
     <>
-      <Navbar user={null} />
+      <Navbar user={null} breadcrumbs={{ breadcrumbs: [] }} />
 
       <div className="w-full h-full p-20">
         <h1 className=" text-2xl font-bold">Recent Updates</h1>

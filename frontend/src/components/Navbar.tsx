@@ -8,6 +8,7 @@ import SettingsContent from "./SettingsContent";
 import { User } from "@supabase/supabase-js";
 import { useKesslerStore } from "@/lib/store";
 import Link from "next/link";
+import { BreadcrumbValues, HeaderBreadcrumbs } from "./SitemapUtils";
 
 function HeaderAuth({ user }: { user: User | null }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -41,11 +42,17 @@ function HeaderAuth({ user }: { user: User | null }) {
     </div>
   );
 }
-const Navbar = ({ user }: { user: User | null }) => {
+const Navbar = ({
+  user,
+  breadcrumbs,
+}: {
+  user: User | null;
+  breadcrumbs: BreadcrumbValues;
+}) => {
   return (
     <div className="navbar bg-base-200 w-max-50">
       <div className="flex-1 font-semibold">
-        <Link href="/">Kessler</Link>
+        <HeaderBreadcrumbs breadcrumbs={breadcrumbs} />
       </div>
       <div className="flex-none">
         <HeaderAuth user={user} />

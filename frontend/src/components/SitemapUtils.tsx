@@ -1,31 +1,37 @@
-import { PageContext } from "@/lib/page_context";
-import { Link } from "lucide-react";
+import { PageContext, getStateDisplayName } from "@/lib/page_context";
+import Link from "next/link";
 
-interface Breadcrumbs {
+export interface BreadcrumbValues {
   state?: string;
   breadcrumbs: {
     value: string;
     title: string;
   }[];
 }
-interface BreadcrumbValue {
-  title: string;
-  url?: string;
-}
 
-const HeaderBreadcrumbs = ({ breadcrumbs }: { breadcrumbs: Breadcrumbs }) => {
-  const breadcrumb_values = breadcrumbs.breadcrumbs.map(
-    (b, index): BreadcrumbValue => {
-      if (index === breadcrumbs.breadcrumbs.length - 1) {
-        return { title: b.title };
-      }
-      const url = breadcrumbs.breadcrumbs
-        .slice(0, index + 1)
-        .map((item) => item.value)
-        .join("/");
-      return { title: b.title, url: url };
-    },
-  );
+export const HeaderBreadcrumbs = ({
+  breadcrumbs,
+}: {
+  breadcrumbs: BreadcrumbValues;
+}) => {
+  const statename = getStateDisplayName(breadcrumbs.state || "");
+  const new_breadcrumbs = [
+    { value: "", title: "Kessler - " + statename },
+    ...breadcrumbs.breadcrumbs,
+  ];
+  const breadcrumb_values = new_breadcrumbs.map((b, index) => {
+    if (index === 0) {
+      return { title: b.title, url: "/" };
+    }
+    if (index === breadcrumbs.breadcrumbs.length) {
+      return { title: b.title };
+    }
+    const url = new_breadcrumbs
+      .slice(0, index + 1)
+      .map((item) => item.value)
+      .join("/");
+    return { title: b.title, url: url };
+  });
   return (
     <div className="breadcrumbs text-xl">
       <ul>

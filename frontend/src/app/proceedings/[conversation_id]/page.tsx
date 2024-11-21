@@ -9,8 +9,7 @@ export default async function Page({
   params: Promise<{ conversation_id: string }>;
 }) {
   const supabase = createClient();
-  const slugs = (await params).conversation_id;
-  const slug = slugs?.[0].toUpperCase();
+  const slug = (await params).conversation_id;
   const headersList = headers();
   const host = headersList.get("host") || "";
   const hostsplits = host.split(".");
@@ -20,12 +19,20 @@ export default async function Page({
     slug: ["proceedings", slug],
     final_identifier: slug,
   };
+
+  const breadcrumbs = {
+    state: state,
+    breadcrumbs: [
+      { value: "proceedings", title: "Proceedings" },
+      { value: slug, title: slug },
+    ],
+  };
   const {
     data: { user },
   } = await supabase.auth.getUser();
   return (
     <>
-      <Navbar user={user} />
+      <Navbar user={user} breadcrumbs={breadcrumbs} />
       <ConversationView pageContext={pageContext} />
     </>
   );
