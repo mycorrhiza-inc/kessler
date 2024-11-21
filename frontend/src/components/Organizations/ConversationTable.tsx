@@ -4,15 +4,23 @@ import Link from "next/link";
 import useSWRImmutable from "swr/immutable";
 import LoadingSpinner from "../styled-components/LoadingSpinner";
 
-const conversationsListAll = async () => {
-  const response = await axios.get(`${apiURL}/v2/public/conversations/list`);
+const conversationsListAll = async (url: string) => {
+  const response = await axios.get(url);
   console.log(response.data);
-  return response.data;
+  const return_data: any[] = response.data;
+  if (return_data.length == 0 || return_data == undefined) {
+    return [];
+  }
+  return return_data;
 };
 
 const ConversationTable = () => {
-  const { data, error, isLoading } = useSWRImmutable(conversationsListAll);
+  const { data, error, isLoading } = useSWRImmutable(
+    `${apiURL}/v2/public/conversations/list`,
+    conversationsListAll,
+  );
   const convoList = data;
+  console.log("convo list: " + convoList);
   return (
     <>
       {isLoading && <LoadingSpinner loadingText="Loading Conversations" />}
