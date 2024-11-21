@@ -26,17 +26,7 @@ func GetFileWithMeta(config FileHandlerConfig) http.HandlerFunc {
 		}
 		pgUUID := pgtype.UUID{Bytes: parsedUUID, Valid: true}
 		ctx := r.Context()
-		// if config.private {
-		// 	token := r.Header.Get("Authorization")
-		// 	isAuthorized, err := checkPrivateFileAuthorization(q, ctx, parsedUUID, token)
-		// 	if !isAuthorized {
-		// 		http.Error(w, "Forbidden", http.StatusForbidden)
-		// 	}
-		// 	if err != nil {
-		// 		fmt.Printf("Ran into the follwing error with authentication %v", err)
-		// 	}
-		// }
-		file, err := q.GetFileWithMetadata(ctx, pgUUID)
+		file_raw, err := q.GetFileWithMetadata(ctx, pgUUID)
 		if err != nil {
 
 			errorstring := fmt.Sprintf("Error Retriving file %v: %v\n", fileID, err)
@@ -44,6 +34,25 @@ func GetFileWithMeta(config FileHandlerConfig) http.HandlerFunc {
 			http.Error(w, errorstring, http.StatusNotFound)
 			return
 		}
+		var mdata_obj map[string]interface{}
+		err = json.Unmarshal(file_raw.Mdata, &mdata_obj)
+		if err != nil {
+			errorstring := fmt.Sprintf("Error Unmarshalling file %v: %v\n", fileID, err)
+			fmt.Println(errorstring)
+			http.Error(w, errorstring, http.StatusInternalServerError)
+			return
+		}
+		file := CompleteFileSchema{
+			ID:        file_raw.ID.Bytes,
+			Verified:  file_raw.Verified.Bool,
+			Extension: file_raw.Extension.String,
+			Lang:      file_raw.Lang.String,
+			Name:      file_raw.Name.String,
+			Hash:      file_raw.Hash.String,
+			IsPrivate: file_raw.Isprivate.Bool,
+			Mdata:     mdata_obj,
+		}
+
 		response, _ := json.Marshal(file)
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(response)

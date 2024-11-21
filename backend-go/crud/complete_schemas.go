@@ -102,7 +102,6 @@ type CompleteFileSchema struct {
 	Stage        DocProcStage            `json:"stage"`
 	Extra        FileGeneratedExtras     `json:"extra"`
 	Authors      []AuthorInformation     `json:"authors"`
-	Juristiction JuristictionInformation `json:"juristiction"`
 	Conversation ConversationInformation `json:"conversation"`
 	// To heavy to include in a default file schema unless the user specifies they want it
 	DocTexts []FileChildTextSource `json:"doc_texts"`
