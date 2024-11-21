@@ -28,7 +28,6 @@ const ConversationTable = () => {
   console.log("Convo List:", convoList);
   return (
     <>
-      <h1 className="text-3xl font-bold">Current Proceedings</h1>
       {isLoading && <LoadingSpinner loadingText="Loading Conversations" />}
       {error && <p>Failed to load conversations {error}</p>}
       {!isLoading && !error && convoList != undefined && (
