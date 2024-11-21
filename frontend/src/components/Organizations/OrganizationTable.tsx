@@ -4,7 +4,7 @@ import Link from "next/link";
 import useSWRImmutable from "swr/immutable";
 import LoadingSpinner from "../styled-components/LoadingSpinner";
 
-const conversationsListAll = (redundant_key: string) => {
+const organizationsListAll = (redundant_key: string) => {
   const cleanData = (response: any) => {
     console.log(response.data);
     const return_data: any[] = response.data;
@@ -14,40 +14,37 @@ const conversationsListAll = (redundant_key: string) => {
     return return_data;
   };
   return axios
-    .get(`${apiURL}/v2/public/conversations/list`)
+    .get(`${apiURL}/v2/public/organizations/list`)
     .then((res) => cleanData(res));
 };
 
-const ConversationTable = () => {
+const OrganizationTable = () => {
   const { data, error, isLoading } = useSWRImmutable(
-    `redudant_key`,
-    conversationsListAll,
+    `redundant_key`,
+    organizationsListAll,
   );
   const convoList = data;
   console.log("Convo List:", convoList);
   return (
     <>
-      <h1 className="text-3xl font-bold">Current Proceedings</h1>
-      {isLoading && <LoadingSpinner loadingText="Loading Conversations" />}
-      {error && <p>Failed to load conversations {error}</p>}
+      <h1 className="text-3xl font-bold">Organizations</h1>
+      {isLoading && <LoadingSpinner loadingText="Loading Organizations" />}
+      {error && <p>Failed to load organizations {error}</p>}
       {!isLoading && !error && convoList != undefined && (
         <table className="table table-pin-rows">
           <thead>
             <tr>
               <td>Name</td>
-              <td>State</td>
+              <td>Description</td>
             </tr>
           </thead>
           <tbody>
             {convoList.map((convo: any) => (
               <tr key={convo.DocketID}>
                 <td colSpan={2} className="p-0">
-                  <Link
-                    href={`/proceedings/${convo.DocketID}`}
-                    className="flex w-full"
-                  >
-                    <div className="flex-1 px-4 py-3">{convo.DocketID}</div>
-                    <div className="flex-1 px-4 py-3">{convo.State}</div>
+                  <Link href={`/orgs/${convo.ID}`} className="flex w-full">
+                    <div className="flex-1 px-4 py-3">{convo.Name}</div>
+                    <div className="flex-1 px-4 py-3">{convo.Description}</div>
                   </Link>
                 </td>
               </tr>
@@ -59,4 +56,4 @@ const ConversationTable = () => {
   );
 };
 
-export default ConversationTable;
+export default OrganizationTable;

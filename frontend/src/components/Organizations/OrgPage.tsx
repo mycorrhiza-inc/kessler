@@ -36,7 +36,7 @@ export default function OrganizationPage({
   const getUpdates = async () => {
     setIsSearching(true);
     console.log("getting recent updates");
-    const data = await getOrganizationInfo(orgId);
+    const data = await getOrganizationInfo(orgId || "");
     console.log(data);
     data.description = "lorem ipsum dolor sit amet";
     setAuthorInfo(data);
