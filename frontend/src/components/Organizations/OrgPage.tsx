@@ -10,20 +10,32 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import LoadingSpinner from "../styled-components/LoadingSpinner";
 import { getOrganizationInfo } from "@/lib/requests/organizations";
 import { PageContext } from "@/lib/page_context";
+import { BreadcrumbValues } from "../SitemapUtils";
+import { User } from "@supabase/supabase-js";
 
 export default function OrganizationPage({
-  pageContext,
+  user,
+  breadcrumbs,
 }: {
-  pageContext: PageContext;
+  user: User | null;
+  breadcrumbs: BreadcrumbValues;
 }) {
-  const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   // FIXME: this is horrible, please fix this right after the mid nov jvp meeting
-  const [authorInfo, setAuthorInfo] = useState<any>({});
+  const [orgInfo, setOrgInfo] = useState<any>({});
   const [filing_ids, setFilingIds] = useState<string[]>([]);
   const [filings, setFilings] = useState<Filing[]>([]);
-  const [page, setPage] = useState(0);
-  const orgId = pageContext.final_identifier;
+  const orgId =
+    breadcrumbs.breadcrumbs[breadcrumbs.breadcrumbs.length - 1].value;
+  const actual_breadcrumb_values = [
+    ...breadcrumbs.breadcrumbs.slice(0, -1),
+    { value: orgId, title: orgInfo.name },
+  ];
+  const actual_breadcrumbs: BreadcrumbValues = {
+    breadcrumbs: actual_breadcrumb_values,
+    state: breadcrumbs.state,
+  };
+  // const [page, setPage] = useState(0);
 
   const getUpdates = async () => {
     setIsSearching(true);
@@ -31,7 +43,7 @@ export default function OrganizationPage({
     const data = await getOrganizationInfo(orgId || "");
     console.log(data);
     data.description = "lorem ipsum dolor sit amet";
-    setAuthorInfo(data);
+    setOrgInfo(data);
 
     const ids = data.files_authored_ids;
     console.log("ids", ids);
@@ -74,9 +86,10 @@ export default function OrganizationPage({
 
   return (
     <>
+      <Navbar user={user} breadcrumbs={actual_breadcrumbs} />
       <div className="w-full h-full p-20">
-        <h1 className=" text-2xl font-bold">Organization: {authorInfo.name}</h1>
-        <p> {authorInfo.description}</p>
+        <h1 className=" text-2xl font-bold">Organization: {orgInfo.name}</h1>
+        <p> {orgInfo.description}</p>
         <h1 className=" text-2xl font-bold">Authored Documents</h1>
         {isSearching ? (
           <LoadingSpinner />

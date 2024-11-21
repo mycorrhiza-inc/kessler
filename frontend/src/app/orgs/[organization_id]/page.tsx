@@ -33,8 +33,7 @@ export default async function Page({
   } = await supabase.auth.getUser();
   return (
     <>
-      <Navbar user={user} breadcrumbs={breadcrumbs} />
-      <OrganizationPage pageContext={pageContext} />
+      <OrganizationPage user={user} breadcrumbs={breadcrumbs} />
     </>
   );
 }
