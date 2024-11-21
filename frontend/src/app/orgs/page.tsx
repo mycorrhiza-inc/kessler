@@ -1,6 +1,5 @@
 import { ConversationView } from "@/components/Conversations/ConversationView";
 import Navbar from "@/components/Navbar";
-import OrganizationPage from "@/components/Organizations/OrgPage";
 import OrganizationTable from "@/components/Organizations/OrganizationTable";
 import { BreadcrumbValues } from "@/components/SitemapUtils";
 import { PageContext } from "@/lib/page_context";
