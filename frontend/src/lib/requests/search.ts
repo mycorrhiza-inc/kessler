@@ -129,13 +129,28 @@ export const ParseFilingDataSingular = async (
   f: any,
 ): Promise<Filing | null> => {
   try {
-    const docID = z.string().uuid().parse(f.sourceID);
-    const metadata_url = `${apiURL}/v2/public/files/${docID}/metadata`;
-    const completeFileSchema = await completeFileSchemaGet(metadata_url);
+    const completeFileSchema: CompleteFileSchema =
+      CompleteFileSchemaValidator.parse(f);
     const newFiling: Filing = generateFilingFromFileSchema(completeFileSchema);
     return newFiling;
+  } catch (error) {}
+
+  try {
+    console.log("Parsing document ID", f);
+    console.log("filing source id", f.sourceID);
+    const docID = z.string().uuid().parse(f.sourceID);
+    const metadata_url = `${apiURL}/v2/public/files/${docID}/metadata`;
+    try {
+      const completeFileSchema = await completeFileSchemaGet(metadata_url);
+      const newFiling: Filing =
+        generateFilingFromFileSchema(completeFileSchema);
+      return newFiling;
+    } catch (error) {
+      console.log("Error getting complete file schema", f, "error:", error);
+      return null;
+    }
   } catch (error) {
-    console.log("Error processing filing", f, "error:", error);
+    console.log("Invalid document ID", f, "error:", error);
     return null;
   }
 };
