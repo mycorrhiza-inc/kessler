@@ -44,7 +44,7 @@ export const FilingTable = ({
           : "overflow-y-auto"
       }
     >
-      <table className="w-full divide-y divide-gray-200 table">
+      <table className="w-full divide-y divide-gray-200 table table-pin-rows">
         <tbody>
           <tr className="border-b border-gray-200">
             <th className="text-left p-2 sticky top-0 bg-white">Date Filed</th>
