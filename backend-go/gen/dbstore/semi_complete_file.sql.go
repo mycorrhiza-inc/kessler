@@ -23,7 +23,7 @@ SELECT public.file.id,
     public.file.updated_at,
     public.file_metadata.mdata
 FROM public.file
-    LEFT JOIN public.file_metadata ON public.file.id = public.file_metadata.file_id
+    LEFT JOIN public.file_metadata ON public.file.id = public.file_metadata.id
 WHERE public.file.id = $1
 `
 
