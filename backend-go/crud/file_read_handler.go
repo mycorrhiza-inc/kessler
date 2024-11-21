@@ -3,7 +3,6 @@ package crud
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 
@@ -19,9 +18,10 @@ func GetFileWithMeta(config FileHandlerConfig) http.HandlerFunc {
 		params := mux.Vars(r)
 		fileID := params["uuid"]
 		parsedUUID, err := uuid.Parse(fileID)
-		log.Printf("Getting file with metadata %v", fileID)
 		if err != nil {
-			http.Error(w, "Invalid File ID format", http.StatusBadRequest)
+			errorstring := fmt.Sprintf("Error parsing file %v: %v\n", fileID, err)
+			fmt.Println(errorstring)
+			http.Error(w, errorstring, http.StatusBadRequest)
 			return
 		}
 		pgUUID := pgtype.UUID{Bytes: parsedUUID, Valid: true}
@@ -38,7 +38,10 @@ func GetFileWithMeta(config FileHandlerConfig) http.HandlerFunc {
 		// }
 		file, err := q.GetFileWithMetadata(ctx, pgUUID)
 		if err != nil {
-			http.Error(w, "File not found", http.StatusNotFound)
+
+			errorstring := fmt.Sprintf("Error Retriving file %v: %v\n", fileID, err)
+			fmt.Println(errorstring)
+			http.Error(w, errorstring, http.StatusNotFound)
 			return
 		}
 		response, _ := json.Marshal(file)

@@ -1,14 +1,29 @@
 
 -- name: GetFileWithMetadata :one
-SELECT f.*,
-  fm.mdata
-FROM public.file f
-  LEFT JOIN public.file_metadata fm ON public.file.id = public.file_metadata.id
+SELECT public.file.id,
+    public.file.name,
+    public.file.extension,
+    public.file.lang,
+    public.file.verified,
+    public.file.hash,
+    public.file.isPrivate,
+    public.file.created_at,
+    public.file.updated_at,
+    public.file_metadata.mdata
+FROM public.file
+    LEFT JOIN public.file_metadata ON public.file.id = public.file_metadata.file_id
 WHERE public.file.id = $1;
 
 -- name: GetSemiCompleteFile :many
 SELECT 
-    f.*,
+    f.id,
+    f.name,
+    f.extension,
+    f.lang,
+    f.verified,
+    f.hash,
+    f.created_at,
+    f.updated_at,
     fm.mdata,
     fe.extra_obj,
     dd.docket_id as docket_uuid,

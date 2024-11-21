@@ -12,23 +12,31 @@ import (
 )
 
 const getFileWithMetadata = `-- name: GetFileWithMetadata :one
-SELECT f.id, f.lang, f.name, f.extension, f.isprivate, f.created_at, f.updated_at, f.hash, f.verified,
-  fm.mdata
-FROM public.file f
-  LEFT JOIN public.file_metadata fm ON public.file.id = public.file_metadata.id
+SELECT public.file.id,
+    public.file.name,
+    public.file.extension,
+    public.file.lang,
+    public.file.verified,
+    public.file.hash,
+    public.file.isPrivate,
+    public.file.created_at,
+    public.file.updated_at,
+    public.file_metadata.mdata
+FROM public.file
+    LEFT JOIN public.file_metadata ON public.file.id = public.file_metadata.file_id
 WHERE public.file.id = $1
 `
 
 type GetFileWithMetadataRow struct {
 	ID        pgtype.UUID
-	Lang      pgtype.Text
 	Name      pgtype.Text
 	Extension pgtype.Text
+	Lang      pgtype.Text
+	Verified  pgtype.Bool
+	Hash      pgtype.Text
 	Isprivate pgtype.Bool
 	CreatedAt pgtype.Timestamptz
 	UpdatedAt pgtype.Timestamptz
-	Hash      pgtype.Text
-	Verified  pgtype.Bool
 	Mdata     []byte
 }
 
@@ -37,14 +45,14 @@ func (q *Queries) GetFileWithMetadata(ctx context.Context, id pgtype.UUID) (GetF
 	var i GetFileWithMetadataRow
 	err := row.Scan(
 		&i.ID,
-		&i.Lang,
 		&i.Name,
 		&i.Extension,
+		&i.Lang,
+		&i.Verified,
+		&i.Hash,
 		&i.Isprivate,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.Hash,
-		&i.Verified,
 		&i.Mdata,
 	)
 	return i, err
@@ -52,7 +60,14 @@ func (q *Queries) GetFileWithMetadata(ctx context.Context, id pgtype.UUID) (GetF
 
 const getSemiCompleteFile = `-- name: GetSemiCompleteFile :many
 SELECT 
-    f.id, f.lang, f.name, f.extension, f.isprivate, f.created_at, f.updated_at, f.hash, f.verified,
+    f.id,
+    f.name,
+    f.extension,
+    f.lang,
+    f.verified,
+    f.hash,
+    f.created_at,
+    f.updated_at,
     fm.mdata,
     fe.extra_obj,
     dd.docket_id as docket_uuid,
@@ -69,14 +84,13 @@ WHERE f.id = $1
 
 type GetSemiCompleteFileRow struct {
 	ID               pgtype.UUID
-	Lang             pgtype.Text
 	Name             pgtype.Text
 	Extension        pgtype.Text
-	Isprivate        pgtype.Bool
+	Lang             pgtype.Text
+	Verified         pgtype.Bool
+	Hash             pgtype.Text
 	CreatedAt        pgtype.Timestamptz
 	UpdatedAt        pgtype.Timestamptz
-	Hash             pgtype.Text
-	Verified         pgtype.Bool
 	Mdata            []byte
 	ExtraObj         []byte
 	DocketUuid       pgtype.UUID
@@ -95,14 +109,13 @@ func (q *Queries) GetSemiCompleteFile(ctx context.Context, id pgtype.UUID) ([]Ge
 		var i GetSemiCompleteFileRow
 		if err := rows.Scan(
 			&i.ID,
-			&i.Lang,
 			&i.Name,
 			&i.Extension,
-			&i.Isprivate,
+			&i.Lang,
+			&i.Verified,
+			&i.Hash,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-			&i.Hash,
-			&i.Verified,
 			&i.Mdata,
 			&i.ExtraObj,
 			&i.DocketUuid,
