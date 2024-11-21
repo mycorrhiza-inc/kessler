@@ -119,15 +119,14 @@ export const generateFilingFromFileSchema = (
     lang: file_schema.lang,
     date: file_schema.mdata.date,
     author: String(file_schema.authors),
-    language: file_schema.lang, // This is redundant with lang
     item_number: file_schema.mdata.item_number,
     file_class: file_schema.mdata.file_class,
     url: file_schema.mdata.url,
   };
 };
 
-export const ParseFilingData = async (filingData: any) => {
-  const generate_filing = async (f: any) => {
+export const ParseFilingData = async (filingData: any): Promise<Filing[]> => {
+  const generate_filing = async (f: any): Promise<Filing | null> => {
     try {
       const docID = z.string().uuid().parse(f.sourceID);
       const metadata_url = `${apiURL}/v2/public/files/${docID}/metadata`;
@@ -144,7 +143,10 @@ export const ParseFilingData = async (filingData: any) => {
   const filings_promises: Promise<Filing | null>[] =
     filingData.map(generate_filing);
   const filings_with_errors = await Promise.all(filings_promises);
-  const filings = filings_with_errors.filter((f): f is Filing => f !== null);
+  const filings_null = filings_with_errors.filter(
+    (f: Filing | null) => f !== null && f !== undefined,
+  );
+  const filings = filings_null as Filing[];
   return filings;
 };
 
