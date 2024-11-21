@@ -29,7 +29,7 @@ export default function OrganizationPage({
     breadcrumbs.breadcrumbs[breadcrumbs.breadcrumbs.length - 1].value;
   const actual_breadcrumb_values = [
     ...breadcrumbs.breadcrumbs.slice(0, -1),
-    { value: orgId, title: orgInfo.name },
+    { value: orgId, title: orgInfo.name || "Loading" },
   ];
   const actual_breadcrumbs: BreadcrumbValues = {
     breadcrumbs: actual_breadcrumb_values,
@@ -42,7 +42,7 @@ export default function OrganizationPage({
     console.log("getting recent updates");
     const data = await getOrganizationInfo(orgId || "");
     console.log(data);
-    data.description = "lorem ipsum dolor sit amet";
+    data.description = "Organization Descriptions Coming Soon!";
     setOrgInfo(data);
 
     const ids = data.files_authored_ids;
@@ -89,7 +89,7 @@ export default function OrganizationPage({
       <Navbar user={user} breadcrumbs={actual_breadcrumbs} />
       <div className="w-full h-full p-20">
         <h1 className=" text-2xl font-bold">Organization: {orgInfo.name}</h1>
-        <p> {orgInfo.description}</p>
+        <p> {orgInfo.description || "Loading Organization Description"}</p>
         <h1 className=" text-2xl font-bold">Authored Documents</h1>
         {isSearching ? (
           <LoadingSpinner />
