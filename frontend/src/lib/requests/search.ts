@@ -2,9 +2,13 @@ import { QueryDataFile, QueryFilterFields } from "@/lib/filters";
 import { Filing } from "@/lib/types/FilingTypes";
 import axios from "axios";
 import { apiURL } from "../env_variables";
+import {
+  CompleteFileSchema,
+  CompleteFileSchemaValidator,
+} from "../types/backend_schemas";
 
 export const getSearchResults = async (
-  queryData: QueryDataFile
+  queryData: QueryDataFile,
 ): Promise<Filing[]> => {
   const searchQuery = queryData.query;
   console.log("query data", queryData);
@@ -34,7 +38,7 @@ export const getSearchResults = async (
           return [];
         }
         const filings_promise: Promise<Filing[]> = ParseFilingData(
-          response.data
+          response.data,
         );
         return filings_promise;
       });
@@ -56,7 +60,7 @@ export const getRecentFilings = async (page?: number) => {
     // "http://api.kessler.xyz/v2/recent_updates",
     {
       page: page,
-    }
+    },
   );
   console.log("recent data", response.data);
   if (response.data.length > 0) {
@@ -67,10 +71,35 @@ export const getRecentFilings = async (page?: number) => {
 export const getFilingMetadata = async (id: string): Promise<Filing> => {
   const response = await axios.get(
     // `http://api.kessler.xyz/v2/public/files/${id}/metadata`
-    `${apiURL}/v2/public/files/${id}/metadata`
+    `${apiURL}/v2/public/files/${id}/metadata`,
   );
   const filings = await ParseFilingData([response.data]);
   return filings[0];
+};
+
+export const completeFileSchemaGet = async (url: string) => {
+  const response = await axios.get(url);
+  if (response.status !== 200) {
+    throw new Error(
+      "Error fetching data with response code: " + response.status,
+    );
+  }
+  if (response.data === undefined) {
+    throw new Error("No data returned from server");
+  }
+
+  try {
+    // Parse and validate the response data
+    const validatedData: CompleteFileSchema = CompleteFileSchemaValidator.parse(
+      response.data,
+    );
+    return validatedData;
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new Error(`Invalid response data structure: ${error.message}`);
+    }
+    throw error;
+  }
 };
 
 export const ParseFilingData = async (filingData: any) => {
@@ -82,9 +111,9 @@ export const ParseFilingData = async (filingData: any) => {
 
       const response = await axios.get(
         // `http://api.kessler.xyz/v2/public/files/${id}/metadata`
-        `${apiURL}/v2/public/files/${docID}/metadata`
+        `${apiURL}/v2/public/files/${docID}/metadata`,
       );
-      const metadata = JSON.parse(atob(response.data.Mdata));
+      const metadata = response.data.mdata;
       const newFiling: Filing = {
         // These names are swaped in the backend, maybe change later
         id: f.sourceID,
@@ -101,7 +130,7 @@ export const ParseFilingData = async (filingData: any) => {
       };
       return newFiling;
     }
-    const metadata = JSON.parse(atob(f.Mdata));
+    const metadata = f.mdata;
     const newFiling: Filing = {
       id: metadata.id,
       title: metadata.title,
