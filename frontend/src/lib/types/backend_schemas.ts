@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export const PGStageValidator = z.enum([
+  "",
   "pending",
   "processing",
   "completed",
@@ -10,6 +11,7 @@ export const PGStageValidator = z.enum([
 export type PGStage = z.infer<typeof PGStageValidator>;
 
 export const DocProcStatusValidator = z.enum([
+  "",
   "unprocessed",
   "completed",
   "encounters_analyzed",
