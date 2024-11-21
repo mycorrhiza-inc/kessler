@@ -128,24 +128,23 @@ export const generateFilingFromFileSchema = (
 
 export const ParseFilingData = async (filingData: any) => {
   const generate_filing = async (f: any) => {
-    var docID = "";
     try {
-      docID = z.string().uuid().parse(f.sourceID);
+      const docID = z.string().uuid().parse(f.sourceID);
+      const metadata_url = `${apiURL}/v2/public/files/${docID}/metadata`;
+      const completeFileSchema = await completeFileSchemaGet(metadata_url);
+      const newFiling: Filing =
+        generateFilingFromFileSchema(completeFileSchema);
+      return newFiling;
     } catch (error) {
-      console.log(error);
-      console.log(f);
-      throw error;
+      console.log("Error processing filing", f, "error:", error);
+      return null;
     }
-    console.log("no metadata string, fetching from source");
-    const metadata_url = `${apiURL}/v2/public/files/${docID}/metadata`;
-    const completeFileSchema = await completeFileSchemaGet(metadata_url);
-    const newFiling: Filing = generateFilingFromFileSchema(completeFileSchema);
-    return newFiling;
   };
 
-  const filings_promises: Promise<Filing>[] = filingData.map(generate_filing);
+  const filings_promises: Promise<Filing | null>[] =
+    filingData.map(generate_filing);
   const filings_with_errors = await Promise.all(filings_promises);
-  const filings = filings_with_errors.filter((f): boolean => Boolean(f));
+  const filings = filings_with_errors.filter((f): f is Filing => f !== null);
   return filings;
 };
 
