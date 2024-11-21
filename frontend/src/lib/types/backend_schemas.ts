@@ -50,7 +50,7 @@ export const AuthorInformationValidator = z.object({
   author_name: z.string(),
   is_person: z.boolean(),
   is_primary_author: z.boolean(),
-  author_id: z.string(),
+  author_id: z.string().uuid(),
 });
 
 export const JuristictionInformationValidator = z.object({
@@ -63,7 +63,7 @@ export const JuristictionInformationValidator = z.object({
 });
 
 export const CompleteFileSchemaValidator = z.object({
-  id: z.string(),
+  id: z.string().uuid(),
   verified: z.boolean(),
   extension: z.string(),
   lang: z.string(),
