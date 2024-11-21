@@ -9,6 +9,7 @@ import { getFilingMetadata, getRecentFilings } from "@/lib/requests/search";
 import InfiniteScroll from "react-infinite-scroll-component";
 import LoadingSpinner from "../styled-components/LoadingSpinner";
 import { getOrganizationInfo } from "@/lib/requests/organizations";
+import { PageContext } from "@/lib/page_context";
 
 function ConvertToFiling(data: any): Filing {
   const newFiling: Filing = {
@@ -18,7 +19,11 @@ function ConvertToFiling(data: any): Filing {
   return newFiling;
 }
 
-export default function OrganizationPage({ orgId }: { orgId: string }) {
+export default function OrganizationPage({
+  pageContext,
+}: {
+  pageContext: PageContext;
+}) {
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   // FIXME: this is horrible, please fix this right after the mid nov jvp meeting
@@ -26,6 +31,7 @@ export default function OrganizationPage({ orgId }: { orgId: string }) {
   const [filing_ids, setFilingIds] = useState<string[]>([]);
   const [filings, setFilings] = useState<Filing[]>([]);
   const [page, setPage] = useState(0);
+  const orgId = pageContext.final_identifier;
 
   const getUpdates = async () => {
     setIsSearching(true);
@@ -75,8 +81,6 @@ export default function OrganizationPage({ orgId }: { orgId: string }) {
 
   return (
     <>
-      <Navbar user={null} />
-
       <div className="w-full h-full p-20">
         <h1 className=" text-2xl font-bold">Organization: {authorInfo.name}</h1>
         <p> {authorInfo.description}</p>

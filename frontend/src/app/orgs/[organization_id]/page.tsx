@@ -25,7 +25,8 @@ export default async function Page({
   } = await supabase.auth.getUser();
   return (
     <>
-      <OrganizationPage orgId={slug} />
+      <Navbar user={user} />
+      <OrganizationPage pageContext={pageContext} />
     </>
   );
 }
