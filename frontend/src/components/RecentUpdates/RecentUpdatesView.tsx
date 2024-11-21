@@ -8,6 +8,7 @@ import { getFilingMetadata, getRecentFilings } from "@/lib/requests/search";
 
 import InfiniteScroll from "react-infinite-scroll-component";
 import LoadingSpinner from "../styled-components/LoadingSpinner";
+import ConversationTable from "../Organizations/ConversationTable";
 
 function ConvertToFiling(data: any): Filing {
   const newFiling: Filing = {
@@ -91,6 +92,7 @@ export default function RecentUpdatesView() {
   return (
     <>
       <Navbar user={null} breadcrumbs={{ breadcrumbs: [] }} />
+      <ConversationTable />
 
       <div className="w-full h-full p-20">
         <h1 className=" text-2xl font-bold">Recent Updates</h1>
