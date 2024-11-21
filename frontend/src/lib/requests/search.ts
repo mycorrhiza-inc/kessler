@@ -6,6 +6,8 @@ import {
   CompleteFileSchema,
   CompleteFileSchemaValidator,
 } from "../types/backend_schemas";
+import { z } from "zod";
+import { fi } from "date-fns/locale";
 
 export const getSearchResults = async (
   queryData: QueryDataFile,
@@ -69,9 +71,10 @@ export const getRecentFilings = async (page?: number) => {
 };
 
 export const getFilingMetadata = async (id: string): Promise<Filing> => {
+  const valid_id = z.string().uuid().parse(id);
   const response = await axios.get(
     // `http://api.kessler.xyz/v2/public/files/${id}/metadata`
-    `${apiURL}/v2/public/files/${id}/metadata`,
+    `${apiURL}/v2/public/files/${valid_id}/metadata`,
   );
   const filings = await ParseFilingData([response.data]);
   return filings[0];
@@ -102,32 +105,33 @@ export const completeFileSchemaGet = async (url: string) => {
   }
 };
 
+export const generateFilingFromFileSchema = (
+  file_schema: CompleteFileSchema,
+): Filing => {
+  return {
+    id: file_schema.id,
+    title: file_schema.name,
+    source: file_schema.mdata.docID,
+    lang: file_schema.lang,
+    date: file_schema.mdata.date,
+    author: String(file_schema.authors),
+    language: file_schema.lang, // This is redundant with lang
+    item_number: file_schema.mdata.item_number,
+    file_class: file_schema.mdata.file_class,
+    url: file_schema.mdata.url,
+  };
+};
+
 export const ParseFilingData = async (filingData: any) => {
   const filings_promises: Promise<Filing>[] = filingData.map(async (f: any) => {
     const mdata_str = f.Mdata;
     if (!mdata_str) {
       console.log("no metadata string, fetching from source");
-      const docID = f.sourceID;
-
-      const response = await axios.get(
-        // `http://api.kessler.xyz/v2/public/files/${id}/metadata`
-        `${apiURL}/v2/public/files/${docID}/metadata`,
-      );
-      const metadata = response.data.mdata;
-      const newFiling: Filing = {
-        // These names are swaped in the backend, maybe change later
-        id: f.sourceID,
-        title: f.name,
-        source: f.docID,
-        lang: metadata.lang,
-        date: metadata.date,
-        author: metadata.author,
-        language: metadata.language,
-        item_number: metadata.item_number,
-        author_organisation: metadata.author_organizatino,
-        file_class: metadata.file_class,
-        url: metadata.url,
-      };
+      const docID = z.string().uuid().parse(f.sourceID);
+      const metadata_url = `${apiURL}/v2/public/files/${docID}/metadata`;
+      const completeFileSchema = await completeFileSchemaGet(metadata_url);
+      const newFiling: Filing =
+        generateFilingFromFileSchema(completeFileSchema);
       return newFiling;
     }
     const metadata = f.mdata;
