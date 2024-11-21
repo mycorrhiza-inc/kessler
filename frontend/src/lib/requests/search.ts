@@ -70,17 +70,18 @@ export const getRecentFilings = async (page?: number) => {
   }
 };
 
-export const getFilingMetadata = async (id: string): Promise<Filing> => {
+export const getFilingMetadata = async (id: string): Promise<Filing | null> => {
   const valid_id = z.string().uuid().parse(id);
   const response = await axios.get(
-    // `http://api.kessler.xyz/v2/public/files/${id}/metadata`
     `${apiURL}/v2/public/files/${valid_id}/metadata`,
   );
-  const filings = await ParseFilingData([response.data]);
-  return filings[0];
+  const filing = await ParseFilingDataSingular(response.data);
+  return filing;
 };
 
-export const completeFileSchemaGet = async (url: string) => {
+export const completeFileSchemaGet = async (
+  url: string,
+): Promise<CompleteFileSchema> => {
   const response = await axios.get(url);
   if (response.status !== 200) {
     throw new Error(
@@ -124,24 +125,25 @@ export const generateFilingFromFileSchema = (
     url: file_schema.mdata.url,
   };
 };
+export const ParseFilingDataSingular = async (
+  f: any,
+): Promise<Filing | null> => {
+  try {
+    const docID = z.string().uuid().parse(f.sourceID);
+    const metadata_url = `${apiURL}/v2/public/files/${docID}/metadata`;
+    const completeFileSchema = await completeFileSchemaGet(metadata_url);
+    const newFiling: Filing = generateFilingFromFileSchema(completeFileSchema);
+    return newFiling;
+  } catch (error) {
+    console.log("Error processing filing", f, "error:", error);
+    return null;
+  }
+};
 
 export const ParseFilingData = async (filingData: any): Promise<Filing[]> => {
-  const generate_filing = async (f: any): Promise<Filing | null> => {
-    try {
-      const docID = z.string().uuid().parse(f.sourceID);
-      const metadata_url = `${apiURL}/v2/public/files/${docID}/metadata`;
-      const completeFileSchema = await completeFileSchemaGet(metadata_url);
-      const newFiling: Filing =
-        generateFilingFromFileSchema(completeFileSchema);
-      return newFiling;
-    } catch (error) {
-      console.log("Error processing filing", f, "error:", error);
-      return null;
-    }
-  };
-
-  const filings_promises: Promise<Filing | null>[] =
-    filingData.map(generate_filing);
+  const filings_promises: Promise<Filing | null>[] = filingData.map(
+    ParseFilingDataSingular,
+  );
   const filings_with_errors = await Promise.all(filings_promises);
   const filings_null = filings_with_errors.filter(
     (f: Filing | null) => f !== null && f !== undefined,
