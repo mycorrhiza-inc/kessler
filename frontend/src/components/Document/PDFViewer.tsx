@@ -27,7 +27,13 @@ const maxWidth = 800;
 
 type PDFFile = string | File | null;
 
-function PDFViewer({ file }: { file: PDFFile }) {
+function PDFViewer({
+  file,
+  setLoading,
+}: {
+  file: PDFFile;
+  setLoading: (val: boolean) => void;
+}) {
   const [numPages, setNumPages] = useState<number>();
   const [containerRef, setContainerRef] = useState<HTMLElement | null>(null);
   const [containerWidth, setContainerWidth] = useState<number>();
@@ -45,6 +51,7 @@ function PDFViewer({ file }: { file: PDFFile }) {
   function onDocumentLoadSuccess({
     numPages: nextNumPages,
   }: PDFDocumentProxy): void {
+    setLoading(false);
     setNumPages(nextNumPages);
   }
 

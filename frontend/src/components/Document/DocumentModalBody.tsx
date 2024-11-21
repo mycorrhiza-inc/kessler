@@ -91,13 +91,14 @@ const MetadataContent = memo(({ docUUID }: { docUUID: string }) => {
 });
 
 const PDFContent = ({ docUUID }: { docUUID: string }) => {
+  const [loading, setLoading] = React.useState(true);
   const pdfUrl = `${apiURL}/v2/public/files/${docUUID}/raw`;
   return (
     <>
       {/* This apparently gets an undefined network error when trying to fetch the pdf from their website not exactly sure why, we need to get the s3 fetch working in golang */}
-      <PDFViewer file={pdfUrl}></PDFViewer>
+      <PDFViewer file={pdfUrl} setLoading={setLoading}></PDFViewer>
 
-      <LoadingSpinner loadingText="PDF Viewer Loading" />
+      {loading && <LoadingSpinner loadingText="PDF Viewer Loading" />}
     </>
   );
 };
