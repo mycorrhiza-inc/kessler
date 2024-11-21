@@ -11,14 +11,6 @@ import LoadingSpinner from "../styled-components/LoadingSpinner";
 import { getOrganizationInfo } from "@/lib/requests/organizations";
 import { PageContext } from "@/lib/page_context";
 
-function ConvertToFiling(data: any): Filing {
-  const newFiling: Filing = {
-    id: data.sourceID,
-  };
-
-  return newFiling;
-}
-
 export default function OrganizationPage({
   pageContext,
 }: {
@@ -61,11 +53,12 @@ export default function OrganizationPage({
         }),
       );
 
-      setFilings((previous) => {
-        const existingIds = new Set(previous.map((f) => f.id));
+      setFilings((previous: Filing[]): Filing[] => {
+        const existingIds = new Set(previous.map((f: Filing) => f.id));
         const uniqueNewFilings = newFilings.filter(
-          (f) => !existingIds.has(f.id),
-        );
+          (f: Filing | null) => f !== null && !existingIds.has(f.id),
+        ) as Filing[];
+
         console.log(" uniques: ", uniqueNewFilings);
         console.log("all data: ", [...previous, ...uniqueNewFilings]);
         return [...previous, ...uniqueNewFilings];
