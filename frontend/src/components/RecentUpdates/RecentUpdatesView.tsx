@@ -93,17 +93,20 @@ export default function RecentUpdatesView() {
   return (
     <>
       <Navbar user={null} breadcrumbs={{ breadcrumbs: [] }} />
-      <div className="grid grid-cols-2 w-full">
-        <div className="max-h-[600px] overflow-x-hidden">
-          <ConversationTable />
-        </div>
-        <div className="max-h-[600px] overflow-x-hidden">
-          <OrganizationTable />
-        </div>
-      </div>
 
       <div className="w-full h-full p-20">
-        <h1 className=" text-2xl font-bold">Recent Updates</h1>
+        <div className="grid grid-cols-2 w-full">
+          <div className="max-h-[600px] overflow-x-hidden border-r pr-4">
+            <h1 className="text-3xl font-bold">Proceedings</h1>
+            <ConversationTable />
+          </div>
+          <div className="max-h-[600px] overflow-x-hidden pl-4">
+            <h1 className="text-3xl font-bold">Organizations</h1>
+            <OrganizationTable />
+          </div>
+        </div>
+        <div className="border-t my-8"></div>
+        <h1 className=" text-2xl font-bold">Newest Docs</h1>
         <InfiniteScroll
           dataLength={filings.length}
           next={getMore}

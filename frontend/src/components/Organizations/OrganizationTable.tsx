@@ -28,7 +28,6 @@ const OrganizationTable = () => {
   console.log("Convo List:", convoList);
   return (
     <>
-      <h1 className="text-3xl font-bold">Organizations</h1>
       {isLoading && <LoadingSpinner loadingText="Loading Organizations" />}
       {error && <p>Failed to load organizations {error}</p>}
       {!isLoading && !error && convoList != undefined && (

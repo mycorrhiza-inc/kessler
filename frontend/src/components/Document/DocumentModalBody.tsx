@@ -9,6 +9,7 @@ import LoadingSpinner from "@/components/styled-components/LoadingSpinner";
 import { apiURL } from "@/lib/env_variables";
 import { fetchObjectDataFromURL, fetchTextDataFromURL } from "./documentLoader";
 import useSWRImmutable from "swr";
+import Link from "next/link";
 
 // import { ErrorBoundary } from "react-error-boundary";
 
@@ -106,6 +107,7 @@ const PDFContent = ({ docUUID }: { docUUID: string }) => {
 const DocumentModalBody = ({ open, objectId, children, title }: ModalProps) => {
   const underscoredTitle = title ? title.replace(/ /g, "_") : "Unkown_Document";
   const fileUrlNamedDownload = `${apiURL}/v2/public/files/${objectId}/raw/${underscoredTitle}.pdf`;
+  const kesslerFileUrl = `/files/${objectId}`;
   return (
     <div className="modal-content standard-box ">
       {/* children are components passed to result modals from special searches */}
@@ -122,6 +124,9 @@ const DocumentModalBody = ({ open, objectId, children, title }: ModalProps) => {
       >
         Download File
       </a>
+      <Link className="btn btn-secondary" href={kesslerFileUrl} target="_blank">
+        Open in New Tab
+      </Link>
 
       <Tabs.Root
         className="TabsRoot"
