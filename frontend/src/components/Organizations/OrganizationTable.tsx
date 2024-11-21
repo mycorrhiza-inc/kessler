@@ -1,3 +1,4 @@
+"use client";
 import { apiURL } from "@/lib/env_variables";
 import axios from "axios";
 import Link from "next/link";
