@@ -99,7 +99,11 @@ export const completeFileSchemaGet = async (url: string) => {
     return validatedData;
   } catch (error) {
     if (error instanceof Error) {
-      throw new Error(`Invalid response data structure: ${error.message}`);
+      console.error("Error parsing data:", error.message);
+      console.error("Data:", response.data);
+      throw new Error(
+        `Invalid response data structure:${response.data} \n raising error: ${error.message}`,
+      );
     }
     throw error;
   }
@@ -124,33 +128,22 @@ export const generateFilingFromFileSchema = (
 
 export const ParseFilingData = async (filingData: any) => {
   const filings_promises: Promise<Filing>[] = filingData.map(async (f: any) => {
-    const mdata_str = f.Mdata;
-    if (!mdata_str) {
-      console.log("no metadata string, fetching from source");
-      const docID = z.string().uuid().parse(f.sourceID);
-      const metadata_url = `${apiURL}/v2/public/files/${docID}/metadata`;
-      const completeFileSchema = await completeFileSchemaGet(metadata_url);
-      const newFiling: Filing =
-        generateFilingFromFileSchema(completeFileSchema);
-      return newFiling;
+    var docID = "";
+    try {
+      docID = z.string().uuid().parse(f.sourceID);
+    } catch (error) {
+      console.log(error);
+      console.log(f);
+      return;
     }
-    const metadata = f.mdata;
-    const newFiling: Filing = {
-      id: metadata.id,
-      title: metadata.title,
-      source: metadata.docket_id,
-      lang: metadata.lang,
-      date: metadata.date,
-      author: metadata.author,
-      language: metadata.language,
-      item_number: metadata.item_number,
-      author_organisation: metadata.author_organizatino,
-      file_class: metadata.file_class,
-      url: metadata.url,
-    };
+    console.log("no metadata string, fetching from source");
+    const metadata_url = `${apiURL}/v2/public/files/${docID}/metadata`;
+    const completeFileSchema = await completeFileSchemaGet(metadata_url);
+    const newFiling: Filing = generateFilingFromFileSchema(completeFileSchema);
     return newFiling;
   });
-  const filings: Filing[] = await Promise.all(filings_promises);
+  const filings_with_errors: Filing[] = await Promise.all(filings_promises);
+  const filings = filings_with_errors.filter((f): boolean => Boolean(f));
   return filings;
 };
 

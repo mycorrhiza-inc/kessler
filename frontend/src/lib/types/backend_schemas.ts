@@ -75,9 +75,8 @@ export const CompleteFileSchemaValidator = z.object({
   mdata: z.record(z.any()),
   stage: DocProcStageValidator,
   extra: FileGeneratedExtrasValidator,
-  authors: z.array(AuthorInformationValidator),
-  juristiction: JuristictionInformationValidator,
-  doc_texts: z.array(FileChildTextSourceValidator),
+  authors: z.array(AuthorInformationValidator).nullable().default([]),
+  doc_texts: z.array(FileChildTextSourceValidator).nullable().default([]),
 });
 
 export type CompleteFileSchema = z.infer<typeof CompleteFileSchemaValidator>;
