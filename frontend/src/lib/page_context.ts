@@ -12,11 +12,12 @@ export const getStateDisplayName = (state?: string) => {
       return "California";
     case "co":
       return "Colorado";
+    // FIXME: FIGURE OUT WHY IT ISNT RETURNING NEW YORK FOR THESE BAD CASES
     case "":
-      return "All States";
+      return "New York";
     case undefined:
-      return "All States";
+      return "New York";
   }
 
-  return "Unknown/Unsupported";
+  return "New York";
 };
