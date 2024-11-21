@@ -127,7 +127,7 @@ export const generateFilingFromFileSchema = (
 };
 
 export const ParseFilingData = async (filingData: any) => {
-  const filings_promises: Promise<Filing>[] = filingData.map(async (f: any) => {
+  const generate_filing = async (f: any) => {
     var docID = "";
     try {
       docID = z.string().uuid().parse(f.sourceID);
@@ -141,8 +141,11 @@ export const ParseFilingData = async (filingData: any) => {
     const completeFileSchema = await completeFileSchemaGet(metadata_url);
     const newFiling: Filing = generateFilingFromFileSchema(completeFileSchema);
     return newFiling;
-  });
-  const filings_with_errors: Filing[] = await Promise.all(filings_promises);
+  };
+
+  const filings_promises: Promise<Filing | undefined>[] =
+    filingData.map(generate_filing);
+  const filings_with_errors = await Promise.all(filings_promises);
   const filings = filings_with_errors.filter((f): boolean => Boolean(f));
   return filings;
 };
