@@ -134,7 +134,7 @@ export const ParseFilingData = async (filingData: any) => {
     } catch (error) {
       console.log(error);
       console.log(f);
-      return;
+      throw error;
     }
     console.log("no metadata string, fetching from source");
     const metadata_url = `${apiURL}/v2/public/files/${docID}/metadata`;
@@ -143,8 +143,7 @@ export const ParseFilingData = async (filingData: any) => {
     return newFiling;
   };
 
-  const filings_promises: Promise<Filing | undefined>[] =
-    filingData.map(generate_filing);
+  const filings_promises: Promise<Filing>[] = filingData.map(generate_filing);
   const filings_with_errors = await Promise.all(filings_promises);
   const filings = filings_with_errors.filter((f): boolean => Boolean(f));
   return filings;
