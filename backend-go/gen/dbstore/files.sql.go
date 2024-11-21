@@ -217,52 +217,6 @@ func (q *Queries) GetFile(ctx context.Context, id pgtype.UUID) (File, error) {
 	return i, err
 }
 
-const getFileWithMetadata = `-- name: GetFileWithMetadata :one
-SELECT file.id, lang, name, extension, file.isprivate, file.created_at, file.updated_at, hash, verified, file_metadata.id, file_metadata.isprivate, mdata, file_metadata.created_at, file_metadata.updated_at
-FROM public.file
-  LEFT JOIN public.file_metadata ON public.file.id = public.file_metadata.id
-WHERE public.file.id = $1
-`
-
-type GetFileWithMetadataRow struct {
-	ID          pgtype.UUID
-	Lang        pgtype.Text
-	Name        pgtype.Text
-	Extension   pgtype.Text
-	Isprivate   pgtype.Bool
-	CreatedAt   pgtype.Timestamptz
-	UpdatedAt   pgtype.Timestamptz
-	Hash        pgtype.Text
-	Verified    pgtype.Bool
-	ID_2        pgtype.UUID
-	Isprivate_2 pgtype.Bool
-	Mdata       []byte
-	CreatedAt_2 pgtype.Timestamptz
-	UpdatedAt_2 pgtype.Timestamptz
-}
-
-func (q *Queries) GetFileWithMetadata(ctx context.Context, id pgtype.UUID) (GetFileWithMetadataRow, error) {
-	row := q.db.QueryRow(ctx, getFileWithMetadata, id)
-	var i GetFileWithMetadataRow
-	err := row.Scan(
-		&i.ID,
-		&i.Lang,
-		&i.Name,
-		&i.Extension,
-		&i.Isprivate,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.Hash,
-		&i.Verified,
-		&i.ID_2,
-		&i.Isprivate_2,
-		&i.Mdata,
-		&i.CreatedAt_2,
-		&i.UpdatedAt_2,
-	)
-	return i, err
-}
-
 const hashGetFileID = `-- name: HashGetFileID :many
 SELECT id
 FROM public.file

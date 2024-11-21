@@ -1,18 +1,20 @@
-export type Filing = {
-  id: string;
-  lang?: string;
-  title?: string;
-  date?: string;
-  author?: string;
-  source?: string;
-  language?: string;
-  extension?: string;
-  file_class?: string;
-  item_number?: string;
-  author_organisation?: string;
-  url?: string;
-  // uuid?: string;
-};
+import { z } from "zod";
+
+export const FilingValidator = z.object({
+  id: z.string(),
+  lang: z.string(),
+  title: z.string(),
+  date: z.string().optional(),
+  author: z.string().optional(),
+  source: z.string().optional(),
+  extension: z.string().optional(),
+  file_class: z.string().optional(),
+  item_number: z.string().optional(),
+  author_organisation: z.string().optional(),
+  url: z.string().url().optional(),
+});
+
+export type Filing = z.infer<typeof FilingValidator>;
 
 export const testFiling: Filing = {
   id: "3c4ba5f3-febc-41f2-aa86-2820db2b459a",
@@ -22,7 +24,6 @@ export const testFiling: Filing = {
   title: "Press Release - PSC Announces CLCPA Tracking Initiative",
   author: "Public Service Commission",
   source: "Public Service Commission",
-  language: "en",
   extension: "pdf",
   file_class: "Press Releases",
   item_number: "3",

@@ -36,7 +36,6 @@ const testFiling: Filing = {
   title: "Press Release - PSC Announces CLCPA Tracking Initiative",
   author: "Public Service Commission",
   source: "Public Service Commission",
-  language: "en",
   extension: "pdf",
   file_class: "Press Releases",
   item_number: "3",
@@ -155,22 +154,26 @@ const ConversationComponent = ({
     }
 
     const fetchFilings = async () => {
-      const newFilings = await Promise.all(
-        filing_ids.map(async (id) => {
+      const newFilings_raw = await Promise.all(
+        filing_ids.map(async (id): Promise<Filing | null> => {
           const filing_data = await getFilingMetadata(id);
           console.log("new filings", filing_data);
           return filing_data;
         }),
       );
+      const notnull_newFilings = newFilings_raw.filter(
+        (f: Filing | null) => f !== null && f !== undefined,
+      );
+      const newFilings: Filing[] = notnull_newFilings as Filing[];
 
-      setFilings((previous) => {
-        const existingIds = new Set(previous.map((f) => f.id));
-        const uniqueNewFilings = newFilings.filter(
-          (f) => !existingIds.has(f.id),
-        );
-        console.log(" uniques: ", uniqueNewFilings);
-        console.log("all data: ", [...previous, ...uniqueNewFilings]);
-        return [...previous, ...uniqueNewFilings];
+      setFilings((previous: Filing[]): Filing[] => {
+        // const existingIds = new Set(previous.map((f: Filing) => f.id));
+        // const uniqueNewFilings = newFilings.filter(
+        //   (f: Filing) => !existingIds.has(f.id),
+        // );
+        // console.log(" uniques: ", uniqueNewFilings);
+        // console.log("all data: ", [...previous, ...uniqueNewFilings]);
+        return [...previous, ...newFilings];
       });
     };
 

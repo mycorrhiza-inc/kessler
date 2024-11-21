@@ -1,69 +1,82 @@
-export type PGStage = "pending" | "processing" | "completed" | "errored";
+import { z } from "zod";
 
-export type DocProcStatus =
-  | "unprocessed"
-  | "completed"
-  | "encounters_analyzed"
-  | "organization_assigned"
-  | "summarization_completed"
-  | "embeddings_completed"
-  | "upload_document_to_db"
-  | "stage3"
-  | "stage2"
-  | "stage1";
+export const PGStageValidator = z.enum([
+  "",
+  "pending",
+  "processing",
+  "completed",
+  "errored",
+]);
 
-export interface FileChildTextSource {
-  is_original_text: boolean;
-  text: string;
-  language: string;
-}
+export type PGStage = z.infer<typeof PGStageValidator>;
 
-export interface DocProcStage {
-  pg_stage: PGStage;
-  docproc_stage: DocProcStatus;
-  is_errored: boolean;
-  is_completed: boolean;
-  processing_error_msg: string;
-  database_error_msg: string;
-}
+export const DocProcStatusValidator = z.enum([
+  "",
+  "unprocessed",
+  "completed",
+  "encounters_analyzed",
+  "organization_assigned",
+  "summarization_completed",
+  "embeddings_completed",
+  "upload_document_to_db",
+  "stage3",
+  "stage2",
+  "stage1",
+]);
 
-export interface FileGeneratedExtras {
-  summary: string;
-  short_summary: string;
-  purpose: string;
-  impressiveness: number;
-}
+export type DocProcStage = z.infer<typeof DocProcStatusValidator>;
 
-export interface AuthorInformation {
-  author_name: string;
-  is_person: boolean;
-  is_primary_author: boolean;
-  author_id: string;
-}
+export const FileChildTextSourceValidator = z.object({
+  is_original_text: z.boolean(),
+  text: z.string(),
+  language: z.string(),
+});
 
-export interface JuristictionInformation {
-  country: string;
-  state: string;
-  municipality: string;
-  agency: string;
-  proceeding_name: string;
-  extra_object: Record<string, any>;
-}
+export const DocProcStageValidator = z.object({
+  pg_stage: PGStageValidator,
+  docproc_stage: DocProcStatusValidator,
+  is_errored: z.boolean(),
+  is_completed: z.boolean(),
+  processing_error_msg: z.string(),
+  database_error_msg: z.string(),
+});
 
-export interface CompleteFileSchema {
-  id: string;
-  verified: boolean;
-  extension: string;
-  lang: string;
-  name: string;
-  hash: string;
-  is_private: boolean;
-  mdata: FileMetadataSchema;
-  stage: DocProcStage;
-  extra: FileGeneratedExtras;
-  authors: AuthorInformation[];
-  juristiction: JuristictionInformation;
-  doc_texts: FileChildTextSource[];
-}
+export const FileGeneratedExtrasValidator = z.object({
+  summary: z.string(),
+  short_summary: z.string(),
+  purpose: z.string(),
+  impressiveness: z.number(),
+});
 
-export type FileMetadataSchema = Record<string, any>;
+export const AuthorInformationValidator = z.object({
+  author_name: z.string(),
+  is_person: z.boolean(),
+  is_primary_author: z.boolean(),
+  author_id: z.string().uuid(),
+});
+
+export const JuristictionInformationValidator = z.object({
+  country: z.string(),
+  state: z.string(),
+  municipality: z.string(),
+  agency: z.string(),
+  proceeding_name: z.string(),
+  extra_object: z.record(z.any()),
+});
+
+export const CompleteFileSchemaValidator = z.object({
+  id: z.string().uuid(),
+  verified: z.boolean(),
+  extension: z.string(),
+  lang: z.string(),
+  name: z.string(),
+  hash: z.string(),
+  is_private: z.boolean(),
+  mdata: z.record(z.any()),
+  stage: DocProcStageValidator,
+  extra: FileGeneratedExtrasValidator,
+  authors: z.array(AuthorInformationValidator).nullable().default([]),
+  doc_texts: z.array(FileChildTextSourceValidator).nullable().default([]),
+});
+
+export type CompleteFileSchema = z.infer<typeof CompleteFileSchemaValidator>;
