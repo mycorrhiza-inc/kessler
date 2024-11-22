@@ -141,7 +141,7 @@ export const ParseFilingDataSingular = async (
     console.log("Parsing document ID", f);
     console.log("filing source id", f.sourceID);
     const docID = z.string().uuid().parse(f.sourceID);
-    const metadata_url = `${apiURL}/v2/public/files/${docID}/metadata`;
+    const metadata_url = `${apiURL}/v2/public/files/${docID}`;
     try {
       const completeFileSchema = await completeFileSchemaGet(metadata_url);
       const newFiling: Filing =
