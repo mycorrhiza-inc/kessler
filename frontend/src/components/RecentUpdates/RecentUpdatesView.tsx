@@ -11,6 +11,7 @@ import LoadingSpinner from "../styled-components/LoadingSpinner";
 import ConversationTable from "../Organizations/ConversationTable";
 import OrganizationTable from "../Organizations/OrganizationTable";
 import Link from "next/link";
+import LoadingSpinnerTimeout from "../styled-components/LoadingSpinnerTimeout";
 
 // TODO: Break out Recent Updates into its own component seperate from all of the homepage logic
 export default function RecentUpdatesView() {
@@ -114,7 +115,10 @@ export default function RecentUpdatesView() {
           hasMore={true}
           loader={
             <div onClick={getMore}>
-              <LoadingSpinner loadingText="Loading Files" />
+              <LoadingSpinnerTimeout
+                loadingText="Loading Files"
+                timeoutSeconds={3}
+              />
             </div>
           }
         >

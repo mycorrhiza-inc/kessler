@@ -27,6 +27,7 @@ import { PageContext } from "@/lib/page_context";
 import InfiniteScroll from "react-infinite-scroll-component";
 import LoadingSpinner from "@/components/styled-components/LoadingSpinner";
 import { set } from "date-fns";
+import LoadingSpinnerTimeout from "../styled-components/LoadingSpinnerTimeout";
 
 const testFiling: Filing = {
   id: "0",
@@ -213,7 +214,10 @@ const ConversationComponent = ({
             hasMore={true}
             loader={
               <div onClick={getMore}>
-                <LoadingSpinner loadingText="Loading Files" />
+                <LoadingSpinnerTimeout
+                  loadingText="Loading Files"
+                  timeoutSeconds={3}
+                />
               </div>
             }
           >
