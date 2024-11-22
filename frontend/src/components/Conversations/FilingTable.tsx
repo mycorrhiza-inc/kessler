@@ -3,16 +3,25 @@ import Modal from "../styled-components/Modal";
 import DocumentModalBody from "../Document/DocumentModalBody";
 import { Filing } from "../../lib/types/FilingTypes";
 
-const pillColors = [
+const oklchSubdivide = (colorNum: number, divisions?: number) => {
+  const defaultDivisions = divisions || 15;
+  const hue = (colorNum % defaultDivisions) * (360 / defaultDivisions);
+  return `oklch(73% 0.123 ${hue})`;
+};
+
+const subdivide15 = [
   "oklch(73% 0.123 0)",
-  "oklch(73% 0.123 40)",
-  "oklch(73% 0.123 80)",
+  "oklch(73% 0.123 30)",
+  "oklch(73% 0.123 60)",
+  "oklch(73% 0.123 90)",
   "oklch(73% 0.123 120)",
-  "oklch(73% 0.123 160)",
-  "oklch(73% 0.123 200)",
+  "oklch(73% 0.123 150)",
+  "oklch(73% 0.123 180)",
+  "oklch(73% 0.123 210)",
   "oklch(73% 0.123 240)",
-  "oklch(73% 0.123 280)",
-  "oklch(73% 0.123 320)",
+  "oklch(73% 0.123 270)",
+  "oklch(73% 0.123 300)",
+  "oklch(73% 0.123 330)",
 ];
 
 const fileTypeColor = {
@@ -23,13 +32,12 @@ const fileTypeColor = {
 
 const FileTypePill = ({ file_class }: { file_class?: string }) => {
   const fileClassDefined = file_class || "Unknown";
-  const pillInteger =
-    Math.abs(
-      fileClassDefined
-        .split("")
-        .reduce((acc, char) => (acc * 3 + 2 * char.charCodeAt(0)) % 27, 0),
-    ) % 9;
-  const pillColor = pillColors[pillInteger];
+  const pillInteger = Math.abs(
+    fileClassDefined
+      .split("")
+      .reduce((acc, char) => (acc * 3 + 2 * char.charCodeAt(0)) % 42, 0),
+  );
+  const pillColor = oklchSubdivide(pillInteger, 15);
   // btn-[${pillColor}]
   return (
     <button
