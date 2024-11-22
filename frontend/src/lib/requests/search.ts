@@ -72,9 +72,7 @@ export const getRecentFilings = async (page?: number) => {
 
 export const getFilingMetadata = async (id: string): Promise<Filing | null> => {
   const valid_id = z.string().uuid().parse(id);
-  const response = await axios.get(
-    `${apiURL}/v2/public/files/${valid_id}/metadata`,
-  );
+  const response = await axios.get(`${apiURL}/v2/public/files/${valid_id}`);
   const filing = await ParseFilingDataSingular(response.data);
   return filing;
 };
@@ -119,10 +117,11 @@ export const generateFilingFromFileSchema = (
     source: file_schema.mdata.docID,
     lang: file_schema.lang,
     date: file_schema.mdata.date,
-    author: String(file_schema.authors),
+    author: file_schema.mdata.author,
+    authors_information: file_schema.authors,
     item_number: file_schema.mdata.item_number,
     file_class: file_schema.mdata.file_class,
-    docket_id: file_schema.mdata.docket_id,
+    // docket_id: file_schema.mdata.docket_id,
     url: file_schema.mdata.url,
   };
 };
@@ -140,7 +139,7 @@ export const ParseFilingDataSingular = async (
     console.log("Parsing document ID", f);
     console.log("filing source id", f.sourceID);
     const docID = z.string().uuid().parse(f.sourceID);
-    const metadata_url = `${apiURL}/v2/public/files/${docID}/metadata`;
+    const metadata_url = `${apiURL}/v2/public/files/${docID}`;
     try {
       const completeFileSchema = await completeFileSchemaGet(metadata_url);
       const newFiling: Filing =

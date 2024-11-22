@@ -59,6 +59,76 @@ func GetFileWithMeta(config FileHandlerConfig) http.HandlerFunc {
 	}
 }
 
+func FileSemiCompleteGetFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		q := *dbstore.New(dbtx_val)
+		params := mux.Vars(r)
+		fileID := params["uuid"]
+		parsedUUID, err := uuid.Parse(fileID)
+		if err != nil {
+			errorstring := fmt.Sprintf("Error parsing file %v: %v\n", fileID, err)
+			fmt.Println(errorstring)
+			http.Error(w, errorstring, http.StatusBadRequest)
+			return
+		}
+		pgUUID := pgtype.UUID{Bytes: parsedUUID, Valid: true}
+		ctx := r.Context()
+		files_raw, err := q.SemiCompleteFileGet(ctx, pgUUID)
+		if err != nil {
+			errorstring := fmt.Sprintf("Error Retriving file %v: %v\n", fileID, err)
+			fmt.Println(errorstring)
+			http.Error(w, errorstring, http.StatusNotFound)
+			return
+		}
+		if len(files_raw) == 0 {
+			errorstring := fmt.Sprintf("Error No Files Found for a list of length zero.\n")
+			fmt.Println(errorstring)
+			http.Error(w, errorstring, http.StatusNotFound)
+			return
+		}
+		file_raw := files_raw[0]
+		var mdata_obj map[string]interface{}
+		err = json.Unmarshal(file_raw.Mdata, &mdata_obj)
+		if err != nil {
+			errorstring := fmt.Sprintf("Error Unmarshalling file metadata %v: %v\n", fileID, err)
+			fmt.Println(errorstring)
+			http.Error(w, errorstring, http.StatusInternalServerError)
+			return
+		}
+		var extra_obj FileGeneratedExtras
+		err = json.Unmarshal(file_raw.ExtraObj, &extra_obj)
+		if err != nil {
+			errorstring := fmt.Sprintf("Error Unmarshalling file extras %v: %v\n", fileID, err)
+			fmt.Println(errorstring)
+			http.Error(w, errorstring, http.StatusInternalServerError)
+			return
+		}
+		// Missing info here, it doesnt have the name.
+		conv_info := ConversationInformation{ID: file_raw.DocketUuid.Bytes}
+		author_info := make([]AuthorInformation, len(files_raw))
+		for i, author_file_raw := range files_raw {
+			author_info[i] = AuthorInformation{AuthorName: author_file_raw.OrganizationName.String, IsPerson: author_file_raw.IsPerson.Bool, IsPrimaryAuthor: author_file_raw.IsPrimaryAuthor.Bool, AuthorID: author_file_raw.OrganizationID.Bytes}
+		}
+
+		file := CompleteFileSchema{
+			ID:           file_raw.ID.Bytes,
+			Verified:     file_raw.Verified.Bool,
+			Extension:    file_raw.Extension.String,
+			Lang:         file_raw.Lang.String,
+			Name:         file_raw.Name.String,
+			Hash:         file_raw.Hash.String,
+			Mdata:        mdata_obj,
+			Extra:        extra_obj,
+			Conversation: conv_info,
+			Authors:      author_info,
+		}
+
+		response, _ := json.Marshal(file)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(response)
+	}
+}
+
 func ReadFileHandlerFactory(config FileHandlerConfig) http.HandlerFunc {
 	private := config.private
 	dbtx_val := config.dbtx_val
