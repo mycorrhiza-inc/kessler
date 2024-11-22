@@ -27,6 +27,7 @@ SELECT
     public.file_metadata.mdata,
     public.file_extras.extra_obj,
     public.docket_documents.docket_id as docket_uuid,
+    public.relation_documents_organizations_authorship.is_primary_author,
     public.organization.id as organization_id,
     public.organization.name as organization_name
 FROM public.file
