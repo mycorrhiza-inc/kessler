@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import Modal from "../styled-components/Modal";
 import DocumentModalBody from "../Document/DocumentModalBody";
 import { Filing } from "../../lib/types/FilingTypes";
@@ -52,7 +52,7 @@ const TextPill = ({ text, link }: { text?: string, link?: string }) => {
   return (
     <button
       style={{ backgroundColor: pillColor }}
-      className={`btn btn-xs no-animation text-black`}
+      className={`btn btn-xs no-animation text-black mt-2 mb-2`}
     >
       {
         link ? (
@@ -65,6 +65,10 @@ const TextPill = ({ text, link }: { text?: string, link?: string }) => {
   );
 };
 
+const NoclickSpan = ({ children }: { children: React.ReactNode }) => {
+  return <span className="noclick p-5">{children}</span>;
+}
+
 const TableRow = ({
   filing,
   DocketColumn,
@@ -73,20 +77,41 @@ const TableRow = ({
   DocketColumn?: boolean
 }) => {
   const [open, setOpen] = useState(false);
+  const handleRowClick = (event: React.MouseEvent<HTMLTableRowElement>) => {
+    // Check if the clicked element is the text inside the row
+    const element = (event.target as HTMLElement);
+    const tagName = element.tagName; // Ensure type safety
+    const className = element.className;  
+    console.log("element", element);
+    console.log('tagName', tagName);
+    console.log('className', className);
+    
+    const includesNoClick = className.includes('noclick');
+
+    if (tagName === 'SPAN' || tagName === 'BUTTON' || includesNoClick) {
+      console.log('Text was clicked');
+      // Prevent the event from propagating further if needed
+      event.stopPropagation();
+      return;
+    }
+
+    // If it's not the specific text, allow the row click to proceed
+    console.log('Row was clicked');
+    setOpen((previous) => !previous)
+  };
+
   return (
     <>
       <tr
         className="border-b border-base-300 hover:bg-base-200 transition duration-500 ease-out"
-        onDoubleClick={() => {
-          setOpen((previous) => !previous);
-        }}
+        onClick={handleRowClick}
       >
-        <td>{filing.date}</td>
+        <td><NoclickSpan>{filing.date}</NoclickSpan></td>
         <td>
-          <TextPill text={filing.file_class} />
+          <NoclickSpan><TextPill text={filing.file_class} /></NoclickSpan>
         </td>
-        <td>{filing.title}</td>
-        <td>{filing.author}</td>
+        <td><NoclickSpan>{filing.title}</NoclickSpan></td>
+        <td><NoclickSpan>{filing.author}</NoclickSpan></td>
         {DocketColumn && (<td><TextPill text={filing.docket_id} link={`/proceedings/${filing.docket_id}`} /></td>)}
 
         <td>{filing.item_number}</td>
