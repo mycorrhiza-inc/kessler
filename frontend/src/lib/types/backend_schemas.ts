@@ -55,6 +55,8 @@ export const AuthorInformationValidator = z.object({
   author_id: z.string().uuid(),
 });
 
+export type AuthorInformation = z.infer<typeof AuthorInformationValidator>;
+
 export const JuristictionInformationValidator = z.object({
   country: z.string(),
   state: z.string(),
