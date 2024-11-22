@@ -58,7 +58,7 @@ func (q *Queries) GetFileWithMetadata(ctx context.Context, id pgtype.UUID) (GetF
 	return i, err
 }
 
-const getSemiCompleteFile = `-- name: GetSemiCompleteFile :many
+const semiCompleteFileGet = `-- name: SemiCompleteFileGet :many
 SELECT 
     f.id,
     f.name,
@@ -82,7 +82,7 @@ FROM public.file f
 WHERE f.id = $1
 `
 
-type GetSemiCompleteFileRow struct {
+type SemiCompleteFileGetRow struct {
 	ID               pgtype.UUID
 	Name             pgtype.Text
 	Extension        pgtype.Text
@@ -98,15 +98,15 @@ type GetSemiCompleteFileRow struct {
 	OrganizationName pgtype.Text
 }
 
-func (q *Queries) GetSemiCompleteFile(ctx context.Context, id pgtype.UUID) ([]GetSemiCompleteFileRow, error) {
-	rows, err := q.db.Query(ctx, getSemiCompleteFile, id)
+func (q *Queries) SemiCompleteFileGet(ctx context.Context, id pgtype.UUID) ([]SemiCompleteFileGetRow, error) {
+	rows, err := q.db.Query(ctx, semiCompleteFileGet, id)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetSemiCompleteFileRow
+	var items []SemiCompleteFileGetRow
 	for rows.Next() {
-		var i GetSemiCompleteFileRow
+		var i SemiCompleteFileGetRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,

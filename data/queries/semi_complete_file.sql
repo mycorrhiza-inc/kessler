@@ -14,7 +14,7 @@ FROM public.file
     LEFT JOIN public.file_metadata ON public.file.id = public.file_metadata.id
 WHERE public.file.id = $1;
 
--- name: GetSemiCompleteFile :many
+-- name: SemiCompleteFileGet :many
 SELECT 
     f.id,
     f.name,
