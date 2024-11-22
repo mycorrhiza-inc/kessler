@@ -20,6 +20,7 @@ const fileTypeColor = {
   doc: "oklch(60.55% 0.13 240)",
   xlsx: "oklch(75.55% 0.133 140)",
 };
+
 const FileTypePill = ({ file_class }: { file_class?: string }) => {
   const fileClassDefined = file_class || "Unknown";
   const pillInteger =
@@ -43,7 +44,7 @@ const TableRow = ({ filing }: { filing: Filing }) => {
     <>
       <tr
         className="border-b border-base-300 hover:bg-base-200 transition duration-500 ease-out"
-        onClick={() => {
+        onDoubleClick={() => {
           setOpen((previous) => !previous);
         }}
       >
