@@ -1,3 +1,4 @@
+"use client";
 import { useState } from "react";
 import DocumentModalBody from "./DocumentModalBody";
 import { BreadcrumbValues } from "../SitemapUtils";
