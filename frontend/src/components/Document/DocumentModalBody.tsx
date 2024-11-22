@@ -1,6 +1,6 @@
 "use client";
 // TODO: change the network fetch stuff so that this can be SSR'd
-import React, { Suspense, memo } from "react";
+import React, { Suspense, memo, useEffect } from "react";
 import * as Tabs from "@radix-ui/react-tabs";
 
 import PDFViewer from "./PDFViewer";
@@ -10,15 +10,16 @@ import { apiURL } from "@/lib/env_variables";
 import { fetchObjectDataFromURL, fetchTextDataFromURL } from "./documentLoader";
 import useSWRImmutable from "swr";
 import Link from "next/link";
+import { completeFileSchemaGet } from "@/lib/requests/search";
 
 // import { ErrorBoundary } from "react-error-boundary";
 
 type ModalProps = {
   open: boolean;
   objectId: string;
-  overridePDFUrl?: string;
   children?: React.ReactNode;
   title?: string;
+  setTitle?: (val: string) => void;
 };
 
 const MarkdownContent = memo(({ docUUID }: { docUUID: string }) => {
@@ -46,50 +47,45 @@ const MarkdownContent = memo(({ docUUID }: { docUUID: string }) => {
   return <MarkdownRenderer>{text}</MarkdownRenderer>;
 });
 
-const MetadataContent = memo(({ docUUID }: { docUUID: string }) => {
-  const object_url = `${apiURL}/v2/public/files/${docUUID}/metadata`;
-  // axios.get(`https://api.kessler.xyz/v2/public/files/${objectid}/markdown`),
-  const { data, error, isLoading } = useSWRImmutable(
-    object_url,
-    fetchObjectDataFromURL,
-  );
-  if (isLoading) {
-    return <LoadingSpinner loadingText="Loading Document Metadata" />;
-  }
-  if (error) {
-    return <p>Encountered an error getting text from the server.</p>;
-  }
-  if (typeof data !== "object") {
-    console.log("mdata type: ", typeof data);
-    console.log("mdata: ", data);
-    return <p>Expected an object for metadata, got something else.</p>;
-  }
-  const mdata_str = atob(data.Mdata);
-  console.log("mdata str: ", mdata_str);
-  const mdata = JSON.parse(mdata_str);
-  // mdata.Mdata = metadata;
+const MetadataContent = memo(
+  ({
+    metadata,
+    isLoading,
+    error,
+  }: {
+    metadata: any;
+    isLoading: boolean;
+    error: any;
+  }) => {
+    if (isLoading) {
+      return <LoadingSpinner loadingText="Loading Document Metadata" />;
+    }
+    if (error) {
+      return <p>Encountered an error getting text from the server.</p>;
+    }
 
-  return (
-    <div className="overflow-x-auto">
-      <table className="table table-zebra">
-        <thead>
-          <tr>
-            <th>Field</th>
-            <th>Value</th>
-          </tr>
-        </thead>
-        <tbody>
-          {Object.entries(mdata).map(([key, value]) => (
-            <tr key={key}>
-              <td>{key}</td>
-              <td>{String(value)}</td>
+    return (
+      <div className="overflow-x-auto">
+        <table className="table table-zebra">
+          <thead>
+            <tr>
+              <th>Field</th>
+              <th>Value</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-});
+          </thead>
+          <tbody>
+            {Object.entries(metadata).map(([key, value]) => (
+              <tr key={key}>
+                <td>{key}</td>
+                <td>{String(value)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  },
+);
 
 const PDFContent = ({ docUUID }: { docUUID: string }) => {
   const [loading, setLoading] = React.useState(true);
@@ -104,17 +100,27 @@ const PDFContent = ({ docUUID }: { docUUID: string }) => {
   );
 };
 
-const DocumentModalBody = ({ open, objectId, children, title }: ModalProps) => {
+const DocumentModalBody = ({ open, objectId, title, setTitle }: ModalProps) => {
+  const semiCompleteFileUrl = `${apiURL}/v2/public/files/${objectId}`;
+  const { data, error, isLoading } = useSWRImmutable(
+    semiCompleteFileUrl,
+    completeFileSchemaGet,
+  );
+  const actualTitle: string = (data?.name || title) as string;
   const underscoredTitle = title ? title.replace(/ /g, "_") : "Unkown_Document";
   const fileUrlNamedDownload = `${apiURL}/v2/public/files/${objectId}/raw/${underscoredTitle}.pdf`;
   const kesslerFileUrl = `/files/${objectId}`;
+  const metadata = data?.mdata;
+  useEffect(() => {
+    if (setTitle) {
+      setTitle(actualTitle);
+    }
+  }, [actualTitle]);
   return (
     <div className="modal-content standard-box ">
-      {/* children are components passed to result modals from special searches */}
       <div className="card-title">
-        <h1>{title}</h1>
+        <h1>{actualTitle}</h1>
       </div>
-      {/* Deleted all the MUI stuff, this should absolutely be refactored into its own styled component soonish*/}
 
       <a
         className="btn btn-primary"
@@ -127,6 +133,11 @@ const DocumentModalBody = ({ open, objectId, children, title }: ModalProps) => {
       <Link className="btn btn-secondary" href={kesslerFileUrl} target="_blank">
         Open in New Tab
       </Link>
+      {isLoading ? (
+        <LoadingSpinner loadingText="Loading Document Summary" />
+      ) : (
+        <p>{data?.extra.summary}</p>
+      )}
 
       <Tabs.Root
         className="TabsRoot"
@@ -151,7 +162,11 @@ const DocumentModalBody = ({ open, objectId, children, title }: ModalProps) => {
           <MarkdownContent docUUID={objectId} />
         </Tabs.Content>
         <Tabs.Content className="TabsContent" value="tab3">
-          <MetadataContent docUUID={objectId} />
+          <MetadataContent
+            isLoading={isLoading}
+            metadata={metadata}
+            error={error}
+          />
         </Tabs.Content>
       </Tabs.Root>
     </div>
