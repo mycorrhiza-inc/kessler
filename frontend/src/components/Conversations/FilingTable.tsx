@@ -2,6 +2,29 @@ import { useState } from "react";
 import Modal from "../styled-components/Modal";
 import DocumentModalBody from "../Document/DocumentModalBody";
 import { Filing } from "../../lib/types/FilingTypes";
+
+const pillColors = [
+  "oklch(72.55% 0.123 0)",
+  "oklch(72.55% 0.123 40)",
+  "oklch(72.55% 0.123 80)",
+  "oklch(72.55% 0.123 120)",
+  "oklch(72.55% 0.123 160)",
+  "oklch(72.55% 0.123 200)",
+  "oklch(72.55% 0.123 240)",
+  "oklch(72.55% 0.123 280)",
+  "oklch(72.55% 0.123 320)",
+];
+
+
+const fileTypeColor = {
+  pdf: "oklch(65.55% 0.133 0)",
+  doc: "oklch(60.55% 0.13 240)",
+  xlsx: "oklch(75.55% 0.133 140)",
+}
+const FileTypePill = ({ file_class }: { file_class: string }) => {
+  const pillColor =;
+};
+
 const TableRow = ({ filing }: { filing: Filing }) => {
   const [open, setOpen] = useState(false);
   return (

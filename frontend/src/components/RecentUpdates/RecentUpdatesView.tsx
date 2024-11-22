@@ -7,7 +7,6 @@ import Navbar from "../Navbar";
 import { getFilingMetadata, getRecentFilings } from "@/lib/requests/search";
 
 import InfiniteScroll from "react-infinite-scroll-component";
-import LoadingSpinner from "../styled-components/LoadingSpinner";
 import ConversationTable from "../Organizations/ConversationTable";
 import OrganizationTable from "../Organizations/OrganizationTable";
 import Link from "next/link";
@@ -15,7 +14,6 @@ import LoadingSpinnerTimeout from "../styled-components/LoadingSpinnerTimeout";
 
 // TODO: Break out Recent Updates into its own component seperate from all of the homepage logic
 export default function RecentUpdatesView() {
-  const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [filing_ids, setFilingIds] = useState<string[]>([]);
   const [filings, setFilings] = useState<Filing[]>([]);
