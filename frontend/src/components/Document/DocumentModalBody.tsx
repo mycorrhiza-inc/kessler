@@ -11,6 +11,7 @@ import { fetchObjectDataFromURL, fetchTextDataFromURL } from "./documentLoader";
 import useSWRImmutable from "swr";
 import Link from "next/link";
 import { completeFileSchemaGet } from "@/lib/requests/search";
+import { AuthorInfoPill } from "../Conversations/TextPills";
 
 // import { ErrorBoundary } from "react-error-boundary";
 
@@ -146,6 +147,12 @@ const DocumentModalBody = ({ open, objectId, title, setTitle }: ModalProps) => {
           <h3 className="text-lg font-bold">Summary:</h3>
           <br />
           <MarkdownRenderer>{data?.extra.summary as string}</MarkdownRenderer>
+          <br />
+          <h3 className="text-lg font-bold">Authors:</h3>
+          <br />
+          {data?.authors?.map((auth_info) => (
+            <AuthorInfoPill author_info={auth_info} />
+          ))}
         </>
       )}
 
