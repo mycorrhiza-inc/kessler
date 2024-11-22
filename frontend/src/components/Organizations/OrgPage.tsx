@@ -94,7 +94,7 @@ export default function OrganizationPage({
         {isSearching ? (
           <LoadingSpinner />
         ) : (
-          <FilingTable filings={filings} scroll={false} />
+          <FilingTable filings={filings} DocketColumn />
         )}
       </div>
     </>
