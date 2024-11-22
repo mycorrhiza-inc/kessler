@@ -43,10 +43,10 @@ export default function RootLayout({
           <ThemeProvider defaultTheme="light">
             <PostHogPageView />
             <main className="">
-              {/* <div className="flex-1 w-100vw flex flex-col items-center"> */}
+              <div className="flex-1 w-100vw flex flex-col items-center">
               {/* <Navbar user={user} /> */}
                 {children}
-              {/* </div> */}
+              </div>
             </main>
           </ThemeProvider>
         </body>
