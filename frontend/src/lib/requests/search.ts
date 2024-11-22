@@ -72,9 +72,7 @@ export const getRecentFilings = async (page?: number) => {
 
 export const getFilingMetadata = async (id: string): Promise<Filing | null> => {
   const valid_id = z.string().uuid().parse(id);
-  const response = await axios.get(
-    `${apiURL}/v2/public/files/${valid_id}/metadata`,
-  );
+  const response = await axios.get(`${apiURL}/v2/public/files/${valid_id}`);
   const filing = await ParseFilingDataSingular(response.data);
   return filing;
 };
@@ -123,7 +121,7 @@ export const generateFilingFromFileSchema = (
     authors_information: file_schema.authors,
     item_number: file_schema.mdata.item_number,
     file_class: file_schema.mdata.file_class,
-    docket_id: file_schema.mdata.docket_id,
+    // docket_id: file_schema.mdata.docket_id,
     url: file_schema.mdata.url,
   };
 };

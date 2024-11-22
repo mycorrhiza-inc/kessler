@@ -4,6 +4,7 @@ import DocumentModalBody from "../Document/DocumentModalBody";
 import { Filing } from "../../lib/types/FilingTypes";
 import { is } from "date-fns/locale";
 import Link from "next/link";
+import { AuthorInformation } from "@/lib/types/backend_schemas";
 
 const oklchSubdivide = (colorNum: number, divisions?: number) => {
   const defaultDivisions = divisions || 15;
@@ -44,11 +45,11 @@ const IsFiletypeColor = (key: string): key is keyof FileColor => {
 
 const TextPill = ({
   text,
-  link,
+  href,
   seed,
 }: {
   text?: string;
-  link?: string;
+  href?: string;
   seed?: string;
 }) => {
   const textDefined: string = text || "Unknown";
@@ -66,12 +67,12 @@ const TextPill = ({
     pillColor = oklchSubdivide(pillInteger, 15);
   }
   // btn-[${pillColor}]
-  if (link) {
+  if (href) {
     return (
       <Link
         style={{ backgroundColor: pillColor }}
         className={`btn btn-xs text-black`}
-        href={link}
+        href={href}
       >
         {text}
       </Link>
@@ -95,6 +96,7 @@ const TableRow = ({
   DocketColumn?: boolean;
 }) => {
   const [open, setOpen] = useState(false);
+
   return (
     <>
       <tr
@@ -108,12 +110,22 @@ const TableRow = ({
           <TextPill text={filing.file_class} />
         </td>
         <td>{filing.title}</td>
-        <td>{filing.author}</td>
+        <td>
+          {filing.authors_information
+            ? filing.authors_information.map((auth_info: AuthorInformation) => (
+                <TextPill
+                  text={auth_info.author_name}
+                  seed={auth_info.author_id}
+                  href={`/orgs/${auth_info.author_id}`}
+                />
+              ))
+            : filing.author + " Something isnt working"}
+        </td>
         {DocketColumn && (
           <td>
             <TextPill
               text={filing.docket_id}
-              link={`/proceedings/${filing.docket_id}`}
+              href={`/proceedings/${filing.docket_id}`}
             />
           </td>
         )}
