@@ -4,15 +4,15 @@ import DocumentModalBody from "../Document/DocumentModalBody";
 import { Filing } from "../../lib/types/FilingTypes";
 
 const pillColors = [
-  "oklch(72.55% 0.123 0)",
-  "oklch(72.55% 0.123 40)",
-  "oklch(72.55% 0.123 80)",
-  "oklch(72.55% 0.123 120)",
-  "oklch(72.55% 0.123 160)",
-  "oklch(72.55% 0.123 200)",
-  "oklch(72.55% 0.123 240)",
-  "oklch(72.55% 0.123 280)",
-  "oklch(72.55% 0.123 320)",
+  "oklch(73% 0.123 0)",
+  "oklch(73% 0.123 40)",
+  "oklch(73% 0.123 80)",
+  "oklch(73% 0.123 120)",
+  "oklch(73% 0.123 160)",
+  "oklch(73% 0.123 200)",
+  "oklch(73% 0.123 240)",
+  "oklch(73% 0.123 280)",
+  "oklch(73% 0.123 320)",
 ];
 
 const fileTypeColor = {
@@ -32,7 +32,10 @@ const FileTypePill = ({ file_class }: { file_class?: string }) => {
   const pillColor = pillColors[pillInteger];
   // btn-[${pillColor}]
   return (
-    <button style={{ backgroundColor: pillColor }} className={`btn btn-xs `}>
+    <button
+      style={{ backgroundColor: pillColor }}
+      className={`btn btn-xs no-animation text-black`}
+    >
       {file_class}
     </button>
   );
