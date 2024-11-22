@@ -120,7 +120,7 @@ export default function RecentUpdatesView() {
             </div>
           }
         >
-          <FilingTable filings={filings}  />
+          <FilingTable filings={filings} DocketColumn />
         </InfiniteScroll>
       </div>
     </>

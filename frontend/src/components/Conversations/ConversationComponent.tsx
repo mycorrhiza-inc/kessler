@@ -227,7 +227,7 @@ const ConversationComponent = ({
               </div>
             }
           >
-            <FilingTable filings={filings}  />
+            <FilingTable filings={filings} />
           </InfiniteScroll>
         </div>
       </div>
