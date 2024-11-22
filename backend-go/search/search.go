@@ -194,7 +194,6 @@ func convertToRFC3339(date string) (string, error) {
 	layout := "2006-01-02"
 
 	parsedDate, err := time.Parse(layout, date)
-
 	if err != nil {
 		return "", fmt.Errorf("invalid date format: %v", err)
 	}
@@ -268,7 +267,7 @@ func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
 	}
 
 	if r.MaxHits == 0 {
-		r.MaxHits = 20
+		r.MaxHits = 40
 	}
 	// construct request
 	request := QuickwitSearchRequest{
