@@ -123,6 +123,7 @@ export const generateFilingFromFileSchema = (
     authors_information: file_schema.authors,
     item_number: file_schema.mdata.item_number,
     file_class: file_schema.mdata.file_class,
+    docket_id: file_schema.mdata.docket_id,
     url: file_schema.mdata.url,
   };
 };
