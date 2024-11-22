@@ -168,7 +168,7 @@ func MigrateDocketToNYPUC() error {
 	requestData := map[string]interface{}{
 		"query":        query,
 		"start_offset": 0,
-		"max_hits":     10,
+		"max_hits":     40,
 		"limit":        1000,
 	}
 

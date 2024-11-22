@@ -7,20 +7,13 @@ import Navbar from "../Navbar";
 import { getFilingMetadata, getRecentFilings } from "@/lib/requests/search";
 
 import InfiniteScroll from "react-infinite-scroll-component";
-import LoadingSpinner from "../styled-components/LoadingSpinner";
 import ConversationTable from "../Organizations/ConversationTable";
 import OrganizationTable from "../Organizations/OrganizationTable";
+import Link from "next/link";
+import LoadingSpinnerTimeout from "../styled-components/LoadingSpinnerTimeout";
 
-function ConvertToFiling(data: any): Filing {
-  const newFiling: Filing = {
-    id: data.sourceID,
-  };
-
-  return newFiling;
-}
-
+// TODO: Break out Recent Updates into its own component seperate from all of the homepage logic
 export default function RecentUpdatesView() {
-  const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [filing_ids, setFilingIds] = useState<string[]>([]);
   const [filings, setFilings] = useState<Filing[]>([]);
@@ -52,11 +45,11 @@ export default function RecentUpdatesView() {
         }),
       );
 
-      setFilings((previous) => {
-        const existingIds = new Set(previous.map((f) => f.id));
+      setFilings((previous: Filing[]): Filing[] => {
+        const existingIds = new Set(previous.map((f: Filing) => f.id));
         const uniqueNewFilings = newFilings.filter(
-          (f) => !existingIds.has(f.id),
-        );
+          (f: Filing | null) => f !== null && !existingIds.has(f.id),
+        ) as Filing[];
         console.log(" uniques: ", uniqueNewFilings);
         console.log("all data: ", [...previous, ...uniqueNewFilings]);
         return [...previous, ...uniqueNewFilings];
@@ -97,11 +90,18 @@ export default function RecentUpdatesView() {
       <div className="w-full h-full p-20">
         <div className="grid grid-cols-2 w-full">
           <div className="max-h-[600px] overflow-x-hidden border-r pr-4">
-            <h1 className="text-3xl font-bold">Proceedings</h1>
+            <Link
+              className="text-3xl font-bold hover:underline"
+              href="/proceedings"
+            >
+              Proceedings
+            </Link>
             <ConversationTable />
           </div>
           <div className="max-h-[600px] overflow-x-hidden pl-4">
-            <h1 className="text-3xl font-bold">Organizations</h1>
+            <Link className="text-3xl font-bold hover:underline" href="/orgs">
+              Organizations
+            </Link>
             <OrganizationTable />
           </div>
         </div>
@@ -113,7 +113,10 @@ export default function RecentUpdatesView() {
           hasMore={true}
           loader={
             <div onClick={getMore}>
-              <LoadingSpinner loadingText="Loading Files" />
+              <LoadingSpinnerTimeout
+                loadingText="Loading Files"
+                timeoutSeconds={3}
+              />
             </div>
           }
         >

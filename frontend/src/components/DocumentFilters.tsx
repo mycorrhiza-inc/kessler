@@ -240,7 +240,11 @@ export function BasicDocumentFilters({
                   onChange={(e) => handleChange(e, filterId)}
                 >
                   {filterData.options?.map((option, index) => (
-                    <option key={option.value} selected={index === 0}>
+                    <option
+                      key={option.value}
+                      value={option.value}
+                      selected={index === 0}
+                    >
                       {option.label}
                     </option>
                   ))}
