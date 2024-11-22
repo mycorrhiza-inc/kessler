@@ -37,6 +37,7 @@ const testFiling: Filing = {
   title: "Press Release - PSC Announces CLCPA Tracking Initiative",
   author: "Public Service Commission",
   source: "Public Service Commission",
+  authors_information: [],
   extension: "pdf",
   file_class: "Press Releases",
   item_number: "3",

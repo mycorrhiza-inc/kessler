@@ -1,6 +1,6 @@
 "use client";
 // TODO: change the network fetch stuff so that this can be SSR'd
-import React, { Suspense, memo } from "react";
+import React, { Suspense, memo, useEffect } from "react";
 import * as Tabs from "@radix-ui/react-tabs";
 
 import PDFViewer from "./PDFViewer";
@@ -100,17 +100,22 @@ const PDFContent = ({ docUUID }: { docUUID: string }) => {
   );
 };
 
-const DocumentModalBody = ({ open, objectId, title }: ModalProps) => {
+const DocumentModalBody = ({ open, objectId, title, setTitle }: ModalProps) => {
   const semiCompleteFileUrl = `${apiURL}/v2/public/files/${objectId}`;
   const { data, error, isLoading } = useSWRImmutable(
     semiCompleteFileUrl,
     completeFileSchemaGet,
   );
-  const actualTitle = data?.name || title;
+  const actualTitle: string = (data?.name || title) as string;
   const underscoredTitle = title ? title.replace(/ /g, "_") : "Unkown_Document";
   const fileUrlNamedDownload = `${apiURL}/v2/public/files/${objectId}/raw/${underscoredTitle}.pdf`;
   const kesslerFileUrl = `/files/${objectId}`;
   const metadata = data?.mdata;
+  useEffect(() => {
+    if (setTitle) {
+      setTitle(actualTitle);
+    }
+  }, [actualTitle]);
   return (
     <div className="modal-content standard-box ">
       <div className="card-title">

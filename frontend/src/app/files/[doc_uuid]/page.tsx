@@ -14,20 +14,12 @@ export default async function Page({
   const host = headersList.get("host") || "";
   const hostsplits = host.split(".");
   const state = hostsplits.length > 1 ? hostsplits[0] : undefined;
-  const breadcrumbs: BreadcrumbValues = {
-    state: state,
-    breadcrumbs: [
-      { title: "Files", value: "files" },
-      { title: "Test Document Name", value: slug },
-    ],
-  };
   const {
     data: { user },
   } = await supabase.auth.getUser();
   return (
     <>
-      <Navbar user={user} breadcrumbs={breadcrumbs} />
-      <DocumentPage objectId={slug} />
+      <DocumentPage objectId={slug} user={user} state={state} />
     </>
   );
 }
