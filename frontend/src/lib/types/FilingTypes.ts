@@ -9,6 +9,7 @@ export const FilingValidator = z.object({
   source: z.string().optional(),
   extension: z.string().optional(),
   file_class: z.string().optional(),
+  docket_id: z.string().optional(),
   item_number: z.string().optional(),
   author_organisation: z.string().optional(),
   url: z.string().url().optional(),
