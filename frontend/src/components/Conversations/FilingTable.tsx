@@ -137,7 +137,6 @@ const TableRow = ({
           open={open}
           title={filing.title}
           objectId={filing.id}
-          overridePDFUrl={filing.url}
         />
       </Modal>
     </>
