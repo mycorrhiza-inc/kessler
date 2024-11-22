@@ -105,6 +105,10 @@ func FileSemiCompleteGetFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 		}
 		// Missing info here, it doesnt have the name.
 		conv_info := ConversationInformation{ID: file_raw.DocketUuid.Bytes}
+		author_info := make([]AuthorInformation, len(files_raw))
+		for i, author_file_raw := range files_raw {
+			author_info[i] = AuthorInformation{AuthorName: author_file_raw.OrganizationName.String, IsPerson: author_file_raw.IsPerson.Bool, IsPrimaryAuthor: author_file_raw.IsPrimaryAuthor.Bool, AuthorID: author_file_raw.OrganizationID.Bytes}
+		}
 
 		file := CompleteFileSchema{
 			ID:           file_raw.ID.Bytes,
@@ -116,6 +120,7 @@ func FileSemiCompleteGetFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 			Mdata:        mdata_obj,
 			Extra:        extra_obj,
 			Conversation: conv_info,
+			Authors:      author_info,
 		}
 
 		response, _ := json.Marshal(file)
