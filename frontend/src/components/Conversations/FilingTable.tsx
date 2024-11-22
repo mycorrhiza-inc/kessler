@@ -5,16 +5,25 @@ import { Filing } from "../../lib/types/FilingTypes";
 import { is } from "date-fns/locale";
 import Link from "next/link";
 
-const pillColors = [
+const oklchSubdivide = (colorNum: number, divisions?: number) => {
+  const defaultDivisions = divisions || 15;
+  const hue = (colorNum % defaultDivisions) * (360 / defaultDivisions);
+  return `oklch(73% 0.123 ${hue})`;
+};
+
+const subdivide15 = [
   "oklch(73% 0.123 0)",
-  "oklch(73% 0.123 40)",
-  "oklch(73% 0.123 80)",
+  "oklch(73% 0.123 30)",
+  "oklch(73% 0.123 60)",
+  "oklch(73% 0.123 90)",
   "oklch(73% 0.123 120)",
-  "oklch(73% 0.123 160)",
-  "oklch(73% 0.123 200)",
+  "oklch(73% 0.123 150)",
+  "oklch(73% 0.123 180)",
+  "oklch(73% 0.123 210)",
   "oklch(73% 0.123 240)",
-  "oklch(73% 0.123 280)",
-  "oklch(73% 0.123 320)",
+  "oklch(73% 0.123 270)",
+  "oklch(73% 0.123 300)",
+  "oklch(73% 0.123 330)",
 ];
 
 type FileColor = {
