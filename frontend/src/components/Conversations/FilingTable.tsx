@@ -70,7 +70,7 @@ const TextPill = ({
     return (
       <Link
         style={{ backgroundColor: pillColor }}
-        className={`btn btn-xs no-animation text-black`}
+        className={`btn btn-xs text-black`}
         href={link}
       >
         {text}
