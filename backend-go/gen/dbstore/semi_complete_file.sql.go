@@ -71,6 +71,7 @@ SELECT
     public.file_metadata.mdata,
     public.file_extras.extra_obj,
     public.docket_documents.docket_id as docket_uuid,
+    public.relation_documents_organizations_authorship.is_primary_author,
     public.organization.id as organization_id,
     public.organization.name as organization_name
 FROM public.file
@@ -94,6 +95,7 @@ type SemiCompleteFileGetRow struct {
 	Mdata            []byte
 	ExtraObj         []byte
 	DocketUuid       pgtype.UUID
+	IsPrimaryAuthor  pgtype.Bool
 	OrganizationID   pgtype.UUID
 	OrganizationName pgtype.Text
 }
@@ -119,6 +121,7 @@ func (q *Queries) SemiCompleteFileGet(ctx context.Context, id pgtype.UUID) ([]Se
 			&i.Mdata,
 			&i.ExtraObj,
 			&i.DocketUuid,
+			&i.IsPrimaryAuthor,
 			&i.OrganizationID,
 			&i.OrganizationName,
 		); err != nil {
