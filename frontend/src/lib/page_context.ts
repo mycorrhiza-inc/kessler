@@ -5,18 +5,20 @@ export type PageContext = {
 };
 
 export const getStateDisplayName = (state?: string) => {
-  switch (state) {
-    case "ny":
-      return "New York State";
-    case "ca":
-      return "California";
-    case "co":
-      return "Colorado";
-    case "":
-      return "All States";
-    case undefined:
-      return "All States";
-  }
+  // switch (state) {
+  //   case "ny":
 
-  return "Unknown/Unsupported";
+  //   case "ca":
+  //     return "California";
+  //   case "co":
+  //     return "Colorado";
+  //   case "":
+  //     return "All States";
+  //   case undefined:
+  //     return "All States";
+  // }
+
+  // return "Unknown/Unsupported";
+  // TODO: have something better. we only do ny rn
+  return "New York";
 };
