@@ -30,7 +30,7 @@ type FileColor = {
   pdf: string;
   doc: string;
   xlsx: string;
-}
+};
 
 const fileTypeColor = {
   pdf: "oklch(65.55% 0.133 0)",
@@ -40,36 +40,49 @@ const fileTypeColor = {
 
 const IsFiletypeColor = (key: string): key is keyof FileColor => {
   return key in fileTypeColor;
-}
+};
 
-
-const TextPill = ({ text, link }: { text?: string, link?: string }) => {
+const TextPill = ({
+  text,
+  link,
+  seed,
+}: {
+  text?: string;
+  link?: string;
+  seed?: string;
+}) => {
   const textDefined: string = text || "Unknown";
+  const actualSeed = seed || textDefined;
   var pillColor = "";
   if (IsFiletypeColor(textDefined)) {
     pillColor = fileTypeColor[textDefined];
   } else {
     const pillInteger =
       Math.abs(
-        textDefined
+        actualSeed
           .split("")
           .reduce((acc, char) => (acc * 3 + 2 * char.charCodeAt(0)) % 27, 0),
       ) % 9;
-    pillColor = pillColors[pillInteger];
+    pillColor = oklchSubdivide(pillInteger, 15);
   }
   // btn-[${pillColor}]
+  if (link) {
+    return (
+      <Link
+        style={{ backgroundColor: pillColor }}
+        className={`btn btn-xs no-animation text-black`}
+        href={link}
+      >
+        {text}
+      </Link>
+    );
+  }
   return (
     <button
       style={{ backgroundColor: pillColor }}
       className={`btn btn-xs no-animation text-black`}
     >
-      {
-        link ? (
-          <Link href={link}>{text}</Link>
-        ) : (
-          <>{text}</>
-        )
-      }
+      {text}
     </button>
   );
 };
@@ -78,8 +91,8 @@ const TableRow = ({
   filing,
   DocketColumn,
 }: {
-  filing: Filing,
-  DocketColumn?: boolean
+  filing: Filing;
+  DocketColumn?: boolean;
 }) => {
   const [open, setOpen] = useState(false);
   return (
@@ -96,7 +109,14 @@ const TableRow = ({
         </td>
         <td>{filing.title}</td>
         <td>{filing.author}</td>
-        {DocketColumn && (<td><TextPill text={filing.docket_id} link={`/proceedings/${filing.docket_id}`} /></td>)}
+        {DocketColumn && (
+          <td>
+            <TextPill
+              text={filing.docket_id}
+              link={`/proceedings/${filing.docket_id}`}
+            />
+          </td>
+        )}
 
         <td>{filing.item_number}</td>
       </tr>
@@ -135,11 +155,16 @@ export const FilingTable = ({
             <th className="text-left p-2 sticky top-0">Document Class</th>
             <th className="text-left p-2 sticky top-0">Title</th>
             <th className="text-left p-2 sticky top-0">Author</th>
-            {DocketColumn && (<th className="text-left p-2 sticky top-0">Proceeding ID</th>)}
+            {DocketColumn && (
+              <th className="text-left p-2 sticky top-0">Proceeding ID</th>
+            )}
             <th className="text-left p-2 sticky top-0">Item Number</th>
           </tr>
           {filings.map((filing) => (
-            <TableRow filing={filing} {...(DocketColumn !== undefined ? { DocketColumn } : {})} />
+            <TableRow
+              filing={filing}
+              {...(DocketColumn !== undefined ? { DocketColumn } : {})}
+            />
           ))}
         </tbody>
       </table>
