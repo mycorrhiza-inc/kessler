@@ -57,3 +57,14 @@ RETURNING id;
 -- name: DocketConversationDelete :exec
 DELETE FROM public.docket_conversations
 WHERE id = $1;
+
+-- name: DocketConversationAddName :one
+UPDATE public.docket_conversations
+SET name = $1
+WHERE id = $2
+RETURNING id;
+-- name: DocketConversationAddDescription :one
+UPDATE public.docket_conversations
+SET description = $1
+WHERE id = $2
+RETURNING id;

@@ -56,12 +56,14 @@ func (ns NullStageState) Value() (driver.Value, error) {
 }
 
 type DocketConversation struct {
-	ID        pgtype.UUID
-	DocketID  string
-	State     string
-	CreatedAt pgtype.Timestamp
-	UpdatedAt pgtype.Timestamp
-	DeletedAt pgtype.Timestamp
+	ID          pgtype.UUID
+	DocketID    string
+	State       string
+	CreatedAt   pgtype.Timestamp
+	UpdatedAt   pgtype.Timestamp
+	DeletedAt   pgtype.Timestamp
+	Name        pgtype.Text
+	Description pgtype.Text
 }
 
 type DocketDocument struct {

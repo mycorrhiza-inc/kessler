@@ -11,6 +11,44 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const docketConversationAddDescription = `-- name: DocketConversationAddDescription :one
+UPDATE public.docket_conversations
+SET description = $1
+WHERE id = $2
+RETURNING id
+`
+
+type DocketConversationAddDescriptionParams struct {
+	Description pgtype.Text
+	ID          pgtype.UUID
+}
+
+func (q *Queries) DocketConversationAddDescription(ctx context.Context, arg DocketConversationAddDescriptionParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, docketConversationAddDescription, arg.Description, arg.ID)
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
+const docketConversationAddName = `-- name: DocketConversationAddName :one
+UPDATE public.docket_conversations
+SET name = $1
+WHERE id = $2
+RETURNING id
+`
+
+type DocketConversationAddNameParams struct {
+	Name pgtype.Text
+	ID   pgtype.UUID
+}
+
+func (q *Queries) DocketConversationAddName(ctx context.Context, arg DocketConversationAddNameParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, docketConversationAddName, arg.Name, arg.ID)
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
 const docketConversationCreate = `-- name: DocketConversationCreate :one
 INSERT INTO public.docket_conversations (
 		docket_id,
@@ -45,7 +83,7 @@ func (q *Queries) DocketConversationDelete(ctx context.Context, id pgtype.UUID) 
 }
 
 const docketConversationFetchByDocketIdMatch = `-- name: DocketConversationFetchByDocketIdMatch :many
-SELECT id, docket_id, state, created_at, updated_at, deleted_at
+SELECT id, docket_id, state, created_at, updated_at, deleted_at, name, description
 FROM public.docket_conversations
 WHERE docket_id = $1
 `
@@ -66,6 +104,8 @@ func (q *Queries) DocketConversationFetchByDocketIdMatch(ctx context.Context, do
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.DeletedAt,
+			&i.Name,
+			&i.Description,
 		); err != nil {
 			return nil, err
 		}
@@ -78,7 +118,7 @@ func (q *Queries) DocketConversationFetchByDocketIdMatch(ctx context.Context, do
 }
 
 const docketConversationList = `-- name: DocketConversationList :many
-SELECT id, docket_id, state, created_at, updated_at, deleted_at
+SELECT id, docket_id, state, created_at, updated_at, deleted_at, name, description
 FROM public.docket_conversations
 ORDER BY created_at DESC
 `
@@ -99,6 +139,8 @@ func (q *Queries) DocketConversationList(ctx context.Context) ([]DocketConversat
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.DeletedAt,
+			&i.Name,
+			&i.Description,
 		); err != nil {
 			return nil, err
 		}
@@ -111,7 +153,7 @@ func (q *Queries) DocketConversationList(ctx context.Context) ([]DocketConversat
 }
 
 const docketConversationRead = `-- name: DocketConversationRead :one
-SELECT id, docket_id, state, created_at, updated_at, deleted_at
+SELECT id, docket_id, state, created_at, updated_at, deleted_at, name, description
 FROM public.docket_conversations
 WHERE id = $1
 `
@@ -126,6 +168,8 @@ func (q *Queries) DocketConversationRead(ctx context.Context, id pgtype.UUID) (D
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
+		&i.Name,
+		&i.Description,
 	)
 	return i, err
 }
