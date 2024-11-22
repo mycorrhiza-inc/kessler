@@ -73,22 +73,37 @@ func FileSemiCompleteGet(config FileHandlerConfig) http.HandlerFunc {
 		}
 		pgUUID := pgtype.UUID{Bytes: parsedUUID, Valid: true}
 		ctx := r.Context()
-		file_raw, err := q.(ctx, pgUUID)
+		files_raw, err := q.SemiCompleteFileGet(ctx, pgUUID)
 		if err != nil {
-
 			errorstring := fmt.Sprintf("Error Retriving file %v: %v\n", fileID, err)
 			fmt.Println(errorstring)
 			http.Error(w, errorstring, http.StatusNotFound)
 			return
 		}
+		if len(files_raw) == 0 {
+			errorstring := fmt.Sprintf("Error No Files Found for a list of length zero.\n")
+			fmt.Println(errorstring)
+			http.Error(w, errorstring, http.StatusNotFound)
+			return
+		}
+		file_raw := files_raw[0]
 		var mdata_obj map[string]interface{}
 		err = json.Unmarshal(file_raw.Mdata, &mdata_obj)
 		if err != nil {
-			errorstring := fmt.Sprintf("Error Unmarshalling file %v: %v\n", fileID, err)
+			errorstring := fmt.Sprintf("Error Unmarshalling file metadata %v: %v\n", fileID, err)
 			fmt.Println(errorstring)
 			http.Error(w, errorstring, http.StatusInternalServerError)
 			return
 		}
+		var extra_obj FileGeneratedExtras
+		err = json.Unmarshal(file_raw.ExtraObj, &extra_obj)
+		if err != nil {
+			errorstring := fmt.Sprintf("Error Unmarshalling file extras %v: %v\n", fileID, err)
+			fmt.Println(errorstring)
+			http.Error(w, errorstring, http.StatusInternalServerError)
+			return
+		}
+
 		file := CompleteFileSchema{
 			ID:        file_raw.ID.Bytes,
 			Verified:  file_raw.Verified.Bool,
@@ -96,8 +111,8 @@ func FileSemiCompleteGet(config FileHandlerConfig) http.HandlerFunc {
 			Lang:      file_raw.Lang.String,
 			Name:      file_raw.Name.String,
 			Hash:      file_raw.Hash.String,
-			IsPrivate: file_raw.Isprivate.Bool,
 			Mdata:     mdata_obj,
+			Extra:     extra_obj,
 		}
 
 		response, _ := json.Marshal(file)
