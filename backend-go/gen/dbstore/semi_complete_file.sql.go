@@ -73,7 +73,8 @@ SELECT
     public.docket_documents.docket_id as docket_uuid,
     public.relation_documents_organizations_authorship.is_primary_author,
     public.organization.id as organization_id,
-    public.organization.name as organization_name
+    public.organization.name as organization_name,
+    public.organization.is_person
 FROM public.file
     LEFT JOIN public.file_metadata ON public.file.id = public.file_metadata.id
     LEFT JOIN public.file_extras ON public.file.id = public.file_extras.id
@@ -98,6 +99,7 @@ type SemiCompleteFileGetRow struct {
 	IsPrimaryAuthor  pgtype.Bool
 	OrganizationID   pgtype.UUID
 	OrganizationName pgtype.Text
+	IsPerson         pgtype.Bool
 }
 
 func (q *Queries) SemiCompleteFileGet(ctx context.Context, id pgtype.UUID) ([]SemiCompleteFileGetRow, error) {
@@ -124,6 +126,7 @@ func (q *Queries) SemiCompleteFileGet(ctx context.Context, id pgtype.UUID) ([]Se
 			&i.IsPrimaryAuthor,
 			&i.OrganizationID,
 			&i.OrganizationName,
+			&i.IsPerson,
 		); err != nil {
 			return nil, err
 		}
