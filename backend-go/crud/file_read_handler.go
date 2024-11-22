@@ -59,9 +59,9 @@ func GetFileWithMeta(config FileHandlerConfig) http.HandlerFunc {
 	}
 }
 
-func FileSemiCompleteGet(config FileHandlerConfig) http.HandlerFunc {
+func FileSemiCompleteGetFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		q := *dbstore.New(config.dbtx_val)
+		q := *dbstore.New(dbtx_val)
 		params := mux.Vars(r)
 		fileID := params["uuid"]
 		parsedUUID, err := uuid.Parse(fileID)
