@@ -15,14 +15,26 @@ const pillColors = [
   "oklch(72.55% 0.123 320)",
 ];
 
-
 const fileTypeColor = {
   pdf: "oklch(65.55% 0.133 0)",
   doc: "oklch(60.55% 0.13 240)",
   xlsx: "oklch(75.55% 0.133 140)",
-}
-const FileTypePill = ({ file_class }: { file_class: string }) => {
-  const pillColor =;
+};
+const FileTypePill = ({ file_class }: { file_class?: string }) => {
+  const fileClassDefined = file_class || "Unknown";
+  const pillInteger =
+    Math.abs(
+      fileClassDefined
+        .split("")
+        .reduce((acc, char) => (acc * 3 + 2 * char.charCodeAt(0)) % 27, 0),
+    ) % 9;
+  const pillColor = pillColors[pillInteger];
+  // btn-[${pillColor}]
+  return (
+    <button style={{ backgroundColor: pillColor }} className={`btn btn-xs `}>
+      {file_class}
+    </button>
+  );
 };
 
 const TableRow = ({ filing }: { filing: Filing }) => {
@@ -36,7 +48,9 @@ const TableRow = ({ filing }: { filing: Filing }) => {
         }}
       >
         <td>{filing.date}</td>
-        <td>{filing.file_class}</td>
+        <td>
+          <FileTypePill file_class={filing.file_class} />
+        </td>
         <td>{filing.title}</td>
         <td>{filing.author}</td>
         <td>{filing.item_number}</td>
