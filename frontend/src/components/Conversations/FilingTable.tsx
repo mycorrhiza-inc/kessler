@@ -2,6 +2,8 @@ import { useState } from "react";
 import Modal from "../styled-components/Modal";
 import DocumentModalBody from "../Document/DocumentModalBody";
 import { Filing } from "../../lib/types/FilingTypes";
+import { is } from "date-fns/locale";
+import Link from "next/link";
 
 const pillColors = [
   "oklch(73% 0.123 0)",
@@ -15,33 +17,61 @@ const pillColors = [
   "oklch(73% 0.123 320)",
 ];
 
+type FileColor = {
+  pdf: string;
+  doc: string;
+  xlsx: string;
+}
+
 const fileTypeColor = {
   pdf: "oklch(65.55% 0.133 0)",
   doc: "oklch(60.55% 0.13 240)",
   xlsx: "oklch(75.55% 0.133 140)",
 };
 
-const FileTypePill = ({ file_class }: { file_class?: string }) => {
-  const fileClassDefined = file_class || "Unknown";
-  const pillInteger =
-    Math.abs(
-      fileClassDefined
-        .split("")
-        .reduce((acc, char) => (acc * 3 + 2 * char.charCodeAt(0)) % 27, 0),
-    ) % 9;
-  const pillColor = pillColors[pillInteger];
+const IsFiletypeColor = (key: string): key is keyof FileColor => {
+  return key in fileTypeColor;
+}
+
+
+const TextPill = ({ text, link }: { text?: string, link?: string }) => {
+  const textDefined: string = text || "Unknown";
+  var pillColor = "";
+  if (IsFiletypeColor(textDefined)) {
+    pillColor = fileTypeColor[textDefined];
+  } else {
+    const pillInteger =
+      Math.abs(
+        textDefined
+          .split("")
+          .reduce((acc, char) => (acc * 3 + 2 * char.charCodeAt(0)) % 27, 0),
+      ) % 9;
+    pillColor = pillColors[pillInteger];
+  }
   // btn-[${pillColor}]
   return (
     <button
       style={{ backgroundColor: pillColor }}
       className={`btn btn-xs no-animation text-black`}
     >
-      {file_class}
+      {
+        link ? (
+          <Link href={link}>{text}</Link>
+        ) : (
+          <>{text}</>
+        )
+      }
     </button>
   );
 };
 
-const TableRow = ({ filing }: { filing: Filing }) => {
+const TableRow = ({
+  filing,
+  DocketColumn,
+}: {
+  filing: Filing,
+  DocketColumn?: boolean
+}) => {
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -53,10 +83,12 @@ const TableRow = ({ filing }: { filing: Filing }) => {
       >
         <td>{filing.date}</td>
         <td>
-          <FileTypePill file_class={filing.file_class} />
+          <TextPill text={filing.file_class} />
         </td>
         <td>{filing.title}</td>
         <td>{filing.author}</td>
+        {DocketColumn && (<td><TextPill text={filing.docket_id} link={`/proceedings/${filing.docket_id}`} /></td>)}
+
         <td>{filing.item_number}</td>
       </tr>
       <Modal open={open} setOpen={setOpen}>
@@ -73,9 +105,11 @@ const TableRow = ({ filing }: { filing: Filing }) => {
 export const FilingTable = ({
   filings,
   scroll,
+  DocketColumn,
 }: {
   filings: Filing[];
   scroll?: boolean;
+  DocketColumn?: boolean;
 }) => {
   return (
     <div
@@ -92,10 +126,11 @@ export const FilingTable = ({
             <th className="text-left p-2 sticky top-0">Document Class</th>
             <th className="text-left p-2 sticky top-0">Title</th>
             <th className="text-left p-2 sticky top-0">Author</th>
+            {DocketColumn && (<th className="text-left p-2 sticky top-0">Proceeding ID</th>)}
             <th className="text-left p-2 sticky top-0">Item Number</th>
           </tr>
           {filings.map((filing) => (
-            <TableRow filing={filing} />
+            <TableRow filing={filing} {...(DocketColumn !== undefined ? { DocketColumn } : {})} />
           ))}
         </tbody>
       </table>
