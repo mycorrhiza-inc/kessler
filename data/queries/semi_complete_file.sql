@@ -29,7 +29,8 @@ SELECT
     public.docket_documents.docket_id as docket_uuid,
     public.relation_documents_organizations_authorship.is_primary_author,
     public.organization.id as organization_id,
-    public.organization.name as organization_name
+    public.organization.name as organization_name,
+    public.organization.is_person
 FROM public.file
     LEFT JOIN public.file_metadata ON public.file.id = public.file_metadata.id
     LEFT JOIN public.file_extras ON public.file.id = public.file_extras.id
