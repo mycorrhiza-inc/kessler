@@ -103,16 +103,19 @@ func FileSemiCompleteGet(config FileHandlerConfig) http.HandlerFunc {
 			http.Error(w, errorstring, http.StatusInternalServerError)
 			return
 		}
+		// Missing info here, it doesnt have the name.
+		conv_info := ConversationInformation{ID: file_raw.DocketUuid.Bytes}
 
 		file := CompleteFileSchema{
-			ID:        file_raw.ID.Bytes,
-			Verified:  file_raw.Verified.Bool,
-			Extension: file_raw.Extension.String,
-			Lang:      file_raw.Lang.String,
-			Name:      file_raw.Name.String,
-			Hash:      file_raw.Hash.String,
-			Mdata:     mdata_obj,
-			Extra:     extra_obj,
+			ID:           file_raw.ID.Bytes,
+			Verified:     file_raw.Verified.Bool,
+			Extension:    file_raw.Extension.String,
+			Lang:         file_raw.Lang.String,
+			Name:         file_raw.Name.String,
+			Hash:         file_raw.Hash.String,
+			Mdata:        mdata_obj,
+			Extra:        extra_obj,
+			Conversation: conv_info,
 		}
 
 		response, _ := json.Marshal(file)
