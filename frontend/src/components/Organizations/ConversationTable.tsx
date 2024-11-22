@@ -31,7 +31,8 @@ const ConversationTable = () => {
       {isLoading && <LoadingSpinner loadingText="Loading Conversations" />}
       {error && <p>Failed to load conversations {error}</p>}
       {!isLoading && !error && convoList != undefined && (
-        <table className="table table-pin-rows">
+        <table className="table">
+          {/* disable pinned rows due to the top row overlaying the filter sidebar */}
           <thead>
             <tr>
               <td>Name</td>

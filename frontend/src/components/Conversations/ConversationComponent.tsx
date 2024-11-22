@@ -45,11 +45,15 @@ const testFiling: Filing = {
 };
 
 const TableFilters = ({
+  searchQuery,
+  setSearchQuery,
   searchFilters,
   setSearchFilters,
   disabledFilters,
   toggleFilters,
 }: {
+  searchQuery: string;
+  setSearchQuery: Dispatch<SetStateAction<string>>;
   searchFilters: QueryFilterFields;
   setSearchFilters: Dispatch<SetStateAction<QueryFilterFields>>;
   disabledFilters: FilterField[];
@@ -62,6 +66,8 @@ const TableFilters = ({
         type="text"
         placeholder="Type here"
         className="input input-bordered w-full max-w-xs"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
       />
       <p className="text-lg font-bold">Filter Documents by: </p>
       <BasicDocumentFiltersList
@@ -233,6 +239,8 @@ const ConversationComponent = ({
         ></label>
         <ul className="menu bg-base-200 text-base-content min-h-full w-90 p-4">
           <TableFilters
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
             searchFilters={searchFilters}
             setSearchFilters={setSearchFilters}
             disabledFilters={disabledFilters}
