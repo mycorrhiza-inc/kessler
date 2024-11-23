@@ -26,7 +26,7 @@ type OrganizationRequest struct {
 	IsPerson         bool   `json:"is_person"`
 }
 
-func verifyOrganizationHandlerFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
+func OrganizationVerifyHandlerFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		bodyBytes, err := io.ReadAll(r.Body)
 		if err != nil {
