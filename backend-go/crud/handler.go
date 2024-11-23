@@ -103,6 +103,14 @@ func DefineCrudRoutes(router *mux.Router, dbtx_val dbstore.DBTX) {
 		"/organizations/{uuid}",
 		GetOrgWithFilesFactory(dbtx_val),
 	).Methods(http.MethodGet)
+	public_subrouter.HandleFunc(
+		"/organizations/verify",
+		OrganizationVerifyHandlerFactory(dbtx_val),
+	).Methods(http.MethodGet)
+	public_subrouter.HandleFunc(
+		"/conversations/verify",
+		ConversationVerifyHandlerFactory(dbtx_val),
+	).Methods(http.MethodGet)
 
 	//
 	// private_subrouter := router.PathPrefix("/v2/private").Subrouter()

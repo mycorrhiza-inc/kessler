@@ -2,7 +2,10 @@ package crud
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -18,9 +21,87 @@ func getFirstElement(array []dbstore.Organization) (dbstore.Organization, error)
 	return test, nil
 }
 
+type OrganizationRequest struct {
+	OrganizationName string `json:"organization_name"`
+	IsPerson         bool   `json:"is_person"`
+}
+
+func verifyOrganizationHandlerFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		bodyBytes, err := io.ReadAll(r.Body)
+		if err != nil {
+			errorstring := fmt.Sprintf("Error reading request body: %v\n", err)
+			fmt.Println(errorstring)
+			http.Error(w, errorstring, http.StatusBadRequest)
+			return
+		}
+		var req OrganizationRequest
+		err = json.Unmarshal(bodyBytes, &req)
+		if err != nil {
+			errorstring := fmt.Sprintf("Error decoding JSON: %v\n", err)
+			fmt.Println(errorstring)
+			http.Error(w, errorstring, http.StatusBadRequest)
+			return
+		}
+
+		ctx := r.Context()
+		q := *dbstore.New(dbtx_val)
+		author_info := AuthorInformation{AuthorName: req.OrganizationName, IsPerson: req.IsPerson}
+		author_info, err = verifyAuthorOrganizationUUID(ctx, q, &author_info)
+		if err != nil {
+			errorstring := fmt.Sprintf("Error verifying author %v: %v\n", req.OrganizationName, err)
+			fmt.Println(errorstring)
+			http.Error(w, errorstring, http.StatusInternalServerError)
+			return
+		}
+		// No error handling since we always want it to retun a 200 at this point.
+		response, _ := json.Marshal(author_info)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(response)
+	}
+}
+
+type ConversationRequest struct {
+	DocketID string `json:"docket_id"`
+}
+
+func ConversationVerifyHandlerFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		bodyBytes, err := io.ReadAll(r.Body)
+		if err != nil {
+			errorstring := fmt.Sprintf("Error reading request body: %v\n", err)
+			fmt.Println(errorstring)
+			http.Error(w, errorstring, http.StatusBadRequest)
+			return
+		}
+		var req ConversationRequest
+		err = json.Unmarshal(bodyBytes, &req)
+		if err != nil {
+			errorstring := fmt.Sprintf("Error decoding JSON: %v\n", err)
+			fmt.Println(errorstring)
+			http.Error(w, errorstring, http.StatusBadRequest)
+			return
+		}
+
+		ctx := r.Context()
+		q := *dbstore.New(dbtx_val)
+		conversation_info := ConversationInformation{DocketID: req.DocketID}
+		conversation_info, err = verifyConversationUUID(ctx, q, &conversation_info)
+		if err != nil {
+			errorstring := fmt.Sprintf("Error verifying conversation %v: %v\n", req.DocketID, err)
+			fmt.Println(errorstring)
+			http.Error(w, errorstring, http.StatusInternalServerError)
+			return
+		}
+		// No error handling since we always want it to retun a 200 at this point.
+		response, _ := json.Marshal(conversation_info)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(response)
+	}
+}
+
 func verifyAuthorOrganizationUUID(ctx context.Context, q dbstore.Queries, author_info *AuthorInformation) (AuthorInformation, error) {
-	empty_uuid, _ := uuid.Parse("00000000-0000-0000-0000-000000000000")
-	if author_info.AuthorID != empty_uuid {
+	if author_info.AuthorID != uuid.Nil {
 		return *author_info, nil
 	}
 	// TODO: Change the sql so that this also matches IsPerson, but for now it shouldnt matter.
