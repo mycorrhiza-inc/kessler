@@ -70,11 +70,14 @@ const TextPill = ({
   if (href) {
     return (
       <Link
-        style={{ backgroundColor: pillColor }}
-        className={`btn btn-xs text-black`}
         href={href}
       >
-        {text}
+        <button
+          style={{ backgroundColor: pillColor }}
+          className={`btn btn-xs no-animation text-black mt-2 mb-2`}
+        >
+          {text}
+        </button>
       </Link>
     );
   }
@@ -89,7 +92,7 @@ const TextPill = ({
 };
 
 const NoclickSpan = ({ children }: { children: React.ReactNode }) => {
-  return <span className="noclick p-5">{children}</span>;
+  return <span className="noclick">{children}</span>;
 }
 
 const TableRow = ({
@@ -136,16 +139,16 @@ const TableRow = ({
         <td><NoclickSpan>{filing.title}</NoclickSpan></td>
         <td>
           <NoclickSpan>
-          {filing.authors_information
-            ? filing.authors_information.map((auth_info: AuthorInformation) => (
-              <TextPill
-                text={auth_info.author_name}
-                seed={auth_info.author_id}
-                href={`/orgs/${auth_info.author_id}`}
-              />
-            ))
-            : filing.author + " Something isnt working"}
-            </NoclickSpan>
+            {filing.authors_information
+              ? filing.authors_information.map((auth_info: AuthorInformation) => (
+                <TextPill
+                  text={auth_info.author_name}
+                  seed={auth_info.author_id}
+                  href={`/orgs/${auth_info.author_id}`}
+                />
+              ))
+              : filing.author + " Something isnt working"}
+          </NoclickSpan>
         </td>
         {DocketColumn && (
           <td>
@@ -188,14 +191,14 @@ export const FilingTable = ({
       <table className="w-full divide-y divide-gray-200 table table-pin-rows">
         <tbody>
           <tr className="border-b border-gray-200">
-            <th className="text-left p-2 sticky top-0">Date Filed</th>
-            <th className="text-left p-2 sticky top-0">Document Class</th>
-            <th className="text-left p-2 sticky top-0">Title</th>
-            <th className="text-left p-2 sticky top-0">Author</th>
+            <th className="text-left  sticky top-0">Date Filed</th>
+            <th className="text-left  sticky top-0">Document Class</th>
+            <th className="text-left  sticky top-0">Title</th>
+            <th className="text-left  sticky top-0">Author</th>
             {DocketColumn && (
-              <th className="text-left p-2 sticky top-0">Proceeding ID</th>
+              <th className="text-left sticky top-0">Proceeding ID</th>
             )}
-            <th className="text-left p-2 sticky top-0">Item Number</th>
+            <th className="text-left sticky top-0">Item Number</th>
           </tr>
           {filings.map((filing) => (
             <TableRow
