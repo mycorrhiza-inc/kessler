@@ -83,6 +83,18 @@ DELETE FROM
 WHERE
     id = $1;
 
+-- name: AliasOrganizationCreate :one
+INSERT INTO
+    public.organization_aliases (
+        organization_id,
+        organization_alias,
+        created_at,
+        updated_at
+    )
+VALUES
+    ($1, $2, NOW(), NOW())
+RETURNING
+    organization_id;
 
 -- name: OrganizationgGetConversationsAuthoredIn :many
 SELECT
