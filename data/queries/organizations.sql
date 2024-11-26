@@ -49,3 +49,19 @@ RETURNING id;
 -- name: OrganizationDelete :exec
 DELETE FROM public.organization
 WHERE id = $1;
+
+
+-- name: OrganizationgGetConversationsAuthoredIn :many
+SELECT public.organization.id as organization_id,
+  public.organization.name as organization_name,
+  public.relation_documents_organizations_authorship.document_id,
+  public.docket_conversations.docket_id as docket_id,
+  public.docket_conversations.id as conversation_uuid
+  
+  
+FROM public.organization
+  LEFT JOIN public.relation_documents_organizations_authorship ON public.organization.id = public.relation_documents_organizations_authorship.organization_id
+  LEFT JOIN public.docket_documents ON public.relation_documents_organizations_authorship.document_id = public.docket_documents.file_id
+  LEFT JOIN public.docket_conversations ON public.docket_documents.docket_id = public.docket_conversations.id
+
+WHERE public.organization.id = $1;

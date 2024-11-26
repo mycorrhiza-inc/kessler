@@ -228,3 +228,53 @@ func (q *Queries) OrganizationUpdate(ctx context.Context, arg OrganizationUpdate
 	err := row.Scan(&id)
 	return id, err
 }
+
+const organizationgGetConversationsAuthoredIn = `-- name: OrganizationgGetConversationsAuthoredIn :many
+SELECT public.organization.id as organization_id,
+  public.organization.name as organization_name,
+  public.relation_documents_organizations_authorship.document_id,
+  public.docket_conversations.docket_id as docket_id,
+  public.docket_conversations.id as conversation_uuid
+  
+  
+FROM public.organization
+  LEFT JOIN public.relation_documents_organizations_authorship ON public.organization.id = public.relation_documents_organizations_authorship.organization_id
+  LEFT JOIN public.docket_documents ON public.relation_documents_organizations_authorship.document_id = public.docket_documents.file_id
+  LEFT JOIN public.docket_conversations ON public.docket_documents.docket_id = public.docket_conversations.id
+
+WHERE public.organization.id = $1
+`
+
+type OrganizationgGetConversationsAuthoredInRow struct {
+	OrganizationID   pgtype.UUID
+	OrganizationName string
+	DocumentID       pgtype.UUID
+	DocketID         pgtype.Text
+	ConversationUuid pgtype.UUID
+}
+
+func (q *Queries) OrganizationgGetConversationsAuthoredIn(ctx context.Context, id pgtype.UUID) ([]OrganizationgGetConversationsAuthoredInRow, error) {
+	rows, err := q.db.Query(ctx, organizationgGetConversationsAuthoredIn, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []OrganizationgGetConversationsAuthoredInRow
+	for rows.Next() {
+		var i OrganizationgGetConversationsAuthoredInRow
+		if err := rows.Scan(
+			&i.OrganizationID,
+			&i.OrganizationName,
+			&i.DocumentID,
+			&i.DocketID,
+			&i.ConversationUuid,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
