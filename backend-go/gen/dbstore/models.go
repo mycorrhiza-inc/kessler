@@ -56,12 +56,14 @@ func (ns NullStageState) Value() (driver.Value, error) {
 }
 
 type DocketConversation struct {
-	ID        pgtype.UUID
-	DocketID  string
-	State     string
-	CreatedAt pgtype.Timestamp
-	UpdatedAt pgtype.Timestamp
-	DeletedAt pgtype.Timestamp
+	ID          pgtype.UUID
+	DocketID    string
+	State       string
+	CreatedAt   pgtype.Timestamp
+	UpdatedAt   pgtype.Timestamp
+	DeletedAt   pgtype.Timestamp
+	Name        pgtype.Text
+	Description pgtype.Text
 }
 
 type DocketDocument struct {
@@ -153,6 +155,14 @@ type Organization struct {
 	CreatedAt   pgtype.Timestamptz
 	UpdatedAt   pgtype.Timestamptz
 	IsPerson    pgtype.Bool
+}
+
+type OrganizationAlias struct {
+	OrganizationAlias pgtype.Text
+	OrganizationID    pgtype.UUID
+	ID                pgtype.UUID
+	CreatedAt         pgtype.Timestamptz
+	UpdatedAt         pgtype.Timestamptz
 }
 
 type PrivateAccessControl struct {

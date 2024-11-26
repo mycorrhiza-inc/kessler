@@ -12,16 +12,19 @@ import (
 )
 
 const createFileTextSource = `-- name: CreateFileTextSource :one
-INSERT INTO public.file_text_source (
-		file_id,
-		is_original_text,
-		language,
-		text,
-		created_at,
-		updated_at
-	)
-VALUES ($1, $2, $3, $4, NOW(), NOW())
-RETURNING id
+INSERT INTO
+    public.file_text_source (
+        file_id,
+        is_original_text,
+        language,
+        text,
+        created_at,
+        updated_at
+    )
+VALUES
+    ($1, $2, $3, $4, NOW(), NOW())
+RETURNING
+    id
 `
 
 type CreateFileTextSourceParams struct {
@@ -44,8 +47,10 @@ func (q *Queries) CreateFileTextSource(ctx context.Context, arg CreateFileTextSo
 }
 
 const deleteFileTexts = `-- name: DeleteFileTexts :exec
-DELETE FROM public.file_text_source
-WHERE file_id = $1
+DELETE FROM
+    public.file_text_source
+WHERE
+    file_id = $1
 `
 
 func (q *Queries) DeleteFileTexts(ctx context.Context, fileID pgtype.UUID) error {
@@ -54,9 +59,12 @@ func (q *Queries) DeleteFileTexts(ctx context.Context, fileID pgtype.UUID) error
 }
 
 const listTextsOfFile = `-- name: ListTextsOfFile :many
-SELECT file_id, is_original_text, language, text, id, created_at, updated_at
-FROM public.file_text_source
-WHERE file_id = $1
+SELECT
+    file_id, is_original_text, language, text, id, created_at, updated_at
+FROM
+    public.file_text_source
+WHERE
+    file_id = $1
 `
 
 func (q *Queries) ListTextsOfFile(ctx context.Context, fileID pgtype.UUID) ([]FileTextSource, error) {
@@ -88,9 +96,13 @@ func (q *Queries) ListTextsOfFile(ctx context.Context, fileID pgtype.UUID) ([]Fi
 }
 
 const listTextsOfFileOriginal = `-- name: ListTextsOfFileOriginal :many
-SELECT file_id, is_original_text, language, text, id, created_at, updated_at
-FROM public.file_text_source
-WHERE file_id = $1 and is_original_text = true
+SELECT
+    file_id, is_original_text, language, text, id, created_at, updated_at
+FROM
+    public.file_text_source
+WHERE
+    file_id = $1
+    AND is_original_text = TRUE
 `
 
 func (q *Queries) ListTextsOfFileOriginal(ctx context.Context, fileID pgtype.UUID) ([]FileTextSource, error) {
@@ -122,9 +134,13 @@ func (q *Queries) ListTextsOfFileOriginal(ctx context.Context, fileID pgtype.UUI
 }
 
 const listTextsOfFileWithLanguage = `-- name: ListTextsOfFileWithLanguage :many
-SELECT file_id, is_original_text, language, text, id, created_at, updated_at
-FROM public.file_text_source
-WHERE file_id = $1 and language = $2
+SELECT
+    file_id, is_original_text, language, text, id, created_at, updated_at
+FROM
+    public.file_text_source
+WHERE
+    file_id = $1
+    AND language = $2
 `
 
 type ListTextsOfFileWithLanguageParams struct {

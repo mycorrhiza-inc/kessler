@@ -12,14 +12,17 @@ import (
 )
 
 const docketConversationCreate = `-- name: DocketConversationCreate :one
-INSERT INTO public.docket_conversations (
-		docket_id,
-		state,
-		created_at,
-		updated_at
-	)
-VALUES ($1, $2, NOW(), NOW())
-RETURNING id
+INSERT INTO
+    public.docket_conversations (
+        docket_id,
+        state,
+        created_at,
+        updated_at
+    )
+VALUES
+    ($1, $2, NOW(), NOW())
+RETURNING
+    id
 `
 
 type DocketConversationCreateParams struct {
@@ -35,8 +38,10 @@ func (q *Queries) DocketConversationCreate(ctx context.Context, arg DocketConver
 }
 
 const docketConversationDelete = `-- name: DocketConversationDelete :exec
-DELETE FROM public.docket_conversations
-WHERE id = $1
+DELETE FROM
+    public.docket_conversations
+WHERE
+    id = $1
 `
 
 func (q *Queries) DocketConversationDelete(ctx context.Context, id pgtype.UUID) error {
@@ -45,9 +50,12 @@ func (q *Queries) DocketConversationDelete(ctx context.Context, id pgtype.UUID) 
 }
 
 const docketConversationFetchByDocketIdMatch = `-- name: DocketConversationFetchByDocketIdMatch :many
-SELECT id, docket_id, state, created_at, updated_at, deleted_at
-FROM public.docket_conversations
-WHERE docket_id = $1
+SELECT
+    id, docket_id, state, created_at, updated_at, deleted_at, name, description
+FROM
+    public.docket_conversations
+WHERE
+    docket_id = $1
 `
 
 func (q *Queries) DocketConversationFetchByDocketIdMatch(ctx context.Context, docketID string) ([]DocketConversation, error) {
@@ -66,6 +74,8 @@ func (q *Queries) DocketConversationFetchByDocketIdMatch(ctx context.Context, do
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.DeletedAt,
+			&i.Name,
+			&i.Description,
 		); err != nil {
 			return nil, err
 		}
@@ -78,9 +88,12 @@ func (q *Queries) DocketConversationFetchByDocketIdMatch(ctx context.Context, do
 }
 
 const docketConversationList = `-- name: DocketConversationList :many
-SELECT id, docket_id, state, created_at, updated_at, deleted_at
-FROM public.docket_conversations
-ORDER BY created_at DESC
+SELECT
+    id, docket_id, state, created_at, updated_at, deleted_at, name, description
+FROM
+    public.docket_conversations
+ORDER BY
+    created_at DESC
 `
 
 func (q *Queries) DocketConversationList(ctx context.Context) ([]DocketConversation, error) {
@@ -99,6 +112,8 @@ func (q *Queries) DocketConversationList(ctx context.Context) ([]DocketConversat
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.DeletedAt,
+			&i.Name,
+			&i.Description,
 		); err != nil {
 			return nil, err
 		}
@@ -111,9 +126,12 @@ func (q *Queries) DocketConversationList(ctx context.Context) ([]DocketConversat
 }
 
 const docketConversationRead = `-- name: DocketConversationRead :one
-SELECT id, docket_id, state, created_at, updated_at, deleted_at
-FROM public.docket_conversations
-WHERE id = $1
+SELECT
+    id, docket_id, state, created_at, updated_at, deleted_at, name, description
+FROM
+    public.docket_conversations
+WHERE
+    id = $1
 `
 
 func (q *Queries) DocketConversationRead(ctx context.Context, id pgtype.UUID) (DocketConversation, error) {
@@ -126,17 +144,23 @@ func (q *Queries) DocketConversationRead(ctx context.Context, id pgtype.UUID) (D
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
+		&i.Name,
+		&i.Description,
 	)
 	return i, err
 }
 
 const docketConversationUpdate = `-- name: DocketConversationUpdate :one
-UPDATE public.docket_conversations
-SET docket_id = $1,
-	state = $2,
-	updated_at = NOW()
-WHERE id = $3
-RETURNING id
+UPDATE
+    public.docket_conversations
+SET
+    docket_id = $1,
+    state = $2,
+    updated_at = NOW()
+WHERE
+    id = $3
+RETURNING
+    id
 `
 
 type DocketConversationUpdateParams struct {
@@ -153,8 +177,10 @@ func (q *Queries) DocketConversationUpdate(ctx context.Context, arg DocketConver
 }
 
 const docketDocumentDeleteAll = `-- name: DocketDocumentDeleteAll :exec
-DELETE FROM public.docket_documents
-WHERE docket_id = $1
+DELETE FROM
+    public.docket_documents
+WHERE
+    docket_id = $1
 `
 
 func (q *Queries) DocketDocumentDeleteAll(ctx context.Context, docketID pgtype.UUID) error {
@@ -163,14 +189,17 @@ func (q *Queries) DocketDocumentDeleteAll(ctx context.Context, docketID pgtype.U
 }
 
 const docketDocumentInsert = `-- name: DocketDocumentInsert :one
-INSERT INTO public.docket_documents (
-		docket_id,
-		file_id,
-		created_at,
-		updated_at
-	)
-VALUES ($1, $2, NOW(), NOW())
-RETURNING docket_id
+INSERT INTO
+    public.docket_documents (
+        docket_id,
+        file_id,
+        created_at,
+        updated_at
+    )
+VALUES
+    ($1, $2, NOW(), NOW())
+RETURNING
+    docket_id
 `
 
 type DocketDocumentInsertParams struct {
@@ -186,12 +215,15 @@ func (q *Queries) DocketDocumentInsert(ctx context.Context, arg DocketDocumentIn
 }
 
 const docketDocumentUpdate = `-- name: DocketDocumentUpdate :one
-UPDATE public.docket_documents 
+UPDATE
+    public.docket_documents
 SET
-		docket_id = $1,
-		updated_at = NOW()
-WHERE file_id = $2
-RETURNING file_id
+    docket_id = $1,
+    updated_at = NOW()
+WHERE
+    file_id = $2
+RETURNING
+    file_id
 `
 
 type DocketDocumentUpdateParams struct {
