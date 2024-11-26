@@ -111,14 +111,14 @@ export const FilingTable = ({
       <table className="w-full divide-y divide-gray-200 table table-pin-rows">
         <tbody>
           <tr className="border-b border-gray-200">
-            <th className="text-left p-2 sticky top-0">Date Filed</th>
-            <th className="text-left p-2 sticky top-0">Document Class</th>
-            <th className="text-left p-2 sticky top-0">Title</th>
-            <th className="text-left p-2 sticky top-0">Author</th>
+            <th className="text-left  sticky top-0">Date Filed</th>
+            <th className="text-left  sticky top-0">Document Class</th>
+            <th className="text-left  sticky top-0">Title</th>
+            <th className="text-left  sticky top-0">Author</th>
             {DocketColumn && (
-              <th className="text-left p-2 sticky top-0">Proceeding ID</th>
+              <th className="text-left sticky top-0">Proceeding ID</th>
             )}
-            <th className="text-left p-2 sticky top-0">Item Number</th>
+            <th className="text-left sticky top-0">Item Number</th>
           </tr>
           {filings.map((filing) => (
             <TableRow
