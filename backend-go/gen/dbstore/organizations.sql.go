@@ -22,7 +22,7 @@ INSERT INTO
 VALUES
     ($1, $2, NOW(), NOW())
 RETURNING
-    organization_id
+    public.organization_aliases.id
 `
 
 type AliasOrganizationCreateParams struct {
@@ -32,9 +32,35 @@ type AliasOrganizationCreateParams struct {
 
 func (q *Queries) AliasOrganizationCreate(ctx context.Context, arg AliasOrganizationCreateParams) (pgtype.UUID, error) {
 	row := q.db.QueryRow(ctx, aliasOrganizationCreate, arg.OrganizationID, arg.OrganizationAlias)
-	var organization_id pgtype.UUID
-	err := row.Scan(&organization_id)
-	return organization_id, err
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
+const aliasOrganizationDelete = `-- name: AliasOrganizationDelete :one
+INSERT INTO
+    public.organization_aliases (
+        organization_id,
+        organization_alias,
+        created_at,
+        updated_at
+    )
+VALUES
+    ($1, $2, NOW(), NOW())
+RETURNING
+    public.organization_aliases.id
+`
+
+type AliasOrganizationDeleteParams struct {
+	OrganizationID    pgtype.UUID
+	OrganizationAlias pgtype.Text
+}
+
+func (q *Queries) AliasOrganizationDelete(ctx context.Context, arg AliasOrganizationDeleteParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, aliasOrganizationDelete, arg.OrganizationID, arg.OrganizationAlias)
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
 }
 
 const authorshipDocumentDeleteAll = `-- name: AuthorshipDocumentDeleteAll :exec
@@ -114,31 +140,86 @@ func (q *Queries) AuthorshipOrganizationListDocuments(ctx context.Context, organ
 }
 
 const createOrganization = `-- name: CreateOrganization :one
+WITH new_org AS (
+    INSERT INTO
+        public.organization (
+            name,
+            description,
+            is_person,
+            created_at,
+            updated_at
+        )
+    VALUES
+        ($1, $2, $3, NOW(), NOW())
+    RETURNING
+        id
+)
 INSERT INTO
-    public.organization (
-        name,
-        description,
-        is_person,
+    public.organization_aliases (
+        organization_id,
+        organization_alias,
         created_at,
         updated_at
     )
-VALUES
-    ($1, $2, $3, NOW(), NOW())
+SELECT
+    id,
+    $1,
+    NOW(),
+    NOW()
+FROM
+    new_org
 RETURNING
-    id
+    (
+        SELECT
+            id
+        FROM
+            new_org
+    ) AS id
 `
 
 type CreateOrganizationParams struct {
-	Name        string
-	Description pgtype.Text
-	IsPerson    pgtype.Bool
+	OrganizationAlias pgtype.Text
+	Description       pgtype.Text
+	IsPerson          pgtype.Bool
 }
 
 func (q *Queries) CreateOrganization(ctx context.Context, arg CreateOrganizationParams) (pgtype.UUID, error) {
-	row := q.db.QueryRow(ctx, createOrganization, arg.Name, arg.Description, arg.IsPerson)
+	row := q.db.QueryRow(ctx, createOrganization, arg.OrganizationAlias, arg.Description, arg.IsPerson)
 	var id pgtype.UUID
 	err := row.Scan(&id)
 	return id, err
+}
+
+const organizationAliasIdLookup = `-- name: OrganizationAliasIdLookup :many
+SELECT
+    
+FROM
+    public.organization_aliases
+WHERE
+    organization_id = $1
+`
+
+type OrganizationAliasIdLookupRow struct {
+}
+
+func (q *Queries) OrganizationAliasIdLookup(ctx context.Context, organizationID pgtype.UUID) ([]OrganizationAliasIdLookupRow, error) {
+	rows, err := q.db.Query(ctx, organizationAliasIdLookup, organizationID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []OrganizationAliasIdLookupRow
+	for rows.Next() {
+		var i OrganizationAliasIdLookupRow
+		if err := rows.Scan(); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const organizationDelete = `-- name: OrganizationDelete :exec

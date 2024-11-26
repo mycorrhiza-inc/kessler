@@ -138,10 +138,7 @@ SELECT
 FROM
     public.organization_aliases
 WHERE
-    organization_id = $1
-RETURNING
-    *;
-
+    organization_id = $1;
 -- name: OrganizationgGetConversationsAuthoredIn :many
 SELECT
     public.organization.id AS organization_id,

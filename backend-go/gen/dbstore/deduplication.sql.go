@@ -9,25 +9,64 @@ import (
 	"context"
 )
 
-const organizationDeduplicateCascade = `-- name: OrganizationDeduplicateCascade :exec
-DO $$
+const conversationDeduplicateCascade = `-- name: ConversationDeduplicateCascade :exec
+DO
+$$
 BEGIN
-    -- Update all foreign key references from organization A to B
-    -- Add new UPDATE statements here when new tables with FK references are added
-    UPDATE public.relation_documents_organizations_authorship
-    SET organization_id = $2
-    WHERE organization_id = $1;
+UPDATE
+    public.docket_documents
+SET
+    docket_id = $2
+WHERE
+    docket_id = $1;
 
-    UPDATE public.organization_aliases
-    SET organization_id = $2
-    WHERE organization_id = $1;
+DELETE FROM
+    public.docket_conversations
+WHERE
+    id = $1;
 
-    -- Finally delete the source organization
-    DELETE FROM public.organization
-    WHERE id = $1;
-END $$
+END
+$$
 `
 
+// Update all foreign key references from organization A to B
+// Add new UPDATE statements here when new tables with FK references are added
+// Finally delete the source organization
+func (q *Queries) ConversationDeduplicateCascade(ctx context.Context) error {
+	_, err := q.db.Exec(ctx, conversationDeduplicateCascade)
+	return err
+}
+
+const organizationDeduplicateCascade = `-- name: OrganizationDeduplicateCascade :exec
+DO
+$$
+BEGIN
+UPDATE
+    public.relation_documents_organizations_authorship
+SET
+    organization_id = $2
+WHERE
+    organization_id = $1;
+
+UPDATE
+    public.organization_aliases
+SET
+    organization_id = $2
+WHERE
+    organization_id = $1;
+
+DELETE FROM
+    public.organization
+WHERE
+    id = $1;
+
+END
+$$
+`
+
+// Update all foreign key references from organization A to B
+// Add new UPDATE statements here when new tables with FK references are added
+// Finally delete the source organization
 func (q *Queries) OrganizationDeduplicateCascade(ctx context.Context) error {
 	_, err := q.db.Exec(ctx, organizationDeduplicateCascade)
 	return err
