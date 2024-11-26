@@ -27,18 +27,41 @@ WHERE
     document_id = $1;
 
 -- name: CreateOrganization :one
+WITH new_org AS (
+    INSERT INTO
+        public.organization (
+            name,
+            description,
+            is_person,
+            created_at,
+            updated_at
+        )
+    VALUES
+        ($1, $2, $3, NOW(), NOW())
+    RETURNING
+        id
+)
 INSERT INTO
-    public.organization (
-        name,
-        description,
-        is_person,
+    public.organization_aliases (
+        organization_id,
+        organization_alias,
         created_at,
         updated_at
     )
-VALUES
-    ($1, $2, $3, NOW(), NOW())
+SELECT
+    id,
+    $1,
+    NOW(),
+    NOW()
+FROM
+    new_org
 RETURNING
-    id;
+    (
+        SELECT
+            id
+        FROM
+            new_org
+    ) AS id;
 
 -- name: OrganizationFetchByNameMatch :many
 SELECT
@@ -94,7 +117,30 @@ INSERT INTO
 VALUES
     ($1, $2, NOW(), NOW())
 RETURNING
-    organization_id;
+    public.organization_aliases.id;
+
+-- name: AliasOrganizationDelete :one
+INSERT INTO
+    public.organization_aliases (
+        organization_id,
+        organization_alias,
+        created_at,
+        updated_at
+    )
+VALUES
+    ($1, $2, NOW(), NOW())
+RETURNING
+    public.organization_aliases.id;
+
+-- name: OrganizationAliasIdLookup :many
+SELECT
+    public.organization_aliases.*
+FROM
+    public.organization_aliases
+WHERE
+    organization_id = $1
+RETURNING
+    *;
 
 -- name: OrganizationgGetConversationsAuthoredIn :many
 SELECT
