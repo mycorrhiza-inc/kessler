@@ -8,6 +8,7 @@ package dbstore
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -26,13 +27,13 @@ RETURNING
 `
 
 type AliasOrganizationCreateParams struct {
-	OrganizationID    pgtype.UUID
-	OrganizationAlias pgtype.Text
+	OrganizationID    uuid.UUID
+	OrganizationAlias string
 }
 
-func (q *Queries) AliasOrganizationCreate(ctx context.Context, arg AliasOrganizationCreateParams) (pgtype.UUID, error) {
+func (q *Queries) AliasOrganizationCreate(ctx context.Context, arg AliasOrganizationCreateParams) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, aliasOrganizationCreate, arg.OrganizationID, arg.OrganizationAlias)
-	var id pgtype.UUID
+	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
 }
@@ -52,13 +53,13 @@ RETURNING
 `
 
 type AliasOrganizationDeleteParams struct {
-	OrganizationID    pgtype.UUID
-	OrganizationAlias pgtype.Text
+	OrganizationID    uuid.UUID
+	OrganizationAlias string
 }
 
-func (q *Queries) AliasOrganizationDelete(ctx context.Context, arg AliasOrganizationDeleteParams) (pgtype.UUID, error) {
+func (q *Queries) AliasOrganizationDelete(ctx context.Context, arg AliasOrganizationDeleteParams) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, aliasOrganizationDelete, arg.OrganizationID, arg.OrganizationAlias)
-	var id pgtype.UUID
+	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
 }
@@ -70,7 +71,7 @@ WHERE
     document_id = $1
 `
 
-func (q *Queries) AuthorshipDocumentDeleteAll(ctx context.Context, documentID pgtype.UUID) error {
+func (q *Queries) AuthorshipDocumentDeleteAll(ctx context.Context, documentID uuid.UUID) error {
 	_, err := q.db.Exec(ctx, authorshipDocumentDeleteAll, documentID)
 	return err
 }
@@ -91,14 +92,14 @@ RETURNING
 `
 
 type AuthorshipDocumentOrganizationInsertParams struct {
-	DocumentID      pgtype.UUID
-	OrganizationID  pgtype.UUID
+	DocumentID      uuid.UUID
+	OrganizationID  uuid.UUID
 	IsPrimaryAuthor pgtype.Bool
 }
 
-func (q *Queries) AuthorshipDocumentOrganizationInsert(ctx context.Context, arg AuthorshipDocumentOrganizationInsertParams) (pgtype.UUID, error) {
+func (q *Queries) AuthorshipDocumentOrganizationInsert(ctx context.Context, arg AuthorshipDocumentOrganizationInsertParams) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, authorshipDocumentOrganizationInsert, arg.DocumentID, arg.OrganizationID, arg.IsPrimaryAuthor)
-	var id pgtype.UUID
+	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
 }
@@ -112,7 +113,7 @@ WHERE
     organization_id = $1
 `
 
-func (q *Queries) AuthorshipOrganizationListDocuments(ctx context.Context, organizationID pgtype.UUID) ([]RelationDocumentsOrganizationsAuthorship, error) {
+func (q *Queries) AuthorshipOrganizationListDocuments(ctx context.Context, organizationID uuid.UUID) ([]RelationDocumentsOrganizationsAuthorship, error) {
 	rows, err := q.db.Query(ctx, authorshipOrganizationListDocuments, organizationID)
 	if err != nil {
 		return nil, err
@@ -178,14 +179,14 @@ RETURNING
 `
 
 type CreateOrganizationParams struct {
-	OrganizationAlias pgtype.Text
-	Description       pgtype.Text
+	OrganizationAlias string
+	Description       string
 	IsPerson          pgtype.Bool
 }
 
-func (q *Queries) CreateOrganization(ctx context.Context, arg CreateOrganizationParams) (pgtype.UUID, error) {
+func (q *Queries) CreateOrganization(ctx context.Context, arg CreateOrganizationParams) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, createOrganization, arg.OrganizationAlias, arg.Description, arg.IsPerson)
-	var id pgtype.UUID
+	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
 }
@@ -202,7 +203,7 @@ WHERE
 type OrganizationAliasGetByItemIDRow struct {
 }
 
-func (q *Queries) OrganizationAliasGetByItemID(ctx context.Context, id pgtype.UUID) ([]OrganizationAliasGetByItemIDRow, error) {
+func (q *Queries) OrganizationAliasGetByItemID(ctx context.Context, id uuid.UUID) ([]OrganizationAliasGetByItemIDRow, error) {
 	rows, err := q.db.Query(ctx, organizationAliasGetByItemID, id)
 	if err != nil {
 		return nil, err
@@ -233,8 +234,8 @@ WHERE
 `
 
 type OrganizationAliasIdNameGetParams struct {
-	OrganizationID    pgtype.UUID
-	OrganizationAlias pgtype.Text
+	OrganizationID    uuid.UUID
+	OrganizationAlias string
 }
 
 type OrganizationAliasIdNameGetRow struct {
@@ -267,7 +268,7 @@ WHERE
     id = $1
 `
 
-func (q *Queries) OrganizationDelete(ctx context.Context, id pgtype.UUID) error {
+func (q *Queries) OrganizationDelete(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.Exec(ctx, organizationDelete, id)
 	return err
 }
@@ -320,7 +321,7 @@ WHERE
 type OrganizationGetAllAliasesRow struct {
 }
 
-func (q *Queries) OrganizationGetAllAliases(ctx context.Context, organizationID pgtype.UUID) ([]OrganizationGetAllAliasesRow, error) {
+func (q *Queries) OrganizationGetAllAliases(ctx context.Context, organizationID uuid.UUID) ([]OrganizationGetAllAliasesRow, error) {
 	rows, err := q.db.Query(ctx, organizationGetAllAliases, organizationID)
 	if err != nil {
 		return nil, err
@@ -385,7 +386,7 @@ WHERE
     id = $1
 `
 
-func (q *Queries) OrganizationRead(ctx context.Context, id pgtype.UUID) (Organization, error) {
+func (q *Queries) OrganizationRead(ctx context.Context, id uuid.UUID) (Organization, error) {
 	row := q.db.QueryRow(ctx, organizationRead, id)
 	var i Organization
 	err := row.Scan(
@@ -415,19 +416,19 @@ RETURNING
 
 type OrganizationUpdateParams struct {
 	Name        string
-	Description pgtype.Text
+	Description string
 	IsPerson    pgtype.Bool
-	ID          pgtype.UUID
+	ID          uuid.UUID
 }
 
-func (q *Queries) OrganizationUpdate(ctx context.Context, arg OrganizationUpdateParams) (pgtype.UUID, error) {
+func (q *Queries) OrganizationUpdate(ctx context.Context, arg OrganizationUpdateParams) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, organizationUpdate,
 		arg.Name,
 		arg.Description,
 		arg.IsPerson,
 		arg.ID,
 	)
-	var id pgtype.UUID
+	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
 }
@@ -449,14 +450,14 @@ WHERE
 `
 
 type OrganizationgGetConversationsAuthoredInRow struct {
-	OrganizationID   pgtype.UUID
+	OrganizationID   uuid.UUID
 	OrganizationName string
-	DocumentID       pgtype.UUID
-	DocketID         pgtype.Text
-	ConversationUuid pgtype.UUID
+	DocumentID       uuid.UUID
+	DocketID         string
+	ConversationUuid uuid.UUID
 }
 
-func (q *Queries) OrganizationgGetConversationsAuthoredIn(ctx context.Context, id pgtype.UUID) ([]OrganizationgGetConversationsAuthoredInRow, error) {
+func (q *Queries) OrganizationgGetConversationsAuthoredIn(ctx context.Context, id uuid.UUID) ([]OrganizationgGetConversationsAuthoredInRow, error) {
 	rows, err := q.db.Query(ctx, organizationgGetConversationsAuthoredIn, id)
 	if err != nil {
 		return nil, err

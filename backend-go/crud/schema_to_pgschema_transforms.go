@@ -9,37 +9,30 @@ import (
 	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
 )
 
-// A UUID is a 128 bit (16 byte) Universal Unique IDentifier as defined in RFC
-// 4122.
-// type UUID [16]byte
-func pguuidToString(uuid_pg pgtype.UUID) string {
-	return uuid.UUID(uuid_pg.Bytes).String()
-}
-
 func PublicFileToSchema(file dbstore.File) FileSchema {
 	return FileSchema{
-		ID:        file.ID.Bytes,
+		ID:        file.ID,
 		Verified:  file.Verified.Bool,
-		Extension: file.Extension.String,
-		Lang:      file.Lang.String,
-		Name:      file.Name.String,
-		Hash:      file.Hash.String,
+		Extension: file.Extension,
+		Lang:      file.Lang,
+		Name:      file.Name,
+		Hash:      file.Hash,
 		IsPrivate: file.Isprivate.Bool,
 	}
 }
 
 type FileTextSchema struct {
-	FileID         pgtype.UUID `json:"file_id"`
-	IsOriginalText bool        `json:"is_original_text"`
-	Text           string      `json:"text"`
-	Language       string      `json:"language"`
+	FileID         uuid.UUID `json:"file_id"`
+	IsOriginalText bool      `json:"is_original_text"`
+	Text           string    `json:"text"`
+	Language       string    `json:"language"`
 }
 
 func PublicTextToSchema(file dbstore.FileTextSource) FileTextSchema {
 	return FileTextSchema{
 		FileID:         file.FileID,
 		IsOriginalText: file.IsOriginalText,
-		Text:           file.Text.String,
+		Text:           file.Text,
 		Language:       file.Language,
 	}
 }
@@ -47,7 +40,7 @@ func PublicTextToSchema(file dbstore.FileTextSource) FileTextSchema {
 type GetFileParam struct {
 	Queries dbstore.Queries
 	Context context.Context
-	PgUUID  pgtype.UUID
+	PgUUID  uuid.UUID
 	Private bool
 }
 
@@ -112,10 +105,10 @@ func GetFileObjectRaw(params GetFileParam) (FileSchema, error) {
 }
 
 type FileCreationDataRaw struct {
-	Extension pgtype.Text
-	Lang      pgtype.Text
-	Name      pgtype.Text
-	Hash      pgtype.Text
+	Extension string
+	Lang      string
+	Name      string
+	Hash      string
 	IsPrivate pgtype.Bool
 	Verified  pgtype.Bool
 }
@@ -131,13 +124,13 @@ func InsertPubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreatio
 	}
 	resultID, err := q.CreateFile(ctx, params)
 	if err != nil {
-		return FileSchema{ID: resultID.Bytes}, err
+		return FileSchema{ID: resultID}, err
 	}
 	resultFile, err := q.ReadFile(ctx, resultID)
 	return PublicFileToSchema(resultFile), err
 }
 
-func UpdatePubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreation FileCreationDataRaw, private bool, pgUUID pgtype.UUID) (FileSchema, error) {
+func UpdatePubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreation FileCreationDataRaw, private bool, pgUUID uuid.UUID) (FileSchema, error) {
 	params := dbstore.UpdateFileParams{
 		Extension: fileCreation.Extension,
 		Lang:      fileCreation.Lang,
@@ -191,7 +184,7 @@ func InsertPriPubFileText(q dbstore.Queries, ctx context.Context, text FileTextS
 	args := dbstore.CreateFileTextSourceParams{
 		FileID:         text.FileID,
 		IsOriginalText: text.IsOriginalText,
-		Text:           pgtype.Text{String: text.Text, Valid: true},
+		Text:           text.Text,
 		Language:       text.Language,
 	}
 	_, err := q.CreateFileTextSource(ctx, args)
@@ -199,14 +192,13 @@ func InsertPriPubFileText(q dbstore.Queries, ctx context.Context, text FileTextS
 }
 
 func HashGetUUIDsFile(q dbstore.Queries, ctx context.Context, hash string) ([]uuid.UUID, error) {
-	pgHash := pgtype.Text{String: hash, Valid: true}
-	filePGUUIDs, err := q.HashGetFileID(ctx, pgHash)
+	filePGUUIDs, err := q.HashGetFileID(ctx, hash)
 	if err != nil {
 		return nil, err
 	}
 	var fileIDs []uuid.UUID
 	for _, file := range filePGUUIDs {
-		fileUUID := uuid.UUID(file.Bytes)
+		fileUUID := uuid.UUID(file)
 		fileIDs = append(fileIDs, fileUUID)
 	}
 	return fileIDs, nil

@@ -112,14 +112,14 @@ func verifyAuthorOrganizationUUID(ctx context.Context, q dbstore.Queries, author
 	}
 	org_return_info, err := getFirstElement(results) // Gives an error if list is empty
 	if err == nil {
-		org_uuid := uuid.UUID(org_return_info.ID.Bytes)
+		org_uuid := org_return_info.ID
 		author_info.AuthorID = org_uuid
 		author_info.IsPerson = org_return_info.IsPerson.Bool
 		return *author_info, nil
 	}
 	org_create_params := dbstore.CreateOrganizationParams{
-		OrganizationAlias: pgtype.Text{String: author_info.AuthorName, Valid: true},
-		Description:       pgtype.Text{String: "", Valid: true}, // I should make this fixable at some point, but for now it will kinda work (tm)
+		OrganizationAlias: author_info.AuthorName,
+		Description:       "", // I should make this fixable at some point, but for now it will kinda work (tm)
 		IsPerson:          pgtype.Bool{Bool: author_info.IsPerson, Valid: true},
 	}
 	pg_org_id, err := q.CreateOrganization(ctx, org_create_params)
@@ -127,14 +127,14 @@ func verifyAuthorOrganizationUUID(ctx context.Context, q dbstore.Queries, author
 		fmt.Println(err)
 		return *author_info, err
 	}
-	org_uuid := uuid.UUID(pg_org_id.Bytes)
+	org_uuid := pg_org_id
 	author_info.AuthorID = org_uuid
 	return *author_info, nil
 }
 
 func fileAuthorsUpsert(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, authors_info []AuthorInformation, insert bool) error {
 	if !insert {
-		err := q.AuthorshipDocumentDeleteAll(ctx, pgtype.UUID{Bytes: doc_uuid, Valid: true})
+		err := q.AuthorshipDocumentDeleteAll(ctx, doc_uuid)
 		if err != nil {
 			return err
 		}
@@ -149,8 +149,8 @@ func fileAuthorsUpsert(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUI
 		}
 
 		author_params := dbstore.AuthorshipDocumentOrganizationInsertParams{
-			DocumentID:      pgtype.UUID{Bytes: doc_uuid, Valid: true},
-			OrganizationID:  pgtype.UUID{Bytes: new_author_info.AuthorID, Valid: true},
+			DocumentID:      doc_uuid,
+			OrganizationID:  new_author_info.AuthorID,
 			IsPrimaryAuthor: pgtype.Bool{Bool: new_author_info.IsPrimaryAuthor, Valid: true},
 		}
 		_, err = q.AuthorshipDocumentOrganizationInsert(ctx, author_params)
@@ -185,7 +185,7 @@ func verifyConversationUUID(ctx context.Context, q dbstore.Queries, conv_info *C
 	// If conversation exists, return it
 	if len(results) > 0 {
 		conv := results[0]
-		conv_info.ID = uuid.UUID(conv.ID.Bytes)
+		conv_info.ID = conv.ID
 		conv_info.State = conv.State
 		return *conv_info, nil
 	}
@@ -201,7 +201,7 @@ func verifyConversationUUID(ctx context.Context, q dbstore.Queries, conv_info *C
 		return *conv_info, err
 	}
 
-	conv_info.ID = uuid.UUID(conv_id.Bytes)
+	conv_info.ID = conv_id
 	return *conv_info, nil
 }
 
@@ -221,8 +221,8 @@ func fileConversationUpsert(ctx context.Context, q dbstore.Queries, file_id uuid
 	}
 	if !insert {
 		args := dbstore.DocketDocumentUpdateParams{
-			DocketID: pgtype.UUID{Bytes: new_conv_info.ID, Valid: true},
-			FileID:   pgtype.UUID{Bytes: file_id, Valid: true},
+			DocketID: new_conv_info.ID,
+			FileID:   file_id,
 		}
 		_, err = q.DocketDocumentUpdate(ctx, args)
 		// If encounter a not found error, break error handling control flow and inserting object
@@ -236,8 +236,8 @@ func fileConversationUpsert(ctx context.Context, q dbstore.Queries, file_id uuid
 	}
 
 	insert_params := dbstore.DocketDocumentInsertParams{
-		DocketID: pgtype.UUID{Bytes: new_conv_info.ID, Valid: true},
-		FileID:   pgtype.UUID{Bytes: file_id, Valid: true},
+		DocketID: new_conv_info.ID,
+		FileID:   file_id,
 	}
 	_, err = q.DocketDocumentInsert(ctx, insert_params)
 	return err

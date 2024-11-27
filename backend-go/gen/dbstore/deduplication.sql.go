@@ -8,7 +8,7 @@ package dbstore
 import (
 	"context"
 
-	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/google/uuid"
 )
 
 const conversationDeduplicateCascade = `-- name: ConversationDeduplicateCascade :exec
@@ -29,8 +29,8 @@ WHERE
 `
 
 type ConversationDeduplicateCascadeParams struct {
-	ID       pgtype.UUID
-	DocketID pgtype.UUID
+	ID       uuid.UUID
+	DocketID uuid.UUID
 }
 
 func (q *Queries) ConversationDeduplicateCascade(ctx context.Context, arg ConversationDeduplicateCascadeParams) error {
@@ -66,8 +66,8 @@ WHERE
 `
 
 type OrganizationDeduplicateCascadeParams struct {
-	ID             pgtype.UUID
-	OrganizationID pgtype.UUID
+	ID             uuid.UUID
+	OrganizationID uuid.UUID
 }
 
 func (q *Queries) OrganizationDeduplicateCascade(ctx context.Context, arg OrganizationDeduplicateCascadeParams) error {

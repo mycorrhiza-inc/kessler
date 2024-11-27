@@ -8,6 +8,7 @@ import (
 	"database/sql/driver"
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -56,36 +57,36 @@ func (ns NullStageState) Value() (driver.Value, error) {
 }
 
 type DocketConversation struct {
-	ID          pgtype.UUID
+	ID          uuid.UUID
 	DocketID    string
 	State       string
 	CreatedAt   pgtype.Timestamp
 	UpdatedAt   pgtype.Timestamp
 	DeletedAt   pgtype.Timestamp
-	Name        pgtype.Text
-	Description pgtype.Text
+	Name        string
+	Description string
 }
 
 type DocketDocument struct {
-	DocketID  pgtype.UUID
-	FileID    pgtype.UUID
+	DocketID  uuid.UUID
+	FileID    uuid.UUID
 	CreatedAt pgtype.Timestamp
 	UpdatedAt pgtype.Timestamp
 }
 
 type Encounter struct {
-	Name        pgtype.Text
-	Description pgtype.Text
-	ID          pgtype.UUID
+	Name        string
+	Description string
+	ID          uuid.UUID
 	CreatedAt   pgtype.Timestamptz
 	UpdatedAt   pgtype.Timestamptz
 }
 
 type Event struct {
 	Date        pgtype.Timestamptz
-	Name        pgtype.Text
-	Description pgtype.Text
-	ID          pgtype.UUID
+	Name        string
+	Description string
+	ID          uuid.UUID
 	CreatedAt   pgtype.Timestamptz
 	UpdatedAt   pgtype.Timestamptz
 }
@@ -93,25 +94,25 @@ type Event struct {
 type Faction struct {
 	Name        string
 	Description string
-	ID          pgtype.UUID
+	ID          uuid.UUID
 	CreatedAt   pgtype.Timestamptz
 	UpdatedAt   pgtype.Timestamptz
 }
 
 type File struct {
-	ID        pgtype.UUID
-	Lang      pgtype.Text
-	Name      pgtype.Text
-	Extension pgtype.Text
+	ID        uuid.UUID
+	Lang      string
+	Name      string
+	Extension string
 	Isprivate pgtype.Bool
 	CreatedAt pgtype.Timestamptz
 	UpdatedAt pgtype.Timestamptz
-	Hash      pgtype.Text
+	Hash      string
 	Verified  pgtype.Bool
 }
 
 type FileExtra struct {
-	ID        pgtype.UUID
+	ID        uuid.UUID
 	Isprivate pgtype.Bool
 	CreatedAt pgtype.Timestamptz
 	UpdatedAt pgtype.Timestamptz
@@ -119,7 +120,7 @@ type FileExtra struct {
 }
 
 type FileMetadatum struct {
-	ID        pgtype.UUID
+	ID        uuid.UUID
 	Isprivate pgtype.Bool
 	Mdata     []byte
 	CreatedAt pgtype.Timestamptz
@@ -127,22 +128,22 @@ type FileMetadatum struct {
 }
 
 type FileTextSource struct {
-	FileID         pgtype.UUID
+	FileID         uuid.UUID
 	IsOriginalText bool
 	Language       string
-	Text           pgtype.Text
-	ID             pgtype.UUID
+	Text           string
+	ID             uuid.UUID
 	CreatedAt      pgtype.Timestamptz
 	UpdatedAt      pgtype.Timestamptz
 }
 
 type JuristictionInformation struct {
-	ID             pgtype.UUID
-	Country        pgtype.Text
-	State          pgtype.Text
-	Municipality   pgtype.Text
-	Agency         pgtype.Text
-	ProceedingName pgtype.Text
+	ID             uuid.UUID
+	Country        string
+	State          string
+	Municipality   string
+	Agency         string
+	ProceedingName string
 	Extra          []byte
 	CreatedAt      pgtype.Timestamptz
 	UpdatedAt      pgtype.Timestamptz
@@ -150,121 +151,121 @@ type JuristictionInformation struct {
 
 type Organization struct {
 	Name        string
-	Description pgtype.Text
-	ID          pgtype.UUID
+	Description string
+	ID          uuid.UUID
 	CreatedAt   pgtype.Timestamptz
 	UpdatedAt   pgtype.Timestamptz
 	IsPerson    pgtype.Bool
 }
 
 type OrganizationAlias struct {
-	OrganizationAlias pgtype.Text
-	OrganizationID    pgtype.UUID
-	ID                pgtype.UUID
+	OrganizationAlias string
+	OrganizationID    uuid.UUID
+	ID                uuid.UUID
 	CreatedAt         pgtype.Timestamptz
 	UpdatedAt         pgtype.Timestamptz
 }
 
 type PrivateAccessControl struct {
-	OperatorID    pgtype.UUID
+	OperatorID    uuid.UUID
 	OperatorTable string
-	ObjectID      pgtype.UUID
+	ObjectID      uuid.UUID
 	ObjectTable   string
-	ID            pgtype.UUID
+	ID            uuid.UUID
 	CreatedAt     pgtype.Timestamptz
 	UpdatedAt     pgtype.Timestamptz
 }
 
 type RelationDocumentsEncounter struct {
-	DocumentID  pgtype.UUID
-	EncounterID pgtype.UUID
-	ID          pgtype.UUID
+	DocumentID  uuid.UUID
+	EncounterID uuid.UUID
+	ID          uuid.UUID
 	CreatedAt   pgtype.Timestamptz
 	UpdatedAt   pgtype.Timestamptz
 }
 
 type RelationDocumentsOrganizationsAuthorship struct {
-	DocumentID      pgtype.UUID
-	OrganizationID  pgtype.UUID
-	ID              pgtype.UUID
+	DocumentID      uuid.UUID
+	OrganizationID  uuid.UUID
+	ID              uuid.UUID
 	CreatedAt       pgtype.Timestamptz
 	UpdatedAt       pgtype.Timestamptz
 	IsPrimaryAuthor pgtype.Bool
 }
 
 type RelationFactionsEncounter struct {
-	EncounterID pgtype.UUID
-	FactionID   pgtype.UUID
-	ID          pgtype.UUID
+	EncounterID uuid.UUID
+	FactionID   uuid.UUID
+	ID          uuid.UUID
 	CreatedAt   pgtype.Timestamptz
 	UpdatedAt   pgtype.Timestamptz
 }
 
 type RelationFilesEvent struct {
-	FileID    pgtype.UUID
-	EventID   pgtype.UUID
-	ID        pgtype.UUID
+	FileID    uuid.UUID
+	EventID   uuid.UUID
+	ID        uuid.UUID
 	CreatedAt pgtype.Timestamptz
 	UpdatedAt pgtype.Timestamptz
 }
 
 type RelationIndividualsEvent struct {
-	IndividualID pgtype.UUID
-	EventID      pgtype.UUID
-	ID           pgtype.UUID
+	IndividualID uuid.UUID
+	EventID      uuid.UUID
+	ID           uuid.UUID
 	CreatedAt    pgtype.Timestamptz
 	UpdatedAt    pgtype.Timestamptz
 }
 
 type RelationOrganizationsEvent struct {
-	OrganizationID pgtype.UUID
-	EventID        pgtype.UUID
-	ID             pgtype.UUID
+	OrganizationID uuid.UUID
+	EventID        uuid.UUID
+	ID             uuid.UUID
 	CreatedAt      pgtype.Timestamptz
 	UpdatedAt      pgtype.Timestamptz
 }
 
 type RelationOrganizationsFaction struct {
-	FactionID      pgtype.UUID
-	OrganizationID pgtype.UUID
-	ID             pgtype.UUID
+	FactionID      uuid.UUID
+	OrganizationID uuid.UUID
+	ID             uuid.UUID
 	CreatedAt      pgtype.Timestamptz
 	UpdatedAt      pgtype.Timestamptz
 }
 
 type RelationUsersUsergroup struct {
-	UserID      pgtype.UUID
-	UsergroupID pgtype.UUID
-	ID          pgtype.UUID
+	UserID      uuid.UUID
+	UsergroupID uuid.UUID
+	ID          uuid.UUID
 	CreatedAt   pgtype.Timestamp
 }
 
 type StageLog struct {
-	ID        pgtype.UUID
+	ID        uuid.UUID
 	Status    NullStageState
 	Log       []byte
 	CreatedAt pgtype.Timestamptz
-	FileID    pgtype.UUID
+	FileID    uuid.UUID
 }
 
 type User struct {
-	ID        pgtype.UUID
-	Username  pgtype.Text
-	StripeID  pgtype.Text
+	ID        uuid.UUID
+	Username  string
+	StripeID  string
 	Email     string
 	CreatedAt pgtype.Timestamp
 }
 
 type UserfilesThaumaturgyApiKey struct {
-	KeyName       pgtype.Text
+	KeyName       string
 	KeyBlake3Hash string
-	ID            pgtype.UUID
+	ID            uuid.UUID
 	CreatedAt     pgtype.Timestamptz
 	UpdatedAt     pgtype.Timestamptz
 }
 
 type Usergroup struct {
-	ID        pgtype.UUID
+	ID        uuid.UUID
 	Name      string
 	CreatedAt pgtype.Timestamp
 }

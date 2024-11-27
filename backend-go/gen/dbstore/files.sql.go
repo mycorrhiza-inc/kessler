@@ -8,6 +8,7 @@ package dbstore
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -41,15 +42,15 @@ RETURNING
 `
 
 type CreateFileParams struct {
-	Extension pgtype.Text
-	Lang      pgtype.Text
-	Name      pgtype.Text
+	Extension string
+	Lang      string
+	Name      string
 	Isprivate pgtype.Bool
-	Hash      pgtype.Text
+	Hash      string
 	Verified  pgtype.Bool
 }
 
-func (q *Queries) CreateFile(ctx context.Context, arg CreateFileParams) (pgtype.UUID, error) {
+func (q *Queries) CreateFile(ctx context.Context, arg CreateFileParams) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, createFile,
 		arg.Extension,
 		arg.Lang,
@@ -58,7 +59,7 @@ func (q *Queries) CreateFile(ctx context.Context, arg CreateFileParams) (pgtype.
 		arg.Hash,
 		arg.Verified,
 	)
-	var id pgtype.UUID
+	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
 }
@@ -70,7 +71,7 @@ WHERE
     id = $1
 `
 
-func (q *Queries) DeleteFile(ctx context.Context, id pgtype.UUID) error {
+func (q *Queries) DeleteFile(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.Exec(ctx, deleteFile, id)
 	return err
 }
@@ -91,14 +92,14 @@ RETURNING
 `
 
 type ExtrasFileCreateParams struct {
-	ID        pgtype.UUID
+	ID        uuid.UUID
 	Isprivate pgtype.Bool
 	ExtraObj  []byte
 }
 
-func (q *Queries) ExtrasFileCreate(ctx context.Context, arg ExtrasFileCreateParams) (pgtype.UUID, error) {
+func (q *Queries) ExtrasFileCreate(ctx context.Context, arg ExtrasFileCreateParams) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, extrasFileCreate, arg.ID, arg.Isprivate, arg.ExtraObj)
-	var id pgtype.UUID
+	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
 }
@@ -112,7 +113,7 @@ WHERE
     id = $1
 `
 
-func (q *Queries) ExtrasFileFetch(ctx context.Context, id pgtype.UUID) (FileExtra, error) {
+func (q *Queries) ExtrasFileFetch(ctx context.Context, id uuid.UUID) (FileExtra, error) {
 	row := q.db.QueryRow(ctx, extrasFileFetch, id)
 	var i FileExtra
 	err := row.Scan(
@@ -141,12 +142,12 @@ RETURNING
 type ExtrasFileUpdateParams struct {
 	Isprivate pgtype.Bool
 	ExtraObj  []byte
-	ID        pgtype.UUID
+	ID        uuid.UUID
 }
 
-func (q *Queries) ExtrasFileUpdate(ctx context.Context, arg ExtrasFileUpdateParams) (pgtype.UUID, error) {
+func (q *Queries) ExtrasFileUpdate(ctx context.Context, arg ExtrasFileUpdateParams) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, extrasFileUpdate, arg.Isprivate, arg.ExtraObj, arg.ID)
-	var id pgtype.UUID
+	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
 }
@@ -160,7 +161,7 @@ WHERE
     id = $1
 `
 
-func (q *Queries) FetchMetadata(ctx context.Context, id pgtype.UUID) ([]FileMetadatum, error) {
+func (q *Queries) FetchMetadata(ctx context.Context, id uuid.UUID) ([]FileMetadatum, error) {
 	rows, err := q.db.Query(ctx, fetchMetadata, id)
 	if err != nil {
 		return nil, err
@@ -200,12 +201,12 @@ RETURNING
 
 type FileVerifiedUpdateParams struct {
 	Verified pgtype.Bool
-	ID       pgtype.UUID
+	ID       uuid.UUID
 }
 
-func (q *Queries) FileVerifiedUpdate(ctx context.Context, arg FileVerifiedUpdateParams) (pgtype.UUID, error) {
+func (q *Queries) FileVerifiedUpdate(ctx context.Context, arg FileVerifiedUpdateParams) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, fileVerifiedUpdate, arg.Verified, arg.ID)
-	var id pgtype.UUID
+	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
 }
@@ -219,7 +220,7 @@ WHERE
     id = $1
 `
 
-func (q *Queries) GetFile(ctx context.Context, id pgtype.UUID) (File, error) {
+func (q *Queries) GetFile(ctx context.Context, id uuid.UUID) (File, error) {
 	row := q.db.QueryRow(ctx, getFile, id)
 	var i File
 	err := row.Scan(
@@ -245,15 +246,15 @@ WHERE
     public.file.hash = $1
 `
 
-func (q *Queries) HashGetFileID(ctx context.Context, hash pgtype.Text) ([]pgtype.UUID, error) {
+func (q *Queries) HashGetFileID(ctx context.Context, hash string) ([]uuid.UUID, error) {
 	rows, err := q.db.Query(ctx, hashGetFileID, hash)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []pgtype.UUID
+	var items []uuid.UUID
 	for rows.Next() {
-		var id pgtype.UUID
+		var id uuid.UUID
 		if err := rows.Scan(&id); err != nil {
 			return nil, err
 		}
@@ -281,14 +282,14 @@ RETURNING
 `
 
 type InsertMetadataParams struct {
-	ID        pgtype.UUID
+	ID        uuid.UUID
 	Isprivate pgtype.Bool
 	Mdata     []byte
 }
 
-func (q *Queries) InsertMetadata(ctx context.Context, arg InsertMetadataParams) (pgtype.UUID, error) {
+func (q *Queries) InsertMetadata(ctx context.Context, arg InsertMetadataParams) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, insertMetadata, arg.ID, arg.Isprivate, arg.Mdata)
-	var id pgtype.UUID
+	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
 }
@@ -341,7 +342,7 @@ WHERE
     id = $1
 `
 
-func (q *Queries) ReadFile(ctx context.Context, id pgtype.UUID) (File, error) {
+func (q *Queries) ReadFile(ctx context.Context, id uuid.UUID) (File, error) {
 	row := q.db.QueryRow(ctx, readFile, id)
 	var i File
 	err := row.Scan(
@@ -370,14 +371,14 @@ RETURNING
 `
 
 type StageLogAddParams struct {
-	FileID pgtype.UUID
+	FileID uuid.UUID
 	Status NullStageState
 	Log    []byte
 }
 
 type StageLogAddRow struct {
-	ID     pgtype.UUID
-	FileID pgtype.UUID
+	ID     uuid.UUID
+	FileID uuid.UUID
 	Status NullStageState
 }
 
@@ -402,7 +403,7 @@ LIMIT
     1
 `
 
-func (q *Queries) StageLogFileGetLatest(ctx context.Context, fileID pgtype.UUID) (StageLog, error) {
+func (q *Queries) StageLogFileGetLatest(ctx context.Context, fileID uuid.UUID) (StageLog, error) {
 	row := q.db.QueryRow(ctx, stageLogFileGetLatest, fileID)
 	var i StageLog
 	err := row.Scan(
@@ -431,13 +432,13 @@ WHERE
 `
 
 type UpdateFileParams struct {
-	Extension pgtype.Text
-	Lang      pgtype.Text
-	Name      pgtype.Text
+	Extension string
+	Lang      string
+	Name      string
 	Isprivate pgtype.Bool
-	Hash      pgtype.Text
+	Hash      string
 	Verified  pgtype.Bool
-	ID        pgtype.UUID
+	ID        uuid.UUID
 }
 
 func (q *Queries) UpdateFile(ctx context.Context, arg UpdateFileParams) error {
@@ -469,12 +470,12 @@ RETURNING
 type UpdateMetadataParams struct {
 	Isprivate pgtype.Bool
 	Mdata     []byte
-	ID        pgtype.UUID
+	ID        uuid.UUID
 }
 
-func (q *Queries) UpdateMetadata(ctx context.Context, arg UpdateMetadataParams) (pgtype.UUID, error) {
+func (q *Queries) UpdateMetadata(ctx context.Context, arg UpdateMetadataParams) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, updateMetadata, arg.Isprivate, arg.Mdata, arg.ID)
-	var id pgtype.UUID
+	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
 }

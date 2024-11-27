@@ -7,3 +7,31 @@ sql:
       go:
         out: "backend-go/gen/dbstore"
         sql_package: "pgx/v5"
+        overrides:
+          - db_type: "uuid"
+            go_type:
+              import: "github.com/google/uuid"
+              type: "UUID"
+            nullable: false
+          - db_type: "uuid"
+            go_type:
+              import: "github.com/google/uuid"
+              type: "UUID"
+            nullable: true
+          # Figure out some way to simplify this list of overrides
+          - db_type: "pg_catalog.varchar"
+            go_type:
+              type: "string"
+            nullable: false
+          - db_type: "pg_catalog.varchar"
+            go_type:
+              type: "string"
+            nullable: true
+          - db_type: "text"
+            go_type:
+              type: "string"
+            nullable: false
+          - db_type: "text"
+            go_type:
+              type: "string"
+            nullable: true

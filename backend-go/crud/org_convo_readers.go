@@ -7,7 +7,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
 )
 
@@ -22,10 +21,9 @@ func GetOrgWithFilesFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 			http.Error(w, "Invalid File ID format", http.StatusBadRequest)
 			return
 		}
-		pgUUID := pgtype.UUID{Bytes: parsedUUID, Valid: true}
 		ctx := r.Context()
 		// TODO: Get these 2 requests to happen in the same query, and or run concurrently
-		org_info, err := q.OrganizationRead(ctx, pgUUID)
+		org_info, err := q.OrganizationRead(ctx, parsedUUID)
 		if err != nil {
 			log.Printf("Error reading organization: %v", err)
 			if err.Error() == "no rows in result set" {
@@ -37,7 +35,7 @@ func GetOrgWithFilesFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 		}
 		org_files_raw, err := q.AuthorshipOrganizationListDocuments(
 			ctx,
-			pgUUID)
+			parsedUUID)
 		if err != nil {
 			log.Printf("Error reading organization: %v", err)
 			if err.Error() == "no rows in result set" {
@@ -50,7 +48,7 @@ func GetOrgWithFilesFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 		org_files := make([]FileSchema, len(org_files_raw))
 		org_file_ids := make([]uuid.UUID, len(org_files_raw))
 		for i, f := range org_files_raw {
-			file_uuid := f.DocumentID.Bytes
+			file_uuid := f.DocumentID
 			org_files[i] = FileSchema{
 				ID: file_uuid,
 			}

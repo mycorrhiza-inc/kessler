@@ -8,7 +8,7 @@ package dbstore
 import (
 	"context"
 
-	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/google/uuid"
 )
 
 const juristictionFileFetch = `-- name: JuristictionFileFetch :many
@@ -20,7 +20,7 @@ WHERE
     id = $1
 `
 
-func (q *Queries) JuristictionFileFetch(ctx context.Context, id pgtype.UUID) ([]JuristictionInformation, error) {
+func (q *Queries) JuristictionFileFetch(ctx context.Context, id uuid.UUID) ([]JuristictionInformation, error) {
 	rows, err := q.db.Query(ctx, juristictionFileFetch, id)
 	if err != nil {
 		return nil, err
@@ -70,16 +70,16 @@ RETURNING
 `
 
 type JuristictionFileInsertParams struct {
-	ID             pgtype.UUID
-	Country        pgtype.Text
-	State          pgtype.Text
-	Municipality   pgtype.Text
-	Agency         pgtype.Text
-	ProceedingName pgtype.Text
+	ID             uuid.UUID
+	Country        string
+	State          string
+	Municipality   string
+	Agency         string
+	ProceedingName string
 	Extra          []byte
 }
 
-func (q *Queries) JuristictionFileInsert(ctx context.Context, arg JuristictionFileInsertParams) (pgtype.UUID, error) {
+func (q *Queries) JuristictionFileInsert(ctx context.Context, arg JuristictionFileInsertParams) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, juristictionFileInsert,
 		arg.ID,
 		arg.Country,
@@ -89,7 +89,7 @@ func (q *Queries) JuristictionFileInsert(ctx context.Context, arg JuristictionFi
 		arg.ProceedingName,
 		arg.Extra,
 	)
-	var id pgtype.UUID
+	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
 }
@@ -112,16 +112,16 @@ RETURNING
 `
 
 type JuristictionFileUpdateParams struct {
-	Country        pgtype.Text
-	State          pgtype.Text
-	Municipality   pgtype.Text
-	Agency         pgtype.Text
-	ProceedingName pgtype.Text
+	Country        string
+	State          string
+	Municipality   string
+	Agency         string
+	ProceedingName string
 	Extra          []byte
-	ID             pgtype.UUID
+	ID             uuid.UUID
 }
 
-func (q *Queries) JuristictionFileUpdate(ctx context.Context, arg JuristictionFileUpdateParams) (pgtype.UUID, error) {
+func (q *Queries) JuristictionFileUpdate(ctx context.Context, arg JuristictionFileUpdateParams) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, juristictionFileUpdate,
 		arg.Country,
 		arg.State,
@@ -131,7 +131,7 @@ func (q *Queries) JuristictionFileUpdate(ctx context.Context, arg JuristictionFi
 		arg.Extra,
 		arg.ID,
 	)
-	var id pgtype.UUID
+	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
 }
