@@ -190,27 +190,65 @@ func (q *Queries) CreateOrganization(ctx context.Context, arg CreateOrganization
 	return id, err
 }
 
-const organizationAliasIdLookup = `-- name: OrganizationAliasIdLookup :many
+const organizationAliasGetByItemID = `-- name: OrganizationAliasGetByItemID :many
+SELECT
+    
+FROM
+    public.organization_aliases
+WHERE
+    id = $1
+`
+
+type OrganizationAliasGetByItemIDRow struct {
+}
+
+func (q *Queries) OrganizationAliasGetByItemID(ctx context.Context, id pgtype.UUID) ([]OrganizationAliasGetByItemIDRow, error) {
+	rows, err := q.db.Query(ctx, organizationAliasGetByItemID, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []OrganizationAliasGetByItemIDRow
+	for rows.Next() {
+		var i OrganizationAliasGetByItemIDRow
+		if err := rows.Scan(); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const organizationAliasIdNameGet = `-- name: OrganizationAliasIdNameGet :many
 SELECT
     
 FROM
     public.organization_aliases
 WHERE
     organization_id = $1
+    AND organization_alias = $2
 `
 
-type OrganizationAliasIdLookupRow struct {
+type OrganizationAliasIdNameGetParams struct {
+	OrganizationID    pgtype.UUID
+	OrganizationAlias pgtype.Text
 }
 
-func (q *Queries) OrganizationAliasIdLookup(ctx context.Context, organizationID pgtype.UUID) ([]OrganizationAliasIdLookupRow, error) {
-	rows, err := q.db.Query(ctx, organizationAliasIdLookup, organizationID)
+type OrganizationAliasIdNameGetRow struct {
+}
+
+func (q *Queries) OrganizationAliasIdNameGet(ctx context.Context, arg OrganizationAliasIdNameGetParams) ([]OrganizationAliasIdNameGetRow, error) {
+	rows, err := q.db.Query(ctx, organizationAliasIdNameGet, arg.OrganizationID, arg.OrganizationAlias)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []OrganizationAliasIdLookupRow
+	var items []OrganizationAliasIdNameGetRow
 	for rows.Next() {
-		var i OrganizationAliasIdLookupRow
+		var i OrganizationAliasIdNameGetRow
 		if err := rows.Scan(); err != nil {
 			return nil, err
 		}
@@ -260,6 +298,38 @@ func (q *Queries) OrganizationFetchByNameMatch(ctx context.Context, name string)
 			&i.UpdatedAt,
 			&i.IsPerson,
 		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const organizationGetAllAliases = `-- name: OrganizationGetAllAliases :many
+SELECT
+    
+FROM
+    public.organization_aliases
+WHERE
+    organization_id = $1
+`
+
+type OrganizationGetAllAliasesRow struct {
+}
+
+func (q *Queries) OrganizationGetAllAliases(ctx context.Context, organizationID pgtype.UUID) ([]OrganizationGetAllAliasesRow, error) {
+	rows, err := q.db.Query(ctx, organizationGetAllAliases, organizationID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []OrganizationGetAllAliasesRow
+	for rows.Next() {
+		var i OrganizationGetAllAliasesRow
+		if err := rows.Scan(); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
