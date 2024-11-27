@@ -1,6 +1,4 @@
 -- +goose Up
-
-
 UPDATE
     public.docket_conversations
 SET
