@@ -453,7 +453,7 @@ type OrganizationgGetConversationsAuthoredInRow struct {
 	OrganizationID   uuid.UUID
 	OrganizationName string
 	DocumentID       uuid.UUID
-	DocketID         string
+	DocketID         pgtype.Text
 	ConversationUuid uuid.UUID
 }
 

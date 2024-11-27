@@ -75,8 +75,8 @@ type DocketDocument struct {
 }
 
 type Encounter struct {
-	Name        string
-	Description string
+	Name        pgtype.Text
+	Description pgtype.Text
 	ID          uuid.UUID
 	CreatedAt   pgtype.Timestamptz
 	UpdatedAt   pgtype.Timestamptz
@@ -84,8 +84,8 @@ type Encounter struct {
 
 type Event struct {
 	Date        pgtype.Timestamptz
-	Name        string
-	Description string
+	Name        pgtype.Text
+	Description pgtype.Text
 	ID          uuid.UUID
 	CreatedAt   pgtype.Timestamptz
 	UpdatedAt   pgtype.Timestamptz
@@ -139,11 +139,11 @@ type FileTextSource struct {
 
 type JuristictionInformation struct {
 	ID             uuid.UUID
-	Country        string
-	State          string
-	Municipality   string
-	Agency         string
-	ProceedingName string
+	Country        pgtype.Text
+	State          pgtype.Text
+	Municipality   pgtype.Text
+	Agency         pgtype.Text
+	ProceedingName pgtype.Text
 	Extra          []byte
 	CreatedAt      pgtype.Timestamptz
 	UpdatedAt      pgtype.Timestamptz
@@ -257,7 +257,7 @@ type User struct {
 }
 
 type UserfilesThaumaturgyApiKey struct {
-	KeyName       string
+	KeyName       pgtype.Text
 	KeyBlake3Hash string
 	ID            uuid.UUID
 	CreatedAt     pgtype.Timestamptz
