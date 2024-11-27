@@ -41,7 +41,10 @@ const ConversationTable = () => {
           </thead>
           <tbody>
             {convoList.map((convo: any) => (
-              <tr key={convo.DocketID}>
+              <tr
+                key={convo.DocketID}
+                className="border-base-300 hover:bg-base-200 transition duration-500 ease-out"
+              >
                 <td colSpan={2} className="p-0">
                   <Link
                     href={`/proceedings/${convo.DocketID}`}
