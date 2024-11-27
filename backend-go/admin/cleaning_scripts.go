@@ -62,7 +62,8 @@ func organizationsNameAsAlias(ctx context.Context, q dbstore.Queries) error {
 			defer wg.Done()
 
 			orgname := org.Name
-			orgNameTrimmed := strings.TrimSpace(orgname)
+			orgNameTrimmed := strings.Trim(strings.TrimSpace(orgname), ".,!?:;\"'()[]{}")
+			orgNameTrimmed = strings.TrimSpace(orgNameTrimmed)
 
 			arg := dbstore.OrganizationAliasIdNameGetParams{
 				OrganizationID:    org.ID,
