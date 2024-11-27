@@ -2,9 +2,10 @@ import React, { useState } from "react";
 import Modal from "../styled-components/Modal";
 import DocumentModalBody from "../Document/DocumentModalBody";
 import { Filing } from "../../lib/types/FilingTypes";
+import { is, fi } from "date-fns/locale";
+import Link from "next/link";
 import { AuthorInformation } from "@/lib/types/backend_schemas";
 import { AuthorInfoPill, TextPill } from "./TextPills";
-import HoverTable from "../styled-components/HoverTable";
 
 const NoclickSpan = ({ children }: { children: React.ReactNode }) => {
   return <span className="noclick">{children}</span>;
@@ -116,7 +117,7 @@ export const FilingTable = ({
           : "overflow-y-auto"
       }
     >
-      <HoverTable>
+      <table className="w-full divide-y divide-gray-200  border-collaps table table-pin-rows lg:table-fixed md:table-auto sm:table-auto">
         <colgroup>
           <col width="40px" />
           <col width="80px" />
@@ -151,7 +152,7 @@ export const FilingTable = ({
             />
           ))}
         </tbody>
-      </HoverTable>
+      </table>
     </div>
   );
 };

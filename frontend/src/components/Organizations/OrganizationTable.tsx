@@ -4,7 +4,6 @@ import axios from "axios";
 import Link from "next/link";
 import useSWRImmutable from "swr/immutable";
 import LoadingSpinner from "../styled-components/LoadingSpinner";
-import HoverTable from "../styled-components/HoverTable";
 
 const organizationsListAll = (redundant_key: string) => {
   const cleanData = (response: any) => {
@@ -32,7 +31,7 @@ const OrganizationTable = () => {
       {isLoading && <LoadingSpinner loadingText="Loading Organizations" />}
       {error && <p>Failed to load organizations {error}</p>}
       {!isLoading && !error && convoList != undefined && (
-        <HoverTable>
+        <table className="table table-pin-rows">
           <thead>
             <tr>
               <td>Name</td>
@@ -51,7 +50,7 @@ const OrganizationTable = () => {
               </tr>
             ))}
           </tbody>
-        </HoverTable>
+        </table>
       )}
     </>
   );
