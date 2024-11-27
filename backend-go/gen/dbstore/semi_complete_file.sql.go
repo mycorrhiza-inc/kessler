@@ -104,7 +104,7 @@ type SemiCompleteFileGetRow struct {
 	DocketUuid       uuid.UUID
 	IsPrimaryAuthor  pgtype.Bool
 	OrganizationID   uuid.UUID
-	OrganizationName string
+	OrganizationName pgtype.Text
 	IsPerson         pgtype.Bool
 }
 

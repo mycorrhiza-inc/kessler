@@ -23,15 +23,15 @@ sql:
             go_type:
               type: "string"
             nullable: false
-          - db_type: "pg_catalog.varchar"
-            go_type:
-              type: "string"
-            nullable: true
           - db_type: "text"
             go_type:
               type: "string"
             nullable: false
-          - db_type: "text"
-            go_type:
-              type: "string"
-            nullable: true
+          # - db_type: "pg_catalog.varchar"
+          #   go_type:
+          #     type: "string"
+          #   nullable: true
+          # - db_type: "text"
+          #   go_type:
+          #     type: "string"
+          #   nullable: true

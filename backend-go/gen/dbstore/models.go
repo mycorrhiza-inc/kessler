@@ -74,31 +74,6 @@ type DocketDocument struct {
 	UpdatedAt pgtype.Timestamp
 }
 
-type Encounter struct {
-	Name        string
-	Description string
-	ID          uuid.UUID
-	CreatedAt   pgtype.Timestamptz
-	UpdatedAt   pgtype.Timestamptz
-}
-
-type Event struct {
-	Date        pgtype.Timestamptz
-	Name        string
-	Description string
-	ID          uuid.UUID
-	CreatedAt   pgtype.Timestamptz
-	UpdatedAt   pgtype.Timestamptz
-}
-
-type Faction struct {
-	Name        string
-	Description string
-	ID          uuid.UUID
-	CreatedAt   pgtype.Timestamptz
-	UpdatedAt   pgtype.Timestamptz
-}
-
 type File struct {
 	ID        uuid.UUID
 	Lang      string
@@ -133,18 +108,6 @@ type FileTextSource struct {
 	Language       string
 	Text           string
 	ID             uuid.UUID
-	CreatedAt      pgtype.Timestamptz
-	UpdatedAt      pgtype.Timestamptz
-}
-
-type JuristictionInformation struct {
-	ID             uuid.UUID
-	Country        string
-	State          string
-	Municipality   string
-	Agency         string
-	ProceedingName string
-	Extra          []byte
 	CreatedAt      pgtype.Timestamptz
 	UpdatedAt      pgtype.Timestamptz
 }
@@ -193,46 +156,6 @@ type RelationDocumentsOrganizationsAuthorship struct {
 	IsPrimaryAuthor pgtype.Bool
 }
 
-type RelationFactionsEncounter struct {
-	EncounterID uuid.UUID
-	FactionID   uuid.UUID
-	ID          uuid.UUID
-	CreatedAt   pgtype.Timestamptz
-	UpdatedAt   pgtype.Timestamptz
-}
-
-type RelationFilesEvent struct {
-	FileID    uuid.UUID
-	EventID   uuid.UUID
-	ID        uuid.UUID
-	CreatedAt pgtype.Timestamptz
-	UpdatedAt pgtype.Timestamptz
-}
-
-type RelationIndividualsEvent struct {
-	IndividualID uuid.UUID
-	EventID      uuid.UUID
-	ID           uuid.UUID
-	CreatedAt    pgtype.Timestamptz
-	UpdatedAt    pgtype.Timestamptz
-}
-
-type RelationOrganizationsEvent struct {
-	OrganizationID uuid.UUID
-	EventID        uuid.UUID
-	ID             uuid.UUID
-	CreatedAt      pgtype.Timestamptz
-	UpdatedAt      pgtype.Timestamptz
-}
-
-type RelationOrganizationsFaction struct {
-	FactionID      uuid.UUID
-	OrganizationID uuid.UUID
-	ID             uuid.UUID
-	CreatedAt      pgtype.Timestamptz
-	UpdatedAt      pgtype.Timestamptz
-}
-
 type RelationUsersUsergroup struct {
 	UserID      uuid.UUID
 	UsergroupID uuid.UUID
@@ -257,7 +180,7 @@ type User struct {
 }
 
 type UserfilesThaumaturgyApiKey struct {
-	KeyName       string
+	KeyName       pgtype.Text
 	KeyBlake3Hash string
 	ID            uuid.UUID
 	CreatedAt     pgtype.Timestamptz
