@@ -35,7 +35,7 @@ const OrganizationTable = () => {
   return (
     <>
       {isLoading && <LoadingSpinner loadingText="Loading Organizations" />}
-      {error && <p>Failed to load organizations {error}</p>}
+      {error && <p>Failed to load organizations {String(error)}</p>}
       {!isLoading && !error && convoList != undefined && (
         <table className="table table-pin-rows">
           <thead>
