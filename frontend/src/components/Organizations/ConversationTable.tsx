@@ -4,6 +4,7 @@ import axios from "axios";
 import Link from "next/link";
 import useSWRImmutable from "swr/immutable";
 import LoadingSpinner from "../styled-components/LoadingSpinner";
+import HoverTable from "../styled-components/HoverTable";
 
 const conversationsListAll = (redundant_key: string) => {
   const cleanData = (response: any) => {
@@ -31,7 +32,7 @@ const ConversationTable = () => {
       {isLoading && <LoadingSpinner loadingText="Loading Conversations" />}
       {error && <p>Failed to load conversations {error}</p>}
       {!isLoading && !error && convoList != undefined && (
-        <table className="table">
+        <HoverTable>
           {/* disable pinned rows due to the top row overlaying the filter sidebar */}
           <thead>
             <tr>
@@ -54,7 +55,7 @@ const ConversationTable = () => {
               </tr>
             ))}
           </tbody>
-        </table>
+        </HoverTable>
       )}
     </>
   );
