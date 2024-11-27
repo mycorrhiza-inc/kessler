@@ -7,67 +7,70 @@ package dbstore
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const conversationDeduplicateCascade = `-- name: ConversationDeduplicateCascade :exec
-DO
-$$
-BEGIN
-UPDATE
-    public.docket_documents
-SET
-    docket_id = $2
-WHERE
-    docket_id = $1;
-
+WITH update_documents AS (
+    UPDATE
+        public.docket_documents
+    SET
+        docket_id = $2
+    WHERE
+        docket_id = $1
+    RETURNING
+        1
+)
 DELETE FROM
     public.docket_conversations
 WHERE
-    id = $1;
-
-END
-$$
+    id = $1
 `
 
-// Update all foreign key references from organization A to B
-// Add new UPDATE statements here when new tables with FK references are added
-// Finally delete the source organization
-func (q *Queries) ConversationDeduplicateCascade(ctx context.Context) error {
-	_, err := q.db.Exec(ctx, conversationDeduplicateCascade)
+type ConversationDeduplicateCascadeParams struct {
+	ID       pgtype.UUID
+	DocketID pgtype.UUID
+}
+
+func (q *Queries) ConversationDeduplicateCascade(ctx context.Context, arg ConversationDeduplicateCascadeParams) error {
+	_, err := q.db.Exec(ctx, conversationDeduplicateCascade, arg.ID, arg.DocketID)
 	return err
 }
 
 const organizationDeduplicateCascade = `-- name: OrganizationDeduplicateCascade :exec
-DO
-$$
-BEGIN
-UPDATE
-    public.relation_documents_organizations_authorship
-SET
-    organization_id = $2
-WHERE
-    organization_id = $1;
-
-UPDATE
-    public.organization_aliases
-SET
-    organization_id = $2
-WHERE
-    organization_id = $1;
-
+WITH update_authorship AS (
+    UPDATE
+        public.relation_documents_organizations_authorship
+    SET
+        organization_id = $2
+    WHERE
+        organization_id = $1
+    RETURNING
+        1
+),
+update_aliases AS (
+    UPDATE
+        public.organization_aliases
+    SET
+        organization_id = $2
+    WHERE
+        organization_id = $1
+    RETURNING
+        1
+)
 DELETE FROM
     public.organization
 WHERE
-    id = $1;
-
-END
-$$
+    public.organization.id = $1
 `
 
-// Update all foreign key references from organization A to B
-// Add new UPDATE statements here when new tables with FK references are added
-// Finally delete the source organization
-func (q *Queries) OrganizationDeduplicateCascade(ctx context.Context) error {
-	_, err := q.db.Exec(ctx, organizationDeduplicateCascade)
+type OrganizationDeduplicateCascadeParams struct {
+	ID             pgtype.UUID
+	OrganizationID pgtype.UUID
+}
+
+func (q *Queries) OrganizationDeduplicateCascade(ctx context.Context, arg OrganizationDeduplicateCascadeParams) error {
+	_, err := q.db.Exec(ctx, organizationDeduplicateCascade, arg.ID, arg.OrganizationID)
 	return err
 }

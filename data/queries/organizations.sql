@@ -132,13 +132,31 @@ VALUES
 RETURNING
     public.organization_aliases.id;
 
--- name: OrganizationAliasIdLookup :many
+-- name: OrganizationAliasGetByItemID :many
+SELECT
+    public.organization_aliases.*
+FROM
+    public.organization_aliases
+WHERE
+    id = $1;
+
+-- name: OrganizationAliasIdNameGet :many
+SELECT
+    public.organization_aliases.*
+FROM
+    public.organization_aliases
+WHERE
+    organization_id = $1
+    AND organization_alias = $2;
+
+-- name: OrganizationGetAllAliases :many
 SELECT
     public.organization_aliases.*
 FROM
     public.organization_aliases
 WHERE
     organization_id = $1;
+
 -- name: OrganizationgGetConversationsAuthoredIn :many
 SELECT
     public.organization.id AS organization_id,
