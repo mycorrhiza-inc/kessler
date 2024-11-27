@@ -74,6 +74,31 @@ type DocketDocument struct {
 	UpdatedAt pgtype.Timestamp
 }
 
+type Encounter struct {
+	Name        pgtype.Text
+	Description pgtype.Text
+	ID          uuid.UUID
+	CreatedAt   pgtype.Timestamptz
+	UpdatedAt   pgtype.Timestamptz
+}
+
+type Event struct {
+	Date        pgtype.Timestamptz
+	Name        pgtype.Text
+	Description pgtype.Text
+	ID          uuid.UUID
+	CreatedAt   pgtype.Timestamptz
+	UpdatedAt   pgtype.Timestamptz
+}
+
+type Faction struct {
+	Name        string
+	Description string
+	ID          uuid.UUID
+	CreatedAt   pgtype.Timestamptz
+	UpdatedAt   pgtype.Timestamptz
+}
+
 type File struct {
 	ID        uuid.UUID
 	Lang      string
@@ -108,6 +133,18 @@ type FileTextSource struct {
 	Language       string
 	Text           string
 	ID             uuid.UUID
+	CreatedAt      pgtype.Timestamptz
+	UpdatedAt      pgtype.Timestamptz
+}
+
+type JuristictionInformation struct {
+	ID             uuid.UUID
+	Country        pgtype.Text
+	State          pgtype.Text
+	Municipality   pgtype.Text
+	Agency         pgtype.Text
+	ProceedingName pgtype.Text
+	Extra          []byte
 	CreatedAt      pgtype.Timestamptz
 	UpdatedAt      pgtype.Timestamptz
 }
@@ -154,6 +191,46 @@ type RelationDocumentsOrganizationsAuthorship struct {
 	CreatedAt       pgtype.Timestamptz
 	UpdatedAt       pgtype.Timestamptz
 	IsPrimaryAuthor pgtype.Bool
+}
+
+type RelationFactionsEncounter struct {
+	EncounterID uuid.UUID
+	FactionID   uuid.UUID
+	ID          uuid.UUID
+	CreatedAt   pgtype.Timestamptz
+	UpdatedAt   pgtype.Timestamptz
+}
+
+type RelationFilesEvent struct {
+	FileID    uuid.UUID
+	EventID   uuid.UUID
+	ID        uuid.UUID
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
+}
+
+type RelationIndividualsEvent struct {
+	IndividualID uuid.UUID
+	EventID      uuid.UUID
+	ID           uuid.UUID
+	CreatedAt    pgtype.Timestamptz
+	UpdatedAt    pgtype.Timestamptz
+}
+
+type RelationOrganizationsEvent struct {
+	OrganizationID uuid.UUID
+	EventID        uuid.UUID
+	ID             uuid.UUID
+	CreatedAt      pgtype.Timestamptz
+	UpdatedAt      pgtype.Timestamptz
+}
+
+type RelationOrganizationsFaction struct {
+	FactionID      uuid.UUID
+	OrganizationID uuid.UUID
+	ID             uuid.UUID
+	CreatedAt      pgtype.Timestamptz
+	UpdatedAt      pgtype.Timestamptz
 }
 
 type RelationUsersUsergroup struct {
