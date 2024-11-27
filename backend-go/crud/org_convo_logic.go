@@ -86,7 +86,7 @@ func ConversationVerifyHandlerFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 		ctx := r.Context()
 		q := *dbstore.New(dbtx_val)
 		conversation_info := ConversationInformation{DocketID: req.DocketID}
-		conversation_info, err = verifyConversationUUID(ctx, q, &conversation_info)
+		conversation_info, err = verifyConversationUUID(ctx, q, &conversation_info, true)
 		if err != nil {
 			errorstring := fmt.Sprintf("Error verifying conversation %v: %v\n", req.DocketID, err)
 			fmt.Println(errorstring)
@@ -231,7 +231,7 @@ func fileConversationUpsert(ctx context.Context, q dbstore.Queries, file_id uuid
 	if shouldnt_process {
 		return nil
 	}
-	new_conv_info, err := verifyConversationUUID(ctx, q, &conv_info)
+	new_conv_info, err := verifyConversationUUID(ctx, q, &conv_info, false)
 	if err != nil {
 		return err
 	}

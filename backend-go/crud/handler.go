@@ -104,11 +104,11 @@ func DefineCrudRoutes(router *mux.Router, dbtx_val dbstore.DBTX) {
 		GetOrgWithFilesFactory(dbtx_val),
 	).Methods(http.MethodGet)
 	public_subrouter.HandleFunc(
-		"/organizations/verify",
+		"/organizations/upsert",
 		OrganizationVerifyHandlerFactory(dbtx_val),
 	).Methods(http.MethodPost)
 	public_subrouter.HandleFunc(
-		"/conversations/verify",
+		"/conversations/upsert",
 		ConversationVerifyHandlerFactory(dbtx_val),
 	).Methods(http.MethodPost)
 
