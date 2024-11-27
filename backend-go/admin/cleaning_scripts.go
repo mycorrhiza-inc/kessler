@@ -22,6 +22,7 @@ func deduplicateOrganizationsOnNames(ctx context.Context, q dbstore.Queries) err
 	for _, org := range all_orgs {
 		orgname := org.Name
 		orgNameTrimmed := strings.TrimSpace(orgname)
+		fmt.Printf("Deduplicating org name: %s\n", orgname)
 		if orgNameTrimmed != orgname {
 			org.Name = orgNameTrimmed
 			args := dbstore.OrganizationUpdateParams{ID: org.ID, Name: orgNameTrimmed, IsPerson: org.IsPerson, Description: org.Description}
@@ -53,6 +54,7 @@ func organizationsNameAsAlias(ctx context.Context, q dbstore.Queries) error {
 	for _, org := range all_orgs {
 		orgname := org.Name
 		orgNameTrimmed := strings.TrimSpace(orgname)
+		fmt.Printf("Ensuring Aliases for org : %s\n", orgname)
 		arg := dbstore.OrganizationAliasIdNameGetParams{OrganizationID: org.ID, OrganizationAlias: pgtype.Text{String: orgNameTrimmed, Valid: true}}
 		org_matched_aliases, err := q.OrganizationAliasIdNameGet(ctx, arg)
 		if err != nil {
@@ -77,6 +79,7 @@ func organizationsNameAsAlias(ctx context.Context, q dbstore.Queries) error {
 
 func completeCleanDatabaseFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Printf("Starting complete clean of database\n")
 		ctx := context.Background()
 		q := *dbstore.New(dbtx_val)
 		err := deduplicateOrganizationsOnNames(ctx, q)
@@ -86,6 +89,7 @@ func completeCleanDatabaseFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 			http.Error(w, errorstring, http.StatusInternalServerError)
 			return
 		}
+		fmt.Printf("Sucessfully deduplicated orgs\n")
 		err = organizationsNameAsAlias(ctx, q)
 		if err != nil {
 			errorstring := fmt.Sprintf("Error ensuring organization aliases: %v\n", err)
@@ -93,5 +97,8 @@ func completeCleanDatabaseFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 			http.Error(w, errorstring, http.StatusInternalServerError)
 			return
 		}
+		fmt.Printf("Sucessfully ensured org aliases\n")
+		w.Header().Set("Content-Type", "text/plain")
+		w.Write([]byte("Successfully cleaned database"))
 	}
 }
