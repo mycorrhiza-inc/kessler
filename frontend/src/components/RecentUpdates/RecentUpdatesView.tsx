@@ -87,7 +87,7 @@ export default function RecentUpdatesView() {
     <>
       <Navbar user={null} breadcrumbs={{ breadcrumbs: [] }} />
 
-      <div className="w-full h-full p-20">
+      <div className="w-full h-full lg:pr-20 lg:pl-20">
         <div className="grid grid-cols-2 w-full">
           <div className="max-h-[600px] overflow-x-hidden border-r pr-4">
             <Link

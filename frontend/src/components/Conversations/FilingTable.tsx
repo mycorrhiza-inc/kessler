@@ -2,21 +2,39 @@ import React, { useState } from "react";
 import Modal from "../styled-components/Modal";
 import DocumentModalBody from "../Document/DocumentModalBody";
 import { Filing } from "../../lib/types/FilingTypes";
-import { is } from "date-fns/locale";
+import { is, fi } from 'date-fns/locale';
 import Link from "next/link";
 import { AuthorInformation } from "@/lib/types/backend_schemas";
 import { AuthorInfoPill, TextPill } from "./TextPills";
 
 const NoclickSpan = ({ children }: { children: React.ReactNode }) => {
-  return <span className="noclick p-5">{children}</span>;
+  return <span className="noclick">{children}</span>;
 };
+
+const AuthorColumn = ({ filing }: {
+  filing: Filing;
+}) => {
+  return (
+    <>
+      {filing.authors_information
+        ? filing.authors_information.map(
+          (auth_info: AuthorInformation) => (
+            <AuthorInfoPill author_info={auth_info} />
+          ),
+        )
+        : filing.author + " Something isnt working"}
+    </>
+  );
+}
 
 const TableRow = ({
   filing,
   DocketColumn,
+  header
 }: {
   filing: Filing;
   DocketColumn?: boolean;
+  header?: boolean;
 }) => {
   const [open, setOpen] = useState(false);
   const handleRowClick = (event: React.MouseEvent<HTMLTableRowElement>) => {
@@ -61,21 +79,15 @@ const TableRow = ({
         </td>
         <td>
           <NoclickSpan>
-            {filing.authors_information
-              ? filing.authors_information.map(
-                  (auth_info: AuthorInformation) => (
-                    <AuthorInfoPill author_info={auth_info} />
-                  ),
-                )
-              : filing.author + " Something isnt working"}
+            <AuthorColumn filing={filing} />
           </NoclickSpan>
         </td>
         {DocketColumn && (
           <td>
-            <TextPill
-              text={filing.docket_id}
-              href={`/proceedings/${filing.docket_id}`}
-            />
+              <TextPill
+                text={filing.docket_id}
+                href={`/proceedings/${filing.docket_id}`}
+              />
           </td>
         )}
 
@@ -104,22 +116,34 @@ export const FilingTable = ({
     <div
       className={
         scroll
-          ? "max-h-[1000px] overflow-y-auto overflow-x-scroll"
+          ? "max-h-[1000px] overflow-y-scroll overflow-x-scroll"
           : "overflow-y-auto"
       }
     >
-      <table className="w-full divide-y divide-gray-200 table table-pin-rows">
-        <tbody>
+      <table className="w-full divide-y divide-gray-200  border-collaps table table-pin-rows lg:table-fixed md:table-auto sm:table-auto">
+        <colgroup>
+          <col width="40px" />
+          <col width="80px" />
+          <col width="200px" />
+          {/* authors column */}
+          {DocketColumn ? (<col width="200px" />) : (<col width="300px" />)}
+          {/* docket id column */}
+          {DocketColumn && <col width="50px" />}
+          <col width="50px" />
+        </colgroup>
+        <thead>
           <tr className="border-b border-gray-200">
-            <th className="text-left  sticky top-0">Date Filed</th>
-            <th className="text-left  sticky top-0">Document Class</th>
-            <th className="text-left  sticky top-0">Title</th>
-            <th className="text-left  sticky top-0">Author</th>
+            <th className="text-left sticky top-0 filing-table-date">Date Filed</th>
+            <th className="text-left sticky top-0 filing-table-doc-class">Document Class</th>
+            <th className="text-left sticky top-0">Title</th>
+            <th className="text-left sticky top-0">Author</th>
             {DocketColumn && (
               <th className="text-left sticky top-0">Proceeding ID</th>
             )}
             <th className="text-left sticky top-0">Item Number</th>
           </tr>
+        </thead>
+        <tbody>
           {filings.map((filing) => (
             <TableRow
               filing={filing}

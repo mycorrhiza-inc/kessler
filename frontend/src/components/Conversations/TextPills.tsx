@@ -66,7 +66,7 @@ export const TextPill = ({
     return (
       <Link
         style={{ backgroundColor: pillColor }}
-        className={`btn btn-xs text-black`}
+        className={`btn btn-xs m-1 h-auto pb-1 text-black noclick text-pretty	`}
         href={href}
       >
         {text}
@@ -76,7 +76,7 @@ export const TextPill = ({
   return (
     <button
       style={{ backgroundColor: pillColor }}
-      className={`btn btn-xs no-animation text-black mt-2 mb-2`}
+      className={`btn  btn-xs m-1 h-auto pb-1 no-animation text-black mt-2 mb-2 noclick text-pretty`}
     >
       {text}
     </button>
