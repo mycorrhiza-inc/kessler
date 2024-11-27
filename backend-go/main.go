@@ -12,6 +12,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 
+	"github.com/mycorrhiza-inc/kessler/backend-go/admin"
 	"github.com/mycorrhiza-inc/kessler/backend-go/crud"
 	"github.com/mycorrhiza-inc/kessler/backend-go/rag"
 	"github.com/mycorrhiza-inc/kessler/backend-go/search"
@@ -107,6 +108,7 @@ func main() {
 
 	mux := mux.NewRouter()
 	crud.DefineCrudRoutes(mux, connPool)
+	admin.DefineAdminRoutes(mux, connPool)
 	// static.HandleStaticGenerationRouting(mux, connPool)
 	mux.HandleFunc("/v2/search", search.HandleSearchRequest)
 	mux.HandleFunc("/v2/rag/basic_chat", rag.HandleBasicChatRequest)

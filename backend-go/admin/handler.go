@@ -10,6 +10,6 @@ import (
 func DefineAdminRoutes(router *mux.Router, dbtx_val dbstore.DBTX) {
 	admin_subrouter := router.PathPrefix("/v2/admin").Subrouter()
 	admin_subrouter.HandleFunc(
-		"/files/insert",
+		"/complete-clean",
 		completeCleanDatabaseFactory(dbtx_val)).Methods(http.MethodPost)
 }
