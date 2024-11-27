@@ -82,53 +82,6 @@ func upsertFileMetadata(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UU
 	return err
 }
 
-func juristictionFileUpsert(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, juristiction_info JuristictionInformation, insert bool) error {
-	// Sometimes this is getting called with an insert when the metadata already exists in the table, this causes a PGERROR, since it violates uniqueness. However, setting it up so it tries to update will fall back to insert if the file doesnt exist. Its probably a good idea to remove this and debug what is causing the new file thing at some point.
-	// UPDATE: I am pretty sure I solved it this should be safe to take out soon - nic
-	insert = false
-	json_obj, err := json.Marshal(juristiction_info.ExtraObject)
-	if err != nil {
-		return err
-	}
-	country := juristiction_info.Country
-	state := juristiction_info.State
-	municipality := juristiction_info.Municipality
-	agency := juristiction_info.Agency
-	proceeding_name := juristiction_info.ProceedingName
-
-	if !insert {
-		update_args := dbstore.JuristictionFileUpdateParams{
-			ID:             doc_uuid,
-			Country:        country,
-			State:          state,
-			Municipality:   municipality,
-			Agency:         agency,
-			ProceedingName: proceeding_name,
-			Extra:          json_obj,
-		}
-		_, err = q.JuristictionFileUpdate(ctx, update_args)
-		// If encounter a not found error, break error handling control flow and inserting object
-		if err == nil {
-			return nil
-		}
-		if err.Error() != "no rows in result set" {
-			// If the error is nil, this still returns the error
-			return err
-		}
-	}
-	insert_args := dbstore.JuristictionFileInsertParams{
-		ID:             doc_uuid,
-		Country:        country,
-		State:          state,
-		Municipality:   municipality,
-		Agency:         agency,
-		ProceedingName: proceeding_name,
-		Extra:          json_obj,
-	}
-	_, err = q.JuristictionFileInsert(ctx, insert_args)
-	return err
-}
-
 func upsertFileExtras(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, extras FileGeneratedExtras, insert bool) error {
 	// Sometimes this is getting called with an insert when the metadata already exists in the table, this causes a PGERROR, since it violates uniqueness. However, setting it up so it tries to update will fall back to insert if the file doesnt exist. Its probably a good idea to remove this and debug what is causing the new file thing at some point.
 	// UPDATE: I am pretty sure I solved it this should be safe to take out soon - nic

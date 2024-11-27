@@ -105,7 +105,7 @@ func FileSemiCompleteGetFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 		author_info := make([]AuthorInformation, len(files_raw))
 		for i, author_file_raw := range files_raw {
 			author_info[i] = AuthorInformation{
-				AuthorName:      author_file_raw.OrganizationName,
+				AuthorName:      author_file_raw.OrganizationName.String,
 				IsPerson:        author_file_raw.IsPerson.Bool,
 				IsPrimaryAuthor: author_file_raw.IsPrimaryAuthor.Bool,
 				AuthorID:        author_file_raw.OrganizationID,
