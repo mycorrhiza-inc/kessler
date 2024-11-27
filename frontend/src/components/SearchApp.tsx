@@ -11,7 +11,6 @@ import { QueryFilterFields, emptyQueryOptions } from "@/lib/filters";
 import { User } from "@supabase/supabase-js";
 
 import { SearchRequest } from "@/utils/interfaces";
-import Navbar from "./Navbar";
 
 export default function SearchApp() {
   const [isSearching, setIsSearching] = useState(false);

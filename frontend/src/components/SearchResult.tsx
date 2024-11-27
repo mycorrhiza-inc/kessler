@@ -34,7 +34,11 @@ const SearchResult = ({ data }: SearchResultProps) => {
         </div>
       </div>
       <Modal open={open} setOpen={setOpen}>
-        <DocumentModalBody open={open} objectId={data.sourceID} />
+        <DocumentModalBody
+          open={open}
+          objectId={data.sourceID}
+          isPage={false}
+        />
       </Modal>
     </>
   );
