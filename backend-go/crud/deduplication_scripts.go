@@ -17,9 +17,14 @@ func deduplicateAllOrganizationsInitial(ctx context.Context, q dbstore.Queries, 
 
 	for _, org := range all_orgs {
 		orgname := org.Name
-		if _, exists := orgMap[orgname]; exists {
+		if old_org, exists := orgMap[orgname]; exists {
 			// Found a duplicate organization name
-			err := q.ConversationDeduplicateCascade(ctx)
+			args := dbstore.OrganizationDeduplicateCascadeParams{
+				ID:             old_org.ID, // Org to be deleted
+				OrganizationID: org.ID,     // Org to be kept
+			}
+
+			err := q.OrganizationDeduplicateCascade(ctx, args)
 			if err != nil {
 				return err
 			}
