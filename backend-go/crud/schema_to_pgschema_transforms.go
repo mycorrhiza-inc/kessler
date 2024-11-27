@@ -13,10 +13,10 @@ func PublicFileToSchema(file dbstore.File) FileSchema {
 	return FileSchema{
 		ID:        file.ID,
 		Verified:  file.Verified.Bool,
-		Extension: file.Extension.String,
-		Lang:      file.Lang.String,
-		Name:      file.Name.String,
-		Hash:      file.Hash.String,
+		Extension: file.Extension,
+		Lang:      file.Lang,
+		Name:      file.Name,
+		Hash:      file.Hash,
 		IsPrivate: file.Isprivate.Bool,
 	}
 }
@@ -32,7 +32,7 @@ func PublicTextToSchema(file dbstore.FileTextSource) FileTextSchema {
 	return FileTextSchema{
 		FileID:         file.FileID,
 		IsOriginalText: file.IsOriginalText,
-		Text:           file.Text.String,
+		Text:           file.Text,
 		Language:       file.Language,
 	}
 }
@@ -105,10 +105,10 @@ func GetFileObjectRaw(params GetFileParam) (FileSchema, error) {
 }
 
 type FileCreationDataRaw struct {
-	Extension pgtype.Text
-	Lang      pgtype.Text
-	Name      pgtype.Text
-	Hash      pgtype.Text
+	Extension string
+	Lang      string
+	Name      string
+	Hash      string
 	IsPrivate pgtype.Bool
 	Verified  pgtype.Bool
 }
@@ -184,7 +184,7 @@ func InsertPriPubFileText(q dbstore.Queries, ctx context.Context, text FileTextS
 	args := dbstore.CreateFileTextSourceParams{
 		FileID:         text.FileID,
 		IsOriginalText: text.IsOriginalText,
-		Text:           pgtype.Text{String: text.Text, Valid: true},
+		Text:           text.Text,
 		Language:       text.Language,
 	}
 	_, err := q.CreateFileTextSource(ctx, args)
@@ -192,8 +192,7 @@ func InsertPriPubFileText(q dbstore.Queries, ctx context.Context, text FileTextS
 }
 
 func HashGetUUIDsFile(q dbstore.Queries, ctx context.Context, hash string) ([]uuid.UUID, error) {
-	pgHash := pgtype.Text{String: hash, Valid: true}
-	filePGUUIDs, err := q.HashGetFileID(ctx, pgHash)
+	filePGUUIDs, err := q.HashGetFileID(ctx, hash)
 	if err != nil {
 		return nil, err
 	}

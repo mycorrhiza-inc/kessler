@@ -7,7 +7,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
 )
 
@@ -67,7 +66,7 @@ func organizationsNameAsAlias(ctx context.Context, q dbstore.Queries) error {
 
 			arg := dbstore.OrganizationAliasIdNameGetParams{
 				OrganizationID:    org.ID,
-				OrganizationAlias: pgtype.Text{String: orgNameTrimmed, Valid: true},
+				OrganizationAlias: orgNameTrimmed,
 			}
 
 			org_matched_aliases, err := q.OrganizationAliasIdNameGet(ctx, arg)
@@ -78,11 +77,8 @@ func organizationsNameAsAlias(ctx context.Context, q dbstore.Queries) error {
 
 			if len(org_matched_aliases) == 0 {
 				org_alias := dbstore.AliasOrganizationCreateParams{
-					OrganizationID: org.ID,
-					OrganizationAlias: pgtype.Text{
-						String: orgNameTrimmed,
-						Valid:  true,
-					},
+					OrganizationID:    org.ID,
+					OrganizationAlias: orgNameTrimmed,
 				}
 				_, err := q.AliasOrganizationCreate(ctx, org_alias)
 				if err != nil {

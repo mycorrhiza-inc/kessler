@@ -146,10 +146,10 @@ func CompleteFileSchemaInflateFromPartialSchema(input FileSchema) CompleteFileSc
 
 func ConvertToCreationData(updateInfo CompleteFileSchema) FileCreationDataRaw {
 	creationData := FileCreationDataRaw{
-		Extension: pgtype.Text{String: updateInfo.Extension, Valid: true},
-		Lang:      pgtype.Text{String: updateInfo.Lang, Valid: true},
-		Name:      pgtype.Text{String: updateInfo.Name, Valid: true},
-		Hash:      pgtype.Text{String: updateInfo.Hash, Valid: true},
+		Extension: updateInfo.Extension,
+		Lang:      updateInfo.Lang,
+		Name:      updateInfo.Name,
+		Hash:      updateInfo.Hash,
 		Verified:  pgtype.Bool{Bool: updateInfo.Verified, Valid: true},
 	}
 	return creationData

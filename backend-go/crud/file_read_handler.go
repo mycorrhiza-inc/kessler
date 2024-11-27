@@ -43,10 +43,10 @@ func GetFileWithMeta(config FileHandlerConfig) http.HandlerFunc {
 		file := CompleteFileSchema{
 			ID:        file_raw.ID,
 			Verified:  file_raw.Verified.Bool,
-			Extension: file_raw.Extension.String,
-			Lang:      file_raw.Lang.String,
-			Name:      file_raw.Name.String,
-			Hash:      file_raw.Hash.String,
+			Extension: file_raw.Extension,
+			Lang:      file_raw.Lang,
+			Name:      file_raw.Name,
+			Hash:      file_raw.Hash,
 			IsPrivate: file_raw.Isprivate.Bool,
 			Mdata:     mdata_obj,
 		}
@@ -104,16 +104,21 @@ func FileSemiCompleteGetFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 		conv_info := ConversationInformation{ID: file_raw.DocketUuid}
 		author_info := make([]AuthorInformation, len(files_raw))
 		for i, author_file_raw := range files_raw {
-			author_info[i] = AuthorInformation{AuthorName: author_file_raw.OrganizationName.String, IsPerson: author_file_raw.IsPerson.Bool, IsPrimaryAuthor: author_file_raw.IsPrimaryAuthor.Bool, AuthorID: author_file_raw.OrganizationID}
+			author_info[i] = AuthorInformation{
+				AuthorName:      author_file_raw.OrganizationName,
+				IsPerson:        author_file_raw.IsPerson.Bool,
+				IsPrimaryAuthor: author_file_raw.IsPrimaryAuthor.Bool,
+				AuthorID:        author_file_raw.OrganizationID,
+			}
 		}
 
 		file := CompleteFileSchema{
 			ID:           file_raw.ID,
 			Verified:     file_raw.Verified.Bool,
-			Extension:    file_raw.Extension.String,
-			Lang:         file_raw.Lang.String,
-			Name:         file_raw.Name.String,
-			Hash:         file_raw.Hash.String,
+			Extension:    file_raw.Extension,
+			Lang:         file_raw.Lang,
+			Name:         file_raw.Name,
+			Hash:         file_raw.Hash,
 			Mdata:        mdata_obj,
 			Extra:        extra_obj,
 			Conversation: conv_info,

@@ -90,11 +90,11 @@ func juristictionFileUpsert(ctx context.Context, q dbstore.Queries, doc_uuid uui
 	if err != nil {
 		return err
 	}
-	country := pgtype.Text{String: juristiction_info.Country}
-	state := pgtype.Text{String: juristiction_info.State}
-	municipality := pgtype.Text{String: juristiction_info.Municipality}
-	agency := pgtype.Text{String: juristiction_info.Agency}
-	proceeding_name := pgtype.Text{String: juristiction_info.ProceedingName}
+	country := juristiction_info.Country
+	state := juristiction_info.State
+	municipality := juristiction_info.Municipality
+	agency := juristiction_info.Agency
+	proceeding_name := juristiction_info.ProceedingName
 
 	if !insert {
 		update_args := dbstore.JuristictionFileUpdateParams{
