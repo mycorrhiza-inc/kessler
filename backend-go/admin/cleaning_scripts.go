@@ -23,7 +23,6 @@ func deduplicateOrganizationsOnNames(ctx context.Context, q dbstore.Queries) err
 	for _, org := range all_orgs {
 		orgname := org.Name
 		orgNameTrimmed := strings.TrimSpace(orgname)
-		fmt.Printf("Deduplicating org name: %s\n", orgname)
 		if orgNameTrimmed != orgname {
 			org.Name = orgNameTrimmed
 			args := dbstore.OrganizationUpdateParams{ID: org.ID, Name: orgNameTrimmed, IsPerson: org.IsPerson, Description: org.Description}
@@ -40,6 +39,7 @@ func deduplicateOrganizationsOnNames(ctx context.Context, q dbstore.Queries) err
 			if err != nil {
 				return err
 			}
+			fmt.Printf("Deduplicated org name: %s\n", orgname)
 		} else {
 			orgMap[orgname] = org
 		}
@@ -63,7 +63,6 @@ func organizationsNameAsAlias(ctx context.Context, q dbstore.Queries) error {
 
 			orgname := org.Name
 			orgNameTrimmed := strings.TrimSpace(orgname)
-			fmt.Printf("Ensuring Aliases for org : %s\n", orgname)
 
 			arg := dbstore.OrganizationAliasIdNameGetParams{
 				OrganizationID:    org.ID,
@@ -89,6 +88,7 @@ func organizationsNameAsAlias(ctx context.Context, q dbstore.Queries) error {
 					errChan <- err
 					return
 				}
+				fmt.Printf("Ensured Aliases for org : %s\n", orgname)
 			}
 		}(org)
 	}
