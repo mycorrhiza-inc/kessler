@@ -20,6 +20,7 @@ type ModalProps = {
   objectId: string;
   children?: React.ReactNode;
   title?: string;
+  isPage: boolean;
   setTitle?: (val: string) => void;
 };
 
@@ -101,7 +102,13 @@ const PDFContent = ({ docUUID }: { docUUID: string }) => {
   );
 };
 
-const DocumentModalBody = ({ open, objectId, title, setTitle }: ModalProps) => {
+const DocumentModalBody = ({
+  open,
+  objectId,
+  title,
+  setTitle,
+  isPage,
+}: ModalProps) => {
   const semiCompleteFileUrl = `${apiURL}/v2/public/files/${objectId}`;
   const { data, error, isLoading } = useSWRImmutable(
     semiCompleteFileUrl,
@@ -130,13 +137,15 @@ const DocumentModalBody = ({ open, objectId, title, setTitle }: ModalProps) => {
           >
             Download File
           </a>
-          <Link
-            className="btn btn-secondary"
-            href={kesslerFileUrl}
-            target="_blank"
-          >
-            Open in New Tab
-          </Link>
+          {!isPage && (
+            <Link
+              className="btn btn-secondary"
+              href={kesslerFileUrl}
+              target="_blank"
+            >
+              Open in New Tab
+            </Link>
+          )}
         </div>
       </div>
 

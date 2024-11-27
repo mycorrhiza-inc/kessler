@@ -3,7 +3,6 @@ import axios from "axios";
 import { useState, useEffect } from "react";
 import { Filing } from "../../lib/types/FilingTypes";
 import { FilingTable } from "../Conversations/FilingTable";
-import Navbar from "../Navbar";
 import { getFilingMetadata, getRecentFilings } from "@/lib/requests/search";
 
 import InfiniteScroll from "react-infinite-scroll-component";
@@ -12,6 +11,7 @@ import { getOrganizationInfo } from "@/lib/requests/organizations";
 import { PageContext } from "@/lib/page_context";
 import { BreadcrumbValues } from "../SitemapUtils";
 import { User } from "@supabase/supabase-js";
+import PageContainer from "../Page/PageContainer";
 
 export default function OrganizationPage({
   user,
@@ -85,18 +85,15 @@ export default function OrganizationPage({
   }, []);
 
   return (
-    <>
-      <Navbar user={user} breadcrumbs={actual_breadcrumbs} />
-      <div className="w-full h-full p-20">
-        <h1 className=" text-2xl font-bold">Organization: {orgInfo.name}</h1>
-        <p> {orgInfo.description || "Loading Organization Description"}</p>
-        <h1 className=" text-2xl font-bold">Authored Documents</h1>
-        {isSearching ? (
-          <LoadingSpinner />
-        ) : (
-          <FilingTable filings={filings} DocketColumn />
-        )}
-      </div>
-    </>
+    <PageContainer user={user} breadcrumbs={actual_breadcrumbs}>
+      <h1 className=" text-2xl font-bold">Organization: {orgInfo.name}</h1>
+      <p> {orgInfo.description || "Loading Organization Description"}</p>
+      <h1 className=" text-2xl font-bold">Authored Documents</h1>
+      {isSearching ? (
+        <LoadingSpinner />
+      ) : (
+        <FilingTable filings={filings} DocketColumn />
+      )}
+    </PageContainer>
   );
 }

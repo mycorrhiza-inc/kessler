@@ -29,7 +29,7 @@ const ConversationTable = () => {
   return (
     <>
       {isLoading && <LoadingSpinner loadingText="Loading Conversations" />}
-      {error && <p>Failed to load conversations {error}</p>}
+      {error && <p>Failed to load conversations {String(error)}</p>}
       {!isLoading && !error && convoList != undefined && (
         <table className="table">
           {/* disable pinned rows due to the top row overlaying the filter sidebar */}
@@ -41,7 +41,10 @@ const ConversationTable = () => {
           </thead>
           <tbody>
             {convoList.map((convo: any) => (
-              <tr key={convo.DocketID}>
+              <tr
+                key={convo.DocketID}
+                className="border-base-300 hover:bg-base-200 transition duration-500 ease-out"
+              >
                 <td colSpan={2} className="p-0">
                   <Link
                     href={`/proceedings/${convo.DocketID}`}

@@ -1,6 +1,6 @@
 import { ConversationView } from "@/components/Conversations/ConversationView";
-import Navbar from "@/components/Navbar";
 import OrganizationTable from "@/components/Organizations/OrganizationTable";
+import PageContainer from "@/components/Page/PageContainer";
 import { BreadcrumbValues } from "@/components/SitemapUtils";
 import { PageContext } from "@/lib/page_context";
 import { createClient } from "@/utils/supabase/server";
@@ -30,8 +30,9 @@ export default async function Page({
   } = await supabase.auth.getUser();
   return (
     <>
-      <Navbar user={user} breadcrumbs={breadcrumbs} />
-      <OrganizationTable />
+      <PageContainer user={user} breadcrumbs={breadcrumbs}>
+        <OrganizationTable />
+      </PageContainer>
     </>
   );
 }

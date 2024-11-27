@@ -3,7 +3,6 @@ import axios from "axios";
 import { useState, useEffect } from "react";
 import { Filing } from "../../lib/types/FilingTypes";
 import { FilingTable } from "../Conversations/FilingTable";
-import Navbar from "../Navbar";
 import { getFilingMetadata, getRecentFilings } from "@/lib/requests/search";
 
 import InfiniteScroll from "react-infinite-scroll-component";
@@ -11,6 +10,7 @@ import ConversationTable from "../Organizations/ConversationTable";
 import OrganizationTable from "../Organizations/OrganizationTable";
 import Link from "next/link";
 import LoadingSpinnerTimeout from "../styled-components/LoadingSpinnerTimeout";
+import PageContainer from "../Page/PageContainer";
 
 // TODO: Break out Recent Updates into its own component seperate from all of the homepage logic
 export default function RecentUpdatesView() {
@@ -84,45 +84,41 @@ export default function RecentUpdatesView() {
   }, []);
 
   return (
-    <>
-      <Navbar user={null} breadcrumbs={{ breadcrumbs: [] }} />
-
-      <div className="w-full h-full lg:pr-20 lg:pl-20">
-        <div className="grid grid-cols-2 w-full">
-          <div className="max-h-[600px] overflow-x-hidden border-r pr-4">
-            <Link
-              className="text-3xl font-bold hover:underline"
-              href="/proceedings"
-            >
-              Proceedings
-            </Link>
-            <ConversationTable />
-          </div>
-          <div className="max-h-[600px] overflow-x-hidden pl-4">
-            <Link className="text-3xl font-bold hover:underline" href="/orgs">
-              Organizations
-            </Link>
-            <OrganizationTable />
-          </div>
+    <PageContainer user={null} breadcrumbs={{ breadcrumbs: [] }}>
+      <div className="grid grid-cols-2 w-full">
+        <div className="max-h-[600px] overflow-x-hidden border-r pr-4">
+          <Link
+            className="text-3xl font-bold hover:underline"
+            href="/proceedings"
+          >
+            Proceedings
+          </Link>
+          <ConversationTable />
         </div>
-        <div className="border-t my-8"></div>
-        <h1 className=" text-2xl font-bold">Newest Docs</h1>
-        <InfiniteScroll
-          dataLength={filings.length}
-          next={getMore}
-          hasMore={true}
-          loader={
-            <div onClick={getMore}>
-              <LoadingSpinnerTimeout
-                loadingText="Loading Files"
-                timeoutSeconds={3}
-              />
-            </div>
-          }
-        >
-          <FilingTable filings={filings} DocketColumn />
-        </InfiniteScroll>
+        <div className="max-h-[600px] overflow-x-hidden pl-4">
+          <Link className="text-3xl font-bold hover:underline" href="/orgs">
+            Organizations
+          </Link>
+          <OrganizationTable />
+        </div>
       </div>
-    </>
+      <div className="border-t my-8"></div>
+      <h1 className=" text-2xl font-bold">Newest Docs</h1>
+      <InfiniteScroll
+        dataLength={filings.length}
+        next={getMore}
+        hasMore={true}
+        loader={
+          <div onClick={getMore}>
+            <LoadingSpinnerTimeout
+              loadingText="Loading Files"
+              timeoutSeconds={3}
+            />
+          </div>
+        }
+      >
+        <FilingTable filings={filings} DocketColumn />
+      </InfiniteScroll>
+    </PageContainer>
   );
 }

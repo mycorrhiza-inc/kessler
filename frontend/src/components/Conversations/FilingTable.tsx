@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import Modal from "../styled-components/Modal";
 import DocumentModalBody from "../Document/DocumentModalBody";
 import { Filing } from "../../lib/types/FilingTypes";
-import { is, fi } from 'date-fns/locale';
+import { is, fi } from "date-fns/locale";
 import Link from "next/link";
 import { AuthorInformation } from "@/lib/types/backend_schemas";
 import { AuthorInfoPill, TextPill } from "./TextPills";
@@ -11,26 +11,22 @@ const NoclickSpan = ({ children }: { children: React.ReactNode }) => {
   return <span className="noclick">{children}</span>;
 };
 
-const AuthorColumn = ({ filing }: {
-  filing: Filing;
-}) => {
+const AuthorColumn = ({ filing }: { filing: Filing }) => {
   return (
     <>
       {filing.authors_information
-        ? filing.authors_information.map(
-          (auth_info: AuthorInformation) => (
+        ? filing.authors_information.map((auth_info: AuthorInformation) => (
             <AuthorInfoPill author_info={auth_info} />
-          ),
-        )
+          ))
         : filing.author + " Something isnt working"}
     </>
   );
-}
+};
 
 const TableRow = ({
   filing,
   DocketColumn,
-  header
+  header,
 }: {
   filing: Filing;
   DocketColumn?: boolean;
@@ -84,10 +80,10 @@ const TableRow = ({
         </td>
         {DocketColumn && (
           <td>
-              <TextPill
-                text={filing.docket_id}
-                href={`/proceedings/${filing.docket_id}`}
-              />
+            <TextPill
+              text={filing.docket_id}
+              href={`/proceedings/${filing.docket_id}`}
+            />
           </td>
         )}
 
@@ -98,6 +94,7 @@ const TableRow = ({
           open={open}
           title={filing.title}
           objectId={filing.id}
+          isPage={false}
         />
       </Modal>
     </>
@@ -126,15 +123,19 @@ export const FilingTable = ({
           <col width="80px" />
           <col width="200px" />
           {/* authors column */}
-          {DocketColumn ? (<col width="200px" />) : (<col width="300px" />)}
+          {DocketColumn ? <col width="200px" /> : <col width="300px" />}
           {/* docket id column */}
           {DocketColumn && <col width="50px" />}
           <col width="50px" />
         </colgroup>
         <thead>
           <tr className="border-b border-gray-200">
-            <th className="text-left sticky top-0 filing-table-date">Date Filed</th>
-            <th className="text-left sticky top-0 filing-table-doc-class">Document Class</th>
+            <th className="text-left sticky top-0 filing-table-date">
+              Date Filed
+            </th>
+            <th className="text-left sticky top-0 filing-table-doc-class">
+              Document Class
+            </th>
             <th className="text-left sticky top-0">Title</th>
             <th className="text-left sticky top-0">Author</th>
             {DocketColumn && (

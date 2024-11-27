@@ -3,7 +3,7 @@ import { useState } from "react";
 import DocumentModalBody from "./DocumentModalBody";
 import { BreadcrumbValues } from "../SitemapUtils";
 import { User } from "@supabase/supabase-js";
-import Navbar from "../Navbar";
+import PageContainer from "../Page/PageContainer";
 
 const DocumentPage = ({
   objectId,
@@ -24,16 +24,14 @@ const DocumentPage = ({
     ],
   };
   return (
-    <>
-      <Navbar user={user} breadcrumbs={breadcrumbs} />
-      <div className="w-full h-full">
-        <DocumentModalBody
-          open={open}
-          objectId={objectId}
-          setTitle={setTitle}
-        />
-      </div>
-    </>
+    <PageContainer user={user} breadcrumbs={breadcrumbs}>
+      <DocumentModalBody
+        open={open}
+        objectId={objectId}
+        setTitle={setTitle}
+        isPage={true}
+      />
+    </PageContainer>
   );
 };
 export default DocumentPage;

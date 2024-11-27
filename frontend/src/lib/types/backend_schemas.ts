@@ -82,3 +82,26 @@ export const CompleteFileSchemaValidator = z.object({
 });
 
 export type CompleteFileSchema = z.infer<typeof CompleteFileSchemaValidator>;
+
+export const FileSchemaValidator = z.object({
+  id: z.string().uuid(),
+  verified: z.boolean(),
+  extension: z.string(),
+  lang: z.string(),
+  name: z.string(),
+  hash: z.string(),
+  is_private: z.boolean(),
+});
+
+export type FileSchema = z.infer<typeof FileSchemaValidator>;
+
+export const OrganizationSchemaCompleteValidator = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  files_authored: z.array(FileSchemaValidator),
+  files_authored_ids: z.array(z.string().uuid()),
+});
+
+export type OrganizationSchemaComplete = z.infer<
+  typeof OrganizationSchemaCompleteValidator
+>;

@@ -1,6 +1,6 @@
 import { ConversationView } from "@/components/Conversations/ConversationView";
-import Navbar from "@/components/Navbar";
 import ConversationTable from "@/components/Organizations/ConversationTable";
+import PageContainer from "@/components/Page/PageContainer";
 import { PageContext } from "@/lib/page_context";
 import { createClient } from "@/utils/supabase/server";
 import { headers } from "next/headers";
@@ -26,12 +26,11 @@ export default async function Page({
     data: { user },
   } = await supabase.auth.getUser();
   return (
-    <>
-      <Navbar user={user} breadcrumbs={breadcrumbs} />
+    <PageContainer user={user} breadcrumbs={breadcrumbs}>
       <h1 className="text-3xl font-bold">Proceedings</h1>
       <ConversationTable />
       <h2 className="text-2xl font-bold">All Documents</h2>
       <ConversationView pageContext={pageContext} />
-    </>
+    </PageContainer>
   );
 }
