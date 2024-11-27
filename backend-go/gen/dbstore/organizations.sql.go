@@ -11,9 +11,63 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const aliasOrganizationCreate = `-- name: AliasOrganizationCreate :one
+INSERT INTO
+    public.organization_aliases (
+        organization_id,
+        organization_alias,
+        created_at,
+        updated_at
+    )
+VALUES
+    ($1, $2, NOW(), NOW())
+RETURNING
+    public.organization_aliases.id
+`
+
+type AliasOrganizationCreateParams struct {
+	OrganizationID    pgtype.UUID
+	OrganizationAlias pgtype.Text
+}
+
+func (q *Queries) AliasOrganizationCreate(ctx context.Context, arg AliasOrganizationCreateParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, aliasOrganizationCreate, arg.OrganizationID, arg.OrganizationAlias)
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
+const aliasOrganizationDelete = `-- name: AliasOrganizationDelete :one
+INSERT INTO
+    public.organization_aliases (
+        organization_id,
+        organization_alias,
+        created_at,
+        updated_at
+    )
+VALUES
+    ($1, $2, NOW(), NOW())
+RETURNING
+    public.organization_aliases.id
+`
+
+type AliasOrganizationDeleteParams struct {
+	OrganizationID    pgtype.UUID
+	OrganizationAlias pgtype.Text
+}
+
+func (q *Queries) AliasOrganizationDelete(ctx context.Context, arg AliasOrganizationDeleteParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, aliasOrganizationDelete, arg.OrganizationID, arg.OrganizationAlias)
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
 const authorshipDocumentDeleteAll = `-- name: AuthorshipDocumentDeleteAll :exec
-DELETE FROM public.relation_documents_organizations_authorship
-WHERE document_id = $1
+DELETE FROM
+    public.relation_documents_organizations_authorship
+WHERE
+    document_id = $1
 `
 
 func (q *Queries) AuthorshipDocumentDeleteAll(ctx context.Context, documentID pgtype.UUID) error {
@@ -22,15 +76,18 @@ func (q *Queries) AuthorshipDocumentDeleteAll(ctx context.Context, documentID pg
 }
 
 const authorshipDocumentOrganizationInsert = `-- name: AuthorshipDocumentOrganizationInsert :one
-INSERT INTO public.relation_documents_organizations_authorship (
-		document_id,
-		organization_id,
-    is_primary_author,
-		created_at,
-		updated_at
-	)
-VALUES ($1, $2, $3, NOW(), NOW())
-RETURNING id
+INSERT INTO
+    public.relation_documents_organizations_authorship (
+        document_id,
+        organization_id,
+        is_primary_author,
+        created_at,
+        updated_at
+    )
+VALUES
+    ($1, $2, $3, NOW(), NOW())
+RETURNING
+    id
 `
 
 type AuthorshipDocumentOrganizationInsertParams struct {
@@ -47,9 +104,12 @@ func (q *Queries) AuthorshipDocumentOrganizationInsert(ctx context.Context, arg 
 }
 
 const authorshipOrganizationListDocuments = `-- name: AuthorshipOrganizationListDocuments :many
-SELECT document_id, organization_id, id, created_at, updated_at, is_primary_author 
-FROM public.relation_documents_organizations_authorship 
-WHERE organization_id = $1
+SELECT
+    document_id, organization_id, id, created_at, updated_at, is_primary_author
+FROM
+    public.relation_documents_organizations_authorship
+WHERE
+    organization_id = $1
 `
 
 func (q *Queries) AuthorshipOrganizationListDocuments(ctx context.Context, organizationID pgtype.UUID) ([]RelationDocumentsOrganizationsAuthorship, error) {
@@ -80,33 +140,93 @@ func (q *Queries) AuthorshipOrganizationListDocuments(ctx context.Context, organ
 }
 
 const createOrganization = `-- name: CreateOrganization :one
-INSERT INTO public.organization (
-		name,
-		description,
-    is_person,
-		created_at,
-		updated_at
-	)
-VALUES ($1, $2, $3, NOW(), NOW())
-RETURNING id
+WITH new_org AS (
+    INSERT INTO
+        public.organization (
+            name,
+            description,
+            is_person,
+            created_at,
+            updated_at
+        )
+    VALUES
+        ($1, $2, $3, NOW(), NOW())
+    RETURNING
+        id
+)
+INSERT INTO
+    public.organization_aliases (
+        organization_id,
+        organization_alias,
+        created_at,
+        updated_at
+    )
+SELECT
+    id,
+    $1,
+    NOW(),
+    NOW()
+FROM
+    new_org
+RETURNING
+    (
+        SELECT
+            id
+        FROM
+            new_org
+    ) AS id
 `
 
 type CreateOrganizationParams struct {
-	Name        string
-	Description pgtype.Text
-	IsPerson    pgtype.Bool
+	OrganizationAlias pgtype.Text
+	Description       pgtype.Text
+	IsPerson          pgtype.Bool
 }
 
 func (q *Queries) CreateOrganization(ctx context.Context, arg CreateOrganizationParams) (pgtype.UUID, error) {
-	row := q.db.QueryRow(ctx, createOrganization, arg.Name, arg.Description, arg.IsPerson)
+	row := q.db.QueryRow(ctx, createOrganization, arg.OrganizationAlias, arg.Description, arg.IsPerson)
 	var id pgtype.UUID
 	err := row.Scan(&id)
 	return id, err
 }
 
+const organizationAliasIdLookup = `-- name: OrganizationAliasIdLookup :many
+SELECT
+    
+FROM
+    public.organization_aliases
+WHERE
+    organization_id = $1
+`
+
+type OrganizationAliasIdLookupRow struct {
+}
+
+func (q *Queries) OrganizationAliasIdLookup(ctx context.Context, organizationID pgtype.UUID) ([]OrganizationAliasIdLookupRow, error) {
+	rows, err := q.db.Query(ctx, organizationAliasIdLookup, organizationID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []OrganizationAliasIdLookupRow
+	for rows.Next() {
+		var i OrganizationAliasIdLookupRow
+		if err := rows.Scan(); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const organizationDelete = `-- name: OrganizationDelete :exec
-DELETE FROM public.organization
-WHERE id = $1
+DELETE FROM
+    public.organization
+WHERE
+    id = $1
 `
 
 func (q *Queries) OrganizationDelete(ctx context.Context, id pgtype.UUID) error {
@@ -115,9 +235,12 @@ func (q *Queries) OrganizationDelete(ctx context.Context, id pgtype.UUID) error 
 }
 
 const organizationFetchByNameMatch = `-- name: OrganizationFetchByNameMatch :many
-SELECT name, description, id, created_at, updated_at, is_person
-FROM public.organization
-WHERE name = $1
+SELECT
+    name, description, id, created_at, updated_at, is_person
+FROM
+    public.organization
+WHERE
+    name = $1
 `
 
 func (q *Queries) OrganizationFetchByNameMatch(ctx context.Context, name string) ([]Organization, error) {
@@ -148,9 +271,12 @@ func (q *Queries) OrganizationFetchByNameMatch(ctx context.Context, name string)
 }
 
 const organizationList = `-- name: OrganizationList :many
-SELECT name, description, id, created_at, updated_at, is_person
-FROM public.organization
-ORDER BY created_at DESC
+SELECT
+    name, description, id, created_at, updated_at, is_person
+FROM
+    public.organization
+ORDER BY
+    created_at DESC
 `
 
 func (q *Queries) OrganizationList(ctx context.Context) ([]Organization, error) {
@@ -181,9 +307,12 @@ func (q *Queries) OrganizationList(ctx context.Context) ([]Organization, error) 
 }
 
 const organizationRead = `-- name: OrganizationRead :one
-SELECT name, description, id, created_at, updated_at, is_person
-FROM public.organization
-WHERE id = $1
+SELECT
+    name, description, id, created_at, updated_at, is_person
+FROM
+    public.organization
+WHERE
+    id = $1
 `
 
 func (q *Queries) OrganizationRead(ctx context.Context, id pgtype.UUID) (Organization, error) {
@@ -201,13 +330,17 @@ func (q *Queries) OrganizationRead(ctx context.Context, id pgtype.UUID) (Organiz
 }
 
 const organizationUpdate = `-- name: OrganizationUpdate :one
-UPDATE public.organization
-SET name = $1,
-	description = $2,
-  is_person = $3,
-	updated_at = NOW()
-WHERE id = $4
-RETURNING id
+UPDATE
+    public.organization
+SET
+    name = $1,
+    description = $2,
+    is_person = $3,
+    updated_at = NOW()
+WHERE
+    id = $4
+RETURNING
+    id
 `
 
 type OrganizationUpdateParams struct {
@@ -230,19 +363,19 @@ func (q *Queries) OrganizationUpdate(ctx context.Context, arg OrganizationUpdate
 }
 
 const organizationgGetConversationsAuthoredIn = `-- name: OrganizationgGetConversationsAuthoredIn :many
-SELECT public.organization.id as organization_id,
-  public.organization.name as organization_name,
-  public.relation_documents_organizations_authorship.document_id,
-  public.docket_conversations.docket_id as docket_id,
-  public.docket_conversations.id as conversation_uuid
-  
-  
-FROM public.organization
-  LEFT JOIN public.relation_documents_organizations_authorship ON public.organization.id = public.relation_documents_organizations_authorship.organization_id
-  LEFT JOIN public.docket_documents ON public.relation_documents_organizations_authorship.document_id = public.docket_documents.file_id
-  LEFT JOIN public.docket_conversations ON public.docket_documents.docket_id = public.docket_conversations.id
-
-WHERE public.organization.id = $1
+SELECT
+    public.organization.id AS organization_id,
+    public.organization.name AS organization_name,
+    public.relation_documents_organizations_authorship.document_id,
+    public.docket_conversations.docket_id AS docket_id,
+    public.docket_conversations.id AS conversation_uuid
+FROM
+    public.organization
+    LEFT JOIN public.relation_documents_organizations_authorship ON public.organization.id = public.relation_documents_organizations_authorship.organization_id
+    LEFT JOIN public.docket_documents ON public.relation_documents_organizations_authorship.document_id = public.docket_documents.file_id
+    LEFT JOIN public.docket_conversations ON public.docket_documents.docket_id = public.docket_conversations.id
+WHERE
+    public.organization.id = $1
 `
 
 type OrganizationgGetConversationsAuthoredInRow struct {

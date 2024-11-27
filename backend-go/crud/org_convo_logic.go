@@ -118,9 +118,9 @@ func verifyAuthorOrganizationUUID(ctx context.Context, q dbstore.Queries, author
 		return *author_info, nil
 	}
 	org_create_params := dbstore.CreateOrganizationParams{
-		Name:        author_info.AuthorName,
-		Description: pgtype.Text{String: "", Valid: true}, // I should make this fixable at some point, but for now it will kinda work (tm)
-		IsPerson:    pgtype.Bool{Bool: author_info.IsPerson, Valid: true},
+		OrganizationAlias: pgtype.Text{String: author_info.AuthorName, Valid: true},
+		Description:       pgtype.Text{String: "", Valid: true}, // I should make this fixable at some point, but for now it will kinda work (tm)
+		IsPerson:          pgtype.Bool{Bool: author_info.IsPerson, Valid: true},
 	}
 	pg_org_id, err := q.CreateOrganization(ctx, org_create_params)
 	if err != nil {

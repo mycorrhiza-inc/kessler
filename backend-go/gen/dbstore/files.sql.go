@@ -12,29 +12,32 @@ import (
 )
 
 const createFile = `-- name: CreateFile :one
-INSERT INTO public.file (
-    id,
-    extension,
-    lang,
-    name,
-    isPrivate,
-    hash,
-    verified,
-    created_at,
-    updated_at
-  )
-VALUES (
-    gen_random_uuid(),
-    $1,
-    $2,
-    $3,
-    $4,
-    $5,
-    $6,
-    NOW(),
-    NOW()
-  )
-RETURNING id
+INSERT INTO
+    public.file (
+        id,
+        extension,
+        lang,
+        name,
+        isPrivate,
+        hash,
+        verified,
+        created_at,
+        updated_at
+    )
+VALUES
+    (
+        gen_random_uuid(),
+        $1,
+        $2,
+        $3,
+        $4,
+        $5,
+        $6,
+        NOW(),
+        NOW()
+    )
+RETURNING
+    id
 `
 
 type CreateFileParams struct {
@@ -61,8 +64,10 @@ func (q *Queries) CreateFile(ctx context.Context, arg CreateFileParams) (pgtype.
 }
 
 const deleteFile = `-- name: DeleteFile :exec
-DELETE FROM public.file
-WHERE id = $1
+DELETE FROM
+    public.file
+WHERE
+    id = $1
 `
 
 func (q *Queries) DeleteFile(ctx context.Context, id pgtype.UUID) error {
@@ -71,21 +76,18 @@ func (q *Queries) DeleteFile(ctx context.Context, id pgtype.UUID) error {
 }
 
 const extrasFileCreate = `-- name: ExtrasFileCreate :one
-INSERT INTO public.file_extras (
-    id,
-    isPrivate,
-    extra_obj,
-    created_at,
-    updated_at
-  )
-VALUES (
-    $1,
-    $2,
-    $3,
-    NOW(),
-    NOW()
-  )
-RETURNING id
+INSERT INTO
+    public.file_extras (
+        id,
+        isPrivate,
+        extra_obj,
+        created_at,
+        updated_at
+    )
+VALUES
+    ($1, $2, $3, NOW(), NOW())
+RETURNING
+    id
 `
 
 type ExtrasFileCreateParams struct {
@@ -102,9 +104,12 @@ func (q *Queries) ExtrasFileCreate(ctx context.Context, arg ExtrasFileCreatePara
 }
 
 const extrasFileFetch = `-- name: ExtrasFileFetch :one
-SELECT id, isprivate, created_at, updated_at, extra_obj
-FROM public.file_extras
-WHERE id = $1
+SELECT
+    id, isprivate, created_at, updated_at, extra_obj
+FROM
+    public.file_extras
+WHERE
+    id = $1
 `
 
 func (q *Queries) ExtrasFileFetch(ctx context.Context, id pgtype.UUID) (FileExtra, error) {
@@ -121,12 +126,16 @@ func (q *Queries) ExtrasFileFetch(ctx context.Context, id pgtype.UUID) (FileExtr
 }
 
 const extrasFileUpdate = `-- name: ExtrasFileUpdate :one
-UPDATE public.file_extras
-SET isPrivate = $1,
-  extra_obj = $2,
-  updated_at = NOW()
-WHERE id = $3
-RETURNING id
+UPDATE
+    public.file_extras
+SET
+    isPrivate = $1,
+    extra_obj = $2,
+    updated_at = NOW()
+WHERE
+    id = $3
+RETURNING
+    id
 `
 
 type ExtrasFileUpdateParams struct {
@@ -143,9 +152,12 @@ func (q *Queries) ExtrasFileUpdate(ctx context.Context, arg ExtrasFileUpdatePara
 }
 
 const fetchMetadata = `-- name: FetchMetadata :many
-SELECT id, isprivate, mdata, created_at, updated_at
-FROM public.file_metadata
-WHERE id = $1
+SELECT
+    id, isprivate, mdata, created_at, updated_at
+FROM
+    public.file_metadata
+WHERE
+    id = $1
 `
 
 func (q *Queries) FetchMetadata(ctx context.Context, id pgtype.UUID) ([]FileMetadatum, error) {
@@ -175,11 +187,15 @@ func (q *Queries) FetchMetadata(ctx context.Context, id pgtype.UUID) ([]FileMeta
 }
 
 const fileVerifiedUpdate = `-- name: FileVerifiedUpdate :one
-UPDATE public.file
-SET verified = $1,
-  updated_at = NOW()
-WHERE public.file.id = $2
-RETURNING id
+UPDATE
+    public.file
+SET
+    verified = $1,
+    updated_at = NOW()
+WHERE
+    public.file.id = $2
+RETURNING
+    id
 `
 
 type FileVerifiedUpdateParams struct {
@@ -195,9 +211,12 @@ func (q *Queries) FileVerifiedUpdate(ctx context.Context, arg FileVerifiedUpdate
 }
 
 const getFile = `-- name: GetFile :one
-SELECT id, lang, name, extension, isprivate, created_at, updated_at, hash, verified
-FROM public.file
-WHERE id = $1
+SELECT
+    id, lang, name, extension, isprivate, created_at, updated_at, hash, verified
+FROM
+    public.file
+WHERE
+    id = $1
 `
 
 func (q *Queries) GetFile(ctx context.Context, id pgtype.UUID) (File, error) {
@@ -218,9 +237,12 @@ func (q *Queries) GetFile(ctx context.Context, id pgtype.UUID) (File, error) {
 }
 
 const hashGetFileID = `-- name: HashGetFileID :many
-SELECT id
-FROM public.file
-WHERE public.file.hash = $1
+SELECT
+    id
+FROM
+    public.file
+WHERE
+    public.file.hash = $1
 `
 
 func (q *Queries) HashGetFileID(ctx context.Context, hash pgtype.Text) ([]pgtype.UUID, error) {
@@ -244,15 +266,18 @@ func (q *Queries) HashGetFileID(ctx context.Context, hash pgtype.Text) ([]pgtype
 }
 
 const insertMetadata = `-- name: InsertMetadata :one
-INSERT INTO public.file_metadata (
-    id,
-    isPrivate,
-    mdata,
-    created_at,
-    updated_at
-  )
-VALUES ($1, $2, $3, NOW(), NOW())
-RETURNING id
+INSERT INTO
+    public.file_metadata (
+        id,
+        isPrivate,
+        mdata,
+        created_at,
+        updated_at
+    )
+VALUES
+    ($1, $2, $3, NOW(), NOW())
+RETURNING
+    id
 `
 
 type InsertMetadataParams struct {
@@ -269,9 +294,12 @@ func (q *Queries) InsertMetadata(ctx context.Context, arg InsertMetadataParams) 
 }
 
 const listFiles = `-- name: ListFiles :many
-SELECT id, lang, name, extension, isprivate, created_at, updated_at, hash, verified
-FROM public.file
-ORDER BY updated_at DESC
+SELECT
+    id, lang, name, extension, isprivate, created_at, updated_at, hash, verified
+FROM
+    public.file
+ORDER BY
+    updated_at DESC
 `
 
 func (q *Queries) ListFiles(ctx context.Context) ([]File, error) {
@@ -305,9 +333,12 @@ func (q *Queries) ListFiles(ctx context.Context) ([]File, error) {
 }
 
 const readFile = `-- name: ReadFile :one
-SELECT id, lang, name, extension, isprivate, created_at, updated_at, hash, verified
-FROM public.file
-WHERE id = $1
+SELECT
+    id, lang, name, extension, isprivate, created_at, updated_at, hash, verified
+FROM
+    public.file
+WHERE
+    id = $1
 `
 
 func (q *Queries) ReadFile(ctx context.Context, id pgtype.UUID) (File, error) {
@@ -328,11 +359,14 @@ func (q *Queries) ReadFile(ctx context.Context, id pgtype.UUID) (File, error) {
 }
 
 const stageLogAdd = `-- name: StageLogAdd :one
-INSERT INTO public.stage_log (file_id, status, log)
-VALUES ($1, $2, $3)
-RETURNING id,
-  file_id,
-  status
+INSERT INTO
+    public.stage_log (file_id, STATUS, log)
+VALUES
+    ($1, $2, $3)
+RETURNING
+    id,
+    file_id,
+    STATUS
 `
 
 type StageLogAddParams struct {
@@ -356,11 +390,16 @@ func (q *Queries) StageLogAdd(ctx context.Context, arg StageLogAddParams) (Stage
 }
 
 const stageLogFileGetLatest = `-- name: StageLogFileGetLatest :one
-SELECT id, status, log, created_at, file_id
-FROM public.stage_log
-WHERE file_id = $1
-ORDER BY created_at DESC
-LIMIT 1
+SELECT
+    id, status, log, created_at, file_id
+FROM
+    public.stage_log
+WHERE
+    file_id = $1
+ORDER BY
+    created_at DESC
+LIMIT
+    1
 `
 
 func (q *Queries) StageLogFileGetLatest(ctx context.Context, fileID pgtype.UUID) (StageLog, error) {
@@ -377,15 +416,18 @@ func (q *Queries) StageLogFileGetLatest(ctx context.Context, fileID pgtype.UUID)
 }
 
 const updateFile = `-- name: UpdateFile :exec
-UPDATE public.file
-SET extension = $1,
-  lang = $2,
-  name = $3,
-  isPrivate = $4,
-  hash = $5,
-  verified = $6,
-  updated_at = NOW()
-WHERE id = $7
+UPDATE
+    public.file
+SET
+    extension = $1,
+    lang = $2,
+    name = $3,
+    isPrivate = $4,
+    hash = $5,
+    verified = $6,
+    updated_at = NOW()
+WHERE
+    id = $7
 `
 
 type UpdateFileParams struct {
@@ -412,12 +454,16 @@ func (q *Queries) UpdateFile(ctx context.Context, arg UpdateFileParams) error {
 }
 
 const updateMetadata = `-- name: UpdateMetadata :one
-UPDATE public.file_metadata
-SET isPrivate = $1,
-  mdata = $2,
-  updated_at = NOW()
-WHERE id = $3
-RETURNING id
+UPDATE
+    public.file_metadata
+SET
+    isPrivate = $1,
+    mdata = $2,
+    updated_at = NOW()
+WHERE
+    id = $3
+RETURNING
+    id
 `
 
 type UpdateMetadataParams struct {

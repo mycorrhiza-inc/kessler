@@ -10,9 +10,12 @@ import (
 )
 
 const checkIfThaumaturgyAPIKeyExists = `-- name: CheckIfThaumaturgyAPIKeyExists :one
-SELECT key_name, key_blake3_hash, id, created_at, updated_at
-FROM userfiles.thaumaturgy_api_keys
-WHERE key_blake3_hash = $1
+SELECT
+    key_name, key_blake3_hash, id, created_at, updated_at
+FROM
+    userfiles.thaumaturgy_api_keys
+WHERE
+    key_blake3_hash = $1
 `
 
 func (q *Queries) CheckIfThaumaturgyAPIKeyExists(ctx context.Context, keyBlake3Hash string) (UserfilesThaumaturgyApiKey, error) {

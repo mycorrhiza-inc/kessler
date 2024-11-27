@@ -5,8 +5,9 @@ CREATE TABLE IF NOT EXISTS public.file_extras (
     summary VARCHAR,
     short_summary VARCHAR,
     purpose VARCHAR,
-    created_at TIMESTAMPTZ DEFAULT now(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
 -- +goose Down
-DROP TABLE if Exists public.file_extras;
+DROP TABLE IF EXISTS public.file_extras;
