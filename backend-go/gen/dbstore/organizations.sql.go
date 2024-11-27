@@ -452,9 +452,9 @@ WHERE
 type OrganizationgGetConversationsAuthoredInRow struct {
 	OrganizationID   uuid.UUID
 	OrganizationName string
-	DocumentID       pgtype.UUID
+	DocumentID       uuid.UUID
 	DocketID         pgtype.Text
-	ConversationUuid pgtype.UUID
+	ConversationUuid uuid.UUID
 }
 
 func (q *Queries) OrganizationgGetConversationsAuthoredIn(ctx context.Context, id uuid.UUID) ([]OrganizationgGetConversationsAuthoredInRow, error) {

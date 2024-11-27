@@ -128,7 +128,7 @@ type FileMetadatum struct {
 }
 
 type FileTextSource struct {
-	FileID         pgtype.UUID
+	FileID         uuid.UUID
 	IsOriginalText bool
 	Language       string
 	Text           pgtype.Text
@@ -245,7 +245,7 @@ type StageLog struct {
 	Status    NullStageState
 	Log       []byte
 	CreatedAt pgtype.Timestamptz
-	FileID    pgtype.UUID
+	FileID    uuid.UUID
 }
 
 type User struct {
@@ -259,7 +259,7 @@ type User struct {
 type UserfilesThaumaturgyApiKey struct {
 	KeyName       pgtype.Text
 	KeyBlake3Hash string
-	ID            pgtype.UUID
+	ID            uuid.UUID
 	CreatedAt     pgtype.Timestamptz
 	UpdatedAt     pgtype.Timestamptz
 }

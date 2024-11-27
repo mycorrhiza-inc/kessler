@@ -101,9 +101,9 @@ type SemiCompleteFileGetRow struct {
 	UpdatedAt        pgtype.Timestamptz
 	Mdata            []byte
 	ExtraObj         []byte
-	DocketUuid       pgtype.UUID
+	DocketUuid       uuid.UUID
 	IsPrimaryAuthor  pgtype.Bool
-	OrganizationID   pgtype.UUID
+	OrganizationID   uuid.UUID
 	OrganizationName pgtype.Text
 	IsPerson         pgtype.Bool
 }

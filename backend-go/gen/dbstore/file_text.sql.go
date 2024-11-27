@@ -29,7 +29,7 @@ RETURNING
 `
 
 type CreateFileTextSourceParams struct {
-	FileID         pgtype.UUID
+	FileID         uuid.UUID
 	IsOriginalText bool
 	Language       string
 	Text           pgtype.Text
@@ -54,7 +54,7 @@ WHERE
     file_id = $1
 `
 
-func (q *Queries) DeleteFileTexts(ctx context.Context, fileID pgtype.UUID) error {
+func (q *Queries) DeleteFileTexts(ctx context.Context, fileID uuid.UUID) error {
 	_, err := q.db.Exec(ctx, deleteFileTexts, fileID)
 	return err
 }
@@ -68,7 +68,7 @@ WHERE
     file_id = $1
 `
 
-func (q *Queries) ListTextsOfFile(ctx context.Context, fileID pgtype.UUID) ([]FileTextSource, error) {
+func (q *Queries) ListTextsOfFile(ctx context.Context, fileID uuid.UUID) ([]FileTextSource, error) {
 	rows, err := q.db.Query(ctx, listTextsOfFile, fileID)
 	if err != nil {
 		return nil, err
@@ -106,7 +106,7 @@ WHERE
     AND is_original_text = TRUE
 `
 
-func (q *Queries) ListTextsOfFileOriginal(ctx context.Context, fileID pgtype.UUID) ([]FileTextSource, error) {
+func (q *Queries) ListTextsOfFileOriginal(ctx context.Context, fileID uuid.UUID) ([]FileTextSource, error) {
 	rows, err := q.db.Query(ctx, listTextsOfFileOriginal, fileID)
 	if err != nil {
 		return nil, err
@@ -145,7 +145,7 @@ WHERE
 `
 
 type ListTextsOfFileWithLanguageParams struct {
-	FileID   pgtype.UUID
+	FileID   uuid.UUID
 	Language string
 }
 

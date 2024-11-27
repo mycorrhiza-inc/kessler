@@ -12,3 +12,9 @@ sql:
             go_type:
               import: "github.com/google/uuid"
               type: "UUID"
+            nullable: false
+          - db_type: "uuid"
+            go_type:
+              import: "github.com/google/uuid"
+              type: "UUID"
+            nullable: true
