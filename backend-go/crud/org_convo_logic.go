@@ -170,8 +170,8 @@ func fileAuthorsUpsert(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUI
 	return nil
 }
 
-func verifyConversationUUID(ctx context.Context, q dbstore.Queries, conv_info *ConversationInformation) (ConversationInformation, error) {
-	if conv_info.ID != uuid.Nil {
+func verifyConversationUUID(ctx context.Context, q dbstore.Queries, conv_info *ConversationInformation, update bool) (ConversationInformation, error) {
+	if conv_info.ID != uuid.Nil && !update {
 		return *conv_info, nil
 	}
 
@@ -186,14 +186,33 @@ func verifyConversationUUID(ctx context.Context, q dbstore.Queries, conv_info *C
 	if len(results) > 0 {
 		conv := results[0]
 		conv_info.ID = conv.ID
+		if update {
+			args := dbstore.DocketConversationUpdateParams{
+				ID:          conv.ID,
+				DocketID:    conv.DocketID,
+				State:       conv.State,
+				Name:        conv.Name,
+				Description: conv.Description,
+			}
+			q.DocketConversationUpdate(ctx, args)
+			if err != nil {
+				return *conv_info, err
+			}
+			return *conv_info, nil
+		}
 		conv_info.State = conv.State
+		conv_info.Name = conv.Name
+		conv_info.Description = conv.Description
 		return *conv_info, nil
+
 	}
 
 	// Create new conversation if none exists
 	create_params := dbstore.DocketConversationCreateParams{
-		DocketID: conv_info.DocketID,
-		State:    conv_info.State,
+		DocketID:    conv_info.DocketID,
+		State:       conv_info.State,
+		Name:        conv_info.Name,
+		Description: conv_info.Description,
 	}
 
 	conv_id, err := q.DocketConversationCreate(ctx, create_params)
