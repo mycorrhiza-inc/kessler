@@ -9,16 +9,9 @@ import (
 	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
 )
 
-// A UUID is a 128 bit (16 byte) Universal Unique IDentifier as defined in RFC
-// 4122.
-// type UUID [16]byte
-func pguuidToString(uuid_pg pgtype.UUID) string {
-	return uuid.UUID(uuid_pg.Bytes).String()
-}
-
 func PublicFileToSchema(file dbstore.File) FileSchema {
 	return FileSchema{
-		ID:        file.ID.Bytes,
+		ID:        file.ID,
 		Verified:  file.Verified.Bool,
 		Extension: file.Extension.String,
 		Lang:      file.Lang.String,
@@ -29,10 +22,10 @@ func PublicFileToSchema(file dbstore.File) FileSchema {
 }
 
 type FileTextSchema struct {
-	FileID         pgtype.UUID `json:"file_id"`
-	IsOriginalText bool        `json:"is_original_text"`
-	Text           string      `json:"text"`
-	Language       string      `json:"language"`
+	FileID         uuid.UUID `json:"file_id"`
+	IsOriginalText bool      `json:"is_original_text"`
+	Text           string    `json:"text"`
+	Language       string    `json:"language"`
 }
 
 func PublicTextToSchema(file dbstore.FileTextSource) FileTextSchema {
@@ -47,7 +40,7 @@ func PublicTextToSchema(file dbstore.FileTextSource) FileTextSchema {
 type GetFileParam struct {
 	Queries dbstore.Queries
 	Context context.Context
-	PgUUID  pgtype.UUID
+	PgUUID  uuid.UUID
 	Private bool
 }
 

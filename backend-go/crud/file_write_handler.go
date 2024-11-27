@@ -208,7 +208,7 @@ func makeFileUpsertHandler(config FileUpsertHandlerConfig) func(w http.ResponseW
 			newDocInfo.Verified = true
 			params := dbstore.FileVerifiedUpdateParams{
 				Verified: pgtype.Bool{Bool: true, Valid: true},
-				ID:       pgtype.UUID{Bytes: doc_uuid, Valid: true},
+				ID:       doc_uuid,
 			}
 			_, err := q.FileVerifiedUpdate(ctx, params)
 			if err != nil {

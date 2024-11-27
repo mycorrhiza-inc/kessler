@@ -24,9 +24,8 @@ func GetFileWithMeta(config FileHandlerConfig) http.HandlerFunc {
 			http.Error(w, errorstring, http.StatusBadRequest)
 			return
 		}
-		pgUUID := pgtype.UUID{Bytes: parsedUUID, Valid: true}
 		ctx := r.Context()
-		file_raw, err := q.GetFileWithMetadata(ctx, pgUUID)
+		file_raw, err := q.GetFileWithMetadata(ctx, parsedUUID)
 		if err != nil {
 
 			errorstring := fmt.Sprintf("Error Retriving file %v: %v\n", fileID, err)
@@ -43,7 +42,7 @@ func GetFileWithMeta(config FileHandlerConfig) http.HandlerFunc {
 			return
 		}
 		file := CompleteFileSchema{
-			ID:        file_raw.ID.Bytes,
+			ID:        file_raw.ID,
 			Verified:  file_raw.Verified.Bool,
 			Extension: file_raw.Extension.String,
 			Lang:      file_raw.Lang.String,
@@ -71,9 +70,8 @@ func FileSemiCompleteGetFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 			http.Error(w, errorstring, http.StatusBadRequest)
 			return
 		}
-		pgUUID := pgtype.UUID{Bytes: parsedUUID, Valid: true}
 		ctx := r.Context()
-		files_raw, err := q.SemiCompleteFileGet(ctx, pgUUID)
+		files_raw, err := q.SemiCompleteFileGet(ctx, parsedUUID)
 		if err != nil {
 			errorstring := fmt.Sprintf("Error Retriving file %v: %v\n", fileID, err)
 			fmt.Println(errorstring)
@@ -111,7 +109,7 @@ func FileSemiCompleteGetFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 		}
 
 		file := CompleteFileSchema{
-			ID:           file_raw.ID.Bytes,
+			ID:           file_raw.ID,
 			Verified:     file_raw.Verified.Bool,
 			Extension:    file_raw.Extension.String,
 			Lang:         file_raw.Lang.String,
