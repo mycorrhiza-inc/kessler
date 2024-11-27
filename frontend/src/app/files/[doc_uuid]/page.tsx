@@ -1,6 +1,4 @@
 import DocumentPage from "@/components/Document/DocumentPage";
-import Navbar from "@/components/Navbar";
-import { BreadcrumbValues } from "@/components/SitemapUtils";
 import { createClient } from "@/utils/supabase/server";
 import { headers } from "next/headers";
 export default async function Page({
@@ -17,9 +15,5 @@ export default async function Page({
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  return (
-    <>
-      <DocumentPage objectId={slug} user={user} state={state} />
-    </>
-  );
+  return <DocumentPage objectId={slug} user={user} state={state} />;
 }
