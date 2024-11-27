@@ -1,14 +1,12 @@
 "use client";
-// Is this even a good idea/acceptable?
-import { createClient } from "@/utils/supabase/server";
 import { UserIcon } from "@/components/Icons";
 import { useEffect, useState } from "react";
-import Modal from "./styled-components/Modal";
-import SettingsContent from "./SettingsContent";
+import Modal from "@/components/styled-components/Modal";
+import SettingsContent from "@/components/SettingsContent";
 import { User } from "@supabase/supabase-js";
 import { useKesslerStore } from "@/lib/store";
 import Link from "next/link";
-import { BreadcrumbValues, HeaderBreadcrumbs } from "./SitemapUtils";
+import { BreadcrumbValues, HeaderBreadcrumbs } from "@/components/SitemapUtils";
 
 function HeaderAuth({ user }: { user: User | null }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
