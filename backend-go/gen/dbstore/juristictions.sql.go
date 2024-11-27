@@ -8,6 +8,7 @@ package dbstore
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -20,7 +21,7 @@ WHERE
     id = $1
 `
 
-func (q *Queries) JuristictionFileFetch(ctx context.Context, id pgtype.UUID) ([]JuristictionInformation, error) {
+func (q *Queries) JuristictionFileFetch(ctx context.Context, id uuid.UUID) ([]JuristictionInformation, error) {
 	rows, err := q.db.Query(ctx, juristictionFileFetch, id)
 	if err != nil {
 		return nil, err
@@ -70,7 +71,7 @@ RETURNING
 `
 
 type JuristictionFileInsertParams struct {
-	ID             pgtype.UUID
+	ID             uuid.UUID
 	Country        pgtype.Text
 	State          pgtype.Text
 	Municipality   pgtype.Text
@@ -79,7 +80,7 @@ type JuristictionFileInsertParams struct {
 	Extra          []byte
 }
 
-func (q *Queries) JuristictionFileInsert(ctx context.Context, arg JuristictionFileInsertParams) (pgtype.UUID, error) {
+func (q *Queries) JuristictionFileInsert(ctx context.Context, arg JuristictionFileInsertParams) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, juristictionFileInsert,
 		arg.ID,
 		arg.Country,
@@ -89,7 +90,7 @@ func (q *Queries) JuristictionFileInsert(ctx context.Context, arg JuristictionFi
 		arg.ProceedingName,
 		arg.Extra,
 	)
-	var id pgtype.UUID
+	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
 }
@@ -118,10 +119,10 @@ type JuristictionFileUpdateParams struct {
 	Agency         pgtype.Text
 	ProceedingName pgtype.Text
 	Extra          []byte
-	ID             pgtype.UUID
+	ID             uuid.UUID
 }
 
-func (q *Queries) JuristictionFileUpdate(ctx context.Context, arg JuristictionFileUpdateParams) (pgtype.UUID, error) {
+func (q *Queries) JuristictionFileUpdate(ctx context.Context, arg JuristictionFileUpdateParams) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, juristictionFileUpdate,
 		arg.Country,
 		arg.State,
@@ -131,7 +132,7 @@ func (q *Queries) JuristictionFileUpdate(ctx context.Context, arg JuristictionFi
 		arg.Extra,
 		arg.ID,
 	)
-	var id pgtype.UUID
+	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
 }

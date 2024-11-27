@@ -8,6 +8,7 @@ package dbstore
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -34,14 +35,14 @@ type CreateFileTextSourceParams struct {
 	Text           pgtype.Text
 }
 
-func (q *Queries) CreateFileTextSource(ctx context.Context, arg CreateFileTextSourceParams) (pgtype.UUID, error) {
+func (q *Queries) CreateFileTextSource(ctx context.Context, arg CreateFileTextSourceParams) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, createFileTextSource,
 		arg.FileID,
 		arg.IsOriginalText,
 		arg.Language,
 		arg.Text,
 	)
-	var id pgtype.UUID
+	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
 }

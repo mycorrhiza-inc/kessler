@@ -8,6 +8,7 @@ package dbstore
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -31,7 +32,7 @@ WHERE
 `
 
 type GetFileWithMetadataRow struct {
-	ID        pgtype.UUID
+	ID        uuid.UUID
 	Name      pgtype.Text
 	Extension pgtype.Text
 	Lang      pgtype.Text
@@ -43,7 +44,7 @@ type GetFileWithMetadataRow struct {
 	Mdata     []byte
 }
 
-func (q *Queries) GetFileWithMetadata(ctx context.Context, id pgtype.UUID) (GetFileWithMetadataRow, error) {
+func (q *Queries) GetFileWithMetadata(ctx context.Context, id uuid.UUID) (GetFileWithMetadataRow, error) {
 	row := q.db.QueryRow(ctx, getFileWithMetadata, id)
 	var i GetFileWithMetadataRow
 	err := row.Scan(
@@ -90,7 +91,7 @@ WHERE
 `
 
 type SemiCompleteFileGetRow struct {
-	ID               pgtype.UUID
+	ID               uuid.UUID
 	Name             pgtype.Text
 	Extension        pgtype.Text
 	Lang             pgtype.Text
@@ -107,7 +108,7 @@ type SemiCompleteFileGetRow struct {
 	IsPerson         pgtype.Bool
 }
 
-func (q *Queries) SemiCompleteFileGet(ctx context.Context, id pgtype.UUID) ([]SemiCompleteFileGetRow, error) {
+func (q *Queries) SemiCompleteFileGet(ctx context.Context, id uuid.UUID) ([]SemiCompleteFileGetRow, error) {
 	rows, err := q.db.Query(ctx, semiCompleteFileGet, id)
 	if err != nil {
 		return nil, err

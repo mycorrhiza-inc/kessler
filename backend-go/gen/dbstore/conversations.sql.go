@@ -8,7 +8,7 @@ package dbstore
 import (
 	"context"
 
-	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/google/uuid"
 )
 
 const docketConversationCreate = `-- name: DocketConversationCreate :one
@@ -30,9 +30,9 @@ type DocketConversationCreateParams struct {
 	State    string
 }
 
-func (q *Queries) DocketConversationCreate(ctx context.Context, arg DocketConversationCreateParams) (pgtype.UUID, error) {
+func (q *Queries) DocketConversationCreate(ctx context.Context, arg DocketConversationCreateParams) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, docketConversationCreate, arg.DocketID, arg.State)
-	var id pgtype.UUID
+	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
 }
@@ -44,7 +44,7 @@ WHERE
     id = $1
 `
 
-func (q *Queries) DocketConversationDelete(ctx context.Context, id pgtype.UUID) error {
+func (q *Queries) DocketConversationDelete(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.Exec(ctx, docketConversationDelete, id)
 	return err
 }
@@ -134,7 +134,7 @@ WHERE
     id = $1
 `
 
-func (q *Queries) DocketConversationRead(ctx context.Context, id pgtype.UUID) (DocketConversation, error) {
+func (q *Queries) DocketConversationRead(ctx context.Context, id uuid.UUID) (DocketConversation, error) {
 	row := q.db.QueryRow(ctx, docketConversationRead, id)
 	var i DocketConversation
 	err := row.Scan(
@@ -166,12 +166,12 @@ RETURNING
 type DocketConversationUpdateParams struct {
 	DocketID string
 	State    string
-	ID       pgtype.UUID
+	ID       uuid.UUID
 }
 
-func (q *Queries) DocketConversationUpdate(ctx context.Context, arg DocketConversationUpdateParams) (pgtype.UUID, error) {
+func (q *Queries) DocketConversationUpdate(ctx context.Context, arg DocketConversationUpdateParams) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, docketConversationUpdate, arg.DocketID, arg.State, arg.ID)
-	var id pgtype.UUID
+	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
 }
@@ -183,7 +183,7 @@ WHERE
     docket_id = $1
 `
 
-func (q *Queries) DocketDocumentDeleteAll(ctx context.Context, docketID pgtype.UUID) error {
+func (q *Queries) DocketDocumentDeleteAll(ctx context.Context, docketID uuid.UUID) error {
 	_, err := q.db.Exec(ctx, docketDocumentDeleteAll, docketID)
 	return err
 }
@@ -203,13 +203,13 @@ RETURNING
 `
 
 type DocketDocumentInsertParams struct {
-	DocketID pgtype.UUID
-	FileID   pgtype.UUID
+	DocketID uuid.UUID
+	FileID   uuid.UUID
 }
 
-func (q *Queries) DocketDocumentInsert(ctx context.Context, arg DocketDocumentInsertParams) (pgtype.UUID, error) {
+func (q *Queries) DocketDocumentInsert(ctx context.Context, arg DocketDocumentInsertParams) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, docketDocumentInsert, arg.DocketID, arg.FileID)
-	var docket_id pgtype.UUID
+	var docket_id uuid.UUID
 	err := row.Scan(&docket_id)
 	return docket_id, err
 }
@@ -227,13 +227,13 @@ RETURNING
 `
 
 type DocketDocumentUpdateParams struct {
-	DocketID pgtype.UUID
-	FileID   pgtype.UUID
+	DocketID uuid.UUID
+	FileID   uuid.UUID
 }
 
-func (q *Queries) DocketDocumentUpdate(ctx context.Context, arg DocketDocumentUpdateParams) (pgtype.UUID, error) {
+func (q *Queries) DocketDocumentUpdate(ctx context.Context, arg DocketDocumentUpdateParams) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, docketDocumentUpdate, arg.DocketID, arg.FileID)
-	var file_id pgtype.UUID
+	var file_id uuid.UUID
 	err := row.Scan(&file_id)
 	return file_id, err
 }
