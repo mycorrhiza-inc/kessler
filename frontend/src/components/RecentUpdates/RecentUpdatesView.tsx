@@ -3,7 +3,6 @@ import axios from "axios";
 import { useState, useEffect } from "react";
 import { Filing } from "../../lib/types/FilingTypes";
 import { FilingTable } from "../Conversations/FilingTable";
-import Navbar from "../Navbar";
 import { getFilingMetadata, getRecentFilings } from "@/lib/requests/search";
 
 import InfiniteScroll from "react-infinite-scroll-component";

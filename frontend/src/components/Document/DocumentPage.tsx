@@ -25,7 +25,12 @@ const DocumentPage = ({
   };
   return (
     <PageContainer user={user} breadcrumbs={breadcrumbs}>
-      <DocumentModalBody open={open} objectId={objectId} setTitle={setTitle} />
+      <DocumentModalBody
+        open={open}
+        objectId={objectId}
+        setTitle={setTitle}
+        isPage={true}
+      />
     </PageContainer>
   );
 };
