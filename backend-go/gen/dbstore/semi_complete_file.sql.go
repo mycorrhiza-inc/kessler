@@ -33,11 +33,11 @@ WHERE
 
 type GetFileWithMetadataRow struct {
 	ID        uuid.UUID
-	Name      pgtype.Text
-	Extension pgtype.Text
-	Lang      pgtype.Text
+	Name      string
+	Extension string
+	Lang      string
 	Verified  pgtype.Bool
-	Hash      pgtype.Text
+	Hash      string
 	Isprivate pgtype.Bool
 	CreatedAt pgtype.Timestamptz
 	UpdatedAt pgtype.Timestamptz
@@ -92,11 +92,11 @@ WHERE
 
 type SemiCompleteFileGetRow struct {
 	ID               uuid.UUID
-	Name             pgtype.Text
-	Extension        pgtype.Text
-	Lang             pgtype.Text
+	Name             string
+	Extension        string
+	Lang             string
 	Verified         pgtype.Bool
-	Hash             pgtype.Text
+	Hash             string
 	CreatedAt        pgtype.Timestamptz
 	UpdatedAt        pgtype.Timestamptz
 	Mdata            []byte
@@ -104,7 +104,7 @@ type SemiCompleteFileGetRow struct {
 	DocketUuid       uuid.UUID
 	IsPrimaryAuthor  pgtype.Bool
 	OrganizationID   uuid.UUID
-	OrganizationName pgtype.Text
+	OrganizationName string
 	IsPerson         pgtype.Bool
 }
 

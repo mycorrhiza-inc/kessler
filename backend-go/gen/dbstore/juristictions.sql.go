@@ -9,7 +9,6 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const juristictionFileFetch = `-- name: JuristictionFileFetch :many
@@ -72,11 +71,11 @@ RETURNING
 
 type JuristictionFileInsertParams struct {
 	ID             uuid.UUID
-	Country        pgtype.Text
-	State          pgtype.Text
-	Municipality   pgtype.Text
-	Agency         pgtype.Text
-	ProceedingName pgtype.Text
+	Country        string
+	State          string
+	Municipality   string
+	Agency         string
+	ProceedingName string
 	Extra          []byte
 }
 
@@ -113,11 +112,11 @@ RETURNING
 `
 
 type JuristictionFileUpdateParams struct {
-	Country        pgtype.Text
-	State          pgtype.Text
-	Municipality   pgtype.Text
-	Agency         pgtype.Text
-	ProceedingName pgtype.Text
+	Country        string
+	State          string
+	Municipality   string
+	Agency         string
+	ProceedingName string
 	Extra          []byte
 	ID             uuid.UUID
 }

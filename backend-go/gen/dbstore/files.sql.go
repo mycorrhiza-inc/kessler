@@ -42,11 +42,11 @@ RETURNING
 `
 
 type CreateFileParams struct {
-	Extension pgtype.Text
-	Lang      pgtype.Text
-	Name      pgtype.Text
+	Extension string
+	Lang      string
+	Name      string
 	Isprivate pgtype.Bool
-	Hash      pgtype.Text
+	Hash      string
 	Verified  pgtype.Bool
 }
 
@@ -246,7 +246,7 @@ WHERE
     public.file.hash = $1
 `
 
-func (q *Queries) HashGetFileID(ctx context.Context, hash pgtype.Text) ([]uuid.UUID, error) {
+func (q *Queries) HashGetFileID(ctx context.Context, hash string) ([]uuid.UUID, error) {
 	rows, err := q.db.Query(ctx, hashGetFileID, hash)
 	if err != nil {
 		return nil, err
@@ -432,11 +432,11 @@ WHERE
 `
 
 type UpdateFileParams struct {
-	Extension pgtype.Text
-	Lang      pgtype.Text
-	Name      pgtype.Text
+	Extension string
+	Lang      string
+	Name      string
 	Isprivate pgtype.Bool
-	Hash      pgtype.Text
+	Hash      string
 	Verified  pgtype.Bool
 	ID        uuid.UUID
 }

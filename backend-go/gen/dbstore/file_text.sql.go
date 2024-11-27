@@ -9,7 +9,6 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createFileTextSource = `-- name: CreateFileTextSource :one
@@ -32,7 +31,7 @@ type CreateFileTextSourceParams struct {
 	FileID         uuid.UUID
 	IsOriginalText bool
 	Language       string
-	Text           pgtype.Text
+	Text           string
 }
 
 func (q *Queries) CreateFileTextSource(ctx context.Context, arg CreateFileTextSourceParams) (uuid.UUID, error) {

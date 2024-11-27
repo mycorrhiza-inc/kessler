@@ -28,7 +28,7 @@ RETURNING
 
 type AliasOrganizationCreateParams struct {
 	OrganizationID    uuid.UUID
-	OrganizationAlias pgtype.Text
+	OrganizationAlias string
 }
 
 func (q *Queries) AliasOrganizationCreate(ctx context.Context, arg AliasOrganizationCreateParams) (uuid.UUID, error) {
@@ -54,7 +54,7 @@ RETURNING
 
 type AliasOrganizationDeleteParams struct {
 	OrganizationID    uuid.UUID
-	OrganizationAlias pgtype.Text
+	OrganizationAlias string
 }
 
 func (q *Queries) AliasOrganizationDelete(ctx context.Context, arg AliasOrganizationDeleteParams) (uuid.UUID, error) {
@@ -179,8 +179,8 @@ RETURNING
 `
 
 type CreateOrganizationParams struct {
-	OrganizationAlias pgtype.Text
-	Description       pgtype.Text
+	OrganizationAlias string
+	Description       string
 	IsPerson          pgtype.Bool
 }
 
@@ -235,7 +235,7 @@ WHERE
 
 type OrganizationAliasIdNameGetParams struct {
 	OrganizationID    uuid.UUID
-	OrganizationAlias pgtype.Text
+	OrganizationAlias string
 }
 
 type OrganizationAliasIdNameGetRow struct {
@@ -416,7 +416,7 @@ RETURNING
 
 type OrganizationUpdateParams struct {
 	Name        string
-	Description pgtype.Text
+	Description string
 	IsPerson    pgtype.Bool
 	ID          uuid.UUID
 }
@@ -453,7 +453,7 @@ type OrganizationgGetConversationsAuthoredInRow struct {
 	OrganizationID   uuid.UUID
 	OrganizationName string
 	DocumentID       uuid.UUID
-	DocketID         pgtype.Text
+	DocketID         string
 	ConversationUuid uuid.UUID
 }
 

@@ -63,8 +63,8 @@ type DocketConversation struct {
 	CreatedAt   pgtype.Timestamp
 	UpdatedAt   pgtype.Timestamp
 	DeletedAt   pgtype.Timestamp
-	Name        pgtype.Text
-	Description pgtype.Text
+	Name        string
+	Description string
 }
 
 type DocketDocument struct {
@@ -75,8 +75,8 @@ type DocketDocument struct {
 }
 
 type Encounter struct {
-	Name        pgtype.Text
-	Description pgtype.Text
+	Name        string
+	Description string
 	ID          uuid.UUID
 	CreatedAt   pgtype.Timestamptz
 	UpdatedAt   pgtype.Timestamptz
@@ -84,8 +84,8 @@ type Encounter struct {
 
 type Event struct {
 	Date        pgtype.Timestamptz
-	Name        pgtype.Text
-	Description pgtype.Text
+	Name        string
+	Description string
 	ID          uuid.UUID
 	CreatedAt   pgtype.Timestamptz
 	UpdatedAt   pgtype.Timestamptz
@@ -101,13 +101,13 @@ type Faction struct {
 
 type File struct {
 	ID        uuid.UUID
-	Lang      pgtype.Text
-	Name      pgtype.Text
-	Extension pgtype.Text
+	Lang      string
+	Name      string
+	Extension string
 	Isprivate pgtype.Bool
 	CreatedAt pgtype.Timestamptz
 	UpdatedAt pgtype.Timestamptz
-	Hash      pgtype.Text
+	Hash      string
 	Verified  pgtype.Bool
 }
 
@@ -131,7 +131,7 @@ type FileTextSource struct {
 	FileID         uuid.UUID
 	IsOriginalText bool
 	Language       string
-	Text           pgtype.Text
+	Text           string
 	ID             uuid.UUID
 	CreatedAt      pgtype.Timestamptz
 	UpdatedAt      pgtype.Timestamptz
@@ -139,11 +139,11 @@ type FileTextSource struct {
 
 type JuristictionInformation struct {
 	ID             uuid.UUID
-	Country        pgtype.Text
-	State          pgtype.Text
-	Municipality   pgtype.Text
-	Agency         pgtype.Text
-	ProceedingName pgtype.Text
+	Country        string
+	State          string
+	Municipality   string
+	Agency         string
+	ProceedingName string
 	Extra          []byte
 	CreatedAt      pgtype.Timestamptz
 	UpdatedAt      pgtype.Timestamptz
@@ -151,7 +151,7 @@ type JuristictionInformation struct {
 
 type Organization struct {
 	Name        string
-	Description pgtype.Text
+	Description string
 	ID          uuid.UUID
 	CreatedAt   pgtype.Timestamptz
 	UpdatedAt   pgtype.Timestamptz
@@ -159,7 +159,7 @@ type Organization struct {
 }
 
 type OrganizationAlias struct {
-	OrganizationAlias pgtype.Text
+	OrganizationAlias string
 	OrganizationID    uuid.UUID
 	ID                uuid.UUID
 	CreatedAt         pgtype.Timestamptz
@@ -250,14 +250,14 @@ type StageLog struct {
 
 type User struct {
 	ID        uuid.UUID
-	Username  pgtype.Text
-	StripeID  pgtype.Text
+	Username  string
+	StripeID  string
 	Email     string
 	CreatedAt pgtype.Timestamp
 }
 
 type UserfilesThaumaturgyApiKey struct {
-	KeyName       pgtype.Text
+	KeyName       string
 	KeyBlake3Hash string
 	ID            uuid.UUID
 	CreatedAt     pgtype.Timestamptz
