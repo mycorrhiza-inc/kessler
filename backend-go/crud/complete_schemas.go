@@ -47,7 +47,7 @@ type FileChildTextSource struct {
 
 func ChildTextSouceToRealTextSource(child_source FileChildTextSource, id uuid.UUID) FileTextSchema {
 	return FileTextSchema{
-		FileID:         pgtype.UUID{Bytes: id, Valid: true},
+		FileID:         id,
 		IsOriginalText: child_source.IsOriginalText,
 		Text:           child_source.Text,
 		Language:       child_source.Language,

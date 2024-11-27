@@ -14,8 +14,6 @@ func upsertFileTexts(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID,
 	// Sometimes this is getting called with an insert when the metadata already exists in the table, this causes a PGERROR, since it violates uniqueness. However, setting it up so it tries to update will fall back to insert if the file doesnt exist. Its probably a good idea to remove this and debug what is causing the new file thing at some point.
 	// I think I might have solved the error, it was only happenining in the other ones so its added here for an abundance of safety and only degrades perf slightly
 	insert = false
-	doc_pgUUID := pgtype.UUID{Bytes: doc_uuid, Valid: true}
-
 	if len(texts) == 0 {
 		return nil
 	}
@@ -31,7 +29,7 @@ func upsertFileTexts(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID,
 	error_list := []error{}
 	for _, text := range texts {
 		textRaw := FileTextSchema{
-			FileID:         doc_pgUUID,
+			FileID:         doc_uuid,
 			IsOriginalText: text.IsOriginalText,
 			Language:       text.Language,
 			Text:           text.Text,
@@ -52,7 +50,6 @@ func upsertFileMetadata(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UU
 	// Sometimes this is getting called with an insert when the metadata already exists in the table, this causes a PGERROR, since it violates uniqueness. However, setting it up so it tries to update will fall back to insert if the file doesnt exist. Its probably a good idea to remove this and debug what is causing the new file thing at some point.
 	// UPDATE: I am pretty sure I solved it this should be safe to take out soon - nic
 	insert = false
-	doc_pgUUID := pgtype.UUID{Bytes: doc_uuid, Valid: true}
 	metadata["id"] = doc_uuid.String()
 	// fmt.Printf("Is it the json marshall?\n")
 
@@ -67,7 +64,7 @@ func upsertFileMetadata(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UU
 
 	// fmt.Printf("Wasnt it, is it any of the db operations?\n")
 	if !insert {
-		args := dbstore.UpdateMetadataParams{ID: doc_pgUUID, Isprivate: pgPrivate, Mdata: json_obj}
+		args := dbstore.UpdateMetadataParams{ID: doc_uuid, Isprivate: pgPrivate, Mdata: json_obj}
 		// fmt.Printf("Defined args successfully\n")
 		_, err = q.UpdateMetadata(ctx, args)
 		// If encounter a not found error, break error handling control flow and inserting the file metadata.
@@ -79,7 +76,7 @@ func upsertFileMetadata(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UU
 		}
 	}
 	// fmt.Printf("Failed and trying to insert metadta instead")
-	insert_args := dbstore.InsertMetadataParams{ID: doc_pgUUID, Isprivate: pgPrivate, Mdata: json_obj}
+	insert_args := dbstore.InsertMetadataParams{ID: doc_uuid, Isprivate: pgPrivate, Mdata: json_obj}
 	_, err = q.InsertMetadata(ctx, insert_args)
 	// fmt.Printf("What the actual fuck is going on?")
 	return err
@@ -93,7 +90,6 @@ func juristictionFileUpsert(ctx context.Context, q dbstore.Queries, doc_uuid uui
 	if err != nil {
 		return err
 	}
-	doc_pgUUID := pgtype.UUID{Bytes: doc_uuid, Valid: true}
 	country := pgtype.Text{String: juristiction_info.Country}
 	state := pgtype.Text{String: juristiction_info.State}
 	municipality := pgtype.Text{String: juristiction_info.Municipality}
@@ -102,7 +98,7 @@ func juristictionFileUpsert(ctx context.Context, q dbstore.Queries, doc_uuid uui
 
 	if !insert {
 		update_args := dbstore.JuristictionFileUpdateParams{
-			ID:             doc_pgUUID,
+			ID:             doc_uuid,
 			Country:        country,
 			State:          state,
 			Municipality:   municipality,
@@ -121,7 +117,7 @@ func juristictionFileUpsert(ctx context.Context, q dbstore.Queries, doc_uuid uui
 		}
 	}
 	insert_args := dbstore.JuristictionFileInsertParams{
-		ID:             doc_pgUUID,
+		ID:             doc_uuid,
 		Country:        country,
 		State:          state,
 		Municipality:   municipality,
@@ -137,7 +133,6 @@ func upsertFileExtras(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID
 	// Sometimes this is getting called with an insert when the metadata already exists in the table, this causes a PGERROR, since it violates uniqueness. However, setting it up so it tries to update will fall back to insert if the file doesnt exist. Its probably a good idea to remove this and debug what is causing the new file thing at some point.
 	// UPDATE: I am pretty sure I solved it this should be safe to take out soon - nic
 	insert = false
-	doc_pgUUID := pgtype.UUID{Bytes: doc_uuid, Valid: true}
 	extras_json_obj, err := json.Marshal(extras)
 	if err != nil {
 		err = fmt.Errorf("error marshalling extras json object, to my understanding this should be absolutely impossible: %v", err)
@@ -149,7 +144,7 @@ func upsertFileExtras(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID
 		Valid: true,
 	}
 	if !insert {
-		args := dbstore.ExtrasFileUpdateParams{ID: doc_pgUUID, Isprivate: pgPrivate, ExtraObj: extras_json_obj}
+		args := dbstore.ExtrasFileUpdateParams{ID: doc_uuid, Isprivate: pgPrivate, ExtraObj: extras_json_obj}
 		_, err = q.ExtrasFileUpdate(ctx, args)
 		// If encounter a not found error, break error handling control flow and inserting object
 		if err == nil {
@@ -160,7 +155,7 @@ func upsertFileExtras(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID
 			return err
 		}
 	}
-	args := dbstore.ExtrasFileCreateParams{ID: doc_pgUUID, Isprivate: pgPrivate, ExtraObj: extras_json_obj}
+	args := dbstore.ExtrasFileCreateParams{ID: doc_uuid, Isprivate: pgPrivate, ExtraObj: extras_json_obj}
 	_, err = q.ExtrasFileCreate(
 		ctx, args)
 	return err
@@ -172,7 +167,7 @@ func fileStatusInsert(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID
 		return err
 	}
 	params := dbstore.StageLogAddParams{
-		FileID: pgtype.UUID{Bytes: doc_uuid, Valid: true},
+		FileID: doc_uuid,
 		Status: dbstore.NullStageState{StageState: dbstore.StageState(stage.PGStage)},
 		Log:    stage_json,
 	}
@@ -181,7 +176,7 @@ func fileStatusInsert(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID
 }
 
 func fileStatusGetLatestStage(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID) (DocProcStage, error) {
-	result_pgschema, err := q.StageLogFileGetLatest(ctx, pgtype.UUID{Bytes: doc_uuid, Valid: true})
+	result_pgschema, err := q.StageLogFileGetLatest(ctx, doc_uuid)
 	return_obj := DocProcStage{}
 	if err != nil {
 		return DocProcStage{}, err

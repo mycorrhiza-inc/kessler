@@ -121,11 +121,7 @@ func makeFileUpsertHandler(config FileUpsertHandlerConfig) func(w http.ResponseW
 				http.Error(w, errorstring, http.StatusInternalServerError)
 				return
 			}
-			pgUUID := pgtype.UUID{
-				Bytes: doc_uuid,
-				Valid: true,
-			}
-			fileSchema, err = UpdatePubPrivateFileObj(q, ctx, rawFileCreationData, private, pgUUID)
+			fileSchema, err = UpdatePubPrivateFileObj(q, ctx, rawFileCreationData, private, doc_uuid)
 		}
 		if err != nil {
 			errorstring := fmt.Sprintf("Error inserting/updating document: %v\n", err)

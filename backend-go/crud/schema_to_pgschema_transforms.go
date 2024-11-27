@@ -124,13 +124,13 @@ func InsertPubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreatio
 	}
 	resultID, err := q.CreateFile(ctx, params)
 	if err != nil {
-		return FileSchema{ID: resultID.Bytes}, err
+		return FileSchema{ID: resultID}, err
 	}
 	resultFile, err := q.ReadFile(ctx, resultID)
 	return PublicFileToSchema(resultFile), err
 }
 
-func UpdatePubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreation FileCreationDataRaw, private bool, pgUUID pgtype.UUID) (FileSchema, error) {
+func UpdatePubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreation FileCreationDataRaw, private bool, pgUUID uuid.UUID) (FileSchema, error) {
 	params := dbstore.UpdateFileParams{
 		Extension: fileCreation.Extension,
 		Lang:      fileCreation.Lang,
@@ -199,7 +199,7 @@ func HashGetUUIDsFile(q dbstore.Queries, ctx context.Context, hash string) ([]uu
 	}
 	var fileIDs []uuid.UUID
 	for _, file := range filePGUUIDs {
-		fileUUID := uuid.UUID(file.Bytes)
+		fileUUID := uuid.UUID(file)
 		fileIDs = append(fileIDs, fileUUID)
 	}
 	return fileIDs, nil
