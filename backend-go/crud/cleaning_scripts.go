@@ -4,10 +4,11 @@ import (
 	"context"
 	"strings"
 
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
 )
 
-func deduplicateAllOrganizationsInitial(ctx context.Context, q dbstore.Queries, author_info *AuthorInformation) error {
+func deduplicateOrganizationsOnNames(ctx context.Context, q dbstore.Queries, author_info *AuthorInformation) error {
 	all_orgs, err := q.OrganizationList(ctx)
 	if err != nil {
 		return err
@@ -37,6 +38,36 @@ func deduplicateAllOrganizationsInitial(ctx context.Context, q dbstore.Queries, 
 			}
 		} else {
 			orgMap[orgname] = org
+		}
+	}
+	return nil
+}
+
+func organizationsNameAsAlias(ctx context.Context, q dbstore.Queries) error {
+	all_orgs, err := q.OrganizationList(ctx)
+	if err != nil {
+		return err
+	}
+	for _, org := range all_orgs {
+		orgname := org.Name
+		orgNameTrimmed := strings.TrimSpace(orgname)
+		arg := dbstore.OrganizationAliasIdNameGetParams{OrganizationID: org.ID, OrganizationAlias: pgtype.Text{String: orgNameTrimmed, Valid: true}}
+		org_matched_aliases, err := q.OrganizationAliasIdNameGet(ctx, arg)
+		if err != nil {
+			return err
+		}
+		if len(org_matched_aliases) == 0 {
+			org_alias := dbstore.AliasOrganizationCreateParams{
+				OrganizationID: org.ID,
+				OrganizationAlias: pgtype.Text{
+					String: orgNameTrimmed,
+					Valid:  true,
+				},
+			}
+			_, err := q.AliasOrganizationCreate(ctx, org_alias)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil
