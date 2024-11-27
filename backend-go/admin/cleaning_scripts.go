@@ -77,7 +77,7 @@ func organizationsNameAsAlias(ctx context.Context, q dbstore.Queries) error {
 
 func completeCleanDatabaseFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
+		ctx := context.Background()
 		q := *dbstore.New(dbtx_val)
 		err := deduplicateOrganizationsOnNames(ctx, q)
 		if err != nil {
