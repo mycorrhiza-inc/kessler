@@ -1,14 +1,16 @@
-package crud
+package admin
 
 import (
 	"context"
+	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
 )
 
-func deduplicateOrganizationsOnNames(ctx context.Context, q dbstore.Queries, author_info *AuthorInformation) error {
+func deduplicateOrganizationsOnNames(ctx context.Context, q dbstore.Queries) error {
 	all_orgs, err := q.OrganizationList(ctx)
 	if err != nil {
 		return err
@@ -71,4 +73,25 @@ func organizationsNameAsAlias(ctx context.Context, q dbstore.Queries) error {
 		}
 	}
 	return nil
+}
+
+func completeCleanDatabaseFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		q := *dbstore.New(dbtx_val)
+		err := deduplicateOrganizationsOnNames(ctx, q)
+		if err != nil {
+			errorstring := fmt.Sprintf("Error deduping orgs: %v\n", err)
+			fmt.Println(errorstring)
+			http.Error(w, errorstring, http.StatusInternalServerError)
+			return
+		}
+		err = organizationsNameAsAlias(ctx, q)
+		if err != nil {
+			errorstring := fmt.Sprintf("Error ensuring organization aliases: %v\n", err)
+			fmt.Println(errorstring)
+			http.Error(w, errorstring, http.StatusInternalServerError)
+			return
+		}
+	}
 }
