@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"sync"
 
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
@@ -51,29 +52,58 @@ func organizationsNameAsAlias(ctx context.Context, q dbstore.Queries) error {
 	if err != nil {
 		return err
 	}
+
+	errChan := make(chan error, len(all_orgs))
+	var wg sync.WaitGroup
+
 	for _, org := range all_orgs {
-		orgname := org.Name
-		orgNameTrimmed := strings.TrimSpace(orgname)
-		fmt.Printf("Ensuring Aliases for org : %s\n", orgname)
-		arg := dbstore.OrganizationAliasIdNameGetParams{OrganizationID: org.ID, OrganizationAlias: pgtype.Text{String: orgNameTrimmed, Valid: true}}
-		org_matched_aliases, err := q.OrganizationAliasIdNameGet(ctx, arg)
+		wg.Add(1)
+		go func(org dbstore.Organization) {
+			defer wg.Done()
+
+			orgname := org.Name
+			orgNameTrimmed := strings.TrimSpace(orgname)
+			fmt.Printf("Ensuring Aliases for org : %s\n", orgname)
+
+			arg := dbstore.OrganizationAliasIdNameGetParams{
+				OrganizationID:    org.ID,
+				OrganizationAlias: pgtype.Text{String: orgNameTrimmed, Valid: true},
+			}
+
+			org_matched_aliases, err := q.OrganizationAliasIdNameGet(ctx, arg)
+			if err != nil {
+				errChan <- err
+				return
+			}
+
+			if len(org_matched_aliases) == 0 {
+				org_alias := dbstore.AliasOrganizationCreateParams{
+					OrganizationID: org.ID,
+					OrganizationAlias: pgtype.Text{
+						String: orgNameTrimmed,
+						Valid:  true,
+					},
+				}
+				_, err := q.AliasOrganizationCreate(ctx, org_alias)
+				if err != nil {
+					errChan <- err
+					return
+				}
+			}
+		}(org)
+	}
+
+	// Wait for all goroutines to complete
+	wg.Wait()
+	close(errChan)
+
+	// Check for any errors
+	for err := range errChan {
 		if err != nil {
 			return err
 		}
-		if len(org_matched_aliases) == 0 {
-			org_alias := dbstore.AliasOrganizationCreateParams{
-				OrganizationID: org.ID,
-				OrganizationAlias: pgtype.Text{
-					String: orgNameTrimmed,
-					Valid:  true,
-				},
-			}
-			_, err := q.AliasOrganizationCreate(ctx, org_alias)
-			if err != nil {
-				return err
-			}
-		}
 	}
+
 	return nil
 }
 
