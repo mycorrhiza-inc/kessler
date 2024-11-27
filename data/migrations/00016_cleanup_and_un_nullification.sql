@@ -1,11 +1,4 @@
 -- +goose Up
-DROP TABLE IF EXISTS public.juristiction_information;
-
-DROP TABLE IF EXISTS public.encounter;
-
-DROP TABLE IF EXISTS public.event;
-
-DROP TABLE IF EXISTS public.faction;
 
 DROP TABLE IF EXISTS public.relation_documents_factions;
 
@@ -18,6 +11,14 @@ DROP TABLE IF EXISTS public.relation_individuals_events;
 DROP TABLE IF EXISTS public.relation_organizations_events;
 
 DROP TABLE IF EXISTS public.relation_organizations_factions;
+
+DROP TABLE IF EXISTS public.juristiction_information;
+
+DROP TABLE IF EXISTS public.encounter;
+
+DROP TABLE IF EXISTS public.event;
+
+DROP TABLE IF EXISTS public.faction;
 
 UPDATE
     public.docket_conversations
@@ -293,3 +294,4 @@ SET
     NOT NULL;
 
 -- +goose Down
+-- FIXME : WRITE THIS SOMETIME IF WE EVER NEED TO REVERT THE DATABASE
