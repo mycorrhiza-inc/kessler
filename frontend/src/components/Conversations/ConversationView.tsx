@@ -16,7 +16,7 @@ export const ConversationView = ({
 }: {
   pageContext: PageContext;
 }) => {
-  const conversation_id = pageContext.final_identifier || "bobloblawslawblog";
+  const conversation_id = pageContext.final_identifier;
   const inheritedFilters: InheritedFilterValues = conversation_id
     ? [{ filter: FilterField.MatchDocketId, value: conversation_id }]
     : [];
@@ -31,22 +31,13 @@ export const ConversationView = ({
 
   return (
     <>
-      <div
-        className="conversationContainer contents-center"
-        style={{
-          position: "relative",
-          width: "99vw",
-          height: "90vh",
-          padding: "20px",
-          // overflow: "scroll",
-        }}
-      >
+      {conversation_id && (
         <NYConversationDescription docket_id={conversation_id} />
-        <ConversationComponent
-          inheritedFilters={inheritedFilters}
-          pageContext={pageContext}
-        />
-      </div>
+      )}
+      <ConversationComponent
+        inheritedFilters={inheritedFilters}
+        pageContext={pageContext}
+      />
     </>
   );
 };
