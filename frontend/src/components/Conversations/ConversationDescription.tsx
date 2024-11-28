@@ -21,14 +21,12 @@ const ConversationDescription = ({
 };
 
 const dummy: NYConversation = {
-  docket_id: "24-E-0138",
-  matter_type: "Petition",
-  matter_subtype:
-    "Certificate of Public Convenience and Necessity - Electric Generation",
-  title:
-    "Petition of Bear Ridge Solar, LLC, for a Certificate of Public Convenience\n      and Necessity, Pursuant to Public Service Law Section 68, and for an Order\n      Granting Lightened Regulation.",
-  organization: "Bear Ridge Solar, LLC",
-  date_filed: "03/04/2024",
+  docket_id: "Loading...",
+  matter_type: "Loading...",
+  matter_subtype: "Loading...",
+  title: "Loading...",
+  organization: "Loading...",
+  date_filed: "Loading...",
 };
 
 const getConversationData = async (url: string) => {
@@ -55,6 +53,10 @@ export const NYConversationDescription = ({
   const conversation = isLoading ? dummy : data;
   return (
     <div className="conversation-description">
+      <h1 className="text-2xl font-bold">
+        {conversation.title} <br />
+      </h1>
+
       <table className="table-auto">
         <tbody>
           <tr>
