@@ -176,7 +176,7 @@ func fileAuthorsUpsert(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUI
 }
 
 func verifyConversationUUID(ctx context.Context, q dbstore.Queries, conv_info *ConversationInformation, update bool) (ConversationInformation, error) {
-	fmt.Printf("Starting verifyConversationUUID with conv_info: %+v, update: %v\n", conv_info, update)
+	// fmt.Printf("Starting verifyConversationUUID with conv_info: %+v, update: %v\n", conv_info, update)
 
 	if conv_info.ID != uuid.Nil && !update {
 		fmt.Println("Existing UUID found and no update requested, returning early")
@@ -197,7 +197,7 @@ func verifyConversationUUID(ctx context.Context, q dbstore.Queries, conv_info *C
 		conv := results[0]
 		conv_info.ID = conv.ID
 		if update {
-			fmt.Println("Updating existing conversation with data %v", conv_info)
+			// fmt.Println("Updating existing conversation with data %v", conv_info)
 			args := dbstore.DocketConversationUpdateParams{
 				ID:          conv_info.ID,
 				DocketID:    conv_info.DocketID,
@@ -215,7 +215,7 @@ func verifyConversationUUID(ctx context.Context, q dbstore.Queries, conv_info *C
 		conv_info.State = conv.State
 		conv_info.Name = conv.Name
 		conv_info.Description = conv.Description
-		fmt.Println("Returning existing conversation without update")
+		// fmt.Println("Returning existing conversation without update")
 		return *conv_info, nil
 
 	}
