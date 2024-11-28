@@ -32,12 +32,14 @@ WHERE
 INSERT INTO
     public.docket_conversations (
         docket_id,
+        name,
+        description,
         state,
         created_at,
         updated_at
     )
 VALUES
-    ($1, $2, NOW(), NOW())
+    ($1, $2, $3, $4, NOW(), NOW())
 RETURNING
     id;
 
@@ -71,9 +73,11 @@ UPDATE
 SET
     docket_id = $1,
     state = $2,
+    name = $3,
+    description = $4,
     updated_at = NOW()
 WHERE
-    id = $3
+    id = $5
 RETURNING
     id;
 

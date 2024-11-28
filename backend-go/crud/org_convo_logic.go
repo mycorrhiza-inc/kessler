@@ -61,12 +61,10 @@ func OrganizationVerifyHandlerFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 	}
 }
 
-type ConversationRequest struct {
-	DocketID string `json:"docket_id"`
-}
-
 func ConversationVerifyHandlerFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// fmt.Println("Starting ConversationVerifyHandlerFactory handler")
+
 		bodyBytes, err := io.ReadAll(r.Body)
 		if err != nil {
 			errorstring := fmt.Sprintf("Error reading request body: %v\n", err)
@@ -74,7 +72,8 @@ func ConversationVerifyHandlerFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 			http.Error(w, errorstring, http.StatusBadRequest)
 			return
 		}
-		var req ConversationRequest
+
+		var req ConversationInformation
 		err = json.Unmarshal(bodyBytes, &req)
 		if err != nil {
 			errorstring := fmt.Sprintf("Error decoding JSON: %v\n", err)
@@ -82,17 +81,23 @@ func ConversationVerifyHandlerFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 			http.Error(w, errorstring, http.StatusBadRequest)
 			return
 		}
+		// fmt.Printf("Unmarshaled request: %+v\n", req)
 
 		ctx := r.Context()
+		// ctx := context.Background()
+
 		q := *dbstore.New(dbtx_val)
-		conversation_info := ConversationInformation{DocketID: req.DocketID}
-		conversation_info, err = verifyConversationUUID(ctx, q, &conversation_info)
+
+		// fmt.Printf("Calling verifyConversationUUID with req: %+v\n", req)
+		conversation_info, err := verifyConversationUUID(ctx, q, &req, true)
 		if err != nil {
 			errorstring := fmt.Sprintf("Error verifying conversation %v: %v\n", req.DocketID, err)
 			fmt.Println(errorstring)
 			http.Error(w, errorstring, http.StatusInternalServerError)
 			return
 		}
+		// fmt.Printf("verifyConversationUUID returned: %+v\n", conversation_info)
+
 		// No error handling since we always want it to retun a 200 at this point.
 		response, _ := json.Marshal(conversation_info)
 		w.Header().Set("Content-Type", "application/json")
@@ -170,8 +175,11 @@ func fileAuthorsUpsert(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUI
 	return nil
 }
 
-func verifyConversationUUID(ctx context.Context, q dbstore.Queries, conv_info *ConversationInformation) (ConversationInformation, error) {
-	if conv_info.ID != uuid.Nil {
+func verifyConversationUUID(ctx context.Context, q dbstore.Queries, conv_info *ConversationInformation, update bool) (ConversationInformation, error) {
+	// fmt.Printf("Starting verifyConversationUUID with conv_info: %+v, update: %v\n", conv_info, update)
+
+	if conv_info.ID != uuid.Nil && !update {
+		fmt.Println("Existing UUID found and no update requested, returning early")
 		return *conv_info, nil
 	}
 
@@ -179,21 +187,45 @@ func verifyConversationUUID(ctx context.Context, q dbstore.Queries, conv_info *C
 	// TODO: Change query to also match state if state exists
 	results, err := q.DocketConversationFetchByDocketIdMatch(ctx, conv_info.DocketID)
 	if err != nil {
+		fmt.Printf("Error fetching conversation by docket ID: %v\n", err)
 		return *conv_info, err
 	}
 
 	// If conversation exists, return it
 	if len(results) > 0 {
+		fmt.Printf("Found existing conversation with %d results\n", len(results))
 		conv := results[0]
 		conv_info.ID = conv.ID
+		if update {
+			// fmt.Println("Updating existing conversation with data %v", conv_info)
+			args := dbstore.DocketConversationUpdateParams{
+				ID:          conv_info.ID,
+				DocketID:    conv_info.DocketID,
+				State:       conv_info.State,
+				Name:        conv_info.Name,
+				Description: conv_info.Description,
+			}
+			q.DocketConversationUpdate(ctx, args)
+			if err != nil {
+				fmt.Printf("Error updating conversation: %v\n", err)
+				return *conv_info, err
+			}
+			return *conv_info, nil
+		}
 		conv_info.State = conv.State
+		conv_info.Name = conv.Name
+		conv_info.Description = conv.Description
+		// fmt.Println("Returning existing conversation without update")
 		return *conv_info, nil
+
 	}
 
 	// Create new conversation if none exists
 	create_params := dbstore.DocketConversationCreateParams{
-		DocketID: conv_info.DocketID,
-		State:    conv_info.State,
+		DocketID:    conv_info.DocketID,
+		State:       conv_info.State,
+		Name:        conv_info.Name,
+		Description: conv_info.Description,
 	}
 
 	conv_id, err := q.DocketConversationCreate(ctx, create_params)
@@ -212,7 +244,7 @@ func fileConversationUpsert(ctx context.Context, q dbstore.Queries, file_id uuid
 	if shouldnt_process {
 		return nil
 	}
-	new_conv_info, err := verifyConversationUUID(ctx, q, &conv_info)
+	new_conv_info, err := verifyConversationUUID(ctx, q, &conv_info, false)
 	if err != nil {
 		return err
 	}

@@ -1,4 +1,3 @@
-
 DROP TABLE IF EXISTS public.relation_documents_factions;
 
 DROP TABLE IF EXISTS public.relation_factions_encounters;

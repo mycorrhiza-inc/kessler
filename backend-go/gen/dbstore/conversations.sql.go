@@ -15,23 +15,32 @@ const docketConversationCreate = `-- name: DocketConversationCreate :one
 INSERT INTO
     public.docket_conversations (
         docket_id,
+        name,
+        description,
         state,
         created_at,
         updated_at
     )
 VALUES
-    ($1, $2, NOW(), NOW())
+    ($1, $2,$3,$4, NOW(), NOW())
 RETURNING
     id
 `
 
 type DocketConversationCreateParams struct {
-	DocketID string
-	State    string
+	DocketID    string
+	Name        string
+	Description string
+	State       string
 }
 
 func (q *Queries) DocketConversationCreate(ctx context.Context, arg DocketConversationCreateParams) (uuid.UUID, error) {
-	row := q.db.QueryRow(ctx, docketConversationCreate, arg.DocketID, arg.State)
+	row := q.db.QueryRow(ctx, docketConversationCreate,
+		arg.DocketID,
+		arg.Name,
+		arg.Description,
+		arg.State,
+	)
 	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
@@ -156,21 +165,31 @@ UPDATE
 SET
     docket_id = $1,
     state = $2,
+    name = $3,
+    description = $4,
     updated_at = NOW()
 WHERE
-    id = $3
+    id = $5
 RETURNING
     id
 `
 
 type DocketConversationUpdateParams struct {
-	DocketID string
-	State    string
-	ID       uuid.UUID
+	DocketID    string
+	State       string
+	Name        string
+	Description string
+	ID          uuid.UUID
 }
 
 func (q *Queries) DocketConversationUpdate(ctx context.Context, arg DocketConversationUpdateParams) (uuid.UUID, error) {
-	row := q.db.QueryRow(ctx, docketConversationUpdate, arg.DocketID, arg.State, arg.ID)
+	row := q.db.QueryRow(ctx, docketConversationUpdate,
+		arg.DocketID,
+		arg.State,
+		arg.Name,
+		arg.Description,
+		arg.ID,
+	)
 	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
