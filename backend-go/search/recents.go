@@ -25,6 +25,10 @@ func GetRecentCaseData(page int) ([]SearchData, error) {
 		return nil, err
 	}
 	log.Printf("data: \n%v", data)
+	if data == nil {
+		empty := []SearchData{}
+		return empty, nil
+	}
 	return data, nil
 }
 
