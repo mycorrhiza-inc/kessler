@@ -2,6 +2,7 @@ package crud
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -62,6 +63,36 @@ func GetOrgWithFilesFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 		}
 
 		response, _ := json.Marshal(complete_org_info)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(response)
+	}
+}
+
+func ConversationGetByNameFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("Getting file with metadata")
+		q := *dbstore.New(dbtx_val)
+		params := mux.Vars(r)
+		docketIdStr := params["name"]
+		ctx := r.Context()
+		conv_infos, err := q.DocketConversationFetchByDocketIdMatch(ctx, docketIdStr)
+		if err != nil {
+			log.Printf("Error reading organization: %v", err)
+			if err.Error() == "no rows in result set" {
+				http.Error(w, err.Error(), http.StatusNotFound)
+				return
+			}
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if len(conv_infos) == 0 {
+			errorstr := fmt.Sprintf("No proceeding with name %s", docketIdStr)
+			http.Error(w, errorstr, http.StatusNotFound)
+			fmt.Println(errorstr)
+			return
+		}
+		conv_info := conv_infos[0]
+		response, _ := json.Marshal(conv_info)
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(response)
 	}

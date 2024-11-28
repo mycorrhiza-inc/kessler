@@ -138,7 +138,7 @@ func ReadFileHandlerFactory(config FileHandlerConfig) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		q := *dbstore.New(dbtx_val)
-		token := r.Header.Get("Authorization")
+		// token := r.Header.Get("Authorization")
 		params := mux.Vars(r)
 		fileID := params["uuid"]
 		parsedUUID, err := uuid.Parse(fileID)
@@ -147,16 +147,16 @@ func ReadFileHandlerFactory(config FileHandlerConfig) http.HandlerFunc {
 			return
 		}
 		ctx := r.Context()
-		if private {
-
-			isAuthorized, err := checkPrivateFileAuthorization(q, ctx, parsedUUID, token)
-			if !isAuthorized {
-				http.Error(w, "Forbidden", http.StatusForbidden)
-			}
-			if err != nil {
-				fmt.Printf("Ran into the follwing error with authentication $v", err)
-			}
-		}
+		// if private {
+		//
+		// 	isAuthorized, err := checkPrivateFileAuthorization(q, ctx, parsedUUID, token)
+		// 	if !isAuthorized {
+		// 		http.Error(w, "Forbidden", http.StatusForbidden)
+		// 	}
+		// 	if err != nil {
+		// 		fmt.Printf("Ran into the follwing error with authentication $v", err)
+		// 	}
+		// }
 		// Since all three of these methods share the same authentication and database connection prerecs
 		// switching functionality using an if else, or a cases switch lets code get reused
 		// TODO: This is horrible, I need to refactor
