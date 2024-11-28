@@ -63,7 +63,7 @@ func OrganizationVerifyHandlerFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 
 func ConversationVerifyHandlerFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("Starting ConversationVerifyHandlerFactory handler")
+		// fmt.Println("Starting ConversationVerifyHandlerFactory handler")
 
 		bodyBytes, err := io.ReadAll(r.Body)
 		if err != nil {
@@ -72,7 +72,6 @@ func ConversationVerifyHandlerFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 			http.Error(w, errorstring, http.StatusBadRequest)
 			return
 		}
-		fmt.Printf("Read request body: %s\n", string(bodyBytes))
 
 		var req ConversationInformation
 		err = json.Unmarshal(bodyBytes, &req)
@@ -82,16 +81,14 @@ func ConversationVerifyHandlerFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 			http.Error(w, errorstring, http.StatusBadRequest)
 			return
 		}
-		fmt.Printf("Unmarshaled request: %+v\n", req)
+		// fmt.Printf("Unmarshaled request: %+v\n", req)
 
-		// ctx := r.Context()
-		ctx := context.Background()
-		fmt.Println("Created background context")
+		ctx := r.Context()
+		// ctx := context.Background()
 
 		q := *dbstore.New(dbtx_val)
-		fmt.Println("Created new database query object")
 
-		fmt.Printf("Calling verifyConversationUUID with req: %+v\n", req)
+		// fmt.Printf("Calling verifyConversationUUID with req: %+v\n", req)
 		conversation_info, err := verifyConversationUUID(ctx, q, &req, true)
 		if err != nil {
 			errorstring := fmt.Sprintf("Error verifying conversation %v: %v\n", req.DocketID, err)
@@ -99,15 +96,12 @@ func ConversationVerifyHandlerFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 			http.Error(w, errorstring, http.StatusInternalServerError)
 			return
 		}
-		fmt.Printf("verifyConversationUUID returned: %+v\n", conversation_info)
+		// fmt.Printf("verifyConversationUUID returned: %+v\n", conversation_info)
 
 		// No error handling since we always want it to retun a 200 at this point.
 		response, _ := json.Marshal(conversation_info)
-		fmt.Printf("Marshaled response: %s\n", string(response))
-
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(response)
-		fmt.Println("Successfully wrote response")
 	}
 }
 
@@ -182,7 +176,10 @@ func fileAuthorsUpsert(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUI
 }
 
 func verifyConversationUUID(ctx context.Context, q dbstore.Queries, conv_info *ConversationInformation, update bool) (ConversationInformation, error) {
+	fmt.Printf("Starting verifyConversationUUID with conv_info: %+v, update: %v\n", conv_info, update)
+
 	if conv_info.ID != uuid.Nil && !update {
+		fmt.Println("Existing UUID found and no update requested, returning early")
 		return *conv_info, nil
 	}
 
@@ -190,23 +187,27 @@ func verifyConversationUUID(ctx context.Context, q dbstore.Queries, conv_info *C
 	// TODO: Change query to also match state if state exists
 	results, err := q.DocketConversationFetchByDocketIdMatch(ctx, conv_info.DocketID)
 	if err != nil {
+		fmt.Printf("Error fetching conversation by docket ID: %v\n", err)
 		return *conv_info, err
 	}
 
 	// If conversation exists, return it
 	if len(results) > 0 {
+		fmt.Printf("Found existing conversation with %d results\n", len(results))
 		conv := results[0]
 		conv_info.ID = conv.ID
 		if update {
+			fmt.Println("Updating existing conversation with data %v", conv_info)
 			args := dbstore.DocketConversationUpdateParams{
-				ID:          conv.ID,
-				DocketID:    conv.DocketID,
-				State:       conv.State,
-				Name:        conv.Name,
-				Description: conv.Description,
+				ID:          conv_info.ID,
+				DocketID:    conv_info.DocketID,
+				State:       conv_info.State,
+				Name:        conv_info.Name,
+				Description: conv_info.Description,
 			}
 			q.DocketConversationUpdate(ctx, args)
 			if err != nil {
+				fmt.Printf("Error updating conversation: %v\n", err)
 				return *conv_info, err
 			}
 			return *conv_info, nil
@@ -214,6 +215,7 @@ func verifyConversationUUID(ctx context.Context, q dbstore.Queries, conv_info *C
 		conv_info.State = conv.State
 		conv_info.Name = conv.Name
 		conv_info.Description = conv.Description
+		fmt.Println("Returning existing conversation without update")
 		return *conv_info, nil
 
 	}

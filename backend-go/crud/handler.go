@@ -192,7 +192,7 @@ func generateRandomString(n int) string {
 	return string(b)
 }
 
-func rivateUploadFactory(dbtx_val dbstore.DBTX) func(w http.ResponseWriter, r *http.Request) {
+func privateUploadFactory(dbtx_val dbstore.DBTX) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		file, _, err := r.FormFile("file")
 		fileName := r.FormValue("file_name")
