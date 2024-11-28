@@ -39,6 +39,7 @@ export const getSearchResults = async (
         if (response.data?.length === 0 || typeof response.data === "string") {
           return [];
         }
+        console.log('response data:::::', response.data)
         const filings_promise: Promise<Filing[]> = ParseFilingData(
           response.data,
         );
@@ -156,6 +157,8 @@ export const ParseFilingDataSingular = async (
 };
 
 export const ParseFilingData = async (filingData: any): Promise<Filing[]> => {
+  const out : Filing[] = [];
+  if (filingData === null) { return out };
   const filings_promises: Promise<Filing | null>[] = filingData.map(
     ParseFilingDataSingular,
   );

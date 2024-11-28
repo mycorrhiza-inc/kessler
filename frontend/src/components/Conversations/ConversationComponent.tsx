@@ -5,7 +5,6 @@ import React, {
   useState,
   useMemo,
   useEffect,
-  Suspense,
 } from "react";
 import { BasicDocumentFiltersList } from "@/components/DocumentFilters";
 import {
@@ -17,33 +16,13 @@ import {
   QueryDataFile,
 } from "@/lib/filters";
 import { Filing } from "@/lib/types/FilingTypes";
-import { AnimatePresence, motion } from "framer-motion";
-import axios from "axios";
 import { FilingTable } from "./FilingTable";
 import { getSearchResults, getFilingMetadata } from "@/lib/requests/search";
-import FilingTableQuery from "./FilingTableQuery";
-import { ConversationHeader } from "../NavigationHeader";
 import { PageContext } from "@/lib/page_context";
 import InfiniteScroll from "react-infinite-scroll-component";
-import LoadingSpinner from "@/components/styled-components/LoadingSpinner";
-import { set } from "date-fns";
 import LoadingSpinnerTimeout from "../styled-components/LoadingSpinnerTimeout";
 
-const testFiling: Filing = {
-  id: "0",
-  url: "https://documents.dps.ny.gov/public/Common/ViewDoc.aspx?DocRefId={7F4AA7FC-CF71-4C2B-8752-A1681D8F9F46}",
-  date: "05/12/2022",
-  lang: "en",
-  title: "Press Release - PSC Announces CLCPA Tracking Initiative",
-  author: "Public Service Commission",
-  source: "Public Service Commission",
-  authors_information: [],
-  extension: "pdf",
-  file_class: "Press Releases",
-  item_number: "3",
-  author_organisation: "Public Service Commission",
-  // uuid?: "3c4ba5f3-febc-41f2-aa86-2820db2b459a",
-};
+import ConversationDescription from "./ConversationDescription";
 
 const TableFilters = ({
   searchQuery,
@@ -175,12 +154,6 @@ const ConversationComponent = ({
       const newFilings: Filing[] = notnull_newFilings as Filing[];
 
       setFilings((previous: Filing[]): Filing[] => {
-        // const existingIds = new Set(previous.map((f: Filing) => f.id));
-        // const uniqueNewFilings = newFilings.filter(
-        //   (f: Filing) => !existingIds.has(f.id),
-        // );
-        // console.log(" uniques: ", uniqueNewFilings);
-        // console.log("all data: ", [...previous, ...uniqueNewFilings]);
         return [...previous, ...newFilings];
       });
     };
@@ -254,51 +227,3 @@ const ConversationComponent = ({
 };
 
 export default ConversationComponent;
-
-// ----------
-// OLD ANIMATED FILTER VIEW
-// ----------
-// <div className="w-full h-full p-10 card relative box-border border-4 border-black flex flex-row overflow-hidden">
-//   <AnimatePresence mode="sync">
-//     {isFocused && (
-//       <motion.div
-//         className="flex-none"
-//         style={{ padding: "10px" }}
-//         initial={{ width: 0, opacity: 0 }}
-//         animate={{ width: "500px", opacity: 1 }}
-//         exit={{ width: 0, opacity: 0 }}
-//       >
-//         <TableFilters
-//           searchFilters={searchFilters}
-//           setSearchFilters={setSearchFilters}
-//           disabledFilters={disabledFilters}
-//           toggleFilters={toggleFilters}
-//         />
-//       </motion.div>
-//     )}
-//     <motion.div
-//       className="flex-grow p-10"
-//       layout
-//       transition={{ duration: 0.3, ease: "easeInOut" }}
-//     >
-//       <div
-//         id="conversation-header"
-//         className="flex justify-between items-center mb-4"
-//       >
-//         <h1 className="text-2xl font-bold">Conversation</h1>
-//         <button
-//           onClick={toggleFilters}
-//           className="btn btn-outline"
-//           style={{
-//             display: !isFocused ? "inline-block" : "none",
-//           }}
-//         >
-//           Filters
-//         </button>
-//       </div>
-//       <div className="w-full h-full">
-//         <FilingTableQuery queryData={queryData} scroll={true} />
-//       </div>
-//     </motion.div>
-//   </AnimatePresence>
-// </div>

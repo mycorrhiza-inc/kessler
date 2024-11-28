@@ -106,7 +106,6 @@ type SearchData struct {
 
 func (s SearchData) String() string {
 	// Marshal the struct to JSON format
-	fmt.Println("searchdata: ")
 	jsonData, err := json.MarshalIndent(s, "", "  ")
 	if err != nil {
 		fmt.Println("Error marshalling JSON:", err)
