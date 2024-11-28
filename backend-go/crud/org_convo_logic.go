@@ -61,12 +61,10 @@ func OrganizationVerifyHandlerFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 	}
 }
 
-type ConversationRequest struct {
-	DocketID string `json:"docket_id"`
-}
-
 func ConversationVerifyHandlerFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("Starting ConversationVerifyHandlerFactory handler")
+
 		bodyBytes, err := io.ReadAll(r.Body)
 		if err != nil {
 			errorstring := fmt.Sprintf("Error reading request body: %v\n", err)
@@ -74,7 +72,9 @@ func ConversationVerifyHandlerFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 			http.Error(w, errorstring, http.StatusBadRequest)
 			return
 		}
-		var req ConversationRequest
+		fmt.Printf("Read request body: %s\n", string(bodyBytes))
+
+		var req ConversationInformation
 		err = json.Unmarshal(bodyBytes, &req)
 		if err != nil {
 			errorstring := fmt.Sprintf("Error decoding JSON: %v\n", err)
@@ -82,21 +82,32 @@ func ConversationVerifyHandlerFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 			http.Error(w, errorstring, http.StatusBadRequest)
 			return
 		}
+		fmt.Printf("Unmarshaled request: %+v\n", req)
 
-		ctx := r.Context()
+		// ctx := r.Context()
+		ctx := context.Background()
+		fmt.Println("Created background context")
+
 		q := *dbstore.New(dbtx_val)
-		conversation_info := ConversationInformation{DocketID: req.DocketID}
-		conversation_info, err = verifyConversationUUID(ctx, q, &conversation_info, true)
+		fmt.Println("Created new database query object")
+
+		fmt.Printf("Calling verifyConversationUUID with req: %+v\n", req)
+		conversation_info, err := verifyConversationUUID(ctx, q, &req, true)
 		if err != nil {
 			errorstring := fmt.Sprintf("Error verifying conversation %v: %v\n", req.DocketID, err)
 			fmt.Println(errorstring)
 			http.Error(w, errorstring, http.StatusInternalServerError)
 			return
 		}
+		fmt.Printf("verifyConversationUUID returned: %+v\n", conversation_info)
+
 		// No error handling since we always want it to retun a 200 at this point.
 		response, _ := json.Marshal(conversation_info)
+		fmt.Printf("Marshaled response: %s\n", string(response))
+
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(response)
+		fmt.Println("Successfully wrote response")
 	}
 }
 
