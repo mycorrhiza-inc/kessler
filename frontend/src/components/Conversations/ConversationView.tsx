@@ -16,7 +16,7 @@ export const ConversationView = ({
 }: {
   pageContext: PageContext;
 }) => {
-  const conversation_id = pageContext.final_identifier;
+  const conversation_id = pageContext.final_identifier || "bobloblawslawblog";
   const inheritedFilters: InheritedFilterValues = conversation_id
     ? [{ filter: FilterField.MatchDocketId, value: conversation_id }]
     : [];
@@ -41,7 +41,7 @@ export const ConversationView = ({
           // overflow: "scroll",
         }}
       >
-        <NYConversationDescription />
+        <NYConversationDescription docket_id={conversation_id} />
         <ConversationComponent
           inheritedFilters={inheritedFilters}
           pageContext={pageContext}
