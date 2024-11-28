@@ -31,22 +31,13 @@ export const ConversationView = ({
 
   return (
     <>
-      <div
-        className="conversationContainer contents-center"
-        style={{
-          position: "relative",
-          width: "99vw",
-          height: "90vh",
-          padding: "20px",
-          // overflow: "scroll",
-        }}
-      >
-        <NYConversationDescription />
-        <ConversationComponent
-          inheritedFilters={inheritedFilters}
-          pageContext={pageContext}
-        />
-      </div>
+      {conversation_id && (
+        <NYConversationDescription docket_id={conversation_id} />
+      )}
+      <ConversationComponent
+        inheritedFilters={inheritedFilters}
+        pageContext={pageContext}
+      />
     </>
   );
 };

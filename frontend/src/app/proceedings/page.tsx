@@ -28,7 +28,9 @@ export default async function Page({
   return (
     <PageContainer user={user} breadcrumbs={breadcrumbs}>
       <h1 className="text-3xl font-bold">Proceedings</h1>
-      <ConversationTable />
+      <div className="max-h-[600px] overflow-x-hidden border-r pr-4">
+        <ConversationTable />
+      </div>
       <h2 className="text-2xl font-bold">All Documents</h2>
       <ConversationView pageContext={pageContext} />
     </PageContainer>
