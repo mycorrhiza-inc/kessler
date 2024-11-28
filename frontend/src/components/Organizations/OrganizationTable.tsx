@@ -16,6 +16,7 @@ const organizationsListGet = (url: string) => {
     if (return_data.length == 0 || return_data == undefined) {
       return [];
     }
+    return return_data;
     const valid_data = return_data.map(
       (item): OrganizationSchemaComplete =>
         OrganizationSchemaCompleteValidator.parse(return_data),
