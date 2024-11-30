@@ -221,7 +221,7 @@ type ReturnFilesSchema struct {
 }
 
 func GetListAllRawFiles(ctx context.Context, q dbstore.Queries) ([]FileSchema, error) {
-	files, err := q.ListFiles(ctx)
+	files, err := q.FilesList(ctx)
 	if err != nil {
 		return []FileSchema{}, err
 	}

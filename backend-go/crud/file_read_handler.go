@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"os"
 	"sync"
@@ -182,17 +183,27 @@ func CompleteFileSchemaGetFromUUID(ctx context.Context, q dbstore.Queries, uuid 
 	return file, nil
 }
 
-func UnverifedFileSchemaList(ctx context.Context, q dbstore.Queries, max_responses uint) ([]CompleteFileSchema, error) {
-	files, err := q.ListFiles(ctx)
+func UnverifedCompleteFileSchemaList(ctx context.Context, q dbstore.Queries, max_responses uint) ([]CompleteFileSchema, error) {
+	files, err := q.FilesListUnverified(ctx)
 	if err != nil {
 		return []CompleteFileSchema{}, err
 	}
-	unverified_raw_uuids := []uuid.UUID{}
-	for _, file := range files {
-		if !file.Verified.Bool {
-			unverified_raw_uuids = append(unverified_raw_uuids, file.ID)
-		}
+	unverified_raw_uuids := make([]uuid.UUID, len(files))
+	for i, file := range files {
+		unverified_raw_uuids[i] = file.ID
 	}
+	// Shuffle the uuids around to get a random selection while processing
+	for i := range unverified_raw_uuids {
+		j := rand.Intn(i + 1) // Want to get a range of [0,i] so that there is a possibility of the null swap.
+		// Inductive proof this distributes the elements randomly at step k:
+		// The element at index k is evenly distributed, since it has a 1/k chance of being the element at k, and a k-1/k chance of selecting from an even distribution of k-1 elements, thus meaning it has an even distribution of 1/k probability of selecting k elements.
+		// Same thing for other elements, it has a k-1/k chance of sampling from its EXISTING even distribution of k-1 elements, and a 1/k chance of swapping with the k'th element. Thus it has a even 1/k chance of being selected from every element.
+		unverified_raw_uuids[i], unverified_raw_uuids[j] = unverified_raw_uuids[j], unverified_raw_uuids[i]
+	}
+	if len(unverified_raw_uuids) > int(max_responses) {
+		unverified_raw_uuids = unverified_raw_uuids[:max_responses]
+	}
+
 	complete_files := []CompleteFileSchema{}
 	fileChan := make(chan CompleteFileSchema)
 	errChan := make(chan error)
@@ -200,16 +211,16 @@ func UnverifedFileSchemaList(ctx context.Context, q dbstore.Queries, max_respons
 
 	for _, uuid := range unverified_raw_uuids {
 		wg.Add(1)
-		go func(file_uuid uuid.UUID) {
+		go func() {
 			defer wg.Done()
 			complete_file, err := CompleteFileSchemaGetFromUUID(ctx, q, uuid)
 			if err != nil {
 				fmt.Printf("Error getting file %v: %v\n", uuid, err)
-				errChan <- err
+				// errChan <- err
 				return
 			}
 			fileChan <- complete_file
-		}(uuid)
+		}()
 	}
 
 	// Close channels when all goroutines complete
@@ -223,7 +234,6 @@ func UnverifedFileSchemaList(ctx context.Context, q dbstore.Queries, max_respons
 	for file := range fileChan {
 		complete_files = append(complete_files, file)
 	}
-
 	return complete_files, nil
 }
 

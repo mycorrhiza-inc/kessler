@@ -21,7 +21,7 @@ func TestPostgresConnection() (string, error) {
 	}
 	defer conn.Close(ctx)
 	queries := dbstore.New(conn)
-	files, err := queries.ListFiles(ctx)
+	files, err := queries.FilesList(ctx)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error listing files: %v\n", err)
 		return "", fmt.Errorf("Error Found")
