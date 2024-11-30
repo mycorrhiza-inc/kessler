@@ -1,10 +1,13 @@
 package crud
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
+	"sync"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -70,65 +73,158 @@ func FileSemiCompleteGetFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 			return
 		}
 		ctx := r.Context()
-		files_raw, err := q.SemiCompleteFileGet(ctx, parsedUUID)
+		file, err := SemiCompleteFileGetFromUUID(ctx, q, parsedUUID)
 		if err != nil {
-			errorstring := fmt.Sprintf("Error Retriving file %v: %v\n", fileID, err)
-			fmt.Println(errorstring)
-			http.Error(w, errorstring, http.StatusNotFound)
+			fmt.Println(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		if len(files_raw) == 0 {
-			errorstring := fmt.Sprintf("Error No Files Found for a list of length zero.\n")
-			fmt.Println(errorstring)
-			http.Error(w, errorstring, http.StatusNotFound)
-			return
-		}
-		file_raw := files_raw[0]
-		var mdata_obj map[string]interface{}
-		err = json.Unmarshal(file_raw.Mdata, &mdata_obj)
-		if err != nil {
-			errorstring := fmt.Sprintf("Error Unmarshalling file metadata %v: %v\n", fileID, err)
-			fmt.Println(errorstring)
-			http.Error(w, errorstring, http.StatusInternalServerError)
-			return
-		}
-		var extra_obj FileGeneratedExtras
-		err = json.Unmarshal(file_raw.ExtraObj, &extra_obj)
-		if err != nil {
-			errorstring := fmt.Sprintf("Error Unmarshalling file extras %v: %v\n", fileID, err)
-			fmt.Println(errorstring)
-			http.Error(w, errorstring, http.StatusInternalServerError)
-			return
-		}
-		// Missing info here, it doesnt have the name.
-		conv_info := ConversationInformation{ID: file_raw.DocketUuid}
-		author_info := make([]AuthorInformation, len(files_raw))
-		for i, author_file_raw := range files_raw {
-			author_info[i] = AuthorInformation{
-				AuthorName:      author_file_raw.OrganizationName.String,
-				IsPerson:        author_file_raw.IsPerson.Bool,
-				IsPrimaryAuthor: author_file_raw.IsPrimaryAuthor.Bool,
-				AuthorID:        author_file_raw.OrganizationID,
-			}
-		}
-
-		file := CompleteFileSchema{
-			ID:           file_raw.ID,
-			Verified:     file_raw.Verified.Bool,
-			Extension:    file_raw.Extension,
-			Lang:         file_raw.Lang,
-			Name:         file_raw.Name,
-			Hash:         file_raw.Hash,
-			Mdata:        mdata_obj,
-			Extra:        extra_obj,
-			Conversation: conv_info,
-			Authors:      author_info,
-		}
-
 		response, _ := json.Marshal(file)
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(response)
 	}
+}
+
+func SemiCompleteFileGetFromUUID(ctx context.Context, q dbstore.Queries, uuid uuid.UUID) (CompleteFileSchema, error) {
+	files_raw, err := q.SemiCompleteFileGet(ctx, uuid)
+	if err != nil {
+		errorstring := fmt.Sprintf("Error Retriving file %v: %v\n", uuid, err)
+		return CompleteFileSchema{}, errors.New(errorstring)
+	}
+	if len(files_raw) == 0 {
+		errorstring := fmt.Sprintf("Error No Files Found for a list of length zero.\n")
+		return CompleteFileSchema{}, errors.New(errorstring)
+	}
+	file_raw := files_raw[0]
+	var mdata_obj map[string]interface{}
+	err = json.Unmarshal(file_raw.Mdata, &mdata_obj)
+	if err != nil {
+		errorstring := fmt.Sprintf("Error Unmarshalling file metadata %v: %v\n", uuid, err)
+		return CompleteFileSchema{}, errors.New(errorstring)
+	}
+	var extra_obj FileGeneratedExtras
+	err = json.Unmarshal(file_raw.ExtraObj, &extra_obj)
+	if err != nil {
+		errorstring := fmt.Sprintf("Error Unmarshalling file extras %v: %v\n", uuid, err)
+		return CompleteFileSchema{}, errors.New(errorstring)
+	}
+	// Missing info here, it doesnt have the name.
+	conv_info := ConversationInformation{ID: file_raw.DocketUuid}
+	author_info := make([]AuthorInformation, len(files_raw))
+	for i, author_file_raw := range files_raw {
+		author_info[i] = AuthorInformation{
+			AuthorName:      author_file_raw.OrganizationName.String,
+			IsPerson:        author_file_raw.IsPerson.Bool,
+			IsPrimaryAuthor: author_file_raw.IsPrimaryAuthor.Bool,
+			AuthorID:        author_file_raw.OrganizationID,
+		}
+	}
+
+	file := CompleteFileSchema{
+		ID:           file_raw.ID,
+		Verified:     file_raw.Verified.Bool,
+		Extension:    file_raw.Extension,
+		Lang:         file_raw.Lang,
+		Name:         file_raw.Name,
+		Hash:         file_raw.Hash,
+		Mdata:        mdata_obj,
+		Extra:        extra_obj,
+		Conversation: conv_info,
+		Authors:      author_info,
+	}
+	return file, nil
+}
+
+func FileTextsGetAll(ctx context.Context, q dbstore.Queries, uuid uuid.UUID) ([]FileChildTextSource, error) {
+	texts, err := q.ListTextsOfFile(ctx, uuid)
+	if err != nil {
+		return make([]FileChildTextSource, 0), err
+	}
+	return_texts := make([]FileChildTextSource, len(texts))
+	for i, text := range texts {
+		return_texts[i] = FileChildTextSource{
+			IsOriginalText: text.IsOriginalText,
+			Text:           text.Text,
+			Language:       text.Language,
+		}
+	}
+	return return_texts, nil
+}
+
+func FileStageGet(ctx context.Context, q dbstore.Queries, uuid uuid.UUID) (DocProcStage, error) {
+	stage_str, err := q.StageLogFileGetLatest(ctx, uuid)
+	if err != nil {
+		return DocProcStage{}, err
+	}
+	stage := DocProcStage{}
+	err = json.Unmarshal(stage_str.Log, &stage)
+	if err != nil {
+		return stage, err
+	}
+	return stage, nil
+}
+
+func CompleteFileSchemaGetFromUUID(ctx context.Context, q dbstore.Queries, uuid uuid.UUID) (CompleteFileSchema, error) {
+	file, err := SemiCompleteFileGetFromUUID(ctx, q, uuid)
+	if err != nil {
+		return CompleteFileSchema{}, err
+	}
+	texts, err := FileTextsGetAll(ctx, q, uuid)
+	if err != nil {
+		return CompleteFileSchema{}, err
+	}
+	file.DocTexts = texts
+	stage, err := FileStageGet(ctx, q, uuid)
+	if err != nil {
+		return CompleteFileSchema{}, err
+	}
+	file.Stage = stage
+	return file, nil
+}
+
+func UnverifedFileSchemaList(ctx context.Context, q dbstore.Queries, max_responses uint) ([]CompleteFileSchema, error) {
+	files, err := q.ListFiles(ctx)
+	if err != nil {
+		return []CompleteFileSchema{}, err
+	}
+	unverified_raw_uuids := []uuid.UUID{}
+	for _, file := range files {
+		if !file.Verified.Bool {
+			unverified_raw_uuids = append(unverified_raw_uuids, file.ID)
+		}
+	}
+	complete_files := []CompleteFileSchema{}
+	fileChan := make(chan CompleteFileSchema)
+	errChan := make(chan error)
+	var wg sync.WaitGroup
+
+	for _, uuid := range unverified_raw_uuids {
+		wg.Add(1)
+		go func(file_uuid uuid.UUID) {
+			defer wg.Done()
+			complete_file, err := CompleteFileSchemaGetFromUUID(ctx, q, uuid)
+			if err != nil {
+				fmt.Printf("Error getting file %v: %v\n", uuid, err)
+				errChan <- err
+				return
+			}
+			fileChan <- complete_file
+		}(uuid)
+	}
+
+	// Close channels when all goroutines complete
+	go func() {
+		wg.Wait()
+		close(fileChan)
+		close(errChan)
+	}()
+
+	// Collect results
+	for file := range fileChan {
+		complete_files = append(complete_files, file)
+	}
+
+	return complete_files, nil
 }
 
 func ReadFileHandlerFactory(config FileHandlerConfig) http.HandlerFunc {
