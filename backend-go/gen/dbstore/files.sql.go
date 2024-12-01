@@ -257,10 +257,14 @@ FROM
     public.file
 WHERE
     verified = false
+ORDER BY
+    RANDOM()
+LIMIT
+    $1
 `
 
-func (q *Queries) FilesListUnverified(ctx context.Context) ([]File, error) {
-	rows, err := q.db.Query(ctx, filesListUnverified)
+func (q *Queries) FilesListUnverified(ctx context.Context, limit int32) ([]File, error) {
+	rows, err := q.db.Query(ctx, filesListUnverified, limit)
 	if err != nil {
 		return nil, err
 	}
