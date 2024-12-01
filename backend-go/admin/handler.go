@@ -12,4 +12,7 @@ func DefineAdminRoutes(router *mux.Router, dbtx_val dbstore.DBTX) {
 	admin_subrouter.HandleFunc(
 		"/complete-clean",
 		completeCleanDatabaseFactory(dbtx_val)).Methods(http.MethodPost)
+	admin_subrouter.HandleFunc(
+		"/get-document-processes/{max_responses}",
+		UnverifedCompleteFileSchemaListFactory(dbtx_val)).Methods(http.MethodGet)
 }

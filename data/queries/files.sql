@@ -64,13 +64,21 @@ FROM
 WHERE
     id = $1;
 
--- name: ListFiles :many
+-- name: FilesList :many
 SELECT
     *
 FROM
     public.file
 ORDER BY
     updated_at DESC;
+
+-- name: FilesListUnverified :many
+SELECT
+    *
+FROM
+    public.file
+WHERE
+    verified = false;
 
 -- name: DeleteFile :exec
 DELETE FROM

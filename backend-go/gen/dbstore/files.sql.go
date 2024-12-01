@@ -211,6 +211,84 @@ func (q *Queries) FileVerifiedUpdate(ctx context.Context, arg FileVerifiedUpdate
 	return id, err
 }
 
+const filesList = `-- name: FilesList :many
+SELECT
+    id, lang, name, extension, isprivate, created_at, updated_at, hash, verified
+FROM
+    public.file
+ORDER BY
+    updated_at DESC
+`
+
+func (q *Queries) FilesList(ctx context.Context) ([]File, error) {
+	rows, err := q.db.Query(ctx, filesList)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []File
+	for rows.Next() {
+		var i File
+		if err := rows.Scan(
+			&i.ID,
+			&i.Lang,
+			&i.Name,
+			&i.Extension,
+			&i.Isprivate,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Hash,
+			&i.Verified,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const filesListUnverified = `-- name: FilesListUnverified :many
+SELECT
+    id, lang, name, extension, isprivate, created_at, updated_at, hash, verified
+FROM
+    public.file
+WHERE
+    verified = false
+`
+
+func (q *Queries) FilesListUnverified(ctx context.Context) ([]File, error) {
+	rows, err := q.db.Query(ctx, filesListUnverified)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []File
+	for rows.Next() {
+		var i File
+		if err := rows.Scan(
+			&i.ID,
+			&i.Lang,
+			&i.Name,
+			&i.Extension,
+			&i.Isprivate,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Hash,
+			&i.Verified,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getFile = `-- name: GetFile :one
 SELECT
     id, lang, name, extension, isprivate, created_at, updated_at, hash, verified
@@ -292,45 +370,6 @@ func (q *Queries) InsertMetadata(ctx context.Context, arg InsertMetadataParams) 
 	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
-}
-
-const listFiles = `-- name: ListFiles :many
-SELECT
-    id, lang, name, extension, isprivate, created_at, updated_at, hash, verified
-FROM
-    public.file
-ORDER BY
-    updated_at DESC
-`
-
-func (q *Queries) ListFiles(ctx context.Context) ([]File, error) {
-	rows, err := q.db.Query(ctx, listFiles)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []File
-	for rows.Next() {
-		var i File
-		if err := rows.Scan(
-			&i.ID,
-			&i.Lang,
-			&i.Name,
-			&i.Extension,
-			&i.Isprivate,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.Hash,
-			&i.Verified,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
 }
 
 const readFile = `-- name: ReadFile :one
