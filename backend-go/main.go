@@ -114,7 +114,7 @@ func main() {
 
 	// Create two separate routers for different timeout requirements
 	adminMux := mux.NewRouter()
-	adminRouter := adminMux.PathPrefix("/v2/admin").Subrouter()
+	adminRouter := adminMux.PathPrefix("/v2/admin/").Subrouter()
 	admin.DefineAdminRoutes(adminRouter, connPool)
 	adminMux.PathPrefix("/v2/admin/").Handler(adminRouter)
 	adminMux.PathPrefix("/v2/crud/").Handler(adminRouter)
