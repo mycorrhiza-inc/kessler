@@ -78,7 +78,11 @@ SELECT
 FROM
     public.file
 WHERE
-    verified = false;
+    verified = false
+ORDER BY
+    RANDOM()
+LIMIT
+    $1;
 
 -- name: DeleteFile :exec
 DELETE FROM
