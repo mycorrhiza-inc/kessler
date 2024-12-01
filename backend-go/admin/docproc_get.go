@@ -44,7 +44,8 @@ func UnverifedCompleteFileSchemaListFactory(dbtx_val dbstore.DBTX) http.HandlerF
 
 func UnverifedCompleteFileSchemaList(ctx context.Context, q dbstore.Queries, max_responses uint) ([]crud.CompleteFileSchema, error) {
 	fmt.Printf("Getting %d unverified files\n", max_responses)
-	files, err := q.FilesListUnverified(ctx)
+	files, err := q.FilesListUnverified(ctx, int32(max_responses)*2)
+	// If postgres return randomization doesnt work, then you can still get it to kinda work by returning double the results, randomizing and throwing away half.
 	if err != nil {
 		return []crud.CompleteFileSchema{}, err
 	}
@@ -58,7 +59,7 @@ func UnverifedCompleteFileSchemaList(ctx context.Context, q dbstore.Queries, max
 		j := rand.Intn(i + 1) // Want to get a range of [0,i] so that there is a possibility of the null swap.
 		// Inductive proof this distributes the elements randomly at step k:
 		// The element at index k is evenly distributed, since it has a 1/k chance of being the element at k, and a k-1/k chance of selecting from an even distribution of k-1 elements, thus meaning it has an even distribution of 1/k probability of selecting k elements.
-		// Same thing for other elements, it has a k-1/k chance of sampling from its EXISTING even distribution of k-1 elements, and a 1/k chance of swapping with the k'th element. Thus it has a even 1/k chance of being selected from every element.
+		// Same thing for other elements, it has a k-1/k chance of sampling from its EXISTING even distribution of k-1 elements, and a 1/k chance of swapping with the k'th element. Thus it has a even 1/k chance of being any of k elements.
 		unverified_raw_uuids[i], unverified_raw_uuids[j] = unverified_raw_uuids[j], unverified_raw_uuids[i]
 	}
 	if len(unverified_raw_uuids) > int(max_responses) {
