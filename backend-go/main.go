@@ -107,15 +107,20 @@ func main() {
 	defer connPool.Close()
 
 	mux := mux.NewRouter()
-	crud.DefineCrudRoutes(mux, connPool)
-	admin.DefineAdminRoutes(mux, connPool)
+	adminRouter := mux.PathPrefix("/v2/admin").Subrouter()
+	admin.DefineAdminRoutes(adminRouter, connPool)
+	public_subrouter := mux.PathPrefix("/v2/public").Subrouter()
+	crud.DefineCrudRoutes(public_subrouter, connPool)
 	// static.HandleStaticGenerationRouting(mux, connPool)
 	mux.HandleFunc("/v2/search", search.HandleSearchRequest)
 	mux.HandleFunc("/v2/rag/basic_chat", rag.HandleBasicChatRequest)
 	mux.HandleFunc("/v2/rag/chat", rag.HandleRagChatRequest)
 	mux.HandleFunc("/v2/recent_updates", search.HandleRecentUpdatesRequest)
 	const timeout = time.Second * 10
+	const adminTimeout = time.Minute * 10
 
+	adminWithTimeout := http.TimeoutHandler(adminRouter, adminTimeout, "Timeout!")
+	mux.PathPrefix("/v2/crud").Handler(adminWithTimeout)
 	muxWithMiddlewares := http.TimeoutHandler(mux, timeout, "Timeout!")
 	// authMiddleware := makeAuthMiddleware(connPool)
 	// handler := corsMiddleware(authMiddleware(muxWithMiddlewares))

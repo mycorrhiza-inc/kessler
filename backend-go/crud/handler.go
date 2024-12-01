@@ -15,9 +15,7 @@ import (
 	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
 )
 
-func DefineCrudRoutes(router *mux.Router, dbtx_val dbstore.DBTX) {
-	public_subrouter := router.PathPrefix("/v2/public").Subrouter()
-
+func DefineCrudRoutes(public_subrouter *mux.Router, dbtx_val dbstore.DBTX) {
 	public_subrouter.HandleFunc(
 		"/files/insert",
 		makeFileUpsertHandler(

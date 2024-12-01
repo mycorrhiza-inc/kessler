@@ -19,6 +19,8 @@ func UnverifedCompleteFileSchemaListFactory(dbtx_val dbstore.DBTX) http.HandlerF
 	return func(w http.ResponseWriter, r *http.Request) {
 		q := *dbstore.New(dbtx_val)
 		params := mux.Vars(r)
+		ctx := r.Context()
+		// ctx := context.Background()
 		max_responses_str := params["max_responses"]
 		max_responses, err := strconv.Atoi(max_responses_str)
 		if err != nil || max_responses < 0 {
@@ -27,7 +29,7 @@ func UnverifedCompleteFileSchemaListFactory(dbtx_val dbstore.DBTX) http.HandlerF
 			http.Error(w, errorstring, http.StatusBadRequest)
 			return
 		}
-		files, err := UnverifedCompleteFileSchemaList(r.Context(), q, uint(max_responses))
+		files, err := UnverifedCompleteFileSchemaList(ctx, q, uint(max_responses))
 		if err != nil {
 			errorstring := fmt.Sprintf("Error getting unverified files: %v", err)
 			fmt.Println(errorstring)
@@ -41,10 +43,12 @@ func UnverifedCompleteFileSchemaListFactory(dbtx_val dbstore.DBTX) http.HandlerF
 }
 
 func UnverifedCompleteFileSchemaList(ctx context.Context, q dbstore.Queries, max_responses uint) ([]crud.CompleteFileSchema, error) {
+	fmt.Printf("Getting %d unverified files\n", max_responses)
 	files, err := q.FilesListUnverified(ctx)
 	if err != nil {
 		return []crud.CompleteFileSchema{}, err
 	}
+	fmt.Printf("Got unverified files, randomizing uuids\n")
 	unverified_raw_uuids := make([]uuid.UUID, len(files))
 	for i, file := range files {
 		unverified_raw_uuids[i] = file.ID
@@ -60,6 +64,7 @@ func UnverifedCompleteFileSchemaList(ctx context.Context, q dbstore.Queries, max
 	if len(unverified_raw_uuids) > int(max_responses) {
 		unverified_raw_uuids = unverified_raw_uuids[:max_responses]
 	}
+	fmt.Printf("Trimmed unverified uuids to %d, getting complete files for all remaining\n", len(unverified_raw_uuids))
 
 	complete_files := []crud.CompleteFileSchema{}
 	fileChan := make(chan crud.CompleteFileSchema)
@@ -71,6 +76,7 @@ func UnverifedCompleteFileSchemaList(ctx context.Context, q dbstore.Queries, max
 		go func() {
 			defer wg.Done()
 			complete_file, err := crud.CompleteFileSchemaGetFromUUID(ctx, q, uuid)
+			fmt.Printf("Got complete file %v\n", uuid)
 			if err != nil {
 				fmt.Printf("Error getting file %v: %v\n", uuid, err)
 				// errChan <- err
