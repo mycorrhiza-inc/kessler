@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -106,31 +107,47 @@ func main() {
 
 	defer connPool.Close()
 
-	mux := mux.NewRouter()
-	adminRouter := mux.PathPrefix("/v2/admin").Subrouter()
-	admin.DefineAdminRoutes(adminRouter, connPool)
-	public_subrouter := mux.PathPrefix("/v2/public").Subrouter()
-	crud.DefineCrudRoutes(public_subrouter, connPool)
+	// mux_route := mux.NewRouter()
 	// static.HandleStaticGenerationRouting(mux, connPool)
-	mux.HandleFunc("/v2/search", search.HandleSearchRequest)
-	mux.HandleFunc("/v2/rag/basic_chat", rag.HandleBasicChatRequest)
-	mux.HandleFunc("/v2/rag/chat", rag.HandleRagChatRequest)
-	mux.HandleFunc("/v2/recent_updates", search.HandleRecentUpdatesRequest)
 	const timeout = time.Second * 10
 	const adminTimeout = time.Minute * 10
 
-	adminWithTimeout := http.TimeoutHandler(adminRouter, adminTimeout, "Timeout!")
-	mux.PathPrefix("/v2/crud").Handler(adminWithTimeout)
-	muxWithMiddlewares := http.TimeoutHandler(mux, timeout, "Timeout!")
-	// authMiddleware := makeAuthMiddleware(connPool)
-	// handler := corsMiddleware(authMiddleware(muxWithMiddlewares))
-	handler := corsMiddleware(muxWithMiddlewares)
+	// Create two separate routers for different timeout requirements
+	adminMux := mux.NewRouter()
+	adminRouter := adminMux.PathPrefix("/v2/admin").Subrouter()
+	admin.DefineAdminRoutes(adminRouter, connPool)
+	adminMux.PathPrefix("/v2/admin/").Handler(adminRouter)
+	adminMux.PathPrefix("/v2/crud/").Handler(adminRouter)
+	adminWithTimeout := http.TimeoutHandler(adminMux, adminTimeout, "Admin Timeout!")
+
+	// Regular routes with standard timeout
+	regularMux := mux.NewRouter()
+	public_subrouter := regularMux.PathPrefix("/v2/public").Subrouter()
+	crud.DefineCrudRoutes(public_subrouter, connPool)
+	regularMux.PathPrefix("/v2/public/").Handler(public_subrouter)
+	regularMux.HandleFunc("/v2/search", search.HandleSearchRequest)
+	regularMux.HandleFunc("/v2/rag/basic_chat", rag.HandleBasicChatRequest)
+	regularMux.HandleFunc("/v2/rag/chat", rag.HandleRagChatRequest)
+	regularMux.HandleFunc("/v2/recent_updates", search.HandleRecentUpdatesRequest)
+	regularWithTimeout := http.TimeoutHandler(regularMux, timeout, "Timeout!")
+
+	// Combine both routers
+	finalHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasPrefix(r.URL.Path, "/v2/admin/") {
+			adminWithTimeout.ServeHTTP(w, r)
+		} else {
+			regularWithTimeout.ServeHTTP(w, r)
+		}
+	})
+
+	handler := corsMiddleware(finalHandler)
 
 	server := &http.Server{
-		Addr:         ":4041",
-		Handler:      handler,
-		ReadTimeout:  timeout,
-		WriteTimeout: timeout,
+		Addr:    ":4041",
+		Handler: handler,
+		// Set longer timeouts at server level to allow for admin operations
+		ReadTimeout:  adminTimeout,
+		WriteTimeout: adminTimeout,
 	}
 
 	log.Println("Starting server on :4041")
