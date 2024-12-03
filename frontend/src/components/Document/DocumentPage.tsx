@@ -24,7 +24,7 @@ const DocumentPage = ({
     ],
   };
   return (
-    <PageContainer user={user} breadcrumbs={breadcrumbs}>
+    <PageContainer breadcrumbs={breadcrumbs}>
       <DocumentModalBody
         open={open}
         objectId={objectId}

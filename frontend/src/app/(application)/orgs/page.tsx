@@ -30,7 +30,7 @@ export default async function Page({
   } = await supabase.auth.getUser();
   return (
     <>
-      <PageContainer user={user} breadcrumbs={breadcrumbs}>
+      <PageContainer breadcrumbs={breadcrumbs}>
         <OrganizationTable />
       </PageContainer>
     </>

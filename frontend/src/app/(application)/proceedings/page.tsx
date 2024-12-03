@@ -26,7 +26,7 @@ export default async function Page({
     data: { user },
   } = await supabase.auth.getUser();
   return (
-    <PageContainer user={user} breadcrumbs={breadcrumbs}>
+    <PageContainer breadcrumbs={breadcrumbs}>
       <h1 className="text-3xl font-bold">Proceedings</h1>
       <div className="max-h-[600px] overflow-x-hidden border-r pr-4">
         <ConversationTable />

@@ -84,7 +84,7 @@ export default function RecentUpdatesView() {
   }, []);
 
   return (
-    <PageContainer user={null} breadcrumbs={{ breadcrumbs: [] }}>
+    <PageContainer breadcrumbs={{ breadcrumbs: [] }}>
       <div className="grid grid-cols-2 w-full">
         <div className="max-h-[600px] overflow-x-hidden border-r pr-4">
           <Link

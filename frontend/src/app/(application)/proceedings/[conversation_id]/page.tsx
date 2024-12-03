@@ -31,7 +31,7 @@ export default async function Page({
     data: { user },
   } = await supabase.auth.getUser();
   return (
-    <PageContainer user={user} breadcrumbs={breadcrumbs}>
+    <PageContainer breadcrumbs={breadcrumbs}>
       <ConversationView pageContext={pageContext} />
     </PageContainer>
   );
