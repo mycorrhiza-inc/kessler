@@ -1,5 +1,9 @@
 import Landing from "@/components/landing/Landing";
 
 export default async function Page() {
-  return <Landing />;
+  return (
+    <div className="h-full w-full">
+      <Landing />
+    </div>
+  );
 }
