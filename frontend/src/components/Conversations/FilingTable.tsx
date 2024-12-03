@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import Modal from "../styled-components/Modal";
-import DocumentModalBody from "../Document/DocumentModalBody";
 import { Filing } from "../../lib/types/FilingTypes";
 import { AuthorInformation } from "@/lib/types/backend_schemas";
 import { AuthorInfoPill, TextPill } from "./TextPills";
+import DocumentModal from "../Document/DocumentModal";
 
 const NoclickSpan = ({ children }: { children: React.ReactNode }) => {
   return <span className="noclick">{children}</span>;
@@ -88,14 +88,7 @@ const TableRow = ({
 
         <td>{filing.item_number}</td>
       </tr>
-      <Modal open={open} setOpen={setOpen}>
-        <DocumentModalBody
-          open={open}
-          title={filing.title}
-          objectId={filing.id}
-          isPage={false}
-        />
-      </Modal>
+      <DocumentModal open={open} setOpen={setOpen} objectId={filing.id} />
     </>
   );
 };

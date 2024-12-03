@@ -3,8 +3,7 @@ import { User } from "@supabase/supabase-js";
 import PageContainer from "../Page/PageContainer";
 import { completeFileSchemaGet } from "@/lib/requests/search";
 import { prodAPIURL } from "@/lib/env_variables";
-import { CompleteFileSchema } from "@/lib/types/backend_schemas";
-import { DocumentMainTabs } from "./DocumentModalBody";
+import { DocumentMainTabs } from "./DocumentBody";
 
 const DocumentPage = async ({
   objectId,
