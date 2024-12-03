@@ -1,3 +1,4 @@
+"use client";
 import { apiURL } from "@/lib/env_variables";
 import { completeFileSchemaGet } from "@/lib/requests/search";
 import useSWRImmutable from "swr";
@@ -6,6 +7,8 @@ import { DocumentMainTabs } from "./DocumentBody";
 import { CompleteFileSchema } from "@/lib/types/backend_schemas";
 import Modal from "../styled-components/Modal";
 
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
 type ModalProps = {
   objectId: string;
   children?: React.ReactNode;
@@ -38,13 +41,17 @@ const DocumentModal = ({
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
-  const wrappedSetOpen = (target_value: boolean) => {
-    if (target_value) {
-      // set the value to true
-    } else {
-      // Set the value to not true.
-    }
-  };
+  const [previousOpenState, setPreviousOpenState] = useState(open);
+  // useEffect(() => {
+  //   if (previousOpenState != open) {
+  //     if (open) {
+  //       nextJSRouter.push(`/file/${objectId}`);
+  //     } else {
+  //       nextJSRouter.back();
+  //     }
+  //   }
+  //   setPreviousOpenState(open);
+  // }, [open]);
   return (
     <Modal open={open} setOpen={setOpen}>
       <DocumentModalBody objectId={objectId} isPage={false} />
