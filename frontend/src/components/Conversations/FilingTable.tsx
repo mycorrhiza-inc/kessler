@@ -3,7 +3,7 @@ import Modal from "../styled-components/Modal";
 import { Filing } from "../../lib/types/FilingTypes";
 import { AuthorInformation } from "@/lib/types/backend_schemas";
 import { AuthorInfoPill, TextPill } from "./TextPills";
-import DocumentModal from "../Document/DocumentModal";
+import DocumentModal from "@/app/_misc/DocumentModal";
 
 const NoclickSpan = ({ children }: { children: React.ReactNode }) => {
   return <span className="noclick">{children}</span>;

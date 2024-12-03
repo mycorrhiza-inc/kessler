@@ -2,11 +2,11 @@
 import { apiURL } from "@/lib/env_variables";
 import { completeFileSchemaGet } from "@/lib/requests/search";
 import useSWRImmutable from "swr";
-import LoadingSpinner from "../styled-components/LoadingSpinner";
-import { DocumentMainTabs } from "./DocumentBody";
+import LoadingSpinner from "@/components/styled-components/LoadingSpinner";
+import { DocumentMainTabs } from "@/components/Document/DocumentBody";
 import { CompleteFileSchema } from "@/lib/types/backend_schemas";
-import Modal from "../styled-components/Modal";
 
+import Modal from "@/components/styled-components/Modal";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 type ModalProps = {
@@ -41,17 +41,18 @@ const DocumentModal = ({
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
+  const nextJSRouter = useRouter();
   const [previousOpenState, setPreviousOpenState] = useState(open);
-  // useEffect(() => {
-  //   if (previousOpenState != open) {
-  //     if (open) {
-  //       nextJSRouter.push(`/file/${objectId}`);
-  //     } else {
-  //       nextJSRouter.back();
-  //     }
-  //   }
-  //   setPreviousOpenState(open);
-  // }, [open]);
+  useEffect(() => {
+    if (previousOpenState != open) {
+      if (open) {
+        nextJSRouter.push(`/file/${objectId}`);
+      } else {
+        nextJSRouter.back();
+      }
+    }
+    setPreviousOpenState(open);
+  }, [open]);
   return (
     <Modal open={open} setOpen={setOpen}>
       <DocumentModalBody objectId={objectId} isPage={false} />
