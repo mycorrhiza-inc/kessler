@@ -19,7 +19,7 @@ export const HeaderBreadcrumbs = ({
     { value: "", title: "Kessler - " + statename },
     ...breadcrumbs.breadcrumbs,
   ];
-  const breadcrumb_values = new_breadcrumbs.map((b, index) => {
+  var breadcrumb_values = new_breadcrumbs.map((b, index) => {
     if (index === 0) {
       return { title: b.title, url: "/" };
     }
@@ -32,6 +32,8 @@ export const HeaderBreadcrumbs = ({
       .join("/");
     return { title: b.title, url: url };
   });
+  // Hack to get the breadcrumb to redirect to the root app page and not the landing page
+  breadcrumb_values[0].url = "/home";
   return (
     <div className="breadcrumbs text-xl">
       <ul>

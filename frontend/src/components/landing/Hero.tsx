@@ -47,7 +47,7 @@ export default function Hero() {
         {globalStore.isLoggedIn ? (
           <div className="flex justify-center space-x-4">
             <Link
-              href="/app"
+              href="/home"
               className="btn glass shadow-xl btn-lg btn-outline btn-neutral"
             >
               Go To App
@@ -57,7 +57,7 @@ export default function Hero() {
           <>
             <div className="flex justify-center space-x-4">
               <Link
-                href="/demo"
+                href="/home"
                 className="btn glass shadow-xl btn-lg btn-outline btn-neutral"
               >
                 Try Now!
