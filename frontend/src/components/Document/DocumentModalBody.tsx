@@ -12,6 +12,7 @@ import useSWRImmutable from "swr";
 import Link from "next/link";
 import { completeFileSchemaGet } from "@/lib/requests/search";
 import { AuthorInfoPill } from "../Conversations/TextPills";
+import { CompleteFileSchema } from "@/lib/types/backend_schemas";
 
 // import { ErrorBoundary } from "react-error-boundary";
 
@@ -49,45 +50,35 @@ const MarkdownContent = memo(({ docUUID }: { docUUID: string }) => {
   return <MarkdownRenderer>{text}</MarkdownRenderer>;
 });
 
-const MetadataContent = memo(
-  ({
-    metadata,
-    isLoading,
-    error,
-  }: {
-    metadata: any;
-    isLoading: boolean;
-    error: any;
-  }) => {
-    if (isLoading) {
-      return <LoadingSpinner loadingText="Loading Document Metadata" />;
-    }
-    if (error) {
-      return <p>Encountered an error getting text from the server.</p>;
-    }
+const MetadataContent = memo(({ metadata }: { metadata: any }) => {
+  // if (isLoading) {
+  //   return <LoadingSpinner loadingText="Loading Document Metadata" />;
+  // }
+  // if (error) {
+  //   return <p>Encountered an error getting text from the server.</p>;
+  // }
 
-    return (
-      <div className="overflow-x-auto">
-        <table className="table table-zebra">
-          <thead>
-            <tr>
-              <th>Field</th>
-              <th>Value</th>
+  return (
+    <div className="overflow-x-auto">
+      <table className="table table-zebra">
+        <thead>
+          <tr>
+            <th>Field</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          {Object.entries(metadata).map(([key, value]) => (
+            <tr key={key}>
+              <td>{key}</td>
+              <td>{String(value)}</td>
             </tr>
-          </thead>
-          <tbody>
-            {Object.entries(metadata).map(([key, value]) => (
-              <tr key={key}>
-                <td>{key}</td>
-                <td>{String(value)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    );
-  },
-);
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+});
 
 const PDFContent = ({ docUUID }: { docUUID: string }) => {
   const [loading, setLoading] = React.useState(true);
@@ -102,32 +93,23 @@ const PDFContent = ({ docUUID }: { docUUID: string }) => {
   );
 };
 
-const DocumentModalBody = ({
-  open,
-  objectId,
-  title,
-  setTitle,
+export const DocumentMainTabs = ({
+  documentObject,
   isPage,
-}: ModalProps) => {
-  const semiCompleteFileUrl = `${apiURL}/v2/public/files/${objectId}`;
-  const { data, error, isLoading } = useSWRImmutable(
-    semiCompleteFileUrl,
-    completeFileSchemaGet,
-  );
-  const actualTitle: string = (data?.name || title) as string;
+}: {
+  documentObject: CompleteFileSchema;
+  isPage: boolean;
+}) => {
+  const title: string = documentObject?.name as string;
+  const objectId = documentObject?.id as string;
   const underscoredTitle = title ? title.replace(/ /g, "_") : "Unkown_Document";
   const fileUrlNamedDownload = `${apiURL}/v2/public/files/${objectId}/raw/${underscoredTitle}.pdf`;
   const kesslerFileUrl = `/files/${objectId}`;
-  const metadata = data?.mdata;
-  useEffect(() => {
-    if (setTitle) {
-      setTitle(actualTitle);
-    }
-  }, [actualTitle]);
+  const metadata = documentObject?.mdata;
   return (
     <div className="modal-content standard-box ">
       <div className="card-title flex justify-between items-center">
-        <h1>{actualTitle}</h1>
+        <h1>{title}</h1>
         <div className="flex gap-2">
           <a
             className="btn btn-primary"
@@ -148,22 +130,6 @@ const DocumentModalBody = ({
           )}
         </div>
       </div>
-
-      {isLoading ? (
-        <LoadingSpinner loadingText="Loading Document Summary" />
-      ) : (
-        <>
-          <h3 className="text-lg font-bold">Summary:</h3>
-          <br />
-          <MarkdownRenderer>{data?.extra.summary as string}</MarkdownRenderer>
-          <br />
-          <h3 className="text-lg font-bold">Authors:</h3>
-          <br />
-          {data?.authors?.map((auth_info) => (
-            <AuthorInfoPill author_info={auth_info} />
-          ))}
-        </>
-      )}
 
       <Tabs.Root
         className="TabsRoot"
@@ -188,15 +154,35 @@ const DocumentModalBody = ({
           <MarkdownContent docUUID={objectId} />
         </Tabs.Content>
         <Tabs.Content className="TabsContent" value="tab3">
-          <MetadataContent
-            isLoading={isLoading}
-            metadata={metadata}
-            error={error}
-          />
+          <MetadataContent metadata={metadata} />
         </Tabs.Content>
       </Tabs.Root>
     </div>
   );
+};
+
+const DocumentModalBody = ({
+  open,
+  objectId,
+  title,
+  setTitle,
+  isPage,
+}: ModalProps) => {
+  const semiCompleteFileUrl = `${apiURL}/v2/public/files/${objectId}`;
+  const { data, error, isLoading } = useSWRImmutable(
+    semiCompleteFileUrl,
+    completeFileSchemaGet,
+  );
+  if (isLoading) {
+    return <LoadingSpinner loadingText="Loading Document" />;
+  }
+  if (error) {
+    return (
+      <p>Encountered an error getting text from the server: {String(error)}</p>
+    );
+  }
+  const docObj = data as CompleteFileSchema;
+  return <DocumentMainTabs documentObject={docObj} isPage={isPage} />;
 };
 
 export default DocumentModalBody;
