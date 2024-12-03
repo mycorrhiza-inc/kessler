@@ -6,6 +6,7 @@ import { Highlight } from "../aceternity/hero-highlight";
 import { Compare } from "../aceternity/compare";
 import { useKesslerStore } from "@/lib/store";
 import Link from "next/link";
+import { rootApplicationSlug } from "@/lib/page_context";
 
 export default function Hero() {
   // Fix the broken min-h-screen stuff and make it actually work
@@ -47,7 +48,7 @@ export default function Hero() {
         {globalStore.isLoggedIn ? (
           <div className="flex justify-center space-x-4">
             <Link
-              href="/home"
+              href={rootApplicationSlug}
               className="btn glass shadow-xl btn-lg btn-outline btn-neutral"
             >
               Go To App
@@ -57,7 +58,7 @@ export default function Hero() {
           <>
             <div className="flex justify-center space-x-4">
               <Link
-                href="/home"
+                href={rootApplicationSlug}
                 className="btn glass shadow-xl btn-lg btn-outline btn-neutral"
               >
                 Try Now!

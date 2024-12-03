@@ -4,6 +4,8 @@ export type PageContext = {
   final_identifier?: string;
 };
 
+export const rootApplicationSlug = "/home";
+
 export const getStateDisplayName = (state?: string) => {
   switch (state) {
     case "ny":
