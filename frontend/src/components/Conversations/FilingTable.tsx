@@ -2,8 +2,6 @@ import React, { useState } from "react";
 import Modal from "../styled-components/Modal";
 import DocumentModalBody from "../Document/DocumentModalBody";
 import { Filing } from "../../lib/types/FilingTypes";
-import { is, fi } from "date-fns/locale";
-import Link from "next/link";
 import { AuthorInformation } from "@/lib/types/backend_schemas";
 import { AuthorInfoPill, TextPill } from "./TextPills";
 
@@ -71,7 +69,8 @@ const TableRow = ({
           </NoclickSpan>
         </td>
         <td>
-          <NoclickSpan>{filing.title}</NoclickSpan>
+          {/* Removing the noclick around this, since I think clicking on the tile should actually open the modal */}
+          {filing.title}
         </td>
         <td>
           <NoclickSpan>
