@@ -1,17 +1,15 @@
 import { ConversationView } from "@/components/Conversations/ConversationView";
-import OrganizationTable from "@/components/Organizations/OrganizationTable";
 import PageContainer from "@/components/Page/PageContainer";
-import { BreadcrumbValues } from "@/components/SitemapUtils";
 import { PageContext } from "@/lib/page_context";
 import { createClient } from "@/utils/supabase/server";
 import { headers } from "next/headers";
 export default async function Page({
   params,
 }: {
-  params: Promise<{ organization_id: string }>;
+  params: Promise<{ conversation_id: string }>;
 }) {
   const supabase = createClient();
-  const slug = (await params).organization_id;
+  const slug = (await params).conversation_id;
   const headersList = headers();
   const host = headersList.get("host") || "";
   const hostsplits = host.split(".");
@@ -21,18 +19,20 @@ export default async function Page({
     slug: ["proceedings", slug],
     final_identifier: slug,
   };
-  const breadcrumbs: BreadcrumbValues = {
+
+  const breadcrumbs = {
     state: state,
-    breadcrumbs: [{ title: "Organizations", value: "orgs" }],
+    breadcrumbs: [
+      { value: "proceedings", title: "Proceedings" },
+      { value: slug, title: slug },
+    ],
   };
   const {
     data: { user },
   } = await supabase.auth.getUser();
   return (
-    <>
-      <PageContainer user={user} breadcrumbs={breadcrumbs}>
-        <OrganizationTable />
-      </PageContainer>
-    </>
+    <PageContainer breadcrumbs={breadcrumbs}>
+      <ConversationView pageContext={pageContext} />
+    </PageContainer>
   );
 }

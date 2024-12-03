@@ -8,13 +8,13 @@ import { useKesslerStore } from "@/lib/store";
 import Link from "next/link";
 import { BreadcrumbValues, HeaderBreadcrumbs } from "@/components/SitemapUtils";
 
-function HeaderAuth({ user }: { user: User | null }) {
+function HeaderAuth() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const globalStore = useKesslerStore();
 
-  useEffect(() => {
-    console.log("Is logged in:", globalStore.isLoggedIn);
-  }, [user]);
+  // useEffect(() => {
+  //   console.log("Is logged in:", globalStore.isLoggedIn);
+  // }, []);
   return globalStore.isLoggedIn ? (
     <>
       <div
@@ -40,20 +40,14 @@ function HeaderAuth({ user }: { user: User | null }) {
     </div>
   );
 }
-const Navbar = ({
-  user,
-  breadcrumbs,
-}: {
-  user: User | null;
-  breadcrumbs: BreadcrumbValues;
-}) => {
+const Navbar = ({ breadcrumbs }: { breadcrumbs: BreadcrumbValues }) => {
   return (
     <div className="navbar bg-base-200 w-max-50">
       <div className="flex-1 font-semibold">
         <HeaderBreadcrumbs breadcrumbs={breadcrumbs} />
       </div>
       <div className="flex-none">
-        <HeaderAuth user={user} />
+        <HeaderAuth />
       </div>
     </div>
   );

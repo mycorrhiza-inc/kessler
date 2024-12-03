@@ -3,17 +3,15 @@ import Navbar from "./Navbar";
 import { BreadcrumbValues } from "../SitemapUtils";
 
 const PageContainer = ({
-  user,
   breadcrumbs,
   children,
 }: {
-  user: User | null;
   breadcrumbs: BreadcrumbValues;
   children: React.ReactNode;
 }) => {
   return (
     <div className="w-full">
-      <Navbar user={user} breadcrumbs={breadcrumbs} />
+      <Navbar breadcrumbs={breadcrumbs} />
       <div className="w-full h-full p-20">{children}</div>
     </div>
   );

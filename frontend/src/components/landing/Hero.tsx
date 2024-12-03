@@ -6,6 +6,7 @@ import { Highlight } from "../aceternity/hero-highlight";
 import { Compare } from "../aceternity/compare";
 import { useKesslerStore } from "@/lib/store";
 import Link from "next/link";
+import { rootApplicationSlug } from "@/lib/page_context";
 
 export default function Hero() {
   // Fix the broken min-h-screen stuff and make it actually work
@@ -25,6 +26,7 @@ export default function Hero() {
           duration: 0.5,
           ease: [0.4, 0.0, 0.2, 1],
         }}
+        className="gap-96"
       >
         <div className="text-3xl px-4 md:text-5xl lg:text-6xl font-bold text-neutral-700 dark:text-white max-w-4xl leading-relaxed lg:leading-snug text-center mx-auto ">
           New York PUC Proceedings, now with a <br />
@@ -32,7 +34,6 @@ export default function Hero() {
             Fast, Modern Interface
           </Highlight>
         </div>
-        {/* <div className="p-4 border rounded-3xl dark:bg-neutral-900 bg-neutral-100  border-neutral-200 dark:border-neutral-800 px-4"> */}
         <div className="flex justify-center space-x-4">
           <Compare
             firstImage="/ny-puc-ui.png"
@@ -43,11 +44,10 @@ export default function Hero() {
             slideMode="hover"
           />
         </div>
-        {/* </div> */}
         {globalStore.isLoggedIn ? (
           <div className="flex justify-center space-x-4">
             <Link
-              href="/app"
+              href={rootApplicationSlug}
               className="btn glass shadow-xl btn-lg btn-outline btn-neutral"
             >
               Go To App
@@ -57,7 +57,7 @@ export default function Hero() {
           <>
             <div className="flex justify-center space-x-4">
               <Link
-                href="/demo"
+                href={rootApplicationSlug}
                 className="btn glass shadow-xl btn-lg btn-outline btn-neutral"
               >
                 Try Now!
