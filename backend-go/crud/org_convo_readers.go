@@ -7,6 +7,8 @@ import (
 	"net/http"
 
 	"kessler/gen/dbstore"
+	"kessler/objects/files"
+	"kessler/objects/organizations"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -47,16 +49,16 @@ func GetOrgWithFilesFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		org_files := make([]FileSchema, len(org_files_raw))
+		org_files := make([]files.FileSchema, len(org_files_raw))
 		org_file_ids := make([]uuid.UUID, len(org_files_raw))
 		for i, f := range org_files_raw {
 			file_uuid := f.DocumentID
-			org_files[i] = FileSchema{
+			org_files[i] = files.FileSchema{
 				ID: file_uuid,
 			}
 			org_file_ids[i] = file_uuid
 		}
-		complete_org_info := OrganizationSchemaComplete{
+		complete_org_info := organizations.OrganizationSchemaComplete{
 			ID:               parsedUUID,
 			Name:             org_info.Name,
 			FilesAuthored:    org_files,

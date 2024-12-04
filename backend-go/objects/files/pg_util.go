@@ -1,4 +1,4 @@
-package crud
+package files
 
 import (
 	"context"
@@ -9,25 +9,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
-
-func PublicFileToSchema(file dbstore.File) FileSchema {
-	return FileSchema{
-		ID:        file.ID,
-		Verified:  file.Verified.Bool,
-		Extension: file.Extension,
-		Lang:      file.Lang,
-		Name:      file.Name,
-		Hash:      file.Hash,
-		IsPrivate: file.Isprivate.Bool,
-	}
-}
-
-type FileTextSchema struct {
-	FileID         uuid.UUID `json:"file_id"`
-	IsOriginalText bool      `json:"is_original_text"`
-	Text           string    `json:"text"`
-	Language       string    `json:"language"`
-}
 
 func PublicTextToSchema(file dbstore.FileTextSource) FileTextSchema {
 	return FileTextSchema{
@@ -65,7 +46,7 @@ func GetSpecificFileText(params GetFileParam, lang string, original bool) (strin
 
 	texts, err := GetTextSchemas(params) // Returns a slice of FileTextSchema
 	if err != nil || len(texts) == 0 {
-		return "", fmt.Errorf("Error retrieving texts or no texts found, error: %v", err)
+		return "", fmt.Errorf("error retrieving texts or no texts found, error: %v", err)
 	}
 	// TODO: Add suport for non english text retrieval and original text retrieval
 	var filteredTexts []FileTextSchema
@@ -86,7 +67,7 @@ func GetSpecificFileText(params GetFileParam, lang string, original bool) (strin
 	if len(filteredTexts) > 0 {
 		return filteredTexts[0].Text, nil
 	}
-	return "", fmt.Errorf("No texts found that mach filter criterion")
+	return "", fmt.Errorf("no texts found that mach filter criterion")
 }
 
 func GetFileObjectRaw(params GetFileParam) (FileSchema, error) {
@@ -170,7 +151,7 @@ func UpdatePubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreatio
 			mismatches = append(mismatches, fmt.Sprintf("verified (got: %v, want: %v)", updatedFile.Verified, fileCreated.Verified))
 		}
 		if len(mismatches) > 0 {
-			return fmt.Errorf("Encountered Mismatched fields while updating: %v", mismatches)
+			return fmt.Errorf("encountered mismatched fields while updating: %v", mismatches)
 		}
 		return nil
 	}

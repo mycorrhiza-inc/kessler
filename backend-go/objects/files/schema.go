@@ -2,9 +2,34 @@ package files
 
 import (
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/pgtype"
-	// "github.com/jackc/pgx/v5/pgtype"
+	"github.com/jackc/pgx/v5/pgtype"
+
+	"kessler/gen/dbstore"
+	"kessler/objects/authors"
+	"kessler/objects/conversations"
 )
+
+type FileChildTextSource struct {
+	IsOriginalText bool   `json:"is_original_text"`
+	Text           string `json:"text"`
+	Language       string `json:"language"`
+}
+
+type FileTextSchema struct {
+	FileID         uuid.UUID `json:"file_id"`
+	IsOriginalText bool      `json:"is_original_text"`
+	Text           string    `json:"text"`
+	Language       string    `json:"language"`
+}
+
+func (child_source FileChildTextSource) ChildTextSouceToRealTextSource(id uuid.UUID) FileTextSchema {
+	return FileTextSchema{
+		FileID:         id,
+		IsOriginalText: child_source.IsOriginalText,
+		Text:           child_source.Text,
+		Language:       child_source.Language,
+	}
+}
 
 type FileSchema struct {
 	ID        uuid.UUID `json:"id"`
@@ -17,21 +42,28 @@ type FileSchema struct {
 }
 type FileMetadataSchema map[string]interface{}
 
+type FileGeneratedExtras struct {
+	Summary        string  `json:"summary"`
+	ShortSummary   string  `json:"short_summary"`
+	Purpose        string  `json:"purpose"`
+	Impressiveness float64 `json:"impressiveness"`
+}
+
+// To heavy to include in a default file schema unless the user specifies they want it
 type CompleteFileSchema struct {
-	ID           uuid.UUID               `json:"id"`
-	Verified     bool                    `json:"verified"`
-	Extension    string                  `json:"extension"`
-	Lang         string                  `json:"lang"`
-	Name         string                  `json:"name"`
-	Hash         string                  `json:"hash"`
-	IsPrivate    bool                    `json:"is_private"`
-	Mdata        FileMetadataSchema      `json:"mdata"`
-	Stage        DocProcStage            `json:"stage"`
-	Extra        FileGeneratedExtras     `json:"extra"`
-	Authors      []AuthorInformation     `json:"authors"`
-	Conversation ConversationInformation `json:"conversation"`
-	// To heavy to include in a default file schema unless the user specifies they want it
-	DocTexts []FileChildTextSource `json:"doc_texts"`
+	ID           uuid.UUID                             `json:"id"`
+	Verified     bool                                  `json:"verified"`
+	Extension    string                                `json:"extension"`
+	Lang         string                                `json:"lang"`
+	Name         string                                `json:"name"`
+	Hash         string                                `json:"hash"`
+	IsPrivate    bool                                  `json:"is_private"`
+	Mdata        FileMetadataSchema                    `json:"mdata"`
+	Stage        DocProcStage                          `json:"stage"`
+	Extra        FileGeneratedExtras                   `json:"extra"`
+	Authors      []authors.AuthorInformation           `json:"authors"`
+	Conversation conversations.ConversationInformation `json:"conversation"`
+	DocTexts     []FileChildTextSource                 `json:"doc_texts"`
 }
 
 func (input CompleteFileSchema) CompleteFileSchemaPrune() FileSchema {
@@ -69,4 +101,16 @@ func (updateInfo CompleteFileSchema) ConvertToCreationData() FileCreationDataRaw
 		Verified:  pgtype.Bool{Bool: updateInfo.Verified, Valid: true},
 	}
 	return creationData
+}
+
+func PublicFileToSchema(file dbstore.File) FileSchema {
+	return FileSchema{
+		ID:        file.ID,
+		Verified:  file.Verified.Bool,
+		Extension: file.Extension,
+		Lang:      file.Lang,
+		Name:      file.Name,
+		Hash:      file.Hash,
+		IsPrivate: file.Isprivate.Bool,
+	}
 }
