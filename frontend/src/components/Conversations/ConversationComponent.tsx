@@ -62,10 +62,8 @@ const TableFilters = ({
 
 const ConversationComponent = ({
   inheritedFilters,
-  pageContext,
 }: {
   inheritedFilters: InheritedFilterValues;
-  pageContext: PageContext;
 }) => {
   const disabledFilters = useMemo(() => {
     return inheritedFilters.map((val) => {
@@ -227,3 +225,4 @@ const ConversationComponent = ({
 };
 
 export default ConversationComponent;
+

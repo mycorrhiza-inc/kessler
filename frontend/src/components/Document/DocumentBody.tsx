@@ -16,15 +16,6 @@ import { CompleteFileSchema } from "@/lib/types/backend_schemas";
 
 // import { ErrorBoundary } from "react-error-boundary";
 
-type ModalProps = {
-  open: boolean;
-  objectId: string;
-  children?: React.ReactNode;
-  title?: string;
-  isPage: boolean;
-  setTitle?: (val: string) => void;
-};
-
 const MarkdownContent = memo(({ docUUID }: { docUUID: string }) => {
   const markdown_url = `${apiURL}/v2/public/files/${docUUID}/markdown`;
   // axios.get(`https://api.kessler.xyz/v2/public/files/${objectid}/markdown`),
@@ -160,29 +151,3 @@ export const DocumentMainTabs = ({
     </div>
   );
 };
-
-const DocumentModalBody = ({
-  open,
-  objectId,
-  title,
-  setTitle,
-  isPage,
-}: ModalProps) => {
-  const semiCompleteFileUrl = `${apiURL}/v2/public/files/${objectId}`;
-  const { data, error, isLoading } = useSWRImmutable(
-    semiCompleteFileUrl,
-    completeFileSchemaGet,
-  );
-  if (isLoading) {
-    return <LoadingSpinner loadingText="Loading Document" />;
-  }
-  if (error) {
-    return (
-      <p>Encountered an error getting text from the server: {String(error)}</p>
-    );
-  }
-  const docObj = data as CompleteFileSchema;
-  return <DocumentMainTabs documentObject={docObj} isPage={isPage} />;
-};
-
-export default DocumentModalBody;

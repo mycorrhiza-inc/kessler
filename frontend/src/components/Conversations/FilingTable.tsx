@@ -1,11 +1,8 @@
 import React, { useState } from "react";
-import Modal from "../styled-components/Modal";
-import DocumentModalBody from "../Document/DocumentModalBody";
 import { Filing } from "../../lib/types/FilingTypes";
-import { is, fi } from "date-fns/locale";
-import Link from "next/link";
 import { AuthorInformation } from "@/lib/types/backend_schemas";
 import { AuthorInfoPill, TextPill } from "./TextPills";
+import DocumentModal from "../Document/DocumentModal";
 
 const NoclickSpan = ({ children }: { children: React.ReactNode }) => {
   return <span className="noclick">{children}</span>;
@@ -71,7 +68,8 @@ const TableRow = ({
           </NoclickSpan>
         </td>
         <td>
-          <NoclickSpan>{filing.title}</NoclickSpan>
+          {/* Removing the noclick around this, since I think clicking on the tile should actually open the modal */}
+          {filing.title}
         </td>
         <td>
           <NoclickSpan>
@@ -89,14 +87,7 @@ const TableRow = ({
 
         <td>{filing.item_number}</td>
       </tr>
-      <Modal open={open} setOpen={setOpen}>
-        <DocumentModalBody
-          open={open}
-          title={filing.title}
-          objectId={filing.id}
-          isPage={false}
-        />
-      </Modal>
+      <DocumentModal open={open} setOpen={setOpen} objectId={filing.id} />
     </>
   );
 };
