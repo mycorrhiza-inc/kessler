@@ -1,4 +1,4 @@
-import { ConversationView } from "@/components/Conversations/ConversationView";
+import { ConversationPage } from "@/components/Conversations/ConversationPage";
 import PageContainer from "@/components/Page/PageContainer";
 import { PageContext } from "@/lib/page_context";
 import { createClient } from "@/utils/supabase/server";
@@ -30,9 +30,5 @@ export default async function Page({
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  return (
-    <PageContainer breadcrumbs={breadcrumbs}>
-      <ConversationView pageContext={pageContext} />
-    </PageContainer>
-  );
+  return <ConversationPage breadcrumbs={breadcrumbs} />;
 }
