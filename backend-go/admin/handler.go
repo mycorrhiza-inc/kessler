@@ -3,8 +3,9 @@ package admin
 import (
 	"net/http"
 
+	"kessler/gen/dbstore"
+
 	"github.com/gorilla/mux"
-	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
 )
 
 func DefineAdminRoutes(admin_subrouter *mux.Router, dbtx_val dbstore.DBTX) {

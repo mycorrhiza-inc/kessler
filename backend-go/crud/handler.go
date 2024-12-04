@@ -10,9 +10,10 @@ import (
 	"os"
 	"strings"
 
+	"kessler/gen/dbstore"
+
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
 )
 
 func DefineCrudRoutes(public_subrouter *mux.Router, dbtx_val dbstore.DBTX) {

@@ -1,4 +1,4 @@
-package crud
+package objects
 
 import (
 	"context"

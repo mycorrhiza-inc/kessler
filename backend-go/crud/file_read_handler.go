@@ -8,11 +8,13 @@ import (
 	"net/http"
 	"os"
 
+	"kessler/gen/dbstore"
+
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
 )
 
+// TODO: refactor config into a middleware pattern
 func GetFileWithMeta(config FileHandlerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		q := *dbstore.New(config.dbtx_val)
@@ -28,7 +30,6 @@ func GetFileWithMeta(config FileHandlerConfig) http.HandlerFunc {
 		ctx := r.Context()
 		file_raw, err := q.GetFileWithMetadata(ctx, parsedUUID)
 		if err != nil {
-
 			errorstring := fmt.Sprintf("Error Retriving file %v: %v\n", fileID, err)
 			fmt.Println(errorstring)
 			http.Error(w, errorstring, http.StatusNotFound)
@@ -84,6 +85,7 @@ func FileSemiCompleteGetFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 	}
 }
 
+// TODO: refactor config into a middleware pattern
 func SemiCompleteFileGetFromUUID(ctx context.Context, q dbstore.Queries, uuid uuid.UUID) (CompleteFileSchema, error) {
 	files_raw, err := q.SemiCompleteFileGet(ctx, uuid)
 	if err != nil {
@@ -181,6 +183,7 @@ func CompleteFileSchemaGetFromUUID(ctx context.Context, q dbstore.Queries, uuid 
 	return file, nil
 }
 
+// TODO: refactor config into a middleware pattern
 func ReadFileHandlerFactory(config FileHandlerConfig) http.HandlerFunc {
 	private := config.private
 	dbtx_val := config.dbtx_val

@@ -9,10 +9,11 @@ import (
 	"strconv"
 	"sync"
 
+	"kessler/crud"
+	"kessler/gen/dbstore"
+
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"github.com/mycorrhiza-inc/kessler/backend-go/crud"
-	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
 )
 
 func UnverifedCompleteFileSchemaListFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {

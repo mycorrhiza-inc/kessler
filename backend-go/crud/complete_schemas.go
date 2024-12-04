@@ -29,16 +29,6 @@ const (
 	Stage1                 DocProcStatus = "stage1"
 )
 
-type FileSchema struct {
-	ID        uuid.UUID `json:"id"`
-	Verified  bool      `json:"verified"`
-	Extension string    `json:"extension"`
-	Lang      string    `json:"lang"`
-	Name      string    `json:"name"`
-	Hash      string    `json:"hash"`
-	IsPrivate bool      `json:"is_private"`
-}
-
 type FileChildTextSource struct {
 	IsOriginalText bool   `json:"is_original_text"`
 	Text           string `json:"text"`
@@ -92,22 +82,6 @@ type AuthorInformation struct {
 	IsPrimaryAuthor bool      `json:"is_primary_author"`
 	AuthorID        uuid.UUID `json:"author_id"`
 }
-type CompleteFileSchema struct {
-	ID           uuid.UUID               `json:"id"`
-	Verified     bool                    `json:"verified"`
-	Extension    string                  `json:"extension"`
-	Lang         string                  `json:"lang"`
-	Name         string                  `json:"name"`
-	Hash         string                  `json:"hash"`
-	IsPrivate    bool                    `json:"is_private"`
-	Mdata        FileMetadataSchema      `json:"mdata"`
-	Stage        DocProcStage            `json:"stage"`
-	Extra        FileGeneratedExtras     `json:"extra"`
-	Authors      []AuthorInformation     `json:"authors"`
-	Conversation ConversationInformation `json:"conversation"`
-	// To heavy to include in a default file schema unless the user specifies they want it
-	DocTexts []FileChildTextSource `json:"doc_texts"`
-}
 
 // Organization Schemas
 
@@ -117,8 +91,6 @@ type OrganizationSchemaComplete struct {
 	FilesAuthored    []FileSchema `json:"files_authored"`
 	FilesAuthoredIDs []uuid.UUID  `json:"files_authored_ids"`
 }
-
-type FileMetadataSchema map[string]interface{}
 
 func CompleteFileSchemaPrune(input CompleteFileSchema) FileSchema {
 	return FileSchema{

@@ -6,10 +6,11 @@ import (
 	"io"
 	"net/http"
 
+	"kessler/gen/dbstore"
+
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
 )
 
 type FileUpsertHandlerConfig struct {

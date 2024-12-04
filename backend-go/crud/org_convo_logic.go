@@ -7,9 +7,10 @@ import (
 	"io"
 	"net/http"
 
+	"kessler/gen/dbstore"
+
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
 )
 
 // Make this generic

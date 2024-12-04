@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"kessler/gen/dbstore"
+
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
 )
 
 func upsertFileTexts(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, texts []FileChildTextSource, insert bool) error {

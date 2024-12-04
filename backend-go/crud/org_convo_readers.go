@@ -6,9 +6,10 @@ import (
 	"log"
 	"net/http"
 
+	"kessler/gen/dbstore"
+
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
 )
 
 func GetOrgWithFilesFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {

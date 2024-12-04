@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/mycorrhiza-inc/kessler/backend-go/search"
+	"kessler/search"
 )
 
 func TestRag(t *testing.T) {

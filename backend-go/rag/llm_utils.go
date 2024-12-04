@@ -7,7 +7,7 @@ import (
 	openai "github.com/sashabaranov/go-openai"
 	"github.com/sashabaranov/go-openai/jsonschema"
 
-	"github.com/mycorrhiza-inc/kessler/backend-go/search"
+	"kessler/search"
 )
 
 // Use custom enums in place of Python's Enum class

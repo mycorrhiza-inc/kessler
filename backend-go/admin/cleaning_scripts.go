@@ -7,7 +7,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
+	"kessler/gen/dbstore"
 )
 
 func deduplicateOrganizationsOnNames(ctx context.Context, q dbstore.Queries) error {

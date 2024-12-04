@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mycorrhiza-inc/kessler/backend-go/search"
+	"kessler/search"
+
 	openai "github.com/sashabaranov/go-openai"
 	"github.com/sashabaranov/go-openai/jsonschema"
 )
