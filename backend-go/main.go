@@ -13,10 +13,10 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 
-	"github.com/mycorrhiza-inc/kessler/backend-go/admin"
-	"github.com/mycorrhiza-inc/kessler/backend-go/crud"
-	"github.com/mycorrhiza-inc/kessler/backend-go/rag"
-	"github.com/mycorrhiza-inc/kessler/backend-go/search"
+	"kessler/admin"
+	"kessler/crud"
+	"kessler/rag"
+	"kessler/search"
 )
 
 func PgPoolConfig() *pgxpool.Config {

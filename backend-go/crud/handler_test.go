@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"os"
 
+	"kessler/gen/dbstore"
+
 	"github.com/jackc/pgx/v5"
-	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
 )
 
 func TestPostgresConnection() (string, error) {

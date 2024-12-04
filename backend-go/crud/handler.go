@@ -10,9 +10,12 @@ import (
 	"os"
 	"strings"
 
+	"kessler/gen/dbstore"
+
+	"kessler/objects/files"
+
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
 )
 
 func DefineCrudRoutes(public_subrouter *mux.Router, dbtx_val dbstore.DBTX) {
@@ -182,7 +185,7 @@ type FileProcessRequest struct {
 	FileUploadName     string            `json:"file_upload_name"`
 	UserID             uuid.UUID         `json:"user_id"`
 	Mdata              map[string]string `json:"mdata"`
-	ExistingFileSchema FileSchema        `json:"existing_file_schema"`
+	ExistingFileSchema files.FileSchema  `json:"existing_file_schema"`
 }
 
 func sendFileProcessRequest(req FileProcessRequest) error {
@@ -223,29 +226,29 @@ func privateUploadFactory(dbtx_val dbstore.DBTX) func(w http.ResponseWriter, r *
 }
 
 type ReturnFilesSchema struct {
-	Files []FileSchema `json:"files"`
+	Files []files.FileSchema `json:"files"`
 }
 
-func GetListAllRawFiles(ctx context.Context, q dbstore.Queries) ([]FileSchema, error) {
-	files, err := q.FilesList(ctx)
+func GetListAllRawFiles(ctx context.Context, q dbstore.Queries) ([]files.FileSchema, error) {
+	db_files, err := q.FilesList(ctx)
 	if err != nil {
-		return []FileSchema{}, err
+		return []files.FileSchema{}, err
 	}
-	var fileSchemas []FileSchema
-	for _, fileRaw := range files {
-		rawSchema := PublicFileToSchema(fileRaw)
+	var fileSchemas []files.FileSchema
+	for _, fileRaw := range db_files {
+		rawSchema := files.PublicFileToSchema(fileRaw)
 		fileSchemas = append(fileSchemas, rawSchema)
 	}
 	return fileSchemas, nil
 }
 
-func GetListAllFiles(ctx context.Context, q dbstore.Queries) ([]FileSchema, error) {
-	files, err := GetListAllRawFiles(ctx, q)
+func GetListAllFiles(ctx context.Context, q dbstore.Queries) ([]files.FileSchema, error) {
+	db_files, err := GetListAllRawFiles(ctx, q)
 	if err != nil {
-		return []FileSchema{}, err
+		return []files.FileSchema{}, err
 	}
-	var fileSchemas []FileSchema
-	for _, rawSchema := range files {
+	var fileSchemas []files.FileSchema
+	for _, rawSchema := range db_files {
 		fileSchema := rawSchema
 		fileSchemas = append(fileSchemas, fileSchema)
 	}

@@ -7,7 +7,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
+	"kessler/gen/dbstore"
 )
 
 type StaticDocData struct {

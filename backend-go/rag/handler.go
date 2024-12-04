@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/mycorrhiza-inc/kessler/backend-go/search"
+	"kessler/search"
 )
 
 type ChatRequestBody struct {

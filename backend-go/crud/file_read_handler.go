@@ -8,11 +8,17 @@ import (
 	"net/http"
 	"os"
 
+	"kessler/gen/dbstore"
+
+	"kessler/objects/authors"
+	"kessler/objects/conversations"
+	"kessler/objects/files"
+
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
 )
 
+// TODO: refactor config into a middleware pattern
 func GetFileWithMeta(config FileHandlerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		q := *dbstore.New(config.dbtx_val)
@@ -28,7 +34,6 @@ func GetFileWithMeta(config FileHandlerConfig) http.HandlerFunc {
 		ctx := r.Context()
 		file_raw, err := q.GetFileWithMetadata(ctx, parsedUUID)
 		if err != nil {
-
 			errorstring := fmt.Sprintf("Error Retriving file %v: %v\n", fileID, err)
 			fmt.Println(errorstring)
 			http.Error(w, errorstring, http.StatusNotFound)
@@ -42,7 +47,7 @@ func GetFileWithMeta(config FileHandlerConfig) http.HandlerFunc {
 			http.Error(w, errorstring, http.StatusInternalServerError)
 			return
 		}
-		file := CompleteFileSchema{
+		file := files.CompleteFileSchema{
 			ID:        file_raw.ID,
 			Verified:  file_raw.Verified.Bool,
 			Extension: file_raw.Extension,
@@ -84,34 +89,37 @@ func FileSemiCompleteGetFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 	}
 }
 
-func SemiCompleteFileGetFromUUID(ctx context.Context, q dbstore.Queries, uuid uuid.UUID) (CompleteFileSchema, error) {
+// TODO: refactor config into a middleware pattern
+func SemiCompleteFileGetFromUUID(ctx context.Context, q dbstore.Queries, uuid uuid.UUID) (files.CompleteFileSchema, error) {
 	files_raw, err := q.SemiCompleteFileGet(ctx, uuid)
 	if err != nil {
 		errorstring := fmt.Sprintf("Error Retriving file %v: %v\n", uuid, err)
-		return CompleteFileSchema{}, errors.New(errorstring)
+		return files.CompleteFileSchema{}, errors.New(errorstring)
 	}
 	if len(files_raw) == 0 {
 		errorstring := fmt.Sprintf("Error No Files Found for a list of length zero.\n")
-		return CompleteFileSchema{}, errors.New(errorstring)
+		return files.CompleteFileSchema{}, errors.New(errorstring)
 	}
 	file_raw := files_raw[0]
+
 	var mdata_obj map[string]interface{}
+	nilSchema := files.CompleteFileSchema{}
 	err = json.Unmarshal(file_raw.Mdata, &mdata_obj)
 	if err != nil {
 		errorstring := fmt.Sprintf("Error Unmarshalling file metadata %v: %v\n", uuid, err)
-		return CompleteFileSchema{}, errors.New(errorstring)
+		return nilSchema, errors.New(errorstring)
 	}
-	var extra_obj FileGeneratedExtras
+	var extra_obj files.FileGeneratedExtras
 	err = json.Unmarshal(file_raw.ExtraObj, &extra_obj)
 	if err != nil {
 		errorstring := fmt.Sprintf("Error Unmarshalling file extras %v: %v\n", uuid, err)
-		return CompleteFileSchema{}, errors.New(errorstring)
+		return nilSchema, errors.New(errorstring)
 	}
 	// Missing info here, it doesnt have the name.
-	conv_info := ConversationInformation{ID: file_raw.DocketUuid}
-	author_info := make([]AuthorInformation, len(files_raw))
+	conv_info := conversations.ConversationInformation{ID: file_raw.DocketUuid}
+	author_info := make([]authors.AuthorInformation, len(files_raw))
 	for i, author_file_raw := range files_raw {
-		author_info[i] = AuthorInformation{
+		author_info[i] = authors.AuthorInformation{
 			AuthorName:      author_file_raw.OrganizationName.String,
 			IsPerson:        author_file_raw.IsPerson.Bool,
 			IsPrimaryAuthor: author_file_raw.IsPrimaryAuthor.Bool,
@@ -119,7 +127,7 @@ func SemiCompleteFileGetFromUUID(ctx context.Context, q dbstore.Queries, uuid uu
 		}
 	}
 
-	file := CompleteFileSchema{
+	file := files.CompleteFileSchema{
 		ID:           file_raw.ID,
 		Verified:     file_raw.Verified.Bool,
 		Extension:    file_raw.Extension,
@@ -134,14 +142,14 @@ func SemiCompleteFileGetFromUUID(ctx context.Context, q dbstore.Queries, uuid uu
 	return file, nil
 }
 
-func FileTextsGetAll(ctx context.Context, q dbstore.Queries, uuid uuid.UUID) ([]FileChildTextSource, error) {
+func FileTextsGetAll(ctx context.Context, q dbstore.Queries, uuid uuid.UUID) ([]files.FileChildTextSource, error) {
 	texts, err := q.ListTextsOfFile(ctx, uuid)
 	if err != nil {
-		return make([]FileChildTextSource, 0), err
+		return make([]files.FileChildTextSource, 0), err
 	}
-	return_texts := make([]FileChildTextSource, len(texts))
+	return_texts := make([]files.FileChildTextSource, len(texts))
 	for i, text := range texts {
-		return_texts[i] = FileChildTextSource{
+		return_texts[i] = files.FileChildTextSource{
 			IsOriginalText: text.IsOriginalText,
 			Text:           text.Text,
 			Language:       text.Language,
@@ -150,12 +158,12 @@ func FileTextsGetAll(ctx context.Context, q dbstore.Queries, uuid uuid.UUID) ([]
 	return return_texts, nil
 }
 
-func FileStageGet(ctx context.Context, q dbstore.Queries, uuid uuid.UUID) (DocProcStage, error) {
+func FileStageGet(ctx context.Context, q dbstore.Queries, uuid uuid.UUID) (files.DocProcStage, error) {
 	stage_str, err := q.StageLogFileGetLatest(ctx, uuid)
 	if err != nil {
-		return DocProcStage{}, err
+		return files.DocProcStage{}, err
 	}
-	stage := DocProcStage{}
+	stage := files.DocProcStage{}
 	err = json.Unmarshal(stage_str.Log, &stage)
 	if err != nil {
 		return stage, err
@@ -163,24 +171,26 @@ func FileStageGet(ctx context.Context, q dbstore.Queries, uuid uuid.UUID) (DocPr
 	return stage, nil
 }
 
-func CompleteFileSchemaGetFromUUID(ctx context.Context, q dbstore.Queries, uuid uuid.UUID) (CompleteFileSchema, error) {
+func CompleteFileSchemaGetFromUUID(ctx context.Context, q dbstore.Queries, uuid uuid.UUID) (files.CompleteFileSchema, error) {
 	file, err := SemiCompleteFileGetFromUUID(ctx, q, uuid)
+	nilSchema := files.CompleteFileSchema{}
 	if err != nil {
-		return CompleteFileSchema{}, err
+		return nilSchema, err
 	}
 	texts, err := FileTextsGetAll(ctx, q, uuid)
 	if err != nil {
-		return CompleteFileSchema{}, err
+		return nilSchema, err
 	}
 	file.DocTexts = texts
 	stage, err := FileStageGet(ctx, q, uuid)
 	if err != nil {
-		return CompleteFileSchema{}, err
+		return nilSchema, err
 	}
 	file.Stage = stage
 	return file, nil
 }
 
+// TODO: refactor config into a middleware pattern
 func ReadFileHandlerFactory(config FileHandlerConfig) http.HandlerFunc {
 	private := config.private
 	dbtx_val := config.dbtx_val
@@ -210,12 +220,15 @@ func ReadFileHandlerFactory(config FileHandlerConfig) http.HandlerFunc {
 		// Since all three of these methods share the same authentication and database connection prerecs
 		// switching functionality using an if else, or a cases switch lets code get reused
 		// TODO: This is horrible, I need to refactor
-		file_params := GetFileParam{
-			q, ctx, parsedUUID, private,
+		file_params := files.GetFileParam{
+			Queries: q,
+			Context: ctx,
+			PgUUID:  parsedUUID,
+			Private: private,
 		}
 		switch return_type {
 		case "raw":
-			file, err := GetFileObjectRaw(file_params)
+			file, err := files.GetFileObjectRaw(file_params)
 			if err != nil {
 				error_string := fmt.Sprintf("Error retrieving file object %v", err)
 				fmt.Println(error_string)
@@ -246,7 +259,7 @@ func ReadFileHandlerFactory(config FileHandlerConfig) http.HandlerFunc {
 			originalLang := r.URL.Query().Get("original_lang") == "true"
 			matchLang := r.URL.Query().Get("match_lang")
 			// TODO: Add suport for non english text retrieval and original text retrieval
-			markdownText, err := GetSpecificFileText(file_params, matchLang, originalLang)
+			markdownText, err := files.GetSpecificFileText(file_params, matchLang, originalLang)
 			if err != nil {
 				http.Error(w, "Error retrieving texts or no texts found that mach query params", http.StatusNotFound)
 				return
@@ -254,12 +267,12 @@ func ReadFileHandlerFactory(config FileHandlerConfig) http.HandlerFunc {
 			w.Header().Set("Content-Type", "text/plain")
 			w.Write([]byte(markdownText))
 		case "object-minimal":
-			file, err := GetFileObjectRaw(file_params)
+			file, err := files.GetFileObjectRaw(file_params)
 			if err != nil {
 				http.Error(w, "File not found", http.StatusNotFound)
 				return
 			}
-			inflated_schema := CompleteFileSchemaInflateFromPartialSchema(file)
+			inflated_schema := file.CompleteFileSchemaInflateFromPartialSchema()
 
 			response, _ := json.Marshal(inflated_schema)
 

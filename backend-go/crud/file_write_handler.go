@@ -6,10 +6,13 @@ import (
 	"io"
 	"net/http"
 
+	"kessler/gen/dbstore"
+
+	"kessler/objects/files"
+
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/mycorrhiza-inc/kessler/backend-go/gen/dbstore"
 )
 
 type FileUpsertHandlerConfig struct {
@@ -62,7 +65,7 @@ func makeFileUpsertHandler(config FileUpsertHandlerConfig) func(w http.ResponseW
 		}
 		// Proceed with the write operation
 		defer r.Body.Close()
-		var newDocInfo CompleteFileSchema
+		var newDocInfo files.CompleteFileSchema
 		bodyBytes, err := io.ReadAll(r.Body)
 		if err != nil {
 			errorstring := fmt.Sprintf("Error reading request body: %v\n", err)
@@ -86,7 +89,7 @@ func makeFileUpsertHandler(config FileUpsertHandlerConfig) func(w http.ResponseW
 			return
 		}
 		if insert && deduplicate_with_respect_to_hash {
-			ids, err := HashGetUUIDsFile(q, ctx, hash)
+			ids, err := files.HashGetUUIDsFile(q, ctx, hash)
 			if err != nil {
 				errorstring := fmt.Sprintf("Error getting document ids from hash for deduplication: %v\n", err)
 				fmt.Println(errorstring)
@@ -103,16 +106,16 @@ func makeFileUpsertHandler(config FileUpsertHandlerConfig) func(w http.ResponseW
 				newDocInfo.ID = id
 			}
 		}
-		rawFileCreationData := ConvertToCreationData(newDocInfo)
+		rawFileCreationData := newDocInfo.ConvertToCreationData()
 		// If we complete all other parts of the file upload process we can set this to true
 		// but assuming some parts fail we want the process to fail safe.
 		newDocInfo.Verified = false
 		rawFileCreationData.Verified = pgtype.Bool{Bool: false, Valid: true}
-		var fileSchema FileSchema
+		var fileSchema files.FileSchema
 		// TODO : For print debugging only, might be a good idea to put these in a deubug logger with lowest priority??
 		fmt.Printf("Inserting document with uuid: %s\n", doc_uuid)
 		if insert {
-			fileSchema, err = InsertPubPrivateFileObj(q, ctx, rawFileCreationData, private)
+			fileSchema, err = files.InsertPubPrivateFileObj(q, ctx, rawFileCreationData, private)
 		} else {
 			if doc_uuid == empty_uuid {
 				err := fmt.Errorf("ASSERT FAILURE: docUUID should never have a null uuid, when updating document.")
@@ -121,7 +124,7 @@ func makeFileUpsertHandler(config FileUpsertHandlerConfig) func(w http.ResponseW
 				http.Error(w, errorstring, http.StatusInternalServerError)
 				return
 			}
-			fileSchema, err = UpdatePubPrivateFileObj(q, ctx, rawFileCreationData, private, doc_uuid)
+			fileSchema, err = files.UpdatePubPrivateFileObj(q, ctx, rawFileCreationData, private, doc_uuid)
 		}
 		if err != nil {
 			errorstring := fmt.Sprintf("Error inserting/updating document: %v\n", err)

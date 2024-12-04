@@ -114,6 +114,100 @@ func (s SearchData) String() string {
 	return string(jsonData)
 }
 
+func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
+	fmt.Printf("searching quickwit:\n%s", r)
+	r.Index = "NY_PUC"
+	search_index := r.Index
+	// ===== construct search request =====
+	query := r.Query
+	log.Printf("search filters: %s\n", r.SearchFilters)
+
+	var queryString string
+	dateQuery, err := ConstructDateQuery(r.SearchFilters.DateFrom, r.SearchFilters.DateTo)
+	if err != nil {
+		log.Printf("error constructing date query: %v", err)
+	}
+	if len(r.Query) >= 0 {
+		queryString = fmt.Sprintf("((text:(%s) OR name:(%s)) AND verified:true AND %s)", query, query, dateQuery)
+	}
+
+	filtersString := constructQuickwitMetadataQueryString(r.SearchFilters.Metadata)
+
+	queryString = queryString + filtersString
+	log.Printf("full query string: %s\n", queryString)
+
+	// construct sortby string
+	sortbyStr := "date_filed"
+	// Changing this to be a greater than or equal to 1, instead of a less than or equal to 1, trying to track down an out of index thing - Nic
+	if len(r.SortBy) >= 1 {
+		sortbyStr = r.SortBy[0]
+	} else {
+		for _, sortby := range r.SortBy {
+			sortbyStr += fmt.Sprintf("metadata.%s,", sortby)
+		}
+	}
+	snippetFields := "text"
+	if !r.GetText {
+		snippetFields = ""
+	}
+
+	if r.MaxHits == 0 {
+		r.MaxHits = 40
+	}
+	// construct request
+	request := QuickwitSearchRequest{
+		Query:         queryString,
+		MaxHits:       r.MaxHits,
+		SnippetFields: snippetFields,
+		StartOffset:   r.StartOffset,
+		SortBy:        sortbyStr,
+	}
+
+	jsonData, err := json.Marshal(request)
+
+	// ===== submit request to quickwit =====
+	log.Printf("jsondata: \n%s", jsonData)
+	if err != nil {
+		log.Printf("Error Marshalling quickwit request: %s", err)
+		return nil, err
+	}
+
+	request_url := fmt.Sprintf("%s/api/v1/%s/search", quickwitURL, search_index)
+	resp, err := http.Post(
+		request_url,
+		"application/json",
+		bytes.NewBuffer(jsonData),
+	)
+	if err != nil {
+		log.Printf("Error sending request to quickwit: %s", err)
+		errturn(err)
+	}
+
+	defer resp.Body.Close()
+
+	// ===== handle response =====
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("Error: received status code %v", resp.StatusCode)
+		a, e := errturn(fmt.Errorf("received status code %v", resp.StatusCode))
+		return a, e
+	}
+	var searchResponse quickwitSearchResponse
+	err = json.NewDecoder(resp.Body).Decode(&searchResponse)
+	if err != nil {
+		log.Printf("Error unmarshalling quickwit response: %s", err)
+		errturn(err)
+	}
+	validated_response := ValidateSearchRequest(r, searchResponse)
+
+	data, err := ExtractSearchData(validated_response)
+	if err != nil {
+		log.Printf("Error creating response data: %s", err)
+		errturn(err)
+	}
+
+	return data, nil
+}
+
 // write a function that will take in a searchRequest and searchResults and create a new quickwitSearchResponse then for each hit and snippet in the passed in search results, make sure all the filters in search request are valid for that, if it is valid append it to the return searchResponse, else skip it and print a scary error message, then return the list of validated results
 func ValidateSearchRequest(searchRequest SearchRequest, searchResults quickwitSearchResponse) quickwitSearchResponse {
 	filters := searchRequest.SearchFilters
@@ -228,100 +322,6 @@ func ConstructDateQuery(DateFrom string, DateTo string) (string, error) {
 	return dateQuery, nil
 }
 
-func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
-	fmt.Printf("searching quickwit:\n%s", r)
-	r.Index = "NY_PUC"
-	search_index := r.Index
-	// ===== construct search request =====
-	query := r.Query
-	log.Printf("search filters: %s\n", r.SearchFilters)
-
-	var queryString string
-	dateQuery, err := ConstructDateQuery(r.SearchFilters.DateFrom, r.SearchFilters.DateTo)
-	if err != nil {
-		log.Printf("error constructing date query: %v", err)
-	}
-	if len(r.Query) >= 0 {
-		queryString = fmt.Sprintf("((text:(%s) OR name:(%s)) AND verified:true AND %s)", query, query, dateQuery)
-	}
-
-	filtersString := constructQuickwitMetadataQueryString(r.SearchFilters.Metadata)
-
-	queryString = queryString + filtersString
-	log.Printf("full query string: %s\n", queryString)
-
-	// construct sortby string
-	sortbyStr := "date_filed"
-	// Changing this to be a greater than or equal to 1, instead of a less than or equal to 1, trying to track down an out of index thing - Nic
-	if len(r.SortBy) >= 1 {
-		sortbyStr = r.SortBy[0]
-	} else {
-		for _, sortby := range r.SortBy {
-			sortbyStr += fmt.Sprintf("metadata.%s,", sortby)
-		}
-	}
-	snippetFields := "text"
-	if !r.GetText {
-		snippetFields = ""
-	}
-
-	if r.MaxHits == 0 {
-		r.MaxHits = 40
-	}
-	// construct request
-	request := QuickwitSearchRequest{
-		Query:         queryString,
-		MaxHits:       r.MaxHits,
-		SnippetFields: snippetFields,
-		StartOffset:   r.StartOffset,
-		SortBy:        sortbyStr,
-	}
-
-	jsonData, err := json.Marshal(request)
-
-	// ===== submit request to quickwit =====
-	log.Printf("jsondata: \n%s", jsonData)
-	if err != nil {
-		log.Printf("Error Marshalling quickwit request: %s", err)
-		return nil, err
-	}
-
-	request_url := fmt.Sprintf("%s/api/v1/%s/search", quickwitURL, search_index)
-	resp, err := http.Post(
-		request_url,
-		"application/json",
-		bytes.NewBuffer(jsonData),
-	)
-	if err != nil {
-		log.Printf("Error sending request to quickwit: %s", err)
-		errturn(err)
-	}
-
-	defer resp.Body.Close()
-
-	// ===== handle response =====
-	if resp.StatusCode != http.StatusOK {
-		log.Printf("Error: received status code %v", resp.StatusCode)
-		a, e := errturn(fmt.Errorf("received status code %v", resp.StatusCode))
-		return a, e
-	}
-	var searchResponse quickwitSearchResponse
-	err = json.NewDecoder(resp.Body).Decode(&searchResponse)
-	if err != nil {
-		log.Printf("Error unmarshalling quickwit response: %s", err)
-		errturn(err)
-	}
-	validated_response := ValidateSearchRequest(r, searchResponse)
-
-	data, err := ExtractSearchData(validated_response)
-	if err != nil {
-		log.Printf("Error creating response data: %s", err)
-		errturn(err)
-	}
-
-	return data, nil
-}
-
 func constructQuickwitMetadataQueryString(meta Metadata) string {
 	var filterQuery string
 	filters := []string{}
@@ -370,47 +370,6 @@ func constructQuickwitMetadataQueryString(meta Metadata) string {
 
 func SearchMilvus(request SearchRequest) ([]SearchData, error) {
 	return []SearchData{}, fmt.Errorf("not implemented")
-}
-
-type SearchReturn struct {
-	Results []SearchData
-	Error   error
-}
-
-func HybridSearch(request SearchRequest) ([]SearchData, error) {
-	// This could absolutely be dryified
-	chanMilvus := make(chan SearchReturn)
-	chanQuickwit := make(chan SearchReturn)
-	go func() {
-		results, err := SearchMilvus(request)
-		return_results := SearchReturn{results, err}
-		chanMilvus <- return_results
-	}()
-	go func() {
-		results, err := SearchQuickwit(request)
-		return_results := SearchReturn{results, err}
-		chanQuickwit <- return_results
-	}()
-	resultsMilvus := <-chanMilvus
-	resultsQuickwit := <-chanQuickwit
-	if resultsMilvus.Error == nil {
-		fmt.Printf("Milvus returned error: %s", resultsMilvus.Error)
-	}
-	if resultsQuickwit.Error == nil {
-		fmt.Printf("Quickwit returned error: %s", resultsQuickwit.Error)
-	}
-	if resultsMilvus.Error != nil && resultsQuickwit.Error != nil {
-		return []SearchData{}, fmt.Errorf("both Milvus and Quickwit returned errors. milvus error: %s quickwit error: %s", resultsMilvus.Error, resultsQuickwit.Error)
-	}
-	unrankedResults := append(resultsMilvus.Results, resultsQuickwit.Results...)
-	rerankedData, err := rerankSearchResults(unrankedResults, request.Query)
-	// Fail semi silently and returns the regular unranked results
-	if err != nil {
-		log.Printf("Error reranking results: %s", err)
-		return unrankedResults, nil
-	}
-
-	return rerankedData, nil
 }
 
 func FormatSearchResults(searchResults []SearchData, query string) string {

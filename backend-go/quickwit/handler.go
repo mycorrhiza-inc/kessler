@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
+	util "kessler/util"
+
 	"github.com/gorilla/mux"
-	util "github.com/mycorrhiza-inc/kessler/backend-go/util"
 )
 
 type SearchIngestRequest struct {
