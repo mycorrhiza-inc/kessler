@@ -1,4 +1,4 @@
-import { ConversationView } from "@/components/Conversations/ConversationView";
+import ConversationComponent from "@/components/Conversations/ConversationComponent";
 import ConversationTable from "@/components/Organizations/ConversationTable";
 import PageContainer from "@/components/Page/PageContainer";
 import { PageContext } from "@/lib/page_context";
@@ -32,7 +32,7 @@ export default async function Page({
         <ConversationTable />
       </div>
       <h2 className="text-2xl font-bold">All Documents</h2>
-      <ConversationView pageContext={pageContext} />
+      <ConversationComponent inheritedFilters={[]} />
     </PageContainer>
   );
 }
