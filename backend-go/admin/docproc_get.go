@@ -11,6 +11,7 @@ import (
 
 	"kessler/crud"
 	"kessler/gen/dbstore"
+	"kessler/objects/files"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -43,16 +44,16 @@ func UnverifedCompleteFileSchemaListFactory(dbtx_val dbstore.DBTX) http.HandlerF
 	}
 }
 
-func UnverifedCompleteFileSchemaList(ctx context.Context, q dbstore.Queries, max_responses uint) ([]crud.CompleteFileSchema, error) {
+func UnverifedCompleteFileSchemaList(ctx context.Context, q dbstore.Queries, max_responses uint) ([]files.CompleteFileSchema, error) {
 	fmt.Printf("Getting %d unverified files\n", max_responses)
-	files, err := q.FilesListUnverified(ctx, int32(max_responses)*2)
+	db_files, err := q.FilesListUnverified(ctx, int32(max_responses)*2)
 	// If postgres return randomization doesnt work, then you can still get it to kinda work by returning double the results, randomizing and throwing away half.
 	if err != nil {
-		return []crud.CompleteFileSchema{}, err
+		return []files.CompleteFileSchema{}, err
 	}
 	fmt.Printf("Got unverified files, randomizing uuids\n")
-	unverified_raw_uuids := make([]uuid.UUID, len(files))
-	for i, file := range files {
+	unverified_raw_uuids := make([]uuid.UUID, len(db_files))
+	for i, file := range db_files {
 		unverified_raw_uuids[i] = file.ID
 	}
 	// Shuffle the uuids around to get a random selection while processing
@@ -68,8 +69,8 @@ func UnverifedCompleteFileSchemaList(ctx context.Context, q dbstore.Queries, max
 	}
 	fmt.Printf("Trimmed unverified uuids to %d, getting complete files for all remaining\n", len(unverified_raw_uuids))
 
-	complete_files := []crud.CompleteFileSchema{}
-	fileChan := make(chan crud.CompleteFileSchema)
+	complete_files := []files.CompleteFileSchema{}
+	fileChan := make(chan files.CompleteFileSchema)
 	errChan := make(chan error)
 	var wg sync.WaitGroup
 

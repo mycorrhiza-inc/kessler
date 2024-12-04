@@ -230,25 +230,25 @@ type ReturnFilesSchema struct {
 }
 
 func GetListAllRawFiles(ctx context.Context, q dbstore.Queries) ([]files.FileSchema, error) {
-	files, err := q.FilesList(ctx)
+	db_files, err := q.FilesList(ctx)
 	if err != nil {
 		return []files.FileSchema{}, err
 	}
 	var fileSchemas []files.FileSchema
-	for _, fileRaw := range files {
+	for _, fileRaw := range db_files {
 		rawSchema := files.PublicFileToSchema(fileRaw)
 		fileSchemas = append(fileSchemas, rawSchema)
 	}
 	return fileSchemas, nil
 }
 
-func GetListAllFiles(ctx context.Context, q dbstore.Queries) ([]FileSchema, error) {
-	files, err := GetListAllRawFiles(ctx, q)
+func GetListAllFiles(ctx context.Context, q dbstore.Queries) ([]files.FileSchema, error) {
+	db_files, err := GetListAllRawFiles(ctx, q)
 	if err != nil {
 		return []files.FileSchema{}, err
 	}
 	var fileSchemas []files.FileSchema
-	for _, rawSchema := range files {
+	for _, rawSchema := range db_files {
 		fileSchema := rawSchema
 		fileSchemas = append(fileSchemas, fileSchema)
 	}

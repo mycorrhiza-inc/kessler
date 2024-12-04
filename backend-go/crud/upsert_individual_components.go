@@ -6,12 +6,13 @@ import (
 	"fmt"
 
 	"kessler/gen/dbstore"
+	"kessler/objects/files"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func upsertFileTexts(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, texts []FileChildTextSource, insert bool) error {
+func upsertFileTexts(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, texts []files.FileChildTextSource, insert bool) error {
 	// Sometimes this is getting called with an insert when the metadata already exists in the table, this causes a PGERROR, since it violates uniqueness. However, setting it up so it tries to update will fall back to insert if the file doesnt exist. Its probably a good idea to remove this and debug what is causing the new file thing at some point.
 	// I think I might have solved the error, it was only happenining in the other ones so its added here for an abundance of safety and only degrades perf slightly
 	insert = false
@@ -29,13 +30,13 @@ func upsertFileTexts(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID,
 	// TODO : Make Async at some point in future
 	error_list := []error{}
 	for _, text := range texts {
-		textRaw := FileTextSchema{
+		textRaw := files.FileTextSchema{
 			FileID:         doc_uuid,
 			IsOriginalText: text.IsOriginalText,
 			Language:       text.Language,
 			Text:           text.Text,
 		}
-		err := InsertPriPubFileText(q, ctx, textRaw, false)
+		err := files.InsertPriPubFileText(q, ctx, textRaw, false)
 		if err != nil {
 			fmt.Print("Error adding a text value, not doing anything and procceeding since error handling is hard.")
 			error_list = append(error_list, err)
@@ -47,7 +48,7 @@ func upsertFileTexts(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID,
 	return nil
 }
 
-func upsertFileMetadata(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, metadata FileMetadataSchema, insert bool) error {
+func upsertFileMetadata(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, metadata files.FileMetadataSchema, insert bool) error {
 	// Sometimes this is getting called with an insert when the metadata already exists in the table, this causes a PGERROR, since it violates uniqueness. However, setting it up so it tries to update will fall back to insert if the file doesnt exist. Its probably a good idea to remove this and debug what is causing the new file thing at some point.
 	// UPDATE: I am pretty sure I solved it this should be safe to take out soon - nic
 	insert = false
@@ -83,7 +84,7 @@ func upsertFileMetadata(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UU
 	return err
 }
 
-func upsertFileExtras(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, extras FileGeneratedExtras, insert bool) error {
+func upsertFileExtras(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, extras files.FileGeneratedExtras, insert bool) error {
 	// Sometimes this is getting called with an insert when the metadata already exists in the table, this causes a PGERROR, since it violates uniqueness. However, setting it up so it tries to update will fall back to insert if the file doesnt exist. Its probably a good idea to remove this and debug what is causing the new file thing at some point.
 	// UPDATE: I am pretty sure I solved it this should be safe to take out soon - nic
 	insert = false
@@ -115,7 +116,7 @@ func upsertFileExtras(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID
 	return err
 }
 
-func fileStatusInsert(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, stage DocProcStage) error {
+func fileStatusInsert(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, stage files.DocProcStage) error {
 	stage_json, err := json.Marshal(stage)
 	if err != nil {
 		return err
@@ -129,16 +130,16 @@ func fileStatusInsert(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID
 	return err
 }
 
-func fileStatusGetLatestStage(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID) (DocProcStage, error) {
+func fileStatusGetLatestStage(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID) (files.DocProcStage, error) {
 	result_pgschema, err := q.StageLogFileGetLatest(ctx, doc_uuid)
-	return_obj := DocProcStage{}
+	return_obj := files.DocProcStage{}
 	if err != nil {
-		return DocProcStage{}, err
+		return files.DocProcStage{}, err
 	}
 	result_json := result_pgschema.Log
 	err = json.Unmarshal(result_json, &return_obj)
 	if err != nil {
-		return DocProcStage{}, err
+		return files.DocProcStage{}, err
 	}
 	return return_obj, nil
 }

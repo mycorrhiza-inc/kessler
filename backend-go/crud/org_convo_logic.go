@@ -9,6 +9,9 @@ import (
 
 	"kessler/gen/dbstore"
 
+	"kessler/objects/authors"
+	"kessler/objects/conversations"
+
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -47,7 +50,7 @@ func OrganizationVerifyHandlerFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 
 		ctx := r.Context()
 		q := *dbstore.New(dbtx_val)
-		author_info := AuthorInformation{AuthorName: req.OrganizationName, IsPerson: req.IsPerson}
+		author_info := authors.AuthorInformation{AuthorName: req.OrganizationName, IsPerson: req.IsPerson}
 		author_info, err = verifyAuthorOrganizationUUID(ctx, q, &author_info)
 		if err != nil {
 			errorstring := fmt.Sprintf("Error verifying author %v: %v\n", req.OrganizationName, err)
@@ -74,7 +77,7 @@ func ConversationVerifyHandlerFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 			return
 		}
 
-		var req ConversationInformation
+		var req conversations.ConversationInformation
 		err = json.Unmarshal(bodyBytes, &req)
 		if err != nil {
 			errorstring := fmt.Sprintf("Error decoding JSON: %v\n", err)
@@ -106,7 +109,7 @@ func ConversationVerifyHandlerFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 	}
 }
 
-func verifyAuthorOrganizationUUID(ctx context.Context, q dbstore.Queries, author_info *AuthorInformation) (AuthorInformation, error) {
+func verifyAuthorOrganizationUUID(ctx context.Context, q dbstore.Queries, author_info *authors.AuthorInformation) (authors.AuthorInformation, error) {
 	if author_info.AuthorID != uuid.Nil {
 		return *author_info, nil
 	}
@@ -138,14 +141,14 @@ func verifyAuthorOrganizationUUID(ctx context.Context, q dbstore.Queries, author
 	return *author_info, nil
 }
 
-func fileAuthorsUpsert(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, authors_info []AuthorInformation, insert bool) error {
+func fileAuthorsUpsert(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, authors_info []authors.AuthorInformation, insert bool) error {
 	if !insert {
 		err := q.AuthorshipDocumentDeleteAll(ctx, doc_uuid)
 		if err != nil {
 			return err
 		}
 	}
-	fileAuthorInsert := func(author_info AuthorInformation) error {
+	fileAuthorInsert := func(author_info authors.AuthorInformation) error {
 		new_author_info, err := verifyAuthorOrganizationUUID(ctx, q, &author_info)
 		if err != nil {
 			return err
@@ -176,7 +179,7 @@ func fileAuthorsUpsert(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUI
 	return nil
 }
 
-func verifyConversationUUID(ctx context.Context, q dbstore.Queries, conv_info *ConversationInformation, update bool) (ConversationInformation, error) {
+func verifyConversationUUID(ctx context.Context, q dbstore.Queries, conv_info *conversations.ConversationInformation, update bool) (conversations.ConversationInformation, error) {
 	// fmt.Printf("Starting verifyConversationUUID with conv_info: %+v, update: %v\n", conv_info, update)
 
 	if conv_info.ID != uuid.Nil && !update {
@@ -238,7 +241,7 @@ func verifyConversationUUID(ctx context.Context, q dbstore.Queries, conv_info *C
 	return *conv_info, nil
 }
 
-func fileConversationUpsert(ctx context.Context, q dbstore.Queries, file_id uuid.UUID, conv_info ConversationInformation, insert bool) error {
+func fileConversationUpsert(ctx context.Context, q dbstore.Queries, file_id uuid.UUID, conv_info conversations.ConversationInformation, insert bool) error {
 	// Sometimes this is getting called with an insert when the metadata already exists in the table, this causes a PGERROR, since it violates uniqueness. However, setting it up so it tries to update will fall back to insert if the file doesnt exist. Its probably a good idea to remove this and debug what is causing the new file thing at some point.
 	insert = false
 	shouldnt_process := conv_info.ID == uuid.Nil && conv_info.DocketID == ""
