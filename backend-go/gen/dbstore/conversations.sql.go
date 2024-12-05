@@ -11,6 +11,56 @@ import (
 	"github.com/google/uuid"
 )
 
+const conversationSemiCompleteInfoList = `-- name: ConversationSemiCompleteInfoList :many
+SELECT
+    dc.id,
+    dc.docket_id,
+    COUNT(dd.file_id) AS document_count,
+    dc."name",
+    dc.description
+FROM
+    public.docket_conversations dc
+    LEFT JOIN public.docket_documents dd ON dd.docket_id = dc.id
+GROUP BY
+    dc.id
+ORDER BY
+    document_count DESC
+`
+
+type ConversationSemiCompleteInfoListRow struct {
+	ID            uuid.UUID
+	DocketID      string
+	DocumentCount int64
+	Name          string
+	Description   string
+}
+
+func (q *Queries) ConversationSemiCompleteInfoList(ctx context.Context) ([]ConversationSemiCompleteInfoListRow, error) {
+	rows, err := q.db.Query(ctx, conversationSemiCompleteInfoList)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ConversationSemiCompleteInfoListRow
+	for rows.Next() {
+		var i ConversationSemiCompleteInfoListRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.DocketID,
+			&i.DocumentCount,
+			&i.Name,
+			&i.Description,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const docketConversationCreate = `-- name: DocketConversationCreate :one
 INSERT INTO
     public.docket_conversations (
