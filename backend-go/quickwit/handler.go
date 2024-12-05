@@ -12,7 +12,7 @@ import (
 
 type SearchIngestRequest struct {
 	Index string                   `json:"index"`
-	Data  []map[string]interface{} `json:"data"`
+	Data  []QuickwitFileUploadData `json:"data"`
 }
 
 func HandleQuckwitIngest(w http.ResponseWriter, r *http.Request) {
