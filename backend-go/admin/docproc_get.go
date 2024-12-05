@@ -67,14 +67,14 @@ func UnverifedCompleteFileSchemaList(ctx context.Context, q dbstore.Queries, max
 	if len(unverified_raw_uuids) > int(max_responses) {
 		unverified_raw_uuids = unverified_raw_uuids[:max_responses]
 	}
-	complete_files, err := getCompleteFileSchemaList(ctx, q, unverified_raw_uuids)
+	complete_files, err := CompleteFileSchemasFromUUIDs(ctx, q, unverified_raw_uuids)
 	if err != nil {
 		return []files.CompleteFileSchema{}, err
 	}
 	return complete_files, nil
 }
 
-func getCompleteFileSchemaList(ctx context.Context, q dbstore.Queries, uuids []uuid.UUID) ([]files.CompleteFileSchema, error) {
+func CompleteFileSchemasFromUUIDs(ctx context.Context, q dbstore.Queries, uuids []uuid.UUID) ([]files.CompleteFileSchema, error) {
 	complete_files := []files.CompleteFileSchema{}
 	fileChan := make(chan files.CompleteFileSchema)
 	// errChan := make(chan error)
