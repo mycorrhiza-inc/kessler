@@ -93,7 +93,9 @@ SELECT
     dc.docket_id,
     COUNT(dd.file_id) AS document_count,
     dc."name",
-    dc.description
+    dc.description,
+    dc.created_at,
+    dc.updated_at
 FROM
     public.docket_conversations dc
     LEFT JOIN public.docket_documents dd ON dd.docket_id = dc.id

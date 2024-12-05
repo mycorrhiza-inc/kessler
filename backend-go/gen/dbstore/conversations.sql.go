@@ -9,6 +9,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const conversationSemiCompleteInfoList = `-- name: ConversationSemiCompleteInfoList :many
@@ -17,7 +18,9 @@ SELECT
     dc.docket_id,
     COUNT(dd.file_id) AS document_count,
     dc."name",
-    dc.description
+    dc.description,
+    dc.created_at,
+    dc.updated_at
 FROM
     public.docket_conversations dc
     LEFT JOIN public.docket_documents dd ON dd.docket_id = dc.id
@@ -33,6 +36,8 @@ type ConversationSemiCompleteInfoListRow struct {
 	DocumentCount int64
 	Name          string
 	Description   string
+	CreatedAt     pgtype.Timestamp
+	UpdatedAt     pgtype.Timestamp
 }
 
 func (q *Queries) ConversationSemiCompleteInfoList(ctx context.Context) ([]ConversationSemiCompleteInfoListRow, error) {
@@ -50,6 +55,8 @@ func (q *Queries) ConversationSemiCompleteInfoList(ctx context.Context) ([]Conve
 			&i.DocumentCount,
 			&i.Name,
 			&i.Description,
+			&i.CreatedAt,
+			&i.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}
