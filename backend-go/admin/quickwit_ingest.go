@@ -29,11 +29,8 @@ func HandleQuickwitIngestFromPostgresFactory(dbtx_val dbstore.DBTX, filter_out_u
 func QuickwitIngestFromPostgresMain(dbtx_val dbstore.DBTX, ctx context.Context, filter_out_unverified bool) error {
 	q := *dbstore.New(dbtx_val)
 	indexName := quickwit.NYPUCIndexName
-	err := quickwit.ClearIndex(indexName)
-	if err != nil {
-		return err
-	}
 	var files []dbstore.File
+	var err error
 
 	if filter_out_unverified {
 		return fmt.Errorf("Not implemented yet")
@@ -43,14 +40,25 @@ func QuickwitIngestFromPostgresMain(dbtx_val dbstore.DBTX, ctx context.Context, 
 			return err
 		}
 	}
-
 	ids := make([]uuid.UUID, len(files))
 	for i, file := range files {
 		ids[i] = file.ID
 	}
-
 	chunkSize := 100
 	fmt.Printf("Got %d file ids, processing in chunks of size %d\n", len(ids), chunkSize)
+
+	fmt.Printf("Attempting to clear index %s\n", indexName)
+	err = quickwit.ClearIndex(indexName)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Cleared index %s\n", indexName)
+	err = quickwit.CreateDocketsQuickwitIndex(indexName)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Created index %s\n", indexName)
+
 	for i := 0; i < len(ids); i += chunkSize {
 
 		end := i + chunkSize
