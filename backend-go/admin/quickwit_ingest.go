@@ -13,6 +13,7 @@ import (
 func HandleQuickwitIngestFromPostgresFactory(dbtx_val dbstore.DBTX, filter_out_unverified bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
+		fmt.Printf("Starting Quickwit ingest from Postgres (filter_out_unverified=%v)\n", filter_out_unverified)
 		err := QuickwitIngestFromPostgresMain(dbtx_val, ctx, filter_out_unverified)
 		if err != nil {
 			errorstring := fmt.Sprintf("Error ingesting from postgres: %v", err)
@@ -20,6 +21,7 @@ func HandleQuickwitIngestFromPostgresFactory(dbtx_val dbstore.DBTX, filter_out_u
 			http.Error(w, errorstring, http.StatusInternalServerError)
 			return
 		}
+		fmt.Println("Successfully completed Quickwit ingest from Postgres")
 		w.Write([]byte("Sucessfully ingested from postgres"))
 	}
 }
@@ -59,16 +61,19 @@ func QuickwitIngestFromPostgresMain(dbtx_val dbstore.DBTX, ctx context.Context, 
 		fmt.Printf("Processing chunk %d to %d\n", i, end-1)
 		complete_files_chunk, err := CompleteFileSchemasFromUUIDs(ctx, q, id_chunk)
 		if err != nil {
+			fmt.Printf("Error getting complete file schemas: %v\n", err)
 			return err
 		}
 		fmt.Printf("Got %d complete files\n", len(complete_files_chunk))
 
 		quickwit_data_list_chunk, err := quickwit.ResolveFileSchemaForDocketIngest(complete_files_chunk)
 		if err != nil {
+			fmt.Printf("Error resolving file schema: %v\n", err)
 			return err
 		}
 		err = quickwit.IngestIntoIndex(indexName, quickwit_data_list_chunk)
 		if err != nil {
+			fmt.Printf("Error ingesting into index: %v\n", err)
 			return err
 		}
 		fmt.Printf("Processed chunk %d to %d\n", i, end-1)
