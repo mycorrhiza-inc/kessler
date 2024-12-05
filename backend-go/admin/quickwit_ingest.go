@@ -10,10 +10,10 @@ import (
 	"github.com/google/uuid"
 )
 
-func HandleQuickwitIngestFromPostgresFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
+func HandleQuickwitIngestFromPostgresFactory(dbtx_val dbstore.DBTX, filter_out_unverified bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		err := QuickwitIngestFromPostgresMain(dbtx_val, ctx)
+		err := QuickwitIngestFromPostgresMain(dbtx_val, ctx, filter_out_unverified)
 		if err != nil {
 			errorstring := fmt.Sprintf("Error ingesting from postgres: %v", err)
 			fmt.Println(errorstring)
@@ -24,17 +24,22 @@ func HandleQuickwitIngestFromPostgresFactory(dbtx_val dbstore.DBTX) http.Handler
 	}
 }
 
-func QuickwitIngestFromPostgresMain(dbtx_val dbstore.DBTX, ctx context.Context) error {
+func QuickwitIngestFromPostgresMain(dbtx_val dbstore.DBTX, ctx context.Context, filter_out_unverified bool) error {
 	q := *dbstore.New(dbtx_val)
 	indexName := quickwit.NYPUCIndexName
 	err := quickwit.ClearIndex(indexName)
 	if err != nil {
 		return err
 	}
+	var files []dbstore.File
 
-	files, err := q.FilesList(ctx)
-	if err != nil {
-		return err
+	if filter_out_unverified {
+		return fmt.Errorf("Not implemented yet")
+	} else {
+		files, err = q.FilesList(ctx)
+		if err != nil {
+			return err
+		}
 	}
 
 	ids := make([]uuid.UUID, len(files))
