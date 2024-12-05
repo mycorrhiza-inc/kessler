@@ -26,7 +26,7 @@ func HandleQuickwitIngestFromPostgresFactory(dbtx_val dbstore.DBTX) http.Handler
 
 func QuickwitIngestFromPostgresMain(dbtx_val dbstore.DBTX, ctx context.Context) error {
 	q := *dbstore.New(dbtx_val)
-	indexName := "idk what the right index name is"
+	indexName := quickwit.NYPUCIndexName
 	err := quickwit.ClearIndex(indexName)
 	if err != nil {
 		return err
@@ -46,6 +46,8 @@ func QuickwitIngestFromPostgresMain(dbtx_val dbstore.DBTX, ctx context.Context) 
 		return err
 	}
 	fmt.Printf("Got %d complete files\n", len(complete_files))
+
+	quickwit_data_list, err := quickwit.ResolveFileSchemaForDocketIngest(complete_files []files.CompleteFileSchema)
 	for _, complete_file := range complete_files {
 		err = quickwit.IndexFile(complete_file)
 		if err != nil {
