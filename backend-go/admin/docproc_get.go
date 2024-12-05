@@ -79,8 +79,7 @@ func getCompleteFileSchemaList(ctx context.Context, q dbstore.Queries, uuids []u
 	fileChan := make(chan files.CompleteFileSchema)
 	// errChan := make(chan error)
 	var wg sync.WaitGroup
-
-	for _, uuid := range uuids {
+	for _, file_uuid := range uuids {
 		wg.Add(1)
 		go func(file_uuid uuid.UUID) {
 			defer wg.Done()
@@ -97,7 +96,7 @@ func getCompleteFileSchemaList(ctx context.Context, q dbstore.Queries, uuids []u
 			}
 			fmt.Printf("Got complete file %v\n", file_uuid)
 			fileChan <- complete_file
-		}(uuid)
+		}(file_uuid)
 	}
 
 	// Close channels when all goroutines complete
