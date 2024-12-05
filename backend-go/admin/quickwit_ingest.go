@@ -46,16 +46,32 @@ func QuickwitIngestFromPostgresMain(dbtx_val dbstore.DBTX, ctx context.Context, 
 	for i, file := range files {
 		ids[i] = file.ID
 	}
-	complete_files, err := CompleteFileSchemasFromUUIDs(ctx, q, ids)
-	if err != nil {
-		return err
-	}
-	fmt.Printf("Got %d complete files\n", len(complete_files))
 
-	quickwit_data_list, err := quickwit.ResolveFileSchemaForDocketIngest(complete_files)
-	err = quickwit.IngestIntoIndex(indexName, quickwit_data_list)
-	if err != nil {
-		return err
+	chunkSize := 100
+	fmt.Printf("Got %d file ids, processing in chunks of size %d\n", len(ids), chunkSize)
+	for i := 0; i < len(ids); i += chunkSize {
+
+		end := i + chunkSize
+		if end > len(ids) {
+			end = len(ids)
+		}
+		id_chunk := ids[i:end]
+		fmt.Printf("Processing chunk %d to %d\n", i, end-1)
+		complete_files_chunk, err := CompleteFileSchemasFromUUIDs(ctx, q, id_chunk)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("Got %d complete files\n", len(complete_files_chunk))
+
+		quickwit_data_list_chunk, err := quickwit.ResolveFileSchemaForDocketIngest(complete_files_chunk)
+		if err != nil {
+			return err
+		}
+		err = quickwit.IngestIntoIndex(indexName, quickwit_data_list_chunk)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("Processed chunk %d to %d\n", i, end-1)
 	}
 
 	return nil
