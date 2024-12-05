@@ -147,7 +147,12 @@ func ResolveFileSchemaForDocketIngest(complete_files []files.CompleteFileSchema)
 		metadata := input_file.Mdata
 		metadata["source_id"] = input_file.ID
 		metadata["source"] = "ny-puc-energyefficiency-filedocs"
-		metadata["conversation_uuid"] = input_file.Conversation.ID
+		metadata["conversation_uuid"] = input_file.Conversation.ID.String()
+		author_uuids := ""
+		for _, author := range input_file.Authors {
+			author_uuids += author.AuthorID.String() + " "
+		}
+		metadata["author_uuids"] = author_uuids
 		return metadata
 	}
 	var data []QuickwitFileUploadData

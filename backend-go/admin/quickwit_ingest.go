@@ -12,7 +12,8 @@ import (
 
 func HandleQuickwitIngestFromPostgresFactory(dbtx_val dbstore.DBTX, filter_out_unverified bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
+		// ctx := r.Context()
+		ctx := context.Background()
 		fmt.Printf("Starting Quickwit ingest from Postgres (filter_out_unverified=%v)\n", filter_out_unverified)
 		err := QuickwitIngestFromPostgresMain(dbtx_val, ctx, filter_out_unverified)
 		if err != nil {
