@@ -1,17 +1,20 @@
 package admin
 
 import (
-	"net/http"
-
 	"kessler/gen/dbstore"
+	"kessler/quickwit"
+	"net/http"
 
 	"github.com/gorilla/mux"
 )
 
 func DefineAdminRoutes(admin_subrouter *mux.Router, dbtx_val dbstore.DBTX) {
-	timeoutHandler := http.HandlerFunc(completeCleanDatabaseFactory(dbtx_val))
-	admin_subrouter.Handle("/complete-clean", timeoutHandler).Methods(http.MethodPost)
+	cleanDatabaseHandler := http.HandlerFunc(completeCleanDatabaseFactory(dbtx_val))
+	admin_subrouter.Handle("/complete-clean", cleanDatabaseHandler).Methods(http.MethodPost)
 
 	unverifiedDocsHandler := http.HandlerFunc(UnverifedCompleteFileSchemaListFactory(dbtx_val))
 	admin_subrouter.Handle("/get-unverified-docs/{max_responses}", unverifiedDocsHandler).Methods(http.MethodGet)
+
+	quickwitIngestHandler := http.HandlerFunc(quickwit.HandleQuickwitIngestFromPostgresFactory(dbtx_val))
+	admin_subrouter.Handle("/quickwit/ingest", quickwitIngestHandler).Methods(http.MethodPost)
 }

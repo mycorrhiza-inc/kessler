@@ -5,10 +5,17 @@ import (
 	"fmt"
 	"net/http"
 
+	dbstore "kessler/gen/dbstore"
 	util "kessler/util"
 
 	"github.com/gorilla/mux"
 )
+
+func HandleQuickwitIngestFromPostgresFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		q := *dbstore.New(dbtx_val)
+	}
+}
 
 type SearchIngestRequest struct {
 	Index string                   `json:"index"`
@@ -25,7 +32,6 @@ func HandleQuckwitIngest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Fprint(w, "injest job started")
-
 }
 
 type ClearIndexRequest struct {
@@ -40,7 +46,6 @@ func HandleQuickwitIndexClear(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer r.Body.Close()
-
 }
 
 func DefineRoutes(router *mux.Router) {
