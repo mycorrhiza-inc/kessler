@@ -5,17 +5,10 @@ import (
 	"fmt"
 	"net/http"
 
-	dbstore "kessler/gen/dbstore"
 	util "kessler/util"
 
 	"github.com/gorilla/mux"
 )
-
-func HandleQuickwitIngestFromPostgresFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		q := *dbstore.New(dbtx_val)
-	}
-}
 
 type SearchIngestRequest struct {
 	Index string                   `json:"index"`
