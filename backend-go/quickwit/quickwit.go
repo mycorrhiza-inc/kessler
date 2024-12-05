@@ -116,7 +116,7 @@ func ClearIndex(indexName string) error {
 	return nil
 }
 
-func IngestIntoIndex(indexName string, data []map[string]interface{}) error {
+func IngestIntoIndex(indexName string, data []QuickwitFileUploadData) error {
 	fmt.Println("Initiating ingest into index")
 	var records []string
 	for _, record := range data {

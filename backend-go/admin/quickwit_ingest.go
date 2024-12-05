@@ -47,12 +47,10 @@ func QuickwitIngestFromPostgresMain(dbtx_val dbstore.DBTX, ctx context.Context) 
 	}
 	fmt.Printf("Got %d complete files\n", len(complete_files))
 
-	quickwit_data_list, err := quickwit.ResolveFileSchemaForDocketIngest(complete_files []files.CompleteFileSchema)
-	for _, complete_file := range complete_files {
-		err = quickwit.IndexFile(complete_file)
-		if err != nil {
-			return err
-		}
+	quickwit_data_list, err := quickwit.ResolveFileSchemaForDocketIngest(complete_files)
+	err = quickwit.IngestIntoIndex(indexName, quickwit_data_list)
+	if err != nil {
+		return err
 	}
 
 	return nil
