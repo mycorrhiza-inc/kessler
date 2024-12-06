@@ -209,7 +209,7 @@ func ResolveFileSchemaForDocketIngest(complete_files []files.CompleteFileSchema)
 		newRecord := QuickwitFileUploadData{}
 		englishText, err := files.EnglishTextFromCompleteFile(file)
 		if err != nil {
-			continue
+			// Do nothing, an error here means to text was found.
 		}
 		if englishText == "" {
 			englishText = "No English text found in file, this is some example text so quickwit doesnt exclude it, please ignore."
