@@ -53,11 +53,6 @@ func CreateDocketsQuickwitIndex(indexName string) error {
 					"fast": true,
 				},
 				{
-					"name": "source_id",
-					"type": "uuid",
-					"fast": true,
-				},
-				{
 					"name": "verified",
 					"type": "bool",
 					"fast": true,
