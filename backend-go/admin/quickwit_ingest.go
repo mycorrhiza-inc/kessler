@@ -34,7 +34,20 @@ func QuickwitIngestFromPostgresMain(dbtx_val dbstore.DBTX, ctx context.Context, 
 	var err error
 
 	if filter_out_unverified {
-		return fmt.Errorf("Not implemented yet")
+		files, err = q.FilesList(ctx)
+		if err != nil {
+			return err
+		}
+
+		// Filter out unverified files
+		verifiedFiles := make([]dbstore.File, 0)
+		for _, file := range files {
+			if file.Verified.Bool {
+				verifiedFiles = append(verifiedFiles, file)
+			}
+		}
+		files = verifiedFiles
+
 	} else {
 		files, err = q.FilesList(ctx)
 		if err != nil {
