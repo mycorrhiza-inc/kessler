@@ -104,19 +104,12 @@ func ConversationGetByNameFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 
 func OrgSemiCompletePaginatedFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var paginationData networking.BasePaginationNetworkSchema
-		err := json.NewDecoder(r.Body).Decode(&paginationData)
-		if err != nil {
-			errorstr := fmt.Sprintf("Error decoding JSON: %v", err)
-			fmt.Println(errorstr)
-			http.Error(w, errorstr, http.StatusBadRequest)
-			return
-		}
+		paginationData := networking.PaginationFromUrlParams(r)
 		q := *dbstore.New(dbtx_val)
 		ctx := r.Context()
 		args := dbstore.OrganizationSemiCompleteInfoListPaginatedParams{
-			Limit:  int32(paginationData.MaxHits),
-			Offset: int32(paginationData.StartOffset),
+			Limit:  int32(paginationData.Limit),
+			Offset: int32(paginationData.Offset),
 		}
 		organizations, err := q.OrganizationSemiCompleteInfoListPaginated(ctx, args)
 		if err != nil {
@@ -136,19 +129,12 @@ func OrgSemiCompletePaginatedFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 
 func ConversationSemiCompletePaginatedListFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var paginationData networking.BasePaginationNetworkSchema
-		err := json.NewDecoder(r.Body).Decode(&paginationData)
-		if err != nil {
-			errorstr := fmt.Sprintf("Error decoding JSON: %v", err)
-			fmt.Println(errorstr)
-			http.Error(w, errorstr, http.StatusBadRequest)
-			return
-		}
+		paginationData := networking.PaginationFromUrlParams(r)
 		q := *dbstore.New(dbtx_val)
 		ctx := r.Context()
 		args := dbstore.ConversationSemiCompleteInfoListPaginatedParams{
-			Limit:  int32(paginationData.MaxHits),
-			Offset: int32(paginationData.StartOffset),
+			Limit:  int32(paginationData.Limit),
+			Offset: int32(paginationData.Offset),
 		}
 		proceedings, err := q.ConversationSemiCompleteInfoListPaginated(ctx, args)
 		if err != nil {
