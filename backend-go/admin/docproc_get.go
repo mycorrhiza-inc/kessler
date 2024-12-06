@@ -76,6 +76,7 @@ func UnverifedCompleteFileSchemaRandomList(ctx context.Context, dbtx_val dbstore
 }
 
 func CompleteFileSchemasFromUUIDs(ctx context.Context, dbtx_val dbstore.DBTX, uuids []uuid.UUID) ([]files.CompleteFileSchema, error) {
+	complete_start := time.Now()
 	complete_files := []files.CompleteFileSchema{}
 	fileChan := make(chan files.CompleteFileSchema)
 	// errChan := make(chan error)
@@ -85,18 +86,19 @@ func CompleteFileSchemasFromUUIDs(ctx context.Context, dbtx_val dbstore.DBTX, uu
 		go func(file_uuid uuid.UUID, dbtx_val dbstore.DBTX) {
 			defer wg.Done()
 			q := *dbstore.New(dbtx_val)
-			start := time.Now()
+			// start := time.Now()
 			complete_file, err := crud.CompleteFileSchemaGetFromUUID(ctx, q, file_uuid)
-			elapsed := time.Since(start)
-			if elapsed > time.Second {
-				fmt.Printf("Slow query for file %v, took %v seconds.\n", file_uuid, elapsed/time.Second)
-			}
+			// elapsed := time.Since(start)
+			// TODO: Debug why these loading times are so fucking slow.
+			// if elapsed > 10*time.Second {
+			// 	fmt.Printf("Slow query for file %v, took %v seconds.\n", file_uuid, elapsed/time.Second)
+			// }
 			if err != nil {
 				fmt.Printf("Error getting file %v: %v\n", file_uuid, err)
 				// errChan <- err
 				return
 			}
-			fmt.Printf("Got complete file %v\n", file_uuid)
+			// fmt.Printf("Got complete file %v\n", file_uuid)
 			fileChan <- complete_file
 		}(file_uuid, dbtx_val)
 	}
@@ -112,5 +114,7 @@ func CompleteFileSchemasFromUUIDs(ctx context.Context, dbtx_val dbstore.DBTX, uu
 	for file := range fileChan {
 		complete_files = append(complete_files, file)
 	}
+	elapsed := time.Since(complete_start)
+	fmt.Printf("Got %d complete files in %v\n", len(complete_files), elapsed)
 	return complete_files, nil
 }
