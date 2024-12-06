@@ -212,7 +212,7 @@ func ResolveFileSchemaForDocketIngest(complete_files []files.CompleteFileSchema)
 			// Do nothing, an error here means to text was found.
 		}
 		if englishText == "" {
-			englishText = "No English text found in file, this is some example text so quickwit doesnt exclude it, please ignore."
+			englishText = "Example Text!"
 		}
 		newRecord.Text = englishText
 		newRecord.SourceID = file.ID
