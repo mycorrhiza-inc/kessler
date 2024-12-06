@@ -59,6 +59,11 @@ func CreateDocketsQuickwitIndex(indexName string) error {
 					"type": "datetime",
 					"fast": true,
 				},
+				{
+					"name": "verified",
+					"type": "bool",
+					"fast": true,
+				},
 			},
 			"timestamp_field": "timestamp",
 		},
@@ -185,7 +190,7 @@ func ResolveFileSchemaForDocketIngest(complete_files []files.CompleteFileSchema)
 	}
 	var data []QuickwitFileUploadData
 	for _, file := range complete_files {
-		newRecord := make(map[string]interface{})
+		newRecord := QuickwitFileUploadData{}
 		englishText, err := files.EnglishTextFromCompleteFile(file)
 		if err != nil {
 			continue
@@ -193,17 +198,18 @@ func ResolveFileSchemaForDocketIngest(complete_files []files.CompleteFileSchema)
 		if englishText == "" {
 			englishText = "No English text found in file, this is some example text so quickwit doesnt exclude it, please ignore."
 		}
-		newRecord["text"] = englishText
-		newRecord["source_id"] = file.ID
+		newRecord.Text = englishText
+		newRecord.SourceID = file.ID
+		newRecord.Verified = file.Verified
 
-		newRecord["metadata"] = createEnrichedMetadata(file)
-		newRecord["name"] = file.Name
+		newRecord.Metadata = createEnrichedMetadata(file)
+		newRecord.Name = file.Name
 		date, err := CreateRFC3339FromString(file.Mdata["date"].(string))
 		if err == nil {
-			newRecord["date_filed"] = date
+			newRecord.DateFiled = date
 		}
 
-		newRecord["timestamp"] = time.Now().Unix()
+		newRecord.Timestamp = time.Now().Unix()
 		data = append(data, newRecord)
 	}
 
