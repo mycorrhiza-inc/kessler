@@ -60,7 +60,7 @@ func QuickwitIngestFromPostgresMain(dbtx_val dbstore.DBTX, ctx context.Context, 
 	for i, file := range files {
 		ids[i] = file.ID
 	}
-	chunkSize := 100
+	chunkSize := 500
 	fmt.Printf("Got %d file ids, processing in chunks of size %d\n", len(ids), chunkSize)
 
 	fmt.Printf("Attempting to clear index %s\n", indexName)
