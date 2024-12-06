@@ -1,6 +1,6 @@
 import { useState } from "react";
-import DocumentModalBody from "./Document/DocumentBody";
 import Modal from "./styled-components/Modal";
+import DocumentModal from "./Document/DocumentModal";
 type SearchFields = {
   sourceID: string;
   name: string;
@@ -33,13 +33,7 @@ const SearchResult = ({ data }: SearchResultProps) => {
           <p>{data.docketID}</p>
         </div>
       </div>
-      <Modal open={open} setOpen={setOpen}>
-        <DocumentModalBody
-          open={open}
-          objectId={data.sourceID}
-          isPage={false}
-        />
-      </Modal>
+      <DocumentModal open={open} setOpen={setOpen} objectId={data.sourceID} />
     </>
   );
 };

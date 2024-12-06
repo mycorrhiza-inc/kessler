@@ -29,5 +29,5 @@ export default async function Page({
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  return <OrganizationPage user={user} breadcrumbs={breadcrumbs} />;
+  return <OrganizationPage breadcrumbs={breadcrumbs} />;
 }
