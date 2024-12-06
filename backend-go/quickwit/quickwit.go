@@ -150,7 +150,7 @@ func IngestIntoIndex(indexName string, data []QuickwitFileUploadData) error {
 	}
 
 	dataToPost := strings.Join(records, "\n")
-	fmt.Println("Ingesting into index\n")
+	fmt.Println("Ingesting %d initial data entries into index\n", len(data))
 	fmt.Println(dataToPost)
 	resp, err := http.Post(
 		fmt.Sprintf("%s/api/v1/%s/ingest", quickwitEndpoint, indexName),
