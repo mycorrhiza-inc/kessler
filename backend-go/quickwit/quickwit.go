@@ -48,6 +48,21 @@ func CreateDocketsQuickwitIndex(indexName string) error {
 					"fast": true,
 				},
 				{
+					"name": "name",
+					"type": "text",
+					"fast": true,
+				},
+				{
+					"name": "source_id",
+					"type": "uuid",
+					"fast": true,
+				},
+				{
+					"name": "verified",
+					"type": "bool",
+					"fast": true,
+				},
+				{
 					"name":           "timestamp",
 					"type":           "datetime",
 					"input_formats":  []string{"unix_timestamp"},
@@ -57,11 +72,6 @@ func CreateDocketsQuickwitIndex(indexName string) error {
 				{
 					"name": "date_filed",
 					"type": "datetime",
-					"fast": true,
-				},
-				{
-					"name": "verified",
-					"type": "bool",
 					"fast": true,
 				},
 			},
