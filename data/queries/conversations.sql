@@ -110,6 +110,7 @@ SELECT
     dc.docket_id,
     COUNT(dd.file_id) AS document_count,
     dc."name",
+    dc.state,
     dc.description,
     dc.created_at,
     dc.updated_at
