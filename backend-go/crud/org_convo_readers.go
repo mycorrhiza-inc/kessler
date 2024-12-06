@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"kessler/gen/dbstore"
 	"kessler/objects/files"
+	"kessler/objects/networking"
 	"kessler/objects/organizations"
 	"log"
 	"net/http"
@@ -103,10 +104,21 @@ func ConversationGetByNameFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 
 func OrgSemiCompletePaginatedFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("Getting all organizations")
+		var paginationData networking.BasePaginationNetworkSchema
+		err := json.NewDecoder(r.Body).Decode(&paginationData)
+		if err != nil {
+			errorstr := fmt.Sprintf("Error decoding JSON: %v", err)
+			fmt.Println(errorstr)
+			http.Error(w, errorstr, http.StatusBadRequest)
+			return
+		}
 		q := *dbstore.New(dbtx_val)
 		ctx := r.Context()
-		organizations, err := q.OrganizationList(ctx)
+		args := dbstore.OrganizationSemiCompleteInfoListPaginatedParams{
+			Limit:  int32(paginationData.MaxHits),
+			Offset: int32(paginationData.StartOffset),
+		}
+		organizations, err := q.OrganizationSemiCompleteInfoListPaginated(ctx, args)
 		if err != nil {
 			log.Printf("Error reading organization: %v", err)
 			if err.Error() == "no rows in result set" {
@@ -124,10 +136,21 @@ func OrgSemiCompletePaginatedFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 
 func ConversationSemiCompletePaginatedListFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("Getting all proceedings")
+		var paginationData networking.BasePaginationNetworkSchema
+		err := json.NewDecoder(r.Body).Decode(&paginationData)
+		if err != nil {
+			errorstr := fmt.Sprintf("Error decoding JSON: %v", err)
+			fmt.Println(errorstr)
+			http.Error(w, errorstr, http.StatusBadRequest)
+			return
+		}
 		q := *dbstore.New(dbtx_val)
 		ctx := r.Context()
-		proceedings, err := q.DocketConversationList(ctx)
+		args := dbstore.ConversationSemiCompleteInfoListPaginatedParams{
+			Limit:  int32(paginationData.MaxHits),
+			Offset: int32(paginationData.StartOffset),
+		}
+		proceedings, err := q.ConversationSemiCompleteInfoListPaginated(ctx, args)
 		if err != nil {
 			log.Printf("Error reading organization: %v", err)
 			if err.Error() == "no rows in result set" {
