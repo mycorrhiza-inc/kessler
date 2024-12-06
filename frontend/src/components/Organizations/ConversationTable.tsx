@@ -37,6 +37,7 @@ const ConversationTable = () => {
             <tr>
               <td className="w-[60%]">Name</td>
               <td className="w-[20%]">ID</td>
+              <td className="w-[20%]">Document Count</td>
               <td className="w-[20%]">State</td>
             </tr>
           </thead>
@@ -46,13 +47,16 @@ const ConversationTable = () => {
                 key={convo.DocketID}
                 className="border-base-300 hover:bg-base-200 transition duration-500 ease-out"
               >
-                <td colSpan={3} className="p-0">
+                <td colSpan={4} className="p-0">
                   <Link
                     href={`/proceedings/${convo.DocketID}`}
                     className="flex w-full"
                   >
                     <div className="w-[60%] px-4 py-3">{convo.Name}</div>
                     <div className="w-[20%] px-4 py-3">{convo.DocketID}</div>
+                    <div className="w-[20%] px-4 py-3">
+                      {convo.DocumentCount}
+                    </div>
                     <div className="w-[20%] px-4 py-3">{convo.State}</div>
                   </Link>
                 </td>

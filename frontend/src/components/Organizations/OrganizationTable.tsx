@@ -42,7 +42,8 @@ const OrganizationTable = () => {
           <thead>
             <tr>
               <td>Name</td>
-              <td>Description</td>
+              <td>Documents Authored</td>
+              {/* <td>Description</td> */}
             </tr>
           </thead>
           <tbody>
@@ -54,7 +55,8 @@ const OrganizationTable = () => {
                 <td colSpan={2} className="p-0">
                   <Link href={`/orgs/${org.ID}`} className="flex w-full">
                     <div className="flex-1 px-4 py-3">{org.Name}</div>
-                    <div className="flex-1 px-4 py-3">{org.Description}</div>
+                    <div className="flex-1 px-4 py-3">{org.DocumentCount}</div>
+                    {/* <div className="flex-1 px-4 py-3">{org.Description}</div> */}
                   </Link>
                 </td>
               </tr>
