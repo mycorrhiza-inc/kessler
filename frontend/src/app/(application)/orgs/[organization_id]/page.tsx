@@ -14,11 +14,11 @@ export default async function Page({
   const host = headersList.get("host") || "";
   const hostsplits = host.split(".");
   const state = hostsplits.length > 1 ? hostsplits[0] : undefined;
-  const pageContext: PageContext = {
-    state: state,
-    slug: ["proceedings", slug],
-    final_identifier: slug,
-  };
+  // const pageContext: PageContext = {
+  //   state: state,
+  //   slug: ["proceedings", slug],
+  //   final_identifier: slug,
+  // };
   const breadcrumbs: BreadcrumbValues = {
     state: state,
     breadcrumbs: [

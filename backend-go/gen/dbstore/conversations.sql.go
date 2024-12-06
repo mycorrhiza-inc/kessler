@@ -74,6 +74,7 @@ SELECT
     dc.docket_id,
     COUNT(dd.file_id) AS document_count,
     dc."name",
+    dc.state,
     dc.description,
     dc.created_at,
     dc.updated_at
@@ -98,6 +99,7 @@ type ConversationSemiCompleteInfoListPaginatedRow struct {
 	DocketID      string
 	DocumentCount int64
 	Name          string
+	State         string
 	Description   string
 	CreatedAt     pgtype.Timestamp
 	UpdatedAt     pgtype.Timestamp
@@ -117,6 +119,7 @@ func (q *Queries) ConversationSemiCompleteInfoListPaginated(ctx context.Context,
 			&i.DocketID,
 			&i.DocumentCount,
 			&i.Name,
+			&i.State,
 			&i.Description,
 			&i.CreatedAt,
 			&i.UpdatedAt,

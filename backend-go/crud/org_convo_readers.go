@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"kessler/gen/dbstore"
 	"kessler/objects/files"
+	"kessler/objects/networking"
 	"kessler/objects/organizations"
 	"log"
 	"net/http"
@@ -103,10 +104,14 @@ func ConversationGetByNameFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 
 func OrgSemiCompletePaginatedFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("Getting all organizations")
+		paginationData := networking.PaginationFromUrlParams(r)
 		q := *dbstore.New(dbtx_val)
 		ctx := r.Context()
-		organizations, err := q.OrganizationList(ctx)
+		args := dbstore.OrganizationSemiCompleteInfoListPaginatedParams{
+			Limit:  int32(paginationData.Limit),
+			Offset: int32(paginationData.Offset),
+		}
+		organizations, err := q.OrganizationSemiCompleteInfoListPaginated(ctx, args)
 		if err != nil {
 			log.Printf("Error reading organization: %v", err)
 			if err.Error() == "no rows in result set" {
@@ -124,10 +129,14 @@ func OrgSemiCompletePaginatedFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 
 func ConversationSemiCompletePaginatedListFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("Getting all proceedings")
+		paginationData := networking.PaginationFromUrlParams(r)
 		q := *dbstore.New(dbtx_val)
 		ctx := r.Context()
-		proceedings, err := q.DocketConversationList(ctx)
+		args := dbstore.ConversationSemiCompleteInfoListPaginatedParams{
+			Limit:  int32(paginationData.Limit),
+			Offset: int32(paginationData.Offset),
+		}
+		proceedings, err := q.ConversationSemiCompleteInfoListPaginated(ctx, args)
 		if err != nil {
 			log.Printf("Error reading organization: %v", err)
 			if err.Error() == "no rows in result set" {
