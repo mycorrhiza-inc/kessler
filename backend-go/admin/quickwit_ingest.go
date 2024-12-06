@@ -38,7 +38,7 @@ func QuickwitIngestFromPostgresMain(dbtx_val dbstore.DBTX, ctx context.Context, 
 		if err != nil {
 			return err
 		}
-		fmt.Printf("Got n files from postgres: %d\n", len(files))
+		fmt.Printf("Got raw n files from postgres: %d\n", len(files))
 
 		// Filter out unverified files
 		verifiedFiles := make([]dbstore.File, 0)
@@ -48,7 +48,6 @@ func QuickwitIngestFromPostgresMain(dbtx_val dbstore.DBTX, ctx context.Context, 
 			}
 		}
 		files = verifiedFiles
-		fmt.Printf("Pared down to %d verified files", len(files))
 
 	} else {
 		files, err = q.FilesList(ctx)
@@ -60,7 +59,7 @@ func QuickwitIngestFromPostgresMain(dbtx_val dbstore.DBTX, ctx context.Context, 
 	for i, file := range files {
 		ids[i] = file.ID
 	}
-	chunkSize := 200
+	chunkSize := 100
 	fmt.Printf("Got %d file ids, processing in chunks of size %d\n", len(ids), chunkSize)
 
 	fmt.Printf("Attempting to clear index %s\n", indexName)
