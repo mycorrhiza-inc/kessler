@@ -41,8 +41,8 @@ const OrganizationTable = () => {
         <table className="table table-pin-rows">
           <thead>
             <tr>
-              <td>Name</td>
-              <td>Documents Authored</td>
+              <td className="w-[80%]">Name</td>
+              <td className="w-[20%]">Documents Authored</td>
               {/* <td>Description</td> */}
             </tr>
           </thead>
@@ -54,8 +54,8 @@ const OrganizationTable = () => {
               >
                 <td colSpan={2} className="p-0">
                   <Link href={`/orgs/${org.ID}`} className="flex w-full">
-                    <div className="flex-1 px-4 py-3">{org.Name}</div>
-                    <div className="flex-1 px-4 py-3">{org.DocumentCount}</div>
+                    <div className="w-[80%] px-4 py-3">{org.Name}</div>
+                    <div className="w-[20%] px-4 py-3">{org.DocumentCount}</div>
                     {/* <div className="flex-1 px-4 py-3">{org.Description}</div> */}
                   </Link>
                 </td>

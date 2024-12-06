@@ -12,7 +12,7 @@ type BasePaginationNetworkSchema struct {
 
 func PaginationFromUrlParams(r *http.Request) BasePaginationNetworkSchema {
 	params := r.URL.Query()
-	limit := 10 // default limit
+	limit := 30 // default limit
 	offset := 0 // default offset
 
 	if limitStr := params.Get("limit"); limitStr != "" {

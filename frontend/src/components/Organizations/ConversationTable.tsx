@@ -37,8 +37,8 @@ const ConversationTable = () => {
             <tr>
               <td className="w-[60%]">Name</td>
               <td className="w-[20%]">ID</td>
-              <td className="w-[20%]">Document Count</td>
-              <td className="w-[20%]">State</td>
+              <td className="w-[10%]">Document Count</td>
+              <td className="w-[10%]">State</td>
             </tr>
           </thead>
           <tbody>
@@ -54,10 +54,10 @@ const ConversationTable = () => {
                   >
                     <div className="w-[60%] px-4 py-3">{convo.Name}</div>
                     <div className="w-[20%] px-4 py-3">{convo.DocketID}</div>
-                    <div className="w-[20%] px-4 py-3">
+                    <div className="w-[10%] px-4 py-3">
                       {convo.DocumentCount}
                     </div>
-                    <div className="w-[20%] px-4 py-3">{convo.State}</div>
+                    <div className="w-[10%] px-4 py-3">{convo.State}</div>
                   </Link>
                 </td>
               </tr>
