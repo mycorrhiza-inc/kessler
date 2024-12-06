@@ -11,6 +11,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 var quickwitEndpoint = os.Getenv("QUICKWIT_ENDPOINT")
@@ -148,9 +150,9 @@ func ResolveFileSchemaForDocketIngest(complete_files []files.CompleteFileSchema)
 		metadata["source_id"] = input_file.ID
 		metadata["source"] = "ny-puc-energyefficiency-filedocs"
 		metadata["conversation_uuid"] = input_file.Conversation.ID.String()
-		author_uuids := ""
-		for _, author := range input_file.Authors {
-			author_uuids += author.AuthorID.String() + " "
+		author_uuids := make([]uuid.UUID, 0, len(input_file.Authors))
+		for i, author := range input_file.Authors {
+			author_uuids[i] = author.AuthorID
 		}
 		metadata["author_uuids"] = author_uuids
 		// FIXME: IMPLEMENT A date_published FIELD IN PG AND RENDER THIS BASED ON THAT
