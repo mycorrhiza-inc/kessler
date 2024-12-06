@@ -65,7 +65,7 @@ const ConversationTable = ({
     </table>
   );
 };
-const SimpleConversationTable = () => {
+const ConversationTableSimple = () => {
   const { data, error, isLoading } = useSWRImmutable(
     `redudant_key`,
     conversationsListAll,
@@ -82,4 +82,4 @@ const SimpleConversationTable = () => {
   );
 };
 
-export default ConversationTable;
+export default ConversationTableSimple;

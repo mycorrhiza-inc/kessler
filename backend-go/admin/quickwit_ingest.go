@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"kessler/gen/dbstore"
 	"kessler/quickwit"
+	"math/rand"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -59,11 +60,17 @@ func QuickwitIngestFromPostgresMain(dbtx_val dbstore.DBTX, ctx context.Context, 
 	for i, file := range files {
 		ids[i] = file.ID
 	}
+	// Randomize the uuids so that you dont have weird unexpected behavior near the beginning or end.
+	for index := range ids {
+		rand_index := rand.Intn(index + 1)
+		ids[index], ids[rand_index] = ids[rand_index], ids[index]
+	}
+	// chunkSize := 100
 	chunkSize := 100
 	fmt.Printf("Got %d file ids, processing in chunks of size %d\n", len(ids), chunkSize)
 
 	fmt.Printf("Attempting to clear index %s\n", indexName)
-	err = quickwit.ClearIndex(indexName)
+	err = quickwit.ClearIndex(indexName, false)
 	if err != nil {
 		return err
 	}
@@ -94,6 +101,7 @@ func QuickwitIngestFromPostgresMain(dbtx_val dbstore.DBTX, ctx context.Context, 
 			fmt.Printf("Error resolving file schema: %v\n", err)
 			return err
 		}
+		fmt.Printf("Sucessfully parsed that into %d quickwit entries\n", len(quickwit_data_list_chunk))
 		err = quickwit.IngestIntoIndex(indexName, quickwit_data_list_chunk)
 		if err != nil {
 			fmt.Printf("Error ingesting into index: %v\n", err)

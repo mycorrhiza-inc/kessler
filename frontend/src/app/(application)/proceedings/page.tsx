@@ -1,5 +1,5 @@
 import ConversationComponent from "@/components/Conversations/ConversationComponent";
-import ConversationTable from "@/components/Organizations/ConversationTable";
+import ConversationTableSimple from "@/components/Organizations/ConversationTable";
 import PageContainer from "@/components/Page/PageContainer";
 import { PageContext } from "@/lib/page_context";
 import { createClient } from "@/utils/supabase/server";
@@ -29,7 +29,7 @@ export default async function Page({
     <PageContainer breadcrumbs={breadcrumbs}>
       <h1 className="text-3xl font-bold">Proceedings</h1>
       <div className="max-h-[600px] overflow-x-hidden border-r pr-4">
-        <ConversationTable />
+        <ConversationTableSimple />
       </div>
       <h2 className="text-2xl font-bold">All Documents</h2>
       <ConversationComponent inheritedFilters={[]} />

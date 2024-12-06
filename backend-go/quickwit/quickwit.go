@@ -48,6 +48,16 @@ func CreateDocketsQuickwitIndex(indexName string) error {
 					"fast": true,
 				},
 				{
+					"name": "name",
+					"type": "text",
+					"fast": true,
+				},
+				{
+					"name": "verified",
+					"type": "bool",
+					"fast": true,
+				},
+				{
 					"name":           "timestamp",
 					"type":           "datetime",
 					"input_formats":  []string{"unix_timestamp"},
@@ -103,10 +113,19 @@ func CreateDocketsQuickwitIndex(indexName string) error {
 	return nil
 }
 
-func ClearIndex(indexName string) error {
-	req, err := http.NewRequest(http.MethodPut, fmt.Sprintf("%s/api/v1/indexes/%s/clear", quickwitEndpoint, indexName), nil)
-	if err != nil {
-		return fmt.Errorf("error creating request: %v", err)
+func ClearIndex(indexName string, nuke bool) error {
+	var req *http.Request
+	var err error
+	if nuke {
+		req, err = http.NewRequest(http.MethodDelete, fmt.Sprintf("%s/api/v1/indexes/%s", quickwitEndpoint, indexName), nil)
+		if err != nil {
+			return fmt.Errorf("error creating request: %v", err)
+		}
+	} else {
+		req, err = http.NewRequest(http.MethodPut, fmt.Sprintf("%s/api/v1/indexes/%s/clear", quickwitEndpoint, indexName), nil)
+		if err != nil {
+			return fmt.Errorf("error creating request: %v", err)
+		}
 	}
 
 	resp, err := http.DefaultClient.Do(req)
@@ -131,6 +150,7 @@ func IngestIntoIndex(indexName string, data []QuickwitFileUploadData) error {
 	}
 
 	dataToPost := strings.Join(records, "\n")
+	fmt.Println("Ingesting %d initial data entries into index\n", len(data))
 	resp, err := http.Post(
 		fmt.Sprintf("%s/api/v1/%s/ingest", quickwitEndpoint, indexName),
 		"application/x-ndjson",
@@ -185,26 +205,32 @@ func ResolveFileSchemaForDocketIngest(complete_files []files.CompleteFileSchema)
 	}
 	var data []QuickwitFileUploadData
 	for _, file := range complete_files {
-		newRecord := make(map[string]interface{})
+		newRecord := QuickwitFileUploadData{}
 		englishText, err := files.EnglishTextFromCompleteFile(file)
 		if err != nil {
-			continue
+			// Do nothing, an error here means to text was found.
 		}
 		if englishText == "" {
-			englishText = "No English text found in file, this is some example text so quickwit doesnt exclude it, please ignore."
+			englishText = "Example Text!"
 		}
-		newRecord["text"] = englishText
-		newRecord["source_id"] = file.ID
+		newRecord.Text = englishText
+		newRecord.SourceID = file.ID
+		newRecord.Verified = file.Verified
 
-		newRecord["metadata"] = createEnrichedMetadata(file)
-		newRecord["name"] = file.Name
+		newRecord.Metadata = createEnrichedMetadata(file)
+		newRecord.Name = file.Name
 		date, err := CreateRFC3339FromString(file.Mdata["date"].(string))
 		if err == nil {
-			newRecord["date_filed"] = date
+			newRecord.DateFiled = date
 		}
 
-		newRecord["timestamp"] = time.Now().Unix()
+		newRecord.Timestamp = time.Now().Unix()
 		data = append(data, newRecord)
+	}
+	// fmt.Printf("len(data) is %d, len(complete_files) is %d\n", len(data), len(complete_files))
+	if len(data) != len(complete_files) {
+		fmt.Printf("len(data) is %d, len(complete_files) is %d. THEY ARE NOT EUQAL THIS SHOULD NEVER HAPPEN\n", len(data), len(complete_files))
+		return nil, errors.New("ASSERTION ERROR: len(data) is not equal to len(complete_files), dispite no logical way for that to happen!")
 	}
 
 	// log.Printf("reformatted data:\n\n%+v\n\n", data)

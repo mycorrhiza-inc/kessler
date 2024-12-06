@@ -1,14 +1,11 @@
 import OrganizationPage from "@/components/Organizations/OrgPage";
 import { BreadcrumbValues } from "@/components/SitemapUtils";
-import { PageContext } from "@/lib/page_context";
-import { createClient } from "@/utils/supabase/server";
 import { headers } from "next/headers";
 export default async function Page({
   params,
 }: {
   params: Promise<{ organization_id: string }>;
 }) {
-  const supabase = createClient();
   const slug = (await params).organization_id;
   const headersList = headers();
   const host = headersList.get("host") || "";
@@ -26,8 +23,5 @@ export default async function Page({
       { title: "Test Organization Name", value: slug },
     ],
   };
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
   return <OrganizationPage breadcrumbs={breadcrumbs} />;
 }
