@@ -19,51 +19,64 @@ const conversationsListAll = (redundant_key: string) => {
     .then((res) => cleanData(res));
 };
 
-const ConversationTable = () => {
+type ConversationTableSchema = {
+  Name: string;
+  DocketID: string;
+  DocumentCount: number;
+  State: string;
+};
+
+const ConversationTable = ({
+  convoList,
+}: {
+  convoList: ConversationTableSchema[];
+}) => {
+  return (
+    <table className="table">
+      {/* disable pinned rows due to the top row overlaying the filter sidebar */}
+      <thead>
+        <tr>
+          <td className="w-[60%]">Name</td>
+          <td className="w-[20%]">ID</td>
+          <td className="w-[10%]">Document Count</td>
+          <td className="w-[10%]">State</td>
+        </tr>
+      </thead>
+      <tbody>
+        {convoList.map((convo: any) => (
+          <tr
+            key={convo.DocketID}
+            className="border-base-300 hover:bg-base-200 transition duration-500 ease-out"
+          >
+            <td colSpan={4} className="p-0">
+              <Link
+                href={`/proceedings/${convo.DocketID}`}
+                className="flex w-full"
+              >
+                <div className="w-[60%] px-4 py-3">{convo.Name}</div>
+                <div className="w-[20%] px-4 py-3">{convo.DocketID}</div>
+                <div className="w-[10%] px-4 py-3">{convo.DocumentCount}</div>
+                <div className="w-[10%] px-4 py-3">{convo.State}</div>
+              </Link>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+};
+const SimpleConversationTable = () => {
   const { data, error, isLoading } = useSWRImmutable(
     `redudant_key`,
     conversationsListAll,
   );
-  const convoList = data;
-  console.log("Convo List:", convoList);
+  console.log("Convo List:", data);
   return (
     <>
       {isLoading && <LoadingSpinner loadingText="Loading Conversations" />}
       {error && <p>Failed to load conversations {String(error)}</p>}
-      {!isLoading && !error && convoList != undefined && (
-        <table className="table">
-          {/* disable pinned rows due to the top row overlaying the filter sidebar */}
-          <thead>
-            <tr>
-              <td className="w-[60%]">Name</td>
-              <td className="w-[20%]">ID</td>
-              <td className="w-[10%]">Document Count</td>
-              <td className="w-[10%]">State</td>
-            </tr>
-          </thead>
-          <tbody>
-            {convoList.map((convo: any) => (
-              <tr
-                key={convo.DocketID}
-                className="border-base-300 hover:bg-base-200 transition duration-500 ease-out"
-              >
-                <td colSpan={4} className="p-0">
-                  <Link
-                    href={`/proceedings/${convo.DocketID}`}
-                    className="flex w-full"
-                  >
-                    <div className="w-[60%] px-4 py-3">{convo.Name}</div>
-                    <div className="w-[20%] px-4 py-3">{convo.DocketID}</div>
-                    <div className="w-[10%] px-4 py-3">
-                      {convo.DocumentCount}
-                    </div>
-                    <div className="w-[10%] px-4 py-3">{convo.State}</div>
-                  </Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {!isLoading && !error && data != undefined && (
+        <ConversationTable convoList={data} />
       )}
     </>
   );
