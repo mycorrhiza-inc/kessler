@@ -101,7 +101,7 @@ func ConversationGetByNameFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 	}
 }
 
-func OrgListAllFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
+func OrgSemiCompletePaginatedFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Getting all organizations")
 		q := *dbstore.New(dbtx_val)
@@ -122,7 +122,7 @@ func OrgListAllFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 	}
 }
 
-func ConversationListAllFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
+func ConversationSemiCompletePaginatedListFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Getting all proceedings")
 		q := *dbstore.New(dbtx_val)
