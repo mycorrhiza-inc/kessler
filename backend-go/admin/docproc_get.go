@@ -76,16 +76,15 @@ func UnverifedCompleteFileSchemaRandomList(ctx context.Context, dbtx_val dbstore
 }
 
 func CompleteFileSchemasFromUUIDs(ctx context.Context, dbtx_val dbstore.DBTX, uuids []uuid.UUID) ([]files.CompleteFileSchema, error) {
-	q := *dbstore.New(dbtx_val)
-
 	complete_files := []files.CompleteFileSchema{}
 	fileChan := make(chan files.CompleteFileSchema)
 	// errChan := make(chan error)
 	var wg sync.WaitGroup
 	for _, file_uuid := range uuids {
 		wg.Add(1)
-		go func(file_uuid uuid.UUID) {
+		go func(file_uuid uuid.UUID, dbtx_val dbstore.DBTX) {
 			defer wg.Done()
+			q := *dbstore.New(dbtx_val)
 			start := time.Now()
 			complete_file, err := crud.CompleteFileSchemaGetFromUUID(ctx, q, file_uuid)
 			elapsed := time.Since(start)
@@ -99,7 +98,7 @@ func CompleteFileSchemasFromUUIDs(ctx context.Context, dbtx_val dbstore.DBTX, uu
 			}
 			fmt.Printf("Got complete file %v\n", file_uuid)
 			fileChan <- complete_file
-		}(file_uuid)
+		}(file_uuid, dbtx_val)
 	}
 
 	// Close channels when all goroutines complete
