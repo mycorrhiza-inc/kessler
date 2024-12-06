@@ -5,14 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"kessler/gen/dbstore"
+	"kessler/objects/files"
 	"math/rand"
 	"net/http"
 	"os"
 	"strings"
-
-	"kessler/gen/dbstore"
-
-	"kessler/objects/files"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -120,6 +118,11 @@ func DefineCrudRoutes(public_subrouter *mux.Router, dbtx_val dbstore.DBTX) {
 		"/conversations/verify",
 		ConversationVerifyHandlerFactory(dbtx_val),
 	).Methods(http.MethodPost)
+
+	public_subrouter.HandleFunc(
+		"/conversations/list/semi-complete",
+		ConversationSemiCompleteListAllFactory(dbtx_val),
+	).Methods(http.MethodGet)
 
 	//
 	// private_subrouter := router.PathPrefix("/v2/private").Subrouter()

@@ -3,12 +3,12 @@ package crud
 import (
 	"encoding/json"
 	"fmt"
-	"log"
-	"net/http"
-
 	"kessler/gen/dbstore"
 	"kessler/objects/files"
 	"kessler/objects/organizations"
+	"log"
+	"net/http"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -134,6 +134,50 @@ func ConversationListAllFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 				http.Error(w, err.Error(), http.StatusNotFound)
 				return
 			}
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		response, _ := json.Marshal(proceedings)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(response)
+	}
+}
+
+type ConversationSemiCompleteInfo struct {
+	ID            uuid.UUID              `json:"id"`
+	DocketId      string                 `json:"docket_id"`
+	Name          string                 `json:"name"`
+	Description   map[string]interface{} `json:"description"`
+	DocumentCount int                    `json:"document_count"`
+	DateCreated   time.Time              `json:"date_created"`
+	DateUpdated   time.Time              `json:"date_updated"`
+}
+
+func ConversationSemiCompleteListAllFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("Getting all proceedings")
+		q := *dbstore.New(dbtx_val)
+		ctx := r.Context()
+		proceedings_raw, err := q.ConversationSemiCompleteInfoList(ctx)
+		proceedings := make([]ConversationSemiCompleteInfo, len(proceedings_raw))
+		for i, proceeding_raw := range proceedings_raw {
+			parsed_description := map[string]interface{}{}
+			err := json.Unmarshal([]byte(proceeding_raw.Description), &parsed_description)
+			if err != nil {
+				continue
+			}
+			proceedings[i] = ConversationSemiCompleteInfo{
+				ID:            proceeding_raw.ID,
+				DocketId:      proceeding_raw.DocketID,
+				Name:          proceeding_raw.Name,
+				Description:   parsed_description,
+				DocumentCount: int(proceeding_raw.DocumentCount),
+				DateCreated:   proceeding_raw.CreatedAt.Time,
+				DateUpdated:   proceeding_raw.UpdatedAt.Time,
+			}
+		}
+
+		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}

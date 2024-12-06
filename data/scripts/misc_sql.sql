@@ -5,4 +5,4 @@ FROM
     public.file
 WHERE
     verified = TRUE
-    AND updated_at >= `2024-12-01`;
+    AND updated_at >= '2024-12-01';

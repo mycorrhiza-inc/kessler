@@ -12,7 +12,7 @@ import (
 
 type SearchIngestRequest struct {
 	Index string                   `json:"index"`
-	Data  []map[string]interface{} `json:"data"`
+	Data  []QuickwitFileUploadData `json:"data"`
 }
 
 func HandleQuckwitIngest(w http.ResponseWriter, r *http.Request) {
@@ -25,7 +25,6 @@ func HandleQuckwitIngest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Fprint(w, "injest job started")
-
 }
 
 type ClearIndexRequest struct {
@@ -40,7 +39,6 @@ func HandleQuickwitIndexClear(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer r.Body.Close()
-
 }
 
 func DefineRoutes(router *mux.Router) {

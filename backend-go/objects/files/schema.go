@@ -1,12 +1,12 @@
 package files
 
 import (
-	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
-
 	"kessler/gen/dbstore"
 	"kessler/objects/authors"
 	"kessler/objects/conversations"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type FileChildTextSource struct {
@@ -49,7 +49,7 @@ type FileGeneratedExtras struct {
 	Impressiveness float64 `json:"impressiveness"`
 }
 
-// To heavy to include in a default file schema unless the user specifies they want it
+// To heavy to include in a default file schema unless the user specifies they want a smaller version
 type CompleteFileSchema struct {
 	ID           uuid.UUID                             `json:"id"`
 	Verified     bool                                  `json:"verified"`

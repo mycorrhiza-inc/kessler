@@ -4,14 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"kessler/crud"
+	"kessler/gen/dbstore"
+	"kessler/objects/files"
 	"math/rand"
 	"net/http"
 	"strconv"
 	"sync"
-
-	"kessler/crud"
-	"kessler/gen/dbstore"
-	"kessler/objects/files"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -67,33 +67,43 @@ func UnverifedCompleteFileSchemaList(ctx context.Context, q dbstore.Queries, max
 	if len(unverified_raw_uuids) > int(max_responses) {
 		unverified_raw_uuids = unverified_raw_uuids[:max_responses]
 	}
-	fmt.Printf("Trimmed unverified uuids to %d, getting complete files for all remaining\n", len(unverified_raw_uuids))
+	complete_files, err := CompleteFileSchemasFromUUIDs(ctx, q, unverified_raw_uuids)
+	if err != nil {
+		return []files.CompleteFileSchema{}, err
+	}
+	return complete_files, nil
+}
 
+func CompleteFileSchemasFromUUIDs(ctx context.Context, q dbstore.Queries, uuids []uuid.UUID) ([]files.CompleteFileSchema, error) {
 	complete_files := []files.CompleteFileSchema{}
 	fileChan := make(chan files.CompleteFileSchema)
-	errChan := make(chan error)
+	// errChan := make(chan error)
 	var wg sync.WaitGroup
-
-	for _, uuid := range unverified_raw_uuids {
+	for _, file_uuid := range uuids {
 		wg.Add(1)
-		go func() {
+		go func(file_uuid uuid.UUID) {
 			defer wg.Done()
-			complete_file, err := crud.CompleteFileSchemaGetFromUUID(ctx, q, uuid)
-			fmt.Printf("Got complete file %v\n", uuid)
+			start := time.Now()
+			complete_file, err := crud.CompleteFileSchemaGetFromUUID(ctx, q, file_uuid)
+			elapsed := time.Since(start)
+			if elapsed > time.Second {
+				fmt.Printf("Slow query for file %v, took %v seconds.\n", file_uuid, elapsed/time.Second)
+			}
 			if err != nil {
-				fmt.Printf("Error getting file %v: %v\n", uuid, err)
+				fmt.Printf("Error getting file %v: %v\n", file_uuid, err)
 				// errChan <- err
 				return
 			}
+			fmt.Printf("Got complete file %v\n", file_uuid)
 			fileChan <- complete_file
-		}()
+		}(file_uuid)
 	}
 
 	// Close channels when all goroutines complete
 	go func() {
 		wg.Wait()
 		close(fileChan)
-		close(errChan)
+		// close(errChan)
 	}()
 
 	// Collect results

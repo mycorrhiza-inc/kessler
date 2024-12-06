@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"kessler/objects/files"
 	"log"
 	"net/http"
 	"os"
@@ -115,7 +116,7 @@ func ClearIndex(indexName string) error {
 	return nil
 }
 
-func IngestIntoIndex(indexName string, data []map[string]interface{}) error {
+func IngestIntoIndex(indexName string, data []QuickwitFileUploadData) error {
 	fmt.Println("Initiating ingest into index")
 	var records []string
 	for _, record := range data {
@@ -141,26 +142,38 @@ func IngestIntoIndex(indexName string, data []map[string]interface{}) error {
 	return nil
 }
 
-func ResolveFileSchemaForDocketIngest(records []map[string]interface{}) []map[string]interface{} {
-	var data []map[string]interface{}
-	for _, record := range records {
-		newRecord := make(map[string]interface{})
-		newRecord["text"] = record["english_text"]
-		newRecord["source_id"] = record["id"]
-
-		if metadata, ok := record["mdata"].(string); ok {
-			var parsedMetadata interface{}
-			if err := json.Unmarshal([]byte(metadata), &parsedMetadata); err == nil {
-				newRecord["metadata"] = parsedMetadata
-			}
+func ResolveFileSchemaForDocketIngest(complete_files []files.CompleteFileSchema) ([]QuickwitFileUploadData, error) {
+	createEnrichedMetadata := func(input_file files.CompleteFileSchema) map[string]interface{} {
+		metadata := input_file.Mdata
+		metadata["source_id"] = input_file.ID
+		metadata["source"] = "ny-puc-energyefficiency-filedocs"
+		metadata["conversation_uuid"] = input_file.Conversation.ID.String()
+		author_uuids := ""
+		for _, author := range input_file.Authors {
+			author_uuids += author.AuthorID.String() + " "
 		}
+		metadata["author_uuids"] = author_uuids
+		return metadata
+	}
+	var data []QuickwitFileUploadData
+	for _, file := range complete_files {
+		newRecord := make(map[string]interface{})
+		englishText, err := files.EnglishTextFromCompleteFile(file)
+		if err != nil {
+			continue
+		}
+		newRecord["text"] = englishText
+		newRecord["source_id"] = file.ID
+
+		newRecord["metadata"] = createEnrichedMetadata(file)
+		newRecord["name"] = file.Name
 
 		newRecord["timestamp"] = time.Now().Unix()
 		data = append(data, newRecord)
 	}
 
-	log.Printf("reformatted data:\n\n%+v\n\n", data)
-	return data
+	// log.Printf("reformatted data:\n\n%+v\n\n", data)
+	return data, nil
 }
 
 func MigrateDocketToNYPUC() error {
