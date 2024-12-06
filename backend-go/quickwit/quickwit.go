@@ -228,6 +228,11 @@ func ResolveFileSchemaForDocketIngest(complete_files []files.CompleteFileSchema)
 		newRecord.Timestamp = time.Now().Unix()
 		data = append(data, newRecord)
 	}
+	fmt.Printf("len(data) is %d, len(complete_files) is %d\n", len(data), len(complete_files))
+	if len(data) != len(complete_files) {
+		fmt.Printf("len(data) is %d, len(complete_files) is %d. THEY ARE NOT EUQAL THIS SHOULD NEVER HAPPEN\n", len(data), len(complete_files))
+		return nil, errors.New("ASSERTION ERROR: len(data) is not equal to len(complete_files), dispite no logical way for that to happen!")
+	}
 
 	// log.Printf("reformatted data:\n\n%+v\n\n", data)
 	return data, nil
