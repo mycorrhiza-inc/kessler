@@ -38,6 +38,7 @@ func QuickwitIngestFromPostgresMain(dbtx_val dbstore.DBTX, ctx context.Context, 
 		if err != nil {
 			return err
 		}
+		fmt.Printf("Got n files from postgres: %d\n", len(files))
 
 		// Filter out unverified files
 		verifiedFiles := make([]dbstore.File, 0)
@@ -47,6 +48,7 @@ func QuickwitIngestFromPostgresMain(dbtx_val dbstore.DBTX, ctx context.Context, 
 			}
 		}
 		files = verifiedFiles
+		fmt.Printf("Pared down to %d verified files", len(files))
 
 	} else {
 		files, err = q.FilesList(ctx)
