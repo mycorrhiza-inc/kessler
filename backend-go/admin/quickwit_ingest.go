@@ -34,7 +34,21 @@ func QuickwitIngestFromPostgresMain(dbtx_val dbstore.DBTX, ctx context.Context, 
 	var err error
 
 	if filter_out_unverified {
-		return fmt.Errorf("Not implemented yet")
+		files, err = q.FilesList(ctx)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("Got raw n files from postgres: %d\n", len(files))
+
+		// Filter out unverified files
+		verifiedFiles := make([]dbstore.File, 0)
+		for _, file := range files {
+			if file.Verified.Bool {
+				verifiedFiles = append(verifiedFiles, file)
+			}
+		}
+		files = verifiedFiles
+
 	} else {
 		files, err = q.FilesList(ctx)
 		if err != nil {
@@ -68,7 +82,7 @@ func QuickwitIngestFromPostgresMain(dbtx_val dbstore.DBTX, ctx context.Context, 
 		}
 		id_chunk := ids[i:end]
 		fmt.Printf("Processing chunk %d to %d\n", i, end-1)
-		complete_files_chunk, err := CompleteFileSchemasFromUUIDs(ctx, q, id_chunk)
+		complete_files_chunk, err := CompleteFileSchemasFromUUIDs(ctx, dbtx_val, id_chunk)
 		if err != nil {
 			fmt.Printf("Error getting complete file schemas: %v\n", err)
 			return err

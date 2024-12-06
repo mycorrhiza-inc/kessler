@@ -19,7 +19,7 @@ import (
 
 func UnverifedCompleteFileSchemaListFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		q := *dbstore.New(dbtx_val)
+		// q := *dbstore.New(dbtx_val)
 		params := mux.Vars(r)
 		ctx := r.Context()
 		// ctx := context.Background()
@@ -31,7 +31,7 @@ func UnverifedCompleteFileSchemaListFactory(dbtx_val dbstore.DBTX) http.HandlerF
 			http.Error(w, errorstring, http.StatusBadRequest)
 			return
 		}
-		files, err := UnverifedCompleteFileSchemaList(ctx, q, uint(max_responses))
+		files, err := UnverifedCompleteFileSchemaRandomList(ctx, dbtx_val, uint(max_responses))
 		if err != nil {
 			errorstring := fmt.Sprintf("Error getting unverified files: %v", err)
 			fmt.Println(errorstring)
@@ -44,7 +44,8 @@ func UnverifedCompleteFileSchemaListFactory(dbtx_val dbstore.DBTX) http.HandlerF
 	}
 }
 
-func UnverifedCompleteFileSchemaList(ctx context.Context, q dbstore.Queries, max_responses uint) ([]files.CompleteFileSchema, error) {
+func UnverifedCompleteFileSchemaRandomList(ctx context.Context, dbtx_val dbstore.DBTX, max_responses uint) ([]files.CompleteFileSchema, error) {
+	q := *dbstore.New(dbtx_val)
 	fmt.Printf("Getting %d unverified files\n", max_responses)
 	db_files, err := q.FilesListUnverified(ctx, int32(max_responses)*2)
 	// If postgres return randomization doesnt work, then you can still get it to kinda work by returning double the results, randomizing and throwing away half.
@@ -67,22 +68,23 @@ func UnverifedCompleteFileSchemaList(ctx context.Context, q dbstore.Queries, max
 	if len(unverified_raw_uuids) > int(max_responses) {
 		unverified_raw_uuids = unverified_raw_uuids[:max_responses]
 	}
-	complete_files, err := CompleteFileSchemasFromUUIDs(ctx, q, unverified_raw_uuids)
+	complete_files, err := CompleteFileSchemasFromUUIDs(ctx, dbtx_val, unverified_raw_uuids)
 	if err != nil {
 		return []files.CompleteFileSchema{}, err
 	}
 	return complete_files, nil
 }
 
-func CompleteFileSchemasFromUUIDs(ctx context.Context, q dbstore.Queries, uuids []uuid.UUID) ([]files.CompleteFileSchema, error) {
+func CompleteFileSchemasFromUUIDs(ctx context.Context, dbtx_val dbstore.DBTX, uuids []uuid.UUID) ([]files.CompleteFileSchema, error) {
 	complete_files := []files.CompleteFileSchema{}
 	fileChan := make(chan files.CompleteFileSchema)
 	// errChan := make(chan error)
 	var wg sync.WaitGroup
 	for _, file_uuid := range uuids {
 		wg.Add(1)
-		go func(file_uuid uuid.UUID) {
+		go func(file_uuid uuid.UUID, dbtx_val dbstore.DBTX) {
 			defer wg.Done()
+			q := *dbstore.New(dbtx_val)
 			start := time.Now()
 			complete_file, err := crud.CompleteFileSchemaGetFromUUID(ctx, q, file_uuid)
 			elapsed := time.Since(start)
@@ -96,7 +98,7 @@ func CompleteFileSchemasFromUUIDs(ctx context.Context, q dbstore.Queries, uuids 
 			}
 			fmt.Printf("Got complete file %v\n", file_uuid)
 			fileChan <- complete_file
-		}(file_uuid)
+		}(file_uuid, dbtx_val)
 	}
 
 	// Close channels when all goroutines complete

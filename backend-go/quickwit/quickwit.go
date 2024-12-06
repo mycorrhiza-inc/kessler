@@ -3,6 +3,7 @@ package quickwit
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"kessler/objects/files"
@@ -11,6 +12,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 var quickwitEndpoint = os.Getenv("QUICKWIT_ENDPOINT")
@@ -142,17 +145,42 @@ func IngestIntoIndex(indexName string, data []QuickwitFileUploadData) error {
 	return nil
 }
 
+func CreateRFC3339FromString(dateStr string) (string, error) {
+	if dateStr == "" {
+		return "", errors.New("empty date string")
+	}
+	dateParts := strings.Split(dateStr, "/")
+	if len(dateParts) != 3 {
+		return "", errors.New("date string must be in the format MM/DD/YYYY")
+	}
+	month := dateParts[0]
+	day := dateParts[1]
+	year := dateParts[2]
+
+	parsedDate, err := time.Parse("01/02/2006", fmt.Sprintf("%s/%s/%s", month, day, year))
+	if err != nil {
+		return "", err
+	}
+	return parsedDate.Format(time.RFC3339), nil
+}
+
 func ResolveFileSchemaForDocketIngest(complete_files []files.CompleteFileSchema) ([]QuickwitFileUploadData, error) {
 	createEnrichedMetadata := func(input_file files.CompleteFileSchema) map[string]interface{} {
 		metadata := input_file.Mdata
 		metadata["source_id"] = input_file.ID
 		metadata["source"] = "ny-puc-energyefficiency-filedocs"
 		metadata["conversation_uuid"] = input_file.Conversation.ID.String()
-		author_uuids := ""
-		for _, author := range input_file.Authors {
-			author_uuids += author.AuthorID.String() + " "
+		author_uuids := make([]uuid.UUID, len(input_file.Authors))
+		for i, author := range input_file.Authors {
+			author_uuids[i] = author.AuthorID
 		}
 		metadata["author_uuids"] = author_uuids
+		// FIXME: IMPLEMENT A date_published FIELD IN PG AND RENDER THIS BASED ON THAT
+		dateStr := metadata["date"].(string)
+		parsedDate, err := CreateRFC3339FromString(dateStr)
+		if err != nil {
+			metadata["date_filed"] = parsedDate
+		}
 		return metadata
 	}
 	var data []QuickwitFileUploadData
@@ -162,11 +190,18 @@ func ResolveFileSchemaForDocketIngest(complete_files []files.CompleteFileSchema)
 		if err != nil {
 			continue
 		}
+		if englishText == "" {
+			englishText = "No English text found in file, this is some example text so quickwit doesnt exclude it, please ignore."
+		}
 		newRecord["text"] = englishText
 		newRecord["source_id"] = file.ID
 
 		newRecord["metadata"] = createEnrichedMetadata(file)
 		newRecord["name"] = file.Name
+		date, err := CreateRFC3339FromString(file.Mdata["date"].(string))
+		if err == nil {
+			newRecord["date_filed"] = date
+		}
 
 		newRecord["timestamp"] = time.Now().Unix()
 		data = append(data, newRecord)

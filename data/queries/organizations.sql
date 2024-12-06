@@ -171,3 +171,21 @@ FROM
     LEFT JOIN public.docket_conversations ON public.docket_documents.docket_id = public.docket_conversations.id
 WHERE
     public.organization.id = $1;
+
+-- name: OrganizationSemiCompleteInfoListPaginated :many
+SELECT
+    org.id,
+    COUNT(org_author.document_id) AS document_count,
+    org.name,
+    org.description,
+    org.created_at,
+    org.updated_at
+FROM
+    public.organization org
+    LEFT JOIN public.relation_documents_organizations_authorship org_author ON org_author.organization_id = org.id
+GROUP BY
+    org.id
+ORDER BY
+    document_count DESC
+LIMIT
+    $1 OFFSET $2;
