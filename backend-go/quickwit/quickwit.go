@@ -108,10 +108,19 @@ func CreateDocketsQuickwitIndex(indexName string) error {
 	return nil
 }
 
-func ClearIndex(indexName string) error {
-	req, err := http.NewRequest(http.MethodPut, fmt.Sprintf("%s/api/v1/indexes/%s/clear", quickwitEndpoint, indexName), nil)
-	if err != nil {
-		return fmt.Errorf("error creating request: %v", err)
+func ClearIndex(indexName string, nuke bool) error {
+	var req *http.Request
+	var err error
+	if nuke {
+		req, err = http.NewRequest(http.MethodDelete, fmt.Sprintf("%s/api/v1/indexes/%s", quickwitEndpoint, indexName), nil)
+		if err != nil {
+			return fmt.Errorf("error creating request: %v", err)
+		}
+	} else {
+		req, err = http.NewRequest(http.MethodPut, fmt.Sprintf("%s/api/v1/indexes/%s/clear", quickwitEndpoint, indexName), nil)
+		if err != nil {
+			return fmt.Errorf("error creating request: %v", err)
+		}
 	}
 
 	resp, err := http.DefaultClient.Do(req)

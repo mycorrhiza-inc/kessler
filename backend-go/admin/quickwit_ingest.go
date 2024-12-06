@@ -63,7 +63,7 @@ func QuickwitIngestFromPostgresMain(dbtx_val dbstore.DBTX, ctx context.Context, 
 	fmt.Printf("Got %d file ids, processing in chunks of size %d\n", len(ids), chunkSize)
 
 	fmt.Printf("Attempting to clear index %s\n", indexName)
-	err = quickwit.ClearIndex(indexName)
+	err = quickwit.ClearIndex(indexName, false)
 	if err != nil {
 		return err
 	}
