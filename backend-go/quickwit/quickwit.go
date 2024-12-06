@@ -150,7 +150,7 @@ func ResolveFileSchemaForDocketIngest(complete_files []files.CompleteFileSchema)
 		metadata["source_id"] = input_file.ID
 		metadata["source"] = "ny-puc-energyefficiency-filedocs"
 		metadata["conversation_uuid"] = input_file.Conversation.ID.String()
-		author_uuids := make([]uuid.UUID, 0, len(input_file.Authors))
+		author_uuids := make([]uuid.UUID, len(input_file.Authors))
 		for i, author := range input_file.Authors {
 			author_uuids[i] = author.AuthorID
 		}
