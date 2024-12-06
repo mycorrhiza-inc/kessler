@@ -400,6 +400,66 @@ func (q *Queries) OrganizationRead(ctx context.Context, id uuid.UUID) (Organizat
 	return i, err
 }
 
+const organizationSemiCompleteInfoListPaginated = `-- name: OrganizationSemiCompleteInfoListPaginated :many
+SELECT
+    org.id,
+    COUNT(org_author.document_id) AS document_count,
+    org.name,
+    org.description,
+    org.created_at,
+    org.updated_at
+FROM
+    public.organization org
+    LEFT JOIN public.relation_documents_organizations_authorship org_author ON org_author.organization_id = org.id
+GROUP BY
+    org.id
+ORDER BY
+    document_count DESC
+LIMIT
+    $1 OFFSET $2
+`
+
+type OrganizationSemiCompleteInfoListPaginatedParams struct {
+	Limit  int32
+	Offset int32
+}
+
+type OrganizationSemiCompleteInfoListPaginatedRow struct {
+	ID            uuid.UUID
+	DocumentCount int64
+	Name          string
+	Description   string
+	CreatedAt     pgtype.Timestamptz
+	UpdatedAt     pgtype.Timestamptz
+}
+
+func (q *Queries) OrganizationSemiCompleteInfoListPaginated(ctx context.Context, arg OrganizationSemiCompleteInfoListPaginatedParams) ([]OrganizationSemiCompleteInfoListPaginatedRow, error) {
+	rows, err := q.db.Query(ctx, organizationSemiCompleteInfoListPaginated, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []OrganizationSemiCompleteInfoListPaginatedRow
+	for rows.Next() {
+		var i OrganizationSemiCompleteInfoListPaginatedRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.DocumentCount,
+			&i.Name,
+			&i.Description,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const organizationUpdate = `-- name: OrganizationUpdate :one
 UPDATE
     public.organization
