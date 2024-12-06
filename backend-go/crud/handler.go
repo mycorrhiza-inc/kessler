@@ -92,12 +92,12 @@ func DefineCrudRoutes(public_subrouter *mux.Router, dbtx_val dbstore.DBTX) {
 	// TODO : Split out the organizations into their own crud handler module
 	public_subrouter.HandleFunc(
 		"/organizations/list",
-		OrgListAllFactory(dbtx_val),
+		OrgSemiCompletePaginatedFactory(dbtx_val),
 	).Methods(http.MethodGet)
 
 	public_subrouter.HandleFunc(
 		"/conversations/list",
-		ConversationListAllFactory(dbtx_val),
+		ConversationSemiCompletePaginatedListFactory(dbtx_val),
 	).Methods(http.MethodGet)
 
 	public_subrouter.HandleFunc(
