@@ -2,6 +2,10 @@ package main
 
 import (
 	"context"
+	"kessler/admin"
+	"kessler/crud"
+	"kessler/rag"
+	"kessler/search"
 	"log"
 	"net/http"
 	"os"
@@ -12,15 +16,10 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
-
-	"kessler/admin"
-	"kessler/crud"
-	"kessler/rag"
-	"kessler/search"
 )
 
 func PgPoolConfig() *pgxpool.Config {
-	const defaultMaxConns = int32(10)
+	const defaultMaxConns = int32(30)
 	const defaultMinConns = int32(0)
 	const defaultMaxConnLifetime = time.Hour
 	const defaultMaxConnIdleTime = time.Minute * 30
