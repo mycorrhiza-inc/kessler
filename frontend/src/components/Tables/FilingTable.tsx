@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Filing } from "../../lib/types/FilingTypes";
+import { Filing } from "@/lib/types/FilingTypes";
 import { AuthorInformation } from "@/lib/types/backend_schemas";
 import { AuthorInfoPill, TextPill } from "./TextPills";
 import DocumentModal from "../Document/DocumentModal";

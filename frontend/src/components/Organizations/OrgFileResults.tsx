@@ -2,7 +2,7 @@
 import axios from "axios";
 import { useState, useEffect } from "react";
 import { Filing } from "../../lib/types/FilingTypes";
-import { FilingTable } from "../Conversations/FilingTable";
+import { FilingTable } from "@/components/Tables/FilingTable";
 import { getFilingMetadata, getRecentFilings } from "@/lib/requests/search";
 
 import LoadingSpinner from "../styled-components/LoadingSpinner";
