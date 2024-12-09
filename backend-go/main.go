@@ -108,7 +108,7 @@ func main() {
 
 	// mux_route := mux.NewRouter()
 	// static.HandleStaticGenerationRouting(mux, connPool)
-	const timeout = time.Second * 10
+	const timeout = time.Second * 20
 	const adminTimeout = time.Minute * 10
 
 	// Create two separate routers for different timeout requirements
