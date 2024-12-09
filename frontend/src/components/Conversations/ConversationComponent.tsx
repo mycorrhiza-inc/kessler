@@ -168,10 +168,7 @@ const ConversationComponent = ({
     <div className="drawer drawer-end">
       <input id="my-drawer" type="checkbox" className="drawer-toggle" />
       <div className="drawer-content">
-        <div
-          id="conversation-header"
-          className="flex justify-between items-center mb-4"
-        >
+        <div id="conversation-header" className="mb-4 flex justify-end">
           <label htmlFor="my-drawer" className="btn btn-primary drawer-button">
             Filters
           </label>
@@ -225,4 +222,3 @@ const ConversationComponent = ({
 };
 
 export default ConversationComponent;
-
