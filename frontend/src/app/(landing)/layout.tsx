@@ -6,7 +6,7 @@ import { createClient } from "@/utils/supabase/server";
 const defaultUrl = "https://kessler.xyz";
 export const metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "Blah Blah Blah",
+  title: "Kessler Search Engine",
   description: "Inteligence and Research tools for Lobbying",
 };
 

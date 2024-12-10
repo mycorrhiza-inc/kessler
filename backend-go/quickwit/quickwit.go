@@ -3,6 +3,7 @@ package quickwit
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"kessler/objects/files"
@@ -11,6 +12,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 var quickwitEndpoint = os.Getenv("QUICKWIT_ENDPOINT")
@@ -42,6 +45,16 @@ func CreateDocketsQuickwitIndex(indexName string) error {
 				{
 					"name": "text",
 					"type": "text",
+					"fast": true,
+				},
+				{
+					"name": "name",
+					"type": "text",
+					"fast": true,
+				},
+				{
+					"name": "verified",
+					"type": "bool",
 					"fast": true,
 				},
 				{
@@ -100,10 +113,19 @@ func CreateDocketsQuickwitIndex(indexName string) error {
 	return nil
 }
 
-func ClearIndex(indexName string) error {
-	req, err := http.NewRequest(http.MethodPut, fmt.Sprintf("%s/api/v1/indexes/%s/clear", quickwitEndpoint, indexName), nil)
-	if err != nil {
-		return fmt.Errorf("error creating request: %v", err)
+func ClearIndex(indexName string, nuke bool) error {
+	var req *http.Request
+	var err error
+	if nuke {
+		req, err = http.NewRequest(http.MethodDelete, fmt.Sprintf("%s/api/v1/indexes/%s", quickwitEndpoint, indexName), nil)
+		if err != nil {
+			return fmt.Errorf("error creating request: %v", err)
+		}
+	} else {
+		req, err = http.NewRequest(http.MethodPut, fmt.Sprintf("%s/api/v1/indexes/%s/clear", quickwitEndpoint, indexName), nil)
+		if err != nil {
+			return fmt.Errorf("error creating request: %v", err)
+		}
 	}
 
 	resp, err := http.DefaultClient.Do(req)
@@ -128,6 +150,7 @@ func IngestIntoIndex(indexName string, data []QuickwitFileUploadData) error {
 	}
 
 	dataToPost := strings.Join(records, "\n")
+	fmt.Println("Ingesting %d initial data entries into index\n", len(data))
 	resp, err := http.Post(
 		fmt.Sprintf("%s/api/v1/%s/ingest", quickwitEndpoint, indexName),
 		"application/x-ndjson",
@@ -142,34 +165,72 @@ func IngestIntoIndex(indexName string, data []QuickwitFileUploadData) error {
 	return nil
 }
 
+func CreateRFC3339FromString(dateStr string) (string, error) {
+	if dateStr == "" {
+		return "", errors.New("empty date string")
+	}
+	dateParts := strings.Split(dateStr, "/")
+	if len(dateParts) != 3 {
+		return "", errors.New("date string must be in the format MM/DD/YYYY")
+	}
+	month := dateParts[0]
+	day := dateParts[1]
+	year := dateParts[2]
+
+	parsedDate, err := time.Parse("01/02/2006", fmt.Sprintf("%s/%s/%s", month, day, year))
+	if err != nil {
+		return "", err
+	}
+	return parsedDate.Format(time.RFC3339), nil
+}
+
 func ResolveFileSchemaForDocketIngest(complete_files []files.CompleteFileSchema) ([]QuickwitFileUploadData, error) {
 	createEnrichedMetadata := func(input_file files.CompleteFileSchema) map[string]interface{} {
 		metadata := input_file.Mdata
 		metadata["source_id"] = input_file.ID
 		metadata["source"] = "ny-puc-energyefficiency-filedocs"
 		metadata["conversation_uuid"] = input_file.Conversation.ID.String()
-		author_uuids := ""
-		for _, author := range input_file.Authors {
-			author_uuids += author.AuthorID.String() + " "
+		author_uuids := make([]uuid.UUID, len(input_file.Authors))
+		for i, author := range input_file.Authors {
+			author_uuids[i] = author.AuthorID
 		}
 		metadata["author_uuids"] = author_uuids
+		// FIXME: IMPLEMENT A date_published FIELD IN PG AND RENDER THIS BASED ON THAT
+		dateStr := metadata["date"].(string)
+		parsedDate, err := CreateRFC3339FromString(dateStr)
+		if err != nil {
+			metadata["date_filed"] = parsedDate
+		}
 		return metadata
 	}
 	var data []QuickwitFileUploadData
 	for _, file := range complete_files {
-		newRecord := make(map[string]interface{})
+		newRecord := QuickwitFileUploadData{}
 		englishText, err := files.EnglishTextFromCompleteFile(file)
 		if err != nil {
-			continue
+			// Do nothing, an error here means to text was found.
 		}
-		newRecord["text"] = englishText
-		newRecord["source_id"] = file.ID
+		if englishText == "" {
+			englishText = "Example Text!"
+		}
+		newRecord.Text = englishText
+		newRecord.SourceID = file.ID
+		newRecord.Verified = file.Verified
 
-		newRecord["metadata"] = createEnrichedMetadata(file)
-		newRecord["name"] = file.Name
+		newRecord.Metadata = createEnrichedMetadata(file)
+		newRecord.Name = file.Name
+		date, err := CreateRFC3339FromString(file.Mdata["date"].(string))
+		if err == nil {
+			newRecord.DateFiled = date
+		}
 
-		newRecord["timestamp"] = time.Now().Unix()
+		newRecord.Timestamp = time.Now().Unix()
 		data = append(data, newRecord)
+	}
+	// fmt.Printf("len(data) is %d, len(complete_files) is %d\n", len(data), len(complete_files))
+	if len(data) != len(complete_files) {
+		fmt.Printf("len(data) is %d, len(complete_files) is %d. THEY ARE NOT EUQAL THIS SHOULD NEVER HAPPEN\n", len(data), len(complete_files))
+		return nil, errors.New("ASSERTION ERROR: len(data) is not equal to len(complete_files), dispite no logical way for that to happen!")
 	}
 
 	// log.Printf("reformatted data:\n\n%+v\n\n", data)

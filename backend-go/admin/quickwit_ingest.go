@@ -3,10 +3,12 @@ package admin
 import (
 	"context"
 	"fmt"
+	"math/rand"
+	"net/http"
+
 	"kessler/gen/dbstore"
 	"kessler/quickwit"
 	"kessler/routing"
-	"net/http"
 
 	"github.com/google/uuid"
 )
@@ -36,7 +38,21 @@ func QuickwitIngestFromPostgres(q *dbstore.Queries, ctx context.Context, filter_
 	var err error
 
 	if filter_out_unverified {
-		return fmt.Errorf("Not implemented yet")
+		files, err = q.FilesList(ctx)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("Got raw n files from postgres: %d\n", len(files))
+
+		// Filter out unverified files
+		verifiedFiles := make([]dbstore.File, 0)
+		for _, file := range files {
+			if file.Verified.Bool {
+				verifiedFiles = append(verifiedFiles, file)
+			}
+		}
+		files = verifiedFiles
+
 	} else {
 		files, err = q.FilesList(ctx)
 		if err != nil {
@@ -47,11 +63,17 @@ func QuickwitIngestFromPostgres(q *dbstore.Queries, ctx context.Context, filter_
 	for i, file := range files {
 		ids[i] = file.ID
 	}
+	// Randomize the uuids so that you dont have weird unexpected behavior near the beginning or end.
+	for index := range ids {
+		rand_index := rand.Intn(index + 1)
+		ids[index], ids[rand_index] = ids[rand_index], ids[index]
+	}
+	// chunkSize := 100
 	chunkSize := 100
 	fmt.Printf("Got %d file ids, processing in chunks of size %d\n", len(ids), chunkSize)
 
 	fmt.Printf("Attempting to clear index %s\n", indexName)
-	err = quickwit.ClearIndex(indexName)
+	err = quickwit.ClearIndex(indexName, false)
 	if err != nil {
 		return err
 	}
@@ -70,7 +92,7 @@ func QuickwitIngestFromPostgres(q *dbstore.Queries, ctx context.Context, filter_
 		}
 		id_chunk := ids[i:end]
 		fmt.Printf("Processing chunk %d to %d\n", i, end-1)
-		complete_files_chunk, err := CompleteFileSchemasFromUUIDs(ctx, *q, id_chunk)
+		complete_files_chunk, err := CompleteFileSchemasFromUUIDs(ctx, q, id_chunk)
 		if err != nil {
 			fmt.Printf("Error getting complete file schemas: %v\n", err)
 			return err
@@ -82,6 +104,7 @@ func QuickwitIngestFromPostgres(q *dbstore.Queries, ctx context.Context, filter_
 			fmt.Printf("Error resolving file schema: %v\n", err)
 			return err
 		}
+		fmt.Printf("Sucessfully parsed that into %d quickwit entries\n", len(quickwit_data_list_chunk))
 		err = quickwit.IngestIntoIndex(indexName, quickwit_data_list_chunk)
 		if err != nil {
 			fmt.Printf("Error ingesting into index: %v\n", err)

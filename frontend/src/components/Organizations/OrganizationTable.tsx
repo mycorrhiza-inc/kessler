@@ -26,44 +26,58 @@ const organizationsListGet = (url: string) => {
   return axios.get(url).then((res) => cleanData(res));
 };
 
-const OrganizationTable = () => {
+type OrganizationTableSchema = {
+  Name: string;
+  DocumentCount: number;
+};
+
+const OrganizationTable = ({
+  orgList,
+}: {
+  orgList: OrganizationTableSchema[];
+}) => {
+  return (
+    <table className="table table-pin-rows">
+      <thead>
+        <tr>
+          <td className="w-[80%]">Name</td>
+          <td className="w-[20%]">Documents Authored</td>
+          {/* <td>Description</td> */}
+        </tr>
+      </thead>
+      <tbody>
+        {orgList.map((org: any) => (
+          <tr
+            key={org.DocketID}
+            className="border-base-300 hover:bg-base-200 transition duration-500 ease-out"
+          >
+            <td colSpan={2} className="p-0">
+              <Link href={`/orgs/${org.ID}`} className="flex w-full">
+                <div className="w-[80%] px-4 py-3">{org.Name}</div>
+                <div className="w-[20%] px-4 py-3">{org.DocumentCount}</div>
+                {/* <div className="flex-1 px-4 py-3">{org.Description}</div> */}
+              </Link>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+};
+const OrganizationTableSimple = () => {
   const { data, error, isLoading } = useSWRImmutable(
     `${apiURL}/v2/public/organizations/list`,
     organizationsListGet,
   );
-  const convoList = data;
-  console.log("Convo List:", convoList);
   return (
     <>
       {isLoading && <LoadingSpinner loadingText="Loading Organizations" />}
       {error && <p>Failed to load organizations {String(error)}</p>}
-      {!isLoading && !error && convoList != undefined && (
-        <table className="table table-pin-rows">
-          <thead>
-            <tr>
-              <td>Name</td>
-              <td>Description</td>
-            </tr>
-          </thead>
-          <tbody>
-            {convoList.map((org: any) => (
-              <tr
-                key={org.DocketID}
-                className="border-base-300 hover:bg-base-200 transition duration-500 ease-out"
-              >
-                <td colSpan={2} className="p-0">
-                  <Link href={`/orgs/${org.ID}`} className="flex w-full">
-                    <div className="flex-1 px-4 py-3">{org.Name}</div>
-                    <div className="flex-1 px-4 py-3">{org.Description}</div>
-                  </Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {!isLoading && !error && data != undefined && (
+        <OrganizationTable orgList={data} />
       )}
     </>
   );
 };
 
-export default OrganizationTable;
+export default OrganizationTableSimple;

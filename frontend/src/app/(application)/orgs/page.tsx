@@ -1,15 +1,13 @@
-import OrganizationTable from "@/components/Organizations/OrganizationTable";
+import OrganizationTableSimple from "@/components/Organizations/OrganizationTable";
 import PageContainer from "@/components/Page/PageContainer";
 import { BreadcrumbValues } from "@/components/SitemapUtils";
 import { PageContext } from "@/lib/page_context";
-import { createClient } from "@/utils/supabase/server";
 import { headers } from "next/headers";
 export default async function Page({
   params,
 }: {
   params: Promise<{ organization_id: string }>;
 }) {
-  const supabase = createClient();
   const slug = (await params).organization_id;
   const headersList = headers();
   const host = headersList.get("host") || "";
@@ -24,13 +22,10 @@ export default async function Page({
     state: state,
     breadcrumbs: [{ title: "Organizations", value: "orgs" }],
   };
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
   return (
     <>
       <PageContainer breadcrumbs={breadcrumbs}>
-        <OrganizationTable />
+        <OrganizationTableSimple />
       </PageContainer>
     </>
   );

@@ -103,3 +103,23 @@ GROUP BY
     dc.id
 ORDER BY
     document_count DESC;
+
+-- name: ConversationSemiCompleteInfoListPaginated :many
+SELECT
+    dc.id,
+    dc.docket_id,
+    COUNT(dd.file_id) AS document_count,
+    dc."name",
+    dc.state,
+    dc.description,
+    dc.created_at,
+    dc.updated_at
+FROM
+    public.docket_conversations dc
+    LEFT JOIN public.docket_documents dd ON dd.docket_id = dc.id
+GROUP BY
+    dc.id
+ORDER BY
+    document_count DESC
+LIMIT
+    $1 OFFSET $2;

@@ -83,12 +83,12 @@ func DefineCrudRoutes(public_subrouter *mux.Router) {
 	// TODO : Split out the organizations into their own crud handler module
 	public_subrouter.HandleFunc(
 		"/organizations/list",
-		OrgListAll,
+		OrgSemiCompletePaginated,
 	).Methods(http.MethodGet)
 
 	public_subrouter.HandleFunc(
 		"/conversations/list",
-		ConversationListAll,
+		ConversationSemiCompletePaginatedList,
 	).Methods(http.MethodGet)
 
 	public_subrouter.HandleFunc(

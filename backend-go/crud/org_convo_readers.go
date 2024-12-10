@@ -3,7 +3,9 @@ package crud
 import (
 	"encoding/json"
 	"fmt"
+	"kessler/gen/dbstore"
 	"kessler/objects/files"
+	"kessler/objects/networking"
 	"kessler/objects/organizations"
 	"kessler/routing"
 	"log"
@@ -99,12 +101,15 @@ func ConversationGetByName(w http.ResponseWriter, r *http.Request) {
 	w.Write(response)
 }
 
-func OrgListAll(w http.ResponseWriter, r *http.Request) {
-	log.Printf("Getting all organizations")
-	q := *routing.DBQueriesFromRequest(r)
-
+func OrgSemiCompletePaginated(w http.ResponseWriter, r *http.Request) {
+	paginationData := networking.PaginationFromUrlParams(r)
+	q := routing.DBQueriesFromRequest(r)
 	ctx := r.Context()
-	organizations, err := q.OrganizationList(ctx)
+	args := dbstore.OrganizationSemiCompleteInfoListPaginatedParams{
+		Limit:  int32(paginationData.Limit),
+		Offset: int32(paginationData.Offset),
+	}
+	organizations, err := q.OrganizationSemiCompleteInfoListPaginated(ctx, args)
 	if err != nil {
 		log.Printf("Error reading organization: %v", err)
 		if err.Error() == "no rows in result set" {
@@ -119,12 +124,15 @@ func OrgListAll(w http.ResponseWriter, r *http.Request) {
 	w.Write(response)
 }
 
-func ConversationListAll(w http.ResponseWriter, r *http.Request) {
-	log.Printf("Getting all proceedings")
-	q := *routing.DBQueriesFromRequest(r)
-
+func ConversationSemiCompletePaginatedList(w http.ResponseWriter, r *http.Request) {
+	paginationData := networking.PaginationFromUrlParams(r)
+	q := routing.DBQueriesFromRequest(r)
 	ctx := r.Context()
-	proceedings, err := q.DocketConversationList(ctx)
+	args := dbstore.ConversationSemiCompleteInfoListPaginatedParams{
+		Limit:  int32(paginationData.Limit),
+		Offset: int32(paginationData.Offset),
+	}
+	proceedings, err := q.ConversationSemiCompleteInfoListPaginated(ctx, args)
 	if err != nil {
 		log.Printf("Error reading organization: %v", err)
 		if err.Error() == "no rows in result set" {
