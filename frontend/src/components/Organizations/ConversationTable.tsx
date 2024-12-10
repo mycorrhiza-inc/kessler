@@ -32,7 +32,7 @@ const ConversationTable = ({
   convoList: ConversationTableSchema[];
 }) => {
   return (
-    <table className="table">
+    <table className="table table-pin-rows">
       {/* disable pinned rows due to the top row overlaying the filter sidebar */}
       <thead>
         <tr>
