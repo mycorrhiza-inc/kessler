@@ -16,6 +16,7 @@ export enum CaseFilterField {
   MatchAuthor = "match_author",
   MatchBeforeDate = "match_before_date",
   MatchAfterDate = "match_after_date",
+  MatchAuthorUUID = "match_author_uuid",
 }
 
 export type InheritedFilterValues = Array<{
@@ -42,6 +43,7 @@ export const CaseFilterFields: FilterField[] = [
   FilterField.MatchBeforeDate,
   FilterField.MatchAfterDate,
 ];
+
 export const emptyQueryOptions: QueryFilterFields = {
   [FilterField.MatchName]: "",
   [FilterField.MatchSource]: "",
@@ -51,4 +53,5 @@ export const emptyQueryOptions: QueryFilterFields = {
   [FilterField.MatchAuthor]: "",
   [FilterField.MatchBeforeDate]: "",
   [FilterField.MatchAfterDate]: "",
+  [FilterField.MatchAuthorUUID]: "",
 };
