@@ -92,7 +92,7 @@ func QuickwitIngestFromPostgres(q *dbstore.Queries, ctx context.Context, filter_
 		}
 		id_chunk := ids[i:end]
 		fmt.Printf("Processing chunk %d to %d\n", i, end-1)
-		complete_files_chunk, err := CompleteFileSchemasFromUUIDs(ctx, q, id_chunk)
+		complete_files_chunk, err := CompleteFileSchemasFromUUIDs(ctx, id_chunk)
 		if err != nil {
 			fmt.Printf("Error getting complete file schemas: %v\n", err)
 			return err
