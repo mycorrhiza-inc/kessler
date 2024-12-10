@@ -35,7 +35,7 @@ FROM
 WHERE
     public.file.id = ANY($1::UUID[]);
 
--- name: SemiCompleteFileGet :one
+-- name: SemiCompleteFileGet :many
 SELECT
     public.file.id,
     public.file.name,

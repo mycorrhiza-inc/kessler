@@ -125,7 +125,7 @@ func (q *Queries) GetFileWithMetadata(ctx context.Context, id uuid.UUID) (GetFil
 	return i, err
 }
 
-const semiCompleteFileGet = `-- name: SemiCompleteFileGet :one
+const semiCompleteFileGet = `-- name: SemiCompleteFileGet :many
 SELECT
     public.file.id,
     public.file.name,
@@ -171,27 +171,40 @@ type SemiCompleteFileGetRow struct {
 	IsPerson         pgtype.Bool
 }
 
-func (q *Queries) SemiCompleteFileGet(ctx context.Context, id uuid.UUID) (SemiCompleteFileGetRow, error) {
-	row := q.db.QueryRow(ctx, semiCompleteFileGet, id)
-	var i SemiCompleteFileGetRow
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Extension,
-		&i.Lang,
-		&i.Verified,
-		&i.Hash,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.Mdata,
-		&i.ExtraObj,
-		&i.DocketUuid,
-		&i.IsPrimaryAuthor,
-		&i.OrganizationID,
-		&i.OrganizationName,
-		&i.IsPerson,
-	)
-	return i, err
+func (q *Queries) SemiCompleteFileGet(ctx context.Context, id uuid.UUID) ([]SemiCompleteFileGetRow, error) {
+	rows, err := q.db.Query(ctx, semiCompleteFileGet, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SemiCompleteFileGetRow
+	for rows.Next() {
+		var i SemiCompleteFileGetRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Extension,
+			&i.Lang,
+			&i.Verified,
+			&i.Hash,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Mdata,
+			&i.ExtraObj,
+			&i.DocketUuid,
+			&i.IsPrimaryAuthor,
+			&i.OrganizationID,
+			&i.OrganizationName,
+			&i.IsPerson,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const semiCompleteFileListGet = `-- name: SemiCompleteFileListGet :many
