@@ -1,4 +1,5 @@
 import DocumentPage from "@/components/Document/DocumentPage";
+import { stateFromHeaders } from "@/lib/nextjs_misc";
 import { createClient } from "@/utils/supabase/server";
 import { headers } from "next/headers";
 export default async function Page({
@@ -9,9 +10,7 @@ export default async function Page({
   const supabase = createClient();
   const slug = (await params).doc_uuid;
   const headersList = headers();
-  const host = headersList.get("host") || "";
-  const hostsplits = host.split(".");
-  const state = hostsplits.length > 1 ? hostsplits[0] : undefined;
+  const state = stateFromHeaders(headersList);
   const {
     data: { user },
   } = await supabase.auth.getUser();

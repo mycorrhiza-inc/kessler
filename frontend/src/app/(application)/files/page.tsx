@@ -1,13 +1,12 @@
 import ConversationComponent from "@/components/Conversations/ConversationComponent";
 import PageContainer from "@/components/Page/PageContainer";
 import { BreadcrumbValues } from "@/components/SitemapUtils";
+import { stateFromHeaders } from "@/lib/nextjs_misc";
 import { headers } from "next/headers";
 
 export default function Page() {
   const headersList = headers();
-  const host = headersList.get("host") || "";
-  const hostsplits = host.split(".");
-  const state = hostsplits.length > 1 ? hostsplits[0] : undefined;
+  const state = stateFromHeaders(headersList);
   const breadcrumbs: BreadcrumbValues = {
     state: "ny",
     breadcrumbs: [{ title: "Files", value: "files" }],
