@@ -9,6 +9,7 @@ import (
 	"kessler/gen/dbstore"
 
 	"kessler/objects/files"
+	"kessler/routing"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -16,13 +17,11 @@ import (
 )
 
 type FileUpsertHandlerConfig struct {
-	dbtx_val dbstore.DBTX
-	private  bool
-	insert   bool
+	private bool
+	insert  bool
 }
 
 func makeFileUpsertHandler(config FileUpsertHandlerConfig) func(w http.ResponseWriter, r *http.Request) {
-	dbtx_val := config.dbtx_val
 	private := config.private
 	insert_parent := config.insert
 	deduplicate_with_respect_to_hash := true
@@ -49,7 +48,7 @@ func makeFileUpsertHandler(config FileUpsertHandlerConfig) func(w http.ResponseW
 				return
 			}
 		}
-		q := *dbstore.New(dbtx_val)
+		q := *routing.DBQueriesFromRequest(r)
 		ctx := r.Context()
 		// TODO!!!!!: Enable insert auth at some point
 		// token := r.Header.Get("Authorization")

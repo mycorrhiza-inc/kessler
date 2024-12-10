@@ -152,7 +152,7 @@ func (q *Queries) ExtrasFileUpdate(ctx context.Context, arg ExtrasFileUpdatePara
 	return id, err
 }
 
-const fetchMetadata = `-- name: FetchMetadata :many
+const fetchMetadata = `-- name: FetchMetadata :one
 SELECT
     id, isprivate, mdata, created_at, updated_at
 FROM
@@ -161,8 +161,27 @@ WHERE
     id = $1
 `
 
-func (q *Queries) FetchMetadata(ctx context.Context, id uuid.UUID) ([]FileMetadatum, error) {
-	rows, err := q.db.Query(ctx, fetchMetadata, id)
+func (q *Queries) FetchMetadata(ctx context.Context, id uuid.UUID) (FileMetadatum, error) {
+	row := q.db.QueryRow(ctx, fetchMetadata, id)
+	var i FileMetadatum
+	err := row.Scan(
+		&i.ID,
+		&i.Isprivate,
+		&i.Mdata,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const fetchMetadataList = `-- name: FetchMetadataList :many
+SELECT id, isprivate, mdata, created_at, updated_at 
+FROM public.file_metadata
+WHERE id = ANY($1::UUID[])
+`
+
+func (q *Queries) FetchMetadataList(ctx context.Context, dollar_1 []uuid.UUID) ([]FileMetadatum, error) {
+	rows, err := q.db.Query(ctx, fetchMetadataList, dollar_1)
 	if err != nil {
 		return nil, err
 	}

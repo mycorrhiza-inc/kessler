@@ -16,7 +16,7 @@ import {
   QueryDataFile,
 } from "@/lib/filters";
 import { Filing } from "@/lib/types/FilingTypes";
-import { FilingTable } from "./FilingTable";
+import { FilingTable } from "@/components/Tables/FilingTable";
 import { getSearchResults, getFilingMetadata } from "@/lib/requests/search";
 import { PageContext } from "@/lib/page_context";
 import InfiniteScroll from "react-infinite-scroll-component";

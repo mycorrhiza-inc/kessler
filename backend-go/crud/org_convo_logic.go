@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"kessler/gen/dbstore"
+	"kessler/routing"
 
 	"kessler/objects/authors"
 	"kessler/objects/conversations"
@@ -30,83 +31,80 @@ type OrganizationRequest struct {
 	IsPerson         bool   `json:"is_person"`
 }
 
-func OrganizationVerifyHandlerFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		bodyBytes, err := io.ReadAll(r.Body)
-		if err != nil {
-			errorstring := fmt.Sprintf("Error reading request body: %v\n", err)
-			fmt.Println(errorstring)
-			http.Error(w, errorstring, http.StatusBadRequest)
-			return
-		}
-		var req OrganizationRequest
-		err = json.Unmarshal(bodyBytes, &req)
-		if err != nil {
-			errorstring := fmt.Sprintf("Error decoding JSON: %v\n", err)
-			fmt.Println(errorstring)
-			http.Error(w, errorstring, http.StatusBadRequest)
-			return
-		}
-
-		ctx := r.Context()
-		q := *dbstore.New(dbtx_val)
-		author_info := authors.AuthorInformation{AuthorName: req.OrganizationName, IsPerson: req.IsPerson}
-		author_info, err = verifyAuthorOrganizationUUID(ctx, q, &author_info)
-		if err != nil {
-			errorstring := fmt.Sprintf("Error verifying author %v: %v\n", req.OrganizationName, err)
-			fmt.Println(errorstring)
-			http.Error(w, errorstring, http.StatusInternalServerError)
-			return
-		}
-		// No error handling since we always want it to retun a 200 at this point.
-		response, _ := json.Marshal(author_info)
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(response)
+func OrganizationVerifyHandler(w http.ResponseWriter, r *http.Request) {
+	bodyBytes, err := io.ReadAll(r.Body)
+	if err != nil {
+		errorstring := fmt.Sprintf("Error reading request body: %v\n", err)
+		fmt.Println(errorstring)
+		http.Error(w, errorstring, http.StatusBadRequest)
+		return
 	}
+	var req OrganizationRequest
+	err = json.Unmarshal(bodyBytes, &req)
+	if err != nil {
+		errorstring := fmt.Sprintf("Error decoding JSON: %v\n", err)
+		fmt.Println(errorstring)
+		http.Error(w, errorstring, http.StatusBadRequest)
+		return
+	}
+
+	ctx := r.Context()
+	q := *routing.DBQueriesFromRequest(r)
+
+	author_info := authors.AuthorInformation{AuthorName: req.OrganizationName, IsPerson: req.IsPerson}
+	author_info, err = verifyAuthorOrganizationUUID(ctx, q, &author_info)
+	if err != nil {
+		errorstring := fmt.Sprintf("Error verifying author %v: %v\n", req.OrganizationName, err)
+		fmt.Println(errorstring)
+		http.Error(w, errorstring, http.StatusInternalServerError)
+		return
+	}
+	// No error handling since we always want it to retun a 200 at this point.
+	response, _ := json.Marshal(author_info)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(response)
 }
 
-func ConversationVerifyHandlerFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// fmt.Println("Starting ConversationVerifyHandlerFactory handler")
+func ConversationVerifyHandler(w http.ResponseWriter, r *http.Request) {
+	// fmt.Println("Starting ConversationVerifyHandlerFactory handler")
 
-		bodyBytes, err := io.ReadAll(r.Body)
-		if err != nil {
-			errorstring := fmt.Sprintf("Error reading request body: %v\n", err)
-			fmt.Println(errorstring)
-			http.Error(w, errorstring, http.StatusBadRequest)
-			return
-		}
-
-		var req conversations.ConversationInformation
-		err = json.Unmarshal(bodyBytes, &req)
-		if err != nil {
-			errorstring := fmt.Sprintf("Error decoding JSON: %v\n", err)
-			fmt.Println(errorstring)
-			http.Error(w, errorstring, http.StatusBadRequest)
-			return
-		}
-		// fmt.Printf("Unmarshaled request: %+v\n", req)
-
-		ctx := r.Context()
-		// ctx := context.Background()
-
-		q := *dbstore.New(dbtx_val)
-
-		// fmt.Printf("Calling verifyConversationUUID with req: %+v\n", req)
-		conversation_info, err := verifyConversationUUID(ctx, q, &req, true)
-		if err != nil {
-			errorstring := fmt.Sprintf("Error verifying conversation %v: %v\n", req.DocketID, err)
-			fmt.Println(errorstring)
-			http.Error(w, errorstring, http.StatusInternalServerError)
-			return
-		}
-		// fmt.Printf("verifyConversationUUID returned: %+v\n", conversation_info)
-
-		// No error handling since we always want it to retun a 200 at this point.
-		response, _ := json.Marshal(conversation_info)
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(response)
+	bodyBytes, err := io.ReadAll(r.Body)
+	if err != nil {
+		errorstring := fmt.Sprintf("Error reading request body: %v\n", err)
+		fmt.Println(errorstring)
+		http.Error(w, errorstring, http.StatusBadRequest)
+		return
 	}
+
+	var req conversations.ConversationInformation
+	err = json.Unmarshal(bodyBytes, &req)
+	if err != nil {
+		errorstring := fmt.Sprintf("Error decoding JSON: %v\n", err)
+		fmt.Println(errorstring)
+		http.Error(w, errorstring, http.StatusBadRequest)
+		return
+	}
+	// fmt.Printf("Unmarshaled request: %+v\n", req)
+
+	ctx := r.Context()
+	// ctx := context.Background()
+
+	q := *routing.DBQueriesFromRequest(r)
+
+	// fmt.Printf("Calling verifyConversationUUID with req: %+v\n", req)
+	conversation_info, err := verifyConversationUUID(ctx, q, &req, true)
+	if err != nil {
+		errorstring := fmt.Sprintf("Error verifying conversation %v: %v\n", req.DocketID, err)
+		fmt.Println(errorstring)
+		http.Error(w, errorstring, http.StatusInternalServerError)
+		return
+	}
+	// fmt.Printf("verifyConversationUUID returned: %+v\n", conversation_info)
+
+	// No error handling since we always want it to retun a 200 at this point.
+	response, _ := json.Marshal(conversation_info)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(response)
 }
 
 func verifyAuthorOrganizationUUID(ctx context.Context, q dbstore.Queries, author_info *authors.AuthorInformation) (authors.AuthorInformation, error) {

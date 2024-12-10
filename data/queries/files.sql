@@ -150,13 +150,18 @@ WHERE
 RETURNING
     id;
 
--- name: FetchMetadata :many
+-- name: FetchMetadata :one
 SELECT
     *
 FROM
     public.file_metadata
 WHERE
     id = $1;
+    
+-- name: FetchMetadataList :many
+SELECT * 
+FROM public.file_metadata
+WHERE id = ANY($1::UUID[]);
 
 -- name: ExtrasFileCreate :one
 INSERT INTO

@@ -1,5 +1,11 @@
 package files
 
-func GetFileMetadataFromID(id string) (string, error) {
+import (
+	"context"
+	// "kessler/gen/dbstore"
+)
+
+func GetFileMetadataFromID(id string, ctx context.Context) (string, error) {
+
 	return "", nil
 }
