@@ -6,8 +6,6 @@ import (
 	"log"
 	"net/http"
 	"strings"
-
-	"github.com/google/uuid"
 )
 
 type SearchRequest struct {
@@ -22,9 +20,9 @@ type SearchRequest struct {
 }
 
 type UUIDFilterFields struct {
-	AuthorUUID       uuid.UUID `json:"author_uuid"`
-	ConversationUUID uuid.UUID `json:"conversation_uuid"`
-	FileUUID         uuid.UUID `json:"file_uuid"`
+	AuthorUUID       string `json:"author_uuid"`
+	ConversationUUID string `json:"conversation_uuid"`
+	FileUUID         string `json:"file_uuid"`
 }
 
 func (s SearchRequest) String() string {
@@ -58,6 +56,7 @@ func HandleSearchRequest(w http.ResponseWriter, r *http.Request) {
 		// Decode the JSON body into the struct
 		err := json.NewDecoder(r.Body).Decode(&RequestData)
 		if err != nil {
+			log.Printf("Error decoding JSON: %v\n", err)
 			http.Error(w, "Error decoding JSON", http.StatusBadRequest)
 			return
 		}
