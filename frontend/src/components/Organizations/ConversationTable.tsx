@@ -1,9 +1,9 @@
 "use client";
-import { apiURL } from "@/lib/env_variables";
 import axios from "axios";
 import Link from "next/link";
 import useSWRImmutable from "swr/immutable";
 import LoadingSpinner from "../styled-components/LoadingSpinner";
+import { publicAPIURL } from "@/lib/env_variables";
 
 const conversationsListAll = (redundant_key: string) => {
   const cleanData = (response: any) => {
@@ -15,7 +15,7 @@ const conversationsListAll = (redundant_key: string) => {
     return return_data;
   };
   return axios
-    .get(`${apiURL}/v2/public/conversations/list`)
+    .get(`${publicAPIURL}/v2/public/conversations/list`)
     .then((res) => cleanData(res));
 };
 

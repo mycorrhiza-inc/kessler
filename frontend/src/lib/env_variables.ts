@@ -7,4 +7,6 @@ export const publicAPIURL =
 // TODO: Figure out why replacing this with http://backend-go:4041 doesnt work.
 // which would improve security and prevent a network route outside the system for SSR.
 export const internalAPIURL =
-  process.env.INTERNAL_KESSLER_API_URL || "http://api.kessler.xyz";
+  process.env.INTERNAL_KESSLER_API_URL || "http://backend-go:4041";
+
+// export const internalAPIURL = "https://api.kessler.xyz";
