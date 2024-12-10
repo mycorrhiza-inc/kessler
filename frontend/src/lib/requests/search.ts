@@ -19,13 +19,15 @@ export const getSearchResults = async (
   const filterDict: { [key: string]: string } = {
     name: searchFilters.match_name,
     author: searchFilters.match_author,
-    author_uuid: searchFilters.match_author_uuid,
     docket_id: searchFilters.match_docket_id,
     file_class: searchFilters.match_file_class,
     doctype: searchFilters.match_doctype,
     source: searchFilters.match_source,
     date_from: searchFilters.match_after_date,
     date_to: searchFilters.match_before_date,
+  };
+  const uuidFilterDict: { [key: string]: string } = {
+    author_uuid: searchFilters.match_author_uuid,
   };
   if (searchFilters.match_author_uuid !== "") {
     // If filtering by author uuid, remove author name
@@ -37,6 +39,7 @@ export const getSearchResults = async (
       .post(`${publicAPIURL}/v2/search`, {
         query: searchQuery,
         filters: filterDict,
+        uuid_filters: uuidFilterDict,
         start_offset: queryData.start_offset,
         max_hits: 20,
       })

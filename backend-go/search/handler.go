@@ -6,16 +6,23 @@ import (
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 type SearchRequest struct {
-	Index         string       `json:"index"`
-	Query         string       `json:"query"`
-	SearchFilters FilterFields `json:"filters"`
-	SortBy        []string     `json:"sort_by"`
-	MaxHits       int          `json:"max_hits"`
-	StartOffset   int          `json:"start_offset"`
-	GetText       bool         `json:"get_text"`
+	Index             string           `json:"index"`
+	Query             string           `json:"query"`
+	SearchFilters     FilterFields     `json:"filters"`
+	SearchUUIDFilters UUIDFilterFields `json:"uuid_filters"`
+	SortBy            []string         `json:"sort_by"`
+	MaxHits           int              `json:"max_hits"`
+	StartOffset       int              `json:"start_offset"`
+	GetText           bool             `json:"get_text"`
+}
+
+type UUIDFilterFields struct {
+	AuthorUUID uuid.UUID `json:"author_uuid"`
 }
 
 func (s SearchRequest) String() string {
@@ -61,7 +68,6 @@ func HandleSearchRequest(w http.ResponseWriter, r *http.Request) {
 		}
 
 		respString, err := json.Marshal(data)
-
 		if err != nil {
 			log.Println("Error marshalling response data")
 			http.Error(w, err.Error(), http.StatusInternalServerError)
