@@ -7,15 +7,6 @@ export enum FilterField {
   MatchAuthor = "match_author",
   MatchBeforeDate = "match_before_date",
   MatchAfterDate = "match_after_date",
-}
-export enum CaseFilterField {
-  MatchName = "match_name",
-  MatchDoctype = "match_doctype",
-  MatchDocketId = "match_docket_id",
-  MatchDocumentClass = "match_file_class",
-  MatchAuthor = "match_author",
-  MatchBeforeDate = "match_before_date",
-  MatchAfterDate = "match_after_date",
   MatchAuthorUUID = "match_author_uuid",
 }
 
@@ -44,6 +35,16 @@ export const CaseFilterFields: FilterField[] = [
   FilterField.MatchAfterDate,
 ];
 
+// This seems redundant with the list of case filter fields only being referenced in the codebace, going ahead and commenting out for now.
+// export enum CaseFilterField {
+//   MatchName = "match_name",
+//   MatchDoctype = "match_doctype",
+//   MatchDocketId = "match_docket_id",
+//   MatchDocumentClass = "match_file_class",
+//   MatchAuthor = "match_author",
+//   MatchBeforeDate = "match_before_date",
+//   MatchAfterDate = "match_after_date",
+// }
 export const emptyQueryOptions: QueryFilterFields = {
   [FilterField.MatchName]: "",
   [FilterField.MatchSource]: "",
