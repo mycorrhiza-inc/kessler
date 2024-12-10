@@ -24,6 +24,7 @@ type SearchRequest struct {
 type UUIDFilterFields struct {
 	AuthorUUID       uuid.UUID `json:"author_uuid"`
 	ConversationUUID uuid.UUID `json:"conversation_uuid"`
+	FileUUID         uuid.UUID `json:"file_uuid"`
 }
 
 func (s SearchRequest) String() string {

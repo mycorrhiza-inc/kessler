@@ -29,6 +29,7 @@ export const getSearchResults = async (
   const uuidFilterDict: { [key: string]: string } = {
     author_uuid: searchFilters.match_author_uuid,
     conversation_uuid: searchFilters.match_conversation_uuid,
+    file_uuid: searchFilters.match_file_uuid,
   };
   if (searchFilters.match_author_uuid !== "") {
     // If filtering by author uuid, remove author name
