@@ -124,6 +124,7 @@ func main() {
 
 	// Regular routes with standard timeout
 	regularMux := mux.NewRouter()
+	regularMux.Use(withDBTX)
 	public_subrouter := regularMux.PathPrefix("/v2/public").Subrouter()
 	crud.DefineCrudRoutes(public_subrouter)
 	regularMux.PathPrefix("/v2/public/").Handler(public_subrouter)
