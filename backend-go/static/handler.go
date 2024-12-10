@@ -41,7 +41,8 @@ package static
 // 	ctx := context.Background()
 // 	chanFileList := make(chan []crud.RawFileSchema)
 // 	go func() {
-// 		q := *dbstore.New(dbtx_val)
+// 				q := *routing.DBQueriesFromRequest(r)
+
 // 		list_all_files, err := crud.GetListAllRawFiles(ctx, q)
 // 		if err != nil {
 // 			fmt.Printf("Error encountered while getting all files %s", err)

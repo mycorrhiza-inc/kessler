@@ -57,7 +57,8 @@ var SupabaseSecret = os.Getenv("SUPABASE_ANON_KEY")
 // 		if strings.HasPrefix(token, "Bearer thaum_") {
 // 			return UserValidation{userID: "thaumaturgy", validated: true}
 // 			// TODO: Add a check so that authentication only succeeds if it comes from a tailscale IP.
-// 			// q := *dbstore.New(dbtx_val)
+// 			// 		q := *routing.DBQueriesFromRequest(r)
+
 // 			// const trim = len("Bearer thaum_")
 // 			// // Replacing this with PBKDF2 or something would be more secure, but it should matter since every API key can be gaurenteed to have at least 128/256 bits of strength.
 // 			// hash := blake2b.Sum256([]byte(token[trim:]))

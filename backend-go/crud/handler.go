@@ -7,6 +7,7 @@ import (
 	"io"
 	"kessler/gen/dbstore"
 	"kessler/objects/files"
+	"kessler/routing"
 	"math/rand"
 	"net/http"
 	"os"
@@ -16,14 +17,13 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func DefineCrudRoutes(public_subrouter *mux.Router, dbtx_val dbstore.DBTX) {
+func DefineCrudRoutes(public_subrouter *mux.Router) {
 	public_subrouter.HandleFunc(
 		"/files/insert",
 		makeFileUpsertHandler(
 			FileUpsertHandlerConfig{
-				dbtx_val: dbtx_val,
-				private:  false,
-				insert:   true,
+				private: false,
+				insert:  true,
 			},
 		)).Methods(http.MethodPost)
 
@@ -31,21 +31,19 @@ func DefineCrudRoutes(public_subrouter *mux.Router, dbtx_val dbstore.DBTX) {
 		"/files/{uuid}/update",
 		makeFileUpsertHandler(
 			FileUpsertHandlerConfig{
-				dbtx_val: dbtx_val,
-				private:  false,
-				insert:   false,
+				private: false,
+				insert:  false,
 			},
 		)).Methods(http.MethodPost)
 	public_subrouter.HandleFunc(
 		"/files/{uuid}",
-		FileSemiCompleteGetFactory(dbtx_val),
+		FileSemiCompleteGet,
 	).Methods(http.MethodGet)
 
 	public_subrouter.HandleFunc(
 		"/files/{uuid}/minimal",
-		ReadFileHandlerFactory(
+		ReadFileHandler(
 			FileHandlerConfig{
-				dbtx_val:    dbtx_val,
 				private:     false,
 				return_type: "object-minimal",
 			},
@@ -53,9 +51,8 @@ func DefineCrudRoutes(public_subrouter *mux.Router, dbtx_val dbstore.DBTX) {
 
 	public_subrouter.HandleFunc(
 		"/files/{uuid}/markdown",
-		ReadFileHandlerFactory(
+		ReadFileHandler(
 			FileHandlerConfig{
-				dbtx_val:    dbtx_val,
 				private:     false,
 				return_type: "markdown",
 			},
@@ -63,9 +60,8 @@ func DefineCrudRoutes(public_subrouter *mux.Router, dbtx_val dbstore.DBTX) {
 	// These shouldnt have to be duplicated, but such is life.
 	public_subrouter.HandleFunc(
 		"/files/{uuid}/raw/{filename}",
-		ReadFileHandlerFactory(
+		ReadFileHandler(
 			FileHandlerConfig{
-				dbtx_val:    dbtx_val,
 				private:     false,
 				return_type: "raw",
 			},
@@ -73,9 +69,8 @@ func DefineCrudRoutes(public_subrouter *mux.Router, dbtx_val dbstore.DBTX) {
 
 	public_subrouter.HandleFunc(
 		"/files/{uuid}/raw",
-		ReadFileHandlerFactory(
+		ReadFileHandler(
 			FileHandlerConfig{
-				dbtx_val:    dbtx_val,
 				private:     false,
 				return_type: "raw",
 			},
@@ -83,45 +78,41 @@ func DefineCrudRoutes(public_subrouter *mux.Router, dbtx_val dbstore.DBTX) {
 
 	public_subrouter.HandleFunc(
 		"/files/{uuid}/metadata",
-		GetFileWithMeta(
-			FileHandlerConfig{
-				dbtx_val: dbtx_val,
-				private:  false,
-			},
-		)).Methods(http.MethodGet)
+		FileWithMetaGetHandler,
+	).Methods(http.MethodGet)
 	// TODO : Split out the organizations into their own crud handler module
 	public_subrouter.HandleFunc(
 		"/organizations/list",
-		OrgListAllFactory(dbtx_val),
+		OrgListAll,
 	).Methods(http.MethodGet)
 
 	public_subrouter.HandleFunc(
 		"/conversations/list",
-		ConversationListAllFactory(dbtx_val),
+		ConversationListAll,
 	).Methods(http.MethodGet)
 
 	public_subrouter.HandleFunc(
 		"/conversations/named-lookup/{name}",
-		ConversationGetByNameFactory(dbtx_val),
+		ConversationGetByName,
 	).Methods(http.MethodGet)
 
 	public_subrouter.HandleFunc(
 		"/organizations/{uuid}",
-		GetOrgWithFilesFactory(dbtx_val),
+		GetOrgWithFiles,
 	).Methods(http.MethodGet)
 
 	public_subrouter.HandleFunc(
 		"/organizations/verify",
-		OrganizationVerifyHandlerFactory(dbtx_val),
+		OrganizationVerifyHandler,
 	).Methods(http.MethodPost)
 	public_subrouter.HandleFunc(
 		"/conversations/verify",
-		ConversationVerifyHandlerFactory(dbtx_val),
+		ConversationVerifyHandler,
 	).Methods(http.MethodPost)
 
 	public_subrouter.HandleFunc(
 		"/conversations/list/semi-complete",
-		ConversationSemiCompleteListAllFactory(dbtx_val),
+		ConversationSemiCompleteListAll,
 	).Methods(http.MethodGet)
 
 	//
@@ -145,7 +136,6 @@ func DefineCrudRoutes(public_subrouter *mux.Router, dbtx_val dbstore.DBTX) {
 
 // CONVERT TO UPPER CASE IF YOU EVER WANT TO USE IT OUTSIDE OF THIS CONTEXT
 type FileHandlerConfig struct {
-	dbtx_val    dbstore.DBTX
 	private     bool
 	return_type string // Can be either markdown, object or raw
 }
@@ -260,7 +250,8 @@ func GetListAllFiles(ctx context.Context, q dbstore.Queries) ([]files.FileSchema
 
 func getListOfAllPublicFilesHandler(dbtx_val dbstore.DBTX) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		q := *dbstore.New(dbtx_val)
+		q := *routing.DBQueriesFromRequest(r)
+
 		ctx := r.Context()
 		fileSchemas, err := GetListAllFiles(ctx, q)
 		if err != nil {

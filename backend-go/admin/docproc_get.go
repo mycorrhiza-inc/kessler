@@ -7,6 +7,7 @@ import (
 	"kessler/crud"
 	"kessler/gen/dbstore"
 	"kessler/objects/files"
+	"kessler/routing"
 	"math/rand"
 	"net/http"
 	"strconv"
@@ -17,31 +18,28 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func UnverifedCompleteFileSchemaListFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		q := *dbstore.New(dbtx_val)
-		params := mux.Vars(r)
-		ctx := r.Context()
-		// ctx := context.Background()
-		max_responses_str := params["max_responses"]
-		max_responses, err := strconv.Atoi(max_responses_str)
-		if err != nil || max_responses < 0 {
-			errorstring := fmt.Sprintf("Error parsing max responses: %v", err)
-			fmt.Println(errorstring)
-			http.Error(w, errorstring, http.StatusBadRequest)
-			return
-		}
-		files, err := UnverifedCompleteFileSchemaList(ctx, q, uint(max_responses))
-		if err != nil {
-			errorstring := fmt.Sprintf("Error getting unverified files: %v", err)
-			fmt.Println(errorstring)
-			http.Error(w, errorstring, http.StatusInternalServerError)
-			return
-		}
-		response, _ := json.Marshal(files)
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(response)
+func HandleUnverifedCompleteFileSchemaList(w http.ResponseWriter, r *http.Request) {
+	q := *routing.DBQueriesFromRequest(r)
+	params := mux.Vars(r)
+	ctx := r.Context()
+	max_responses_str := params["max_responses"]
+	max_responses, err := strconv.Atoi(max_responses_str)
+	if err != nil || max_responses < 0 {
+		errorstring := fmt.Sprintf("Error parsing max responses: %v", err)
+		fmt.Println(errorstring)
+		http.Error(w, errorstring, http.StatusBadRequest)
+		return
 	}
+	files, err := UnverifedCompleteFileSchemaList(ctx, q, uint(max_responses))
+	if err != nil {
+		errorstring := fmt.Sprintf("Error getting unverified files: %v", err)
+		fmt.Println(errorstring)
+		http.Error(w, errorstring, http.StatusInternalServerError)
+		return
+	}
+	response, _ := json.Marshal(files)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(response)
 }
 
 func UnverifedCompleteFileSchemaList(ctx context.Context, q dbstore.Queries, max_responses uint) ([]files.CompleteFileSchema, error) {
