@@ -1,22 +1,52 @@
 package admin
 
 import (
-	"kessler/gen/dbstore"
+	"context"
 	"net/http"
 
 	"github.com/gorilla/mux"
 )
 
-func DefineAdminRoutes(admin_subrouter *mux.Router, dbtx_val dbstore.DBTX) {
-	cleanDatabaseHandler := http.HandlerFunc(completeCleanDatabaseFactory(dbtx_val))
-	admin_subrouter.Handle("/complete-clean", cleanDatabaseHandler).Methods(http.MethodPost)
+// middlware to set if
+func withVerifiedFileData(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Add the connection pool to the request context
+		ctx := context.WithValue(r.Context(), "verified_search", true)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
 
-	unverifiedDocsHandler := http.HandlerFunc(UnverifedCompleteFileSchemaListFactory(dbtx_val))
-	admin_subrouter.Handle("/get-unverified-docs/{max_responses}", unverifiedDocsHandler).Methods(http.MethodGet)
+func withUnverifiedFileData(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Add the connection pool to the request context
+		ctx := context.WithValue(r.Context(), "verified_search", false)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
 
-	quickwitIngestHandler := http.HandlerFunc(HandleQuickwitIngestFromPostgresFactory(dbtx_val, false))
-	admin_subrouter.Handle("/quickwit/ingest", quickwitIngestHandler).Methods(http.MethodPost)
+func DefineAdminRoutes(admin_subrouter *mux.Router) {
+	admin_subrouter.HandleFunc(
+		"/complete-clean",
+		completeCleanDatabaseHandler,
+	).Methods(http.MethodPost)
 
-	quickwitVerifiedIngestHandler := http.HandlerFunc(HandleQuickwitIngestFromPostgresFactory(dbtx_val, true))
-	admin_subrouter.Handle("/quickwit/ingest/verified_only", quickwitVerifiedIngestHandler).Methods(http.MethodPost)
+	admin_subrouter.HandleFunc(
+		"/get-unverified-docs/{max_responses}",
+		HandleUnverifedCompleteFileSchemaList,
+	).Methods(http.MethodGet)
+
+	verified := admin_subrouter.Methods(http.MethodPost).Subrouter()
+	verified.HandleFunc(
+		"/quickwit/ingest",
+		HandleQuickwitIngestFromPostgres,
+	)
+	verified.Use(withUnverifiedFileData)
+
+	unVerified := admin_subrouter.Methods(http.MethodPost).Subrouter()
+	unVerified.HandleFunc(
+		"/quickwit/ingest/verified_only",
+		HandleQuickwitIngestFromPostgres,
+	)
+	unVerified.Use(withVerifiedFileData)
+
 }

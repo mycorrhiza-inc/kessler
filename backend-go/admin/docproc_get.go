@@ -7,6 +7,7 @@ import (
 	"kessler/crud"
 	"kessler/gen/dbstore"
 	"kessler/objects/files"
+	"kessler/routing"
 	"math/rand"
 	"net/http"
 	"strconv"
@@ -17,35 +18,43 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func UnverifedCompleteFileSchemaListFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// q := *dbstore.New(dbtx_val)
-		params := mux.Vars(r)
-		ctx := r.Context()
-		// ctx := context.Background()
-		max_responses_str := params["max_responses"]
-		max_responses, err := strconv.Atoi(max_responses_str)
-		if err != nil || max_responses < 0 {
-			errorstring := fmt.Sprintf("Error parsing max responses: %v", err)
-			fmt.Println(errorstring)
-			http.Error(w, errorstring, http.StatusBadRequest)
-			return
-		}
-		files, err := UnverifedCompleteFileSchemaRandomList(ctx, dbtx_val, uint(max_responses))
-		if err != nil {
-			errorstring := fmt.Sprintf("Error getting unverified files: %v", err)
-			fmt.Println(errorstring)
-			http.Error(w, errorstring, http.StatusInternalServerError)
-			return
-		}
-		response, _ := json.Marshal(files)
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(response)
+func HandleUnverifedCompleteFileSchemaList(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	ctx := r.Context()
+	// ctx := context.Background()
+	max_responses_str := params["max_responses"]
+	max_responses, err := strconv.Atoi(max_responses_str)
+	if err != nil || max_responses < 0 {
+		errorstring := fmt.Sprintf("Error parsing max responses: %v", err)
+		fmt.Println(errorstring)
+		http.Error(w, errorstring, http.StatusBadRequest)
+		return
 	}
+	files, err := UnverifedCompleteFileSchemaRandomList(ctx, uint(max_responses))
+	if err != nil {
+		errorstring := fmt.Sprintf("Error getting unverified files: %v", err)
+		fmt.Println(errorstring)
+		http.Error(w, errorstring, http.StatusInternalServerError)
+		return
+	}
+	response, _ := json.Marshal(files)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(response)
+
+	files, err = UnverifedCompleteFileSchemaRandomList(ctx, uint(max_responses))
+	if err != nil {
+		errorstring := fmt.Sprintf("Error getting unverified files: %v", err)
+		fmt.Println(errorstring)
+		http.Error(w, errorstring, http.StatusInternalServerError)
+		return
+	}
+	response, _ = json.Marshal(files)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(response)
 }
 
-func UnverifedCompleteFileSchemaRandomList(ctx context.Context, dbtx_val dbstore.DBTX, max_responses uint) ([]files.CompleteFileSchema, error) {
-	q := *dbstore.New(dbtx_val)
+func UnverifedCompleteFileSchemaRandomList(ctx context.Context, max_responses uint) ([]files.CompleteFileSchema, error) {
+	q := routing.DBQueriesFromContext(ctx)
 	fmt.Printf("Getting %d unverified files\n", max_responses)
 	db_files, err := q.FilesListUnverified(ctx, int32(max_responses)*2)
 	// If postgres return randomization doesnt work, then you can still get it to kinda work by returning double the results, randomizing and throwing away half.
@@ -68,17 +77,20 @@ func UnverifedCompleteFileSchemaRandomList(ctx context.Context, dbtx_val dbstore
 	if len(unverified_raw_uuids) > int(max_responses) {
 		unverified_raw_uuids = unverified_raw_uuids[:max_responses]
 	}
-	complete_files, err := CompleteFileSchemasFromUUIDs(ctx, dbtx_val, unverified_raw_uuids)
+	complete_files, err := CompleteFileSchemasFromUUIDs(ctx, unverified_raw_uuids)
 	if err != nil {
 		return []files.CompleteFileSchema{}, err
 	}
 	return complete_files, nil
 }
 
-func CompleteFileSchemasFromUUIDs(ctx context.Context, dbtx_val dbstore.DBTX, uuids []uuid.UUID) ([]files.CompleteFileSchema, error) {
+func CompleteFileSchemasFromUUIDs(ctx context.Context, uuids []uuid.UUID) ([]files.CompleteFileSchema, error) {
+	dbtx_val := routing.DBTXFromContext(ctx)
+
 	complete_start := time.Now()
 	complete_files := []files.CompleteFileSchema{}
 	fileChan := make(chan files.CompleteFileSchema)
+
 	// errChan := make(chan error)
 	var wg sync.WaitGroup
 	for _, file_uuid := range uuids {

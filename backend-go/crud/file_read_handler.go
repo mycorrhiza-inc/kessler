@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"kessler/gen/dbstore"
+	"kessler/routing"
 
 	"kessler/objects/authors"
 	"kessler/objects/conversations"
@@ -18,75 +19,71 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// TODO: refactor config into a middleware pattern
-func GetFileWithMeta(config FileHandlerConfig) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		q := *dbstore.New(config.dbtx_val)
-		params := mux.Vars(r)
-		fileID := params["uuid"]
-		parsedUUID, err := uuid.Parse(fileID)
-		if err != nil {
-			errorstring := fmt.Sprintf("Error parsing file %v: %v\n", fileID, err)
-			fmt.Println(errorstring)
-			http.Error(w, errorstring, http.StatusBadRequest)
-			return
-		}
-		ctx := r.Context()
-		file_raw, err := q.GetFileWithMetadata(ctx, parsedUUID)
-		if err != nil {
-			errorstring := fmt.Sprintf("Error Retriving file %v: %v\n", fileID, err)
-			fmt.Println(errorstring)
-			http.Error(w, errorstring, http.StatusNotFound)
-			return
-		}
-		var mdata_obj map[string]interface{}
-		err = json.Unmarshal(file_raw.Mdata, &mdata_obj)
-		if err != nil {
-			errorstring := fmt.Sprintf("Error Unmarshalling file %v: %v\n", fileID, err)
-			fmt.Println(errorstring)
-			http.Error(w, errorstring, http.StatusInternalServerError)
-			return
-		}
-		file := files.CompleteFileSchema{
-			ID:        file_raw.ID,
-			Verified:  file_raw.Verified.Bool,
-			Extension: file_raw.Extension,
-			Lang:      file_raw.Lang,
-			Name:      file_raw.Name,
-			Hash:      file_raw.Hash,
-			IsPrivate: file_raw.Isprivate.Bool,
-			Mdata:     mdata_obj,
-		}
-
-		response, _ := json.Marshal(file)
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(response)
+func FileWithMetaGetHandler(w http.ResponseWriter, r *http.Request) {
+	q := *routing.DBQueriesFromRequest(r)
+	params := mux.Vars(r)
+	fileID := params["uuid"]
+	parsedUUID, err := uuid.Parse(fileID)
+	if err != nil {
+		errorstring := fmt.Sprintf("Error parsing file %v: %v\n", fileID, err)
+		fmt.Println(errorstring)
+		http.Error(w, errorstring, http.StatusBadRequest)
+		return
 	}
+	ctx := r.Context()
+	file_raw, err := q.GetFileWithMetadata(ctx, parsedUUID)
+	if err != nil {
+		errorstring := fmt.Sprintf("Error Retriving file %v: %v\n", fileID, err)
+		fmt.Println(errorstring)
+		http.Error(w, errorstring, http.StatusNotFound)
+		return
+	}
+	var mdata_obj map[string]interface{}
+	err = json.Unmarshal(file_raw.Mdata, &mdata_obj)
+	if err != nil {
+		errorstring := fmt.Sprintf("Error Unmarshalling file %v: %v\n", fileID, err)
+		fmt.Println(errorstring)
+		http.Error(w, errorstring, http.StatusInternalServerError)
+		return
+	}
+	file := files.CompleteFileSchema{
+		ID:        file_raw.ID,
+		Verified:  file_raw.Verified.Bool,
+		Extension: file_raw.Extension,
+		Lang:      file_raw.Lang,
+		Name:      file_raw.Name,
+		Hash:      file_raw.Hash,
+		IsPrivate: file_raw.Isprivate.Bool,
+		Mdata:     mdata_obj,
+	}
+
+	response, _ := json.Marshal(file)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(response)
 }
 
-func FileSemiCompleteGetFactory(dbtx_val dbstore.DBTX) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		q := *dbstore.New(dbtx_val)
-		params := mux.Vars(r)
-		fileID := params["uuid"]
-		parsedUUID, err := uuid.Parse(fileID)
-		if err != nil {
-			errorstring := fmt.Sprintf("Error parsing file %v: %v\n", fileID, err)
-			fmt.Println(errorstring)
-			http.Error(w, errorstring, http.StatusBadRequest)
-			return
-		}
-		ctx := r.Context()
-		file, err := SemiCompleteFileGetFromUUID(ctx, q, parsedUUID)
-		if err != nil {
-			fmt.Println(err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		response, _ := json.Marshal(file)
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(response)
+func FileSemiCompleteGet(w http.ResponseWriter, r *http.Request) {
+	q := *routing.DBQueriesFromRequest(r)
+
+	params := mux.Vars(r)
+	fileID := params["uuid"]
+	parsedUUID, err := uuid.Parse(fileID)
+	if err != nil {
+		errorstring := fmt.Sprintf("Error parsing file %v: %v\n", fileID, err)
+		fmt.Println(errorstring)
+		http.Error(w, errorstring, http.StatusBadRequest)
+		return
 	}
+	ctx := r.Context()
+	file, err := SemiCompleteFileGetFromUUID(ctx, q, parsedUUID)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	response, _ := json.Marshal(file)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(response)
 }
 
 // TODO: refactor config into a middleware pattern
@@ -191,13 +188,13 @@ func CompleteFileSchemaGetFromUUID(ctx context.Context, q dbstore.Queries, uuid 
 }
 
 // TODO: refactor config into a middleware pattern
-func ReadFileHandlerFactory(config FileHandlerConfig) http.HandlerFunc {
+func ReadFileHandler(config FileHandlerConfig) http.HandlerFunc {
 	private := config.private
-	dbtx_val := config.dbtx_val
 	return_type := config.return_type
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		q := *dbstore.New(dbtx_val)
+		q := *routing.DBQueriesFromRequest(r)
+
 		// token := r.Header.Get("Authorization")
 		params := mux.Vars(r)
 		fileID := params["uuid"]

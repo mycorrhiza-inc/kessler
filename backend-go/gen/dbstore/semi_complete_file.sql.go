@@ -12,6 +12,69 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const getFileListWithMetadata = `-- name: GetFileListWithMetadata :many
+SELECT
+    public.file.id,
+    public.file.name,
+    public.file.extension,
+    public.file.lang,
+    public.file.verified,
+    public.file.hash,
+    public.file.isPrivate,
+    public.file.created_at,
+    public.file.updated_at,
+    public.file_metadata.mdata
+FROM
+    public.file
+    LEFT JOIN public.file_metadata ON public.file.id = public.file_metadata.id
+WHERE
+    public.file.id = ANY($1::UUID[])
+`
+
+type GetFileListWithMetadataRow struct {
+	ID        uuid.UUID
+	Name      string
+	Extension string
+	Lang      string
+	Verified  pgtype.Bool
+	Hash      string
+	Isprivate pgtype.Bool
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
+	Mdata     []byte
+}
+
+func (q *Queries) GetFileListWithMetadata(ctx context.Context, dollar_1 []uuid.UUID) ([]GetFileListWithMetadataRow, error) {
+	rows, err := q.db.Query(ctx, getFileListWithMetadata, dollar_1)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetFileListWithMetadataRow
+	for rows.Next() {
+		var i GetFileListWithMetadataRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Extension,
+			&i.Lang,
+			&i.Verified,
+			&i.Hash,
+			&i.Isprivate,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Mdata,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getFileWithMetadata = `-- name: GetFileWithMetadata :one
 SELECT
     public.file.id,
@@ -117,6 +180,88 @@ func (q *Queries) SemiCompleteFileGet(ctx context.Context, id uuid.UUID) ([]Semi
 	var items []SemiCompleteFileGetRow
 	for rows.Next() {
 		var i SemiCompleteFileGetRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Extension,
+			&i.Lang,
+			&i.Verified,
+			&i.Hash,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Mdata,
+			&i.ExtraObj,
+			&i.DocketUuid,
+			&i.IsPrimaryAuthor,
+			&i.OrganizationID,
+			&i.OrganizationName,
+			&i.IsPerson,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const semiCompleteFileListGet = `-- name: SemiCompleteFileListGet :many
+SELECT
+    public.file.id,
+    public.file.name,
+    public.file.extension,
+    public.file.lang,
+    public.file.verified,
+    public.file.hash,
+    public.file.created_at,
+    public.file.updated_at,
+    public.file_metadata.mdata,
+    public.file_extras.extra_obj,
+    public.docket_documents.docket_id AS docket_uuid,
+    public.relation_documents_organizations_authorship.is_primary_author,
+    public.organization.id AS organization_id,
+    public.organization.name AS organization_name,
+    public.organization.is_person
+FROM
+    public.file
+    LEFT JOIN public.file_metadata ON public.file.id = public.file_metadata.id
+    LEFT JOIN public.file_extras ON public.file.id = public.file_extras.id
+    LEFT JOIN public.docket_documents ON public.file.id = public.docket_documents.file_id
+    LEFT JOIN public.relation_documents_organizations_authorship ON public.file.id = public.relation_documents_organizations_authorship.document_id
+    LEFT JOIN public.organization ON public.relation_documents_organizations_authorship.organization_id = public.organization.id
+WHERE
+    public.file.id = ANY($1::UUID[])
+`
+
+type SemiCompleteFileListGetRow struct {
+	ID               uuid.UUID
+	Name             string
+	Extension        string
+	Lang             string
+	Verified         pgtype.Bool
+	Hash             string
+	CreatedAt        pgtype.Timestamptz
+	UpdatedAt        pgtype.Timestamptz
+	Mdata            []byte
+	ExtraObj         []byte
+	DocketUuid       uuid.UUID
+	IsPrimaryAuthor  pgtype.Bool
+	OrganizationID   uuid.UUID
+	OrganizationName pgtype.Text
+	IsPerson         pgtype.Bool
+}
+
+func (q *Queries) SemiCompleteFileListGet(ctx context.Context, dollar_1 []uuid.UUID) ([]SemiCompleteFileListGetRow, error) {
+	rows, err := q.db.Query(ctx, semiCompleteFileListGet, dollar_1)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SemiCompleteFileListGetRow
+	for rows.Next() {
+		var i SemiCompleteFileListGetRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,

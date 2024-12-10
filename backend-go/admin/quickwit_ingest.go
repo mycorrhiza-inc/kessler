@@ -3,33 +3,36 @@ package admin
 import (
 	"context"
 	"fmt"
-	"kessler/gen/dbstore"
-	"kessler/quickwit"
 	"math/rand"
 	"net/http"
+
+	"kessler/gen/dbstore"
+	"kessler/quickwit"
+	"kessler/routing"
 
 	"github.com/google/uuid"
 )
 
-func HandleQuickwitIngestFromPostgresFactory(dbtx_val dbstore.DBTX, filter_out_unverified bool) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// ctx := r.Context()
-		ctx := context.Background()
-		fmt.Printf("Starting Quickwit ingest from Postgres (filter_out_unverified=%v)\n", filter_out_unverified)
-		err := QuickwitIngestFromPostgresMain(dbtx_val, ctx, filter_out_unverified)
-		if err != nil {
-			errorstring := fmt.Sprintf("Error ingesting from postgres: %v", err)
-			fmt.Println(errorstring)
-			http.Error(w, errorstring, http.StatusInternalServerError)
-			return
-		}
-		fmt.Println("Successfully completed Quickwit ingest from Postgres")
-		w.Write([]byte("Sucessfully ingested from postgres"))
+func HandleQuickwitIngestFromPostgres(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	q := routing.DBQueriesFromRequest(r)
+	filter_out_unverified := ctx.Value("verified_search").(bool)
+
+	fmt.Printf("Starting Quickwit ingest from Postgres (filter_out_unverified=%v)\n", filter_out_unverified)
+
+	err := QuickwitIngestFromPostgres(q, ctx, filter_out_unverified)
+
+	if err != nil {
+		errorstring := fmt.Sprintf("Error ingesting from postgres: %v", err)
+		fmt.Println(errorstring)
+		http.Error(w, errorstring, http.StatusInternalServerError)
+		return
 	}
+	fmt.Println("Successfully completed Quickwit ingest from Postgres")
+	w.Write([]byte("Sucessfully ingested from postgres"))
 }
 
-func QuickwitIngestFromPostgresMain(dbtx_val dbstore.DBTX, ctx context.Context, filter_out_unverified bool) error {
-	q := *dbstore.New(dbtx_val)
+func QuickwitIngestFromPostgres(q *dbstore.Queries, ctx context.Context, filter_out_unverified bool) error {
 	indexName := quickwit.NYPUCIndexName
 	var files []dbstore.File
 	var err error
@@ -89,7 +92,7 @@ func QuickwitIngestFromPostgresMain(dbtx_val dbstore.DBTX, ctx context.Context, 
 		}
 		id_chunk := ids[i:end]
 		fmt.Printf("Processing chunk %d to %d\n", i, end-1)
-		complete_files_chunk, err := CompleteFileSchemasFromUUIDs(ctx, dbtx_val, id_chunk)
+		complete_files_chunk, err := CompleteFileSchemasFromUUIDs(ctx, id_chunk)
 		if err != nil {
 			fmt.Printf("Error getting complete file schemas: %v\n", err)
 			return err
