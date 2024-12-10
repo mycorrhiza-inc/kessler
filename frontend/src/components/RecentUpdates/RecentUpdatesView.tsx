@@ -86,20 +86,24 @@ export default function RecentUpdatesView() {
   return (
     <PageContainer breadcrumbs={{ breadcrumbs: [] }}>
       <div className="grid grid-cols-2 w-full">
-        <div className="max-h-[600px] overflow-x-hidden border-r pr-4">
+        <div>
           <Link
             className="text-3xl font-bold hover:underline"
             href="/proceedings"
           >
             Proceedings
           </Link>
-          <ConversationTable />
+          <div className="max-h-[600px] overflow-x-hidden border-r pr-4">
+            <ConversationTable />
+          </div>
         </div>
-        <div className="max-h-[600px] overflow-x-hidden pl-4">
+        <div>
           <Link className="text-3xl font-bold hover:underline" href="/orgs">
             Organizations
           </Link>
-          <OrganizationTable />
+          <div className="max-h-[600px] overflow-x-hidden pl-4">
+            <OrganizationTable />
+          </div>
         </div>
       </div>
       <div className="border-t my-8"></div>
