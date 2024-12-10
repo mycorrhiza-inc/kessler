@@ -4,7 +4,7 @@ import (
 	"context"
 	"kessler/objects/files"
 
-	"fmt/log"
+	"log"
 )
 
 func HydrateSearchResults(results []SearchData) []SearchData {
@@ -19,14 +19,14 @@ func SearchThenHydrate(r SearchRequest, ctx context.Context) ([]files.FileMetada
 
 	data, err := SearchQuickwit(r)
 	if err != nil {
-		log.Errorf("search-then-hydrate: error getting quickwit data", err)
+		log.Printf("search-then-hydrate: error getting quickwit data", err)
 	}
 	idList := make([]string, len(data))
 	for i, d := range data {
 		idList[i] = d.SourceID
 	}
 
-	hydratedData := make([]files.FileMetadataSchema, len(idList))
+	// hydratedData := make([]files.FileMetadataSchema, len(idList))
 
 	return []files.FileMetadataSchema{}, nil
 }
