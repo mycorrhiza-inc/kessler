@@ -26,7 +26,7 @@ func SearchThenHydrate(r SearchRequest, ctx context.Context) ([]files.FileMetada
 		idList[i] = d.SourceID
 	}
 
-	hydratedData := []files.FileMetadataSchema{}
+	hydratedData := make([]files.FileMetadataSchema, len(idList))
 
 	return []files.FileMetadataSchema{}, nil
 }
