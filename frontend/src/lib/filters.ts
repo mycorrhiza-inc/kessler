@@ -8,6 +8,7 @@ export enum FilterField {
   MatchBeforeDate = "match_before_date",
   MatchAfterDate = "match_after_date",
   MatchAuthorUUID = "match_author_uuid",
+  MatchConversationUUID = "match_conversation_uuid",
 }
 
 export type InheritedFilterValues = Array<{
@@ -55,4 +56,5 @@ export const emptyQueryOptions: QueryFilterFields = {
   [FilterField.MatchBeforeDate]: "",
   [FilterField.MatchAfterDate]: "",
   [FilterField.MatchAuthorUUID]: "",
+  [FilterField.MatchConversationUUID]: "",
 };

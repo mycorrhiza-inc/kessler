@@ -28,10 +28,14 @@ export const getSearchResults = async (
   };
   const uuidFilterDict: { [key: string]: string } = {
     author_uuid: searchFilters.match_author_uuid,
+    conversation_uuid: searchFilters.match_conversation_uuid,
   };
   if (searchFilters.match_author_uuid !== "") {
     // If filtering by author uuid, remove author name
     filterDict.author = "";
+  }
+  if (searchFilters.match_conversation_uuid !== "") {
+    filterDict.docket_id = "";
   }
   try {
     const searchResults: Filing[] = await axios
