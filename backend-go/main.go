@@ -2,6 +2,10 @@ package main
 
 import (
 	"context"
+	"kessler/admin"
+	"kessler/crud"
+	"kessler/rag"
+	"kessler/search"
 	"log"
 	"net/http"
 	"os"
@@ -12,17 +16,12 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
-
-	"kessler/admin"
-	"kessler/crud"
-	"kessler/rag"
-	"kessler/search"
 )
 
 var connPool *pgxpool.Pool
 
 func PgPoolConfig() *pgxpool.Config {
-	const defaultMaxConns = int32(10)
+	const defaultMaxConns = int32(30)
 	const defaultMinConns = int32(0)
 	const defaultMaxConnLifetime = time.Hour
 	const defaultMaxConnIdleTime = time.Minute * 30
@@ -111,7 +110,7 @@ func main() {
 
 	// mux_route := mux.NewRouter()
 	// static.HandleStaticGenerationRouting(mux, connPool)
-	const timeout = time.Second * 10
+	const timeout = time.Second * 20
 	const adminTimeout = time.Minute * 10
 
 	// Create two separate routers for different timeout requirements
@@ -125,6 +124,7 @@ func main() {
 
 	// Regular routes with standard timeout
 	regularMux := mux.NewRouter()
+	regularMux.Use(withDBTX)
 	public_subrouter := regularMux.PathPrefix("/v2/public").Subrouter()
 	crud.DefineCrudRoutes(public_subrouter)
 	regularMux.PathPrefix("/v2/public/").Handler(public_subrouter)
