@@ -1,7 +1,7 @@
 import { QueryDataFile, QueryFilterFields } from "@/lib/filters";
 import { Filing } from "@/lib/types/FilingTypes";
 import axios from "axios";
-import { apiURL } from "../env_variables";
+import { publicAPIURL } from "../env_variables";
 import {
   CompleteFileSchema,
   CompleteFileSchemaValidator,
@@ -19,7 +19,7 @@ export const getSearchResults = async (
   try {
     const searchResults: Filing[] = await axios
       // .post("https://api.kessler.xyz/v2/search", {
-      .post(`${apiURL}/v2/search`, {
+      .post(`${publicAPIURL}/v2/search`, {
         query: searchQuery,
         filters: {
           name: searchFilters.match_name,
@@ -59,7 +59,7 @@ export const getRecentFilings = async (page?: number) => {
     page = 0;
   }
   const response = await axios.post(
-    `${apiURL}/v2/recent_updates`,
+    `${publicAPIURL}/v2/recent_updates`,
     // "http://api.kessler.xyz/v2/recent_updates",
     {
       page: page,
@@ -73,7 +73,7 @@ export const getRecentFilings = async (page?: number) => {
 
 export const getFilingMetadata = async (id: string): Promise<Filing | null> => {
   const valid_id = z.string().uuid().parse(id);
-  const response = await axios.get(`${apiURL}/v2/public/files/${valid_id}`);
+  const response = await axios.get(`${publicAPIURL}/v2/public/files/${valid_id}`);
   const filing = await ParseFilingDataSingular(response.data);
   return filing;
 };
@@ -141,7 +141,7 @@ export const ParseFilingDataSingular = async (
     console.log("Parsing document ID", f);
     console.log("filing source id", f.sourceID);
     const docID = z.string().uuid().parse(f.sourceID);
-    const metadata_url = `${apiURL}/v2/public/files/${docID}`;
+    const metadata_url = `${publicAPIURL}/v2/public/files/${docID}`;
     try {
       const completeFileSchema = await completeFileSchemaGet(metadata_url);
       const newFiling: Filing =

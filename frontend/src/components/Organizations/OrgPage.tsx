@@ -4,6 +4,8 @@ import { getOrganizationInfo } from "@/lib/requests/organizations";
 import { BreadcrumbValues } from "../SitemapUtils";
 import PageContainer from "../Page/PageContainer";
 import OrganizationFileTable from "./OrgFileResults";
+import ConversationComponent from "../Conversations/ConversationComponent";
+import { FilterField } from "@/lib/filters";
 
 export default async function OrganizationPage({
   breadcrumbs,
@@ -27,9 +29,17 @@ export default async function OrganizationPage({
   return (
     <PageContainer breadcrumbs={actual_breadcrumbs}>
       <h1 className=" text-2xl font-bold">Organization: {orgInfo.name}</h1>
-      <p> {orgInfo.description || "Loading Organization Description"}</p>
+      <p>
+        {orgInfo.description ||
+          "Automatically generated org descriptions coming soon"}
+      </p>
       <h1 className=" text-2xl font-bold">Authored Documents</h1>
-      <OrganizationFileTable filing_ids={orgInfo.filings} orgId={orgId} />
+      <ConversationComponent
+        inheritedFilters={[
+          { filter: FilterField.MatchAuthorUUID, value: orgId },
+          { filter: FilterField.MatchAuthor, value: orgInfo.name },
+        ]}
+      />
     </PageContainer>
   );
 }

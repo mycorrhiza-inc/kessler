@@ -1,7 +1,7 @@
 import ConversationComponent from "@/components/Conversations/ConversationComponent";
 import ConversationTableSimple from "@/components/Organizations/ConversationTable";
 import PageContainer from "@/components/Page/PageContainer";
-import { PageContext } from "@/lib/page_context";
+import { stateFromHeaders } from "@/lib/nextjs_misc";
 import { createClient } from "@/utils/supabase/server";
 import { headers } from "next/headers";
 export default async function Page({
@@ -9,22 +9,12 @@ export default async function Page({
 }: {
   params: Promise<{ conversation_id: string }>;
 }) {
-  const supabase = createClient();
   const headersList = headers();
-  const host = headersList.get("host") || "";
-  const hostsplits = host.split(".");
-  const state = hostsplits.length > 1 ? hostsplits[0] : undefined;
-  const pageContext: PageContext = {
-    state: state,
-    slug: ["proceedings"],
-  };
+  const state = stateFromHeaders(headersList);
   const breadcrumbs = {
     state: state,
     breadcrumbs: [{ value: "proceedings", title: "Proceedings" }],
   };
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
   return (
     <PageContainer breadcrumbs={breadcrumbs}>
       <h1 className="text-3xl font-bold">Proceedings</h1>

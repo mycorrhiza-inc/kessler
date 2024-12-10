@@ -2,8 +2,8 @@ import { BreadcrumbValues } from "../SitemapUtils";
 import { User } from "@supabase/supabase-js";
 import PageContainer from "../Page/PageContainer";
 import { completeFileSchemaGet } from "@/lib/requests/search";
-import { prodAPIURL } from "@/lib/env_variables";
 import { DocumentMainTabs } from "./DocumentBody";
+import { internalAPIURL } from "@/lib/env_variables";
 
 const DocumentPage = async ({
   objectId,
@@ -13,7 +13,7 @@ const DocumentPage = async ({
   state?: string;
   user: User | null;
 }) => {
-  const semiCompleteFileUrl = `${prodAPIURL}/v2/public/files/${objectId}`;
+  const semiCompleteFileUrl = `${internalAPIURL}/v2/public/files/${objectId}`;
   const fileObj = await completeFileSchemaGet(semiCompleteFileUrl);
   const breadcrumbs: BreadcrumbValues = {
     state: state,

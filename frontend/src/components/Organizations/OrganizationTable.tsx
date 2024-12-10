@@ -1,5 +1,4 @@
 "use client";
-import { apiURL } from "@/lib/env_variables";
 import axios from "axios";
 import Link from "next/link";
 import useSWRImmutable from "swr/immutable";
@@ -8,6 +7,7 @@ import {
   OrganizationSchemaComplete,
   OrganizationSchemaCompleteValidator,
 } from "@/lib/types/backend_schemas";
+import { publicAPIURL } from "@/lib/env_variables";
 
 const organizationsListGet = (url: string) => {
   const cleanData = (response: any) => {
@@ -66,7 +66,7 @@ const OrganizationTable = ({
 };
 const OrganizationTableSimple = () => {
   const { data, error, isLoading } = useSWRImmutable(
-    `${apiURL}/v2/public/organizations/list`,
+    `${publicAPIURL}/v2/public/organizations/list`,
     organizationsListGet,
   );
   return (

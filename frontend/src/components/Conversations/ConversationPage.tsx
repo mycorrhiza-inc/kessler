@@ -1,5 +1,4 @@
 import ConversationComponent from "@/components/Conversations/ConversationComponent";
-import { apiURL, prodAPIURL } from "@/lib/env_variables";
 
 import { FilterField, InheritedFilterValues } from "@/lib/filters";
 import { PageContext } from "@/lib/page_context";
@@ -7,6 +6,7 @@ import axios from "axios";
 import { BreadcrumbValues } from "../SitemapUtils";
 import MarkdownRenderer from "../MarkdownRenderer";
 import PageContainer from "../Page/PageContainer";
+import { internalAPIURL } from "@/lib/env_variables";
 
 const getConversationData = async (url: string) => {
   const response = await axios.get(
@@ -76,7 +76,7 @@ export const ConversationPage = async ({
 
   // const url = `${apiURL}/v2/public/conversations/named-lookup/${conversation_id}`;
   // USE THE PROD URL SINCE LOCALHOST ISNT REACHABLE FROM SERVER COMPONENTS
-  const url = `${prodAPIURL}/v2/public/conversations/named-lookup/${conversation_id}`;
+  const url = `${internalAPIURL}/v2/public/conversations/named-lookup/${conversation_id}`;
   const conversation = await getConversationData(url);
   // The title of the page looks weird with the really long title, either shorten
   const displayTitle =

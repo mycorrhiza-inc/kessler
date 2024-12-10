@@ -45,7 +45,7 @@ const TableFilters = ({
       <input
         type="text"
         placeholder="Type here"
-        className="input input-bordered w-full max-w-xs"
+        className="input input-bordered w-full "
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
       />
@@ -168,10 +168,7 @@ const ConversationComponent = ({
     <div className="drawer drawer-end">
       <input id="my-drawer" type="checkbox" className="drawer-toggle" />
       <div className="drawer-content">
-        <div
-          id="conversation-header"
-          className="flex justify-between items-center mb-4"
-        >
+        <div id="conversation-header" className="mb-4 flex justify-end">
           <label htmlFor="my-drawer" className="btn btn-primary drawer-button">
             Filters
           </label>
@@ -209,7 +206,7 @@ const ConversationComponent = ({
           aria-label="close sidebar"
           className="drawer-overlay"
         ></label>
-        <ul className="menu bg-base-200 text-base-content min-h-full w-90 p-4">
+        <ul className="menu bg-base-200 text-base-content min-h-full w-90 p-4 w-1/5">
           <TableFilters
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
@@ -225,4 +222,3 @@ const ConversationComponent = ({
 };
 
 export default ConversationComponent;
-

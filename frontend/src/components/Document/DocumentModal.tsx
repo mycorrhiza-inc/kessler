@@ -1,5 +1,4 @@
 "use client";
-import { apiURL } from "@/lib/env_variables";
 import { completeFileSchemaGet } from "@/lib/requests/search";
 import useSWRImmutable from "swr";
 import LoadingSpinner from "../styled-components/LoadingSpinner";
@@ -9,13 +8,14 @@ import Modal from "../styled-components/Modal";
 
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
+import { publicAPIURL } from "@/lib/env_variables";
 type ModalProps = {
   objectId: string;
   children?: React.ReactNode;
   isPage: boolean;
 };
 const DocumentModalBody = ({ objectId, isPage }: ModalProps) => {
-  const semiCompleteFileUrl = `${apiURL}/v2/public/files/${objectId}`;
+  const semiCompleteFileUrl = `${publicAPIURL}/v2/public/files/${objectId}`;
   const { data, error, isLoading } = useSWRImmutable(
     semiCompleteFileUrl,
     completeFileSchemaGet,

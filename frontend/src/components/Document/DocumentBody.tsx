@@ -6,18 +6,17 @@ import * as Tabs from "@radix-ui/react-tabs";
 import PDFViewer from "./PDFViewer";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import LoadingSpinner from "@/components/styled-components/LoadingSpinner";
-import { apiURL } from "@/lib/env_variables";
 import { fetchObjectDataFromURL, fetchTextDataFromURL } from "./documentLoader";
 import useSWRImmutable from "swr";
-import Link from "next/link";
 import { completeFileSchemaGet } from "@/lib/requests/search";
-import { AuthorInfoPill } from "../Conversations/TextPills";
 import { CompleteFileSchema } from "@/lib/types/backend_schemas";
+import { publicAPIURL } from "@/lib/env_variables";
+import Link from "next/link";
 
 // import { ErrorBoundary } from "react-error-boundary";
 
 const MarkdownContent = memo(({ docUUID }: { docUUID: string }) => {
-  const markdown_url = `${apiURL}/v2/public/files/${docUUID}/markdown`;
+  const markdown_url = `${publicAPIURL}/v2/public/files/${docUUID}/markdown`;
   // axios.get(`https://api.kessler.xyz/v2/public/files/${objectid}/markdown`),
   const { data, error, isLoading } = useSWRImmutable(
     markdown_url,
@@ -73,7 +72,7 @@ const MetadataContent = memo(({ metadata }: { metadata: any }) => {
 
 const PDFContent = ({ docUUID }: { docUUID: string }) => {
   const [loading, setLoading] = React.useState(true);
-  const pdfUrl = `${apiURL}/v2/public/files/${docUUID}/raw`;
+  const pdfUrl = `${publicAPIURL}/v2/public/files/${docUUID}/raw`;
   return (
     <>
       {/* This apparently gets an undefined network error when trying to fetch the pdf from their website not exactly sure why, we need to get the s3 fetch working in golang */}
@@ -94,7 +93,7 @@ export const DocumentMainTabs = ({
   const title: string = documentObject?.name as string;
   const objectId = documentObject?.id as string;
   const underscoredTitle = title ? title.replace(/ /g, "_") : "Unkown_Document";
-  const fileUrlNamedDownload = `${apiURL}/v2/public/files/${objectId}/raw/${underscoredTitle}.pdf`;
+  const fileUrlNamedDownload = `${publicAPIURL}/v2/public/files/${objectId}/raw/${underscoredTitle}.pdf`;
   const kesslerFileUrl = `/files/${objectId}`;
   const metadata = documentObject?.mdata;
   return (

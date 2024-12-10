@@ -1,5 +1,6 @@
 import { ConversationPage } from "@/components/Conversations/ConversationPage";
 import PageContainer from "@/components/Page/PageContainer";
+import { stateFromHeaders } from "@/lib/nextjs_misc";
 import { PageContext } from "@/lib/page_context";
 import { createClient } from "@/utils/supabase/server";
 import { headers } from "next/headers";
@@ -11,14 +12,7 @@ export default async function Page({
   const supabase = createClient();
   const slug = (await params).conversation_id;
   const headersList = headers();
-  const host = headersList.get("host") || "";
-  const hostsplits = host.split(".");
-  const state = hostsplits.length > 1 ? hostsplits[0] : undefined;
-  const pageContext: PageContext = {
-    state: state,
-    slug: ["proceedings", slug],
-    final_identifier: slug,
-  };
+  const state = stateFromHeaders(headersList);
 
   const breadcrumbs = {
     state: state,

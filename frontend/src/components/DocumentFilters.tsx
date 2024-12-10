@@ -12,6 +12,7 @@ import {
   QueryFilterFields,
   emptyQueryOptions,
 } from "@/lib/filters";
+import clsx from "clsx";
 
 enum InputType {
   Text = "text",
@@ -166,11 +167,13 @@ export function BasicDocumentFilters({
   setQueryOptions,
   showQueries,
   disabledQueries,
+  max_w_xs,
 }: {
   queryOptions: QueryFilterFields;
   setQueryOptions: Dispatch<SetStateAction<QueryFilterFields>>;
   showQueries: FilterField[];
   disabledQueries?: FilterField[];
+  max_w_xs?: boolean;
 }) {
   // const [docFilterValues, setDocFilterValues] = useState(emptyQueryOptions);
   const disabledQueriesDict = useMemo(() => {
@@ -204,6 +207,8 @@ export function BasicDocumentFilters({
       .sort((a, b) => a.placementIndex - b.placementIndex);
   }, [showQueries, queryFiltersInformation]);
 
+  const max_w_xs_ClassString = max_w_xs ? "max-w-xs" : "";
+
   return (
     <>
       {sortedFilters.map(({ filterId, filterData }) => {
@@ -217,7 +222,10 @@ export function BasicDocumentFilters({
                 </div>
                 <br />
                 <input
-                  className="input input-bordered w-full max-w-xs"
+                  className={clsx(
+                    "input input-bordered w-full",
+                    max_w_xs_ClassString,
+                  )}
                   type="text"
                   disabled={isDisabled}
                   value={docFilterValues[filterId]}
@@ -235,7 +243,10 @@ export function BasicDocumentFilters({
                 <br />
                 <select
                   disabled={isDisabled}
-                  className="select select-bordered w-full max-w-xs"
+                  className={clsx(
+                    "select select-bordered w-full",
+                    max_w_xs_ClassString,
+                  )}
                   value={docFilterValues[filterId]}
                   onChange={(e) => handleChange(e, filterId)}
                 >
@@ -259,7 +270,10 @@ export function BasicDocumentFilters({
                 </div>
                 <br />
                 <input
-                  className="input input-bordered w-full max-w-xs"
+                  className={clsx(
+                    "input input-bordered w-full",
+                    max_w_xs_ClassString,
+                  )}
                   type="date"
                   disabled={isDisabled}
                   value={docFilterValues[filterId]}
