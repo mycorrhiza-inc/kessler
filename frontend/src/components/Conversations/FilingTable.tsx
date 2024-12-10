@@ -3,6 +3,7 @@ import { Filing } from "../../lib/types/FilingTypes";
 import { AuthorInformation } from "@/lib/types/backend_schemas";
 import { AuthorInfoPill, TextPill } from "./TextPills";
 import DocumentModal from "../Document/DocumentModal";
+import clsx from "clsx";
 
 const NoclickSpan = ({ children }: { children: React.ReactNode }) => {
   return <span className="noclick">{children}</span>;
@@ -95,11 +96,14 @@ export const FilingTable = ({
   filings,
   scroll,
   DocketColumn,
+  PinTableHeader,
 }: {
   filings: Filing[];
   scroll?: boolean;
   DocketColumn?: boolean;
+  PinTableHeader?: boolean;
 }) => {
+  const pinClassName = PinTableHeader ? "table-pin-rows" : "";
   return (
     <div
       className={
@@ -108,7 +112,12 @@ export const FilingTable = ({
           : "overflow-y-auto"
       }
     >
-      <table className="w-full divide-y divide-gray-200  border-collaps table table-pin-rows lg:table-fixed md:table-auto sm:table-auto">
+      <table
+        className={clsx(
+          "w-full divide-y divide-gray-200  border-collaps table lg:table-fixed md:table-auto sm:table-auto",
+          pinClassName,
+        )}
+      >
         <colgroup>
           <col width="40px" />
           <col width="80px" />
