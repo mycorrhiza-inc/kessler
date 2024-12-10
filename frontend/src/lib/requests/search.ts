@@ -16,21 +16,27 @@ export const getSearchResults = async (
   console.log("query data", queryData);
   const searchFilters = queryData.filters;
   console.log("searchhing for", searchFilters);
+  const filterDict: { [key: string]: string } = {
+    name: searchFilters.match_name,
+    author: searchFilters.match_author,
+    author_uuid: searchFilters.match_author_uuid,
+    docket_id: searchFilters.match_docket_id,
+    file_class: searchFilters.match_file_class,
+    doctype: searchFilters.match_doctype,
+    source: searchFilters.match_source,
+    date_from: searchFilters.match_after_date,
+    date_to: searchFilters.match_before_date,
+  };
+  if (searchFilters.match_author_uuid !== "") {
+    // If filtering by author uuid, remove author name
+    filterDict.author = "";
+  }
   try {
     const searchResults: Filing[] = await axios
       // .post("https://api.kessler.xyz/v2/search", {
       .post(`${publicAPIURL}/v2/search`, {
         query: searchQuery,
-        filters: {
-          name: searchFilters.match_name,
-          author: searchFilters.match_author,
-          docket_id: searchFilters.match_docket_id,
-          file_class: searchFilters.match_file_class,
-          doctype: searchFilters.match_doctype,
-          source: searchFilters.match_source,
-          date_from: searchFilters.match_after_date,
-          date_to: searchFilters.match_before_date,
-        },
+        filters: filterDict,
         start_offset: queryData.start_offset,
         max_hits: 20,
       })
@@ -39,7 +45,7 @@ export const getSearchResults = async (
         if (response.data?.length === 0 || typeof response.data === "string") {
           return [];
         }
-        console.log('response data:::::', response.data)
+        console.log("response data:::::", response.data);
         const filings_promise: Promise<Filing[]> = ParseFilingData(
           response.data,
         );
@@ -73,7 +79,9 @@ export const getRecentFilings = async (page?: number) => {
 
 export const getFilingMetadata = async (id: string): Promise<Filing | null> => {
   const valid_id = z.string().uuid().parse(id);
-  const response = await axios.get(`${publicAPIURL}/v2/public/files/${valid_id}`);
+  const response = await axios.get(
+    `${publicAPIURL}/v2/public/files/${valid_id}`,
+  );
   const filing = await ParseFilingDataSingular(response.data);
   return filing;
 };
@@ -108,7 +116,6 @@ export const completeFileSchemaGet = async (
     throw error;
   }
 };
-
 
 export const generateFilingFromFileSchema = (
   file_schema: CompleteFileSchema,
@@ -158,8 +165,10 @@ export const ParseFilingDataSingular = async (
 };
 
 export const ParseFilingData = async (filingData: any): Promise<Filing[]> => {
-  const out : Filing[] = [];
-  if (filingData === null) { return out };
+  const out: Filing[] = [];
+  if (filingData === null) {
+    return out;
+  }
   const filings_promises: Promise<Filing | null>[] = filingData.map(
     ParseFilingDataSingular,
   );
