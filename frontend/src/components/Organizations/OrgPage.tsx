@@ -37,6 +37,7 @@ export default async function OrganizationPage({
       <ConversationComponent
         inheritedFilters={[
           { filter: FilterField.MatchAuthorUUID, value: orgId },
+          { filter: FilterField.MatchAuthor, value: orgInfo.name },
         ]}
       />
     </PageContainer>
