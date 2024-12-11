@@ -107,11 +107,12 @@ export default function RecentUpdatesView() {
           </div>
         </div>
       </div>
-      <div className="flex flex-col border-t justify-center w-full">
-        <ChatModalClickDiv className="btn btn-accent" inheritedFilters={[]}>
-          Unsure of what to do? Try chatting with the entire New York PUC
-        </ChatModalClickDiv>
-      </div>
+      <ChatModalClickDiv
+        className="btn btn-accent w-full"
+        inheritedFilters={[]}
+      >
+        Unsure of what to do? Try chatting with the entire New York PUC
+      </ChatModalClickDiv>
       <h1 className=" text-2xl font-bold">Newest Docs</h1>
       <InfiniteScroll
         dataLength={filings.length}
