@@ -60,3 +60,21 @@ export const emptyQueryOptions: QueryFilterFields = {
   [FilterField.MatchConversationUUID]: "",
   [FilterField.MatchFileUUID]: "",
 };
+
+export const disableListFromInherited = (
+  inheritedFilters: InheritedFilterValues,
+): FilterField[] => {
+  return inheritedFilters.map((val) => {
+    return val.filter;
+  });
+};
+
+export const initialFiltersFromInherited = (
+  inheritedFilters: InheritedFilterValues,
+): QueryFilterFields => {
+  var initialFilters = emptyQueryOptions;
+  inheritedFilters.map((val) => {
+    initialFilters[val.filter] = val.value;
+  });
+  return initialFilters;
+};

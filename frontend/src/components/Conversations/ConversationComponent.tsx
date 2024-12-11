@@ -14,6 +14,8 @@ import {
   InheritedFilterValues,
   FilterField,
   QueryDataFile,
+  disableListFromInherited,
+  initialFiltersFromInherited,
 } from "@/lib/filters";
 import { Filing } from "@/lib/types/FilingTypes";
 import { FilingTable } from "@/components/Tables/FilingTable";
@@ -65,18 +67,11 @@ const ConversationComponent = ({
 }: {
   inheritedFilters: InheritedFilterValues;
 }) => {
-  const disabledFilters = useMemo(() => {
-    return inheritedFilters.map((val) => {
-      return val.filter;
-    });
-  }, [inheritedFilters]);
-
   const initialFilterState = useMemo(() => {
-    var initialFilters = emptyQueryOptions;
-    inheritedFilters.map((val) => {
-      initialFilters[val.filter] = val.value;
-    });
-    return initialFilters;
+    return initialFiltersFromInherited(inheritedFilters);
+  }, [inheritedFilters]);
+  const disabledFilters = useMemo(() => {
+    return disableListFromInherited(inheritedFilters);
   }, [inheritedFilters]);
   const [searchFilters, setSearchFilters] =
     useState<QueryFilterFields>(initialFilterState);
