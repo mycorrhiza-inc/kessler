@@ -121,7 +121,7 @@ export const DocumentMainTabs = ({
             </Link>
           )}
           <ChatModalClickDiv
-            className="btn btn-primary"
+            className="btn btn-accent"
             inheritedFilters={[
               { filter: FilterField.MatchFileUUID, value: objectId },
             ]}

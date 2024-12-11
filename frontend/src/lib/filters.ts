@@ -78,3 +78,18 @@ export const initialFiltersFromInherited = (
   });
   return initialFilters;
 };
+
+export const inheritedFiltersFromValues = (
+  filters: QueryFilterFields,
+): InheritedFilterValues => {
+  if (filters == null) {
+    return [];
+  }
+  var inheritedFilters: InheritedFilterValues = [];
+  for (const [key, value] of Object.entries(filters)) {
+    if (value != "") {
+      inheritedFilters.push({ filter: key as FilterField, value: value });
+    }
+  }
+  return inheritedFilters;
+};
