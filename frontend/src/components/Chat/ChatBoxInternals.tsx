@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import MarkdownRenderer from "./MarkdownRenderer";
+import MarkdownRenderer from "../MarkdownRenderer";
 
 import { QueryFilterFields } from "@/lib/filters";
 import { exampleChatHistory, Message } from "@/lib/chat";

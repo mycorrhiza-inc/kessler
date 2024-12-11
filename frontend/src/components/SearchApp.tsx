@@ -5,7 +5,7 @@ import { useRef, useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { CenteredFloatingSearhBox } from "@/components/SearchBox";
 import SearchResultBox from "@/components/SearchResultBox";
-import ChatBoxInternals from "./ChatBoxInternals";
+import ChatBoxInternals from "./Chat/ChatBoxInternals";
 
 import { QueryFilterFields, emptyQueryOptions } from "@/lib/filters";
 import { User } from "@supabase/supabase-js";
