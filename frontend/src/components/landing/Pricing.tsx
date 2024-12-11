@@ -22,7 +22,7 @@ const Pricing = ({ className }: { className: string }) => {
     {
       key: "professional",
       message: `
-## $50 /month
+## ~~$50 /month~~ Free while in beta
 **Professional Tier**
 
 - Access to all our government documents
@@ -58,11 +58,10 @@ const Pricing = ({ className }: { className: string }) => {
         <div className="">
           <div className="animate_top mx-auto text-center">
             <div className="text-center">
-              <h2 className="text-2xl font-bold">PRICING PLANS</h2>
-              <p className="mt-4">
-                WHILE KESSLER IS IN BETA, EVERYTHING IS FREE. However, once we
-                have built out the features and dataset, we are planning on
-                charging to continue to support development.
+              <h2 className="text-2xl font-bold">PRICING PLANS ()</h2>
+              <p className="mt-4 text-xl">
+                However, once we have built out the features and dataset, we are
+                planning on charging to continue to support development.
               </p>
             </div>
           </div>
