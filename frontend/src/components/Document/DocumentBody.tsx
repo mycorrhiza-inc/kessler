@@ -94,10 +94,28 @@ export const DocumentMainTabs = ({
 }) => {
   const title: string = documentObject?.name as string;
   const objectId = documentObject?.id as string;
+  const extension = documentObject?.extension || "pdf";
   const underscoredTitle = title ? title.replace(/ /g, "_") : "Unkown_Document";
-  const fileUrlNamedDownload = `${publicAPIURL}/v2/public/files/${objectId}/raw/${underscoredTitle}.pdf`;
+  const fileUrlNamedDownload = `${publicAPIURL}/v2/public/files/${objectId}/raw/${underscoredTitle}.${extension}`;
   const kesslerFileUrl = `/files/${objectId}`;
   const metadata = documentObject?.mdata;
+  // TODO: Make this into a library function or something.
+  const showText =
+    documentObject?.verified && documentObject?.extension != "xlsx";
+  const showRawDocument = documentObject?.extension == "pdf";
+  const getDefaultTab = (
+    showRawDocument: boolean,
+    showText: boolean,
+  ): string => {
+    if (!showRawDocument) {
+      if (!showText) {
+        return "tab3";
+      }
+      return "tab2";
+    }
+    return "tab1";
+  };
+  const defaultTab = getDefaultTab(showRawDocument, showText);
   return (
     <div className="modal-content standard-box ">
       <div className="card-title flex justify-between items-center">
@@ -134,25 +152,34 @@ export const DocumentMainTabs = ({
       <Tabs.Root
         className="TabsRoot"
         role="tablist tabs tabs-bordered tabs-lg"
-        defaultValue="tab1"
+        defaultValue={defaultTab}
       >
         <Tabs.List className="TabsList" aria-label="What Documents ">
-          <Tabs.Trigger className="TabsTrigger tab" value="tab1">
-            Document
-          </Tabs.Trigger>
-          <Tabs.Trigger className="TabsTrigger tab" value="tab2">
-            Document Text
-          </Tabs.Trigger>
+          {showRawDocument && (
+            <Tabs.Trigger className="TabsTrigger tab" value="tab1">
+              Document
+            </Tabs.Trigger>
+          )}
+
+          {showText && (
+            <Tabs.Trigger className="TabsTrigger tab" value="tab2">
+              Document Text
+            </Tabs.Trigger>
+          )}
           <Tabs.Trigger className="TabsTrigger tab" value="tab3">
             Metadata
           </Tabs.Trigger>
         </Tabs.List>
-        <Tabs.Content className="TabsContent" value="tab1">
-          <PDFContent docUUID={objectId} />
-        </Tabs.Content>
-        <Tabs.Content className="TabsContent" value="tab2">
-          <MarkdownContent docUUID={objectId} />
-        </Tabs.Content>
+        {showRawDocument && (
+          <Tabs.Content className="TabsContent" value="tab1">
+            <PDFContent docUUID={objectId} />
+          </Tabs.Content>
+        )}
+        {showText && (
+          <Tabs.Content className="TabsContent" value="tab2">
+            <MarkdownContent docUUID={objectId} />
+          </Tabs.Content>
+        )}
         <Tabs.Content className="TabsContent" value="tab3">
           <MetadataContent metadata={metadata} />
         </Tabs.Content>
