@@ -30,4 +30,3 @@ export type NYConversation = {
   organization: string;
   date_filed: string;
 };
-

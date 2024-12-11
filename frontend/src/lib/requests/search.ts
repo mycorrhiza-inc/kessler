@@ -39,7 +39,7 @@ export const getSearchResults = async (
         if (response.data?.length === 0 || typeof response.data === "string") {
           return [];
         }
-        console.log('response data:::::', response.data)
+        console.log("response data:::::", response.data);
         const filings_promise: Promise<Filing[]> = ParseFilingData(
           response.data,
         );
@@ -73,7 +73,9 @@ export const getRecentFilings = async (page?: number) => {
 
 export const getFilingMetadata = async (id: string): Promise<Filing | null> => {
   const valid_id = z.string().uuid().parse(id);
-  const response = await axios.get(`${publicAPIURL}/v2/public/files/${valid_id}`);
+  const response = await axios.get(
+    `${publicAPIURL}/v2/public/files/${valid_id}`,
+  );
   const filing = await ParseFilingDataSingular(response.data);
   return filing;
 };
@@ -108,7 +110,6 @@ export const completeFileSchemaGet = async (
     throw error;
   }
 };
-
 
 export const generateFilingFromFileSchema = (
   file_schema: CompleteFileSchema,
@@ -158,8 +159,10 @@ export const ParseFilingDataSingular = async (
 };
 
 export const ParseFilingData = async (filingData: any): Promise<Filing[]> => {
-  const out : Filing[] = [];
-  if (filingData === null) { return out };
+  const out: Filing[] = [];
+  if (filingData === null) {
+    return out;
+  }
   const filings_promises: Promise<Filing | null>[] = filingData.map(
     ParseFilingDataSingular,
   );
