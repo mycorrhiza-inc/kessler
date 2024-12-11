@@ -2,9 +2,8 @@ package rag
 
 import (
 	"fmt"
+	"kessler/objects/networking"
 	"testing"
-
-	"kessler/search"
 )
 
 func TestRag(t *testing.T) {
@@ -20,7 +19,7 @@ func TestRag(t *testing.T) {
 	}
 	chatHistory := SimpleToChatMessages(history)
 	llmObject := LLMModel{ModelName: "gpt-4o"}
-	result, err := llmObject.RagChat(chatHistory, search.Metadata{})
+	result, err := llmObject.RagChat(chatHistory, networking.FilterFields{})
 	if err != nil {
 		t.Fatal(err)
 	}

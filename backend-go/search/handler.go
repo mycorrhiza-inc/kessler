@@ -3,26 +3,20 @@ package search
 import (
 	"encoding/json"
 	"fmt"
+	"kessler/objects/networking"
 	"log"
 	"net/http"
 	"strings"
 )
 
 type SearchRequest struct {
-	Index             string           `json:"index"`
-	Query             string           `json:"query"`
-	SearchFilters     FilterFields     `json:"filters"`
-	SearchUUIDFilters UUIDFilterFields `json:"uuid_filters"`
-	SortBy            []string         `json:"sort_by"`
-	MaxHits           int              `json:"max_hits"`
-	StartOffset       int              `json:"start_offset"`
-	GetText           bool             `json:"get_text"`
-}
-
-type UUIDFilterFields struct {
-	AuthorUUID       string `json:"author_uuid"`
-	ConversationUUID string `json:"conversation_uuid"`
-	FileUUID         string `json:"file_uuid"`
+	Index         string                  `json:"index"`
+	Query         string                  `json:"query"`
+	SearchFilters networking.FilterFields `json:"filters"`
+	SortBy        []string                `json:"sort_by"`
+	MaxHits       int                     `json:"max_hits"`
+	StartOffset   int                     `json:"start_offset"`
+	GetText       bool                    `json:"get_text"`
 }
 
 func (s SearchRequest) String() string {

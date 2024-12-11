@@ -3,11 +3,11 @@ package rag
 import (
 	"encoding/json"
 	"fmt"
+	"kessler/objects/networking"
+	"kessler/search"
 
 	openai "github.com/sashabaranov/go-openai"
 	"github.com/sashabaranov/go-openai/jsonschema"
-
-	"kessler/search"
 )
 
 // Use custom enums in place of Python's Enum class
@@ -118,7 +118,7 @@ var rag_query_func_schema = openai.FunctionDefinition{
 }
 
 // arguments='{"order_id":"order_12345"}',
-func rag_query_func_generated_from_filters(filters search.Metadata) func(query_json string) (ToolCallResults, error) {
+func rag_query_func_generated_from_filters(filters networking.FilterFields) func(query_json string) (ToolCallResults, error) {
 	return func(query_json string) (ToolCallResults, error) {
 		var queryData map[string]string
 		err := json.Unmarshal([]byte(query_json), &queryData)
@@ -129,7 +129,7 @@ func rag_query_func_generated_from_filters(filters search.Metadata) func(query_j
 		if !ok {
 			return ToolCallResults{}, fmt.Errorf("query field is missing in query_json")
 		}
-		search_request := search.SearchRequest{Index: "NY_PUC", Query: search_query, SearchFilters: search.FilterFields{Metadata: filters}}
+		search_request := search.SearchRequest{Index: "NY_PUC", Query: search_query, SearchFilters: filters}
 		search_results, err := search.SearchQuickwit(search_request)
 		if err != nil {
 			return ToolCallResults{}, err
@@ -149,7 +149,7 @@ func rag_query_func_generated_from_filters(filters search.Metadata) func(query_j
 	}
 }
 
-func rag_func_call_filters(filters search.Metadata) FunctionCall {
+func rag_func_call_filters(filters networking.FilterFields) FunctionCall {
 	return FunctionCall{
 		Schema: rag_query_func_schema,
 		Func:   rag_query_func_generated_from_filters(filters),
@@ -159,7 +159,7 @@ func rag_func_call_filters(filters search.Metadata) FunctionCall {
 // TODO: Add this back in when we have a use case for it.
 // var rag_func_call_no_filters = rag_func_call_filters(search.Metadata{})
 
-func (model_name LLMModel) RagChat(chatHistory []ChatMessage, filters search.Metadata) (ChatMessage, error) {
+func (model_name LLMModel) RagChat(chatHistory []ChatMessage, filters networking.FilterFields) (ChatMessage, error) {
 	requestMultiplex := MultiplexerChatCompletionRequest{
 		ChatHistory: chatHistory,
 		ModelName:   model_name.ModelName,
