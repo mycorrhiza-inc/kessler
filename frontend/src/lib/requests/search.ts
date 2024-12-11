@@ -1,4 +1,9 @@
-import { QueryDataFile, QueryFilterFields } from "@/lib/filters";
+import {
+  BackendFilterObject,
+  QueryDataFile,
+  QueryFilterFields,
+  backendFilterGenerate,
+} from "@/lib/filters";
 import { Filing } from "@/lib/types/FilingTypes";
 import axios from "axios";
 import { publicAPIURL } from "../env_variables";
@@ -16,35 +21,13 @@ export const getSearchResults = async (
   console.log("query data", queryData);
   const searchFilters = queryData.filters;
   console.log("searchhing for", searchFilters);
-  const filterDict: { [key: string]: string } = {
-    name: searchFilters.match_name,
-    author: searchFilters.match_author,
-    docket_id: searchFilters.match_docket_id,
-    file_class: searchFilters.match_file_class,
-    doctype: searchFilters.match_doctype,
-    source: searchFilters.match_source,
-    date_from: searchFilters.match_after_date,
-    date_to: searchFilters.match_before_date,
-  };
-  const uuidFilterDict: { [key: string]: string } = {
-    author_uuid: searchFilters.match_author_uuid,
-    conversation_uuid: searchFilters.match_conversation_uuid,
-    file_uuid: searchFilters.match_file_uuid,
-  };
-  if (searchFilters.match_author_uuid !== "") {
-    // If filtering by author uuid, remove author name
-    filterDict.author = "";
-  }
-  if (searchFilters.match_conversation_uuid !== "") {
-    filterDict.docket_id = "";
-  }
+  const filterObj: BackendFilterObject = backendFilterGenerate(searchFilters);
   try {
     const searchResults: Filing[] = await axios
       // .post("https://api.kessler.xyz/v2/search", {
       .post(`${publicAPIURL}/v2/search`, {
         query: searchQuery,
-        filters: filterDict,
-        uuid_filters: uuidFilterDict,
+        filters: filterObj,
         start_offset: queryData.start_offset,
         max_hits: 20,
       })

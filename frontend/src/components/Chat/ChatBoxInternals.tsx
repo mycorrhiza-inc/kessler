@@ -3,7 +3,7 @@ import { useState } from "react";
 import MarkdownRenderer from "../MarkdownRenderer";
 
 import { QueryFilterFields } from "@/lib/filters";
-import { exampleChatHistory, Message } from "@/lib/chat";
+import { exampleChatHistory, getUpdatedChatHistory, Message } from "@/lib/chat";
 export const ChatMessages = ({
   messages,
   loading,
@@ -174,78 +174,18 @@ export const ChatBoxInternalsStateless = ({
     console.log(newMessages);
     setMessages(newMessages);
 
-    let chat_hist = newMessages.map((m) => {
-      let { key, ...rest } = m;
-      return rest;
-    });
-
     const modelToSend = selectedModel === "default" ? undefined : selectedModel;
     setLoadingResponse(true);
 
     // Should this fetch get refactored out into lib as something that calls a chat endpoint?
-    let result_message = await fetch(chatUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        accept: "application/json",
-      },
-      body: JSON.stringify({
-        model: modelToSend,
-        chat_history: chat_hist,
-        filters: ragFilters,
-      }),
-    })
-      .then((resp) => {
-        setLoadingResponse(false);
-        if (resp.status < 200 || resp.status > 299) {
-          console.log("failed request with status " + resp.status);
-          console.log(resp);
-          return "failed request";
-        }
-        return resp.json();
-      })
-      .then((data) => {
-        if (!data.message) {
-          console.log("no message in data");
-          console.log(data);
-          return "failed request";
-        }
-        console.log("got data");
-        console.log(data);
-        if (data.message.citations) {
-          console.log("got citations");
-          console.log("set highlighted message");
-          setCitations(data.message.citations);
-          console.log("set citations");
-        }
-        console.log("Returning Message:");
-        console.log(data.message);
-        return data.message;
-      })
-      .catch((e) => {
-        console.log("error making request");
-        console.log(JSON.stringify(e));
-        return "encountered exception while fetching data";
-      });
-    let chat_response: Message;
 
-    if (typeof result_message === "string") {
-      chat_response = {
-        role: "assistant",
-        key: Symbol(),
-        content: result_message,
-        citations: [],
-      };
-    } else {
-      chat_response = {
-        role: "assistant",
-        key: Symbol(),
-        content: result_message.content,
-        citations: result_message.citations,
-      };
-    }
-
-    newMessages = [...newMessages, chat_response];
+    newMessages = await getUpdatedChatHistory(
+      newMessages,
+      ragFilters,
+      chatUrl,
+      modelToSend,
+    );
+    setLoadingResponse(false);
     setMessages(newMessages);
   };
   const model_list = [
