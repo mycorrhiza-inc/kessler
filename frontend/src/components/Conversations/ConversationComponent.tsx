@@ -14,6 +14,9 @@ import {
   InheritedFilterValues,
   FilterField,
   QueryDataFile,
+  disableListFromInherited,
+  initialFiltersFromInherited,
+  inheritedFiltersFromValues,
 } from "@/lib/filters";
 import { Filing } from "@/lib/types/FilingTypes";
 import { FilingTable } from "@/components/Tables/FilingTable";
@@ -23,6 +26,7 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import LoadingSpinnerTimeout from "../styled-components/LoadingSpinnerTimeout";
 
 import ConversationDescription from "./ConversationDescription";
+import { ChatModalClickDiv } from "../Chat/ChatModal";
 
 const TableFilters = ({
   searchQuery,
@@ -65,18 +69,11 @@ const ConversationComponent = ({
 }: {
   inheritedFilters: InheritedFilterValues;
 }) => {
-  const disabledFilters = useMemo(() => {
-    return inheritedFilters.map((val) => {
-      return val.filter;
-    });
-  }, [inheritedFilters]);
-
   const initialFilterState = useMemo(() => {
-    var initialFilters = emptyQueryOptions;
-    inheritedFilters.map((val) => {
-      initialFilters[val.filter] = val.value;
-    });
-    return initialFilters;
+    return initialFiltersFromInherited(inheritedFilters);
+  }, [inheritedFilters]);
+  const disabledFilters = useMemo(() => {
+    return disableListFromInherited(inheritedFilters);
   }, [inheritedFilters]);
   const [searchFilters, setSearchFilters] =
     useState<QueryFilterFields>(initialFilterState);
@@ -168,19 +165,30 @@ const ConversationComponent = ({
     <div className="drawer drawer-end">
       <input id="my-drawer" type="checkbox" className="drawer-toggle" />
       <div className="drawer-content">
-        <div id="conversation-header" className="mb-4 flex justify-end">
-          <label htmlFor="my-drawer" className="btn btn-primary drawer-button">
-            Filters
-          </label>
-          <button
-            onClick={toggleFilters}
-            className="btn btn-outline"
-            style={{
-              display: !isFocused ? "inline-block" : "none",
-            }}
+        <div id="conversation-header" className="mb-4 flex justify-between">
+          <ChatModalClickDiv
+            className="btn btn-accent"
+            inheritedFilters={inheritedFiltersFromValues(searchFilters)}
           >
-            Filters
-          </button>
+            Chat with Document List
+          </ChatModalClickDiv>
+          <div>
+            <label
+              htmlFor="my-drawer"
+              className="btn btn-primary drawer-button"
+            >
+              Filters
+            </label>
+            <button
+              onClick={toggleFilters}
+              className="btn btn-outline"
+              style={{
+                display: !isFocused ? "inline-block" : "none",
+              }}
+            >
+              Filters
+            </button>
+          </div>
         </div>
         <div className="w-full h-full">
           <InfiniteScroll

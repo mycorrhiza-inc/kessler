@@ -2,13 +2,14 @@ package search
 
 import (
 	"fmt"
+	"kessler/objects/networking"
 	"testing"
 )
 
 var example_search_request = SearchRequest{
 	Index:         "Marshall Fire",
 	Query:         "",
-	SearchFilters: FilterFields{},
+	SearchFilters: networking.FilterFields{},
 	SortBy:        []string{},
 	MaxHits:       10,
 	StartOffset:   0,

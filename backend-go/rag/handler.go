@@ -3,10 +3,9 @@ package rag
 import (
 	"encoding/json"
 	"fmt"
+	"kessler/objects/networking"
 	"net/http"
 	"strings"
-
-	"kessler/search"
 )
 
 type ChatRequestBody struct {
@@ -54,9 +53,9 @@ func HandleBasicChatRequest(w http.ResponseWriter, r *http.Request) {
 }
 
 type AdvancedRagRequestBody struct {
-	Model       string           `json:"model"`
-	ChatHistory []ChatMessage    `json:"chat_history"`
-	Filters     *search.Metadata `json:"filters,omitempty"`
+	Model       string                   `json:"model"`
+	ChatHistory []ChatMessage            `json:"chat_history"`
+	Filters     *networking.FilterFields `json:"filters,omitempty"`
 }
 
 func HandleRagChatRequest(w http.ResponseWriter, r *http.Request) {

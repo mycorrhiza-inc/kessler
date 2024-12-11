@@ -3,19 +3,20 @@ package search
 import (
 	"encoding/json"
 	"fmt"
+	"kessler/objects/networking"
 	"log"
 	"net/http"
 	"strings"
 )
 
 type SearchRequest struct {
-	Index         string       `json:"index"`
-	Query         string       `json:"query"`
-	SearchFilters FilterFields `json:"filters"`
-	SortBy        []string     `json:"sort_by"`
-	MaxHits       int          `json:"max_hits"`
-	StartOffset   int          `json:"start_offset"`
-	GetText       bool         `json:"get_text"`
+	Index         string                  `json:"index"`
+	Query         string                  `json:"query"`
+	SearchFilters networking.FilterFields `json:"filters"`
+	SortBy        []string                `json:"sort_by"`
+	MaxHits       int                     `json:"max_hits"`
+	StartOffset   int                     `json:"start_offset"`
+	GetText       bool                    `json:"get_text"`
 }
 
 func (s SearchRequest) String() string {
@@ -49,6 +50,7 @@ func HandleSearchRequest(w http.ResponseWriter, r *http.Request) {
 		// Decode the JSON body into the struct
 		err := json.NewDecoder(r.Body).Decode(&RequestData)
 		if err != nil {
+			log.Printf("Error decoding JSON: %v\n", err)
 			http.Error(w, "Error decoding JSON", http.StatusBadRequest)
 			return
 		}
@@ -61,7 +63,6 @@ func HandleSearchRequest(w http.ResponseWriter, r *http.Request) {
 		}
 
 		respString, err := json.Marshal(data)
-
 		if err != nil {
 			log.Println("Error marshalling response data")
 			http.Error(w, err.Error(), http.StatusInternalServerError)

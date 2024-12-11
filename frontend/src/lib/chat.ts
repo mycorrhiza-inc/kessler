@@ -1,7 +1,5 @@
 import axios from "axios";
-
-const chatUrl = "/api/chat";
-const modelToSend = "llama-3.1-8b";
+import { QueryFilterFields, backendFilterGenerate } from "./filters";
 
 export interface Message {
   role: string;
@@ -69,6 +67,70 @@ export interface ChatMessageInterface {
   content: string;
   key: symbol;
 }
+
+export const getUpdatedChatHistory = async (
+  chatHistory: Message[],
+  ragFilters: QueryFilterFields,
+  chatUrl: string,
+  model?: string,
+) => {
+  const backendFilters = backendFilterGenerate(ragFilters);
+  let result_message = await fetch(chatUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      accept: "application/json",
+    },
+    body: JSON.stringify({
+      model: model,
+      chat_history: chatHistory,
+      filters: backendFilters,
+    }),
+  })
+    .then((resp) => {
+      if (resp.status < 200 || resp.status > 299) {
+        console.log("failed request with status " + resp.status);
+        console.log(resp);
+        return "failed request";
+      }
+      return resp.json();
+    })
+    .then((data) => {
+      if (!data.message) {
+        console.log("no message in data");
+        console.log(data);
+        return "failed request";
+      }
+      console.log("got data");
+      console.log(data);
+      console.log("Returning Message:");
+      console.log(data.message);
+      return data.message;
+    })
+    .catch((e) => {
+      console.log("error making request");
+      console.log(JSON.stringify(e));
+      return "encountered exception while fetching data";
+    });
+  let chat_response: Message;
+
+  if (typeof result_message === "string") {
+    chat_response = {
+      role: "assistant",
+      key: Symbol(),
+      content: result_message,
+      citations: [],
+    };
+  } else {
+    chat_response = {
+      role: "assistant",
+      key: Symbol(),
+      content: result_message.content,
+      citations: result_message.citations,
+    };
+  }
+  return [...chatHistory, chat_response];
+};
 
 export interface ChatLogInterface {
   id: string;
@@ -139,7 +201,7 @@ export class ChatLog implements ChatLogInterface {
         accept: "application/json",
       },
       body: JSON.stringify({
-        model: modelToSend,
+        model: "llama-70b",
         chat_history: this.getHistory(),
       }),
     })

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"kessler/objects/networking"
 	"log"
 	"net/http"
 	"os"
@@ -15,59 +16,22 @@ import (
 var quickwitURL = os.Getenv("QUICKWIT_ENDPOINT")
 
 type Hit struct {
-	CreatedAt     string   `json:"created_at"`
-	Doctype       string   `json:"doctype"`
-	Hash          string   `json:"hash"`
-	Lang          string   `json:"lang"`
-	DateFiled     string   `json:"updated_at"`
-	Metadata      Metadata `json:"metadata"`
-	Name          string   `json:"name"`
-	SaOrmSentinel *string  `json:"sa_orm_sentinel"`
-	ShortSummary  *string  `json:"short_summary"`
-	Source        string   `json:"source"`
-	SourceID      string   `json:"source_id"`
-	Stage         string   `json:"stage"`
-	Summary       *string  `json:"summary"`
-	Text          string   `json:"text"`
-	Timestamp     string   `json:"timestamp"`
-	URL           string   `json:"url"`
-}
-
-type Metadata struct {
-	Author    string `json:"author"`
-	Date      string `json:"date"`
-	DocketID  string `json:"docket_id"`
-	FileClass string `json:"file_class"`
-	Doctype   string `json:"doctype"`
-	Lang      string `json:"lang"`
-	Language  string `json:"language"`
-	Source    string `json:"source"`
-	Title     string `json:"title"`
-}
-
-func (m Metadata) String() string {
-	// Marshal the struct to JSON format
-	jsonData, err := json.MarshalIndent(m, "", "  ")
-	if err != nil {
-		fmt.Println("Error marshalling JSON:", err)
-	}
-	// Print the formatted JSON string
-	return string(jsonData)
-}
-
-type FilterFields struct {
-	Metadata
-	DateFrom string `json:"date_from"`
-	DateTo   string `json:"date_to"`
-}
-
-// String method for FilterFields struct
-func (f FilterFields) String() string {
-	jsonData, err := json.MarshalIndent(f, "", "  ")
-	if err != nil {
-		fmt.Println("Error marshalling JSON:", err)
-	}
-	return string(jsonData)
+	CreatedAt     string              `json:"created_at"`
+	Doctype       string              `json:"doctype"`
+	Hash          string              `json:"hash"`
+	Lang          string              `json:"lang"`
+	DateFiled     string              `json:"updated_at"`
+	Metadata      networking.Metadata `json:"metadata"`
+	Name          string              `json:"name"`
+	SaOrmSentinel *string             `json:"sa_orm_sentinel"`
+	ShortSummary  *string             `json:"short_summary"`
+	Source        string              `json:"source"`
+	SourceID      string              `json:"source_id"`
+	Stage         string              `json:"stage"`
+	Summary       *string             `json:"summary"`
+	Text          string              `json:"text"`
+	Timestamp     string              `json:"timestamp"`
+	URL           string              `json:"url"`
 }
 
 type Snippet struct {
@@ -123,7 +87,7 @@ func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
 	log.Printf("search filters: %s\n", r.SearchFilters)
 
 	var queryString string
-	dateQuery, err := ConstructDateQuery(r.SearchFilters.DateFrom, r.SearchFilters.DateTo)
+	dateQuery, err := ConstructDateQuery(r.SearchFilters.MetadataFilters.DateFrom, r.SearchFilters.MetadataFilters.DateTo)
 	if err != nil {
 		log.Printf("error constructing date query: %v", err)
 	}
@@ -132,7 +96,7 @@ func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
 		// queryString = fmt.Sprintf("((text:(%s) OR name:(%s)) AND verified:true AND %s)", query, query, dateQuery)
 	}
 
-	filtersString := constructQuickwitMetadataQueryString(r.SearchFilters.Metadata)
+	filtersString := constructQuickwitMetadataQueryString(r.SearchFilters.MetadataFilters.Metadata)
 
 	queryString = queryString + filtersString
 	log.Printf("full query string: %s\n", queryString)
@@ -211,7 +175,8 @@ func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
 
 // write a function that will take in a searchRequest and searchResults and create a new quickwitSearchResponse then for each hit and snippet in the passed in search results, make sure all the filters in search request are valid for that, if it is valid append it to the return searchResponse, else skip it and print a scary error message, then return the list of validated results
 func ValidateSearchRequest(searchRequest SearchRequest, searchResults quickwitSearchResponse) quickwitSearchResponse {
-	filters := searchRequest.SearchFilters
+	global_filters := searchRequest.SearchFilters
+	filters := global_filters.MetadataFilters
 	metadata_filters := filters.Metadata
 	var validatedResponse quickwitSearchResponse
 
@@ -323,7 +288,7 @@ func ConstructDateQuery(DateFrom string, DateTo string) (string, error) {
 	return dateQuery, nil
 }
 
-func constructQuickwitMetadataQueryString(meta Metadata) string {
+func constructQuickwitMetadataQueryString(meta networking.Metadata) string {
 	var filterQuery string
 	filters := []string{}
 

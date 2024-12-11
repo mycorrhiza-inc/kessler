@@ -1,4 +1,9 @@
-import { QueryDataFile, QueryFilterFields } from "@/lib/filters";
+import {
+  BackendFilterObject,
+  QueryDataFile,
+  QueryFilterFields,
+  backendFilterGenerate,
+} from "@/lib/filters";
 import { Filing } from "@/lib/types/FilingTypes";
 import axios from "axios";
 import { publicAPIURL } from "../env_variables";
@@ -16,21 +21,13 @@ export const getSearchResults = async (
   console.log("query data", queryData);
   const searchFilters = queryData.filters;
   console.log("searchhing for", searchFilters);
+  const filterObj: BackendFilterObject = backendFilterGenerate(searchFilters);
   try {
     const searchResults: Filing[] = await axios
       // .post("https://api.kessler.xyz/v2/search", {
       .post(`${publicAPIURL}/v2/search`, {
         query: searchQuery,
-        filters: {
-          name: searchFilters.match_name,
-          author: searchFilters.match_author,
-          docket_id: searchFilters.match_docket_id,
-          file_class: searchFilters.match_file_class,
-          doctype: searchFilters.match_doctype,
-          source: searchFilters.match_source,
-          date_from: searchFilters.match_after_date,
-          date_to: searchFilters.match_before_date,
-        },
+        filters: filterObj,
         start_offset: queryData.start_offset,
         max_hits: 20,
       })

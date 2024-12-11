@@ -1,9 +1,9 @@
 import { useState } from "react";
 
-import MarkdownRenderer from "./MarkdownRenderer";
+import MarkdownRenderer from "../MarkdownRenderer";
 
 import { QueryFilterFields } from "@/lib/filters";
-import { exampleChatHistory, Message } from "@/lib/chat";
+import { exampleChatHistory, getUpdatedChatHistory, Message } from "@/lib/chat";
 export const ChatMessages = ({
   messages,
   loading,
@@ -84,21 +84,77 @@ export const ChatMessages = ({
     </>
   );
 };
-interface ChatBoxInternalsProps {
-  setCitations: (citations: any[]) => void;
-  ragFilters: QueryFilterFields;
+
+export interface ChatBoxInternalsState {
+  highlighted: number;
+  messages: Message[];
+  loadingResponse: boolean;
+  selectedModel: string;
+  ragMode: boolean;
+  draftText: string;
 }
 
-const ChatBoxInternals = ({
+export const initialChatState: ChatBoxInternalsState = {
+  highlighted: -1,
+  messages: [],
+  loadingResponse: false,
+  selectedModel: "default",
+  ragMode: true,
+  draftText: "",
+};
+
+export const ChatBoxInternals = ({
   setCitations,
   ragFilters,
-}: ChatBoxInternalsProps) => {
-  const [highlighted, setHighlighted] = useState<number>(-1); // -1 Means no message is highlighted
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [loadingResponse, setLoadingResponse] = useState(false);
-  const [selectedModel, setSelectedModel] = useState("default");
-  const [ragMode, setRagMode] = useState(true);
-  const [draftText, setDraftText] = useState("");
+}: {
+  setCitations: React.Dispatch<React.SetStateAction<any[]>>;
+  ragFilters: QueryFilterFields;
+}) => {
+  const [chatState, setChatState] =
+    useState<ChatBoxInternalsState>(initialChatState);
+  return (
+    <ChatBoxInternalsStateless
+      setCitations={setCitations}
+      ragFilters={ragFilters}
+      chatState={chatState}
+      setChatState={setChatState}
+    />
+  );
+};
+
+export const ChatBoxInternalsStateless = ({
+  setCitations,
+  ragFilters,
+  chatState,
+  setChatState,
+}: {
+  setCitations: React.Dispatch<React.SetStateAction<any[]>>;
+  ragFilters: QueryFilterFields;
+  chatState: ChatBoxInternalsState;
+  setChatState: React.Dispatch<React.SetStateAction<ChatBoxInternalsState>>;
+}) => {
+  const {
+    highlighted,
+    messages,
+    loadingResponse,
+    selectedModel,
+    ragMode,
+    draftText,
+  } = chatState;
+
+  const setHighlighted = (value: number) => {
+    setChatState((prev) => ({ ...prev, highlighted: value }));
+  };
+  const setMessages = (value: Message[]) =>
+    setChatState((prev) => ({ ...prev, messages: value }));
+  const setLoadingResponse = (value: boolean) =>
+    setChatState((prev) => ({ ...prev, loadingResponse: value }));
+  const setSelectedModel = (value: string) =>
+    setChatState((prev) => ({ ...prev, selectedModel: value }));
+  const setRagMode = (value: boolean) =>
+    setChatState((prev) => ({ ...prev, ragMode: value }));
+  const setDraftText = (value: string) =>
+    setChatState((prev) => ({ ...prev, draftText: value }));
   const chatUrl = ragMode
     ? "https://api.kessler.xyz/v2/rag/chat"
     : "https://api.kessler.xyz/v2/rag/basic_chat";
@@ -118,79 +174,18 @@ const ChatBoxInternals = ({
     console.log(newMessages);
     setMessages(newMessages);
 
-    let chat_hist = newMessages.map((m) => {
-      let { key, ...rest } = m;
-      return rest;
-    });
-
     const modelToSend = selectedModel === "default" ? undefined : selectedModel;
     setLoadingResponse(true);
 
     // Should this fetch get refactored out into lib as something that calls a chat endpoint?
-    let result_message = await fetch(chatUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        accept: "application/json",
-      },
-      body: JSON.stringify({
-        model: modelToSend,
-        chat_history: chat_hist,
-        filters: ragFilters,
-      }),
-    })
-      .then((resp) => {
-        setLoadingResponse(false);
-        if (resp.status < 200 || resp.status > 299) {
-          console.log("failed request with status " + resp.status);
-          console.log(resp);
-          return "failed request";
-        }
-        return resp.json();
-      })
-      .then((data) => {
-        if (!data.message) {
-          console.log("no message in data");
-          console.log(data);
-          return "failed request";
-        }
-        console.log("got data");
-        console.log(data);
-        if (data.message.citations) {
-          console.log("got citations");
-          setHighlighted(newMessages.length); // You arent subtracting one here, since you want it to highlight the last message added to the list.
-          console.log("set highlighted message");
-          setCitations(data.message.citations);
-          console.log("set citations");
-        }
-        console.log("Returning Message:");
-        console.log(data.message);
-        return data.message;
-      })
-      .catch((e) => {
-        console.log("error making request");
-        console.log(JSON.stringify(e));
-        return "encountered exception while fetching data";
-      });
-    let chat_response: Message;
 
-    if (typeof result_message === "string") {
-      chat_response = {
-        role: "assistant",
-        key: Symbol(),
-        content: result_message,
-        citations: [],
-      };
-    } else {
-      chat_response = {
-        role: "assistant",
-        key: Symbol(),
-        content: result_message.content,
-        citations: result_message.citations,
-      };
-    }
-
-    newMessages = [...newMessages, chat_response];
+    newMessages = await getUpdatedChatHistory(
+      newMessages,
+      ragFilters,
+      chatUrl,
+      modelToSend,
+    );
+    setLoadingResponse(false);
     setMessages(newMessages);
   };
   const model_list = [
