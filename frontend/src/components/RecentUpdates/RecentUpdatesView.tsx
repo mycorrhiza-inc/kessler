@@ -11,6 +11,7 @@ import OrganizationTable from "../Organizations/OrganizationTable";
 import Link from "next/link";
 import LoadingSpinnerTimeout from "../styled-components/LoadingSpinnerTimeout";
 import PageContainer from "../Page/PageContainer";
+import { ChatModalClickDiv } from "../Chat/ChatModal";
 
 // TODO: Break out Recent Updates into its own component seperate from all of the homepage logic
 export default function RecentUpdatesView() {
@@ -106,7 +107,11 @@ export default function RecentUpdatesView() {
           </div>
         </div>
       </div>
-      <div className="border-t my-8"></div>
+      <div className="flex flex-col border-t justify-center w-full">
+        <ChatModalClickDiv className="btn btn-accent" inheritedFilters={[]}>
+          Unsure of what to do? Try chatting with the entire New York PUC
+        </ChatModalClickDiv>
+      </div>
       <h1 className=" text-2xl font-bold">Newest Docs</h1>
       <InfiniteScroll
         dataLength={filings.length}
