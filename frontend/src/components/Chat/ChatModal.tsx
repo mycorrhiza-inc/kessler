@@ -4,7 +4,11 @@ import {
 } from "@/lib/filters";
 import { useMemo, useState } from "react";
 import Modal from "../styled-components/Modal";
-import ChatBoxInternals from "./ChatBoxInternals";
+import ChatBoxInternals, {
+  ChatBoxInternalsState,
+  ChatBoxInternalsStateless,
+  initialChatState,
+} from "./ChatBoxInternals";
 import clsx from "clsx";
 
 export const ChatModalClickDiv = ({
@@ -23,13 +27,17 @@ export const ChatModalClickDiv = ({
   const [open, setOpen] = useState(false);
   const [citations, setCitations] = useState<any[]>([]);
   const clickButton = () => setOpen((prev) => !prev);
+  const [chatState, setChatState] =
+    useState<ChatBoxInternalsState>(initialChatState);
 
   return (
     <>
       <Modal setOpen={setOpen} open={open}>
-        <ChatBoxInternals
+        <ChatBoxInternalsStateless
           setCitations={setCitations}
           ragFilters={filterState}
+          chatState={chatState}
+          setChatState={setChatState}
         />
       </Modal>
       <div onClick={clickButton} className={className}>

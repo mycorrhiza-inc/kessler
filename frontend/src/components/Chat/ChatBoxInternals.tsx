@@ -84,21 +84,77 @@ export const ChatMessages = ({
     </>
   );
 };
-interface ChatBoxInternalsProps {
-  setCitations: (citations: any[]) => void;
-  ragFilters: QueryFilterFields;
+
+export interface ChatBoxInternalsState {
+  highlighted: number;
+  messages: Message[];
+  loadingResponse: boolean;
+  selectedModel: string;
+  ragMode: boolean;
+  draftText: string;
 }
 
-const ChatBoxInternals = ({
+export const initialChatState: ChatBoxInternalsState = {
+  highlighted: -1,
+  messages: [],
+  loadingResponse: false,
+  selectedModel: "default",
+  ragMode: true,
+  draftText: "",
+};
+
+export const ChatBoxInternals = ({
   setCitations,
   ragFilters,
-}: ChatBoxInternalsProps) => {
-  const [highlighted, setHighlighted] = useState<number>(-1); // -1 Means no message is highlighted
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [loadingResponse, setLoadingResponse] = useState(false);
-  const [selectedModel, setSelectedModel] = useState("default");
-  const [ragMode, setRagMode] = useState(true);
-  const [draftText, setDraftText] = useState("");
+}: {
+  setCitations: React.Dispatch<React.SetStateAction<any[]>>;
+  ragFilters: QueryFilterFields;
+}) => {
+  const [chatState, setChatState] =
+    useState<ChatBoxInternalsState>(initialChatState);
+  return (
+    <ChatBoxInternalsStateless
+      setCitations={setCitations}
+      ragFilters={ragFilters}
+      chatState={chatState}
+      setChatState={setChatState}
+    />
+  );
+};
+
+export const ChatBoxInternalsStateless = ({
+  setCitations,
+  ragFilters,
+  chatState,
+  setChatState,
+}: {
+  setCitations: React.Dispatch<React.SetStateAction<any[]>>;
+  ragFilters: QueryFilterFields;
+  chatState: ChatBoxInternalsState;
+  setChatState: React.Dispatch<React.SetStateAction<ChatBoxInternalsState>>;
+}) => {
+  const {
+    highlighted,
+    messages,
+    loadingResponse,
+    selectedModel,
+    ragMode,
+    draftText,
+  } = chatState;
+
+  const setHighlighted = (value: number) => {
+    setChatState((prev) => ({ ...prev, highlighted: value }));
+  };
+  const setMessages = (value: Message[]) =>
+    setChatState((prev) => ({ ...prev, messages: value }));
+  const setLoadingResponse = (value: boolean) =>
+    setChatState((prev) => ({ ...prev, loadingResponse: value }));
+  const setSelectedModel = (value: string) =>
+    setChatState((prev) => ({ ...prev, selectedModel: value }));
+  const setRagMode = (value: boolean) =>
+    setChatState((prev) => ({ ...prev, ragMode: value }));
+  const setDraftText = (value: string) =>
+    setChatState((prev) => ({ ...prev, draftText: value }));
   const chatUrl = ragMode
     ? "https://api.kessler.xyz/v2/rag/chat"
     : "https://api.kessler.xyz/v2/rag/basic_chat";
@@ -158,7 +214,6 @@ const ChatBoxInternals = ({
         console.log(data);
         if (data.message.citations) {
           console.log("got citations");
-          setHighlighted(newMessages.length); // You arent subtracting one here, since you want it to highlight the last message added to the list.
           console.log("set highlighted message");
           setCitations(data.message.citations);
           console.log("set citations");
