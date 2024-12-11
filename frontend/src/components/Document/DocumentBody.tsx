@@ -12,6 +12,8 @@ import { completeFileSchemaGet } from "@/lib/requests/search";
 import { CompleteFileSchema } from "@/lib/types/backend_schemas";
 import { publicAPIURL } from "@/lib/env_variables";
 import Link from "next/link";
+import { ChatModalClickDiv, ChatModalTestButton } from "../Chat/ChatModal";
+import { FilterField } from "@/lib/filters";
 
 // import { ErrorBoundary } from "react-error-boundary";
 
@@ -118,6 +120,14 @@ export const DocumentMainTabs = ({
               Open in New Tab
             </Link>
           )}
+          <ChatModalClickDiv
+            className="btn btn-primary"
+            inheritedFilters={[
+              { filter: FilterField.MatchFileUUID, value: objectId },
+            ]}
+          >
+            Chat with Document
+          </ChatModalClickDiv>
         </div>
       </div>
 
