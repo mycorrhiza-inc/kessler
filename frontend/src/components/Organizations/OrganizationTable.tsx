@@ -8,7 +8,7 @@ import {
   OrganizationSchemaCompleteValidator,
 } from "@/lib/types/backend_schemas";
 import { publicAPIURL } from "@/lib/env_variables";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 
 const organizationsListGet = async (url: string) => {
@@ -83,11 +83,26 @@ const OrganizationTableSimple = () => {
 };
 
 const OrganizationTableInfiniteScroll = () => {
+  const defaultPageSize = 40;
+  const [page, setPage] = useState(0);
+
   const [tableData, setTableData] = useState<OrganizationTableSchema[]>([]);
-  const getMore = async () => {
-    const result = await organizationsListGet("");
+  const getPageResults = async (page: number, limit: number) => {
+    const offset = page * limit;
+    const result = await organizationsListGet(
+      `${publicAPIURL}/v2/public/organizations/list`,
+    );
     setTableData((prev) => [...prev, ...result] as OrganizationTableSchema[]);
   };
+  const getMore = async () => {
+    await getPageResults(page, defaultPageSize);
+    setPage((prev) => prev + 1);
+  };
+  useEffect(() => {
+    const numPageFetch = 3;
+    getPageResults(0, defaultPageSize * numPageFetch);
+    setPage(numPageFetch);
+  }, []);
   return (
     <>
       <InfiniteScroll
