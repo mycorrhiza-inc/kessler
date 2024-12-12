@@ -4,8 +4,10 @@ import Link from "next/link";
 import useSWRImmutable from "swr/immutable";
 import LoadingSpinner from "../styled-components/LoadingSpinner";
 import { publicAPIURL } from "@/lib/env_variables";
+import InfiniteScroll from "react-infinite-scroll-component";
+import { useEffect, useState } from "react";
 
-const conversationsListAll = (redundant_key: string) => {
+const conversationsListGet = async (url: string) => {
   const cleanData = (response: any) => {
     console.log(response.data);
     const return_data: any[] = response.data;
@@ -14,9 +16,8 @@ const conversationsListAll = (redundant_key: string) => {
     }
     return return_data;
   };
-  return axios
-    .get(`${publicAPIURL}/v2/public/conversations/list`)
-    .then((res) => cleanData(res));
+  const result = await axios.get(url).then((res) => cleanData(res));
+  return result as ConversationTableSchema[];
 };
 
 type ConversationTableSchema = {
@@ -24,6 +25,7 @@ type ConversationTableSchema = {
   DocketID: string;
   DocumentCount: number;
   State: string;
+  Description: string;
 };
 
 const ConversationTable = ({
@@ -36,50 +38,98 @@ const ConversationTable = ({
       {/* disable pinned rows due to the top row overlaying the filter sidebar */}
       <thead>
         <tr>
-          <td className="w-[60%]">Name</td>
-          <td className="w-[20%]">ID</td>
+          <td className="w-[30%]">Name</td>
+          <td className="w-[10%]">ID</td>
           <td className="w-[10%]">Document Count</td>
           <td className="w-[10%]">State</td>
+          <td className="w-[10%]">Matter Type</td>
+          <td className="w-[10%]">Matter Subtype</td>
+          <td className="w-[10%]">Organization</td>
+          <td className="w-[10%]">Date Filed</td>
         </tr>
       </thead>
       <tbody>
-        {convoList.map((convo: any) => (
-          <tr
-            key={convo.DocketID}
-            className="border-base-300 hover:bg-base-200 transition duration-500 ease-out"
-          >
-            <td colSpan={4} className="p-0">
-              <Link
-                href={`/proceedings/${convo.DocketID}`}
-                className="flex w-full"
-              >
-                <div className="w-[60%] px-4 py-3">{convo.Name}</div>
-                <div className="w-[20%] px-4 py-3">{convo.DocketID}</div>
-                <div className="w-[10%] px-4 py-3">{convo.DocumentCount}</div>
-                <div className="w-[10%] px-4 py-3">{convo.State}</div>
-              </Link>
-            </td>
-          </tr>
-        ))}
+        {convoList.map((convo: ConversationTableSchema) => {
+          var description = null;
+          const description_string = convo.Description;
+          console.log(description_string);
+          try {
+            description = JSON.parse(description_string);
+            console.log(description);
+          } catch (e) {
+            console.log("Error parsing JSON", e);
+          }
+          const matter_type = description?.matter_type || "unknown";
+          const matter_subtype = description?.matter_subtype || "unknown";
+          const organization = description?.organization || "unknown";
+          const date_filed = description?.date_filed || "unknown";
+
+          return (
+            <tr
+              key={convo.DocketID}
+              className="border-base-300 hover:bg-base-200 transition duration-500 ease-out"
+            >
+              <td colSpan={8} className="p-0">
+                <Link
+                  href={`/dockets/${convo.DocketID}`}
+                  className="flex w-full"
+                >
+                  <div className="w-[30%] px-4 py-3">{convo.Name}</div>
+                  <div className="w-[10%] px-4 py-3">{convo.DocketID}</div>
+                  <div className="w-[10%] px-4 py-3">{convo.DocumentCount}</div>
+                  <div className="w-[10%] px-4 py-3">{convo.State}</div>
+                  <div className="w-[10%] px-4 py-3">{matter_type}</div>
+                  <div className="w-[10%] px-4 py-3">{matter_subtype}</div>
+                  <div className="w-[10%] px-4 py-3">{organization}</div>
+                  <div className="w-[10%] px-4 py-3">{date_filed}</div>
+                </Link>
+              </td>
+            </tr>
+          );
+        })}
       </tbody>
     </table>
   );
 };
-const ConversationTableSimple = () => {
-  const { data, error, isLoading } = useSWRImmutable(
-    `redudant_key`,
-    conversationsListAll,
-  );
-  console.log("Convo List:", data);
+
+const ConversationTableInfiniteScroll = () => {
+  const [tableData, setTableData] = useState<ConversationTableSchema[]>([]);
+  const defaultPageSize = 40;
+  const [page, setPage] = useState(0);
+
+  const getPageResults = async (page: number, limit: number) => {
+    const offset = page * limit;
+    const result = await conversationsListGet(
+      `${publicAPIURL}/v2/public/conversations/list?limit=${limit}&offset=${offset}`,
+    );
+    return result;
+  };
+  const getMore = async () => {
+    const result = await getPageResults(page, defaultPageSize);
+    setTableData((prev) => [...prev, ...result]);
+    setPage((prev) => prev + 1);
+  };
+  const getInitialData = async () => {
+    const numPageFetch = 3;
+    const result = await getPageResults(0, defaultPageSize * numPageFetch);
+    setTableData(result);
+    setPage(numPageFetch);
+  };
+  useEffect(() => {
+    getInitialData();
+  }, []);
   return (
     <>
-      {isLoading && <LoadingSpinner loadingText="Loading Conversations" />}
-      {error && <p>Failed to load conversations {String(error)}</p>}
-      {!isLoading && !error && data != undefined && (
-        <ConversationTable convoList={data} />
-      )}
+      <InfiniteScroll
+        dataLength={tableData.length}
+        hasMore={true}
+        next={getMore}
+        loader={<LoadingSpinner loadingText="Loading Conversations" />}
+      >
+        <ConversationTable convoList={tableData} />
+      </InfiniteScroll>
     </>
   );
 };
 
-export default ConversationTableSimple;
+export default ConversationTableInfiniteScroll;

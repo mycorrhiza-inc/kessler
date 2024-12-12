@@ -29,7 +29,7 @@ export default function Hero() {
         className="gap-96"
       >
         <div className="text-3xl px-4 md:text-5xl lg:text-6xl font-bold text-neutral-700 dark:text-white max-w-4xl leading-relaxed lg:leading-snug text-center mx-auto ">
-          New York PUC Proceedings, now with a <br />
+          New York PUC Dockets, now with a <br />
           <Highlight className="text-black dark:text-white">
             Fast, Modern Interface
           </Highlight>

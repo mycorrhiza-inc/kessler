@@ -19,6 +19,7 @@ enum InputType {
   Select = "select",
   Datalist = "datalist",
   Date = "date",
+  NotShown = "not_shown",
 }
 type PropertyInformation = {
   type: InputType;
@@ -112,6 +113,27 @@ const queryFiltersInformation: QueryFiltersInformation = {
     displayName: "After Date",
     description: "The date related to the document.",
     details: "Filters results by the specified date.",
+  },
+  match_file_uuid: {
+    type: InputType.NotShown,
+    index: -1,
+    displayName: "",
+    description: "",
+    details: "",
+  },
+  match_author_uuid: {
+    type: InputType.NotShown,
+    index: -1,
+    displayName: "",
+    description: "",
+    details: "",
+  },
+  match_conversation_uuid: {
+    type: InputType.NotShown,
+    index: -1,
+    displayName: "",
+    description: "",
+    details: "",
   },
 };
 export function BasicDocumentFiltersList({
@@ -282,6 +304,8 @@ export function BasicDocumentFilters({
                 />
               </div>
             );
+          case InputType.NotShown:
+            return <></>;
         }
       })}
     </>

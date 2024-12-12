@@ -200,6 +200,9 @@ const ConversationComponent = ({
                 <LoadingSpinnerTimeout
                   loadingText="Loading Files"
                   timeoutSeconds={3}
+                  replacement={
+                    filings.length == 0 ? <p>No Documents Found</p> : <></>
+                  }
                 />
               </div>
             }

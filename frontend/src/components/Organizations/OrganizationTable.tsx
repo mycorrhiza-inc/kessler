@@ -8,8 +8,10 @@ import {
   OrganizationSchemaCompleteValidator,
 } from "@/lib/types/backend_schemas";
 import { publicAPIURL } from "@/lib/env_variables";
+import { useEffect, useState } from "react";
+import InfiniteScroll from "react-infinite-scroll-component";
 
-const organizationsListGet = (url: string) => {
+const organizationsListGet = async (url: string) => {
   const cleanData = (response: any) => {
     console.log(response.data);
     const return_data: any[] = response.data;
@@ -23,7 +25,8 @@ const organizationsListGet = (url: string) => {
     );
     return valid_data;
   };
-  return axios.get(url).then((res) => cleanData(res));
+  const result = await axios.get(url).then((res) => cleanData(res));
+  return result as OrganizationTableSchema[];
 };
 
 type OrganizationTableSchema = {
@@ -64,20 +67,45 @@ const OrganizationTable = ({
     </table>
   );
 };
-const OrganizationTableSimple = () => {
-  const { data, error, isLoading } = useSWRImmutable(
-    `${publicAPIURL}/v2/public/organizations/list`,
-    organizationsListGet,
-  );
+
+const OrganizationTableInfiniteScroll = () => {
+  const defaultPageSize = 40;
+  const [page, setPage] = useState(0);
+
+  const [tableData, setTableData] = useState<OrganizationTableSchema[]>([]);
+  const getPageResults = async (page: number, limit: number) => {
+    const offset = page * limit;
+    const result = await organizationsListGet(
+      `${publicAPIURL}/v2/public/organizations/list?limit=${limit}&offset=${offset}`,
+    );
+    return result;
+  };
+  const getMore = async () => {
+    const result = await getPageResults(page, defaultPageSize);
+    setTableData((prev) => [...prev, ...result]);
+    setPage((prev) => prev + 1);
+  };
+  const getInitialData = async () => {
+    const numPageFetch = 3;
+    const result = await getPageResults(0, defaultPageSize * numPageFetch);
+    setTableData(result);
+    setPage(numPageFetch);
+  };
+  useEffect(() => {
+    getInitialData();
+  }, []);
   return (
     <>
-      {isLoading && <LoadingSpinner loadingText="Loading Organizations" />}
-      {error && <p>Failed to load organizations {String(error)}</p>}
-      {!isLoading && !error && data != undefined && (
-        <OrganizationTable orgList={data} />
-      )}
+      <InfiniteScroll
+        dataLength={tableData.length}
+        hasMore={true}
+        next={getMore}
+        loader={<LoadingSpinner loadingText="Loading Conversations" />}
+      >
+        <OrganizationTable orgList={tableData} />
+      </InfiniteScroll>
     </>
   );
 };
 
-export default OrganizationTableSimple;
+export default OrganizationTableInfiniteScroll;

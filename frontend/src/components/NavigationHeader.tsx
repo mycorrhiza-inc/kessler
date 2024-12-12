@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export const ConversationHeader = ({ context }: { context: PageContext }) => {
   const displayState = getStateDisplayName(context.state);
-  const proceeding_id = context.final_identifier;
+  const docket_id = context.final_identifier;
   return (
     <div className="breadcrumbs text-xl">
       <ul>
@@ -11,9 +11,9 @@ export const ConversationHeader = ({ context }: { context: PageContext }) => {
           <Link href="/">{displayState}</Link>
         </li>
         <li>
-          <Link href="/proceedings">Proceedings</Link>
+          <Link href="/dockets">Dockets</Link>
         </li>
-        {proceeding_id && <li>{proceeding_id}</li>}
+        {docket_id && <li>{docket_id}</li>}
       </ul>
     </div>
   );

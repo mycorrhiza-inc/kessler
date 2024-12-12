@@ -1,4 +1,4 @@
-import OrganizationTableSimple from "@/components/Organizations/OrganizationTable";
+import OrganizationTableInfiniteScroll from "@/components/Organizations/OrganizationTable";
 import PageContainer from "@/components/Page/PageContainer";
 import { BreadcrumbValues } from "@/components/SitemapUtils";
 import { stateFromHeaders } from "@/lib/nextjs_misc";
@@ -14,7 +14,7 @@ export default async function Page({
   const state = stateFromHeaders(headersList);
   const pageContext: PageContext = {
     state: state,
-    slug: ["proceedings", slug],
+    slug: ["dockets", slug],
     final_identifier: slug,
   };
   const breadcrumbs: BreadcrumbValues = {
@@ -24,7 +24,7 @@ export default async function Page({
   return (
     <>
       <PageContainer breadcrumbs={breadcrumbs}>
-        <OrganizationTableSimple />
+        <OrganizationTableInfiniteScroll />
       </PageContainer>
     </>
   );

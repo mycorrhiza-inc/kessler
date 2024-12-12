@@ -81,7 +81,7 @@ const TableRow = ({
           <td>
             <TextPill
               text={filing.docket_id}
-              href={`/proceedings/${filing.docket_id}`}
+              href={`/dockets/${filing.docket_id}`}
             />
           </td>
         )}
@@ -139,7 +139,7 @@ export const FilingTable = ({
             <th className="text-left sticky top-0">Title</th>
             <th className="text-left sticky top-0">Author</th>
             {DocketColumn && (
-              <th className="text-left sticky top-0">Proceeding ID</th>
+              <th className="text-left sticky top-0">Docket ID</th>
             )}
             <th className="text-left sticky top-0">Item Number</th>
           </tr>
