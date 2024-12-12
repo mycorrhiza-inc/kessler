@@ -90,18 +90,23 @@ const OrganizationTableInfiniteScroll = () => {
   const getPageResults = async (page: number, limit: number) => {
     const offset = page * limit;
     const result = await organizationsListGet(
-      `${publicAPIURL}/v2/public/organizations/list`,
+      `${publicAPIURL}/v2/public/organizations/list?limit=${limit}&offset=${offset}`,
     );
-    setTableData((prev) => [...prev, ...result] as OrganizationTableSchema[]);
+    return result as OrganizationTableSchema[];
   };
   const getMore = async () => {
-    await getPageResults(page, defaultPageSize);
+    const result = await getPageResults(page, defaultPageSize);
+    setTableData((prev) => [...prev, ...result]);
     setPage((prev) => prev + 1);
   };
-  useEffect(() => {
+  const getInitialData = async () => {
     const numPageFetch = 3;
-    getPageResults(0, defaultPageSize * numPageFetch);
+    const result = await getPageResults(0, defaultPageSize * numPageFetch);
+    setTableData(result);
     setPage(numPageFetch);
+  };
+  useEffect(() => {
+    getInitialData();
   }, []);
   return (
     <>
