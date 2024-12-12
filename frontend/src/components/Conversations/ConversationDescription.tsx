@@ -3,7 +3,6 @@ import { Conversation, NYConversation } from "@/lib/conversations";
 import MarkdownRenderer from "../MarkdownRenderer";
 import useSWRImmutable from "swr";
 import axios from "axios";
-import { apiURL } from "@/lib/env_variables";
 
 const ConversationDescription = ({
   conversation,
