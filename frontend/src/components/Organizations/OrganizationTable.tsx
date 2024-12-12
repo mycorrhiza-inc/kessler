@@ -8,6 +8,8 @@ import {
   OrganizationSchemaCompleteValidator,
 } from "@/lib/types/backend_schemas";
 import { publicAPIURL } from "@/lib/env_variables";
+import { useState } from "react";
+import InfiniteScroll from "react-infinite-scroll-component";
 
 const organizationsListGet = (url: string) => {
   const cleanData = (response: any) => {
@@ -80,4 +82,24 @@ const OrganizationTableSimple = () => {
   );
 };
 
-export default OrganizationTableSimple;
+const OrganizationTableInfiniteScroll = () => {
+  const [tableData, setTableData] = useState<OrganizationTableSchema[]>([]);
+  const getMore = async () => {
+    const result = await organizationsListGet("");
+    setTableData((prev) => [...prev, ...result] as OrganizationTableSchema[]);
+  };
+  return (
+    <>
+      <InfiniteScroll
+        dataLength={tableData.length}
+        hasMore={true}
+        next={getMore}
+        loader={<LoadingSpinner loadingText="Loading Conversations" />}
+      >
+        <OrganizationTable orgList={tableData} />
+      </InfiniteScroll>
+    </>
+  );
+};
+
+export default OrganizationTableInfiniteScroll;

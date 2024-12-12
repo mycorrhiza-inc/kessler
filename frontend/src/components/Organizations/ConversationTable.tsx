@@ -4,6 +4,8 @@ import Link from "next/link";
 import useSWRImmutable from "swr/immutable";
 import LoadingSpinner from "../styled-components/LoadingSpinner";
 import { publicAPIURL } from "@/lib/env_variables";
+import InfiniteScroll from "react-infinite-scroll-component";
+import { useState } from "react";
 
 const conversationsListAll = (redundant_key: string) => {
   const cleanData = (response: any) => {
@@ -49,10 +51,7 @@ const ConversationTable = ({
             className="border-base-300 hover:bg-base-200 transition duration-500 ease-out"
           >
             <td colSpan={4} className="p-0">
-              <Link
-                href={`/dockets/${convo.DocketID}`}
-                className="flex w-full"
-              >
+              <Link href={`/dockets/${convo.DocketID}`} className="flex w-full">
                 <div className="w-[60%] px-4 py-3">{convo.Name}</div>
                 <div className="w-[20%] px-4 py-3">{convo.DocketID}</div>
                 <div className="w-[10%] px-4 py-3">{convo.DocumentCount}</div>
@@ -82,4 +81,43 @@ const ConversationTableSimple = () => {
   );
 };
 
-export default ConversationTableSimple;
+// <InfiniteScroll
+//   dataLength={filings.length}
+//   next={getMore}
+//   hasMore={true}
+//   loader={
+//     <div onClick={getMore}>
+//       <LoadingSpinnerTimeout
+//         loadingText="Loading Files"
+//         timeoutSeconds={3}
+//         replacement={
+//           filings.length == 0 ? <p>No Documents Found</p> : <></>
+//         }
+//       />
+//     </div>
+//   }
+// >
+//   <FilingTable filings={filings} />
+// </InfiniteScroll>
+
+const ConversationTableInfiniteScroll = () => {
+  const [tableData, setTableData] = useState<ConversationTableSchema[]>([]);
+  const getMore = async () => {
+    const result = await conversationsListAll("");
+    setTableData((prev) => [...prev, ...result] as ConversationTableSchema[]);
+  };
+  return (
+    <>
+      <InfiniteScroll
+        dataLength={tableData.length}
+        hasMore={true}
+        next={getMore}
+        loader={<LoadingSpinner loadingText="Loading Conversations" />}
+      >
+        <ConversationTable convoList={tableData} />
+      </InfiniteScroll>
+    </>
+  );
+};
+
+export default ConversationTableInfiniteScroll;
