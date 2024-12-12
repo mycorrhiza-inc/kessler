@@ -25,6 +25,7 @@ type ConversationTableSchema = {
   DocketID: string;
   DocumentCount: number;
   State: string;
+  Description: string;
 };
 
 const ConversationTable = ({
@@ -37,28 +38,55 @@ const ConversationTable = ({
       {/* disable pinned rows due to the top row overlaying the filter sidebar */}
       <thead>
         <tr>
-          <td className="w-[60%]">Name</td>
-          <td className="w-[20%]">ID</td>
+          <td className="w-[30%]">Name</td>
+          <td className="w-[10%]">ID</td>
           <td className="w-[10%]">Document Count</td>
           <td className="w-[10%]">State</td>
+          <td className="w-[10%]">Matter Type</td>
+          <td className="w-[10%]">Matter Subtype</td>
+          <td className="w-[10%]">Organization</td>
+          <td className="w-[10%]">Date Filed</td>
         </tr>
       </thead>
       <tbody>
-        {convoList.map((convo: any) => (
-          <tr
-            key={convo.DocketID}
-            className="border-base-300 hover:bg-base-200 transition duration-500 ease-out"
-          >
-            <td colSpan={4} className="p-0">
-              <Link href={`/dockets/${convo.DocketID}`} className="flex w-full">
-                <div className="w-[60%] px-4 py-3">{convo.Name}</div>
-                <div className="w-[20%] px-4 py-3">{convo.DocketID}</div>
-                <div className="w-[10%] px-4 py-3">{convo.DocumentCount}</div>
-                <div className="w-[10%] px-4 py-3">{convo.State}</div>
-              </Link>
-            </td>
-          </tr>
-        ))}
+        {convoList.map((convo: ConversationTableSchema) => {
+          var description = null;
+          const description_string = convo.Description;
+          console.log(description_string);
+          try {
+            description = JSON.parse(description_string);
+            console.log(description);
+          } catch (e) {
+            console.log("Error parsing JSON", e);
+          }
+          const matter_type = description?.matter_type || "unknown";
+          const matter_subtype = description?.matter_subtype || "unknown";
+          const organization = description?.organization || "unknown";
+          const date_filed = description?.date_filed || "unknown";
+
+          return (
+            <tr
+              key={convo.DocketID}
+              className="border-base-300 hover:bg-base-200 transition duration-500 ease-out"
+            >
+              <td colSpan={8} className="p-0">
+                <Link
+                  href={`/dockets/${convo.DocketID}`}
+                  className="flex w-full"
+                >
+                  <div className="w-[30%] px-4 py-3">{convo.Name}</div>
+                  <div className="w-[10%] px-4 py-3">{convo.DocketID}</div>
+                  <div className="w-[10%] px-4 py-3">{convo.DocumentCount}</div>
+                  <div className="w-[10%] px-4 py-3">{convo.State}</div>
+                  <div className="w-[10%] px-4 py-3">{matter_type}</div>
+                  <div className="w-[10%] px-4 py-3">{matter_subtype}</div>
+                  <div className="w-[10%] px-4 py-3">{organization}</div>
+                  <div className="w-[10%] px-4 py-3">{date_filed}</div>
+                </Link>
+              </td>
+            </tr>
+          );
+        })}
       </tbody>
     </table>
   );
