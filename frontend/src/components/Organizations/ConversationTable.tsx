@@ -5,9 +5,9 @@ import useSWRImmutable from "swr/immutable";
 import LoadingSpinner from "../styled-components/LoadingSpinner";
 import { publicAPIURL } from "@/lib/env_variables";
 import InfiniteScroll from "react-infinite-scroll-component";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-const conversationsListAll = async (redundant_key: string) => {
+const conversationsListGet = async (url: string) => {
   const cleanData = (response: any) => {
     console.log(response.data);
     const return_data: any[] = response.data;
@@ -16,9 +16,8 @@ const conversationsListAll = async (redundant_key: string) => {
     }
     return return_data;
   };
-  return await axios
-    .get(`${publicAPIURL}/v2/public/conversations/list`)
-    .then((res) => cleanData(res));
+  const result = await axios.get(url).then((res) => cleanData(res));
+  return result as ConversationTableSchema[];
 };
 
 type ConversationTableSchema = {
@@ -64,48 +63,33 @@ const ConversationTable = ({
     </table>
   );
 };
-const ConversationTableSimple = () => {
-  const { data, error, isLoading } = useSWRImmutable(
-    `redudant_key`,
-    conversationsListAll,
-  );
-  console.log("Convo List:", data);
-  return (
-    <>
-      {isLoading && <LoadingSpinner loadingText="Loading Conversations" />}
-      {error && <p>Failed to load conversations {String(error)}</p>}
-      {!isLoading && !error && data != undefined && (
-        <ConversationTable convoList={data} />
-      )}
-    </>
-  );
-};
-
-// <InfiniteScroll
-//   dataLength={filings.length}
-//   next={getMore}
-//   hasMore={true}
-//   loader={
-//     <div onClick={getMore}>
-//       <LoadingSpinnerTimeout
-//         loadingText="Loading Files"
-//         timeoutSeconds={3}
-//         replacement={
-//           filings.length == 0 ? <p>No Documents Found</p> : <></>
-//         }
-//       />
-//     </div>
-//   }
-// >
-//   <FilingTable filings={filings} />
-// </InfiniteScroll>
 
 const ConversationTableInfiniteScroll = () => {
   const [tableData, setTableData] = useState<ConversationTableSchema[]>([]);
-  const getMore = async () => {
-    const result = await conversationsListAll("");
-    setTableData((prev) => [...prev, ...result] as ConversationTableSchema[]);
+  const defaultPageSize = 40;
+  const [page, setPage] = useState(0);
+
+  const getPageResults = async (page: number, limit: number) => {
+    const offset = page * limit;
+    const result = await conversationsListGet(
+      `${publicAPIURL}/v2/public/conversations/list?limit=${limit}&offset=${offset}`,
+    );
+    return result;
   };
+  const getMore = async () => {
+    const result = await getPageResults(page, defaultPageSize);
+    setTableData((prev) => [...prev, ...result]);
+    setPage((prev) => prev + 1);
+  };
+  const getInitialData = async () => {
+    const numPageFetch = 3;
+    const result = await getPageResults(0, defaultPageSize * numPageFetch);
+    setTableData(result);
+    setPage(numPageFetch);
+  };
+  useEffect(() => {
+    getInitialData();
+  }, []);
   return (
     <>
       <InfiniteScroll

@@ -25,7 +25,8 @@ const organizationsListGet = async (url: string) => {
     );
     return valid_data;
   };
-  return await axios.get(url).then((res) => cleanData(res));
+  const result = await axios.get(url).then((res) => cleanData(res));
+  return result as OrganizationTableSchema[];
 };
 
 type OrganizationTableSchema = {
@@ -66,21 +67,6 @@ const OrganizationTable = ({
     </table>
   );
 };
-const OrganizationTableSimple = () => {
-  const { data, error, isLoading } = useSWRImmutable(
-    `${publicAPIURL}/v2/public/organizations/list`,
-    organizationsListGet,
-  );
-  return (
-    <>
-      {isLoading && <LoadingSpinner loadingText="Loading Organizations" />}
-      {error && <p>Failed to load organizations {String(error)}</p>}
-      {!isLoading && !error && data != undefined && (
-        <OrganizationTable orgList={data} />
-      )}
-    </>
-  );
-};
 
 const OrganizationTableInfiniteScroll = () => {
   const defaultPageSize = 40;
@@ -92,7 +78,7 @@ const OrganizationTableInfiniteScroll = () => {
     const result = await organizationsListGet(
       `${publicAPIURL}/v2/public/organizations/list?limit=${limit}&offset=${offset}`,
     );
-    return result as OrganizationTableSchema[];
+    return result;
   };
   const getMore = async () => {
     const result = await getPageResults(page, defaultPageSize);

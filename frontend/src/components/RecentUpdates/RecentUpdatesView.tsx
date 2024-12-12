@@ -6,8 +6,8 @@ import { FilingTable } from "@/components/Tables/FilingTable";
 import { getFilingMetadata, getRecentFilings } from "@/lib/requests/search";
 
 import InfiniteScroll from "react-infinite-scroll-component";
-import ConversationTable from "../Organizations/ConversationTable";
-import OrganizationTable from "../Organizations/OrganizationTable";
+import ConversationTableInfiniteScroll from "../Organizations/ConversationTable";
+import OrganizationTableInfiniteScroll from "../Organizations/OrganizationTable";
 import Link from "next/link";
 import LoadingSpinnerTimeout from "../styled-components/LoadingSpinnerTimeout";
 import PageContainer from "../Page/PageContainer";
@@ -88,14 +88,11 @@ export default function RecentUpdatesView() {
     <PageContainer breadcrumbs={{ breadcrumbs: [] }}>
       <div className="grid grid-cols-2 w-full">
         <div>
-          <Link
-            className="text-3xl font-bold hover:underline"
-            href="/dockets"
-          >
+          <Link className="text-3xl font-bold hover:underline" href="/dockets">
             Dockets
           </Link>
           <div className="max-h-[600px] overflow-x-hidden border-r pr-4">
-            <ConversationTable />
+            <ConversationTableInfiniteScroll />
           </div>
         </div>
         <div>
@@ -103,7 +100,7 @@ export default function RecentUpdatesView() {
             Organizations
           </Link>
           <div className="max-h-[600px] overflow-x-hidden pl-4">
-            <OrganizationTable />
+            <OrganizationTableInfiniteScroll />
           </div>
         </div>
       </div>

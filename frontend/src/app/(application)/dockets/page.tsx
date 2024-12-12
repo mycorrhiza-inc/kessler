@@ -1,5 +1,5 @@
 import ConversationComponent from "@/components/Conversations/ConversationComponent";
-import ConversationTableSimple from "@/components/Organizations/ConversationTable";
+import ConversationTableInfiniteScroll from "@/components/Organizations/ConversationTable";
 import PageContainer from "@/components/Page/PageContainer";
 import { stateFromHeaders } from "@/lib/nextjs_misc";
 import { createClient } from "@/utils/supabase/server";
@@ -19,7 +19,7 @@ export default async function Page({
     <PageContainer breadcrumbs={breadcrumbs}>
       <h1 className="text-3xl font-bold">Dockets</h1>
       <div className="overflow-x-hidden border-r pr-4">
-        <ConversationTableSimple />
+        <ConversationTableInfiniteScroll />
       </div>
     </PageContainer>
   );
