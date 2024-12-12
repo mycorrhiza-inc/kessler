@@ -40,17 +40,6 @@ func HandleUnverifedCompleteFileSchemaList(w http.ResponseWriter, r *http.Reques
 	response, _ := json.Marshal(files)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(response)
-
-	files, err = UnverifedCompleteFileSchemaRandomList(ctx, uint(max_responses))
-	if err != nil {
-		errorstring := fmt.Sprintf("Error getting unverified files: %v", err)
-		fmt.Println(errorstring)
-		http.Error(w, errorstring, http.StatusInternalServerError)
-		return
-	}
-	response, _ = json.Marshal(files)
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(response)
 }
 
 func UnverifedCompleteFileSchemaRandomList(ctx context.Context, max_responses uint) ([]files.CompleteFileSchema, error) {
