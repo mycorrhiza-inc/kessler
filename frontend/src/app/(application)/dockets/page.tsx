@@ -18,11 +18,9 @@ export default async function Page({
   return (
     <PageContainer breadcrumbs={breadcrumbs}>
       <h1 className="text-3xl font-bold">Dockets</h1>
-      <div className="max-h-[600px] overflow-x-hidden border-r pr-4">
+      <div className="overflow-x-hidden border-r pr-4">
         <ConversationTableSimple />
       </div>
-      <h2 className="text-2xl font-bold">All Documents</h2>
-      <ConversationComponent inheritedFilters={[]} />
     </PageContainer>
   );
 }
