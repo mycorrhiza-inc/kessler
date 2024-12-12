@@ -38,10 +38,9 @@ const ConversationTable = ({
       {/* disable pinned rows due to the top row overlaying the filter sidebar */}
       <thead>
         <tr>
-          <td className="w-[30%]">Name</td>
+          <td className="w-[40%]">Name</td>
           <td className="w-[10%]">ID</td>
           <td className="w-[10%]">Document Count</td>
-          <td className="w-[10%]">State</td>
           <td className="w-[10%]">Matter Type</td>
           <td className="w-[10%]">Matter Subtype</td>
           <td className="w-[10%]">Organization</td>
@@ -69,15 +68,14 @@ const ConversationTable = ({
               key={convo.DocketID}
               className="border-base-300 hover:bg-base-200 transition duration-500 ease-out"
             >
-              <td colSpan={8} className="p-0">
+              <td colSpan={7} className="p-0">
                 <Link
                   href={`/dockets/${convo.DocketID}`}
                   className="flex w-full"
                 >
-                  <div className="w-[30%] px-4 py-3">{convo.Name}</div>
+                  <div className="w-[40%] px-4 py-3">{convo.Name}</div>
                   <div className="w-[10%] px-4 py-3">{convo.DocketID}</div>
                   <div className="w-[10%] px-4 py-3">{convo.DocumentCount}</div>
-                  <div className="w-[10%] px-4 py-3">{convo.State}</div>
                   <div className="w-[10%] px-4 py-3">{matter_type}</div>
                   <div className="w-[10%] px-4 py-3">{matter_subtype}</div>
                   <div className="w-[10%] px-4 py-3">{organization}</div>
