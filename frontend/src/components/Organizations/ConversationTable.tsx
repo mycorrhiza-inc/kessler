@@ -50,7 +50,7 @@ const ConversationTable = ({
           >
             <td colSpan={4} className="p-0">
               <Link
-                href={`/proceedings/${convo.DocketID}`}
+                href={`/dockets/${convo.DocketID}`}
                 className="flex w-full"
               >
                 <div className="w-[60%] px-4 py-3">{convo.Name}</div>

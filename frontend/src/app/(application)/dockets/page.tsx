@@ -13,11 +13,11 @@ export default async function Page({
   const state = stateFromHeaders(headersList);
   const breadcrumbs = {
     state: state,
-    breadcrumbs: [{ value: "proceedings", title: "Proceedings" }],
+    breadcrumbs: [{ value: "dockets", title: "Dockets" }],
   };
   return (
     <PageContainer breadcrumbs={breadcrumbs}>
-      <h1 className="text-3xl font-bold">Proceedings</h1>
+      <h1 className="text-3xl font-bold">Dockets</h1>
       <div className="max-h-[600px] overflow-x-hidden border-r pr-4">
         <ConversationTableSimple />
       </div>

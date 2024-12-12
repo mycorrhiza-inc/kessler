@@ -17,7 +17,7 @@ export default async function Page({
   const breadcrumbs = {
     state: state,
     breadcrumbs: [
-      { value: "proceedings", title: "Proceedings" },
+      { value: "dockets", title: "Dockets" },
       { value: slug, title: slug },
     ],
   };

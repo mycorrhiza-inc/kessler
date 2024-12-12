@@ -14,7 +14,7 @@ export default async function Page({
   const state = stateFromHeaders(headersList);
   const pageContext: PageContext = {
     state: state,
-    slug: ["proceedings", slug],
+    slug: ["dockets", slug],
     final_identifier: slug,
   };
   const breadcrumbs: BreadcrumbValues = {

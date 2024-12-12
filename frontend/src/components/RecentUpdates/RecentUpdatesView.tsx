@@ -90,9 +90,9 @@ export default function RecentUpdatesView() {
         <div>
           <Link
             className="text-3xl font-bold hover:underline"
-            href="/proceedings"
+            href="/dockets"
           >
-            Proceedings
+            Dockets
           </Link>
           <div className="max-h-[600px] overflow-x-hidden border-r pr-4">
             <ConversationTable />
