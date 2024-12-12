@@ -7,7 +7,7 @@ import { publicAPIURL } from "@/lib/env_variables";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useState } from "react";
 
-const conversationsListAll = (redundant_key: string) => {
+const conversationsListAll = async (redundant_key: string) => {
   const cleanData = (response: any) => {
     console.log(response.data);
     const return_data: any[] = response.data;
@@ -16,7 +16,7 @@ const conversationsListAll = (redundant_key: string) => {
     }
     return return_data;
   };
-  return axios
+  return await axios
     .get(`${publicAPIURL}/v2/public/conversations/list`)
     .then((res) => cleanData(res));
 };

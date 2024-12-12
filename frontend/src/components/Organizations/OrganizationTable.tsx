@@ -11,7 +11,7 @@ import { publicAPIURL } from "@/lib/env_variables";
 import { useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 
-const organizationsListGet = (url: string) => {
+const organizationsListGet = async (url: string) => {
   const cleanData = (response: any) => {
     console.log(response.data);
     const return_data: any[] = response.data;
@@ -25,7 +25,7 @@ const organizationsListGet = (url: string) => {
     );
     return valid_data;
   };
-  return axios.get(url).then((res) => cleanData(res));
+  return await axios.get(url).then((res) => cleanData(res));
 };
 
 type OrganizationTableSchema = {
