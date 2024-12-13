@@ -15,7 +15,6 @@ FROM
     LEFT JOIN public.file_metadata ON public.file.id = public.file_metadata.id
 WHERE
     public.file.id = $1;
-    
 
 -- name: GetFileListWithMetadata :many
 SELECT
@@ -33,7 +32,7 @@ FROM
     public.file
     LEFT JOIN public.file_metadata ON public.file.id = public.file_metadata.id
 WHERE
-    public.file.id = ANY($1::UUID[]);
+    public.file.id = ANY($1 :: UUID []);
 
 -- name: SemiCompleteFileGet :many
 SELECT
@@ -61,8 +60,6 @@ FROM
     LEFT JOIN public.organization ON public.relation_documents_organizations_authorship.organization_id = public.organization.id
 WHERE
     public.file.id = $1;
-    
-
 
 -- name: SemiCompleteFileListGet :many
 SELECT
@@ -89,4 +86,4 @@ FROM
     LEFT JOIN public.relation_documents_organizations_authorship ON public.file.id = public.relation_documents_organizations_authorship.document_id
     LEFT JOIN public.organization ON public.relation_documents_organizations_authorship.organization_id = public.organization.id
 WHERE
-    public.file.id = ANY($1::UUID[]);
+    public.file.id = ANY($1 :: UUID []);

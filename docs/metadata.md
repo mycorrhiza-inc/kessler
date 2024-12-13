@@ -75,6 +75,3 @@ Type of Document (Report, Act, Decision, Public Comment, Bill, Recording, Etc)
 }
 ```
 
-```
-
-```
