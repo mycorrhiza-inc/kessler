@@ -27,8 +27,10 @@ const (
 type DocProcStage struct {
 	PGStage            PGStage       `json:"pg_stage"`
 	DocProcStatus      DocProcStatus `json:"docproc_stage"`
+	SkipProcessing     bool          `json:"skip_processing"`
 	IsErrored          bool          `json:"is_errored"`
 	IsCompleted        bool          `json:"is_completed"`
+	IngestErrorMsg     string        `json:"ingest_error_msg"`
 	ProcessingErrorMsg string        `json:"processing_error_msg"`
 	DatabaseErrorMsg   string        `json:"database_error_msg"`
 }
