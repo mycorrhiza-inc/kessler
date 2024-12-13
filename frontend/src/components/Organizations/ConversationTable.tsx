@@ -1,7 +1,6 @@
 "use client";
 import axios from "axios";
 import Link from "next/link";
-import useSWRImmutable from "swr/immutable";
 import LoadingSpinner from "../styled-components/LoadingSpinner";
 import { publicAPIURL } from "@/lib/env_variables";
 import InfiniteScroll from "react-infinite-scroll-component";
@@ -28,10 +27,55 @@ type ConversationTableSchema = {
   Description: string;
 };
 
-const ConversationTable = ({
+const ConversationTableHeaderless = ({
   convoList,
 }: {
   convoList: ConversationTableSchema[];
+}) => {
+  return (
+    <tbody>
+      {convoList.map((convo: ConversationTableSchema) => {
+        var description = null;
+        const description_string = convo.Description;
+        console.log(description_string);
+        try {
+          description = JSON.parse(description_string);
+          console.log(description);
+        } catch (e) {
+          console.log("Error parsing JSON", e);
+        }
+        const matter_type = description?.matter_type || "unknown";
+        const matter_subtype = description?.matter_subtype || "unknown";
+        const organization = description?.organization || "unknown";
+        const date_filed = description?.date_filed || "unknown";
+
+        return (
+          <tr
+            key={convo.DocketID}
+            className="border-base-300 hover:bg-base-200 transition duration-500 ease-out"
+          >
+            <td colSpan={7} className="p-0">
+              <Link href={`/dockets/${convo.DocketID}`} className="flex w-full">
+                <div className="w-[40%] px-4 py-3">{convo.Name}</div>
+                <div className="w-[10%] px-4 py-3">{convo.DocketID}</div>
+                <div className="w-[10%] px-4 py-3">{convo.DocumentCount}</div>
+                <div className="w-[10%] px-4 py-3">{matter_type}</div>
+                <div className="w-[10%] px-4 py-3">{matter_subtype}</div>
+                <div className="w-[10%] px-4 py-3">{organization}</div>
+                <div className="w-[10%] px-4 py-3">{date_filed}</div>
+              </Link>
+            </td>
+          </tr>
+        );
+      })}
+    </tbody>
+  );
+};
+
+const ConversationTableHeaders = ({
+  children,
+}: {
+  children: React.ReactNode;
 }) => {
   return (
     <table className="table table-pin-rows">
@@ -47,46 +91,20 @@ const ConversationTable = ({
           <td className="w-[10%]">Date Filed</td>
         </tr>
       </thead>
-      <tbody>
-        {convoList.map((convo: ConversationTableSchema) => {
-          var description = null;
-          const description_string = convo.Description;
-          console.log(description_string);
-          try {
-            description = JSON.parse(description_string);
-            console.log(description);
-          } catch (e) {
-            console.log("Error parsing JSON", e);
-          }
-          const matter_type = description?.matter_type || "unknown";
-          const matter_subtype = description?.matter_subtype || "unknown";
-          const organization = description?.organization || "unknown";
-          const date_filed = description?.date_filed || "unknown";
-
-          return (
-            <tr
-              key={convo.DocketID}
-              className="border-base-300 hover:bg-base-200 transition duration-500 ease-out"
-            >
-              <td colSpan={7} className="p-0">
-                <Link
-                  href={`/dockets/${convo.DocketID}`}
-                  className="flex w-full"
-                >
-                  <div className="w-[40%] px-4 py-3">{convo.Name}</div>
-                  <div className="w-[10%] px-4 py-3">{convo.DocketID}</div>
-                  <div className="w-[10%] px-4 py-3">{convo.DocumentCount}</div>
-                  <div className="w-[10%] px-4 py-3">{matter_type}</div>
-                  <div className="w-[10%] px-4 py-3">{matter_subtype}</div>
-                  <div className="w-[10%] px-4 py-3">{organization}</div>
-                  <div className="w-[10%] px-4 py-3">{date_filed}</div>
-                </Link>
-              </td>
-            </tr>
-          );
-        })}
-      </tbody>
+      {children}
     </table>
+  );
+};
+
+const ConversationTable = ({
+  convoList,
+}: {
+  convoList: ConversationTableSchema[];
+}) => {
+  return (
+    <ConversationTableHeaders>
+      <ConversationTableHeaderless convoList={convoList} />
+    </ConversationTableHeaders>
   );
 };
 
@@ -117,16 +135,16 @@ const ConversationTableInfiniteScroll = () => {
     getInitialData();
   }, []);
   return (
-    <>
-      <InfiniteScroll
-        dataLength={tableData.length}
-        hasMore={true}
-        next={getMore}
-        loader={<LoadingSpinner loadingText="Loading Conversations" />}
-      >
-        <ConversationTable convoList={tableData} />
-      </InfiniteScroll>
-    </>
+    <InfiniteScroll
+      dataLength={tableData.length}
+      hasMore={true}
+      next={getMore}
+      loader={<LoadingSpinner loadingText="Loading Conversations" />}
+    >
+      <ConversationTableHeaders>
+        <ConversationTableHeaderless convoList={tableData} />
+      </ConversationTableHeaders>
+    </InfiniteScroll>
   );
 };
 
