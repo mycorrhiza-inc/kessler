@@ -101,7 +101,7 @@ func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
 	}
 
 	filtersString := constructQuickwitMetadataQueryString(metadataFilters.Metadata)
-	uuidFilterString := constructQuickwitMetadataQueryString(uuidFilters)
+	uuidFilterString := constructQuickwitUUIDMetadataQueryString(uuidFilters)
 
 	log.Printf(
 		"!!!!!!!!!!\nquery: %s\nfilters: %s\nuuid filters: %s\n!!!!!!!!!!\n",
@@ -304,13 +304,22 @@ var QuickwitFilterMapping = map[string]string{
 	"DateFrom": "date_filed",
 }
 
-func constructQuickwitMetadataQueryString[T any](meta T) string {
+func constructQuickwitMetadataQueryString(meta networking.Metadata) string {
+	values := reflect.ValueOf(meta)
+	types := reflect.TypeOf(meta)
+	return constructGenericFilterQuery(values, types)
+}
+
+func constructQuickwitUUIDMetadataQueryString(meta networking.UUIDFilterFields) string {
+	values := reflect.ValueOf(meta)
+	types := reflect.TypeOf(meta)
+	return constructGenericFilterQuery(values, types)
+}
+
+func constructGenericFilterQuery(values reflect.Value, types reflect.Type) string {
 	var filterQuery string
 	filters := []string{}
 
-	// ===== reflect the filter metadata =====
-	values := reflect.ValueOf(meta)
-	types := reflect.TypeOf(meta)
 	fmt.Printf("values: %v\n", values)
 	fmt.Printf("types: %v\n", types)
 
@@ -325,28 +334,21 @@ func constructQuickwitMetadataQueryString[T any](meta T) string {
 		}
 
 		fmt.Printf("tag: %v\nfield: %v\nvalue: %v\n", tag, field, value)
-		// Get the json tag value
 
-		// format each query equality
+		if tag == "fileuuid" {
+			tag = "source_id"
+		}
 		s := fmt.Sprintf("metadata.%s:(%s)", tag, value)
+
+		// exlude empty values
 		if strings.Contains(s, "00000000-0000-0000-0000-000000000000") {
 			continue
 		}
 		log.Printf("new filter: %s\n", s)
 		filters = append(filters, s)
-
-		// TODO: allow for multiple distinct filters per filter segment
-		// construct the filter specific string
-		// filterString := field_queries[0]
-		// for q := 1; q < len(field_queries); q++ {
-		// 	filterString += fmt.Sprintf(" OR %s", field_queries[q])
-		// }
 	}
 	// concat all filters with AND clauses
 	for _, f := range filters {
-		// WARN: This is potentially not safe. TBD if quickwit's query language is
-		// vulnerable to injectable attacks
-		// fmt.Printf("got filter: \n%s\n", f)
 		filterQuery += fmt.Sprintf(" AND (%s)", f)
 	}
 	fmt.Printf("filter query: %s\n", filterQuery)
