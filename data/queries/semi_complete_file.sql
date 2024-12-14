@@ -74,18 +74,28 @@ SELECT
     public.file_metadata.mdata,
     public.file_extras.extra_obj,
     public.docket_documents.docket_id AS docket_uuid,
-    array_agg(public.organization.id ORDER BY public.organization.id) AS organization_ids,
-    array_agg(public.organization.name ORDER BY public.organization.id) AS organization_names,
-    array_agg(public.organization.is_person ORDER BY public.organization.id) AS is_person_list
+    array_agg(
+        public.organization.id
+        ORDER BY
+            public.organization.id
+    ) AS organization_ids,
+    array_agg(
+        public.organization.name
+        ORDER BY
+            public.organization.id
+    ) AS organization_names,
+    array_agg(
+        public.organization.is_person
+        ORDER BY
+            public.organization.id
+    ) AS is_person_list
 FROM
     public.file
     LEFT JOIN public.file_metadata ON public.file.id = public.file_metadata.id
     LEFT JOIN public.file_extras ON public.file.id = public.file_extras.id
     LEFT JOIN public.docket_documents ON public.file.id = public.docket_documents.file_id
-    LEFT JOIN public.relation_documents_organizations_authorship 
-        ON public.file.id = public.relation_documents_organizations_authorship.document_id
-    LEFT JOIN public.organization 
-        ON public.relation_documents_organizations_authorship.organization_id = public.organization.id
+    LEFT JOIN public.relation_documents_organizations_authorship ON public.file.id = public.relation_documents_organizations_authorship.document_id
+    LEFT JOIN public.organization ON public.relation_documents_organizations_authorship.organization_id = public.organization.id
 WHERE
     public.file.id = ANY($1 :: UUID [])
 GROUP BY
@@ -100,5 +110,3 @@ GROUP BY
     public.file_metadata.mdata,
     public.file_extras.extra_obj,
     public.docket_documents.docket_id;
-
-
