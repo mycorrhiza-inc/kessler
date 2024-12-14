@@ -6,8 +6,7 @@ import { DocumentMainTabs } from "./DocumentBody";
 import { CompleteFileSchema } from "@/lib/types/backend_schemas";
 import Modal from "../styled-components/Modal";
 
-import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { publicAPIURL } from "@/lib/env_variables";
 type ModalProps = {
   objectId: string;

@@ -1,8 +1,6 @@
 // Figure out way to statically render this markdown without needing a UseState
-import Image from "next/image";
 
 import MarkdownRenderer from "../MarkdownRenderer";
-import { BadgeIcon } from "lucide-react";
 
 const Pricing = ({ className }: { className: string }) => {
   const pricing_tiers = [

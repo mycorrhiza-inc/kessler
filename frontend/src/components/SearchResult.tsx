@@ -1,5 +1,4 @@
 import { useState } from "react";
-import Modal from "./styled-components/Modal";
 import DocumentModal from "./Document/DocumentModal";
 type SearchFields = {
   sourceID: string;

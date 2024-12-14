@@ -3,7 +3,7 @@ import { useState } from "react";
 import MarkdownRenderer from "../MarkdownRenderer";
 
 import { QueryFilterFields } from "@/lib/filters";
-import { exampleChatHistory, getUpdatedChatHistory, Message } from "@/lib/chat";
+import { getUpdatedChatHistory, Message } from "@/lib/chat";
 export const ChatMessages = ({
   messages,
   loading,

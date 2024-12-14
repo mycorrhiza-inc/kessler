@@ -8,7 +8,6 @@ import React, {
 } from "react";
 import { BasicDocumentFiltersList } from "@/components/DocumentFilters";
 import {
-  emptyQueryOptions,
   QueryFilterFields,
   CaseFilterFields,
   InheritedFilterValues,
@@ -21,11 +20,9 @@ import {
 import { Filing } from "@/lib/types/FilingTypes";
 import { FilingTable } from "@/components/Tables/FilingTable";
 import { getSearchResults } from "@/lib/requests/search";
-import { PageContext } from "@/lib/page_context";
 import InfiniteScroll from "react-infinite-scroll-component";
 import LoadingSpinnerTimeout from "../styled-components/LoadingSpinnerTimeout";
 
-import ConversationDescription from "./ConversationDescription";
 import { ChatModalClickDiv } from "../Chat/ChatModal";
 
 const TableFilters = ({

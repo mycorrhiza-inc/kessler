@@ -1,4 +1,4 @@
-import { useEffect, MutableRefObject, useRef, RefObject } from "react";
+import { useEffect, useRef, RefObject } from "react";
 import { Dispatch, SetStateAction, useState } from "react";
 
 interface ChatBoxProps {

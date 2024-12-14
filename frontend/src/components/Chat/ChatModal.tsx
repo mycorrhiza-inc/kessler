@@ -5,12 +5,11 @@ import {
 } from "@/lib/filters";
 import { useMemo, useState } from "react";
 import Modal from "../styled-components/Modal";
-import ChatBoxInternals, {
+import {
   ChatBoxInternalsState,
   ChatBoxInternalsStateless,
   initialChatState,
 } from "./ChatBoxInternals";
-import clsx from "clsx";
 
 export const ChatModalClickDiv = ({
   inheritedFilters,

@@ -1,5 +1,5 @@
 "use client";
-import { Suspense, memo } from "react";
+import { memo } from "react";
 import useSWRImmutable from "swr";
 import FilingTable from "./FilingTable";
 import { QueryDataFile } from "@/lib/filters";

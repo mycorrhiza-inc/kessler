@@ -1,12 +1,9 @@
 "use client";
 import axios from "axios";
 import Link from "next/link";
-import useSWRImmutable from "swr/immutable";
 import LoadingSpinner from "../styled-components/LoadingSpinner";
-import {
-  OrganizationSchemaComplete,
-  OrganizationSchemaCompleteValidator,
-} from "@/lib/types/backend_schemas";
+
+
 import { publicAPIURL } from "@/lib/env_variables";
 import { useEffect, useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";

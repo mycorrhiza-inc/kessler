@@ -1,4 +1,3 @@
-import { User } from "@supabase/supabase-js";
 import Navbar from "./Navbar";
 import { BreadcrumbValues } from "../SitemapUtils";
 

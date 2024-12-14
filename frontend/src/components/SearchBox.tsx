@@ -2,7 +2,6 @@ import { Dispatch, SetStateAction, useState, useEffect, useRef } from "react";
 import Tooltip from "@mui/joy/Tooltip";
 import { motion, AnimatePresence } from "framer-motion"; // Import necessary components from framer-motion
 import {
-  CommandIcon,
   SearchIcon,
   ChatIcon,
   FileUploadIcon,
@@ -10,7 +9,6 @@ import {
 
 import {
   QueryFilterFields,
-  emptyQueryOptions,
   allFilterFields,
 } from "@/lib/filters";
 import { BasicDocumentFiltersGrid } from "@/components/DocumentFilters";

@@ -1,4 +1,3 @@
-import { string } from "zod";
 
 export type Conversation = {
   id: string; // UUID
