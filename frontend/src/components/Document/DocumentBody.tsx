@@ -1,18 +1,17 @@
 "use client";
 // TODO: change the network fetch stuff so that this can be SSR'd
-import React, { Suspense, memo, useEffect } from "react";
+import React, { memo } from "react";
 import * as Tabs from "@radix-ui/react-tabs";
 
 import PDFViewer from "./PDFViewer";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import LoadingSpinner from "@/components/styled-components/LoadingSpinner";
-import { fetchObjectDataFromURL, fetchTextDataFromURL } from "./documentLoader";
+import { fetchTextDataFromURL } from "./documentLoader";
 import useSWRImmutable from "swr";
-import { completeFileSchemaGet } from "@/lib/requests/search";
 import { CompleteFileSchema } from "@/lib/types/backend_schemas";
 import { publicAPIURL } from "@/lib/env_variables";
 import Link from "next/link";
-import { ChatModalClickDiv, ChatModalTestButton } from "../Chat/ChatModal";
+import { ChatModalClickDiv } from "../Chat/ChatModal";
 import { FilterField } from "@/lib/filters";
 
 // import { ErrorBoundary } from "react-error-boundary";

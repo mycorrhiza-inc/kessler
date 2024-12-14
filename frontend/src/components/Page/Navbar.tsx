@@ -1,9 +1,8 @@
 "use client";
 import { UserIcon } from "@/components/Icons";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Modal from "@/components/styled-components/Modal";
 import SettingsContent from "@/components/SettingsContent";
-import { User } from "@supabase/supabase-js";
 import { useKesslerStore } from "@/lib/store";
 import Link from "next/link";
 import { BreadcrumbValues, HeaderBreadcrumbs } from "@/components/SitemapUtils";

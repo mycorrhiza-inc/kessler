@@ -1,5 +1,5 @@
 import axios from "axios";
-import { publicAPIURL, internalAPIURL } from "../env_variables";
+import { internalAPIURL } from "../env_variables";
 
 export const getOrganizationInfo = async (orgID: string) => {
   const response = await axios.get(

@@ -1,8 +1,5 @@
 "use client";
 import { Conversation, NYConversation } from "@/lib/conversations";
-import MarkdownRenderer from "../MarkdownRenderer";
-import useSWRImmutable from "swr";
-import axios from "axios";
 
 const ConversationDescription = ({
   conversation,

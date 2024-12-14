@@ -1,9 +1,6 @@
-import axios from "axios";
-import { useState, useEffect } from "react";
 import { getOrganizationInfo } from "@/lib/requests/organizations";
 import { BreadcrumbValues } from "../SitemapUtils";
 import PageContainer from "../Page/PageContainer";
-import OrganizationFileTable from "./OrgFileResults";
 import ConversationComponent from "../Conversations/ConversationComponent";
 import { FilterField } from "@/lib/filters";
 

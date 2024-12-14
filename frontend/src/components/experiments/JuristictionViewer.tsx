@@ -1,5 +1,4 @@
 import React from "react";
-import { createRoot } from "react-dom/client";
 import { Map } from "react-map-gl/maplibre";
 import DeckGL from "@deck.gl/react";
 import { LineLayer, ScatterplotLayer } from "@deck.gl/layers";
@@ -9,9 +8,9 @@ import type { PickingInfo, MapViewState } from "@deck.gl/core";
 // Source data CSV
 const DATA_URL = {
   AIRPORTS:
-    "https://raw.githubusercontent.com/visgl/deck.gl-data/master/examples/line/airports.json", // eslint-disable-line
+    "https://raw.githubusercontent.com/visgl/deck.gl-data/master/examples/line/airports.json",  
   FLIGHT_PATHS:
-    "https://raw.githubusercontent.com/visgl/deck.gl-data/master/examples/line/heathrow-flights.json", // eslint-disable-line
+    "https://raw.githubusercontent.com/visgl/deck.gl-data/master/examples/line/heathrow-flights.json",  
 };
 
 type Airport = {

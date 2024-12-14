@@ -1,5 +1,5 @@
-import { motion, PanInfo, useDragControls } from "framer-motion";
-import { useEffect, MutableRefObject, useRef, RefObject } from "react";
+import { motion, useDragControls } from "framer-motion";
+import { useEffect, useRef, RefObject } from "react";
 import { Dispatch, SetStateAction, useState } from "react";
 import "./ChatBoxAnimated.css";
 

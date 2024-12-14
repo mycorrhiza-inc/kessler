@@ -2,15 +2,11 @@ import React from "react";
 import {
   Dispatch,
   SetStateAction,
-  useState,
-  useEffect,
-  useRef,
   useMemo,
 } from "react";
 import {
   FilterField,
   QueryFilterFields,
-  emptyQueryOptions,
 } from "@/lib/filters";
 import clsx from "clsx";
 

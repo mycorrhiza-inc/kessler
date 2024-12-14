@@ -1,4 +1,3 @@
-import { User } from "@supabase/supabase-js";
 import Feature from "./Features";
 import Hero from "./Hero";
 import Pricing from "./Pricing";

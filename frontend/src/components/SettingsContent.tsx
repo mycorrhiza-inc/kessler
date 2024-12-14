@@ -1,8 +1,5 @@
-import { User } from "@supabase/supabase-js";
 import ThemeSelector from "./ThemeSelector";
 
-import { createClient } from "@/utils/supabase/server";
-import { signOutAction } from "@/app/actions";
 import { useKesslerStore } from "@/lib/store";
 import Link from "next/link";
 // The password reset is horribly insecure, but it was horribly insecure before and did allow a password reset with a stolen cookie, but now there is a button that does the same thing. Welp...

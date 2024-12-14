@@ -2,15 +2,13 @@
 import axios from "axios";
 import { useRef, useState, useEffect } from "react";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { CenteredFloatingSearhBox } from "@/components/SearchBox";
 import SearchResultBox from "@/components/SearchResultBox";
 import ChatBoxInternals from "./Chat/ChatBoxInternals";
 
 import { QueryFilterFields, emptyQueryOptions } from "@/lib/filters";
-import { User } from "@supabase/supabase-js";
 
-import { SearchRequest } from "@/utils/interfaces";
 
 export default function SearchApp() {
   const [isSearching, setIsSearching] = useState(false);
