@@ -4,6 +4,12 @@ import { BreadcrumbValues } from "@/components/SitemapUtils";
 import { stateFromHeaders } from "@/lib/nextjs_misc";
 import { PageContext } from "@/lib/page_context";
 import { headers } from "next/headers";
+
+export const metadata = {
+  title: "Organizations - Kessler",
+  description:
+    "Search all availible organizations who write goverment documents.",
+};
 export default async function Page({
   params,
 }: {

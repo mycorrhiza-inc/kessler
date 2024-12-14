@@ -123,26 +123,6 @@ func HandleRecentUpdatesRequest(w http.ResponseWriter, r *http.Request) {
 		}
 		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprint(w, string(respString))
-	// This is something that we really want the browser to cache, and it doesnt do this for post requests,
-	//
-	// case http.MethodPost:
-	// 	var request RecentUpdatesRequest
-	// 	err := json.NewDecoder(r.Body).Decode(&request)
-	// 	if err != nil {
-	// 		http.Error(w, "Error decoding JSON", http.StatusBadRequest)
-	// 		return
-	// 	}
-	// 	data, err := GetRecentCaseData(request.Page)
-	// 	if err != nil {
-	// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-	// 		return
-	// 	}
-	// 	respString, err := json.Marshal(data)
-	// 	if err != nil {
-	// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-	// 		return
-	// 	}
-	// 	fmt.Fprint(w, string(respString))
 	default:
 		http.Error(w, "Unsupported request method", http.StatusMethodNotAllowed)
 

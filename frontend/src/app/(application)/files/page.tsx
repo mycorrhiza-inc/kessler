@@ -4,6 +4,10 @@ import { BreadcrumbValues } from "@/components/SitemapUtils";
 import { stateFromHeaders } from "@/lib/nextjs_misc";
 import { headers } from "next/headers";
 
+export const metadata = {
+  title: "Files - Kessler",
+  description: "Search all availible files.",
+};
 export default function Page() {
   const headersList = headers();
   const state = stateFromHeaders(headersList);
@@ -15,9 +19,9 @@ export default function Page() {
     <PageContainer breadcrumbs={breadcrumbs}>
       <h1 className="text-3xl font-bold">
         We dont really know what to put on this page, a view of all files is
-        probably better gotten from the filter view on dockets, but we can
-        put a table here if you really want to browse. If you have any better
-        ideas about what to put here, please let me know - nicole
+        probably better gotten from the filter view on dockets, but we can put a
+        table here if you really want to browse. If you have any better ideas
+        about what to put here, please let me know - nicole
       </h1>
       <ConversationComponent inheritedFilters={[]} />
     </PageContainer>
