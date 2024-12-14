@@ -84,10 +84,14 @@ func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
 	search_index := r.Index
 	// ===== construct search request =====
 	query := r.Query
-	log.Printf("search filters: %s\n", r.SearchFilters)
+
+	var queryFilters networking.FilterFields = r.SearchFilters
+	var metadataFilters networking.MetadataFilterFields = queryFilters.MetadataFilters
+	var uuidFilters networking.UUIDFilterFields = queryFilters.UUIDFilters
+	log.Printf("zzxxcc: %v\n", uuidFilters)
 
 	var queryString string
-	dateQuery, err := ConstructDateQuery(r.SearchFilters.MetadataFilters.DateFrom, r.SearchFilters.MetadataFilters.DateTo)
+	dateQuery, err := ConstructDateQuery(metadataFilters.DateFrom, metadataFilters.DateTo)
 	if err != nil {
 		log.Printf("error constructing date query: %v", err)
 	}
@@ -96,9 +100,16 @@ func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
 		// queryString = fmt.Sprintf("((text:(%s) OR name:(%s)) AND verified:true AND %s)", query, query, dateQuery)
 	}
 
-	filtersString := constructQuickwitMetadataQueryString(r.SearchFilters.MetadataFilters.Metadata)
+	filtersString := constructQuickwitMetadataQueryString(metadataFilters.Metadata)
+	uuidFilterString := constructQuickwitMetadataQueryString(uuidFilters)
 
-	queryString = queryString + filtersString
+	log.Printf(
+		"!!!!!!!!!!\nquery: %s\nfilters: %s\nuuid filters: %s\n!!!!!!!!!!\n",
+		queryString,
+		filtersString,
+		uuidFilterString,
+	)
+	queryString = queryString + filtersString + uuidFilterString
 	log.Printf("full query string: %s\n", queryString)
 
 	// construct sortby string
@@ -288,7 +299,12 @@ func ConstructDateQuery(DateFrom string, DateTo string) (string, error) {
 	return dateQuery, nil
 }
 
-func constructQuickwitMetadataQueryString(meta networking.Metadata) string {
+// THESE ARE THE IMPORTANT MAPPINGS
+var QuickwitFilterMapping = map[string]string{
+	"DateFrom": "date_filed",
+}
+
+func constructQuickwitMetadataQueryString[T any](meta T) string {
 	var filterQuery string
 	filters := []string{}
 
@@ -304,16 +320,19 @@ func constructQuickwitMetadataQueryString(meta networking.Metadata) string {
 		field := types.Field(i)
 		value := values.Field(i)
 		tag := field.Tag.Get("json")
+		if strings.Contains(tag, ",omitempty") {
+			tag = strings.Split(tag, ",")[0]
+		}
+
 		fmt.Printf("tag: %v\nfield: %v\nvalue: %v\n", tag, field, value)
 		// Get the json tag value
 
-		// skip all non-slice filters and empty slices
-		if value.Kind() != reflect.String || value.Len() <= 0 {
-			continue
-		}
-
 		// format each query equality
 		s := fmt.Sprintf("metadata.%s:(%s)", tag, value)
+		if strings.Contains(s, "00000000-0000-0000-0000-000000000000") {
+			continue
+		}
+		log.Printf("new filter: %s\n", s)
 		filters = append(filters, s)
 
 		// TODO: allow for multiple distinct filters per filter segment

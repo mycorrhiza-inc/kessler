@@ -45,15 +45,22 @@ func (f MetadataFilterFields) String() string {
 }
 
 type UUIDFilterFields struct {
-	AuthorUUID       uuid.UUID `json:"author_uuid,omitempty"`
+	AuthorUUID       uuid.UUID `json:"author_uuids,omitempty"`
 	ConversationUUID uuid.UUID `json:"conversation_uuid,omitempty"`
 	FileUUID         uuid.UUID `json:"file_uuid,omitempty"`
 }
 
+func (f UUIDFilterFields) String() string {
+	jsonData, err := json.MarshalIndent(f, "", "  ")
+	if err != nil {
+		fmt.Println("Error marshalling JSON:", err)
+	}
+	return string(jsonData)
+}
+
 func (u *UUIDFilterFields) UnmarshalJSON(data []byte) error {
-	type Alias UUIDFilterFields
 	aux := &struct {
-		AuthorUUID       string `json:"author_uuid,omitempty"`
+		AuthorUUID       string `json:"author_uuids,omitempty"`
 		ConversationUUID string `json:"conversation_uuid,omitempty"`
 		FileUUID         string `json:"file_uuid,omitempty"`
 	}{}
