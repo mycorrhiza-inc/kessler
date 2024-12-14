@@ -78,17 +78,17 @@ SELECT
         public.organization.id
         ORDER BY
             public.organization.id
-    ) AS organization_ids,
+    ) :: uuid [] AS organization_ids,
     array_agg(
         public.organization.name
         ORDER BY
             public.organization.id
-    ) AS organization_names,
+    ) :: text [] AS organization_names,
     array_agg(
         public.organization.is_person
         ORDER BY
             public.organization.id
-    ) AS is_person_list
+    ) :: boolean [] AS is_person_list
 FROM
     public.file
     LEFT JOIN public.file_metadata ON public.file.id = public.file_metadata.id
@@ -99,14 +99,14 @@ FROM
 WHERE
     public.file.id = ANY($1 :: UUID [])
 GROUP BY
-    public.file.id,
-    public.file.name,
-    public.file.extension,
-    public.file.lang,
-    public.file.verified,
-    public.file.hash,
-    public.file.created_at,
-    public.file.updated_at,
-    public.file_metadata.mdata,
-    public.file_extras.extra_obj,
-    public.docket_documents.docket_id;
+    FILE.id,
+    FILE.name,
+    FILE.extension,
+    FILE.lang,
+    FILE.verified,
+    FILE.hash,
+    FILE.created_at,
+    FILE.updated_at,
+    file_metadata.mdata,
+    file_extras.extra_obj,
+    docket_documents.docket_id;
