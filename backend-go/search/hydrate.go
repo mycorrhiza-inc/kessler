@@ -76,8 +76,21 @@ func unrollSingleSchema(schema dbstore.SemiCompleteFileListGetRow) (files.Comple
 }
 
 type SearchDataHydrated struct {
-	SearchData
-	file files.CompleteFileSchema `json:"file"`
+	Name     string                   `json:"name"`
+	Snippet  string                   `json:"snippet,omitempty"`
+	DocID    string                   `json:"docID"`
+	SourceID string                   `json:"sourceID"`
+	File     files.CompleteFileSchema `json:"file"`
+}
+
+func setupSearchDataHydrated(s SearchData, f files.CompleteFileSchema) SearchDataHydrated {
+	return SearchDataHydrated{
+		Name:     s.Name,
+		Snippet:  s.Snippet,
+		DocID:    s.DocID,
+		SourceID: s.SourceID,
+		File:     f,
+	}
 }
 
 func HydrateSearchResults(results []SearchData, ctx context.Context, q dbstore.Queries) ([]SearchDataHydrated, error) {
@@ -95,16 +108,15 @@ func HydrateSearchResults(results []SearchData, ctx context.Context, q dbstore.Q
 		log.Printf("Error hydrating search results: %v\n", err)
 		return []SearchDataHydrated{}, err
 	}
-	fmt.Printf("Got back $v complete files for hydration, out of %v requested files\n", len(files_complete), len(results))
+	fmt.Printf("Got back %v complete files for hydration, out of %v requested files\n", len(files_complete), len(results))
 	results_hydrated := make([]SearchDataHydrated, len(results))
 	files_actually_hydrated := 0
-	for i, r := range results {
-		results_hydrated[i].SearchData = r
-		uuid, _ := uuid.Parse(r.SourceID)
+	for i, res := range results {
+		uuid, _ := uuid.Parse(res.SourceID)
 		for _, f := range files_complete {
 			if f.ID == uuid {
 				files_actually_hydrated += 1
-				results_hydrated[i].file = f
+				results_hydrated[i] = setupSearchDataHydrated(res, f)
 				break
 			}
 		}

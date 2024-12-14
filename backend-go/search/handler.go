@@ -79,6 +79,7 @@ func HandleSearchRequest(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprint(w, string(respString))
 
 	case http.MethodPut:
@@ -116,6 +117,7 @@ func HandleRecentUpdatesRequest(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprint(w, string(respString))
 	// This is something that we really want the browser to cache, and it doesnt do this for post requests,
 	//

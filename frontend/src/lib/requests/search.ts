@@ -50,12 +50,26 @@ export const getSearchResults = async (
 export const hydratedSearchResultsToFilings = (
   hydratedSearchResults: any,
 ): Filing[] => {
-  return hydratedSearchResults.map((hydrated_result: any): Filing => {
-    const maybe_file = hydrated_result.file;
-    const file = CompleteFileSchemaValidator.parse(maybe_file);
-    const filing = generateFilingFromFileSchema(file);
-    return filing;
-  });
+  const verifified_nullable_files: Array<CompleteFileSchema | null> =
+    hydratedSearchResults.map(
+      (hydrated_result: any): CompleteFileSchema | null => {
+        const maybe_file = hydrated_result.file;
+        try {
+          const file = CompleteFileSchemaValidator.parse(maybe_file);
+          return file;
+        } catch (error) {
+          console.log("Error parsing file", error);
+          return null;
+        }
+      },
+    );
+  const valid_files: CompleteFileSchema[] = verifified_nullable_files.filter(
+    (file) => file !== null,
+  ) as CompleteFileSchema[]; // filter out null _files.filter
+  const filings = valid_files.map(
+    (file: CompleteFileSchema): Filing => generateFilingFromFileSchema(file),
+  );
+  return filings;
 };
 
 export const getRecentFilings = async (page?: number): Promise<Filing[]> => {
