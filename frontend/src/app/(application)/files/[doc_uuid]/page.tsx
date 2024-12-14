@@ -7,7 +7,7 @@ import { Metadata } from "next";
 import { headers } from "next/headers";
 
 export const metadata: Metadata = {
-  title: "THIS SHOULDNT BE HERE",
+  title: "ERROR IN SITE NAME",
 };
 
 export default async function Page({
