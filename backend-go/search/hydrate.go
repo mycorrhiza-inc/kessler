@@ -75,12 +75,38 @@ func unrollSingleSchema(schema dbstore.SemiCompleteFileListGetRow) (files.Comple
 	return file, nil
 }
 
-func HydrateSearchResults(results []SearchData) []SearchData {
-	// get a pg connection
-	// query the database for all metadata of each result
-	// return array of hydrated results
-	// This could be done in a more efficient way
-	return results
+type SearchDataHydrated struct {
+	SearchData
+	file files.CompleteFileSchema `json:"file"`
+}
+
+func HydrateSearchResults(results []SearchData, ctx context.Context, q dbstore.Queries) ([]SearchDataHydrated, error) {
+	uuid_list := make([]uuid.UUID, len(results))
+	for i, r := range results {
+		uuid, err := uuid.Parse(r.SourceID)
+		if err != nil {
+			fmt.Printf("Error parsing uuid: %v", err)
+		}
+		uuid_list[i] = uuid
+	}
+	files_complete, err := doShittyHydration(uuid_list, ctx, q)
+	if err != nil {
+		log.Printf("Error hydrating search results: %v", err)
+		return []SearchDataHydrated{}, err
+	}
+	results_hydrated := make([]SearchDataHydrated, len(results))
+	for i, r := range results {
+		results_hydrated[i].SearchData = r
+		uuid, _ := uuid.Parse(r.SourceID)
+		for _, f := range files_complete {
+			if f.ID == uuid {
+				results_hydrated[i].file = f
+				break
+			}
+		}
+		fmt.Printf("No file hydrated for result %v", r)
+	}
+	return results_hydrated, nil
 }
 
 func SearchThenHydrate(r SearchRequest, ctx context.Context) ([]files.FileMetadataSchema, error) {
