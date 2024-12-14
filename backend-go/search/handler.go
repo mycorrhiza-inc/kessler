@@ -57,6 +57,10 @@ func HandleSearchRequest(w http.ResponseWriter, r *http.Request) {
 		}
 		defer r.Body.Close() // Close the body when done
 
+		pagination := networking.PaginationFromUrlParams(r)
+		RequestData.MaxHits = int(pagination.Limit)
+		RequestData.StartOffset = int(pagination.Offset)
+
 		data, err := SearchQuickwit(RequestData)
 		if err != nil {
 			log.Printf("Error searching quickwit: %s", err)

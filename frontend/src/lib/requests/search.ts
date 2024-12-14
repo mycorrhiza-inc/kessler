@@ -14,6 +14,8 @@ import { queryStringFromPageMaxHits } from "../pagination";
 
 export const getSearchResults = async (
   queryData: QueryDataFile,
+  page: number,
+  maxHits: number,
 ): Promise<Filing[]> => {
   const searchQuery = queryData.query;
   console.log("query data", queryData);
@@ -21,13 +23,12 @@ export const getSearchResults = async (
   console.log("searchhing for", searchFilters);
   const filterObj: BackendFilterObject = backendFilterGenerate(searchFilters);
   try {
+    const paginationQueryString = queryStringFromPageMaxHits(page, maxHits);
     const searchResults: Filing[] = await axios
       // .post("https://api.kessler.xyz/v2/search", {
-      .post(`${publicAPIURL}/v2/search`, {
+      .post(`${publicAPIURL}/v2/search${paginationQueryString}`, {
         query: searchQuery,
         filters: filterObj,
-        start_offset: queryData.start_offset,
-        max_hits: 20,
       })
       // check error conditions
       .then((response) => {
