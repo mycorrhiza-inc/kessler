@@ -72,12 +72,16 @@ export const hydratedSearchResultsToFilings = (
   return filings;
 };
 
-export const getRecentFilings = async (page?: number): Promise<Filing[]> => {
+export const getRecentFilings = async (
+  page?: number,
+  page_size?: number,
+): Promise<Filing[]> => {
   if (!page) {
     page = 0;
   }
-  const page_size = 40;
-  const queryString = queryStringFromPageMaxHits(page, page_size);
+  const default_page_size = 40;
+  const limit = page_size || default_page_size;
+  const queryString = queryStringFromPageMaxHits(limit, page_size);
   const response = await axios.get(
     `${publicAPIURL}/v2/recent_updates${queryString}`,
   );

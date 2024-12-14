@@ -17,12 +17,10 @@ export default function RecentUpdatesView() {
   const getUpdates = async () => {
     setIsSearching(true);
     console.log("getting recent updates");
-    const data = await getRecentFilings();
-    console.log();
+    const filings = await getRecentFilings(0, 80);
 
-    const ids = data.map((item: any) => item.sourceID);
-    console.log("ids", ids);
-    setFilingIds(ids);
+    setFilings(filings);
+    setPage(2);
     setIsSearching(false);
   };
 
