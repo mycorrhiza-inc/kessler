@@ -13,6 +13,7 @@ import {
 } from "../types/backend_schemas";
 import { z } from "zod";
 import { fi } from "date-fns/locale";
+import { queryStringFromPageMaxHits } from "../pagination";
 
 export const getSearchResults = async (
   queryData: QueryDataFile,
@@ -55,12 +56,10 @@ export const getRecentFilings = async (page?: number) => {
   if (!page) {
     page = 0;
   }
-  const response = await axios.post(
-    `${publicAPIURL}/v2/recent_updates`,
-    // "http://api.kessler.xyz/v2/recent_updates",
-    {
-      page: page,
-    },
+  const page_size = 40;
+  const queryString = queryStringFromPageMaxHits(page, page_size);
+  const response = await axios.get(
+    `${publicAPIURL}/v2/recent_updates${queryString}`,
   );
   console.log("recent data", response.data);
   if (response.data.length > 0) {
