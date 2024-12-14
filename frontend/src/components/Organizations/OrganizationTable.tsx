@@ -20,11 +20,12 @@ const organizationsListGet = async (url: string) => {
       return [];
     }
     return return_data;
-    const valid_data = return_data.map(
-      (item): OrganizationSchemaComplete =>
-        OrganizationSchemaCompleteValidator.parse(return_data),
-    );
-    return valid_data;
+    // TODO: Fix this validator code at some point
+    // const valid_data = return_data.map(
+    //   (item): OrganizationSchemaComplete =>
+    //     OrganizationSchemaCompleteValidator.parse(return_data),
+    // );
+    // return valid_data;
   };
   const result = await axios.get(url).then((res) => cleanData(res));
   return result as OrganizationTableSchema[];

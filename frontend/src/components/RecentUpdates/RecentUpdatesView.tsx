@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Filing } from "@/lib/types/FilingTypes";
 import { FilingTable } from "@/components/Tables/FilingTable";
-import { getFilingMetadata, getRecentFilings } from "@/lib/requests/search";
+import { getRecentFilings } from "@/lib/requests/search";
 
 import InfiniteScroll from "react-infinite-scroll-component";
 import LoadingSpinnerTimeout from "../styled-components/LoadingSpinnerTimeout";
