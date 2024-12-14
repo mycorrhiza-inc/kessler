@@ -20,7 +20,7 @@ import {
 } from "@/lib/filters";
 import { Filing } from "@/lib/types/FilingTypes";
 import { FilingTable } from "@/components/Tables/FilingTable";
-import { getSearchResults, getFilingMetadata } from "@/lib/requests/search";
+import { getSearchResults } from "@/lib/requests/search";
 import { PageContext } from "@/lib/page_context";
 import InfiniteScroll from "react-infinite-scroll-component";
 import LoadingSpinnerTimeout from "../styled-components/LoadingSpinnerTimeout";
