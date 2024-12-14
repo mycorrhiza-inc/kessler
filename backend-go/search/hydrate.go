@@ -35,13 +35,13 @@ func unrollSingleSchema(schema dbstore.SemiCompleteFileListGetRow) (files.Comple
 	nilSchema := files.CompleteFileSchema{}
 	err := json.Unmarshal(schema.Mdata, &mdata_obj)
 	if err != nil {
-		errorstring := fmt.Sprintf("Error Unmarshalling file metadata %v: %v\n", uuid, err)
+		errorstring := fmt.Sprintf("Error Unmarshalling file metadata : %v\n", schema.ID, err)
 		return nilSchema, errors.New(errorstring)
 	}
 	var extra_obj files.FileGeneratedExtras
 	err = json.Unmarshal(schema.ExtraObj, &extra_obj)
 	if err != nil {
-		errorstring := fmt.Sprintf("Error Unmarshalling file extras %v: %v\n", uuid, err)
+		errorstring := fmt.Sprintf("Error Unmarshalling file extras %v: %v\n", schema.ID, err)
 		return nilSchema, errors.New(errorstring)
 	}
 	// Missing info here, it doesnt have the name.
