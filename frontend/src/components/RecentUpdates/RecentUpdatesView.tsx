@@ -26,46 +26,43 @@ export default function RecentUpdatesView() {
     setIsSearching(false);
   };
 
-  useEffect(() => {
-    if (!filing_ids) {
-      return;
-    }
-
-    const fetchFilings = async () => {
-      const newFilings = await Promise.all(
-        filing_ids.map(async (id) => {
-          const filing_data = await getFilingMetadata(id);
-          console.log("new filings", filing_data);
-          return filing_data;
-        }),
-      );
-
-      setFilings((previous: Filing[]): Filing[] => {
-        const existingIds = new Set(previous.map((f: Filing) => f.id));
-        const uniqueNewFilings = newFilings.filter(
-          (f: Filing | null) => f !== null && !existingIds.has(f.id),
-        ) as Filing[];
-        console.log(" uniques: ", uniqueNewFilings);
-        console.log("all data: ", [...previous, ...uniqueNewFilings]);
-        return [...previous, ...uniqueNewFilings];
-      });
-    };
-
-    fetchFilings();
-  }, [filing_ids]);
+  // useEffect(() => {
+  //   if (!filing_ids) {
+  //     return;
+  //   }
+  //
+  //   const fetchFilings = async () => {
+  //     const newFilings = await Promise.all(
+  //       filing_ids.map(async (id) => {
+  //         const filing_data = await getFilingMetadata(id);
+  //         console.log("new filings", filing_data);
+  //         return filing_data;
+  //       }),
+  //     );
+  //
+  //     setFilings((previous: Filing[]): Filing[] => {
+  //       const existingIds = new Set(previous.map((f: Filing) => f.id));
+  //       const uniqueNewFilings = newFilings.filter(
+  //         (f: Filing | null) => f !== null && !existingIds.has(f.id),
+  //       ) as Filing[];
+  //       console.log(" uniques: ", uniqueNewFilings);
+  //       console.log("all data: ", [...previous, ...uniqueNewFilings]);
+  //       return [...previous, ...uniqueNewFilings];
+  //     });
+  //   };
+  //
+  //   fetchFilings();
+  // }, [filing_ids]);
 
   const getMore = async () => {
     setIsSearching(true);
     try {
       console.log("getting page ", page + 1);
-      const data = await getRecentFilings(page);
+      const new_filings = await getRecentFilings(page);
       setPage(page + 1);
-      console.log(data);
-      if (data.length > 0) {
-        setFilingIds([
-          ...filing_ids,
-          ...data.map((item: any) => item.sourceID),
-        ]);
+      console.log(new_filings);
+      if (filings.length > 0) {
+        setFilings((old_filings: Filing[]) => [...old_filings, ...new_filings]);
       }
     } catch (error) {
       console.log(error);
