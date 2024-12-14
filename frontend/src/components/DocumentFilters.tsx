@@ -117,7 +117,7 @@ const queryFiltersInformation: QueryFiltersInformation = {
     description: "",
     details: "",
   },
-  match_author_uuid: {
+  match_author_uuids: {
     type: InputType.NotShown,
     index: -1,
     displayName: "",

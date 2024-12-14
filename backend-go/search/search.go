@@ -84,10 +84,14 @@ func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
 	search_index := r.Index
 	// ===== construct search request =====
 	query := r.Query
-	log.Printf("search filters: %s\n", r.SearchFilters)
+
+	var queryFilters networking.FilterFields = r.SearchFilters
+	var metadataFilters networking.MetadataFilterFields = queryFilters.MetadataFilters
+	var uuidFilters networking.UUIDFilterFields = queryFilters.UUIDFilters
+	log.Printf("zzxxcc: %v\n", uuidFilters)
 
 	var queryString string
-	dateQuery, err := ConstructDateQuery(r.SearchFilters.MetadataFilters.DateFrom, r.SearchFilters.MetadataFilters.DateTo)
+	dateQuery, err := ConstructDateQuery(metadataFilters.DateFrom, metadataFilters.DateTo)
 	if err != nil {
 		log.Printf("error constructing date query: %v", err)
 	}
@@ -96,9 +100,16 @@ func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
 		// queryString = fmt.Sprintf("((text:(%s) OR name:(%s)) AND verified:true AND %s)", query, query, dateQuery)
 	}
 
-	filtersString := constructQuickwitMetadataQueryString(r.SearchFilters.MetadataFilters.Metadata)
+	filtersString := constructQuickwitMetadataQueryString(metadataFilters.Metadata)
+	uuidFilterString := constructQuickwitUUIDMetadataQueryString(uuidFilters)
 
-	queryString = queryString + filtersString
+	log.Printf(
+		"!!!!!!!!!!\nquery: %s\nfilters: %s\nuuid filters: %s\n!!!!!!!!!!\n",
+		queryString,
+		filtersString,
+		uuidFilterString,
+	)
+	queryString = queryString + filtersString + uuidFilterString
 	log.Printf("full query string: %s\n", queryString)
 
 	// construct sortby string
@@ -288,13 +299,27 @@ func ConstructDateQuery(DateFrom string, DateTo string) (string, error) {
 	return dateQuery, nil
 }
 
+// THESE ARE THE IMPORTANT MAPPINGS
+var QuickwitFilterMapping = map[string]string{
+	"DateFrom": "date_filed",
+}
+
 func constructQuickwitMetadataQueryString(meta networking.Metadata) string {
+	values := reflect.ValueOf(meta)
+	types := reflect.TypeOf(meta)
+	return constructGenericFilterQuery(values, types)
+}
+
+func constructQuickwitUUIDMetadataQueryString(meta networking.UUIDFilterFields) string {
+	values := reflect.ValueOf(meta)
+	types := reflect.TypeOf(meta)
+	return constructGenericFilterQuery(values, types)
+}
+
+func constructGenericFilterQuery(values reflect.Value, types reflect.Type) string {
 	var filterQuery string
 	filters := []string{}
 
-	// ===== reflect the filter metadata =====
-	values := reflect.ValueOf(meta)
-	types := reflect.TypeOf(meta)
 	fmt.Printf("values: %v\n", values)
 	fmt.Printf("types: %v\n", types)
 
@@ -304,30 +329,26 @@ func constructQuickwitMetadataQueryString(meta networking.Metadata) string {
 		field := types.Field(i)
 		value := values.Field(i)
 		tag := field.Tag.Get("json")
-		fmt.Printf("tag: %v\nfield: %v\nvalue: %v\n", tag, field, value)
-		// Get the json tag value
-
-		// skip all non-slice filters and empty slices
-		if value.Kind() != reflect.String || value.Len() <= 0 {
-			continue
+		if strings.Contains(tag, ",omitempty") {
+			tag = strings.Split(tag, ",")[0]
 		}
 
-		// format each query equality
-		s := fmt.Sprintf("metadata.%s:(%s)", tag, value)
-		filters = append(filters, s)
+		fmt.Printf("tag: %v\nfield: %v\nvalue: %v\n", tag, field, value)
 
-		// TODO: allow for multiple distinct filters per filter segment
-		// construct the filter specific string
-		// filterString := field_queries[0]
-		// for q := 1; q < len(field_queries); q++ {
-		// 	filterString += fmt.Sprintf(" OR %s", field_queries[q])
-		// }
+		if tag == "fileuuid" {
+			tag = "source_id"
+		}
+		s := fmt.Sprintf("metadata.%s:(%s)", tag, value)
+
+		// exlude empty values
+		if strings.Contains(s, "00000000-0000-0000-0000-000000000000") {
+			continue
+		}
+		log.Printf("new filter: %s\n", s)
+		filters = append(filters, s)
 	}
 	// concat all filters with AND clauses
 	for _, f := range filters {
-		// WARN: This is potentially not safe. TBD if quickwit's query language is
-		// vulnerable to injectable attacks
-		// fmt.Printf("got filter: \n%s\n", f)
 		filterQuery += fmt.Sprintf(" AND (%s)", f)
 	}
 	fmt.Printf("filter query: %s\n", filterQuery)
