@@ -1,17 +1,11 @@
 "use client";
-import axios from "axios";
 import { useState, useEffect } from "react";
 import { Filing } from "@/lib/types/FilingTypes";
 import { FilingTable } from "@/components/Tables/FilingTable";
 import { getFilingMetadata, getRecentFilings } from "@/lib/requests/search";
 
 import InfiniteScroll from "react-infinite-scroll-component";
-import ConversationTableInfiniteScroll from "../Organizations/ConversationTable";
-import OrganizationTableInfiniteScroll from "../Organizations/OrganizationTable";
-import Link from "next/link";
 import LoadingSpinnerTimeout from "../styled-components/LoadingSpinnerTimeout";
-import PageContainer from "../Page/PageContainer";
-import { ChatModalClickDiv } from "../Chat/ChatModal";
 
 // TODO: Break out Recent Updates into its own component seperate from all of the homepage logic
 export default function RecentUpdatesView() {
@@ -85,47 +79,20 @@ export default function RecentUpdatesView() {
   }, []);
 
   return (
-    <PageContainer breadcrumbs={{ breadcrumbs: [] }}>
-      <div className="grid grid-cols-2 w-full">
-        <div>
-          <Link className="text-3xl font-bold hover:underline" href="/dockets">
-            Dockets
-          </Link>
-          <div className="max-h-[600px] overflow-x-hidden border-r pr-4">
-            <ConversationTableInfiniteScroll />
-          </div>
+    <InfiniteScroll
+      dataLength={filings.length}
+      next={getMore}
+      hasMore={true}
+      loader={
+        <div onClick={getMore}>
+          <LoadingSpinnerTimeout
+            loadingText="Loading Files"
+            timeoutSeconds={3}
+          />
         </div>
-        <div>
-          <Link className="text-3xl font-bold hover:underline" href="/orgs">
-            Organizations
-          </Link>
-          <div className="max-h-[600px] overflow-x-hidden pl-4">
-            <OrganizationTableInfiniteScroll />
-          </div>
-        </div>
-      </div>
-      <ChatModalClickDiv
-        className="btn btn-accent w-full"
-        inheritedFilters={[]}
-      >
-        Unsure of what to do? Try chatting with the entire New York PUC
-      </ChatModalClickDiv>
-      <h1 className=" text-2xl font-bold">Newest Docs</h1>
-      <InfiniteScroll
-        dataLength={filings.length}
-        next={getMore}
-        hasMore={true}
-        loader={
-          <div onClick={getMore}>
-            <LoadingSpinnerTimeout
-              loadingText="Loading Files"
-              timeoutSeconds={3}
-            />
-          </div>
-        }
-      >
-        <FilingTable filings={filings} DocketColumn />
-      </InfiniteScroll>
-    </PageContainer>
+      }
+    >
+      <FilingTable filings={filings} DocketColumn />
+    </InfiniteScroll>
   );
 }
