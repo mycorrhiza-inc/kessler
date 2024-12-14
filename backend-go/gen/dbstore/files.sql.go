@@ -175,9 +175,12 @@ func (q *Queries) FetchMetadata(ctx context.Context, id uuid.UUID) (FileMetadatu
 }
 
 const fetchMetadataList = `-- name: FetchMetadataList :many
-SELECT id, isprivate, mdata, created_at, updated_at 
-FROM public.file_metadata
-WHERE id = ANY($1::UUID[])
+SELECT
+    id, isprivate, mdata, created_at, updated_at
+FROM
+    public.file_metadata
+WHERE
+    id = ANY($1 :: UUID [])
 `
 
 func (q *Queries) FetchMetadataList(ctx context.Context, dollar_1 []uuid.UUID) ([]FileMetadatum, error) {

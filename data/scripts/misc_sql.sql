@@ -17,3 +17,11 @@ WHERE
     AND updated_at >= '2024-12-01'
 ORDER BY
     updated_at DESC;
+
+-- Rework through all xlsx files to check mime type
+UPDATE
+    public.file
+SET
+    verified = FALSE
+WHERE
+    extension = 'xlsx';

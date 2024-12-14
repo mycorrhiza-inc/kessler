@@ -98,7 +98,8 @@ export const DocumentMainTabs = ({
   const underscoredTitle = title ? title.replace(/ /g, "_") : "Unkown_Document";
   const fileUrlNamedDownload = `${publicAPIURL}/v2/public/files/${objectId}/raw/${underscoredTitle}.${extension}`;
   const kesslerFileUrl = `/files/${objectId}`;
-  const metadata = documentObject?.mdata;
+  var metadata = documentObject?.mdata;
+  metadata.hash = documentObject?.hash;
   // TODO: Make this into a library function or something.
   const showText =
     documentObject?.verified && documentObject?.extension != "xlsx";

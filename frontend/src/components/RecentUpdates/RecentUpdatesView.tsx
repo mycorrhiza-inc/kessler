@@ -1,17 +1,11 @@
 "use client";
-import axios from "axios";
 import { useState, useEffect } from "react";
 import { Filing } from "@/lib/types/FilingTypes";
 import { FilingTable } from "@/components/Tables/FilingTable";
-import { getFilingMetadata, getRecentFilings } from "@/lib/requests/search";
+import { getRecentFilings } from "@/lib/requests/search";
 
 import InfiniteScroll from "react-infinite-scroll-component";
-import ConversationTableInfiniteScroll from "../Organizations/ConversationTable";
-import OrganizationTableInfiniteScroll from "../Organizations/OrganizationTable";
-import Link from "next/link";
 import LoadingSpinnerTimeout from "../styled-components/LoadingSpinnerTimeout";
-import PageContainer from "../Page/PageContainer";
-import { ChatModalClickDiv } from "../Chat/ChatModal";
 
 // TODO: Break out Recent Updates into its own component seperate from all of the homepage logic
 export default function RecentUpdatesView() {
@@ -23,55 +17,50 @@ export default function RecentUpdatesView() {
   const getUpdates = async () => {
     setIsSearching(true);
     console.log("getting recent updates");
-    const data = await getRecentFilings();
-    console.log();
+    const filings = await getRecentFilings(0, 80);
 
-    const ids = data.map((item: any) => item.sourceID);
-    console.log("ids", ids);
-    setFilingIds(ids);
+    setFilings(filings);
+    setPage(2);
     setIsSearching(false);
   };
 
-  useEffect(() => {
-    if (!filing_ids) {
-      return;
-    }
-
-    const fetchFilings = async () => {
-      const newFilings = await Promise.all(
-        filing_ids.map(async (id) => {
-          const filing_data = await getFilingMetadata(id);
-          console.log("new filings", filing_data);
-          return filing_data;
-        }),
-      );
-
-      setFilings((previous: Filing[]): Filing[] => {
-        const existingIds = new Set(previous.map((f: Filing) => f.id));
-        const uniqueNewFilings = newFilings.filter(
-          (f: Filing | null) => f !== null && !existingIds.has(f.id),
-        ) as Filing[];
-        console.log(" uniques: ", uniqueNewFilings);
-        console.log("all data: ", [...previous, ...uniqueNewFilings]);
-        return [...previous, ...uniqueNewFilings];
-      });
-    };
-
-    fetchFilings();
-  }, [filing_ids]);
+  // useEffect(() => {
+  //   if (!filing_ids) {
+  //     return;
+  //   }
+  //
+  //   const fetchFilings = async () => {
+  //     const newFilings = await Promise.all(
+  //       filing_ids.map(async (id) => {
+  //         const filing_data = await getFilingMetadata(id);
+  //         console.log("new filings", filing_data);
+  //         return filing_data;
+  //       }),
+  //     );
+  //
+  //     setFilings((previous: Filing[]): Filing[] => {
+  //       const existingIds = new Set(previous.map((f: Filing) => f.id));
+  //       const uniqueNewFilings = newFilings.filter(
+  //         (f: Filing | null) => f !== null && !existingIds.has(f.id),
+  //       ) as Filing[];
+  //       console.log(" uniques: ", uniqueNewFilings);
+  //       console.log("all data: ", [...previous, ...uniqueNewFilings]);
+  //       return [...previous, ...uniqueNewFilings];
+  //     });
+  //   };
+  //
+  //   fetchFilings();
+  // }, [filing_ids]);
 
   const getMore = async () => {
     setIsSearching(true);
     try {
       console.log("getting page ", page + 1);
-      const data = await getRecentFilings(page);
+      const new_filings = await getRecentFilings(page);
       setPage(page + 1);
-      console.log(data);
-      if (data.length > 0) {
-        setFilingIds([
-          ...filing_ids,
-          ...data.map((item: any) => item.sourceID),
-        ]);
+      console.log(new_filings);
+      if (filings.length > 0) {
+        setFilings((old_filings: Filing[]) => [...old_filings, ...new_filings]);
       }
     } catch (error) {
       console.log(error);
@@ -85,47 +74,20 @@ export default function RecentUpdatesView() {
   }, []);
 
   return (
-    <PageContainer breadcrumbs={{ breadcrumbs: [] }}>
-      <div className="grid grid-cols-2 w-full">
-        <div>
-          <Link className="text-3xl font-bold hover:underline" href="/dockets">
-            Dockets
-          </Link>
-          <div className="max-h-[600px] overflow-x-hidden border-r pr-4">
-            <ConversationTableInfiniteScroll />
-          </div>
+    <InfiniteScroll
+      dataLength={filings.length}
+      next={getMore}
+      hasMore={true}
+      loader={
+        <div onClick={getMore}>
+          <LoadingSpinnerTimeout
+            loadingText="Loading Files"
+            timeoutSeconds={3}
+          />
         </div>
-        <div>
-          <Link className="text-3xl font-bold hover:underline" href="/orgs">
-            Organizations
-          </Link>
-          <div className="max-h-[600px] overflow-x-hidden pl-4">
-            <OrganizationTableInfiniteScroll />
-          </div>
-        </div>
-      </div>
-      <ChatModalClickDiv
-        className="btn btn-accent w-full"
-        inheritedFilters={[]}
-      >
-        Unsure of what to do? Try chatting with the entire New York PUC
-      </ChatModalClickDiv>
-      <h1 className=" text-2xl font-bold">Newest Docs</h1>
-      <InfiniteScroll
-        dataLength={filings.length}
-        next={getMore}
-        hasMore={true}
-        loader={
-          <div onClick={getMore}>
-            <LoadingSpinnerTimeout
-              loadingText="Loading Files"
-              timeoutSeconds={3}
-            />
-          </div>
-        }
-      >
-        <FilingTable filings={filings} DocketColumn />
-      </InfiniteScroll>
-    </PageContainer>
+      }
+    >
+      <FilingTable filings={filings} DocketColumn />
+    </InfiniteScroll>
   );
 }

@@ -87,33 +87,36 @@ const ConversationComponent = ({
     return {
       filters: searchFilters,
       query: searchQuery,
-      start_offset: 0,
     };
   }, [searchFilters]);
+  const pageSize = 40;
 
   const getUpdates = async () => {
+    const load_initial_pages = 2;
     setIsSearching(true);
     console.log("getting recent updates");
-    const data = await getSearchResults(queryData);
-    console.log();
+    const filings: Filing[] = await getSearchResults(
+      queryData,
+      0,
+      pageSize * load_initial_pages,
+    );
 
-    const ids = data.map((item: any) => item.id);
-    console.log("ids", ids);
-    setFilingIds(ids);
+    setFilings(filings);
+    setPage(load_initial_pages);
     setIsSearching(false);
   };
 
   const getMore = async () => {
     setIsSearching(true);
     try {
-      const data = await getSearchResults({
-        ...queryData,
-        start_offset: page + 20,
-      });
-      setPage(page + 20);
-      console.log("data", data);
-      if (data.length > 0) {
-        setFilingIds([...filing_ids, ...data.map((item: any) => item.id)]);
+      const new_filings: Filing[] = await getSearchResults(
+        queryData,
+        page,
+        pageSize,
+      );
+      setPage((prev) => prev + 1);
+      if (new_filings.length > 0) {
+        setFilings((prev: Filing[]): Filing[] => [...prev, ...new_filings]);
       }
     } catch (error) {
       console.log(error);
@@ -121,40 +124,43 @@ const ConversationComponent = ({
       setIsSearching(false);
     }
   };
-
   useEffect(() => {
-    setIsSearching(true);
-    console.log("search filters changed", searchFilters);
-    setFilingIds([]);
-    setFilings([]);
     getUpdates();
-  }, [searchFilters]);
+  }, []);
 
-  useEffect(() => {
-    if (!filing_ids || isSearching) {
-      return;
-    }
-
-    const fetchFilings = async () => {
-      const newFilings_raw = await Promise.all(
-        filing_ids.map(async (id): Promise<Filing | null> => {
-          const filing_data = await getFilingMetadata(id);
-          console.log("new filings", filing_data);
-          return filing_data;
-        }),
-      );
-      const notnull_newFilings = newFilings_raw.filter(
-        (f: Filing | null) => f !== null && f !== undefined,
-      );
-      const newFilings: Filing[] = notnull_newFilings as Filing[];
-
-      setFilings((previous: Filing[]): Filing[] => {
-        return [...previous, ...newFilings];
-      });
-    };
-
-    fetchFilings();
-  }, [filing_ids]);
+  // useEffect(() => {
+  //   setIsSearching(true);
+  //   console.log("search filters changed", searchFilters);
+  //   setFilingIds([]);
+  //   setFilings([]);
+  //   getUpdates();
+  // }, [searchFilters]);
+  //
+  // useEffect(() => {
+  //   if (!filing_ids || isSearching) {
+  //     return;
+  //   }
+  //
+  //   const fetchFilings = async () => {
+  //     const newFilings_raw = await Promise.all(
+  //       filing_ids.map(async (id): Promise<Filing | null> => {
+  //         const filing_data = await getFilingMetadata(id);
+  //         console.log("new filings", filing_data);
+  //         return filing_data;
+  //       }),
+  //     );
+  //     const notnull_newFilings = newFilings_raw.filter(
+  //       (f: Filing | null) => f !== null && f !== undefined,
+  //     );
+  //     const newFilings: Filing[] = notnull_newFilings as Filing[];
+  //
+  //     setFilings((previous: Filing[]): Filing[] => {
+  //       return [...previous, ...newFilings];
+  //     });
+  //   };
+  //
+  //   fetchFilings();
+  // }, [filing_ids]);
 
   const [isFocused, setIsFocused] = useState(true);
   const toggleFilters = () => {

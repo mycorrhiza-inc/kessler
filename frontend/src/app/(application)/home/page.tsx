@@ -1,5 +1,5 @@
-import RecentUpdatesView from "@/components/RecentUpdates/RecentUpdatesView";
+import RecentUpdatesPage from "@/components/RecentUpdates/RecentUpdatesPage";
 
 export default async function Page() {
-  return <RecentUpdatesView />;
+  return <RecentUpdatesPage />;
 }

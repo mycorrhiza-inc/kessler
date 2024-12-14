@@ -10,6 +10,7 @@ import {
 import { publicAPIURL } from "@/lib/env_variables";
 import { useEffect, useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
+import { queryStringFromPageMaxHits } from "@/lib/pagination";
 
 const organizationsListGet = async (url: string) => {
   const cleanData = (response: any) => {
@@ -19,11 +20,12 @@ const organizationsListGet = async (url: string) => {
       return [];
     }
     return return_data;
-    const valid_data = return_data.map(
-      (item): OrganizationSchemaComplete =>
-        OrganizationSchemaCompleteValidator.parse(return_data),
-    );
-    return valid_data;
+    // TODO: Fix this validator code at some point
+    // const valid_data = return_data.map(
+    //   (item): OrganizationSchemaComplete =>
+    //     OrganizationSchemaCompleteValidator.parse(return_data),
+    // );
+    // return valid_data;
   };
   const result = await axios.get(url).then((res) => cleanData(res));
   return result as OrganizationTableSchema[];
@@ -74,9 +76,9 @@ const OrganizationTableInfiniteScroll = () => {
 
   const [tableData, setTableData] = useState<OrganizationTableSchema[]>([]);
   const getPageResults = async (page: number, limit: number) => {
-    const offset = page * limit;
+    const queryString = queryStringFromPageMaxHits(page, limit);
     const result = await organizationsListGet(
-      `${publicAPIURL}/v2/public/organizations/list?limit=${limit}&offset=${offset}`,
+      `${publicAPIURL}/v2/public/organizations/list${queryString}`,
     );
     return result;
   };

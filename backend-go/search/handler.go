@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"kessler/objects/networking"
+	"kessler/routing"
 	"log"
 	"net/http"
 	"strings"
@@ -56,20 +57,35 @@ func HandleSearchRequest(w http.ResponseWriter, r *http.Request) {
 		}
 		defer r.Body.Close() // Close the body when done
 
+		pagination := networking.PaginationFromUrlParams(r)
+		RequestData.MaxHits = int(pagination.Limit)
+		RequestData.StartOffset = int(pagination.Offset)
+
 		data, err := SearchQuickwit(RequestData)
 		if err != nil {
 			log.Printf("Error searching quickwit: %s", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
+		q := *routing.DBQueriesFromRequest(r)
+		ctx := r.Context()
+		hydrated_data, err := HydrateSearchResults(data, ctx, q)
+		if err != nil {
+			errorstring := fmt.Sprintf("Error hydrating search results: %v\n", err)
+			log.Println(errorstring)
+			http.Error(w, errorstring, http.StatusInternalServerError)
+			return
+		}
 
-		respString, err := json.Marshal(data)
+		respString, err := json.Marshal(hydrated_data)
 		if err != nil {
 			log.Println("Error marshalling response data")
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
+		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprint(w, string(respString))
+
 	case http.MethodPut:
 		fmt.Fprintf(w, "PUT request")
 	case http.MethodDelete:
@@ -82,35 +98,51 @@ func HandleSearchRequest(w http.ResponseWriter, r *http.Request) {
 func HandleRecentUpdatesRequest(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		data, err := GetRecentCaseData(0)
+		pagination := networking.PaginationFromUrlParams(r)
+		maxHits := int(pagination.Limit)
+		offset := int(pagination.Offset)
+
+		data, err := GetRecentCaseData(maxHits, offset)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		respString, err := json.Marshal(data)
+		q := *routing.DBQueriesFromRequest(r)
+		ctx := r.Context()
+		hydrated_data, err := HydrateSearchResults(data, ctx, q)
+		if err != nil {
+			errorstring := fmt.Sprintf("Error hydrating search results: %v\n", err)
+			log.Println(errorstring)
+			http.Error(w, errorstring, http.StatusInternalServerError)
+			return
+		}
+		respString, err := json.Marshal(hydrated_data)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprint(w, string(respString))
-	case http.MethodPost:
-		var request RecentUpdatesRequest
-		err := json.NewDecoder(r.Body).Decode(&request)
-		if err != nil {
-			http.Error(w, "Error decoding JSON", http.StatusBadRequest)
-			return
-		}
-		data, err := GetRecentCaseData(request.Page)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		respString, err := json.Marshal(data)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		fmt.Fprint(w, string(respString))
+	// This is something that we really want the browser to cache, and it doesnt do this for post requests,
+	//
+	// case http.MethodPost:
+	// 	var request RecentUpdatesRequest
+	// 	err := json.NewDecoder(r.Body).Decode(&request)
+	// 	if err != nil {
+	// 		http.Error(w, "Error decoding JSON", http.StatusBadRequest)
+	// 		return
+	// 	}
+	// 	data, err := GetRecentCaseData(request.Page)
+	// 	if err != nil {
+	// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+	// 		return
+	// 	}
+	// 	respString, err := json.Marshal(data)
+	// 	if err != nil {
+	// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+	// 		return
+	// 	}
+	// 	fmt.Fprint(w, string(respString))
 	default:
 		http.Error(w, "Unsupported request method", http.StatusMethodNotAllowed)
 
