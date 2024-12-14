@@ -85,26 +85,30 @@ func HydrateSearchResults(results []SearchData, ctx context.Context, q dbstore.Q
 	for i, r := range results {
 		uuid, err := uuid.Parse(r.SourceID)
 		if err != nil {
-			fmt.Printf("Error parsing uuid: %v", err)
+			fmt.Printf("Error parsing uuid: %v\n", err)
 		}
 		uuid_list[i] = uuid
 	}
+	fmt.Printf("Hydrating %v files\n", len(uuid_list))
 	files_complete, err := doShittyHydration(uuid_list, ctx, q)
 	if err != nil {
-		log.Printf("Error hydrating search results: %v", err)
+		log.Printf("Error hydrating search results: %v\n", err)
 		return []SearchDataHydrated{}, err
 	}
+	fmt.Printf("Got back $v complete files for hydration, out of %v requested files\n", len(files_complete), len(results))
 	results_hydrated := make([]SearchDataHydrated, len(results))
+	files_actually_hydrated := 0
 	for i, r := range results {
 		results_hydrated[i].SearchData = r
 		uuid, _ := uuid.Parse(r.SourceID)
 		for _, f := range files_complete {
 			if f.ID == uuid {
+				files_actually_hydrated += 1
 				results_hydrated[i].file = f
 				break
 			}
 		}
-		fmt.Printf("No file hydrated for result %v", r)
+		fmt.Printf("Hydrated %v of %v files", files_actually_hydrated, len(results))
 	}
 	return results_hydrated, nil
 }
