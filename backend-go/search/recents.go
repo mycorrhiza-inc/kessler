@@ -8,11 +8,9 @@ import (
 	"net/http"
 )
 
-func GetRecentCaseData(page int) ([]SearchData, error) {
+func GetRecentCaseData(maxHits int, offset int) ([]SearchData, error) {
 	// get all documents with a metadata.date_filed since (x)
 	log.Printf("gettings ssssssflkjadflhdsfuhlifadlhf")
-	maxHits := 40
-	offset := page * maxHits
 	request := SearchRequest{
 		Index:       "NY_PUC",
 		Query:       "",
