@@ -1,6 +1,8 @@
 import axios from "axios";
 import { internalAPIURL } from "../env_variables";
 
+export type OrganizationInfo = any;
+
 export const getOrganizationInfo = async (orgID: string) => {
   const response = await axios.get(
     // `${publicAPIURL}/v2/public/organizations/${orgID}`,
