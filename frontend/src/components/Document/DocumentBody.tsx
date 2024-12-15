@@ -84,40 +84,23 @@ const PDFContent = ({ docUUID }: { docUUID: string }) => {
   );
 };
 
-export const DocumentMainTabs = ({
+const DocumentHeader = ({
   documentObject,
   isPage,
 }: {
   documentObject: CompleteFileSchema;
   isPage: boolean;
 }) => {
-  const title: string = documentObject?.name as string;
-  const objectId = documentObject?.id as string;
-  const extension = documentObject?.extension || "pdf";
+  const title: string = documentObject.name;
+  const objectId: string = documentObject.id;
+  const extension = documentObject.extension || "pdf";
+  const verified = (documentObject.verified || false) as boolean;
+  const summary = documentObject.extra.summary;
   const underscoredTitle = title ? title.replace(/ /g, "_") : "Unkown_Document";
   const fileUrlNamedDownload = `${publicAPIURL}/v2/public/files/${objectId}/raw/${underscoredTitle}.${extension}`;
   const kesslerFileUrl = `/files/${objectId}`;
-  var metadata = documentObject?.mdata;
-  metadata.hash = documentObject?.hash;
-  // TODO: Make this into a library function or something.
-  const showText =
-    documentObject?.verified && documentObject?.extension != "xlsx";
-  const showRawDocument = documentObject?.extension == "pdf";
-  const getDefaultTab = (
-    showRawDocument: boolean,
-    showText: boolean,
-  ): string => {
-    if (!showRawDocument) {
-      if (!showText) {
-        return "tab3";
-      }
-      return "tab2";
-    }
-    return "tab1";
-  };
-  const defaultTab = getDefaultTab(showRawDocument, showText);
   return (
-    <div className="modal-content standard-box ">
+    <>
       <div className="card-title flex justify-between items-center">
         <h1>{title}</h1>
         <div className="flex gap-2">
@@ -138,17 +121,60 @@ export const DocumentMainTabs = ({
               Open in New Tab
             </Link>
           )}
-          <ChatModalClickDiv
-            className="btn btn-accent"
-            inheritedFilters={[
-              { filter: FilterField.MatchFileUUID, value: objectId },
-            ]}
-          >
-            Chat with Document
-          </ChatModalClickDiv>
+          {verified && (
+            <ChatModalClickDiv
+              className="btn btn-accent"
+              inheritedFilters={[
+                { filter: FilterField.MatchFileUUID, value: objectId },
+              ]}
+            >
+              Chat with Document
+            </ChatModalClickDiv>
+          )}
         </div>
       </div>
+      {verified && <MarkdownRenderer>{summary}</MarkdownRenderer>}
+      {!verified && (
+        <MarkdownRenderer>
+          {
+            "The document hasnt finished processing yet. Come back later for a completed summary and document chat!"
+          }
+        </MarkdownRenderer>
+      )}
+    </>
+  );
+};
 
+export const DocumentMainTabs = ({
+  documentObject,
+  isPage,
+}: {
+  documentObject: CompleteFileSchema;
+  isPage: boolean;
+}) => {
+  const objectId = documentObject.id;
+  var metadata = documentObject.mdata;
+  metadata.hash = documentObject.hash;
+  // TODO: Make this into a library function or something.
+  const showText =
+    documentObject?.verified && documentObject?.extension != "xlsx";
+  const showRawDocument = documentObject?.extension == "pdf";
+  const getDefaultTab = (
+    showRawDocument: boolean,
+    showText: boolean,
+  ): string => {
+    if (!showRawDocument) {
+      if (!showText) {
+        return "tab3";
+      }
+      return "tab2";
+    }
+    return "tab1";
+  };
+  const defaultTab = getDefaultTab(showRawDocument, showText);
+  return (
+    <div className="modal-content standard-box ">
+      <DocumentHeader documentObject={documentObject} isPage={isPage} />
       <Tabs.Root
         className="TabsRoot"
         role="tablist tabs tabs-bordered tabs-lg"

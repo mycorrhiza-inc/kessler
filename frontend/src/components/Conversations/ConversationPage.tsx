@@ -6,7 +6,6 @@ import { BreadcrumbValues } from "../SitemapUtils";
 import MarkdownRenderer from "../MarkdownRenderer";
 import PageContainer from "../Page/PageContainer";
 import { internalAPIURL } from "@/lib/env_variables";
-import { cache } from "react";
 
 const getConversationData = async (url: string) => {
   const response = await axios.get(
@@ -22,10 +21,9 @@ const getConversationData = async (url: string) => {
   return convo;
 };
 
-const cacheGetConvo = cache(getConversationData);
 const NYConversationDescription = ({ conversation }: { conversation: any }) => {
   return (
-    <div className="conversation-description">
+    <div className="conversation-description gap-4">
       <h1 className="text-2xl font-bold">
         {conversation.title} <br />
       </h1>
@@ -34,7 +32,15 @@ const NYConversationDescription = ({ conversation }: { conversation: any }) => {
         <tbody>
           <tr>
             <td>Case Number:</td>
-            <td> {conversation.docket_id}</td>
+            <td>
+              {conversation.docket_id + "         "}
+              <a
+                href={`https://documents.dps.ny.gov/public/MatterManagement/CaseMaster.aspx?MatterCaseNo=${conversation.docket_id}`}
+                className="btn btn-secondary btn-xs"
+              >
+                Browse on New York State Website
+              </a>
+            </td>
           </tr>
           <tr>
             <td>Title of Matter:</td>
@@ -74,7 +80,7 @@ export const generateConversationInfo = async (convoNamedID: string) => {
   // const url = `${apiURL}/v2/public/conversations/named-lookup/${conversation_id}`;
   // USE THE PROD URL SINCE LOCALHOST ISNT REACHABLE FROM SERVER COMPONENTS
   const url = `${internalAPIURL}/v2/public/conversations/named-lookup/${convoNamedID}`;
-  const conversation = await cacheGetConvo(url);
+  const conversation = await getConversationData(url);
   // The title of the page looks weird with the really long title, either shorten
   const displayTitle =
     conversation.title.length > 50
