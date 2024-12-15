@@ -62,35 +62,52 @@ const NYConversationDescription = ({ conversation }: { conversation: any }) => {
     </div>
   );
 };
-export const ConversationPage = async ({
-  breadcrumbs,
-}: {
-  breadcrumbs: BreadcrumbValues;
-}) => {
-  const conversation_id =
-    breadcrumbs.breadcrumbs[breadcrumbs.breadcrumbs.length - 1].value;
-  const inheritedFilters: InheritedFilterValues = conversation_id
-    ? [{ filter: FilterField.MatchDocketId, value: conversation_id }]
+
+export const generateConversationInfo = async (
+  convoNamedID: string,
+  state: string,
+) => {
+  const inheritedFilters: InheritedFilterValues = convoNamedID
+    ? [{ filter: FilterField.MatchDocketId, value: convoNamedID }]
     : [];
 
   // const url = `${apiURL}/v2/public/conversations/named-lookup/${conversation_id}`;
   // USE THE PROD URL SINCE LOCALHOST ISNT REACHABLE FROM SERVER COMPONENTS
-  const url = `${internalAPIURL}/v2/public/conversations/named-lookup/${conversation_id}`;
+  const url = `${internalAPIURL}/v2/public/conversations/named-lookup/${convoNamedID}`;
   const conversation = await getConversationData(url);
   // The title of the page looks weird with the really long title, either shorten
   const displayTitle =
     conversation.title.length > 50
       ? conversation.title.slice(0, 50) + "..."
       : conversation.title;
-  var new_breadcrumbs = breadcrumbs;
-  new_breadcrumbs.breadcrumbs[breadcrumbs.breadcrumbs.length - 1].title =
-    displayTitle;
 
+  const breadcrumbs = {
+    state: state,
+    breadcrumbs: [
+      { value: "dockets", title: "Dockets" },
+      { value: convoNamedID, title: displayTitle },
+    ],
+  };
+  return {
+    inheritedFilters: inheritedFilters,
+    conversation: conversation,
+    breadcrumbs: breadcrumbs,
+    displayTitle: displayTitle,
+  };
+};
+
+export const ConversationPage = async ({
+  conversation,
+  inheritedFilters,
+  breadcrumbs,
+}: {
+  conversation: any;
+  inheritedFilters: InheritedFilterValues;
+  breadcrumbs: BreadcrumbValues;
+}) => {
   return (
-    <PageContainer breadcrumbs={new_breadcrumbs}>
-      {conversation_id && (
-        <NYConversationDescription conversation={conversation} />
-      )}
+    <PageContainer breadcrumbs={breadcrumbs}>
+      <NYConversationDescription conversation={conversation} />
       <ConversationComponent inheritedFilters={inheritedFilters} />
     </PageContainer>
   );

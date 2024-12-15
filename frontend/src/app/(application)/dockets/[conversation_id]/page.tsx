@@ -1,26 +1,31 @@
-import { ConversationPage } from "@/components/Conversations/ConversationPage";
+import {
+  ConversationPage,
+  generateConversationInfo,
+} from "@/components/Conversations/ConversationPage";
 import { stateFromHeaders } from "@/lib/nextjs_misc";
 import { createClient } from "@/utils/supabase/server";
+import { Metadata } from "next";
 import { headers } from "next/headers";
+
+export const metadata: Metadata = {
+  title: "ERROR IN SITE NAME",
+};
 export default async function Page({
   params,
 }: {
   params: Promise<{ conversation_id: string }>;
 }) {
-  const supabase = createClient();
   const slug = (await params).conversation_id;
   const headersList = headers();
   const state = stateFromHeaders(headersList);
+  const convoInfo = await generateConversationInfo(slug, state || "");
+  metadata.title = convoInfo.displayTitle;
 
-  const breadcrumbs = {
-    state: state,
-    breadcrumbs: [
-      { value: "dockets", title: "Dockets" },
-      { value: slug, title: slug },
-    ],
-  };
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return <ConversationPage breadcrumbs={breadcrumbs} />;
+  return (
+    <ConversationPage
+      conversation={convoInfo.conversation}
+      breadcrumbs={convoInfo.breadcrumbs}
+      inheritedFilters={convoInfo.inheritedFilters}
+    />
+  );
 }

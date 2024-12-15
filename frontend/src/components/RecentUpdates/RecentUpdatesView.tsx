@@ -12,15 +12,15 @@ export default function RecentUpdatesView() {
   const [isSearching, setIsSearching] = useState(false);
   const [filing_ids, setFilingIds] = useState<string[]>([]);
   const [filings, setFilings] = useState<Filing[]>([]);
-  const [page, setPage] = useState(0);
+  const inital_page_load = 2;
+  const [page, setPage] = useState(inital_page_load);
 
   const getUpdates = async () => {
     setIsSearching(true);
     console.log("getting recent updates");
-    const filings = await getRecentFilings(0, 80);
+    const new_filings = await getRecentFilings(0, 40 * inital_page_load);
 
-    setFilings(filings);
-    setPage(2);
+    setFilings(new_filings);
     setIsSearching(false);
   };
 
