@@ -6,6 +6,7 @@ import { BreadcrumbValues } from "../SitemapUtils";
 import MarkdownRenderer from "../MarkdownRenderer";
 import PageContainer from "../Page/PageContainer";
 import { internalAPIURL } from "@/lib/env_variables";
+import { cache } from "react";
 
 const getConversationData = async (url: string) => {
   const response = await axios.get(
@@ -20,6 +21,8 @@ const getConversationData = async (url: string) => {
   const convo = JSON.parse(json_convo);
   return convo;
 };
+
+const cacheGetConvo = cache(getConversationData);
 const NYConversationDescription = ({ conversation }: { conversation: any }) => {
   return (
     <div className="conversation-description">
@@ -63,10 +66,7 @@ const NYConversationDescription = ({ conversation }: { conversation: any }) => {
   );
 };
 
-export const generateConversationInfo = async (
-  convoNamedID: string,
-  state: string,
-) => {
+export const generateConversationInfo = async (convoNamedID: string) => {
   const inheritedFilters: InheritedFilterValues = convoNamedID
     ? [{ filter: FilterField.MatchDocketId, value: convoNamedID }]
     : [];
@@ -74,15 +74,15 @@ export const generateConversationInfo = async (
   // const url = `${apiURL}/v2/public/conversations/named-lookup/${conversation_id}`;
   // USE THE PROD URL SINCE LOCALHOST ISNT REACHABLE FROM SERVER COMPONENTS
   const url = `${internalAPIURL}/v2/public/conversations/named-lookup/${convoNamedID}`;
-  const conversation = await getConversationData(url);
+  const conversation = await cacheGetConvo(url);
   // The title of the page looks weird with the really long title, either shorten
   const displayTitle =
     conversation.title.length > 50
       ? conversation.title.slice(0, 50) + "..."
       : conversation.title;
 
-  const breadcrumbs = {
-    state: state,
+  const breadcrumbs: BreadcrumbValues = {
+    state: "",
     breadcrumbs: [
       { value: "dockets", title: "Dockets" },
       { value: convoNamedID, title: displayTitle },

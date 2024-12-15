@@ -5,14 +5,10 @@ import { DocumentMainTabs } from "./DocumentBody";
 import { internalAPIURL } from "@/lib/env_variables";
 import { CompleteFileSchema } from "@/lib/types/backend_schemas";
 
-export const generateDocumentPageData = async (
-  objectId: string,
-  state?: string,
-) => {
+export const generateDocumentPageData = async (objectId: string) => {
   const semiCompleteFileUrl = `${internalAPIURL}/v2/public/files/${objectId}`;
   const fileObj = await completeFileSchemaGet(semiCompleteFileUrl);
   const breadcrumbs: BreadcrumbValues = {
-    state: state,
     breadcrumbs: [
       { title: "Files", value: "files" },
       { title: fileObj.name, value: objectId },

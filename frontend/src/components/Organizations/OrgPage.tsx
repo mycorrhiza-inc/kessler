@@ -7,14 +7,10 @@ import PageContainer from "../Page/PageContainer";
 import ConversationComponent from "../Conversations/ConversationComponent";
 import { FilterField } from "@/lib/filters";
 
-export const generateOrganizationData = async (
-  orgId: string,
-  state: string,
-) => {
+export const generateOrganizationData = async (orgId: string) => {
   const orgInfo = await getOrganizationInfo(orgId);
 
   const breadcrumbs: BreadcrumbValues = {
-    state: state,
     breadcrumbs: [
       { title: "Organizations", value: "orgs" },
       { title: orgInfo.name, value: orgId },
