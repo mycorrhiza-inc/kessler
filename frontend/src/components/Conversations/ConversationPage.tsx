@@ -20,9 +20,10 @@ const getConversationData = async (url: string) => {
   const convo = JSON.parse(json_convo);
   return convo;
 };
+
 const NYConversationDescription = ({ conversation }: { conversation: any }) => {
   return (
-    <div className="conversation-description">
+    <div className="conversation-description gap-4">
       <h1 className="text-2xl font-bold">
         {conversation.title} <br />
       </h1>
@@ -31,7 +32,15 @@ const NYConversationDescription = ({ conversation }: { conversation: any }) => {
         <tbody>
           <tr>
             <td>Case Number:</td>
-            <td> {conversation.docket_id}</td>
+            <td>
+              {conversation.docket_id + "         "}
+              <a
+                href={`https://documents.dps.ny.gov/public/MatterManagement/CaseMaster.aspx?MatterCaseNo=${conversation.docket_id}`}
+                className="btn btn-secondary btn-xs"
+              >
+                Browse on New York State Website
+              </a>
+            </td>
           </tr>
           <tr>
             <td>Title of Matter:</td>
@@ -63,10 +72,7 @@ const NYConversationDescription = ({ conversation }: { conversation: any }) => {
   );
 };
 
-export const generateConversationInfo = async (
-  convoNamedID: string,
-  state: string,
-) => {
+export const generateConversationInfo = async (convoNamedID: string) => {
   const inheritedFilters: InheritedFilterValues = convoNamedID
     ? [{ filter: FilterField.MatchDocketId, value: convoNamedID }]
     : [];
@@ -81,8 +87,8 @@ export const generateConversationInfo = async (
       ? conversation.title.slice(0, 50) + "..."
       : conversation.title;
 
-  const breadcrumbs = {
-    state: state,
+  const breadcrumbs: BreadcrumbValues = {
+    state: "",
     breadcrumbs: [
       { value: "dockets", title: "Dockets" },
       { value: convoNamedID, title: displayTitle },

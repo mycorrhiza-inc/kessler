@@ -5,10 +5,23 @@ import { BreadcrumbValues } from "@/components/SitemapUtils";
 import { stateFromHeaders } from "@/lib/nextjs_misc";
 import { Metadata } from "next";
 import { headers } from "next/headers";
+import { cache } from "react";
 
-export const metadata: Metadata = {
-  title: "ERROR IN SITE NAME",
-};
+const cachedOrgData = cache(generateOrganizationData);
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ organization_id: string }>;
+}): Promise<Metadata> {
+  const slug = (await params).organization_id;
+  const headersList = headers();
+  const state = stateFromHeaders(headersList);
+  const orgData = await cachedOrgData(slug);
+  return {
+    title: orgData.orgInfo.name,
+  };
+}
 
 export default async function Page({
   params,
@@ -18,8 +31,8 @@ export default async function Page({
   const slug = (await params).organization_id;
   const headersList = headers();
   const state = stateFromHeaders(headersList);
-  const orgData = await generateOrganizationData(slug, state || "");
-  metadata.title = orgData.orgInfo.name;
+  const orgData = await cachedOrgData(slug);
+  orgData.breadcrumbs.state = state || "";
 
   return (
     <OrganizationPage
