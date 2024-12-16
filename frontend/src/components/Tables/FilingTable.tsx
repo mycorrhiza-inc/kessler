@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Filing } from "@/lib/types/FilingTypes";
 import { AuthorInformation } from "@/lib/types/backend_schemas";
-import { AuthorInfoPill, TextPill } from "./TextPills";
+import { AuthorInfoPill, DocketPill, TextPill } from "./TextPills";
 import DocumentModal from "../Document/DocumentModal";
 import clsx from "clsx";
 
@@ -79,10 +79,9 @@ const TableRow = ({
         </td>
         {DocketColumn && (
           <td>
-            <TextPill
-              text={filing.docket_id}
-              href={`/dockets/${filing.docket_id}`}
-            />
+            {filing.docket_id && (
+              <DocketPill docket_named_id={filing.docket_id} />
+            )}
           </td>
         )}
 

@@ -94,3 +94,9 @@ export const AuthorInfoPill = ({
     href={`/orgs/${author_info.author_id}`}
   />
 );
+
+export const DocketPill = ({
+  docket_named_id,
+}: {
+  docket_named_id: string;
+}) => <TextPill text={docket_named_id} href={`/dockets/${docket_named_id}`} />;
