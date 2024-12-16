@@ -6,6 +6,7 @@ import { getRecentFilings } from "@/lib/requests/search";
 
 import InfiniteScroll from "react-infinite-scroll-component";
 import LoadingSpinnerTimeout from "../styled-components/LoadingSpinnerTimeout";
+import { fi } from "date-fns/locale";
 
 // TODO: Break out Recent Updates into its own component seperate from all of the homepage logic
 export default function RecentUpdatesView() {
@@ -16,6 +17,10 @@ export default function RecentUpdatesView() {
   const [page, setPage] = useState(inital_page_load);
 
   const getUpdates = async () => {
+    if (filings.length > 0) {
+      console.log("already have filings");
+      return
+    } 
     setIsSearching(true);
     console.log("getting recent updates");
     const new_filings = await getRecentFilings(0, 40 * inital_page_load);
@@ -58,11 +63,12 @@ export default function RecentUpdatesView() {
       console.log("getting page ", page + 1);
       const new_filings = await getRecentFilings(page);
       setPage(page + 1);
-      console.log(new_filings);
+      // console.log(new_filings);
       if (filings.length > 0) {
         setFilings((old_filings: Filing[]) => [...old_filings, ...new_filings]);
       }
     } catch (error) {
+      console.log("error getting more filings");
       console.log(error);
     } finally {
       setIsSearching(false);

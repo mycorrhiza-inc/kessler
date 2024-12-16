@@ -86,7 +86,7 @@ export const getRecentFilings = async (
   const response = await axios.get(
     `${publicAPIURL}/v2/recent_updates${queryString}`,
   );
-  console.log("recent data", response.data);
+  // console.log("recent data", response.data);
   if (response.data.length > 0) {
     return hydratedSearchResultsToFilings(response.data);
   }

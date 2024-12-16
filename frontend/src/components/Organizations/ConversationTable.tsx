@@ -9,7 +9,7 @@ import LoadingSpinnerTimeout from "../styled-components/LoadingSpinnerTimeout";
 
 const conversationsListGet = async (url: string) => {
   const cleanData = (response: any) => {
-    console.log(response.data);
+    // console.log(response.data);
     const return_data: any[] = response.data;
     if (return_data.length == 0 || return_data == undefined) {
       return [];
@@ -38,10 +38,10 @@ const ConversationTableHeaderless = ({
       {convoList.map((convo: ConversationTableSchema) => {
         var description = null;
         const description_string = convo.Description;
-        console.log(description_string);
+        // console.log(description_string);
         try {
           description = JSON.parse(description_string);
-          console.log(description);
+          // console.log(description);
         } catch (e) {
           console.log("Error parsing JSON", e);
         }

@@ -43,12 +43,12 @@ export const HeaderBreadcrumbs = ({
         {breadcrumb_values.map((b) => {
           if (b.url) {
             return (
-              <li>
+              <li key={b.title}>
                 <Link href={b.url}>{b.title}</Link>
               </li>
             );
           }
-          return <li>{b.title}</li>;
+          return <li key={b.title}>{b.title}</li>;
         })}
       </ul>
     </div>

@@ -149,6 +149,7 @@ export const FilingTable = ({
             <TableRow
               filing={filing}
               {...(DocketColumn !== undefined ? { DocketColumn } : {})}
+              key={filing.id}
             />
           ))}
         </tbody>
