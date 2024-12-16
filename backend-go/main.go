@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"kessler/admin"
+	"kessler/autocomplete"
 	"kessler/crud"
 	"kessler/rag"
 	"kessler/search"
@@ -132,6 +133,8 @@ func main() {
 	regularMux.HandleFunc("/v2/rag/basic_chat", rag.HandleBasicChatRequest)
 	regularMux.HandleFunc("/v2/rag/chat", rag.HandleRagChatRequest)
 	regularMux.HandleFunc("/v2/recent_updates", search.HandleRecentUpdatesRequest)
+	autocomplete_subrouter := regularMux.PathPrefix("/v2/autocomplete").Subrouter()
+	autocomplete.DefineAutocompleteRoutes(autocomplete_subrouter)
 	regularWithTimeout := http.TimeoutHandler(regularMux, timeout, "Timeout!")
 
 	// Combine both routers
