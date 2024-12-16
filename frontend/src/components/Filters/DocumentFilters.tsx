@@ -7,6 +7,7 @@ import {
   PropertyInformation,
   queryFiltersInformation,
 } from "./FiltersInfo";
+import TestMultiSelect from "./FilterMultiSelect";
 
 export function BasicDocumentFiltersList({
   queryOptions,
@@ -170,6 +171,26 @@ export function BasicDocumentFilters({
               onChange={(e) => handleChange(e, filterId)}
               title={filterData.displayName}
             />
+          </div>
+        );
+      case InputType.OrgMultiselect:
+        return (
+          <div className="box-border">
+            <div className="tooltip" data-tip={filterData.description}>
+              <p>{filterData.displayName}</p>
+            </div>
+            <br />
+            <TestMultiSelect />
+          </div>
+        );
+      case InputType.ConvoMultiselect:
+        return (
+          <div className="box-border">
+            <div className="tooltip" data-tip={filterData.description}>
+              <p>{filterData.displayName}</p>
+            </div>
+            <br />
+            <TestMultiSelect />
           </div>
         );
       case InputType.NotShown:
