@@ -6,22 +6,27 @@ import { getRecentFilings } from "@/lib/requests/search";
 
 import InfiniteScroll from "react-infinite-scroll-component";
 import LoadingSpinnerTimeout from "../styled-components/LoadingSpinnerTimeout";
+import { fi } from "date-fns/locale";
 
 // TODO: Break out Recent Updates into its own component seperate from all of the homepage logic
 export default function RecentUpdatesView() {
   const [isSearching, setIsSearching] = useState(false);
   const [filing_ids, setFilingIds] = useState<string[]>([]);
   const [filings, setFilings] = useState<Filing[]>([]);
-  const [page, setPage] = useState(0);
+  const [loaded, setLoaded] = useState(false);
+  const [page, setPage] = useState(2);
 
   const getUpdates = async () => {
+    if (filings.length > 0) {
+      console.log("already have filings");
+      return
+    } 
     setIsSearching(true);
     console.log("getting recent updates");
-    const filings = await getRecentFilings(0, 80);
-
-    setFilings(filings);
-    setPage(2);
+    const data = await getRecentFilings(0, 80);
+    setFilings(data);
     setIsSearching(false);
+    setLoaded(true);
   };
 
   // useEffect(() => {
@@ -58,11 +63,12 @@ export default function RecentUpdatesView() {
       console.log("getting page ", page + 1);
       const new_filings = await getRecentFilings(page);
       setPage(page + 1);
-      console.log(new_filings);
+      // console.log(new_filings);
       if (filings.length > 0) {
         setFilings((old_filings: Filing[]) => [...old_filings, ...new_filings]);
       }
     } catch (error) {
+      console.log("error getting more filings");
       console.log(error);
     } finally {
       setIsSearching(false);
@@ -71,7 +77,7 @@ export default function RecentUpdatesView() {
 
   useEffect(() => {
     getUpdates();
-  }, []);
+  }, [loaded]);
 
   return (
     <InfiniteScroll
