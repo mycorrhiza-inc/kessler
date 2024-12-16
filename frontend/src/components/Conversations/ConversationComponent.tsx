@@ -6,7 +6,7 @@ import React, {
   useMemo,
   useEffect,
 } from "react";
-import { BasicDocumentFiltersList } from "@/components/DocumentFilters";
+import { BasicDocumentFiltersList } from "@/components/Filters/DocumentFilters";
 import {
   QueryFilterFields,
   CaseFilterFields,

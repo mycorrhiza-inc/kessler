@@ -1,17 +1,10 @@
 import { Dispatch, SetStateAction, useState, useEffect, useRef } from "react";
 import Tooltip from "@mui/joy/Tooltip";
 import { motion, AnimatePresence } from "framer-motion"; // Import necessary components from framer-motion
-import {
-  SearchIcon,
-  ChatIcon,
-  FileUploadIcon,
-} from "@/components/Icons";
+import { SearchIcon, ChatIcon, FileUploadIcon } from "@/components/Icons";
 
-import {
-  QueryFilterFields,
-  allFilterFields,
-} from "@/lib/filters";
-import { BasicDocumentFiltersGrid } from "@/components/DocumentFilters";
+import { QueryFilterFields, allFilterFields } from "@/lib/filters";
+import { BasicDocumentFiltersGrid } from "@/components/Filters/DocumentFilters";
 
 const AdvancedFilters = ({
   queryOptions,
