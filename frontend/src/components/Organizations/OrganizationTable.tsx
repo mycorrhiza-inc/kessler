@@ -3,11 +3,11 @@ import axios from "axios";
 import Link from "next/link";
 import LoadingSpinner from "../styled-components/LoadingSpinner";
 
-
 import { publicAPIURL } from "@/lib/env_variables";
 import { useEffect, useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { queryStringFromPageMaxHits } from "@/lib/pagination";
+import LoadingSpinnerTimeout from "../styled-components/LoadingSpinnerTimeout";
 
 const organizationsListGet = async (url: string) => {
   const cleanData = (response: any) => {
@@ -99,7 +99,12 @@ const OrganizationTableInfiniteScroll = () => {
         dataLength={tableData.length}
         hasMore={true}
         next={getMore}
-        loader={<LoadingSpinner loadingText="Loading Conversations" />}
+        loader={
+          <LoadingSpinnerTimeout
+            timeoutSeconds={3}
+            loadingText="Loading Conversations"
+          />
+        }
       >
         <OrganizationTable orgList={tableData} />
       </InfiniteScroll>

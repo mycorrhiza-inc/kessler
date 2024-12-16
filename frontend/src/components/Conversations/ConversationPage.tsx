@@ -20,9 +20,10 @@ const getConversationData = async (url: string) => {
   const convo = JSON.parse(json_convo);
   return convo;
 };
+
 const NYConversationDescription = ({ conversation }: { conversation: any }) => {
   return (
-    <div className="conversation-description">
+    <div className="conversation-description gap-4">
       <h1 className="text-2xl font-bold">
         {conversation.title} <br />
       </h1>
@@ -31,7 +32,15 @@ const NYConversationDescription = ({ conversation }: { conversation: any }) => {
         <tbody>
           <tr>
             <td>Case Number:</td>
-            <td> {conversation.docket_id}</td>
+            <td>
+              {conversation.docket_id + "         "}
+              <a
+                href={`https://documents.dps.ny.gov/public/MatterManagement/CaseMaster.aspx?MatterCaseNo=${conversation.docket_id}`}
+                className="btn btn-secondary btn-xs"
+              >
+                Browse on New York State Website
+              </a>
+            </td>
           </tr>
           <tr>
             <td>Title of Matter:</td>
@@ -62,35 +71,49 @@ const NYConversationDescription = ({ conversation }: { conversation: any }) => {
     </div>
   );
 };
-export const ConversationPage = async ({
-  breadcrumbs,
-}: {
-  breadcrumbs: BreadcrumbValues;
-}) => {
-  const conversation_id =
-    breadcrumbs.breadcrumbs[breadcrumbs.breadcrumbs.length - 1].value;
-  const inheritedFilters: InheritedFilterValues = conversation_id
-    ? [{ filter: FilterField.MatchDocketId, value: conversation_id }]
+
+export const generateConversationInfo = async (convoNamedID: string) => {
+  const inheritedFilters: InheritedFilterValues = convoNamedID
+    ? [{ filter: FilterField.MatchDocketId, value: convoNamedID }]
     : [];
 
   // const url = `${apiURL}/v2/public/conversations/named-lookup/${conversation_id}`;
   // USE THE PROD URL SINCE LOCALHOST ISNT REACHABLE FROM SERVER COMPONENTS
-  const url = `${internalAPIURL}/v2/public/conversations/named-lookup/${conversation_id}`;
+  const url = `${internalAPIURL}/v2/public/conversations/named-lookup/${convoNamedID}`;
   const conversation = await getConversationData(url);
   // The title of the page looks weird with the really long title, either shorten
   const displayTitle =
     conversation.title.length > 50
       ? conversation.title.slice(0, 50) + "..."
       : conversation.title;
-  var new_breadcrumbs = breadcrumbs;
-  new_breadcrumbs.breadcrumbs[breadcrumbs.breadcrumbs.length - 1].title =
-    displayTitle;
 
+  const breadcrumbs: BreadcrumbValues = {
+    state: "",
+    breadcrumbs: [
+      { value: "dockets", title: "Dockets" },
+      { value: convoNamedID, title: displayTitle },
+    ],
+  };
+  return {
+    inheritedFilters: inheritedFilters,
+    conversation: conversation,
+    breadcrumbs: breadcrumbs,
+    displayTitle: displayTitle,
+  };
+};
+
+export const ConversationPage = async ({
+  conversation,
+  inheritedFilters,
+  breadcrumbs,
+}: {
+  conversation: any;
+  inheritedFilters: InheritedFilterValues;
+  breadcrumbs: BreadcrumbValues;
+}) => {
   return (
-    <PageContainer breadcrumbs={new_breadcrumbs}>
-      {conversation_id && (
-        <NYConversationDescription conversation={conversation} />
-      )}
+    <PageContainer breadcrumbs={breadcrumbs}>
+      <NYConversationDescription conversation={conversation} />
       <ConversationComponent inheritedFilters={inheritedFilters} />
     </PageContainer>
   );

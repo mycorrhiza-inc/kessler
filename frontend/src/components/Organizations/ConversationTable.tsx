@@ -5,6 +5,7 @@ import LoadingSpinner from "../styled-components/LoadingSpinner";
 import { publicAPIURL } from "@/lib/env_variables";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useEffect, useState } from "react";
+import LoadingSpinnerTimeout from "../styled-components/LoadingSpinnerTimeout";
 
 const conversationsListGet = async (url: string) => {
   const cleanData = (response: any) => {
@@ -139,7 +140,12 @@ const ConversationTableInfiniteScroll = () => {
       dataLength={tableData.length}
       hasMore={true}
       next={getMore}
-      loader={<LoadingSpinner loadingText="Loading Conversations" />}
+      loader={
+        <LoadingSpinnerTimeout
+          timeoutSeconds={3}
+          loadingText="Loading Conversations"
+        />
+      }
     >
       <ConversationTableHeaders>
         <ConversationTableHeaderless convoList={tableData} />

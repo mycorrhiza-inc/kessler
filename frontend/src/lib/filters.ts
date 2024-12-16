@@ -7,7 +7,7 @@ export enum FilterField {
   MatchAuthor = "match_author",
   MatchBeforeDate = "match_before_date",
   MatchAfterDate = "match_after_date",
-  MatchAuthorUUID = "match_author_uuid",
+  MatchAuthorUUID = "match_author_uuids",
   MatchConversationUUID = "match_conversation_uuid",
   MatchFileUUID = "match_file_uuid",
 }
@@ -105,7 +105,7 @@ export interface BackendFilterObject {
     date_to: string;
   };
   uuid_filters: {
-    author_uuid: string;
+    author_uuids: string;
     conversation_uuid: string;
     file_uuid: string;
   };
@@ -125,11 +125,11 @@ export const backendFilterGenerate = (
     date_to: filters.match_before_date,
   };
   const uuidFilters: BackendFilterObject["uuid_filters"] = {
-    author_uuid: filters.match_author_uuid,
+    author_uuids: filters.match_author_uuids,
     conversation_uuid: filters.match_conversation_uuid,
     file_uuid: filters.match_file_uuid,
   };
-  if (filters.match_author_uuid !== "") {
+  if (filters.match_author_uuids !== "") {
     // If filtering by author uuid, remove author name
     metadataFilters.author = "";
   }
@@ -147,7 +147,7 @@ export const backendFilterGenerate = (
     metadataFilters.date_from = "";
     metadataFilters.date_to = "";
     metadataFilters.source = "";
-    uuidFilters.author_uuid = "";
+    uuidFilters.author_uuids = "";
     uuidFilters.conversation_uuid = "";
   }
   return { metadata_filters: metadataFilters, uuid_filters: uuidFilters };

@@ -1,7 +1,28 @@
-import OrganizationPage from "@/components/Organizations/OrgPage";
+import OrganizationPage, {
+  generateOrganizationData,
+} from "@/components/Organizations/OrgPage";
 import { BreadcrumbValues } from "@/components/SitemapUtils";
 import { stateFromHeaders } from "@/lib/nextjs_misc";
+import { Metadata } from "next";
 import { headers } from "next/headers";
+import { cache } from "react";
+
+const cachedOrgData = cache(generateOrganizationData);
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ organization_id: string }>;
+}): Promise<Metadata> {
+  const slug = (await params).organization_id;
+  const headersList = headers();
+  const state = stateFromHeaders(headersList);
+  const orgData = await cachedOrgData(slug);
+  return {
+    title: orgData.orgInfo.name,
+  };
+}
+
 export default async function Page({
   params,
 }: {
@@ -10,12 +31,13 @@ export default async function Page({
   const slug = (await params).organization_id;
   const headersList = headers();
   const state = stateFromHeaders(headersList);
-  const breadcrumbs: BreadcrumbValues = {
-    state: state,
-    breadcrumbs: [
-      { title: "Organizations", value: "orgs" },
-      { title: "Test Organization Name", value: slug },
-    ],
-  };
-  return <OrganizationPage breadcrumbs={breadcrumbs} />;
+  const orgData = await cachedOrgData(slug);
+  orgData.breadcrumbs.state = state || "";
+
+  return (
+    <OrganizationPage
+      breadcrumbs={orgData.breadcrumbs}
+      orgInfo={orgData.orgInfo}
+    />
+  );
 }

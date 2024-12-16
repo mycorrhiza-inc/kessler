@@ -13,8 +13,8 @@ export default function RecentUpdatesView() {
   const [isSearching, setIsSearching] = useState(false);
   const [filing_ids, setFilingIds] = useState<string[]>([]);
   const [filings, setFilings] = useState<Filing[]>([]);
-  const [loaded, setLoaded] = useState(false);
-  const [page, setPage] = useState(2);
+  const inital_page_load = 2;
+  const [page, setPage] = useState(inital_page_load);
 
   const getUpdates = async () => {
     if (filings.length > 0) {
@@ -23,10 +23,10 @@ export default function RecentUpdatesView() {
     } 
     setIsSearching(true);
     console.log("getting recent updates");
-    const data = await getRecentFilings(0, 80);
-    setFilings(data);
+    const new_filings = await getRecentFilings(0, 40 * inital_page_load);
+
+    setFilings(new_filings);
     setIsSearching(false);
-    setLoaded(true);
   };
 
   // useEffect(() => {
@@ -77,7 +77,7 @@ export default function RecentUpdatesView() {
 
   useEffect(() => {
     getUpdates();
-  }, [loaded]);
+  }, []);
 
   return (
     <InfiniteScroll

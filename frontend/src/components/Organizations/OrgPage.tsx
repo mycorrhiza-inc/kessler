@@ -1,30 +1,33 @@
-import { getOrganizationInfo } from "@/lib/requests/organizations";
+import {
+  OrganizationInfo,
+  getOrganizationInfo,
+} from "@/lib/requests/organizations";
 import { BreadcrumbValues } from "../SitemapUtils";
 import PageContainer from "../Page/PageContainer";
 import ConversationComponent from "../Conversations/ConversationComponent";
 import { FilterField } from "@/lib/filters";
 
-export default async function OrganizationPage({
+export const generateOrganizationData = async (orgId: string) => {
+  const orgInfo = await getOrganizationInfo(orgId);
+
+  const breadcrumbs: BreadcrumbValues = {
+    breadcrumbs: [
+      { title: "Organizations", value: "orgs" },
+      { title: orgInfo.name, value: orgId },
+    ],
+  };
+  return { breadcrumbs: breadcrumbs, orgInfo: orgInfo };
+};
+
+export default function OrganizationPage({
   breadcrumbs,
+  orgInfo,
 }: {
   breadcrumbs: BreadcrumbValues;
+  orgInfo: OrganizationInfo;
 }) {
-  const orgId =
-    breadcrumbs.breadcrumbs[breadcrumbs.breadcrumbs.length - 1].value;
-
-  const orgInfo = await getOrganizationInfo(orgId);
-  const actual_breadcrumb_values = [
-    ...breadcrumbs.breadcrumbs.slice(0, -1),
-    { value: orgId, title: orgInfo.name || "Loading" },
-  ];
-  const actual_breadcrumbs: BreadcrumbValues = {
-    breadcrumbs: actual_breadcrumb_values,
-    state: breadcrumbs.state,
-  };
-  // const [page, setPage] = useState(0);
-
   return (
-    <PageContainer breadcrumbs={actual_breadcrumbs}>
+    <PageContainer breadcrumbs={breadcrumbs}>
       <h1 className=" text-2xl font-bold">Organization: {orgInfo.name}</h1>
       <p>
         {orgInfo.description ||
@@ -33,7 +36,7 @@ export default async function OrganizationPage({
       <h1 className=" text-2xl font-bold">Authored Documents</h1>
       <ConversationComponent
         inheritedFilters={[
-          { filter: FilterField.MatchAuthorUUID, value: orgId },
+          { filter: FilterField.MatchAuthorUUID, value: orgInfo.id },
           { filter: FilterField.MatchAuthor, value: orgInfo.name },
         ]}
       />
