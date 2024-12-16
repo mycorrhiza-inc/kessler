@@ -8,11 +8,15 @@ import MarkdownRenderer from "@/components/MarkdownRenderer";
 import LoadingSpinner from "@/components/styled-components/LoadingSpinner";
 import { fetchTextDataFromURL } from "./documentLoader";
 import useSWRImmutable from "swr";
-import { CompleteFileSchema } from "@/lib/types/backend_schemas";
+import {
+  AuthorInformation,
+  CompleteFileSchema,
+} from "@/lib/types/backend_schemas";
 import { publicAPIURL } from "@/lib/env_variables";
 import Link from "next/link";
 import { ChatModalClickDiv } from "../Chat/ChatModal";
 import { FilterField } from "@/lib/filters";
+import { AuthorInfoPill, DocketPill } from "../Tables/TextPills";
 
 // import { ErrorBoundary } from "react-error-boundary";
 
@@ -99,6 +103,8 @@ const DocumentHeader = ({
   const underscoredTitle = title ? title.replace(/ /g, "_") : "Unkown_Document";
   const fileUrlNamedDownload = `${publicAPIURL}/v2/public/files/${objectId}/raw/${underscoredTitle}.${extension}`;
   const kesslerFileUrl = `/files/${objectId}`;
+  const authors_unpluralized =
+    documentObject.authors?.length == 1 ? "Author" : "Authors";
   return (
     <>
       <div className="card-title flex justify-between items-center">
@@ -133,6 +139,20 @@ const DocumentHeader = ({
           )}
         </div>
       </div>
+      <p>
+        Case Number: {"   "}
+        <DocketPill
+          docket_named_id={documentObject.mdata.docket_id as string}
+        />
+      </p>
+      {documentObject.authors && (
+        <p>
+          {authors_unpluralized}:{" "}
+          {documentObject.authors.map((a: AuthorInformation) => (
+            <AuthorInfoPill author_info={a} />
+          ))}
+        </p>
+      )}
       {verified && <MarkdownRenderer>{summary}</MarkdownRenderer>}
       {!verified && (
         <MarkdownRenderer>
