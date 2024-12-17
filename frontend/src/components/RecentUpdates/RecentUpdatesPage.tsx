@@ -32,6 +32,9 @@ export default function RecentUpdatesPage() {
       >
         Unsure of what to do? Try chatting with the entire New York PUC
       </ChatModalClickDiv>
+      <Link className="btn btn-primary w-full" href="/files">
+        Search all Files
+      </Link>
       <h1 className=" text-2xl font-bold">Newest Docs</h1>
       <RecentUpdatesView />
     </PageContainer>

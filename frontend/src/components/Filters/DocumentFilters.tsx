@@ -7,6 +7,7 @@ import {
   PropertyInformation,
   queryFiltersInformation,
 } from "./FiltersInfo";
+import { OrgMultiSelect, ConvoMultiSelect } from "./FilterMultiSelect";
 
 export function BasicDocumentFiltersList({
   queryOptions,
@@ -103,6 +104,27 @@ export function BasicDocumentFilters({
     filterData: PropertyInformation,
   ) => {
     const isDisabled = disabledQueriesDict[filterId] || false;
+    if (isDisabled) {
+      return (
+        <div className="box-border">
+          <div className="tooltip" data-tip={filterData.description}>
+            <p>{filterData.displayName}</p>
+          </div>
+          <br />
+          <input
+            className={clsx(
+              "input input-bordered w-full",
+              max_w_xs_ClassString,
+            )}
+            type="text"
+            disabled={isDisabled}
+            value={docFilterValues[filterId]}
+            onChange={(e) => handleChange(e, filterId)}
+            title={filterData.displayName}
+          />
+        </div>
+      );
+    }
     switch (filterData.type) {
       case InputType.Text:
         return (
@@ -170,6 +192,26 @@ export function BasicDocumentFilters({
               onChange={(e) => handleChange(e, filterId)}
               title={filterData.displayName}
             />
+          </div>
+        );
+      case InputType.OrgMultiselect:
+        return (
+          <div className="box-border">
+            <div className="tooltip" data-tip={filterData.description}>
+              <p>{filterData.displayName}</p>
+            </div>
+            <br />
+            <OrgMultiSelect />
+          </div>
+        );
+      case InputType.ConvoMultiselect:
+        return (
+          <div className="box-border">
+            <div className="tooltip" data-tip={filterData.description}>
+              <p>{filterData.displayName}</p>
+            </div>
+            <br />
+            <ConvoMultiSelect />
           </div>
         );
       case InputType.NotShown:

@@ -178,7 +178,9 @@ export const DocumentMainTabs = ({
   // TODO: Make this into a library function or something.
   const showText =
     documentObject?.verified && documentObject?.extension != "xlsx";
-  const showRawDocument = documentObject?.extension == "pdf";
+  // Temporary fix while we sort out the bad documents
+  const showRawDocument =
+    documentObject?.extension == "pdf" && documentObject?.verified;
   const getDefaultTab = (
     showRawDocument: boolean,
     showText: boolean,

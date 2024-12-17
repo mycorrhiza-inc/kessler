@@ -6,6 +6,8 @@ export enum InputType {
   Datalist = "datalist",
   Date = "date",
   NotShown = "not_shown",
+  OrgMultiselect = "org_multiselect",
+  ConvoMultiselect = "convo_multiselect",
 }
 export type PropertyInformation = {
   type: InputType;
@@ -28,14 +30,14 @@ export const queryFiltersInformation: QueryFiltersInformation = {
     details: "Searches for items approximately matching the title",
   },
   match_docket_id: {
-    type: InputType.Text,
+    type: InputType.ConvoMultiselect,
     index: 2,
     displayName: "Docket ID",
     description: "The unique identifier for the docket.",
     details: "Filters search results based on the docket ID.",
   },
   match_author: {
-    type: InputType.Text,
+    type: InputType.OrgMultiselect,
     index: 3,
     displayName: "Author",
     description: "The author of the document.",
