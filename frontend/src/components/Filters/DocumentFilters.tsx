@@ -7,7 +7,7 @@ import {
   PropertyInformation,
   queryFiltersInformation,
 } from "./FiltersInfo";
-import TestMultiSelect from "./FilterMultiSelect";
+import { OrgMultiSelect, ConvoMultiSelect } from "./FilterMultiSelect";
 
 export function BasicDocumentFiltersList({
   queryOptions,
@@ -180,7 +180,7 @@ export function BasicDocumentFilters({
               <p>{filterData.displayName}</p>
             </div>
             <br />
-            <TestMultiSelect />
+            <OrgMultiSelect />
           </div>
         );
       case InputType.ConvoMultiselect:
@@ -190,7 +190,7 @@ export function BasicDocumentFilters({
               <p>{filterData.displayName}</p>
             </div>
             <br />
-            <TestMultiSelect />
+            <ConvoMultiSelect />
           </div>
         );
       case InputType.NotShown:
