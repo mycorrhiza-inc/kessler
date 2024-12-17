@@ -27,74 +27,66 @@ func printResponse(resp *http.Response) {
 	log.Printf("quickwit_api_call:\nstatus: %d\nresponse:\n%s", resp.StatusCode, string(body))
 }
 
-func CreateDocketsQuickwitIndex(indexName string) error {
-	requestData := map[string]interface{}{
-		"version":  "0.7",
-		"index_id": indexName,
-		"doc_mapping": map[string]interface{}{
-			"mode": "dynamic",
-			"dynamic_mapping": map[string]interface{}{
-				"indexed":     true,
-				"stored":      true,
-				"tokenizer":   "default",
-				"record":      "basic",
-				"expand_dots": true,
-				"fast":        true,
-			},
-			"field_mappings": []map[string]interface{}{
-				{
-					"name": "text",
-					"type": "text",
-					"fast": true,
-				},
-				{
-					"name": "name",
-					"type": "text",
-					"fast": true,
-				},
-				{
-					"name": "verified",
-					"type": "bool",
-					"fast": true,
-				},
-				{
-					"name":           "timestamp",
-					"type":           "datetime",
-					"input_formats":  []string{"unix_timestamp"},
-					"fast_precision": "seconds",
-					"fast":           true,
-				},
-				{
-					"name": "date_filed",
-					"type": "datetime",
-					"fast": true,
-				},
-			},
-			"timestamp_field": "timestamp",
-		},
-		"search_settings": map[string]interface{}{
-			"default_search_fields": []string{
-				"text", "state", "city", "country",
-			},
-		},
-		"indexing_settings": map[string]interface{}{
-			"merge_policy": map[string]interface{}{
-				"type":             "limit_merge",
-				"max_merge_ops":    3,
-				"merge_factor":     10,
-				"max_merge_factor": 12,
-			},
-			"resources": map[string]interface{}{
-				"max_merge_write_throughput": "80mb",
-			},
-		},
-		"retention": map[string]interface{}{
-			"period":   "10 years",
-			"schedule": "yearly",
-		},
-	}
+type MergePolicy struct {
+	Type           string `json:"type"`
+	MaxMergeOps    int    `json:"max_merge_ops"`
+	MergeFactor    int    `json:"merge_factor"`
+	MaxMergeFactor int    `json:"max_merge_factor"`
+}
 
-	jsonData, err := json.Marshal(requestData)
+type Resources struct {
+	MaxMergeWriteThroughput string `json:"max_merge_write_throughput"`
+}
+
+type IndexingSettings struct {
+	MergePolicy MergePolicy `json:"merge_policy"`
+	Resources   Resources   `json:"resources"`
+}
+
+type SearchSettings struct {
+	DefaultSearchFields []string `json:"default_search_fields"`
+}
+
+type FieldMapping struct {
+	Name          string   `json:"name"`
+	Type          string   `json:"type"`
+	InputFormats  []string `json:"input_formats,omitempty"`
+	FastPrecision string   `json:"fast_precision,omitempty"`
+	Fast          bool     `json:"fast"`
+}
+
+type DynamicMapping struct {
+	Indexed    bool   `json:"indexed"`
+	Stored     bool   `json:"stored"`
+	Tokenizer  string `json:"tokenizer"`
+	Record     string `json:"record"`
+	ExpandDots bool   `json:"expand_dots"`
+	Fast       bool   `json:"fast"`
+}
+
+type DocMapping struct {
+	Mode           string         `json:"mode"`
+	DynamicMapping DynamicMapping `json:"dynamic_mapping"`
+	FieldMappings  []FieldMapping `json:"field_mappings"`
+	TimestampField string         `json:"timestamp_field"`
+}
+
+type Retention struct {
+	Period   string `json:"period"`
+	Schedule string `json:"schedule"`
+}
+
+type QuickwitIndex struct {
+	Version          string           `json:"version"`
+	IndexID          string           `json:"index_id"`
+	DocMapping       DocMapping       `json:"doc_mapping"`
+	SearchSettings   SearchSettings   `json:"search_settings"`
+	IndexingSettings IndexingSettings `json:"indexing_settings"`
+	Retention        Retention        `json:"retention"`
+}
+
+func CreateIndex(index QuickwitIndex) error {
+	jsonData, err := json.Marshal(index)
 	if err != nil {
 		return fmt.Errorf("error marshaling request data: %v", err)
 	}
@@ -111,6 +103,53 @@ func CreateDocketsQuickwitIndex(indexName string) error {
 
 	printResponse(resp)
 	return nil
+}
+
+func CreateDocketsIndex(indexName string) error {
+	requestData := QuickwitIndex{
+		Version: "0.7",
+		IndexID: indexName,
+		DocMapping: DocMapping{
+			Mode: "dynamic",
+			DynamicMapping: DynamicMapping{
+				Indexed:    true,
+				Stored:     true,
+				Tokenizer:  "default",
+				Record:     "basic",
+				ExpandDots: true,
+				Fast:       true,
+			},
+			FieldMappings: []FieldMapping{
+				{Name: "text", Type: "text", Fast: true},
+				{Name: "name", Type: "text", Fast: true},
+				{Name: "verified", Type: "bool", Fast: true},
+				{Name: "timestamp", Type: "datetime", InputFormats: []string{"unix_timestamp"}, FastPrecision: "seconds", Fast: true},
+				{Name: "date_filed", Type: "datetime", Fast: true},
+			},
+			TimestampField: "timestamp",
+		},
+		SearchSettings: SearchSettings{
+			DefaultSearchFields: []string{"text", "state", "city", "country"},
+		},
+		IndexingSettings: IndexingSettings{
+			MergePolicy: MergePolicy{
+				Type:           "limit_merge",
+				MaxMergeOps:    3,
+				MergeFactor:    10,
+				MaxMergeFactor: 12,
+			},
+			Resources: Resources{
+				MaxMergeWriteThroughput: "80mb",
+			},
+		},
+		Retention: Retention{
+			Period:   "10 years",
+			Schedule: "yearly",
+		},
+	}
+	err := CreateIndex(requestData)
+	return err
+
 }
 
 func ClearIndex(indexName string, nuke bool) error {
