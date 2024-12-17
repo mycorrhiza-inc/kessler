@@ -38,6 +38,16 @@ const IsFiletypeColor = (key: string): key is keyof FileColor => {
   return key in fileTypeColor;
 };
 
+export const subdividedHueFromSeed = (seed: string): string => {
+  const seed_integer =
+    Math.abs(
+      seed
+        .split("")
+        .reduce((acc, char) => (acc * 3 + 2 * char.charCodeAt(0)) % 27, 0),
+    ) % 9;
+  return oklchSubdivide(seed_integer, 15);
+};
+
 export const TextPill = ({
   text,
   href,
@@ -53,13 +63,7 @@ export const TextPill = ({
   if (IsFiletypeColor(textDefined)) {
     pillColor = fileTypeColor[textDefined];
   } else {
-    const pillInteger =
-      Math.abs(
-        actualSeed
-          .split("")
-          .reduce((acc, char) => (acc * 3 + 2 * char.charCodeAt(0)) % 27, 0),
-      ) % 9;
-    pillColor = oklchSubdivide(pillInteger, 15);
+    pillColor = subdividedHueFromSeed(actualSeed);
   }
   // btn-[${pillColor}]
   if (href) {
