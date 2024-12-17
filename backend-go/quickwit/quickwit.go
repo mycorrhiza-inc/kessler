@@ -27,74 +27,8 @@ func printResponse(resp *http.Response) {
 	log.Printf("quickwit_api_call:\nstatus: %d\nresponse:\n%s", resp.StatusCode, string(body))
 }
 
-func CreateDocketsQuickwitIndex(indexName string) error {
-	requestData := map[string]interface{}{
-		"version":  "0.7",
-		"index_id": indexName,
-		"doc_mapping": map[string]interface{}{
-			"mode": "dynamic",
-			"dynamic_mapping": map[string]interface{}{
-				"indexed":     true,
-				"stored":      true,
-				"tokenizer":   "default",
-				"record":      "basic",
-				"expand_dots": true,
-				"fast":        true,
-			},
-			"field_mappings": []map[string]interface{}{
-				{
-					"name": "text",
-					"type": "text",
-					"fast": true,
-				},
-				{
-					"name": "name",
-					"type": "text",
-					"fast": true,
-				},
-				{
-					"name": "verified",
-					"type": "bool",
-					"fast": true,
-				},
-				{
-					"name":           "timestamp",
-					"type":           "datetime",
-					"input_formats":  []string{"unix_timestamp"},
-					"fast_precision": "seconds",
-					"fast":           true,
-				},
-				{
-					"name": "date_filed",
-					"type": "datetime",
-					"fast": true,
-				},
-			},
-			"timestamp_field": "timestamp",
-		},
-		"search_settings": map[string]interface{}{
-			"default_search_fields": []string{
-				"text", "state", "city", "country",
-			},
-		},
-		"indexing_settings": map[string]interface{}{
-			"merge_policy": map[string]interface{}{
-				"type":             "limit_merge",
-				"max_merge_ops":    3,
-				"merge_factor":     10,
-				"max_merge_factor": 12,
-			},
-			"resources": map[string]interface{}{
-				"max_merge_write_throughput": "80mb",
-			},
-		},
-		"retention": map[string]interface{}{
-			"period":   "10 years",
-			"schedule": "yearly",
-		},
-	}
-
-	jsonData, err := json.Marshal(requestData)
+func CreateIndex(index QuickwitIndex) error {
+	jsonData, err := json.Marshal(index)
 	if err != nil {
 		return fmt.Errorf("error marshaling request data: %v", err)
 	}
@@ -111,6 +45,140 @@ func CreateDocketsQuickwitIndex(indexName string) error {
 
 	printResponse(resp)
 	return nil
+}
+
+func CreateQuickwitProceedingIndex(indexName string) error {
+	requestData := QuickwitIndex{
+		Version: "0.7",
+		IndexID: indexName,
+		DocMapping: DocMapping{
+			Mode: "dynamic",
+			DynamicMapping: DynamicMapping{
+				Indexed:    true,
+				Stored:     true,
+				Tokenizer:  "default",
+				Record:     "basic",
+				ExpandDots: true,
+				Fast:       true,
+			},
+			FieldMappings: []FieldMapping{
+				{Name: "name", Type: "text", Fast: true},
+				{Name: "caseNumber", Type: "text", Fast: true},
+				{Name: "description", Type: "text", Fast: true},
+				{Name: "uuid", Type: "boo;", Fast: true},
+			},
+		},
+		SearchSettings: SearchSettings{
+			DefaultSearchFields: []string{"name"},
+		},
+		IndexingSettings: IndexingSettings{
+			MergePolicy: MergePolicy{
+				Type:           "limit_merge",
+				MaxMergeOps:    3,
+				MergeFactor:    10,
+				MaxMergeFactor: 12,
+			},
+			Resources: Resources{
+				MaxMergeWriteThroughput: "80mb",
+			},
+		},
+		Retention: Retention{
+			Period:   "10 years",
+			Schedule: "yearly",
+		},
+	}
+	err := CreateIndex(requestData)
+	return err
+}
+
+func CreateQuickwitAuthorsIndex(indexName string) error {
+	requestData := QuickwitIndex{
+		Version: "0.7",
+		IndexID: indexName,
+		DocMapping: DocMapping{
+			Mode: "dynamic",
+			DynamicMapping: DynamicMapping{
+				Indexed:    true,
+				Stored:     true,
+				Tokenizer:  "default",
+				Record:     "basic",
+				ExpandDots: true,
+				Fast:       true,
+			},
+			FieldMappings: []FieldMapping{
+				{Name: "name", Type: "text", Fast: true},
+				{Name: "uuid", Type: "bool", Fast: true},
+			},
+		},
+		SearchSettings: SearchSettings{
+			DefaultSearchFields: []string{"name"},
+		},
+		IndexingSettings: IndexingSettings{
+			MergePolicy: MergePolicy{
+				Type:           "limit_merge",
+				MaxMergeOps:    3,
+				MergeFactor:    10,
+				MaxMergeFactor: 12,
+			},
+			Resources: Resources{
+				MaxMergeWriteThroughput: "80mb",
+			},
+		},
+		Retention: Retention{
+			Period:   "10 years",
+			Schedule: "yearly",
+		},
+	}
+	err := CreateIndex(requestData)
+	return err
+
+}
+
+func CreateQuickwitDocketsIndex(indexName string) error {
+	requestData := QuickwitIndex{
+		Version: "0.7",
+		IndexID: indexName,
+		DocMapping: DocMapping{
+			Mode: "dynamic",
+			DynamicMapping: DynamicMapping{
+				Indexed:    true,
+				Stored:     true,
+				Tokenizer:  "default",
+				Record:     "basic",
+				ExpandDots: true,
+				Fast:       true,
+			},
+			FieldMappings: []FieldMapping{
+				{Name: "text", Type: "text", Fast: true},
+				{Name: "name", Type: "text", Fast: true},
+				{Name: "verified", Type: "bool", Fast: true},
+				{Name: "timestamp", Type: "datetime", InputFormats: []string{"unix_timestamp"}, FastPrecision: "seconds", Fast: true},
+				{Name: "date_filed", Type: "datetime", Fast: true},
+			},
+			TimestampField: "timestamp",
+		},
+		SearchSettings: SearchSettings{
+			DefaultSearchFields: []string{"text", "state", "city", "country"},
+		},
+		IndexingSettings: IndexingSettings{
+			MergePolicy: MergePolicy{
+				Type:           "limit_merge",
+				MaxMergeOps:    3,
+				MergeFactor:    10,
+				MaxMergeFactor: 12,
+			},
+			Resources: Resources{
+				MaxMergeWriteThroughput: "80mb",
+			},
+		},
+		Retention: Retention{
+			Period:   "10 years",
+			Schedule: "yearly",
+		},
+	}
+	err := CreateIndex(requestData)
+	return err
+
 }
 
 func ClearIndex(indexName string, nuke bool) error {
