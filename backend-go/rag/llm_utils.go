@@ -88,6 +88,17 @@ func OAIMessagesToComplex(oaiMsgs []openai.ChatCompletionMessage) []ChatMessage 
 	return SimpleToChatMessages(OAIMessagesToSimples(oaiMsgs))
 }
 
+func ComplexToOAIMessages(messages []ChatMessage) []openai.ChatCompletionMessage {
+	var oai_messages []openai.ChatCompletionMessage
+	for _, message := range messages {
+		oai_messages = append(oai_messages, openai.ChatCompletionMessage{
+			Role:    string(message.Role),
+			Content: message.Content,
+		})
+	}
+	return oai_messages
+}
+
 type LLMModel struct {
 	ModelName string
 }
@@ -98,7 +109,7 @@ func (model_name LLMModel) Chat(chatHistory []ChatMessage) (ChatMessage, error) 
 		ModelName:   model_name.ModelName,
 		Functions:   []FunctionCall{},
 	}
-	return createComplexRequest(requestMultiplex)
+	return LLMComplexRequest(requestMultiplex)
 }
 
 var rag_query_func_schema = openai.FunctionDefinition{
@@ -131,7 +142,7 @@ func (model_name LLMModel) RagChat(chatHistory []ChatMessage, filters networking
 		ModelName:   model_name.ModelName,
 		Functions:   []FunctionCall{rag_func_call_filters(filters)},
 	}
-	return createComplexRequest(requestMultiplex)
+	return LLMComplexRequest(requestMultiplex)
 }
 
 type LLM interface {

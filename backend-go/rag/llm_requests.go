@@ -39,7 +39,22 @@ type MultiplexerChatCompletionRequest struct {
 	IsSimpleChat bool
 }
 
-func createComplexRequest(messageRequest MultiplexerChatCompletionRequest) (ChatMessage, error) {
+func FunctionCallsToOAI(funcs []FunctionCall) []openai.Tool {
+	var tools []openai.Tool
+	for _, fn := range funcs {
+		tools = append(tools, openai.Tool{
+			Type:     openai.ToolTypeFunction,
+			Function: &fn.Schema,
+		})
+	}
+	return tools
+}
+
+// TODO: I tried once to simplify and break down this function into component pieces and failed, sorry - nic
+func LLMComplexRequest(messageRequest MultiplexerChatCompletionRequest) (ChatMessage, error) {
+	if len(messageRequest.Functions) > 1 {
+		return ChatMessage{}, fmt.Errorf("multiple functions not supported, please fix at some point")
+	}
 	ctx := context.Background()
 	modelName := messageRequest.ModelName
 	chatHistory := messageRequest.ChatHistory
@@ -47,30 +62,9 @@ func createComplexRequest(messageRequest MultiplexerChatCompletionRequest) (Chat
 		AppendInstructionHeaderToChathistory(&chatHistory)
 	}
 	client, modelID := createOpenaiClientFromString(modelName)
+	dialogue := ComplexToOAIMessages(chatHistory)
+	tools := FunctionCallsToOAI(messageRequest.Functions)
 
-	// Create message slice for OpenAI request
-	var dialogue []openai.ChatCompletionMessage
-	for _, history := range chatHistory {
-		dialogue = append(dialogue, openai.ChatCompletionMessage{
-			Role:    string(history.Role),
-			Content: history.Content,
-		})
-	}
-
-	if len(messageRequest.Functions) > 1 {
-		return ChatMessage{}, fmt.Errorf("multiple functions not supported, please fix at some point")
-	}
-	// Logic of code below must be fixed
-	var tools []openai.Tool
-	for _, fn := range messageRequest.Functions {
-		tools = append(tools, openai.Tool{
-			Type:     openai.ToolTypeFunction,
-			Function: &fn.Schema,
-		})
-	}
-
-	fmt.Printf("Asking OpenAI '%v' and providing it %d functions...\n",
-		dialogue[0].Content, len(messageRequest.Functions))
 	fmt.Printf("Calling OpenAI model %v\n", modelID)
 	resp, err := client.CreateChatCompletion(ctx,
 		openai.ChatCompletionRequest{
@@ -79,7 +73,7 @@ func createComplexRequest(messageRequest MultiplexerChatCompletionRequest) (Chat
 			Tools:    tools,
 		},
 	)
-	fmt.Printf("Finished calling OpenAI model %v\n", modelID)
+	// fmt.Printf("Finished calling OpenAI model %v\n", modelID)
 
 	if err != nil || len(resp.Choices) != 1 {
 		return ChatMessage{}, fmt.Errorf("completion error: err:%v len(choices):%v", err, len(resp.Choices))
