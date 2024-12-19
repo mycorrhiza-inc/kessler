@@ -9,8 +9,9 @@ import (
 )
 
 type ChatRequestBody struct {
-	Model       string        `json:"model"`
-	ChatHistory []ChatMessage `json:"chat_history"`
+	Model         string                  `json:"model"`
+	ChatHistory   []ChatMessage           `json:"chat_history"`
+	SearchFilters networking.FilterFields `json:"filters"`
 }
 
 func checkChatAuthorization(token string) (bool, error) {
