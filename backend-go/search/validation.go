@@ -8,10 +8,28 @@ import (
 )
 
 func SearchDataPassesFilters(result SearchDataHydrated, filters networking.FilterFields) bool {
+	mdata := result.File.Mdata
 	docket_id := filters.MetadataFilters.DocketID
 	if result.File.Conversation.DocketID != docket_id {
 		return false
 	}
+	file_class := filters.MetadataFilters.FileClass
+	if mdata["file_class"] != file_class {
+		return false
+	}
+	// author := filters.MetadataFilters.Author
+	// if result.File.Author != author {
+	// 	return false
+	// }
+	// doctype := filters.MetadataFilters.Doctype
+	// if result.File.Doctype != doctype {
+	// 	return false
+	// }
+	// lang := filters.MetadataFilters.Lang
+	// if result.File.Language != lang {
+	// 	return false
+	// }
+
 	return true
 }
 
