@@ -18,7 +18,13 @@ func rag_query_func_generated_from_filters(filters networking.FilterFields) func
 		if !ok {
 			return ToolCallResults{}, fmt.Errorf("query field is missing in query_json")
 		}
-		search_request := search.SearchRequest{Index: "NY_PUC", Query: search_query, SearchFilters: filters}
+		search_request := search.SearchRequest{
+			Index:         "NY_PUC",
+			Query:         search_query,
+			SearchFilters: filters,
+			GetText:       true,
+			MaxHits:       30,
+		}
 		search_results, err := search.HybridSearch(search_request)
 		if err != nil {
 			return ToolCallResults{}, err
