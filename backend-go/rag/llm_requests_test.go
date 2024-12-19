@@ -24,14 +24,15 @@ func TestSimpleChatCompletionString(t *testing.T) {
 			Role:    "assistant",
 		},
 		{
-			Content: "I'm struggling with my math homework on quadratic equations.",
+			Content: "I'm struggling with my math homework deriving a proof that the dirichlet function is discontinuous everywhere.",
 			Role:    "user",
 		},
 	}
 	multiplex_request := MultiplexerChatCompletionRequest{
-		modelName,
-		SimpleToChatMessages(chatHistory),
-		[]FunctionCall{},
+		ModelName:    modelName,
+		ChatHistory:  SimpleToChatMessages(chatHistory),
+		Functions:    []FunctionCall{},
+		IsSimpleChat: true,
 	}
 	result, err := createSimpleChatCompletionString(multiplex_request)
 	if err != nil {

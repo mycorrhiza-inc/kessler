@@ -15,8 +15,10 @@ func HybridSearch(request SearchRequest) ([]SearchData, error) {
 	chanMilvus := make(chan SearchReturn)
 	chanQuickwit := make(chan SearchReturn)
 	go func() {
-		results, err := SearchMilvus(request)
-		return_results := SearchReturn{results, err}
+		// Not implemented
+		// results, err := SearchMilvus(request)
+		err := fmt.Errorf("not implemented")
+		return_results := SearchReturn{[]SearchData{}, err}
 		chanMilvus <- return_results
 	}()
 	go func() {

@@ -3,9 +3,8 @@ package rag
 import (
 	"context"
 	"fmt"
-	"os"
-
 	"kessler/search"
+	"os"
 
 	openai "github.com/sashabaranov/go-openai"
 	"github.com/sashabaranov/go-openai/jsonschema"
@@ -35,9 +34,10 @@ type ToolCallResults struct {
 }
 
 type MultiplexerChatCompletionRequest struct {
-	ModelName   string
-	ChatHistory []ChatMessage
-	Functions   []FunctionCall
+	ModelName    string
+	ChatHistory  []ChatMessage
+	Functions    []FunctionCall
+	IsSimpleChat bool
 }
 
 func createSimpleChatCompletionString(messageRequest MultiplexerChatCompletionRequest) (string, error) {
@@ -92,6 +92,9 @@ func createComplexRequest(messageRequest MultiplexerChatCompletionRequest) (Chat
 	ctx := context.Background()
 	modelName := messageRequest.ModelName
 	chatHistory := messageRequest.ChatHistory
+	if !messageRequest.IsSimpleChat {
+		AppendInstructionHeaderToChathistory(&chatHistory)
+	}
 	client, modelID := createOpenaiClientFromString(modelName)
 
 	// Create message slice for OpenAI request
