@@ -21,20 +21,19 @@ func SearchDataPassesFilters(result SearchDataHydrated, filters networking.Filte
 	// if result.File.Extension != doctype {
 	// 	return false
 	// }
-
 	return true
 }
 
-func ValidateSearchResultsAgainstFilters(ctx context.Context, results []SearchData, filters networking.FilterFields) ([]SearchDataHydrated, error) {
+func ValidateAgainstFilters(ctx context.Context, results []SearchData, filters networking.FilterFields) ([]SearchDataHydrated, error) {
 	q := *routing.DBQueriesFromContext(ctx)
 	hydrated_results, err := HydrateSearchResults(results, ctx, q)
 	if err != nil {
 		return []SearchDataHydrated{}, err
 	}
-	return ValidateSearchResultsHydratedAgainstFilters(hydrated_results, filters)
+	return ValidateHydratedAgainstFilters(hydrated_results, filters)
 }
 
-func ValidateSearchResultsHydratedAgainstFilters(results []SearchDataHydrated, filters networking.FilterFields) ([]SearchDataHydrated, error) {
+func ValidateHydratedAgainstFilters(results []SearchDataHydrated, filters networking.FilterFields) ([]SearchDataHydrated, error) {
 	invalid_count := 0
 	for i, result := range results {
 		if !SearchDataPassesFilters(result, filters) {

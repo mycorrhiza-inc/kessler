@@ -115,8 +115,6 @@ var rag_query_func_schema = openai.FunctionDefinition{
 	},
 }
 
-// arguments='{"order_id":"order_12345"}',
-
 func rag_func_call_filters(filters networking.FilterFields) FunctionCall {
 	return FunctionCall{
 		Schema: rag_query_func_schema,
