@@ -5,6 +5,7 @@ import MarkdownRenderer from "../MarkdownRenderer";
 import { QueryFilterFields } from "@/lib/filters";
 import { getUpdatedChatHistory, Message } from "@/lib/chat";
 import { publicAPIURL } from "@/lib/env_variables";
+import clsx from "clsx";
 export const ChatMessages = ({
   messages,
   loading,
@@ -28,52 +29,58 @@ export const ChatMessages = ({
     const clickCitation = () => {
       console.log("Yay you clicked the citation component:", message.citations);
     };
-    if (!hasCitations) {
-      return (
-        <div
-          className={`flex w-full${isUser ? "justify-end" : "justify-start"}`}
-        >
-          <div className="indicator max-w-11/12">
+    const showCitationsButton = !isUser;
+    return (
+      <div
+        className={clsx(
+          "flex w-full",
+          isUser ? "justify-end" : "justify-start",
+        )}
+      >
+        <div className="indicator max-w-11/12">
+          {showCitationsButton && (
             <button
               className="indicator-item badge badge-primary"
               onClick={clickCitation}
             >
               View Citations
             </button>
-            <div
-              className={`rounded-lg overflow-auto min-h-[100px] p-5 ${
-                isUser ? "bg-success" : "bg-base-300"
-              }`}
-              // onClick={clickMessage}
+          )}
+          <div
+            className={`rounded-lg overflow-auto min-h-[100px] p-5 ${
+              isUser ? "bg-success" : "bg-base-300"
+            }`}
+            // onClick={clickMessage}
+          >
+            <MarkdownRenderer
+              color={isUser ? "success-content" : "base-content"}
             >
-              <MarkdownRenderer
-                color={isUser ? "success-content" : "base-content"}
-              >
-                {message.content}
-              </MarkdownRenderer>
-            </div>
+              {message.content}
+            </MarkdownRenderer>
           </div>
-        </div>
-      );
-    }
-    return (
-      <div
-        className={`flex w-full ${isUser ? "justify-end" : "justify-start"}`}
-      >
-        <div
-          className={`w-11/12 rounded-lg overflow-auto min-h-[100px] p-5 ${
-            isUser ? "bg-success" : "bg-base-300"
-          }`}
-        >
-          <MarkdownRenderer color={isUser ? "success-content" : "base-content"}>
-            {message.content}
-          </MarkdownRenderer>
         </div>
       </div>
     );
+    // return (
+    //   <div
+    //     className={`flex w-full ${isUser ? "justify-end" : "justify-start"}`}
+    //   >
+    //     <div
+    //       className={`border-8 w-11/12 rounded-lg overflow-auto min-h-[100px] p-5 ${
+    //         isUser
+    //           ? "bg-success text-success-content"
+    //           : "bg-base-300 text-base-content"
+    //       }`}
+    //     >
+    //       <MarkdownRenderer color={isUser ? "success-content" : "base-content"}>
+    //         {message.content}
+    //       </MarkdownRenderer>
+    //     </div>
+    //   </div>
+    // );
   };
   return (
-    <div className="gap-16 h-[85%] overflow-y-auto">
+    <div className="flex flex-col gap-8 h-[85%] overflow-y-auto">
       {messages.length === 0 && (
         <div className="p-5 text-center text-base-content">
           <h2 className="text-lg font-bold">Welcome to the Chatbot!</h2>
