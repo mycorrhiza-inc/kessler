@@ -21,16 +21,17 @@ export const ChatMessages = ({
   //     setCitations(message.citations);
   //   }
   // };
+
   const MessageComponent = ({ message }: { message: Message }) => {
     const isUser = message.role === "user";
     const hasCitations = message.citations && message.citations.length > 0;
     const clickCitation = () => {
-      console.log("Yay you clicked the citation component");
+      console.log("Yay you clicked the citation component:", message.citations);
     };
     if (!hasCitations) {
       return (
         <div
-          className={`flex w-full gap-16 ${isUser ? "justify-end" : "justify-start"}`}
+          className={`flex w-full${isUser ? "justify-end" : "justify-start"}`}
         >
           <div className="indicator max-w-11/12">
             <button
@@ -40,7 +41,7 @@ export const ChatMessages = ({
               View Citations
             </button>
             <div
-              className={`max-w-11/12 rounded-lg overflow-auto min-h-[100px] p-5 ${
+              className={`rounded-lg overflow-auto min-h-[100px] p-5 ${
                 isUser ? "bg-success" : "bg-base-300"
               }`}
               // onClick={clickMessage}
