@@ -24,17 +24,23 @@ export const ChatMessages = ({
   const MessageComponent = ({ message }: { message: Message }) => {
     const isUser = message.role === "user";
     const hasCitations = message.citations && message.citations.length > 0;
-    if (hasCitations) {
+    const clickCitation = () => {
+      console.log("Yay you clicked the citation component");
+    };
+    if (!hasCitations) {
       return (
         <div
-          className={`flex w-full ${isUser ? "justify-end" : "justify-start"}`}
+          className={`flex w-full gap-16 ${isUser ? "justify-end" : "justify-start"}`}
         >
-          <div className="indicator">
-            <span className="indicator-item badge badge-primary">
-              This Message has Citations
-            </span>
+          <div className="indicator max-w-11/12">
+            <button
+              className="indicator-item badge badge-primary"
+              onClick={clickCitation}
+            >
+              View Citations
+            </button>
             <div
-              className={`w-11/12 rounded-lg overflow-auto min-h-[100px] p-5 ${
+              className={`max-w-11/12 rounded-lg overflow-auto min-h-[100px] p-5 ${
                 isUser ? "bg-success" : "bg-base-300"
               }`}
               // onClick={clickMessage}
@@ -66,7 +72,7 @@ export const ChatMessages = ({
     );
   };
   return (
-    <>
+    <div className="gap-16 h-[85%] overflow-y-auto">
       {messages.length === 0 && (
         <div className="p-5 text-center text-base-content">
           <h2 className="text-lg font-bold">Welcome to the Chatbot!</h2>
@@ -76,13 +82,7 @@ export const ChatMessages = ({
         </div>
       )}
       {messages.map((m: Message, index: number) => {
-        return (
-          <MessageComponent
-            message={m}
-            // clickMessage={() => setMessageCitations(index)}
-            // highlighted={highlighted === index}
-          />
-        );
+        return <MessageComponent message={m} />;
       })}
       {loading && (
         <div className="w-11/12 bg-base-300 rounded-lg min-h-[100px] p-5">
@@ -93,7 +93,7 @@ export const ChatMessages = ({
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 };
 
@@ -265,9 +265,7 @@ export const ChatBoxInternalsStateless = ({
           New Chat
         </button>
       </div>
-      <div className="flex-1 h-[85%] overflow-y-auto">
-        <ChatMessages messages={messages} loading={loadingResponse} />
-      </div>
+      <ChatMessages messages={messages} loading={loadingResponse} />
       <div className="flex-none h-[15%]">
         <textarea
           name="userMessage"
