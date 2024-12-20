@@ -4,38 +4,51 @@ import MarkdownRenderer from "../MarkdownRenderer";
 
 import { QueryFilterFields } from "@/lib/filters";
 import { getUpdatedChatHistory, Message } from "@/lib/chat";
+import { publicAPIURL } from "@/lib/env_variables";
 export const ChatMessages = ({
   messages,
   loading,
-  setCitations,
-  highlighted,
-  setHighlighted,
 }: {
   messages: Message[];
   loading: boolean;
-  setCitations: (citations: any[]) => void;
-  highlighted: number;
-  setHighlighted: (index: number) => void;
 }) => {
-  const setMessageCitations = (index: number) => {
-    setHighlighted(index);
-    const message = messages[index];
-    const isntUser = message.role != "user";
-    const citationExists = message.citations && message.citations.length > 0;
-    if (isntUser && citationExists) {
-      setCitations(message.citations);
-    }
-  };
-  const MessageComponent = ({
-    message,
-    clickMessage,
-    highlighted,
-  }: {
-    message: Message;
-    clickMessage: any; // This makes me sad
-    highlighted: boolean;
-  }) => {
+  // const setMessageCitations = (index: number) => {
+  //   setHighlighted(index);
+  //   const message = messages[index];
+  //   const isntUser = message.role != "user";
+  //   const citationExists = message.citations && message.citations.length > 0;
+  //   if (isntUser && citationExists) {
+  //     setCitations(message.citations);
+  //   }
+  // };
+  const MessageComponent = ({ message }: { message: Message }) => {
     const isUser = message.role === "user";
+    const hasCitations = message.citations && message.citations.length > 0;
+    if (hasCitations) {
+      return (
+        <div
+          className={`flex w-full ${isUser ? "justify-end" : "justify-start"}`}
+        >
+          <div className="indicator">
+            <span className="indicator-item badge badge-primary">
+              This Message has Citations
+            </span>
+            <div
+              className={`w-11/12 rounded-lg overflow-auto min-h-[100px] p-5 ${
+                isUser ? "bg-success" : "bg-base-300"
+              }`}
+              // onClick={clickMessage}
+            >
+              <MarkdownRenderer
+                color={isUser ? "success-content" : "base-content"}
+              >
+                {message.content}
+              </MarkdownRenderer>
+            </div>
+          </div>
+        </div>
+      );
+    }
     return (
       <div
         className={`flex w-full ${isUser ? "justify-end" : "justify-start"}`}
@@ -43,8 +56,7 @@ export const ChatMessages = ({
         <div
           className={`w-11/12 rounded-lg overflow-auto min-h-[100px] p-5 ${
             isUser ? "bg-success" : "bg-base-300"
-          } ${highlighted ? "highlighted" : "not-highlighted"}`}
-          onClick={clickMessage}
+          }`}
         >
           <MarkdownRenderer color={isUser ? "success-content" : "base-content"}>
             {message.content}
@@ -67,8 +79,8 @@ export const ChatMessages = ({
         return (
           <MessageComponent
             message={m}
-            clickMessage={() => setMessageCitations(index)}
-            highlighted={highlighted === index}
+            // clickMessage={() => setMessageCitations(index)}
+            // highlighted={highlighted === index}
           />
         );
       })}
@@ -133,14 +145,8 @@ export const ChatBoxInternalsStateless = ({
   chatState: ChatBoxInternalsState;
   setChatState: React.Dispatch<React.SetStateAction<ChatBoxInternalsState>>;
 }) => {
-  const {
-    highlighted,
-    messages,
-    loadingResponse,
-    selectedModel,
-    ragMode,
-    draftText,
-  } = chatState;
+  const { messages, loadingResponse, selectedModel, ragMode, draftText } =
+    chatState;
 
   const setHighlighted = (value: number) => {
     setChatState((prev) => ({ ...prev, highlighted: value }));
@@ -156,8 +162,8 @@ export const ChatBoxInternalsStateless = ({
   const setDraftText = (value: string) =>
     setChatState((prev) => ({ ...prev, draftText: value }));
   const chatUrl = ragMode
-    ? "https://api.kessler.xyz/v2/rag/chat"
-    : "https://api.kessler.xyz/v2/rag/basic_chat";
+    ? `${publicAPIURL}/v2/rag/chat`
+    : `${publicAPIURL}/v2/rag/basic_chat`;
 
   const getResponse = async (responseText: string) => {
     if (responseText == "") {
@@ -260,13 +266,7 @@ export const ChatBoxInternalsStateless = ({
         </button>
       </div>
       <div className="flex-1 h-[85%] overflow-y-auto">
-        <ChatMessages
-          messages={messages}
-          loading={loadingResponse}
-          setCitations={setCitations}
-          highlighted={highlighted}
-          setHighlighted={setHighlighted}
-        />
+        <ChatMessages messages={messages} loading={loadingResponse} />
       </div>
       <div className="flex-none h-[15%]">
         <textarea
