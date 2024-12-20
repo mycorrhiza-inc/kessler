@@ -1,5 +1,6 @@
 // import "@/app/globals.css";
 import AuthGuard from "@/components/AuthGuard";
+import { publicAPIURL } from "@/lib/env_variables";
 
 import { createClient } from "@/utils/supabase/server";
 
@@ -16,12 +17,21 @@ export default async function ApplicationLayout({
   children: React.ReactNode;
 }) {
   const checkLoggedIn = async () => {
-    const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    const userPresent = Boolean(user);
-    return userPresent;
+    // Make the apps and pages load when you are running it locally even if offline, otherwise it errors out
+    // when trying to connect to supabase.
+    if (publicAPIURL == "http://localhost") {
+      return true;
+    }
+    try {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      const userPresent = Boolean(user);
+      return userPresent;
+    } catch {
+      return false;
+    }
   };
 
   const isLoggedIn = await checkLoggedIn();

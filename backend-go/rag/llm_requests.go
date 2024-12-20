@@ -3,12 +3,10 @@ package rag
 import (
 	"context"
 	"fmt"
+	"kessler/search"
 	"os"
 
-	"kessler/search"
-
 	openai "github.com/sashabaranov/go-openai"
-	"github.com/sashabaranov/go-openai/jsonschema"
 )
 
 var openaiKey = os.Getenv("OPENAI_API_KEY")
@@ -35,88 +33,38 @@ type ToolCallResults struct {
 }
 
 type MultiplexerChatCompletionRequest struct {
-	ModelName   string
-	ChatHistory []ChatMessage
-	Functions   []FunctionCall
+	ModelName    string
+	ChatHistory  []ChatMessage
+	Functions    []FunctionCall
+	IsSimpleChat bool
 }
 
-func createSimpleChatCompletionString(messageRequest MultiplexerChatCompletionRequest) (string, error) {
-	modelName := messageRequest.ModelName
-	chatHistory := messageRequest.ChatHistory
-	client, modelid := createOpenaiClientFromString(modelName)
-
-	// Create message slice for OpenAI request
-	var messages []openai.ChatCompletionMessage
-	for _, history := range chatHistory {
-		messages = append(messages, openai.ChatCompletionMessage{
-			Role:    string(history.Role),
-			Content: history.Content,
-		})
-	}
-
-	openaiRequest := openai.ChatCompletionRequest{
-		Model:     modelid,
-		MaxTokens: 2000,
-		Messages:  messages,
-		Stream:    false,
-	}
-
-	ctx := context.Background()
-	chatResponse, err := client.CreateChatCompletion(ctx, openaiRequest)
-	if err != nil {
-		return "", fmt.Errorf("failed to create chat completion: %v", err)
-	}
-	chatText := chatResponse.Choices[0].Message.Content
-	if chatText == "" {
-		return "", fmt.Errorf("no chat completion text returned")
-	}
-
-	return chatText, nil
-}
-
-var test_func_document = openai.FunctionDefinition{
-	Name: "get_document_info_from_uuid",
-	Parameters: jsonschema.Definition{
-		Type: jsonschema.Object,
-		Properties: map[string]jsonschema.Definition{
-			"uuid": {
-				Type:        jsonschema.String,
-				Description: "The UUID of the document",
-			},
-		},
-		Required: []string{"uuid"},
-	},
-}
-
-func createComplexRequest(messageRequest MultiplexerChatCompletionRequest) (ChatMessage, error) {
-	ctx := context.Background()
-	modelName := messageRequest.ModelName
-	chatHistory := messageRequest.ChatHistory
-	client, modelID := createOpenaiClientFromString(modelName)
-
-	// Create message slice for OpenAI request
-	var dialogue []openai.ChatCompletionMessage
-	for _, history := range chatHistory {
-		dialogue = append(dialogue, openai.ChatCompletionMessage{
-			Role:    string(history.Role),
-			Content: history.Content,
-		})
-	}
-
-	if len(messageRequest.Functions) > 1 {
-		return ChatMessage{}, fmt.Errorf("multiple functions not supported, please fix at some point")
-	}
-	// Logic of code below must be fixed
+func FunctionCallsToOAI(funcs []FunctionCall) []openai.Tool {
 	var tools []openai.Tool
-	for _, fn := range messageRequest.Functions {
+	for _, fn := range funcs {
 		tools = append(tools, openai.Tool{
 			Type:     openai.ToolTypeFunction,
 			Function: &fn.Schema,
 		})
 	}
+	return tools
+}
 
-	fmt.Printf("Asking OpenAI '%v' and providing it %d functions...\n",
-		dialogue[0].Content, len(messageRequest.Functions))
+// TODO: I tried once to simplify and break down this function into component pieces and failed, sorry - nic
+func LLMComplexRequest(messageRequest MultiplexerChatCompletionRequest) (ChatMessage, error) {
+	if len(messageRequest.Functions) > 1 {
+		return ChatMessage{}, fmt.Errorf("multiple functions not supported, please fix at some point")
+	}
+	ctx := context.Background()
+	modelName := messageRequest.ModelName
+	chatHistory := messageRequest.ChatHistory
+	if !messageRequest.IsSimpleChat {
+		AppendInstructionHeaderToChathistory(&chatHistory)
+	}
+	client, modelID := createOpenaiClientFromString(modelName)
+	dialogue := ComplexToOAIMessages(chatHistory)
+	tools := FunctionCallsToOAI(messageRequest.Functions)
+
 	fmt.Printf("Calling OpenAI model %v\n", modelID)
 	resp, err := client.CreateChatCompletion(ctx,
 		openai.ChatCompletionRequest{
@@ -125,7 +73,7 @@ func createComplexRequest(messageRequest MultiplexerChatCompletionRequest) (Chat
 			Tools:    tools,
 		},
 	)
-	fmt.Printf("Finished calling OpenAI model %v\n", modelID)
+	// fmt.Printf("Finished calling OpenAI model %v\n", modelID)
 
 	if err != nil || len(resp.Choices) != 1 {
 		return ChatMessage{}, fmt.Errorf("completion error: err:%v len(choices):%v", err, len(resp.Choices))

@@ -53,9 +53,9 @@ func HandleBasicChatRequest(w http.ResponseWriter, r *http.Request) {
 }
 
 type AdvancedRagRequestBody struct {
-	Model       string                   `json:"model"`
-	ChatHistory []ChatMessage            `json:"chat_history"`
-	Filters     *networking.FilterFields `json:"filters,omitempty"`
+	Model       string                  `json:"model"`
+	ChatHistory []ChatMessage           `json:"chat_history"`
+	Filters     networking.FilterFields `json:"filters,omitempty"`
 }
 
 func HandleRagChatRequest(w http.ResponseWriter, r *http.Request) {
@@ -75,7 +75,7 @@ func HandleRagChatRequest(w http.ResponseWriter, r *http.Request) {
 	llmObject := LLMModel{reqBody.Model}
 
 	chatHistory := reqBody.ChatHistory
-	filters := *reqBody.Filters
+	filters := reqBody.Filters
 	chatResponse, err := llmObject.RagChat(chatHistory, filters)
 	if err != nil {
 		fmt.Println("Error:", err)
