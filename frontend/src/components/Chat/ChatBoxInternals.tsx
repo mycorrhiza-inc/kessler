@@ -29,7 +29,7 @@ export const ChatMessages = ({
     const clickCitation = () => {
       console.log("Yay you clicked the citation component:", message.citations);
     };
-    const showCitationsButton = !isUser;
+    const showCitationsButton = !isUser && hasCitations;
     return (
       <div
         className={clsx(
@@ -37,7 +37,7 @@ export const ChatMessages = ({
           isUser ? "justify-end" : "justify-start",
         )}
       >
-        <div className="indicator max-w-11/12">
+        <div className="indicator w-4/5">
           {showCitationsButton && (
             <button
               className="indicator-item badge badge-primary"
@@ -47,10 +47,9 @@ export const ChatMessages = ({
             </button>
           )}
           <div
-            className={`rounded-lg overflow-auto min-h-[100px] p-5 ${
+            className={`w-full rounded-lg overflow-auto min-h-[100px] p-5 ${
               isUser ? "bg-success" : "bg-base-300"
             }`}
-            // onClick={clickMessage}
           >
             <MarkdownRenderer
               color={isUser ? "success-content" : "base-content"}
