@@ -87,9 +87,11 @@ const ConversationComponent = ({
   };
   const pageSize = 40;
 
-  const getUpdates = async () => {
+  const getInitialUpdates = async () => {
     const load_initial_pages = 2;
+    setPage(0);
     setIsSearching(true);
+    setFilings([]);
     console.log("getting recent updates");
     const filings: Filing[] = await getSearchResults(
       queryData,
@@ -121,7 +123,7 @@ const ConversationComponent = ({
     }
   };
   useEffect(() => {
-    getUpdates();
+    getInitialUpdates();
   }, [searchFilters]);
 
   const [isFocused, setIsFocused] = useState(true);
