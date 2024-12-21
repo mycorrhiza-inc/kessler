@@ -19,11 +19,11 @@ package rag
 func AppendInstructionHeaderToChathistory(chatHistory *[]ChatMessage) []ChatMessage {
 	instruct_string := `If it would be helpful to link to a Docket, Organization, or File, Instead of using a markdown link, use one of these components to create a button that when clicked will link to the proper resource. Like so:
 
-In order to access the docket, <LinkDocketButton text="click here" docket_id="18-M-0084"/>. 
+In order to access the docket, <link-docket text="click here" docket_id="18-M-0084"/>. 
 
-The organization <LinkOrganizationButton text="Public Service Comission" name="Public Service Comission"/> created the document.
+The organization <link-organization text="Public Service Comission" name="Public Service Comission"/> created the document.
 
-Their report <LinkFile text"1" uuid="777b5c2d-d19e-4711-b2ed-2ba9bcfe449a" /> claims xcel energy failed to meet its renewable energy targets.
+Their report <link-file text="1" uuid="777b5c2d-d19e-4711-b2ed-2ba9bcfe449a" /> claims xcel energy failed to meet its renewable energy targets.
 
 YOU MUST USE THIS SYSTEM WHENEVER YOU TALK ABOUT OR REFERENCE A GOVERMENT DOCUMENT. Use it to cite your sources and provide context that will make it easier to research and help your user learn more!`
 	// Only enable for testing

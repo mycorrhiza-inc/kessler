@@ -13,16 +13,6 @@ export const ChatMessages = ({
   messages: Message[];
   loading: boolean;
 }) => {
-  // const setMessageCitations = (index: number) => {
-  //   setHighlighted(index);
-  //   const message = messages[index];
-  //   const isntUser = message.role != "user";
-  //   const citationExists = message.citations && message.citations.length > 0;
-  //   if (isntUser && citationExists) {
-  //     setCitations(message.citations);
-  //   }
-  // };
-
   const MessageComponent = ({ message }: { message: Message }) => {
     const isUser = message.role === "user";
     const hasCitations = message.citations && message.citations.length > 0;
@@ -65,23 +55,6 @@ export const ChatMessages = ({
         </div>
       </div>
     );
-    // return (
-    //   <div
-    //     className={`flex w-full ${isUser ? "justify-end" : "justify-start"}`}
-    //   >
-    //     <div
-    //       className={`border-8 w-11/12 rounded-lg overflow-auto min-h-[100px] p-5 ${
-    //         isUser
-    //           ? "bg-success text-success-content"
-    //           : "bg-base-300 text-base-content"
-    //       }`}
-    //     >
-    //       <MarkdownRenderer color={isUser ? "success-content" : "base-content"}>
-    //         {message.content}
-    //       </MarkdownRenderer>
-    //     </div>
-    //   </div>
-    // );
   };
   return (
     <div className="flex flex-col gap-8 h-[85%] overflow-y-auto">

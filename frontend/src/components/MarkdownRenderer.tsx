@@ -6,6 +6,8 @@ import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { dracula } from "react-syntax-highlighter/dist/cjs/styles/prism";
+import rehypeComponents from "rehype-components";
+import { LinkDocket, LinkFile } from "./Chat/LLMComponents";
 interface MarkdownRendererProps {
   children: string;
   color?: string;
@@ -136,7 +138,19 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
       >
         <Markdown
           remarkPlugins={[remarkMath, remarkGfm]}
-          rehypePlugins={[rehypeKatex, rehypeRaw]}
+          rehypePlugins={[
+            rehypeKatex,
+            rehypeRaw,
+            [
+              rehypeComponents,
+              {
+                components: {
+                  "link-file": LinkFile,
+                  "link-docket": LinkDocket,
+                },
+              },
+            ],
+          ]}
           components={{
             code: CodeBlock,
           }}
