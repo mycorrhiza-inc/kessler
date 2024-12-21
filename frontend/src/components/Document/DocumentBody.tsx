@@ -11,7 +11,7 @@ import useSWRImmutable from "swr";
 import { CompleteFileSchema } from "@/lib/types/backend_schemas";
 import { publicAPIURL } from "@/lib/env_variables";
 import Link from "next/link";
-import { ChatModalClickDiv } from "../Chat/ChatModal";
+import { ExperimentalChatModalClickDiv } from "../Chat/ChatModal";
 import { FilterField } from "@/lib/filters";
 
 // import { ErrorBoundary } from "react-error-boundary";
@@ -122,14 +122,14 @@ const DocumentHeader = ({
             </Link>
           )}
           {verified && (
-            <ChatModalClickDiv
+            <ExperimentalChatModalClickDiv
               className="btn btn-accent"
               inheritedFilters={[
                 { filter: FilterField.MatchFileUUID, value: objectId },
               ]}
             >
               Chat with Document
-            </ChatModalClickDiv>
+            </ExperimentalChatModalClickDiv>
           )}
         </div>
       </div>

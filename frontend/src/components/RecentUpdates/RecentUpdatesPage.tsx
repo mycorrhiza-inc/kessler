@@ -1,15 +1,11 @@
-"use client";
 import Link from "next/link";
 import ConversationTableInfiniteScroll from "../Organizations/ConversationTable";
 import PageContainer from "../Page/PageContainer";
-import { ChatModalClickDiv } from "../Chat/ChatModal";
+import { ExperimentalChatModalClickDiv } from "../Chat/ChatModal";
 import OrganizationTableInfiniteScroll from "../Organizations/OrganizationTable";
 import RecentUpdatesView from "./RecentUpdatesView";
-import { useKesslerStore } from "@/lib/store";
 
 export default function RecentUpdatesPage() {
-  const globalStore = useKesslerStore();
-  const experimentalFeatures = globalStore.experimentalFeaturesEnabled;
   return (
     <PageContainer breadcrumbs={{ breadcrumbs: [] }}>
       <div className="grid grid-cols-2 w-full">
@@ -30,14 +26,13 @@ export default function RecentUpdatesPage() {
           </div>
         </div>
       </div>
-      {experimentalFeatures && (
-        <ChatModalClickDiv
-          className="btn btn-accent w-full"
-          inheritedFilters={[]}
-        >
-          Unsure of what to do? Try chatting with the entire New York PUC
-        </ChatModalClickDiv>
-      )}
+      <ExperimentalChatModalClickDiv
+        className="btn btn-accent w-full"
+        inheritedFilters={[]}
+      >
+        Unsure of what to do? Try chatting with the entire New York PUC
+      </ExperimentalChatModalClickDiv>
+
       <h1 className=" text-2xl font-bold">Newest Docs</h1>
       <RecentUpdatesView />
     </PageContainer>
