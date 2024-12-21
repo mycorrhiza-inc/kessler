@@ -11,21 +11,22 @@ import (
 func SearchDataPassesFilters(result SearchDataHydrated, filters networking.FilterFields) bool {
 	// mdata := result.File.Mdata
 	docket_id := filters.MetadataFilters.DocketID
-	if result.File.Mdata["docket_id"] != docket_id {
-		log.Printf("Docket ID mismatch, wanted: %v \ngot: %v\n", result.File.Conversation.DocketID, docket_id)
-		return false
+	if docket_id != "" {
+		result_docket_id := result.File.Mdata["docket_id"]
+		if result_docket_id != docket_id {
+			log.Printf("Docket ID mismatch, wanted: %v \ngot: %v\n", docket_id, result_docket_id)
+			return false
+		}
 	}
-
 	file_class := filters.MetadataFilters.FileClass
-	if result.File.Mdata["file_class"] != file_class {
-		log.Printf("File Class mismatch, wanted: %v \ngot: %v\n", result.File.Conversation.DocketID, docket_id)
-		return false
+	if file_class != "" {
+		result_file_class := result.File.Mdata["file_class"]
+		if result_file_class != file_class {
+			log.Printf("File Class mismatch, wanted: %v \ngot: %v\n", file_class, result_file_class)
+			return false
+		}
 	}
 
-	// file_class := filters.MetadataFilters.FileClass
-	// if mdata["file_class"] != file_class {
-	// 	return false
-	// }
 	// doctype := filters.MetadataFilters.Doctype
 	// if result.File.Extension != doctype {
 	// 	return false
