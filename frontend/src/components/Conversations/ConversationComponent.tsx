@@ -81,12 +81,10 @@ const ConversationComponent = ({
   const [page, setPage] = useState(0);
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const queryData: QueryDataFile = useMemo(() => {
-    return {
-      filters: searchFilters,
-      query: searchQuery,
-    };
-  }, [searchFilters]);
+  const queryData: QueryDataFile = {
+    filters: searchFilters,
+    query: searchQuery,
+  };
   const pageSize = 40;
 
   const getUpdates = async () => {
@@ -124,7 +122,7 @@ const ConversationComponent = ({
   };
   useEffect(() => {
     getUpdates();
-  }, []);
+  }, [searchFilters]);
 
   const [isFocused, setIsFocused] = useState(true);
   const toggleFilters = () => {
