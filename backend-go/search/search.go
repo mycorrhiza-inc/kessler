@@ -190,8 +190,10 @@ func ExtractSearchData(data quickwitSearchResponse) ([]SearchData, error) {
 	// Map snippets text to hit names
 	for i, hit := range data.Hits {
 		var snippet string
-		if len(data.Snippets) > 0 {
-			snippet = data.Snippets[i].Text[0]
+		if len(data.Snippets) > i {
+			if len(data.Snippets[i].Text) > 0 {
+				snippet = data.Snippets[i].Text[0]
+			}
 		}
 		sdata := SearchData{
 			Name:     hit.Name,
