@@ -2,15 +2,15 @@ import { create } from "zustand";
 
 interface KesslerState {
   isLoggedIn: boolean;
-  enableExperimentalFeatures: boolean;
+  experimentalFeaturesEnabled: boolean;
   setIsLoggedIn: (isLoggedIn: boolean) => void;
-  setEnableExperimentalFeatures: (enableExperimentalFeatures: boolean) => void;
+  setExperimentalFeaturesEnabled: (enableExperimentalFeatures: boolean) => void;
 }
 
 export const useKesslerStore = create<KesslerState>()((set) => ({
-  enableExperimentalFeatures: false,
+  experimentalFeaturesEnabled: false,
   isLoggedIn: false,
   setIsLoggedIn: (isLoggedIn: boolean) => set({ isLoggedIn }),
-  setEnableExperimentalFeatures: (enableExperimentalFeatures: boolean) =>
-    set({ enableExperimentalFeatures }),
+  setExperimentalFeaturesEnabled: (experimentalFeaturesEnabled: boolean) =>
+    set({ experimentalFeaturesEnabled }),
 }));

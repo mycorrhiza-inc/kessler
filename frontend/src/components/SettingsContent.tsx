@@ -5,8 +5,8 @@ import Link from "next/link";
 // The password reset is horribly insecure, but it was horribly insecure before and did allow a password reset with a stolen cookie, but now there is a button that does the same thing. Welp...
 const SettingsContent = () => {
   const globalStore = useKesslerStore();
-  const experimentalFeaturesEnabled = globalStore.enableExperimentalFeatures;
-  const setExperimentalFeatures = globalStore.setEnableExperimentalFeatures;
+  const experimentalFeaturesEnabled = globalStore.experimentalFeaturesEnabled;
+  const setExperimentalFeatures = globalStore.setExperimentalFeaturesEnabled;
   return (
     <div className=" p-5 m-5 justify-center border-2 border-['accent'] rounded-box w-full">
       <h1 className="text-5xl font-extrabold">Settings</h1>
@@ -30,6 +30,7 @@ const SettingsContent = () => {
             className="checkbox checkbox-success"
             checked={experimentalFeaturesEnabled}
             // this seems hackish, but it kinda works?
+            // Also right now this changes on every page refresh, so setting the global store value from user info is good!
             onChange={() =>
               setExperimentalFeatures(!experimentalFeaturesEnabled)
             }
