@@ -109,19 +109,26 @@ func HydrateSearchResults(results []SearchData, ctx context.Context, q dbstore.Q
 		return []SearchDataHydrated{}, err
 	}
 	fmt.Printf("Got back %v complete files for hydration, out of %v requested files\n", len(files_complete), len(results))
+
+	// Create map of file ID to complete file
+	fileMap := make(map[uuid.UUID]files.CompleteFileSchema)
+	for _, f := range files_complete {
+		fileMap[f.ID] = f
+	}
+
 	results_hydrated := make([]SearchDataHydrated, len(results))
 	files_actually_hydrated := 0
+
 	for i, res := range results {
 		uuid, _ := uuid.Parse(res.SourceID)
-		for _, f := range files_complete {
-			if f.ID == uuid {
-				files_actually_hydrated += 1
-				results_hydrated[i] = setupSearchDataHydrated(res, f)
-				break
-			}
+		if file, ok := fileMap[uuid]; ok {
+			files_actually_hydrated++
+			results_hydrated[i] = setupSearchDataHydrated(res, file)
+		} else {
+			fmt.Printf("Error hydrating search result: %v\n", uuid)
+			res.Name = "ERROR HYDRATING SEARCH RESULT W/ PG DATA: " + res.Name
+			results_hydrated[i] = setupSearchDataHydrated(res, files.CompleteFileSchema{})
 		}
-		res.Name = "ERROR HYDRATING SEARCH RESULT W/ PG DATA: " + res.Name
-		results_hydrated[i] = setupSearchDataHydrated(res, files.CompleteFileSchema{})
 	}
 	fmt.Printf("Hydrated %v of %v files\n", files_actually_hydrated, len(results))
 	return results_hydrated, nil
