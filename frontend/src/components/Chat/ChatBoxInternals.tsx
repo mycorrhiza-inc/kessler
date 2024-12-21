@@ -4,57 +4,83 @@ import MarkdownRenderer from "../MarkdownRenderer";
 
 import { QueryFilterFields } from "@/lib/filters";
 import { getUpdatedChatHistory, Message } from "@/lib/chat";
+import { publicAPIURL } from "@/lib/env_variables";
+import clsx from "clsx";
 export const ChatMessages = ({
   messages,
   loading,
-  setCitations,
-  highlighted,
-  setHighlighted,
 }: {
   messages: Message[];
   loading: boolean;
-  setCitations: (citations: any[]) => void;
-  highlighted: number;
-  setHighlighted: (index: number) => void;
 }) => {
-  const setMessageCitations = (index: number) => {
-    setHighlighted(index);
-    const message = messages[index];
-    const isntUser = message.role != "user";
-    const citationExists = message.citations && message.citations.length > 0;
-    if (isntUser && citationExists) {
-      setCitations(message.citations);
-    }
-  };
-  const MessageComponent = ({
-    message,
-    clickMessage,
-    highlighted,
-  }: {
-    message: Message;
-    clickMessage: any; // This makes me sad
-    highlighted: boolean;
-  }) => {
+  // const setMessageCitations = (index: number) => {
+  //   setHighlighted(index);
+  //   const message = messages[index];
+  //   const isntUser = message.role != "user";
+  //   const citationExists = message.citations && message.citations.length > 0;
+  //   if (isntUser && citationExists) {
+  //     setCitations(message.citations);
+  //   }
+  // };
+
+  const MessageComponent = ({ message }: { message: Message }) => {
     const isUser = message.role === "user";
+    const hasCitations = message.citations && message.citations.length > 0;
+    const clickCitation = () => {
+      console.log("Yay you clicked the citation component:", message.citations);
+    };
+    const showCitationsButton = !isUser;
     return (
       <div
-        className={`flex w-full ${isUser ? "justify-end" : "justify-start"}`}
+        className={clsx(
+          "flex w-full",
+          isUser ? "justify-end" : "justify-start",
+        )}
       >
-        <div
-          className={`w-11/12 rounded-lg overflow-auto min-h-[100px] p-5 ${
-            isUser ? "bg-success" : "bg-base-300"
-          } ${highlighted ? "highlighted" : "not-highlighted"}`}
-          onClick={clickMessage}
-        >
-          <MarkdownRenderer color={isUser ? "success-content" : "base-content"}>
-            {message.content}
-          </MarkdownRenderer>
+        <div className="indicator max-w-11/12">
+          {showCitationsButton && (
+            <button
+              className="indicator-item badge badge-primary"
+              onClick={clickCitation}
+            >
+              View Citations
+            </button>
+          )}
+          <div
+            className={`rounded-lg overflow-auto min-h-[100px] p-5 ${
+              isUser ? "bg-success" : "bg-base-300"
+            }`}
+            // onClick={clickMessage}
+          >
+            <MarkdownRenderer
+              color={isUser ? "success-content" : "base-content"}
+            >
+              {message.content}
+            </MarkdownRenderer>
+          </div>
         </div>
       </div>
     );
+    // return (
+    //   <div
+    //     className={`flex w-full ${isUser ? "justify-end" : "justify-start"}`}
+    //   >
+    //     <div
+    //       className={`border-8 w-11/12 rounded-lg overflow-auto min-h-[100px] p-5 ${
+    //         isUser
+    //           ? "bg-success text-success-content"
+    //           : "bg-base-300 text-base-content"
+    //       }`}
+    //     >
+    //       <MarkdownRenderer color={isUser ? "success-content" : "base-content"}>
+    //         {message.content}
+    //       </MarkdownRenderer>
+    //     </div>
+    //   </div>
+    // );
   };
   return (
-    <>
+    <div className="flex flex-col gap-8 h-[85%] overflow-y-auto">
       {messages.length === 0 && (
         <div className="p-5 text-center text-base-content">
           <h2 className="text-lg font-bold">Welcome to the Chatbot!</h2>
@@ -64,13 +90,7 @@ export const ChatMessages = ({
         </div>
       )}
       {messages.map((m: Message, index: number) => {
-        return (
-          <MessageComponent
-            message={m}
-            clickMessage={() => setMessageCitations(index)}
-            highlighted={highlighted === index}
-          />
-        );
+        return <MessageComponent message={m} />;
       })}
       {loading && (
         <div className="w-11/12 bg-base-300 rounded-lg min-h-[100px] p-5">
@@ -81,7 +101,7 @@ export const ChatMessages = ({
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 };
 
@@ -133,14 +153,8 @@ export const ChatBoxInternalsStateless = ({
   chatState: ChatBoxInternalsState;
   setChatState: React.Dispatch<React.SetStateAction<ChatBoxInternalsState>>;
 }) => {
-  const {
-    highlighted,
-    messages,
-    loadingResponse,
-    selectedModel,
-    ragMode,
-    draftText,
-  } = chatState;
+  const { messages, loadingResponse, selectedModel, ragMode, draftText } =
+    chatState;
 
   const setHighlighted = (value: number) => {
     setChatState((prev) => ({ ...prev, highlighted: value }));
@@ -156,8 +170,8 @@ export const ChatBoxInternalsStateless = ({
   const setDraftText = (value: string) =>
     setChatState((prev) => ({ ...prev, draftText: value }));
   const chatUrl = ragMode
-    ? "https://api.kessler.xyz/v2/rag/chat"
-    : "https://api.kessler.xyz/v2/rag/basic_chat";
+    ? `${publicAPIURL}/v2/rag/chat`
+    : `${publicAPIURL}/v2/rag/basic_chat`;
 
   const getResponse = async (responseText: string) => {
     if (responseText == "") {
@@ -259,15 +273,7 @@ export const ChatBoxInternalsStateless = ({
           New Chat
         </button>
       </div>
-      <div className="flex-1 h-[85%] overflow-y-auto">
-        <ChatMessages
-          messages={messages}
-          loading={loadingResponse}
-          setCitations={setCitations}
-          highlighted={highlighted}
-          setHighlighted={setHighlighted}
-        />
-      </div>
+      <ChatMessages messages={messages} loading={loadingResponse} />
       <div className="flex-none h-[15%]">
         <textarea
           name="userMessage"

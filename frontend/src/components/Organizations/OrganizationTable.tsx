@@ -50,7 +50,7 @@ const OrganizationTable = ({
       <tbody>
         {orgList.map((org: any) => (
           <tr
-            key={org.DocketID}
+            key={org.ID}
             className="border-base-300 hover:bg-base-200 transition duration-500 ease-out"
           >
             <td colSpan={2} className="p-0">

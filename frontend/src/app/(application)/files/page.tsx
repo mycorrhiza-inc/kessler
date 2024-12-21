@@ -17,12 +17,7 @@ export default function Page() {
   };
   return (
     <PageContainer breadcrumbs={breadcrumbs}>
-      <h1 className="text-3xl font-bold">
-        We dont really know what to put on this page, a view of all files is
-        probably better gotten from the filter view on dockets, but we can put a
-        table here if you really want to browse. If you have any better ideas
-        about what to put here, please let me know - nicole
-      </h1>
+      <h1 className="text-3xl font-bold">All Files Search</h1>
       <ConversationComponent inheritedFilters={[]} />
     </PageContainer>
   );

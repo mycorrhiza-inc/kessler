@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 
 const conversationsListGet = async (url: string) => {
   const cleanData = (response: any) => {
-    console.log(response.data);
+    // console.log(response.data);
     const return_data: any[] = response.data;
     if (return_data.length == 0 || return_data == undefined) {
       return [];

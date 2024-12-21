@@ -120,8 +120,10 @@ func HydrateSearchResults(results []SearchData, ctx context.Context, q dbstore.Q
 				break
 			}
 		}
+		res.Name = "ERROR HYDRATING SEARCH RESULT W/ PG DATA: " + res.Name
+		results_hydrated[i] = setupSearchDataHydrated(res, files.CompleteFileSchema{})
 	}
-	fmt.Printf("Hydrated %v of %v files \n", files_actually_hydrated, len(results))
+	fmt.Printf("Hydrated %v of %v files\n", files_actually_hydrated, len(results))
 	return results_hydrated, nil
 }
 

@@ -81,12 +81,18 @@ export const getRecentFilings = async (
     page = 0;
   }
   const default_page_size = 40;
-  const limit = page_size || default_page_size;
-  const queryString = queryStringFromPageMaxHits(limit, page_size);
+  const queryString = queryStringFromPageMaxHits(
+    page,
+    page_size || default_page_size,
+  );
+  // Incorrect Code:
+  // const default_page_size = 40;
+  // const limit = page_size || default_page_size;
+  // const queryString = queryStringFromPageMaxHits(limit, page_size);
   const response = await axios.get(
     `${publicAPIURL}/v2/recent_updates${queryString}`,
   );
-  console.log("recent data", response.data);
+  // console.log("recent data", response.data);
   if (response.data.length > 0) {
     return hydratedSearchResultsToFilings(response.data);
   }

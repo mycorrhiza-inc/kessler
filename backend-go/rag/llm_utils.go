@@ -1,8 +1,6 @@
 package rag
 
 import (
-	"encoding/json"
-	"fmt"
 	"kessler/objects/networking"
 	"kessler/search"
 
@@ -90,6 +88,17 @@ func OAIMessagesToComplex(oaiMsgs []openai.ChatCompletionMessage) []ChatMessage 
 	return SimpleToChatMessages(OAIMessagesToSimples(oaiMsgs))
 }
 
+func ComplexToOAIMessages(messages []ChatMessage) []openai.ChatCompletionMessage {
+	var oai_messages []openai.ChatCompletionMessage
+	for _, message := range messages {
+		oai_messages = append(oai_messages, openai.ChatCompletionMessage{
+			Role:    string(message.Role),
+			Content: message.Content,
+		})
+	}
+	return oai_messages
+}
+
 type LLMModel struct {
 	ModelName string
 }
@@ -100,7 +109,7 @@ func (model_name LLMModel) Chat(chatHistory []ChatMessage) (ChatMessage, error) 
 		ModelName:   model_name.ModelName,
 		Functions:   []FunctionCall{},
 	}
-	return createComplexRequest(requestMultiplex)
+	return LLMComplexRequest(requestMultiplex)
 }
 
 var rag_query_func_schema = openai.FunctionDefinition{
@@ -115,38 +124,6 @@ var rag_query_func_schema = openai.FunctionDefinition{
 		},
 		Required: []string{"query"},
 	},
-}
-
-// arguments='{"order_id":"order_12345"}',
-func rag_query_func_generated_from_filters(filters networking.FilterFields) func(query_json string) (ToolCallResults, error) {
-	return func(query_json string) (ToolCallResults, error) {
-		var queryData map[string]string
-		err := json.Unmarshal([]byte(query_json), &queryData)
-		if err != nil {
-			return ToolCallResults{}, fmt.Errorf("error unmarshaling query_json: %v", err)
-		}
-		search_query, ok := queryData["query"]
-		if !ok {
-			return ToolCallResults{}, fmt.Errorf("query field is missing in query_json")
-		}
-		search_request := search.SearchRequest{Index: "NY_PUC", Query: search_query, SearchFilters: filters}
-		search_results, err := search.SearchQuickwit(search_request)
-		if err != nil {
-			return ToolCallResults{}, err
-		}
-		// Increase to give llm more results.
-		const truncation = 4
-		var truncated_search_results []search.SearchData
-		if len(search_results) < truncation {
-			truncated_search_results = search_results
-		} else {
-			truncated_search_results = search_results[:truncation]
-		}
-		format_string := search.FormatSearchResults(truncated_search_results, search_query)
-		result := ToolCallResults{Response: format_string, Citations: &truncated_search_results}
-
-		return result, nil
-	}
 }
 
 func rag_func_call_filters(filters networking.FilterFields) FunctionCall {
@@ -165,7 +142,7 @@ func (model_name LLMModel) RagChat(chatHistory []ChatMessage, filters networking
 		ModelName:   model_name.ModelName,
 		Functions:   []FunctionCall{rag_func_call_filters(filters)},
 	}
-	return createComplexRequest(requestMultiplex)
+	return LLMComplexRequest(requestMultiplex)
 }
 
 type LLM interface {
