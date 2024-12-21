@@ -20,6 +20,11 @@ const SettingsContent = () => {
       >
         Reset Password
       </Link>
+      <div>
+        <p>
+          <br />
+        </p>
+      </div>
       <ThemeSelector />
       <h2 className="text-3xl font-bold">Options</h2>
       <div className="form-control">
