@@ -46,8 +46,8 @@ const ThemeSelector = () => {
 
   return (
     <>
+      <h1 className="text-3xl font-bold">Themes</h1>
       <div className=" p-5 m-5 justify-center border-2 border-['accent'] rounded-box">
-        <h1 className="text-3xl font-bold">Themes</h1>
         <div className="flex flex-row flex-wrap space-x-5 ">
           {themeDataList.map((themeData) => (
             <div
