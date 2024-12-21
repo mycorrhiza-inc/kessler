@@ -30,7 +30,7 @@ const SettingsContent = () => {
             className="checkbox checkbox-success"
             checked={experimentalFeaturesEnabled}
             // this seems hackish, but it kinda works?
-            // Also right now this changes on every page refresh, so setting the global store value from user info is good!
+            // Also right now this changes on every page refresh, (but stays intact with react router navigations) so setting the global store value from user info is good!
             onChange={() =>
               setExperimentalFeatures(!experimentalFeaturesEnabled)
             }

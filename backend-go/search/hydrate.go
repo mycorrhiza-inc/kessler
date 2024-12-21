@@ -120,8 +120,8 @@ func HydrateSearchResults(results []SearchData, ctx context.Context, q dbstore.Q
 				break
 			}
 		}
-		fmt.Printf("Hydrated %v of %v files", files_actually_hydrated, len(results))
 	}
+	fmt.Printf("Hydrated %v of %v files \n", files_actually_hydrated, len(results))
 	return results_hydrated, nil
 }
 
