@@ -24,6 +24,7 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import LoadingSpinnerTimeout from "../styled-components/LoadingSpinnerTimeout";
 
 import { ChatModalClickDiv } from "../Chat/ChatModal";
+import { useKesslerStore } from "@/lib/store";
 
 const TableFilters = ({
   searchQuery,
@@ -125,56 +126,28 @@ const ConversationComponent = ({
     getUpdates();
   }, []);
 
-  // useEffect(() => {
-  //   setIsSearching(true);
-  //   console.log("search filters changed", searchFilters);
-  //   setFilingIds([]);
-  //   setFilings([]);
-  //   getUpdates();
-  // }, [searchFilters]);
-  //
-  // useEffect(() => {
-  //   if (!filing_ids || isSearching) {
-  //     return;
-  //   }
-  //
-  //   const fetchFilings = async () => {
-  //     const newFilings_raw = await Promise.all(
-  //       filing_ids.map(async (id): Promise<Filing | null> => {
-  //         const filing_data = await getFilingMetadata(id);
-  //         console.log("new filings", filing_data);
-  //         return filing_data;
-  //       }),
-  //     );
-  //     const notnull_newFilings = newFilings_raw.filter(
-  //       (f: Filing | null) => f !== null && f !== undefined,
-  //     );
-  //     const newFilings: Filing[] = notnull_newFilings as Filing[];
-  //
-  //     setFilings((previous: Filing[]): Filing[] => {
-  //       return [...previous, ...newFilings];
-  //     });
-  //   };
-  //
-  //   fetchFilings();
-  // }, [filing_ids]);
-
   const [isFocused, setIsFocused] = useState(true);
   const toggleFilters = () => {
     setIsFocused(!isFocused);
   };
+  const globalStore = useKesslerStore();
+  const experimentalFeatures = globalStore.experimentalFeaturesEnabled;
 
   return (
     <div className="drawer drawer-end">
       <input id="my-drawer" type="checkbox" className="drawer-toggle" />
       <div className="drawer-content">
         <div id="conversation-header" className="mb-4 flex justify-between">
-          <ChatModalClickDiv
-            className="btn btn-accent"
-            inheritedFilters={inheritedFiltersFromValues(searchFilters)}
-          >
-            Chat with Document List
-          </ChatModalClickDiv>
+          {experimentalFeatures ? (
+            <ChatModalClickDiv
+              className="btn btn-accent"
+              inheritedFilters={inheritedFiltersFromValues(searchFilters)}
+            >
+              Chat with Document List
+            </ChatModalClickDiv>
+          ) : (
+            <div></div>
+          )}
           <div>
             <label
               htmlFor="my-drawer"
