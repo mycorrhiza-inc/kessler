@@ -76,13 +76,13 @@ func HandleSearchRequest(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		// TODO : Reneable validation once other stuff is certainly working.
-		// _, err = ValidateHydratedAgainstFilters(hydrated_data, RequestData.SearchFilters)
-		// if err != nil {
-		// 	errorstring := fmt.Sprintf("Returned results did not match filters: %v\n", err)
-		// 	log.Println(errorstring)
-		// 	http.Error(w, errorstring, http.StatusInternalServerError)
-		// 	return
-		// }
+		_, err = ValidateHydratedAgainstFilters(hydrated_data, RequestData.SearchFilters)
+		if err != nil {
+			errorstring := fmt.Sprintf("Returned results did not match filters: %v\n", err)
+			log.Println(errorstring)
+			http.Error(w, errorstring, http.StatusInternalServerError)
+			return
+		}
 
 		respString, err := json.Marshal(hydrated_data)
 		if err != nil {

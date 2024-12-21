@@ -5,14 +5,23 @@ import (
 	"fmt"
 	"kessler/objects/networking"
 	"kessler/routing"
+	"log"
 )
 
 func SearchDataPassesFilters(result SearchDataHydrated, filters networking.FilterFields) bool {
 	// mdata := result.File.Mdata
 	docket_id := filters.MetadataFilters.DocketID
-	if result.File.Conversation.DocketID != docket_id {
+	if result.File.Mdata["docket_id"] != docket_id {
+		log.Printf("Docket ID mismatch, wanted: %v \ngot: %v\n", result.File.Conversation.DocketID, docket_id)
 		return false
 	}
+
+	file_class := filters.MetadataFilters.FileClass
+	if result.File.Mdata["file_class"] != file_class {
+		log.Printf("File Class mismatch, wanted: %v \ngot: %v\n", result.File.Conversation.DocketID, docket_id)
+		return false
+	}
+
 	// file_class := filters.MetadataFilters.FileClass
 	// if mdata["file_class"] != file_class {
 	// 	return false
@@ -42,6 +51,7 @@ func ValidateHydratedAgainstFilters(results []SearchDataHydrated, filters networ
 		}
 	}
 	if invalid_count > 0 {
+		log.Printf("Filters invalid results: %v out of %v total results", invalid_count, len(results))
 		return results, fmt.Errorf("Found %v invalid results out of %v total results", invalid_count, len(results))
 	}
 	return results, nil
