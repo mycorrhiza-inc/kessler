@@ -73,7 +73,7 @@ const ConversationTable = ({
           return (
             <tr
               key={convo.DocketID}
-              className="border-base-300 hover:bg-base-200 transition duration-500 ease-out"
+              className="border-base-300 hover:bg-base-200 transition duration-500 ease-out cursor-pointer"
               onClick={() => {
                 router.push(`/dockets/${convo.DocketID}`);
               }}
