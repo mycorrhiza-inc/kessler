@@ -1,7 +1,7 @@
 import Link from "next/link";
 import ConversationTableInfiniteScroll from "../Organizations/ConversationTable";
 import PageContainer from "../Page/PageContainer";
-import { ChatModalClickDiv } from "../Chat/ChatModal";
+import { ExperimentalChatModalClickDiv } from "../Chat/ChatModal";
 import OrganizationTableInfiniteScroll from "../Organizations/OrganizationTable";
 import RecentUpdatesView from "./RecentUpdatesView";
 
@@ -14,7 +14,7 @@ export default function RecentUpdatesPage() {
             Dockets
           </Link>
           <div className="max-h-[600px] overflow-x-hidden border-r pr-4">
-            <ConversationTableInfiniteScroll />
+            <ConversationTableInfiniteScroll truncate />
           </div>
         </div>
         <div>
@@ -26,15 +26,13 @@ export default function RecentUpdatesPage() {
           </div>
         </div>
       </div>
-      <ChatModalClickDiv
+      <ExperimentalChatModalClickDiv
         className="btn btn-accent w-full"
         inheritedFilters={[]}
       >
         Unsure of what to do? Try chatting with the entire New York PUC
-      </ChatModalClickDiv>
-      <Link className="btn btn-primary w-full" href="/files">
-        Search all Files
-      </Link>
+      </ExperimentalChatModalClickDiv>
+
       <h1 className=" text-2xl font-bold">Newest Docs</h1>
       <RecentUpdatesView />
     </PageContainer>

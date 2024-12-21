@@ -1,11 +1,10 @@
 "use client";
 import axios from "axios";
-import Link from "next/link";
-import LoadingSpinner from "../styled-components/LoadingSpinner";
 import { publicAPIURL } from "@/lib/env_variables";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useEffect, useState } from "react";
 import LoadingSpinnerTimeout from "../styled-components/LoadingSpinnerTimeout";
+import { useRouter } from "next/navigation";
 
 const conversationsListGet = async (url: string) => {
   const cleanData = (response: any) => {
@@ -28,88 +27,81 @@ type ConversationTableSchema = {
   Description: string;
 };
 
-const ConversationTableHeaderless = ({
+const ConversationTable = ({
+  truncate,
   convoList,
 }: {
+  truncate?: boolean;
   convoList: ConversationTableSchema[];
 }) => {
-  return (
-    <tbody>
-      {convoList.map((convo: ConversationTableSchema) => {
-        var description = null;
-        const description_string = convo.Description;
-        // console.log(description_string);
-        try {
-          description = JSON.parse(description_string);
-          // console.log(description);
-        } catch (e) {
-          console.log("Error parsing JSON", e);
-        }
-        const matter_type = description?.matter_type || "unknown";
-        const matter_subtype = description?.matter_subtype || "unknown";
-        const organization = description?.organization || "unknown";
-        const date_filed = description?.date_filed || "unknown";
-
-        return (
-          <tr
-            key={convo.DocketID}
-            className="border-base-300 hover:bg-base-200 transition duration-500 ease-out"
-          >
-            <td colSpan={7} className="p-0">
-              <Link href={`/dockets/${convo.DocketID}`} className="flex w-full">
-                <div className="w-[40%] px-4 py-3">{convo.Name}</div>
-                <div className="w-[10%] px-4 py-3">{convo.DocketID}</div>
-                <div className="w-[10%] px-4 py-3">{convo.DocumentCount}</div>
-                <div className="w-[10%] px-4 py-3">{matter_type}</div>
-                <div className="w-[10%] px-4 py-3">{matter_subtype}</div>
-                <div className="w-[10%] px-4 py-3">{organization}</div>
-                <div className="w-[10%] px-4 py-3">{date_filed}</div>
-              </Link>
-            </td>
-          </tr>
-        );
-      })}
-    </tbody>
-  );
-};
-
-const ConversationTableHeaders = ({
-  children,
-}: {
-  children: React.ReactNode;
-}) => {
+  const router = useRouter();
   return (
     <table className="table table-pin-rows">
       {/* disable pinned rows due to the top row overlaying the filter sidebar */}
       <thead>
         <tr>
           <td className="w-[40%]">Name</td>
+          <td className="w-[10%]">Date Filed</td>
           <td className="w-[10%]">ID</td>
-          <td className="w-[10%]">Document Count</td>
           <td className="w-[10%]">Matter Type</td>
           <td className="w-[10%]">Matter Subtype</td>
-          <td className="w-[10%]">Organization</td>
-          <td className="w-[10%]">Date Filed</td>
+          {!truncate && (
+            <>
+              <td className="w-[10%]">Organization</td>
+              <td className="w-[10%]">Document Count</td>
+            </>
+          )}
         </tr>
       </thead>
-      {children}
+
+      <tbody>
+        {convoList.map((convo: ConversationTableSchema) => {
+          var description = null;
+          const description_string = convo.Description;
+          console.log(description_string);
+          try {
+            description = JSON.parse(description_string);
+            console.log(description);
+          } catch (e) {
+            console.log("Error parsing JSON", e);
+          }
+          const matter_type = description?.matter_type || "unknown";
+          const matter_subtype = description?.matter_subtype || "unknown";
+          const organization = description?.organization || "unknown";
+          const date_filed = description?.date_filed || "unknown";
+
+          return (
+            <tr
+              key={convo.DocketID}
+              className="border-base-300 hover:bg-base-200 transition duration-500 ease-out cursor-pointer"
+              onClick={() => {
+                router.push(`/dockets/${convo.DocketID}`);
+              }}
+            >
+              <td className="w-[60%] px-4 py-3">{convo.Name}</td>
+              <td className="w-[10%] px-4 py-3">{date_filed}</td>
+              <td className="w-[10%] px-4 py-3">{convo.DocketID}</td>
+              <td className="w-[10%] px-4 py-3">{matter_type}</td>
+              <td className="w-[10%] px-4 py-3">{matter_subtype}</td>
+              {!truncate && (
+                <>
+                  <td className="w-[10%] px-4 py-3">{organization}</td>
+                  <td className="w-[10%] px-4 py-3">{convo.DocumentCount}</td>
+                </>
+              )}
+            </tr>
+          );
+        })}
+      </tbody>
     </table>
   );
 };
 
-const ConversationTable = ({
-  convoList,
+const ConversationTableInfiniteScroll = ({
+  truncate,
 }: {
-  convoList: ConversationTableSchema[];
+  truncate?: boolean;
 }) => {
-  return (
-    <ConversationTableHeaders>
-      <ConversationTableHeaderless convoList={convoList} />
-    </ConversationTableHeaders>
-  );
-};
-
-const ConversationTableInfiniteScroll = () => {
   const [tableData, setTableData] = useState<ConversationTableSchema[]>([]);
   const defaultPageSize = 40;
   const [page, setPage] = useState(0);
@@ -147,9 +139,7 @@ const ConversationTableInfiniteScroll = () => {
         />
       }
     >
-      <ConversationTableHeaders>
-        <ConversationTableHeaderless convoList={tableData} />
-      </ConversationTableHeaders>
+      <ConversationTable convoList={tableData} truncate={truncate} />
     </InfiniteScroll>
   );
 };

@@ -10,6 +10,32 @@ import {
   ChatBoxInternalsStateless,
   initialChatState,
 } from "./ChatBoxInternals";
+import { useKesslerStore } from "@/lib/store";
+
+export const ExperimentalChatModalClickDiv = ({
+  inheritedFilters,
+  children,
+  className,
+}: {
+  inheritedFilters: InheritedFilterValues;
+  children?: React.ReactNode;
+  className?: string;
+}) => {
+  const globalStore = useKesslerStore();
+  const experimentalFilters = globalStore.experimentalFeaturesEnabled;
+  return (
+    <>
+      {experimentalFilters && (
+        <ChatModalClickDiv
+          inheritedFilters={inheritedFilters}
+          className={className}
+        >
+          {children}
+        </ChatModalClickDiv>
+      )}
+    </>
+  );
+};
 
 export const ChatModalClickDiv = ({
   inheritedFilters,
