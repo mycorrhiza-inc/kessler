@@ -18,9 +18,10 @@ package rag
 
 func AppendInstructionHeaderToChathistory(chatHistory *[]ChatMessage) []ChatMessage {
 	instruct_string := `If it would be helpful to link to a Docket, Organization, or File, Include the following in your response
-LinkDocket(18-M-0084)
-LinkOrganization(Public Service Comission)
-LinkFile(777b5c2d-d19e-4711-b2ed-2ba9bcfe449a)
+<LinkDocket docket_id="18-M-0084"/>
+<LinkOrganization name="Public Service Comission"/>
+<LinkOrganization uuid="b5009c5a-873c-44c5-8f7d-ab5b9fa8891b"/>
+<LinkFile uuid="777b5c2d-d19e-4711-b2ed-2ba9bcfe449a" />
 To create a link. Dont redirect to any other goverment resources except through this system.`
 	return_list := make([]ChatMessage, 0)
 	return_list = append(return_list, ChatMessage{

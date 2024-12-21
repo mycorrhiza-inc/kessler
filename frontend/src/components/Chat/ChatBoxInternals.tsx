@@ -40,7 +40,8 @@ export const ChatMessages = ({
         <div className="indicator w-4/5">
           {showCitationsButton && (
             <button
-              className="indicator-item badge badge-primary"
+              className="tooltip indicator-item badge badge-primary"
+              data-tip={String(message.citations)}
               onClick={clickCitation}
             >
               View Citations
