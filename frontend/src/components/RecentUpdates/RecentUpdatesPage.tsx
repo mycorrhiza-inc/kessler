@@ -14,7 +14,7 @@ export default function RecentUpdatesPage() {
             Dockets
           </Link>
           <div className="max-h-[600px] overflow-x-hidden border-r pr-4">
-            <ConversationTableInfiniteScroll />
+            <ConversationTableInfiniteScroll truncate />
           </div>
         </div>
         <div>
