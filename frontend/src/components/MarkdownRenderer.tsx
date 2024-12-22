@@ -85,6 +85,12 @@ E = mc^2
 def greet():
     print("Hello, world!")
 \`\`\`
+
+In order to access the docket, <link-docket text="click here" docket_id="18-M-0084"/>. 
+
+The organization <link-organization text="Public Service Comission" name="Public Service Comission"/> created the document.
+
+Their report <link-file text="1" uuid="777b5c2d-d19e-4711-b2ed-2ba9bcfe449a" /> claims xcel energy failed to meet its renewable energy targets.
 `;
 const CodeBlock = ({ node, inline, className, children, ...props }: any) => {
   const match = /language-(\w+)/.exec(className || "");
@@ -139,17 +145,19 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
         <Markdown
           remarkPlugins={[remarkMath, remarkGfm]}
           rehypePlugins={[
-            rehypeKatex,
             rehypeRaw,
             [
               rehypeComponents,
               {
                 components: {
+                  // Uncomenting these with rehypeRaw causes the bug: TypeError: cyclic object value
+                  // Uncomennting w/o rehypeRaw reverts to the default html escaping behavior.
                   "link-file": LinkFile,
                   "link-docket": LinkDocket,
                 },
               },
             ],
+            rehypeKatex,
           ]}
           components={{
             code: CodeBlock,
