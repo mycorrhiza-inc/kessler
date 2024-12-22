@@ -13,23 +13,13 @@ export const ChatMessages = ({
   messages: Message[];
   loading: boolean;
 }) => {
-  // const setMessageCitations = (index: number) => {
-  //   setHighlighted(index);
-  //   const message = messages[index];
-  //   const isntUser = message.role != "user";
-  //   const citationExists = message.citations && message.citations.length > 0;
-  //   if (isntUser && citationExists) {
-  //     setCitations(message.citations);
-  //   }
-  // };
-
   const MessageComponent = ({ message }: { message: Message }) => {
     const isUser = message.role === "user";
     const hasCitations = message.citations && message.citations.length > 0;
     const clickCitation = () => {
       console.log("Yay you clicked the citation component:", message.citations);
     };
-    const showCitationsButton = !isUser;
+    const showCitationsButton = !isUser && hasCitations;
     return (
       <div
         className={clsx(
@@ -37,20 +27,24 @@ export const ChatMessages = ({
           isUser ? "justify-end" : "justify-start",
         )}
       >
-        <div className="indicator max-w-11/12">
+        <div className="indicator w-4/5">
           {showCitationsButton && (
             <button
               className="indicator-item badge badge-primary"
               onClick={clickCitation}
             >
-              View Citations
+              <div
+                className="tooltip"
+                data-tip={message.citations.map((citation) => String(citation))}
+              >
+                View Citations
+              </div>
             </button>
           )}
           <div
-            className={`rounded-lg overflow-auto min-h-[100px] p-5 ${
+            className={`w-full rounded-lg overflow-auto min-h-[100px] p-5 ${
               isUser ? "bg-success" : "bg-base-300"
             }`}
-            // onClick={clickMessage}
           >
             <MarkdownRenderer
               color={isUser ? "success-content" : "base-content"}
@@ -61,23 +55,6 @@ export const ChatMessages = ({
         </div>
       </div>
     );
-    // return (
-    //   <div
-    //     className={`flex w-full ${isUser ? "justify-end" : "justify-start"}`}
-    //   >
-    //     <div
-    //       className={`border-8 w-11/12 rounded-lg overflow-auto min-h-[100px] p-5 ${
-    //         isUser
-    //           ? "bg-success text-success-content"
-    //           : "bg-base-300 text-base-content"
-    //       }`}
-    //     >
-    //       <MarkdownRenderer color={isUser ? "success-content" : "base-content"}>
-    //         {message.content}
-    //       </MarkdownRenderer>
-    //     </div>
-    //   </div>
-    // );
   };
   return (
     <div className="flex flex-col gap-8 h-[85%] overflow-y-auto">

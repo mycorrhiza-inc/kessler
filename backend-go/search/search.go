@@ -173,65 +173,14 @@ func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
 		log.Printf("Error unmarshalling quickwit response: %s", err)
 		errturn(err)
 	}
-	validated_response := ValidateSearchRequest(r, searchResponse)
 
-	data, err := ExtractSearchData(validated_response)
+	data, err := ExtractSearchData(searchResponse)
 	if err != nil {
 		log.Printf("Error creating response data: %s", err)
 		errturn(err)
 	}
 
 	return data, nil
-}
-
-// write a function that will take in a searchRequest and searchResults and create a new quickwitSearchResponse then for each hit and snippet in the passed in search results, make sure all the filters in search request are valid for that, if it is valid append it to the return searchResponse, else skip it and print a scary error message, then return the list of validated results
-func ValidateSearchRequest(searchRequest SearchRequest, searchResults quickwitSearchResponse) quickwitSearchResponse {
-	global_filters := searchRequest.SearchFilters
-	filters := global_filters.MetadataFilters
-	metadata_filters := filters.Metadata
-	var validatedResponse quickwitSearchResponse
-
-	for i, hit := range searchResults.Hits {
-		isValid := true
-
-		// Validate query matches if present
-		if searchRequest.Query != "" {
-			if !strings.Contains(strings.ToLower(hit.Text), strings.ToLower(searchRequest.Query)) &&
-				!strings.Contains(strings.ToLower(hit.Name), strings.ToLower(searchRequest.Query)) {
-				log.Printf("❌ WARNING: Hit %d failed query validation", i)
-				isValid = false
-			}
-		}
-
-		// Claude writes some interesting go code lol - nic
-		// Validate metadata filters
-		v := reflect.ValueOf(metadata_filters)
-		t := reflect.TypeOf(metadata_filters)
-		for j := 0; j < t.NumField(); j++ {
-			field := t.Field(j)
-			value := v.Field(j)
-
-			// Skip empty string fields
-			if value.Kind() == reflect.String && value.String() != "" {
-				hitValue := reflect.ValueOf(hit.Metadata).FieldByName(field.Name)
-				if !hitValue.IsValid() || hitValue.String() != value.String() {
-					log.Printf("❌ WARNING: Hit %d failed metadata validation for field %s", i, field.Name)
-					isValid = false
-					break
-				}
-			}
-		}
-
-		// If all validations pass, append to response
-		if isValid {
-			validatedResponse.Hits = append(validatedResponse.Hits, hit)
-			if i < len(searchResults.Snippets) {
-				validatedResponse.Snippets = append(validatedResponse.Snippets, searchResults.Snippets[i])
-			}
-		}
-	}
-
-	return validatedResponse
 }
 
 // Function to create search data array
@@ -241,8 +190,10 @@ func ExtractSearchData(data quickwitSearchResponse) ([]SearchData, error) {
 	// Map snippets text to hit names
 	for i, hit := range data.Hits {
 		var snippet string
-		if len(data.Snippets) > 0 {
-			snippet = data.Snippets[i].Text[0]
+		if len(data.Snippets) > i {
+			if len(data.Snippets[i].Text) > 0 {
+				snippet = data.Snippets[i].Text[0]
+			}
 		}
 		sdata := SearchData{
 			Name:     hit.Name,

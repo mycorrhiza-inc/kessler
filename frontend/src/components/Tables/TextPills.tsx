@@ -101,6 +101,13 @@ export const AuthorInfoPill = ({
 
 export const DocketPill = ({
   docket_named_id,
+  text,
 }: {
   docket_named_id: string;
-}) => <TextPill text={docket_named_id} href={`/dockets/${docket_named_id}`} />;
+  text?: string;
+}) => (
+  <TextPill
+    text={text || docket_named_id}
+    href={`/dockets/${docket_named_id}`}
+  />
+);
