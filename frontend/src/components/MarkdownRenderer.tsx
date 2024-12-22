@@ -145,15 +145,31 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
         <Markdown
           remarkPlugins={[remarkMath, remarkGfm]}
           rehypePlugins={[
-            rehypeRaw,
+            // rehypeRaw,
             [
               rehypeComponents,
               {
                 components: {
                   // Uncomenting these with rehypeRaw causes the bug: TypeError: cyclic object value
                   // Uncomennting w/o rehypeRaw reverts to the default html escaping behavior.
-                  "link-file": LinkFile,
-                  "link-docket": LinkDocket,
+                  // "link-file": LinkFile,
+                  // "link-docket": LinkDocket,
+                  // When trying with server side rendering I get a more detailed error:
+                  //
+                  // 67.36    Generating static pages (12/17)
+                  // 67.63 Error: rehype-components: Component function is expected to return ElementContent or an array of ElementContent, but got [{"key":null,"ref":null,"props":{"text":"click here"},"_owner":null}].
+                  // 67.63     at /app/.next/server/chunks/223.js:1:1069893
+                  // 67.63     at /app/.next/server/chunks/223.js:1:1393842
+                  // 67.63     at node (element<link-docket>) (/app/.next/server/chunks/223.js:1:1393285)
+                  // 67.63     at node (element<p>) (/app/.next/server/chunks/223.js:1:1393505)
+                  // 67.63     at node (root) (/app/.next/server/chunks/223.js:1:1393505)
+                  // 67.63     at s (/app/.next/server/chunks/223.js:1:1393582)
+                  // 67.63     at a (/app/.next/server/chunks/223.js:1:1393763)
+                  // 67.63     at /app/.next/server/chunks/223.js:1:1069722
+                  // 67.63     at /app/.next/server/chunks/223.js:1:1060981
+                  // 67.63     at a (/app/.next/server/chunks/223.js:1:1061186) {
+                  // 67.63   digest: '3998901393'
+                  // 67.63 }
                 },
               },
             ],
