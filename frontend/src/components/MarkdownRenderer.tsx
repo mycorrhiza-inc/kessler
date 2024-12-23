@@ -152,8 +152,8 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                 components: {
                   // Uncomenting these with rehypeRaw causes the bug: TypeError: cyclic object value
                   // Uncomennting w/o rehypeRaw reverts to the default html escaping behavior.
-                  // "link-file": LinkFile,
-                  // "link-docket": LinkDocket,
+                  "link-file": LinkFile,
+                  "link-docket": LinkDocket,
                   // When trying with server side rendering I get a more detailed error:
                   //
                   // 67.36    Generating static pages (12/17)
