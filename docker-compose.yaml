@@ -1,69 +1,57 @@
 # local development docker compose
 services:
-  reverse-proxy:
-    # official image
-    image: traefik:v3.0
-    command:
-      # - "--log.level=DEBUG"
-      - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--providers.docker.constraints=Label(`traefik.namespace`,`kessler`)"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entryPoints.websecure.address=:443"
-      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
-      - "--certificatesresolvers.myresolver.acme.email=mbright@kessler.xyz"
-      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
-      - "--providers.file.filename=/etc/traefik/traefik_dynamic.yaml"
-    ports:
-      - "80:80"
-      - "443:443"
-      - "${PROXY_UI_PORT:-8083}:8080"
-    volumes:
-      - "${VOLUMES_DIRECTORY:-./volumes}/letsencrypt:/letsencrypt"
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
-      - "./traefik_dynamic.yaml:/etc/traefik/traefik_dynamic.yaml:ro"
   frontend:
-    image: fractalhuman1/kessler-frontend:latest
+    hostname: "kessler.xyz"
+    build:
+      context: ./frontend
+      dockerfile: ./Dockerfile-dev
     env_file:
       - config/global.env
     volumes:
-      - ./config/frontend.env.local:/app.env.local
+      - ./config/frontend.env.local:/app/.env.local
       - ./config/global.env:/app/.env
+      - ./frontend/src/:/app/src
     labels:
       - "traefik.enable=true"
       - "traefik.namespace=kessler"
-      - "traefik.http.routers.frontend.rule=Host(`kessler.xyz`) && PathPrefix(`/`)"
-      - "traefik.http.routers.frontend.rule=HostRegexp(`{state:al|ak|az|ar|ca|co|ct|de|fl|ga|hi|id|il|in|ia|ks|ky|la|me|md|ma|mi|mn|ms|mo|mt|ne|nv|nh|nj|nm|ny|nc|nd|oh|ok|or|pa|ri|sc|sd|tn|tx|ut|vt|va|wa|wv|wi|wy}.kessler.xyz`)"
-      - traefik.http.routers.blog.tls.domains[0].main=kessler.xyz
-      - traefik.http.routers.blog.tls.domains[0].sans=*.kessler.xyz
-      # - "traefik.http.routers.frontend.middlewares=state-redirect@file"
-      - "traefik.http.routers.frontend.entrypoints=websecure"
-      - "traefik.http.routers.frontend.tls.certresolver=myresolver"
-      - "traefik.http.routers.whoami.rule=Host(`kessler.xyz`)"
-      - "traefik.http.routers.whoami.entrypoints=websecure"
-      - "traefik.http.routers.whoami.tls.certresolver=myresolver"
+      - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
     expose:
       - 3000
     command:
-      # - "sleep"
-      # - "9999999999d"
       - "npm"
       - "run"
-      - "start"
+      - "dev"
 
-  backend-go:
-    image: fractalhuman1/kessler-backend-go:latest
+  reverse-proxy:
+    image: traefik:v3.1.2
     command:
-      - "./kessler-backend-go"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.constraints=Label(`traefik.namespace`,`kessler`)"
+    expose:
+      - 80
+      - 443
+    ports:
+      - "80:80"
+      - "${PROXY_UI_PORT:-8083}:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+  backend-go:
+    image: cosmtrek/air
+    command:
+      - "air"
     env_file:
       - config/global.env
+    environment:
+      - "air_wd=/app"
+    volumes:
+      - ./backend-go:/app
+      - ./config/global.env:/app/.env
+    working_dir: /app
     expose:
       - 4041
     labels:
       - "traefik.enable=true"
       - "traefik.namespace=kessler"
-      - "traefik.http.routers.backend-go.rule=Host(`api.kessler.xyz`) && PathPrefix(`/v2`)"
-      # - "traefik.http.routers.backend-go.middlewares=state-redirect@file"
+      - "traefik.http.routers.go-backend.rule=PathPrefix(`/v2`)"
       - "traefik.http.middlewares.test-stripprefix.stripprefix.prefixes=/v2"
-      - "traefik.http.routers.backend-go.entrypoints=websecure"
-      - "traefik.http.routers.backend-go.tls.certresolver=myresolver"
