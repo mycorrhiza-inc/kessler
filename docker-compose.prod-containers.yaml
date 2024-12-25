@@ -25,7 +25,7 @@ services:
       - "traefik.http.middlewares.test-retry.retry.attempts=5"
       - "traefik.http.middlewares.test-retry.retry.initialinterval=200ms"
       - "traefik.http.services.web.loadbalancer.server.port=3000"
-      - "traefik.http.services.web.loadbalancer.healthCheck.path=/health"
+      - "traefik.http.services.web.loadbalancer.healthCheck.path=/"
       - "traefik.http.services.web.loadbalancer.healthCheck.interval=10s"
       - "traefik.http.services.web.loadbalancer.healthCheck.timeout=1s"
     restart: always
@@ -62,9 +62,14 @@ services:
       - "traefik.http.middlewares.test-retry.retry.attempts=5"
       - "traefik.http.middlewares.test-retry.retry.initialinterval=200ms"
       - "traefik.http.services.web.loadbalancer.server.port=3000"
-      - "traefik.http.services.web.loadbalancer.healthCheck.path=/health"
+      - "traefik.http.services.web.loadbalancer.healthCheck.path=/v2/ping"
       - "traefik.http.services.web.loadbalancer.healthCheck.interval=10s"
       - "traefik.http.services.web.loadbalancer.healthCheck.timeout=1s"
   backend-go-green:
     <<: *backend-go
     container_name: backend-go-green
+
+networks:
+  traefik:
+    name: traefik_webgateway
+    external: true

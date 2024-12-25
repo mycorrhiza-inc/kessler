@@ -22,3 +22,7 @@ services:
       - "${VOLUMES_DIRECTORY:-./volumes}/letsencrypt:/letsencrypt"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "./traefik_dynamic.yaml:/etc/traefik/traefik_dynamic.yaml:ro"
+
+networks:
+  webgateway:
+    driver: bridge
