@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+spec:
+  replicas: {{ .Values.backend.replicas }}
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend
+        image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+        ports:
+        - containerPort: {{ .Values.backend.port }}
+        command:
+        - ./kessler-backend-go
+        envFrom:
+        - configMapRef:
+            name: {{ .Values.backend.env.configMapName }}
+        livenessProbe:
+          httpGet:
+            path: /v2/ping
+            port: {{ .Values.backend.port }}
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 1
+

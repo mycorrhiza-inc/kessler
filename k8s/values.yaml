@@ -1,0 +1,23 @@
+frontend:
+  image:
+    repository: fractalhuman1/kessler-frontend
+    tag: latest
+  replicas: 1
+  domain: kessler.xyz
+  port: 3000
+  env:
+    configMapName: frontend-config
+
+backend:
+  image:
+    repository: fractalhuman1/kessler-backend-go
+    tag: latest
+  replicas: 1
+  domain: api.kessler.xyz
+  port: 4041
+  env:
+    configMapName: backend-config
+
+traefik:
+  enabled: true
+  certResolver: myresolver
