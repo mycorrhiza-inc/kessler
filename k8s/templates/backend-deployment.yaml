@@ -21,7 +21,9 @@ spec:
         - ./kessler-backend-go
         envFrom:
         - configMapRef:
-            name: {{ .Values.backend.env.configMapName }}
+            name: kessler-public-config
+        - secretRef:
+            name: kessler-private-config
         livenessProbe:
           httpGet:
             path: /v2/ping

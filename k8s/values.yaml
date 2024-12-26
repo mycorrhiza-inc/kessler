@@ -1,3 +1,7 @@
+config:
+  domain: "localhost"
+  apiUrl: "http://localhost"
+
 frontend:
   image:
     repository: fractalhuman1/kessler-frontend
@@ -5,8 +9,6 @@ frontend:
   replicas: 1
   domain: kessler.xyz
   port: 3000
-  env:
-    configMapName: frontend-config
 
 backend:
   image:
@@ -15,8 +17,6 @@ backend:
   replicas: 1
   domain: api.kessler.xyz
   port: 4041
-  env:
-    configMapName: backend-config
 
 traefik:
   enabled: true

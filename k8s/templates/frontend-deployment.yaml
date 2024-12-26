@@ -23,7 +23,9 @@ spec:
         - start
         envFrom:
         - configMapRef:
-            name: {{ .Values.frontend.env.configMapName }}
+            name: kessler-public-config
+        - secretRef:
+            name: kessler-private-config
         livenessProbe:
           httpGet:
             path: /
