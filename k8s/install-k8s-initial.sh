@@ -19,6 +19,14 @@ chmod 700 get_helm.sh
 
 helm list
 
+cd / 
+mkdir mycorrhiza
+cd mycorrhiza
+git clone https://github.com/mycorrhiza-inc/kessler
+cd kessler
+git fetch --all
+# Temporary since I dont want to fuck up by pushing all this stuff to main.
+git switch improving-reliability-3
 
 # Install k8s dashboard
 helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/
@@ -33,58 +41,19 @@ kubectl create clusterrolebinding nicole-admin-binding \
     --serviceaccount=default:nicole
 
 # Create a token for the service account
-kubectl create token nicole
+# kubectl create token nicole
 
 kubectl create namespace traefik
+helm repo add traefik https://traefik.github.io/charts
 helm install traefik traefik/traefik --namespace traefik --values k8s/helm-traefik-values.yaml
-
-
-# helm repo add jetstack https://charts.jetstack.io
-# helm repo update
-# helm install \
-#  cert-manager jetstack/cert-manager \
-#   --namespace cert-manager \
-#   --create-namespace \
-#   --set installCRDs=true
-
-
-cd / 
-mkdir mycorrhiza
-cd mycorrhiza
-git clone https://github.com/mycorrhiza-inc/kessler
-cd kessler
-git fetch --all
-
 
 
 
 # manually do some magic to copy k8s/secret.yml
-helm install kessler ./k8s -f k8s/values-prod.yaml
+# helm install kessler ./k8s -f k8s/values-prod.yaml
 
 
 
 
-
-# Now the service account 'nicole' has full cluster administration privileges
-# WARNING: This gives complete unrestricted access - only use in test environments!
-#
-# mkdir /root/install-artifacts
-# cd /root/install-artifacts
-# # Install k8s and helm
-# dnf install -y kubernetes1.32 kubernetes1.32-kubeadm kubernetes1.30-client 
-#
-# systemctl enable containerd
-# systemctl start containerd
-# # Enable IP forwarding
-# echo "1" > /proc/sys/net/ipv4/ip_forward
-# # Make IP forwarding persistent across reboots
-# echo "net.ipv4.ip_forward = 1" > /etc/sysctl.d/99-kubernetes-cri.conf
-# sysctl --system
-#
-# # Initialize kubernetes
-# kubeadm init
-
-
-# Now helm should work
 
 
