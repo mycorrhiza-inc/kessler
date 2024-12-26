@@ -1,3 +1,4 @@
+set -euo pipefail
 # Install utility packages to make debugging on the server easier.
 dnf install git fish tmux micro neovim btop wget -y
 chsh -s /usr/bin/fish
@@ -12,29 +13,39 @@ curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scrip
 chmod 700 get_helm.sh
 ./get_helm.sh
 
-# Apparently docker makes offical changes to the Open Container Initiative (OCI) standard. So we are not using docker here
-wget https://github.com/containerd/containerd/releases/download/v2.0.1/containerd-2.0.1-linux-amd64.tar.gz
-tar Cxzvf /usr/local containerd-*
-systemctl daemon-reload
-systemctl enable --now containerd
+systemctl enable containerd
+systemctl start containerd
+# Enable IP forwarding
+echo "1" > /proc/sys/net/ipv4/ip_forward
+# Make IP forwarding persistent across reboots
+echo "net.ipv4.ip_forward = 1" > /etc/sysctl.d/99-kubernetes-cri.conf
+sysctl --system
 
-wget https://github.com/opencontainers/runc/releases/download/v1.2.3/runc.amd64
-install -m 755 runc.amd64 /usr/local/sbin/runc
+# this works
+kubeadm init
 
-wget https://github.com/containernetworking/plugins/releases/download/v1.6.1/cni-plugins-linux-amd64-v1.6.1.tgz
-mkdir -p /opt/cni/bin
-tar Cxzvf /opt/cni/bin cni-plugins-linux-amd64-v1.6.1.tgz
-# # Install docker
+# Then I try this and get an error
+helm list
+# Error: Kubernetes cluster unreachable: Get "http://localhost:8080/version": dial tcp [::1]:8080: connect: connection refused
+
+# # Apparently docker makes offical changes to the Open Container Initiative (OCI) standard. So we are not using docker here
+# wget https://github.com/containerd/containerd/releases/download/v2.0.1/containerd-2.0.1-linux-amd64.tar.gz
+# tar Cxzvf /usr/local containerd-*
+# systemctl daemon-reload
+# systemctl enable --now containerd
+#
+# wget https://github.com/opencontainers/runc/releases/download/v1.2.3/runc.amd64 e
+# install -m 755 runc.amd64 /usr/local/sbin/runc
+#
+# wget https://github.com/containernetworking/plugins/releases/download/v1.6.1/cni-plugins-linux-amd64-v1.6.1.tgz
+# mkdir -p /opt/cni/bin
+# tar Cxzvf /opt/cni/bin cni-plugins-linux-amd64-v1.6.1.tgz
+# # Although apparently you can also install it with dnf using the containerd distributed by docker like so
 # dnf -y install dnf-plugins-core
 # dnf-3 config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
-# dnf install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
-# systemctl start docker
-# systemctl enable docker
-#
-#
-# # Install a docker shim, apparently it lets k8s control docker
-# wget https://github.com/Mirantis/cri-dockerd/releases/download/v0.3.16/cri-dockerd-0.3.16-3.fc36.x86_64.rpm
-# dnf install -y ./cri-dockerd-0.3.16-3.fc36.x86_64.rpm
+# dnf install containerd.io  -y
+# systemctl daemon-reload
+# systemctl enable --now containerd
 
 cd / 
 mkdir mycorrhiza
