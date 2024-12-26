@@ -17,16 +17,16 @@ spec:
             name: frontend
             port:
               number: {{ .Values.frontend.port }}
-  - host: "*.{{ .Values.frontend.domain }}"
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: frontend
-            port:
-              number: {{ .Values.frontend.port }}
+  {{/* - host: "*.{{ .Values.frontend.domain }}" */}}
+  {{/*   http: */}}
+  {{/*     paths: */}}
+  {{/*     - path: / */}}
+  {{/*       pathType: Prefix */}}
+  {{/*       backend: */}}
+  {{/*         service: */}}
+  {{/*           name: frontend */}}
+  {{/*           port: */}}
+  {{/*             number: {{ .Values.frontend.port }} */}}
   - host: {{ .Values.backend.domain }}
     http:
       paths:
@@ -40,5 +40,5 @@ spec:
   tls:
   - hosts:
     - {{ .Values.frontend.domain }}
-    - "*.{{ .Values.frontend.domain }}"
+    {{/* - "*.{{ .Values.frontend.domain }}" */}}
     - {{ .Values.backend.domain }}

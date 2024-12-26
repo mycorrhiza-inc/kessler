@@ -7,7 +7,7 @@ frontend:
     repository: fractalhuman1/kessler-frontend
     tag: latest
   replicas: 1
-  domain: kessler.xyz
+  domain: k8s.kessler.xyz
   port: 3000
 
 backend:
@@ -15,7 +15,7 @@ backend:
     repository: fractalhuman1/kessler-backend-go
     tag: latest
   replicas: 1
-  domain: api.kessler.xyz
+  domain: api-k8s.kessler.xyz
   port: 4041
 
 traefik:
