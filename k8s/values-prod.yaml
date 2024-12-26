@@ -17,7 +17,3 @@ backend:
   replicas: 1
   domain: k8s-kessler-api.kessler.xyz
   port: 4041
-
-traefik:
-  enabled: true
-  certResolver: myresolver

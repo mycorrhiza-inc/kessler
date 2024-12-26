@@ -16,8 +16,11 @@ kind: Ingress
 metadata:
   name: kessler-ingress
   annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production
     kubernetes.io/ingress.class: traefik
-    traefik.ingress.kubernetes.io/router.tls.certresolver: {{ .Values.traefik.certResolver }}
+  labels:
+    app: kessler
+  namespace: default
 spec:
   rules:
   - host: {{ .Values.frontend.domain }}
@@ -27,7 +30,7 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: frontend
+            name: kessler-frontend
             port:
               number: {{ .Values.frontend.port }}
   - host: {{ .Values.backend.domain }}
@@ -37,7 +40,7 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: backend
+            name: kessler-backend
             port:
               number: {{ .Values.backend.port }}
   tls:
