@@ -2,6 +2,8 @@ config:
   domain: "localhost"
   apiUrl: "http://localhost"
 
+certManager:
+  email: "mbright@kessler.xyz" # Replace with your email
 frontend:
   image:
     repository: fractalhuman1/kessler-frontend

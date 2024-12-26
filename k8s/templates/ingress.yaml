@@ -16,7 +16,7 @@ kind: Ingress
 metadata:
   name: kessler-ingress
   annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-production
+    cert-manager.io/cluster-issuer: letsencrypt-prod
     kubernetes.io/ingress.class: traefik
   labels:
     app: kessler
@@ -47,3 +47,4 @@ spec:
   - hosts:
     - {{ .Values.frontend.domain }}
     - {{ .Values.backend.domain }}
+    secretName: kessler-tls-cert
