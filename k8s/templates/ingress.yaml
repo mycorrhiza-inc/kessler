@@ -17,7 +17,7 @@ metadata:
   name: kessler-ingress
   annotations:
     kubernetes.io/ingress.class: traefik
-    traefik.ingress.kubernetes.io/router.tls.certresolver: letsencrypt
+    traefik.ingress.kubernetes.io/router.tls.certresolver: {{ .Values.traefik.certResolver }}
 spec:
   rules:
   - host: {{ .Values.frontend.domain }}

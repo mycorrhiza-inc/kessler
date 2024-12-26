@@ -19,5 +19,5 @@ backend:
   port: 4041
 
 traefik:
-  acme:
-    email: "your-email@domain.com"
+  enabled: true
+  certResolver: myresolver
