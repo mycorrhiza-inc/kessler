@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: traefik-config
+data:
+  traefik.yaml: |
+    api:
+      dashboard: true
+      insecure: true
+    log:
+      level: INFO
+    entryPoints:
+      web:
+        address: ":80"
+        http:
+          redirections:
+            entryPoint:
+              to: websecure
+              scheme: https
+      websecure:
+        address: ":443"
+    certificatesResolvers:
+      letsencrypt:
+        acme:
+          email: {{ .Values.traefik.acme.email }}
+          storage: /letsencrypt/acme.json
+          tlsChallenge: {}
+    providers:
+      kubernetesCRD:
+        enabled: true
+      kubernetesIngress:
+        enabled: true
+
