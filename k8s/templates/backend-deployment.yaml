@@ -31,4 +31,3 @@ spec:
           initialDelaySeconds: 10
           periodSeconds: 10
           timeoutSeconds: 1
-
