@@ -35,13 +35,17 @@ kubectl create clusterrolebinding nicole-admin-binding \
 # Create a token for the service account
 kubectl create token nicole
 
-helm repo add jetstack https://charts.jetstack.io
-helm repo update
-helm install \
- cert-manager jetstack/cert-manager \
-  --namespace cert-manager \
-  --create-namespace \
-  --set installCRDs=true
+kubectl create namespace traefik
+helm install traefik traefik/traefik --namespace traefik --values k8s/helm-traefik-values.yaml
+
+
+# helm repo add jetstack https://charts.jetstack.io
+# helm repo update
+# helm install \
+#  cert-manager jetstack/cert-manager \
+#   --namespace cert-manager \
+#   --create-namespace \
+#   --set installCRDs=true
 
 
 cd / 

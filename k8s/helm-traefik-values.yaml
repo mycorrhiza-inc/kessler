@@ -1,0 +1,10 @@
+image:
+  repository: traefik
+  tag: v3.2.3
+  pullPolicy: IfNotPresent
+
+# --> Change redirect HTTP to HTTPs by default here...
+ports:
+  web:
+    redirectTo:
+      port: websecure
