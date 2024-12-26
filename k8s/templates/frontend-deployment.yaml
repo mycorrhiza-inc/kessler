@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: kessler-frontend
+  namespace: kessler
 spec:
   replicas: {{ .Values.frontend.replicas }}
   selector:

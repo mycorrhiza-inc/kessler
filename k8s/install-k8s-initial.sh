@@ -32,7 +32,7 @@ git switch improving-reliability-3
 helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/
 helm install testing-dashboard kubernetes-dashboard/kubernetes-dashboard
 # To make acessible publicly
-# kubectl -n default port-forward svc/test-dashboard-kong-proxy 8443:443 --address 0.0.0.0
+# kubectl -n default port-forward svc/testing-dashboard-kong-proxy 8443:443 --address 0.0.0.0
 
 # Create a service account with cluster-admin privileges
 kubectl create serviceaccount nicole -n default
@@ -49,8 +49,12 @@ helm install traefik traefik/traefik --namespace traefik --values k8s/helm-traef
 
 
 
+
+kubectl create namespace kessler
+
+
 # manually do some magic to copy k8s/secret.yml
-# helm install kessler ./k8s -f k8s/values-prod.yaml
+# helm install kessler ./k8s -f k8s/values-prod.yaml --namespace -kessler
 
 
 
