@@ -43,9 +43,10 @@ kubectl create clusterrolebinding nicole-admin-binding \
 # Create a token for the service account
 # kubectl create token nicole
 
-kubectl create namespace traefik
-helm repo add traefik https://traefik.github.io/charts
-helm install traefik traefik/traefik --namespace traefik --values k8s/helm-traefik-values.yaml
+# kubectl create namespace traefik
+# helm repo add traefik https://traefik.github.io/charts
+# helm install traefik traefik/traefik --namespace traefik --values k8s/helm-traefik-values.yaml
+# helm install traefik traefik/traefik 
 
 
 
