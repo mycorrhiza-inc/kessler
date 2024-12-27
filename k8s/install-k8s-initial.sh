@@ -54,7 +54,7 @@ kubectl create namespace kessler
 
 
 # manually do some magic to copy k8s/secret.yml
-# helm install kessler ./k8s -f k8s/values-prod.yaml --namespace -kessler
+helm install kessler ./k8s -f k8s/values-prod.yaml --namespace kessler
 
 
 
