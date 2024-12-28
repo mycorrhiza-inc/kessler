@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kessler-public-config
+  namespace: kessler
+data:
+  DOMAIN: {{ .Values.config.domain | quote }}
+  NEXT_PUBLIC_KESSLER_API_URL: {{ .Values.config.apiUrl | quote }}
+  NEXT_PUBLIC_SUPABASE_URL: "https://kpvkpczxcclxslabfzeu.supabase.co"
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtwdmtwY3p4Y2NseHNsYWJmemV1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjUwNTQzOTIsImV4cCI6MjA0MDYzMDM5Mn0.9kR-oYUM5SqjmteQbPE1w-ABX8-0sSGldGAGsegCHfs"
+  CLERK_PUBLIC_KEY: "sk_test_OQpY6GKUsDuewS1UKW09eAxAX0Wf4bQg2Tm4rX0wwq"
+  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_test_cHJvLXBvcnBvaXNlLTY4LmNsZXJrLmFjY291bnRzLmRldiQ"
+  QUICKWIT_ENDPOINT: "http://quickwit-main.tail4a273.ts.net:7280"
+  MARKER_ENDPOINT_URL: "http://uttu-fedora:2718"
+  GPU_COMPUTE_URL: "http://uttu-fedora:6000"
+  TMPDIR: "/tmp/"
+

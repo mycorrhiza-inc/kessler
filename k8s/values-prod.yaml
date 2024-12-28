@@ -1,0 +1,21 @@
+config:
+  domain: "localhost"
+  apiUrl: "http://localhost"
+
+certManager:
+  email: "mbright@kessler.xyz" # Replace with your email
+frontend:
+  image:
+    repository: fractalhuman1/kessler-frontend
+    tag: latest
+  replicas: 1
+  domain: k8s-kessler.kessler.xyz
+  port: 3000
+
+backend:
+  image:
+    repository: fractalhuman1/kessler-backend-go
+    tag: latest
+  replicas: 1
+  domain: k8s-kessler-api.kessler.xyz
+  port: 4041

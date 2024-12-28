@@ -1,0 +1,28 @@
+# local development docker compose
+services:
+  reverse-proxy:
+    # official image
+    image: traefik:v3.0
+    command:
+      - "--log.level=INFO"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.constraints=Label(`traefik.namespace`,`kessler`)"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entryPoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.email=mbright@kessler.xyz"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      - "--providers.file.filename=/etc/traefik/traefik_dynamic.yaml"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "${PROXY_UI_PORT:-8083}:8080"
+    volumes:
+      - "${VOLUMES_DIRECTORY:-./volumes}/letsencrypt:/letsencrypt"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./traefik_dynamic.yaml:/etc/traefik/traefik_dynamic.yaml:ro"
+
+networks:
+  webgateway:
+    driver: bridge

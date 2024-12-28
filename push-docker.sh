@@ -7,8 +7,16 @@
 # 5. Run this script
 set -e
 
-docker build -t fractalhuman1/kessler-frontend:latest --platform linux/amd64 ./frontend/ &&
-docker build -t fractalhuman1/kessler-backend-go:latest --platform linux/amd64 ./backend-go/ &&
+# Default tag is nightly
+TAG="nightly"
 
-docker push fractalhuman1/kessler-frontend:latest &&
-docker push fractalhuman1/kessler-backend-go:latest 
+# Check for --release flag
+if [ "$1" = "--release" ]; then
+    TAG="latest"
+fi
+
+docker build -t "fractalhuman1/kessler-frontend:${TAG}" --platform linux/amd64 ./frontend/ &&
+docker build -t "fractalhuman1/kessler-backend-go:${TAG}" --platform linux/amd64 ./backend-go/ &&
+
+docker push "fractalhuman1/kessler-frontend:${TAG}" &&
+docker push "fractalhuman1/kessler-backend-go:${TAG}"

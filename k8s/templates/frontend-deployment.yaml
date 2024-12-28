@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kessler-frontend
+  namespace: kessler
+spec:
+  replicas: {{ .Values.frontend.replicas }}
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}"
+        ports:
+        - containerPort: {{ .Values.frontend.port }}
+        command:
+        - npm
+        - run
+        - start
+        envFrom:
+        - configMapRef:
+            name: kessler-public-config
+        - secretRef:
+            name: kessler-private-config
+        livenessProbe:
+          httpGet:
+            path: /
+            port: {{ .Values.frontend.port }}
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 1
+
