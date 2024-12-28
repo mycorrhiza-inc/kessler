@@ -6,7 +6,7 @@ metadata:
     kubernetes.io/ingress.class: traefik
   labels:
     app: kessler
-  namespace: default
+  namespace: kessler
 spec:
   rules:
   - host: {{ .Values.frontend.domain }}
