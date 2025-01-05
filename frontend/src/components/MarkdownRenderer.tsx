@@ -171,7 +171,7 @@ const horrificMarkdownComponentMangle = (inputMarkdown: string): string => {
     (match, attributes) => {
       const attrs = getAttributes(attributes);
       const color = subdividedHueFromSeed(attrs.docket_id);
-      return `<a href = "/docket/${attrs.docket_id}" class="btn btn-xs m-1 h-auto pb-1 text-black noclick text-pretty" style="background-color: ${color}"> ${attrs.text} </a>`;
+      return `<a  target="_blank" href="/docket/${attrs.docket_id}" class="btn btn-xs m-1 h-auto pb-1 text-black noclick text-pretty" style="background-color: ${color}"> ${attrs.text} </a>`;
     },
   );
 
@@ -181,7 +181,7 @@ const horrificMarkdownComponentMangle = (inputMarkdown: string): string => {
     (match, attributes) => {
       const attrs = getAttributes(attributes);
       const color = subdividedHueFromSeed(attrs.uuid);
-      return `<a href = "/file/${attrs.uuid}" class="btn btn-xs m-1 h-auto pb-1 text-black noclick text-pretty" style="background-color: ${color}"> ${attrs.text} </a>`;
+      return `<a target="_blank" href="/file/${attrs.uuid}" class="btn btn-xs m-1 h-auto pb-1 text-black noclick text-pretty" style="background-color: ${color}"> ${attrs.text} </a>`;
     },
   );
 
@@ -191,7 +191,7 @@ const horrificMarkdownComponentMangle = (inputMarkdown: string): string => {
     (match, attributes) => {
       const attrs = getAttributes(attributes);
       const color = subdividedHueFromSeed(attrs.uuid);
-      return `<a href = "/orgs/${attrs.uuid}" class="btn btn-xs m-1 h-auto pb-1 text-black noclick text-pretty" style="background-color: ${color}"> ${attrs.text} </a>`;
+      return `<a target="_blank" href="/orgs/${attrs.uuid}" class="btn btn-xs m-1 h-auto pb-1 text-black noclick text-pretty" style="background-color: ${color}"> ${attrs.text} </a>`;
     },
   );
 
