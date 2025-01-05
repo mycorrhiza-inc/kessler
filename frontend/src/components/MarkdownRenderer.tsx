@@ -143,7 +143,7 @@ const CodeBlock = ({ node, inline, className, children, ...props }: any) => {
 //
 // In order to access the docket, <link-docket text="click here" docket_id="18-M-0084"/>.
 //
-// The organization <link-organization text="Public Service Comission" name="Public Service Comission"/> created the document.
+// The organization <link-organization text="Public Service Comission" uuid="Public Service Comission"/> created the document.
 //
 // Their report <link-file text="1" uuid="777b5c2d-d19e-4711-b2ed-2ba9bcfe449a" /> claims xcel energy failed to meet its renewable energy targets.
 //
@@ -171,7 +171,7 @@ const horrificMarkdownComponentMangle = (inputMarkdown: string): string => {
     (match, attributes) => {
       const attrs = getAttributes(attributes);
       const color = subdividedHueFromSeed(attrs.docket_id);
-      return `<a  target="_blank" href="/docket/${attrs.docket_id}" class="btn btn-xs m-1 h-auto pb-1 text-black noclick text-pretty" style="background-color: ${color}"> ${attrs.text} </a>`;
+      return `<a  target="_blank" href="/dockets/${attrs.docket_id}" class="btn btn-xs m-1 h-auto pb-1 text-black noclick text-pretty" style="background-color: ${color}"> ${attrs.text} </a>`;
     },
   );
 
@@ -181,7 +181,7 @@ const horrificMarkdownComponentMangle = (inputMarkdown: string): string => {
     (match, attributes) => {
       const attrs = getAttributes(attributes);
       const color = subdividedHueFromSeed(attrs.uuid);
-      return `<a target="_blank" href="/file/${attrs.uuid}" class="btn btn-xs m-1 h-auto pb-1 text-black noclick text-pretty" style="background-color: ${color}"> ${attrs.text} </a>`;
+      return `<a target="_blank" href="/files/${attrs.uuid}" class="btn btn-xs m-1 h-auto pb-1 text-black noclick text-pretty" style="background-color: ${color}"> ${attrs.text} </a>`;
     },
   );
 
@@ -190,7 +190,7 @@ const horrificMarkdownComponentMangle = (inputMarkdown: string): string => {
     /<link-organization([^/>]+)\/>/g,
     (match, attributes) => {
       const attrs = getAttributes(attributes);
-      const color = subdividedHueFromSeed(attrs.uuid);
+      const color = subdividedHueFromSeed(attrs.name);
       return `<a target="_blank" href="/orgs/${attrs.uuid}" class="btn btn-xs m-1 h-auto pb-1 text-black noclick text-pretty" style="background-color: ${color}"> ${attrs.text} </a>`;
     },
   );
