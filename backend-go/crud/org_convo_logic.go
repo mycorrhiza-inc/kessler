@@ -110,12 +110,7 @@ func verifyAuthorOrganizationUUID(ctx context.Context, q dbstore.Queries, author
 		return *author_info, nil
 	}
 	// TODO: Change the sql so that this also matches IsPerson, but for now it shouldnt matter.
-	results, err := q.OrganizationFetchByAliasMatch(ctx, author_info.AuthorName)
-	if err != nil {
-		fmt.Println(err)
-		return *author_info, err
-	}
-	org_return_info, err := getFirstElement(results) // Gives an error if list is empty
+	org_return_info, err := q.OrganizationFetchByAliasMatchSingle(ctx, author_info.AuthorName)
 	if err == nil {
 		org_uuid := org_return_info.ID
 		author_info.AuthorID = org_uuid

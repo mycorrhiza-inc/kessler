@@ -52,14 +52,11 @@ func OrgWithFilesGetByUnknown(ctx context.Context, q *dbstore.Queries, orgQuery 
 	if err == nil {
 		return OrgWithFilesGetByID(ctx, q, org_id)
 	}
-	orgs_incomple_list, err := q.OrganizationFetchByAliasMatch(ctx, orgQuery)
+	orgs_pgobject, err := q.OrganizationFetchByAliasMatchSingle(ctx, orgQuery)
 	if err != nil {
 		return organizations.OrganizationSchemaComplete{}, err
 	}
-	if len(orgs_incomple_list) == 0 {
-		return organizations.OrganizationSchemaComplete{}, fmt.Errorf("Asking for a list of organization matches returned no results.")
-	}
-	org_id = orgs_incomple_list[0].ID
+	org_id = orgs_pgobject.ID
 	return OrgWithFilesGetByID(ctx, q, org_id)
 }
 

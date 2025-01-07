@@ -21,11 +21,12 @@ func getObjectInformation(obj_query_string string, obj_type string, q dbstore.Qu
 	switch obj_type {
 	case "file":
 		return getFileInformationUnknown(obj_query_string, q, ctx)
-	case "org":
+	case "organization":
 		return getOrgInformationUnknown(obj_query_string, q, ctx)
 	case "docket":
 		return getDocketInformationUnkown(obj_query_string, q, ctx)
 	}
+	return ObjectInfo{}, fmt.Errorf("Unknown object type: %v", obj_type)
 }
 
 func getFileInformationUnknown(file_query_string string, q dbstore.Queries, ctx context.Context) (ObjectInfo, error) {
@@ -62,6 +63,7 @@ func getDocketInformationUnkown(docket_query_string string, q dbstore.Queries, c
 		return ObjectInfo{}, err
 	}
 	return_info := ObjectInfo{
+		UUID:        return_obj.ID,
 		Name:        return_obj.DocketID,
 		ObjectType:  "docket",
 		Description: return_obj.Name,
@@ -70,8 +72,16 @@ func getDocketInformationUnkown(docket_query_string string, q dbstore.Queries, c
 	return return_info, nil
 }
 
-func getOrgInformationUnknown(org_query_string uuid.UUID, q dbstore.Queries, ctx context.Context) (ObjectInfo, error) {
-	return_org, err := crud.OrganizationGetByID(ctx, &q, org_query_string)
-	exampleInfo := ObjectInfo{UUID: org_uuid, ObjectType: "org", Name: "Example Organization", Description: "Example Organization Description"}
-	return exampleInfo, nil
+func getOrgInformationUnknown(org_query_string string, q dbstore.Queries, ctx context.Context) (ObjectInfo, error) {
+	return_obj, err := crud.OrgWithFilesGetByUnknown(ctx, &q, org_query_string)
+	if err != nil {
+		return ObjectInfo{}, err
+	}
+	return_info := ObjectInfo{
+		UUID:        return_obj.ID,
+		Name:        return_obj.Name,
+		ObjectType:  "organization",
+		Description: "",
+	}
+	return return_info, nil
 }
