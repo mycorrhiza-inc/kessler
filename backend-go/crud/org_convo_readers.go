@@ -1,6 +1,7 @@
 package crud
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"kessler/gen/dbstore"
@@ -72,14 +73,15 @@ func GetOrgWithFiles(w http.ResponseWriter, r *http.Request) {
 	w.Write(response)
 }
 
-func ConversationGetByName(w http.ResponseWriter, r *http.Request) {
+func ConversationGetByNameHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Getting file with metadata")
 	q := *routing.DBQueriesFromRequest(r)
 
 	params := mux.Vars(r)
 	docketIdStr := params["name"]
 	ctx := r.Context()
-	conv_infos, err := q.DocketConversationFetchByDocketIdMatch(ctx, docketIdStr)
+
+	conv_info, err := GetConversationByName(ctx, &q, docketIdStr)
 	if err != nil {
 		log.Printf("Error reading organization: %v", err)
 		if err.Error() == "no rows in result set" {
@@ -89,16 +91,22 @@ func ConversationGetByName(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	if len(conv_infos) == 0 {
-		errorstr := fmt.Sprintf("No proceeding with name %s", docketIdStr)
-		http.Error(w, errorstr, http.StatusNotFound)
-		fmt.Println(errorstr)
-		return
-	}
-	conv_info := conv_infos[0]
+
 	response, _ := json.Marshal(conv_info)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(response)
+}
+
+func GetConversationByName(ctx context.Context, q *dbstore.Queries, docketIdStr string) (dbstore.DocketConversation, error) {
+	conv_infos, err := q.DocketConversationFetchByDocketIdMatch(ctx, docketIdStr)
+	if err != nil {
+		return dbstore.DocketConversation{}, err
+	}
+	if len(conv_infos) == 0 {
+		errorstr := fmt.Sprintf("No proceeding with name %s", docketIdStr)
+		return dbstore.DocketConversation{}, fmt.Errorf(errorstr)
+	}
+	return conv_infos[0], nil
 }
 
 func OrgSemiCompletePaginated(w http.ResponseWriter, r *http.Request) {
@@ -188,5 +196,4 @@ func ConversationSemiCompleteListAll(w http.ResponseWriter, r *http.Request) {
 	response, _ := json.Marshal(proceedings)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(response)
-
 }
