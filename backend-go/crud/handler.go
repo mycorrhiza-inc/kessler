@@ -98,7 +98,7 @@ func DefineCrudRoutes(public_subrouter *mux.Router) {
 
 	public_subrouter.HandleFunc(
 		"/organizations/{uuid}",
-		GetOrgWithFiles,
+		GetOrgWithFilesHandler,
 	).Methods(http.MethodGet)
 
 	public_subrouter.HandleFunc(
