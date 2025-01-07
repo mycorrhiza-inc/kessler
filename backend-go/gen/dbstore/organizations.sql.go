@@ -273,30 +273,42 @@ func (q *Queries) OrganizationDelete(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
-const organizationFetchByNameMatch = `-- name: OrganizationFetchByNameMatch :many
+const organizationFetchByAliasMatch = `-- name: OrganizationFetchByAliasMatch :many
 SELECT
-    name, description, id, created_at, updated_at, is_person
+  public.organization_aliases.organization_alias AS alias,
+  public.organization.id AS id,
+  public.organization.name AS name,
+  public.organization.description AS description,
+  public.organization.is_person AS is_person
 FROM
-    public.organization
+    public.organization_aliases
+    LEFT JOIN public.organization ON public.organization.id = public.organization_aliases.organization_id
 WHERE
-    name = $1
+    public.organization_aliases.organization_alias = $1
 `
 
-func (q *Queries) OrganizationFetchByNameMatch(ctx context.Context, name string) ([]Organization, error) {
-	rows, err := q.db.Query(ctx, organizationFetchByNameMatch, name)
+type OrganizationFetchByAliasMatchRow struct {
+	Alias       string
+	ID          uuid.UUID
+	Name        pgtype.Text
+	Description pgtype.Text
+	IsPerson    pgtype.Bool
+}
+
+func (q *Queries) OrganizationFetchByAliasMatch(ctx context.Context, organizationAlias string) ([]OrganizationFetchByAliasMatchRow, error) {
+	rows, err := q.db.Query(ctx, organizationFetchByAliasMatch, organizationAlias)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Organization
+	var items []OrganizationFetchByAliasMatchRow
 	for rows.Next() {
-		var i Organization
+		var i OrganizationFetchByAliasMatchRow
 		if err := rows.Scan(
+			&i.Alias,
+			&i.ID,
 			&i.Name,
 			&i.Description,
-			&i.ID,
-			&i.CreatedAt,
-			&i.UpdatedAt,
 			&i.IsPerson,
 		); err != nil {
 			return nil, err
