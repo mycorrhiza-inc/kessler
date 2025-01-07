@@ -17,49 +17,36 @@ type ObjectInfo struct {
 	Extras      map[string]interface{} `json:"extras"`
 }
 
-func getObjectInformation(obj_uuid_string string, obj_named_lookup string, obj_type string, q dbstore.Queries, ctx context.Context) (ObjectInfo, error) {
-	obj_uuid := uuid.Nil
-	err := error(nil)
-	if obj_uuid_string == "" {
-		if obj_named_lookup == "" {
-			return ObjectInfo{}, fmt.Errorf("Object UUID and name lookup were empty")
-		}
-		return ObjectInfo{}, fmt.Errorf("Named lookup not implemented yet")
-
-	} else {
-		obj_uuid, err = uuid.Parse(obj_uuid_string)
-		if err != nil {
-			return ObjectInfo{}, err
-		}
-
-	}
-	return getObjectInformationUUID(obj_uuid, obj_type, q, ctx)
-}
-
-func getObjectInformationUUID(obj_uuid uuid.UUID, obj_type string, q dbstore.Queries, ctx context.Context) (ObjectInfo, error) {
-	if obj_uuid == uuid.Nil {
-		return ObjectInfo{}, fmt.Errorf("Object UUID was nil")
-	}
-	exampleInfo := ObjectInfo{UUID: obj_uuid, ObjectType: obj_type, Name: "Example", Description: "Example Description"}
+func getObjectInformation(obj_query_string string, obj_type string, q dbstore.Queries, ctx context.Context) (ObjectInfo, error) {
 	switch obj_type {
 	case "file":
-		return getFileInformationUUID(obj_uuid, q, ctx)
+		return getFileInformationUnknown(obj_query_string, q, ctx)
 	case "org":
-		return getOrgInformation(obj_uuid, q, ctx)
+		return getOrgInformationUnknown(obj_query_string, q, ctx)
 	case "docket":
-		return getDocketInformation(obj_uuid, q, ctx)
+		return getDocketInformationUnkown(obj_query_string, q, ctx)
 	}
-	return exampleInfo, fmt.Errorf("Object type %s did not match anything known", obj_type)
+}
+
+func getFileInformationUnknown(file_query_string string, q dbstore.Queries, ctx context.Context) (ObjectInfo, error) {
+	file_uuid, err := uuid.Parse(file_query_string)
+	if err == nil {
+		return getFileInformationUUID(file_uuid, q, ctx)
+	}
+	return ObjectInfo{}, fmt.Errorf("UUID Failed to parse and Named File Lookup not implemented.")
 }
 
 func getFileInformationUUID(file_uuid uuid.UUID, q dbstore.Queries, ctx context.Context) (ObjectInfo, error) {
-	returnInfo := ObjectInfo{UUID: file_uuid, ObjectType: "file", Name: "Example File", Description: "Example File Description"}
 	file, err := crud.SemiCompleteFileGetFromUUID(ctx, q, file_uuid)
 	if err != nil {
 		return ObjectInfo{}, err
 	}
-	returnInfo.Name = file.Name
-	returnInfo.Description = file.Extra.Summary
+	returnInfo := ObjectInfo{
+		UUID:        file_uuid,
+		ObjectType:  "file",
+		Name:        file.Name,
+		Description: file.Extra.Summary,
+	}
 	returnInfo.Extras["date"] = file.Mdata["date"]
 	returnInfo.Extras["file_extension"] = file.Extension
 	returnInfo.Extras["parent_docket_name"] = file.Conversation.Name
@@ -69,14 +56,22 @@ func getFileInformationUUID(file_uuid uuid.UUID, q dbstore.Queries, ctx context.
 	return returnInfo, nil
 }
 
-func getDocketInformationNamed(docket_named_id string, q dbstore.Queries, ctx context.Context) (ObjectInfo, error) {
-	convo, err := crud.ConversationGetByName(ctx, q, docket_named_id)
+func getDocketInformationUnkown(docket_query_string string, q dbstore.Queries, ctx context.Context) (ObjectInfo, error) {
+	return_obj, err := crud.ConversationGetByUnknown(ctx, &q, docket_query_string)
+	if err != nil {
+		return ObjectInfo{}, err
+	}
+	return_info := ObjectInfo{
+		Name:        return_obj.DocketID,
+		ObjectType:  "docket",
+		Description: return_obj.Name,
+	}
 
-	exampleInfo := ObjectInfo{UUID: convo.ID, ObjectType: "docket", Name: convo.Name, Description: "Example Docket Description"}
-	return exampleInfo, nil
+	return return_info, nil
 }
 
-func getOrgInformation(org_uuid uuid.UUID, q dbstore.Queries, ctx context.Context) (ObjectInfo, error) {
+func getOrgInformationUnknown(org_query_string uuid.UUID, q dbstore.Queries, ctx context.Context) (ObjectInfo, error) {
+	return_org, err := crud.OrganizationGetByID(ctx, &q, org_query_string)
 	exampleInfo := ObjectInfo{UUID: org_uuid, ObjectType: "org", Name: "Example Organization", Description: "Example Organization Description"}
 	return exampleInfo, nil
 }

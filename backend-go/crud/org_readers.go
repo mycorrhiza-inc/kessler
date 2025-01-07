@@ -44,7 +44,7 @@ func OrgGetWithFilesHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(response)
 }
 
-func OrgWithFilesGetByUnknownQuery(ctx context.Context, q *dbstore.Queries, orgQuery string) (organizations.OrganizationSchemaComplete, error) {
+func OrgWithFilesGetByUnknown(ctx context.Context, q *dbstore.Queries, orgQuery string) (organizations.OrganizationSchemaComplete, error) {
 	if orgQuery == "" {
 		return organizations.OrganizationSchemaComplete{}, fmt.Errorf("No query string provided.")
 	}
@@ -52,10 +52,15 @@ func OrgWithFilesGetByUnknownQuery(ctx context.Context, q *dbstore.Queries, orgQ
 	if err == nil {
 		return OrgWithFilesGetByID(ctx, q, org_id)
 	}
-	arg := dbstore.OrganizationAliasIdNameGetParams{
-
+	orgs_incomple_list, err := q.OrganizationFetchByAliasMatch(ctx, orgQuery)
+	if err != nil {
+		return organizations.OrganizationSchemaComplete{}, err
 	}
-	test, err := q.OrganizationAliasIdNameGet(ctx, arg dbstore.OrganizationAliasIdNameGetParams)
+	if len(orgs_incomple_list) == 0 {
+		return organizations.OrganizationSchemaComplete{}, fmt.Errorf("Asking for a list of organization matches returned no results.")
+	}
+	org_id = orgs_incomple_list[0].ID
+	return OrgWithFilesGetByID(ctx, q, org_id)
 }
 
 func OrgWithFilesGetByID(ctx context.Context, q *dbstore.Queries, orgID uuid.UUID) (organizations.OrganizationSchemaComplete, error) {

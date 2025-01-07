@@ -5,13 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net/http"
-
 	"kessler/gen/dbstore"
-	"kessler/routing"
-
 	"kessler/objects/authors"
 	"kessler/objects/conversations"
+	"kessler/routing"
+	"net/http"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -112,7 +110,7 @@ func verifyAuthorOrganizationUUID(ctx context.Context, q dbstore.Queries, author
 		return *author_info, nil
 	}
 	// TODO: Change the sql so that this also matches IsPerson, but for now it shouldnt matter.
-	results, err := q.OrganizationFetchByNameMatch(ctx, author_info.AuthorName)
+	results, err := q.OrganizationFetchByAliasMatch(ctx, author_info.AuthorName)
 	if err != nil {
 		fmt.Println(err)
 		return *author_info, err
