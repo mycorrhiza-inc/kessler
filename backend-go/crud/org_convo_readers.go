@@ -17,7 +17,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func GetOrgWithFilesHandler(w http.ResponseWriter, r *http.Request) {
+func OrgGetWithFilesHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Getting file with metadata")
 	q := *routing.DBQueriesFromRequest(r)
 
@@ -30,7 +30,7 @@ func GetOrgWithFilesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx := r.Context()
 
-	complete_org_info, err := GetOrgWithFilesByID(ctx, &q, parsedUUID)
+	complete_org_info, err := OrgGetWithFilesByID(ctx, &q, parsedUUID)
 	if err != nil {
 		log.Printf("Error reading organization: %v", err)
 		if err.Error() == "no rows in result set" {
@@ -46,7 +46,7 @@ func GetOrgWithFilesHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(response)
 }
 
-func GetOrgWithFilesByID(ctx context.Context, q *dbstore.Queries, orgID uuid.UUID) (organizations.OrganizationSchemaComplete, error) {
+func OrgGetWithFilesByID(ctx context.Context, q *dbstore.Queries, orgID uuid.UUID) (organizations.OrganizationSchemaComplete, error) {
 	org_info, err := q.OrganizationRead(ctx, orgID)
 	if err != nil {
 		return organizations.OrganizationSchemaComplete{}, err
@@ -75,7 +75,7 @@ func GetOrgWithFilesByID(ctx context.Context, q *dbstore.Queries, orgID uuid.UUI
 	}, nil
 }
 
-func ConversationGetByNameHandler(w http.ResponseWriter, r *http.Request) {
+func ConversationGetByUnknownHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Getting file with metadata")
 	q := *routing.DBQueriesFromRequest(r)
 
@@ -83,7 +83,7 @@ func ConversationGetByNameHandler(w http.ResponseWriter, r *http.Request) {
 	docketIdStr := params["name"]
 	ctx := r.Context()
 
-	conv_info, err := GetConversationByName(ctx, &q, docketIdStr)
+	conv_info, err := ConversationGetByUnknown(ctx, &q, docketIdStr)
 	if err != nil {
 		log.Printf("Error reading organization: %v", err)
 		if err.Error() == "no rows in result set" {
@@ -99,7 +99,26 @@ func ConversationGetByNameHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(response)
 }
 
-func GetConversationByName(ctx context.Context, q *dbstore.Queries, docketIdStr string) (dbstore.DocketConversation, error) {
+func ConversationGetByUnknown(ctx context.Context, q *dbstore.Queries, query_string string) (dbstore.DocketConversation, error) {
+	if query_string == "" {
+		return dbstore.DocketConversation{}, fmt.Errorf("No proceeding with empty query string")
+	}
+	conv_uuid, err := uuid.Parse(query_string)
+	if err == nil {
+		return ConversationGetByUUID(ctx, q, conv_uuid)
+	}
+	return ConversationGetByName(ctx, q, query_string)
+}
+
+func ConversationGetByUUID(ctx context.Context, q *dbstore.Queries, conversation_uuid uuid.UUID) (dbstore.DocketConversation, error) {
+	conv_infos, err := q.DocketConversationRead(ctx, conversation_uuid)
+	if err != nil {
+		return dbstore.DocketConversation{}, err
+	}
+	return conv_infos, nil
+}
+
+func ConversationGetByName(ctx context.Context, q *dbstore.Queries, docketIdStr string) (dbstore.DocketConversation, error) {
 	conv_infos, err := q.DocketConversationFetchByDocketIdMatch(ctx, docketIdStr)
 	if err != nil {
 		return dbstore.DocketConversation{}, err

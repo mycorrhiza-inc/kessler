@@ -69,9 +69,10 @@ func getFileInformationUUID(file_uuid uuid.UUID, q dbstore.Queries, ctx context.
 	return returnInfo, nil
 }
 
-func getDocketInformationNamed(conversation_uuid uuid.UUID, q dbstore.Queries, ctx context.Context) (ObjectInfo, error) {
-	convo, err := crud.ConversationGetByName()
-	exampleInfo := ObjectInfo{UUID: conversation_uuid, ObjectType: "docket", Name: "Example Docket", Description: "Example Docket Description"}
+func getDocketInformationNamed(docket_named_id string, q dbstore.Queries, ctx context.Context) (ObjectInfo, error) {
+	convo, err := crud.ConversationGetByName(ctx, q, docket_named_id)
+
+	exampleInfo := ObjectInfo{UUID: convo.ID, ObjectType: "docket", Name: convo.Name, Description: "Example Docket Description"}
 	return exampleInfo, nil
 }
 
