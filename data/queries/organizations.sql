@@ -63,7 +63,20 @@ RETURNING
             new_org
     ) AS id;
 
--- name: OrganizationFetchByAliasMatch :many
+-- name: OrganizationFetchByAliasMatchSingle :one
+SELECT
+  public.organization_aliases.organization_alias AS alias,
+  public.organization.id AS id,
+  public.organization.name AS name,
+  public.organization.description AS description,
+  public.organization.is_person AS is_person
+FROM
+    public.organization_aliases
+    LEFT JOIN public.organization ON public.organization.id = public.organization_aliases.organization_id
+WHERE
+    public.organization_aliases.organization_alias = $1;
+
+-- name: OrganizationFetchByAliasMatchAll :many
 SELECT
   public.organization_aliases.organization_alias AS alias,
   public.organization.id AS id,

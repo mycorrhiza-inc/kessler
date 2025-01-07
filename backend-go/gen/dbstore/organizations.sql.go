@@ -273,7 +273,7 @@ func (q *Queries) OrganizationDelete(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
-const organizationFetchByAliasMatch = `-- name: OrganizationFetchByAliasMatch :many
+const organizationFetchByAliasMatchAll = `-- name: OrganizationFetchByAliasMatchAll :many
 SELECT
   public.organization_aliases.organization_alias AS alias,
   public.organization.id AS id,
@@ -287,7 +287,7 @@ WHERE
     public.organization_aliases.organization_alias = $1
 `
 
-type OrganizationFetchByAliasMatchRow struct {
+type OrganizationFetchByAliasMatchAllRow struct {
 	Alias       string
 	ID          uuid.UUID
 	Name        pgtype.Text
@@ -295,15 +295,15 @@ type OrganizationFetchByAliasMatchRow struct {
 	IsPerson    pgtype.Bool
 }
 
-func (q *Queries) OrganizationFetchByAliasMatch(ctx context.Context, organizationAlias string) ([]OrganizationFetchByAliasMatchRow, error) {
-	rows, err := q.db.Query(ctx, organizationFetchByAliasMatch, organizationAlias)
+func (q *Queries) OrganizationFetchByAliasMatchAll(ctx context.Context, organizationAlias string) ([]OrganizationFetchByAliasMatchAllRow, error) {
+	rows, err := q.db.Query(ctx, organizationFetchByAliasMatchAll, organizationAlias)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []OrganizationFetchByAliasMatchRow
+	var items []OrganizationFetchByAliasMatchAllRow
 	for rows.Next() {
-		var i OrganizationFetchByAliasMatchRow
+		var i OrganizationFetchByAliasMatchAllRow
 		if err := rows.Scan(
 			&i.Alias,
 			&i.ID,
@@ -319,6 +319,41 @@ func (q *Queries) OrganizationFetchByAliasMatch(ctx context.Context, organizatio
 		return nil, err
 	}
 	return items, nil
+}
+
+const organizationFetchByAliasMatchSingle = `-- name: OrganizationFetchByAliasMatchSingle :one
+SELECT
+  public.organization_aliases.organization_alias AS alias,
+  public.organization.id AS id,
+  public.organization.name AS name,
+  public.organization.description AS description,
+  public.organization.is_person AS is_person
+FROM
+    public.organization_aliases
+    LEFT JOIN public.organization ON public.organization.id = public.organization_aliases.organization_id
+WHERE
+    public.organization_aliases.organization_alias = $1
+`
+
+type OrganizationFetchByAliasMatchSingleRow struct {
+	Alias       string
+	ID          uuid.UUID
+	Name        pgtype.Text
+	Description pgtype.Text
+	IsPerson    pgtype.Bool
+}
+
+func (q *Queries) OrganizationFetchByAliasMatchSingle(ctx context.Context, organizationAlias string) (OrganizationFetchByAliasMatchSingleRow, error) {
+	row := q.db.QueryRow(ctx, organizationFetchByAliasMatchSingle, organizationAlias)
+	var i OrganizationFetchByAliasMatchSingleRow
+	err := row.Scan(
+		&i.Alias,
+		&i.ID,
+		&i.Name,
+		&i.Description,
+		&i.IsPerson,
+	)
+	return i, err
 }
 
 const organizationGetAllAliases = `-- name: OrganizationGetAllAliases :many
