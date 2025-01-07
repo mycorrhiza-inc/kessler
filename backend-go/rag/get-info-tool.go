@@ -17,20 +17,42 @@ type ObjectInfo struct {
 	Extras      map[string]interface{} `json:"extras"`
 }
 
-func getObjectInformation(obj_uuid uuid.UUID, obj_type string, q dbstore.Queries, ctx context.Context) (ObjectInfo, error) {
+func getObjectInformation(obj_uuid_string string, obj_named_lookup string, obj_type string, q dbstore.Queries, ctx context.Context) (ObjectInfo, error) {
+	obj_uuid := uuid.Nil
+	err := error(nil)
+	if obj_uuid_string == "" {
+		if obj_named_lookup == "" {
+			return ObjectInfo{}, fmt.Errorf("Object UUID and name lookup were empty")
+		}
+		return ObjectInfo{}, fmt.Errorf("Named lookup not implemented yet")
+
+	} else {
+		obj_uuid, err = uuid.Parse(obj_uuid_string)
+		if err != nil {
+			return ObjectInfo{}, err
+		}
+
+	}
+	return getObjectInformationUUID(obj_uuid, obj_type, q, ctx)
+}
+
+func getObjectInformationUUID(obj_uuid uuid.UUID, obj_type string, q dbstore.Queries, ctx context.Context) (ObjectInfo, error) {
+	if obj_uuid == uuid.Nil {
+		return ObjectInfo{}, fmt.Errorf("Object UUID was nil")
+	}
 	exampleInfo := ObjectInfo{UUID: obj_uuid, ObjectType: obj_type, Name: "Example", Description: "Example Description"}
 	switch obj_type {
 	case "file":
-		return getFileInformation(obj_uuid, q, ctx)
+		return getFileInformationUUID(obj_uuid, q, ctx)
 	case "org":
-		return getOrgInformation(obj_uuid, q)
+		return getOrgInformation(obj_uuid, q, ctx)
 	case "docket":
-		return getDocketInformation(obj_uuid, q)
+		return getDocketInformation(obj_uuid, q, ctx)
 	}
 	return exampleInfo, fmt.Errorf("Object type %s did not match anything known", obj_type)
 }
 
-func getFileInformation(file_uuid uuid.UUID, q dbstore.Queries, ctx context.Context) (ObjectInfo, error) {
+func getFileInformationUUID(file_uuid uuid.UUID, q dbstore.Queries, ctx context.Context) (ObjectInfo, error) {
 	returnInfo := ObjectInfo{UUID: file_uuid, ObjectType: "file", Name: "Example File", Description: "Example File Description"}
 	file, err := crud.SemiCompleteFileGetFromUUID(ctx, q, file_uuid)
 	if err != nil {
@@ -47,12 +69,13 @@ func getFileInformation(file_uuid uuid.UUID, q dbstore.Queries, ctx context.Cont
 	return returnInfo, nil
 }
 
-func getOrgInformation(org_uuid uuid.UUID, q dbstore.Queries) (ObjectInfo, error) {
-	exampleInfo := ObjectInfo{UUID: org_uuid, ObjectType: "org", Name: "Example Organization", Description: "Example Organization Description"}
+func getDocketInformationNamed(conversation_uuid uuid.UUID, q dbstore.Queries, ctx context.Context) (ObjectInfo, error) {
+	convo, err := crud.ConversationGetByName()
+	exampleInfo := ObjectInfo{UUID: conversation_uuid, ObjectType: "docket", Name: "Example Docket", Description: "Example Docket Description"}
 	return exampleInfo, nil
 }
 
-func getDocketInformation(docket_uuid uuid.UUID, q dbstore.Queries) (ObjectInfo, error) {
-	exampleInfo := ObjectInfo{UUID: docket_uuid, ObjectType: "docket", Name: "Example Docket", Description: "Example Docket Description"}
+func getOrgInformation(org_uuid uuid.UUID, q dbstore.Queries, ctx context.Context) (ObjectInfo, error) {
+	exampleInfo := ObjectInfo{UUID: org_uuid, ObjectType: "org", Name: "Example Organization", Description: "Example Organization Description"}
 	return exampleInfo, nil
 }
