@@ -93,12 +93,12 @@ func DefineCrudRoutes(public_subrouter *mux.Router) {
 
 	public_subrouter.HandleFunc(
 		"/conversations/named-lookup/{name}",
-		ConversationGetByNameHandler,
+		ConversationGetByUnknownHandler,
 	).Methods(http.MethodGet)
 
 	public_subrouter.HandleFunc(
 		"/organizations/{uuid}",
-		GetOrgWithFilesHandler,
+		OrgGetWithFilesHandler,
 	).Methods(http.MethodGet)
 
 	public_subrouter.HandleFunc(
