@@ -3,6 +3,7 @@ package crud
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"kessler/gen/dbstore"
 	"kessler/objects/files"
 	"kessler/objects/organizations"
@@ -27,7 +28,7 @@ func OrgGetWithFilesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx := r.Context()
 
-	complete_org_info, err := OrgGetWithFilesByID(ctx, &q, parsedUUID)
+	complete_org_info, err := OrgWithFilesGetByID(ctx, &q, parsedUUID)
 	if err != nil {
 		log.Printf("Error reading organization: %v", err)
 		if err.Error() == "no rows in result set" {
@@ -43,7 +44,21 @@ func OrgGetWithFilesHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(response)
 }
 
-func OrgGetWithFilesByID(ctx context.Context, q *dbstore.Queries, orgID uuid.UUID) (organizations.OrganizationSchemaComplete, error) {
+func OrgWithFilesGetByUnknownQuery(ctx context.Context, q *dbstore.Queries, orgQuery string) (organizations.OrganizationSchemaComplete, error) {
+	if orgQuery == "" {
+		return organizations.OrganizationSchemaComplete{}, fmt.Errorf("No query string provided.")
+	}
+	org_id, err := uuid.Parse(orgQuery)
+	if err == nil {
+		return OrgWithFilesGetByID(ctx, q, org_id)
+	}
+	arg := dbstore.OrganizationAliasIdNameGetParams{
+
+	}
+	test, err := q.OrganizationAliasIdNameGet(ctx, arg dbstore.OrganizationAliasIdNameGetParams)
+}
+
+func OrgWithFilesGetByID(ctx context.Context, q *dbstore.Queries, orgID uuid.UUID) (organizations.OrganizationSchemaComplete, error) {
 	org_info, err := q.OrganizationRead(ctx, orgID)
 	if err != nil {
 		return organizations.OrganizationSchemaComplete{}, err
