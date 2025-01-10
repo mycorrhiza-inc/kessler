@@ -2,11 +2,15 @@ package rag
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"kessler/crud"
 	"kessler/gen/dbstore"
+	"kessler/routing"
 
 	"github.com/google/uuid"
+	openai "github.com/sashabaranov/go-openai"
+	"github.com/sashabaranov/go-openai/jsonschema"
 )
 
 type ObjectInfo struct {
@@ -17,49 +21,91 @@ type ObjectInfo struct {
 	Extras      map[string]interface{} `json:"extras"`
 }
 
-func getObjectInformation(obj_uuid_string string, obj_named_lookup string, obj_type string, q dbstore.Queries, ctx context.Context) (ObjectInfo, error) {
-	obj_uuid := uuid.Nil
-	err := error(nil)
-	if obj_uuid_string == "" {
-		if obj_named_lookup == "" {
-			return ObjectInfo{}, fmt.Errorf("Object UUID and name lookup were empty")
-		}
-		return ObjectInfo{}, fmt.Errorf("Named lookup not implemented yet")
-
-	} else {
-		obj_uuid, err = uuid.Parse(obj_uuid_string)
-		if err != nil {
-			return ObjectInfo{}, err
-		}
-
-	}
-	return getObjectInformationUUID(obj_uuid, obj_type, q, ctx)
+var more_info_func_schema = openai.FunctionDefinition{
+	Name:        "get_more_info",
+	Description: "If you need more context or general information about a certain object, you can query the database using a uuid or name. It should return info like a summary, metadata, and ids of other related objects.",
+	Parameters: jsonschema.Definition{
+		Type: jsonschema.Object,
+		Properties: map[string]jsonschema.Definition{
+			"query": {
+				Type:        jsonschema.String,
+				Description: "Query the database using a uuid (or optionally a name/id). A UUID is preferred since multiple objects can share the same name, thus leading to errors.",
+			},
+			"object_type": {
+				Type:        jsonschema.String,
+				Description: "The type of the object you want to query, currently supports: file, organization, docket",
+			},
+		},
+		Required: []string{"query", "object_type"},
+	},
 }
 
-func getObjectInformationUUID(obj_uuid uuid.UUID, obj_type string, q dbstore.Queries, ctx context.Context) (ObjectInfo, error) {
-	if obj_uuid == uuid.Nil {
-		return ObjectInfo{}, fmt.Errorf("Object UUID was nil")
+func more_info_func_call(ctx context.Context) FunctionCall {
+	q := *routing.DBQueriesFromContext(ctx)
+	return FunctionCall{
+		Schema: rag_query_func_schema,
+		Func: func(query_json string) (ToolCallResults, error) {
+			var queryData map[string]string
+			err := json.Unmarshal([]byte(query_json), &queryData)
+			if err != nil {
+				return ToolCallResults{}, fmt.Errorf("error unmarshaling query_json: %v", err)
+			}
+			search_query, ok := queryData["query"]
+			if !ok {
+				return ToolCallResults{}, fmt.Errorf("query field is missing in query_json")
+			}
+			object_type, ok := queryData["type"]
+			if !ok {
+				return ToolCallResults{}, fmt.Errorf("query field is missing in query_json")
+			}
+			obj_info, err := getObjectInformation(search_query, object_type, q, ctx)
+			if err != nil {
+				return ToolCallResults{}, err
+			}
+			// TODO: I dont know if returning yaml instead of json is good, typically yaml has better performance,
+			// but the entire interface is already in json, and randomly swapping to yaml isnt probably going to improve things.
+			obj_info_json, err := json.Marshal(obj_info)
+			if err != nil {
+				return ToolCallResults{}, err
+			}
+			return ToolCallResults{
+				Response: string(obj_info_json),
+			}, nil
+		},
 	}
-	exampleInfo := ObjectInfo{UUID: obj_uuid, ObjectType: obj_type, Name: "Example", Description: "Example Description"}
+}
+
+func getObjectInformation(obj_query_string string, obj_type string, q dbstore.Queries, ctx context.Context) (ObjectInfo, error) {
 	switch obj_type {
 	case "file":
-		return getFileInformationUUID(obj_uuid, q, ctx)
-	case "org":
-		return getOrgInformation(obj_uuid, q, ctx)
+		return getFileInformationUnknown(obj_query_string, q, ctx)
+	case "organization":
+		return getOrgInformationUnknown(obj_query_string, q, ctx)
 	case "docket":
-		return getDocketInformation(obj_uuid, q, ctx)
+		return getDocketInformationUnkown(obj_query_string, q, ctx)
 	}
-	return exampleInfo, fmt.Errorf("Object type %s did not match anything known", obj_type)
+	return ObjectInfo{}, fmt.Errorf("Unknown object type: %v", obj_type)
+}
+
+func getFileInformationUnknown(file_query_string string, q dbstore.Queries, ctx context.Context) (ObjectInfo, error) {
+	file_uuid, err := uuid.Parse(file_query_string)
+	if err == nil {
+		return getFileInformationUUID(file_uuid, q, ctx)
+	}
+	return ObjectInfo{}, fmt.Errorf("UUID Failed to parse and Named File Lookup not implemented.")
 }
 
 func getFileInformationUUID(file_uuid uuid.UUID, q dbstore.Queries, ctx context.Context) (ObjectInfo, error) {
-	returnInfo := ObjectInfo{UUID: file_uuid, ObjectType: "file", Name: "Example File", Description: "Example File Description"}
 	file, err := crud.SemiCompleteFileGetFromUUID(ctx, q, file_uuid)
 	if err != nil {
 		return ObjectInfo{}, err
 	}
-	returnInfo.Name = file.Name
-	returnInfo.Description = file.Extra.Summary
+	returnInfo := ObjectInfo{
+		UUID:        file_uuid,
+		ObjectType:  "file",
+		Name:        file.Name,
+		Description: file.Extra.Summary,
+	}
 	returnInfo.Extras["date"] = file.Mdata["date"]
 	returnInfo.Extras["file_extension"] = file.Extension
 	returnInfo.Extras["parent_docket_name"] = file.Conversation.Name
@@ -69,14 +115,31 @@ func getFileInformationUUID(file_uuid uuid.UUID, q dbstore.Queries, ctx context.
 	return returnInfo, nil
 }
 
-func getDocketInformationNamed(docket_named_id string, q dbstore.Queries, ctx context.Context) (ObjectInfo, error) {
-	convo, err := crud.ConversationGetByName(ctx, q, docket_named_id)
+func getDocketInformationUnkown(docket_query_string string, q dbstore.Queries, ctx context.Context) (ObjectInfo, error) {
+	return_obj, err := crud.ConversationGetByUnknown(ctx, &q, docket_query_string)
+	if err != nil {
+		return ObjectInfo{}, err
+	}
+	return_info := ObjectInfo{
+		UUID:        return_obj.ID,
+		Name:        return_obj.DocketID,
+		ObjectType:  "docket",
+		Description: return_obj.Name,
+	}
 
-	exampleInfo := ObjectInfo{UUID: convo.ID, ObjectType: "docket", Name: convo.Name, Description: "Example Docket Description"}
-	return exampleInfo, nil
+	return return_info, nil
 }
 
-func getOrgInformation(org_uuid uuid.UUID, q dbstore.Queries, ctx context.Context) (ObjectInfo, error) {
-	exampleInfo := ObjectInfo{UUID: org_uuid, ObjectType: "org", Name: "Example Organization", Description: "Example Organization Description"}
-	return exampleInfo, nil
+func getOrgInformationUnknown(org_query_string string, q dbstore.Queries, ctx context.Context) (ObjectInfo, error) {
+	return_obj, err := crud.OrgWithFilesGetByUnknown(ctx, &q, org_query_string)
+	if err != nil {
+		return ObjectInfo{}, err
+	}
+	return_info := ObjectInfo{
+		UUID:        return_obj.ID,
+		Name:        return_obj.Name,
+		ObjectType:  "organization",
+		Description: "",
+	}
+	return return_info, nil
 }
