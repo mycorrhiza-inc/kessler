@@ -2,11 +2,15 @@ package rag
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"kessler/crud"
 	"kessler/gen/dbstore"
+	"kessler/routing"
 
 	"github.com/google/uuid"
+	openai "github.com/sashabaranov/go-openai"
+	"github.com/sashabaranov/go-openai/jsonschema"
 )
 
 type ObjectInfo struct {
@@ -15,6 +19,60 @@ type ObjectInfo struct {
 	ObjectType  string                 `json:"object_type"`
 	Description string                 `json:"description"`
 	Extras      map[string]interface{} `json:"extras"`
+}
+
+var more_info_func_schema = openai.FunctionDefinition{
+	Name:        "get_more_info",
+	Description: "",
+	Parameters: jsonschema.Definition{
+		Type: jsonschema.Object,
+		Properties: map[string]jsonschema.Definition{
+			"query": {
+				Type:        jsonschema.String,
+				Description: "Query the database using a uuid (or optionally a name/id). A UUID is preferred since multiple objects can share the same name, thus leading to errors.",
+			},
+			"object_type": {
+				Type:        jsonschema.String,
+				Description: "The type of the object you want to query, currently supports: file, organization, docket",
+			},
+		},
+		Required: []string{"query", "object_type"},
+	},
+}
+
+func more_info_func_call(ctx context.Context) FunctionCall {
+	q := *routing.DBQueriesFromContext(ctx)
+	return FunctionCall{
+		Schema: rag_query_func_schema,
+		Func: func(query_json string) (ToolCallResults, error) {
+			var queryData map[string]string
+			err := json.Unmarshal([]byte(query_json), &queryData)
+			if err != nil {
+				return ToolCallResults{}, fmt.Errorf("error unmarshaling query_json: %v", err)
+			}
+			search_query, ok := queryData["query"]
+			if !ok {
+				return ToolCallResults{}, fmt.Errorf("query field is missing in query_json")
+			}
+			object_type, ok := queryData["type"]
+			if !ok {
+				return ToolCallResults{}, fmt.Errorf("query field is missing in query_json")
+			}
+			obj_info, err := getObjectInformation(search_query, object_type, q, ctx)
+			if err != nil {
+				return ToolCallResults{}, err
+			}
+			// TODO: I dont know if returning yaml instead of json is good, typically yaml has better performance,
+			// but the entire interface is already in json, and randomly swapping to yaml isnt probably going to improve things.
+			obj_info_json, err := json.Marshal(obj_info)
+			if err != nil {
+				return ToolCallResults{}, err
+			}
+			return ToolCallResults{
+				Response: string(obj_info_json),
+			}, nil
+		},
+	}
 }
 
 func getObjectInformation(obj_query_string string, obj_type string, q dbstore.Queries, ctx context.Context) (ObjectInfo, error) {
