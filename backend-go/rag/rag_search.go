@@ -27,21 +27,23 @@ var rag_query_func_schema = openai.FunctionDefinition{
 func rag_func_call_filters(filters networking.FilterFields) FunctionCall {
 	return FunctionCall{
 		Schema: rag_query_func_schema,
-		Func:   rag_query_func_generated_from_filters(filters),
+		Func: func(query_json string) (ToolCallResults, error) {
+			var queryData map[string]string
+			err := json.Unmarshal([]byte(query_json), &queryData)
+			if err != nil {
+				return ToolCallResults{}, fmt.Errorf("error unmarshaling query_json: %v", err)
+			}
+			search_query, ok := queryData["query"]
+			if !ok {
+				return ToolCallResults{}, fmt.Errorf("query field is missing in query_json")
+			}
+			return rag_query_func_generated_from_filters(filters)(search_query)
+		},
 	}
 }
 
-func rag_query_func_generated_from_filters(filters networking.FilterFields) func(query_json string) (ToolCallResults, error) {
-	return func(query_json string) (ToolCallResults, error) {
-		var queryData map[string]string
-		err := json.Unmarshal([]byte(query_json), &queryData)
-		if err != nil {
-			return ToolCallResults{}, fmt.Errorf("error unmarshaling query_json: %v", err)
-		}
-		search_query, ok := queryData["query"]
-		if !ok {
-			return ToolCallResults{}, fmt.Errorf("query field is missing in query_json")
-		}
+func rag_query_func_generated_from_filters(filters networking.FilterFields) func(search_query string) (ToolCallResults, error) {
+	return func(search_query string) (ToolCallResults, error) {
 		search_request := search.SearchRequest{
 			Index:         "NY_PUC",
 			Query:         search_query,
