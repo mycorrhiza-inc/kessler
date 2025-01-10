@@ -1,6 +1,7 @@
 package rag
 
 import (
+	"context"
 	"kessler/objects/networking"
 	"kessler/search"
 
@@ -115,10 +116,14 @@ func (model_name LLMModel) Chat(chatHistory []ChatMessage) (ChatMessage, error) 
 // var rag_func_call_no_filters = rag_func_call_filters(search.Metadata{})
 
 func (model_name LLMModel) RagChat(chatHistory []ChatMessage, filters networking.FilterFields) (ChatMessage, error) {
+	ctx := context.Background()
 	requestMultiplex := MultiplexerChatCompletionRequest{
 		ChatHistory: chatHistory,
 		ModelName:   model_name.ModelName,
-		Functions:   []FunctionCall{rag_func_call_filters(filters)},
+		Functions: []FunctionCall{
+			rag_func_call_filters(filters),
+			more_info_func_call(ctx),
+		},
 	}
 	return LLMComplexRequest(requestMultiplex)
 }
