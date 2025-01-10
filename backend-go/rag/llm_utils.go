@@ -5,7 +5,6 @@ import (
 	"kessler/search"
 
 	openai "github.com/sashabaranov/go-openai"
-	"github.com/sashabaranov/go-openai/jsonschema"
 )
 
 // Use custom enums in place of Python's Enum class
@@ -110,27 +109,6 @@ func (model_name LLMModel) Chat(chatHistory []ChatMessage) (ChatMessage, error) 
 		Functions:   []FunctionCall{},
 	}
 	return LLMComplexRequest(requestMultiplex)
-}
-
-var rag_query_func_schema = openai.FunctionDefinition{
-	Name: "query_government_documents",
-	Parameters: jsonschema.Definition{
-		Type: jsonschema.Object,
-		Properties: map[string]jsonschema.Definition{
-			"query": {
-				Type:        jsonschema.String,
-				Description: "The query string to search government documents and knowledge",
-			},
-		},
-		Required: []string{"query"},
-	},
-}
-
-func rag_func_call_filters(filters networking.FilterFields) FunctionCall {
-	return FunctionCall{
-		Schema: rag_query_func_schema,
-		Func:   rag_query_func_generated_from_filters(filters),
-	}
 }
 
 // TODO: Add this back in when we have a use case for it.

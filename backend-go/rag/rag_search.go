@@ -5,7 +5,31 @@ import (
 	"fmt"
 	"kessler/objects/networking"
 	"kessler/search"
+
+	openai "github.com/sashabaranov/go-openai"
+	"github.com/sashabaranov/go-openai/jsonschema"
 )
+
+var rag_query_func_schema = openai.FunctionDefinition{
+	Name: "query_government_documents",
+	Parameters: jsonschema.Definition{
+		Type: jsonschema.Object,
+		Properties: map[string]jsonschema.Definition{
+			"query": {
+				Type:        jsonschema.String,
+				Description: "The query string to search government documents and knowledge",
+			},
+		},
+		Required: []string{"query"},
+	},
+}
+
+func rag_func_call_filters(filters networking.FilterFields) FunctionCall {
+	return FunctionCall{
+		Schema: rag_query_func_schema,
+		Func:   rag_query_func_generated_from_filters(filters),
+	}
+}
 
 func rag_query_func_generated_from_filters(filters networking.FilterFields) func(query_json string) (ToolCallResults, error) {
 	return func(query_json string) (ToolCallResults, error) {
