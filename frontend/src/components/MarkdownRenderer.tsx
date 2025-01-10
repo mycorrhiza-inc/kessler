@@ -8,6 +8,7 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { dracula } from "react-syntax-highlighter/dist/cjs/styles/prism";
 import rehypeComponents from "rehype-components";
 import { LinkDocket, LinkFile } from "./Chat/LLMComponents";
+import { subdividedHueFromSeed } from "./Tables/TextPills";
 interface MarkdownRendererProps {
   children: string;
   color?: string;
@@ -86,6 +87,8 @@ def greet():
     print("Hello, world!")
 \`\`\`
 
+# Custom Components
+
 In order to access the docket, <link-docket text="click here" docket_id="18-M-0084"/>. 
 
 The organization <link-organization text="Public Service Comission" name="Public Service Comission"/> created the document.
@@ -127,6 +130,73 @@ const CodeBlock = ({ node, inline, className, children, ...props }: any) => {
     </code>
   );
 };
+// Im sorry - nic
+// Make a component that will take in tags like this from a markdown string
+//
+// \`\`\`python
+// # Python code block
+// def greet():
+//     print("Hello, world!")
+// \`\`\`
+//
+// # Custom Components
+//
+// In order to access the docket, <link-docket text="click here" docket_id="18-M-0084"/>.
+//
+// The organization <link-organization text="Public Service Comission" uuid="Public Service Comission"/> created the document.
+//
+// Their report <link-file text="1" uuid="777b5c2d-d19e-4711-b2ed-2ba9bcfe449a" /> claims xcel energy failed to meet its renewable energy targets.
+//
+// and change every instance of <link-docket text="click here" docket_id="18-M-0084"/> to a component
+// <a href="/docket/18-M-0084" className
+// style={{ backgroundColor: buttonColor }}
+// className="btn btn-xs m-1 h-auto pb-1 text-black noclick text-pretty	" />
+const horrificMarkdownComponentMangle = (inputMarkdown: string): string => {
+  let mangledMarkdown = inputMarkdown;
+
+  // Helper function to extract attributes from tag string
+  const getAttributes = (tagContent: string) => {
+    const attrs: Record<string, string> = {};
+    const attrRegex = /(\w+)="([^"]+)"/g;
+    let match;
+    while ((match = attrRegex.exec(tagContent)) !== null) {
+      attrs[match[1]] = match[2];
+    }
+    return attrs;
+  };
+
+  // Replace link-docket tags
+  mangledMarkdown = mangledMarkdown.replace(
+    /<link-docket([^/>]+)\/>/g,
+    (match, attributes) => {
+      const attrs = getAttributes(attributes);
+      const color = subdividedHueFromSeed(attrs.docket_id);
+      return `<a  target="_blank" href="/dockets/${attrs.docket_id}" class="btn btn-xs m-1 h-auto pb-1 text-black noclick text-pretty" style="background-color: ${color}"> ${attrs.text} </a>`;
+    },
+  );
+
+  // Replace link-file tags
+  mangledMarkdown = mangledMarkdown.replace(
+    /<link-file([^/>]+)\/>/g,
+    (match, attributes) => {
+      const attrs = getAttributes(attributes);
+      const color = subdividedHueFromSeed(attrs.uuid);
+      return `<a target="_blank" href="/files/${attrs.uuid}" class="btn btn-xs m-1 h-auto pb-1 text-black noclick text-pretty" style="background-color: ${color}"> ${attrs.text} </a>`;
+    },
+  );
+
+  // Replace link-organization tags
+  mangledMarkdown = mangledMarkdown.replace(
+    /<link-organization([^/>]+)\/>/g,
+    (match, attributes) => {
+      const attrs = getAttributes(attributes);
+      const color = subdividedHueFromSeed(attrs.name);
+      return `<a target="_blank" href="/orgs/${attrs.uuid}" class="btn btn-xs m-1 h-auto pb-1 text-black noclick text-pretty" style="background-color: ${color}"> ${attrs.text} </a>`;
+    },
+  );
+
+  return mangledMarkdown;
+};
 
 const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
   children,
@@ -145,15 +215,15 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
         <Markdown
           remarkPlugins={[remarkMath, remarkGfm]}
           rehypePlugins={[
-            // rehypeRaw,
+            rehypeRaw,
             [
               rehypeComponents,
               {
                 components: {
                   // Uncomenting these with rehypeRaw causes the bug: TypeError: cyclic object value
                   // Uncomennting w/o rehypeRaw reverts to the default html escaping behavior.
-                  "link-file": LinkFile,
-                  "link-docket": LinkDocket,
+                  // "link-file": LinkFile,
+                  // "link-docket": LinkDocket,
                   // When trying with server side rendering I get a more detailed error:
                   //
                   // 67.36    Generating static pages (12/17)
@@ -179,7 +249,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
             code: CodeBlock,
           }}
         >
-          {children}
+          {horrificMarkdownComponentMangle(children as string)}
         </Markdown>
       </article>
     </>

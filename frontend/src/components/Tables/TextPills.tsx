@@ -38,7 +38,10 @@ const IsFiletypeColor = (key: string): key is keyof FileColor => {
   return key in fileTypeColor;
 };
 
-export const subdividedHueFromSeed = (seed: string): string => {
+export const subdividedHueFromSeed = (seed?: string): string => {
+  if (seed === undefined) {
+    return "oklch(40% 0.33 0)";
+  }
   const seed_integer =
     Math.abs(
       seed
