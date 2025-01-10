@@ -50,11 +50,20 @@ func FunctionCallsToOAI(funcs []FunctionCall) []openai.Tool {
 	return tools
 }
 
+func generateFunctionDictionary(functionCalls []FunctionCall) map[string]FunctionCall {
+	return_map := make(map[string]FunctionCall)
+	for _, funcCall := range functionCalls {
+		return_map[funcCall.Schema.Name] = funcCall
+	}
+	return return_map
+}
+
 // TODO: I tried once to simplify and break down this function into component pieces and failed, sorry - nic
 func LLMComplexRequest(messageRequest MultiplexerChatCompletionRequest) (ChatMessage, error) {
-	if len(messageRequest.Functions) > 1 {
-		return ChatMessage{}, fmt.Errorf("multiple functions not supported, please fix at some point")
-	}
+	// max_tool_calls := 2
+	// if len(messageRequest.Functions) > 1 {
+	// 	return ChatMessage{}, fmt.Errorf("multiple functions not supported, please fix at some point")
+	// }
 	ctx := context.Background()
 	modelName := messageRequest.ModelName
 	chatHistory := messageRequest.ChatHistory
@@ -64,6 +73,7 @@ func LLMComplexRequest(messageRequest MultiplexerChatCompletionRequest) (ChatMes
 	client, modelID := createOpenaiClientFromString(modelName)
 	dialogue := ComplexToOAIMessages(chatHistory)
 	tools := FunctionCallsToOAI(messageRequest.Functions)
+	toolDictionary := generateFunctionDictionary(messageRequest.Functions)
 
 	fmt.Printf("Calling OpenAI model %v\n", modelID)
 	resp, err := client.CreateChatCompletion(ctx,
@@ -90,26 +100,28 @@ func LLMComplexRequest(messageRequest MultiplexerChatCompletionRequest) (ChatMes
 	if len(msg.ToolCalls) == 0 {
 		return ChatMessage{}, fmt.Errorf("no tool calls in openai response, dispite stopping for a tool completion")
 	}
-	if len(msg.ToolCalls) > 1 {
-		// return ChatMessage{}, fmt.Errorf("we only support one function call per message, got %v, please fix", len(msg.ToolCalls))
-		fmt.Printf("Warning: we only support one function call per message, got %v, proceeding to only do the first tool call.\n", len(msg.ToolCalls))
-	}
+	// if len(msg.ToolCalls) > 1 {
+	// 	// return ChatMessage{}, fmt.Errorf("we only support one function call per message, got %v, please fix", len(msg.ToolCalls))
+	// 	fmt.Printf("Warning: we only support one function call per message, got %v, proceeding to only do the first tool call.\n", len(msg.ToolCalls))
+	// }
 	dialogue = append(dialogue, msg)
 	contextMessages := []openai.ChatCompletionMessage{msg}
 	returnCitations := []search.SearchData{}
-	for toolCallID := range msg.ToolCalls[:1] {
+	for _, toolCall := range msg.ToolCalls {
+		// toolCallName := tool_call.Function.Name
+		// tool_call_params := tool_call.Function.Arguments
 		fmt.Printf("OpenAI called us back wanting to invoke our function '%v' with params '%v'\n",
-			msg.ToolCalls[toolCallID].Function.Name, msg.ToolCalls[toolCallID].Function.Arguments)
-		run_func := messageRequest.Functions[toolCallID].Func
-		run_results, err := run_func(msg.ToolCalls[toolCallID].Function.Arguments)
+			toolCall.Function.Name, toolCall.Function.Arguments)
+		run_func := toolDictionary[toolCall.Function.Name].Func
+		run_results, err := run_func(toolCall.Function.Arguments)
 		if err != nil {
 			return ChatMessage{}, fmt.Errorf("error running function: %v", err)
 		}
 		toolMsg := openai.ChatCompletionMessage{
 			Role:       openai.ChatMessageRoleTool,
 			Content:    run_results.Response,
-			Name:       msg.ToolCalls[toolCallID].Function.Name,
-			ToolCallID: msg.ToolCalls[toolCallID].ID,
+			Name:       toolCall.Function.Name,
+			ToolCallID: toolCall.ID,
 		}
 		dialogue = append(dialogue, toolMsg)
 		contextMessages = append(contextMessages, toolMsg)
