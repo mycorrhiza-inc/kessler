@@ -23,7 +23,7 @@ type ObjectInfo struct {
 
 var more_info_func_schema = openai.FunctionDefinition{
 	Name:        "get_more_info",
-	Description: "",
+	Description: "If you need more context or general information about a certain object, you can query the database using a uuid or name. It should return info like a summary, metadata, and ids of other related objects.",
 	Parameters: jsonschema.Definition{
 		Type: jsonschema.Object,
 		Properties: map[string]jsonschema.Definition{

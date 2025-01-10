@@ -11,13 +11,14 @@ import (
 )
 
 var rag_query_func_schema = openai.FunctionDefinition{
-	Name: "query_government_documents",
+	Name:        "query_government_documents",
+	Description: "Search the text of goverment documents to find snippets from documents that match.",
 	Parameters: jsonschema.Definition{
 		Type: jsonschema.Object,
 		Properties: map[string]jsonschema.Definition{
 			"query": {
 				Type:        jsonschema.String,
-				Description: "The query string to search government documents and knowledge",
+				Description: "The query string to search.",
 			},
 		},
 		Required: []string{"query"},
