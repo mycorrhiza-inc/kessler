@@ -7,7 +7,8 @@ export const isLocalMode = publicAPIURL.indexOf("localhost") !== -1;
 // the nextjs docker container.
 // TODO: Figure out why replacing this with http://backend-go:4041 doesnt work.
 // which would improve security and prevent a network route outside the system for SSR.
+// It does work for docker compose, k8s hates it though so it defaults to the api rn.
 export const internalAPIURL =
-  process.env.INTERNAL_KESSLER_API_URL || "http://backend-go:4041";
+  process.env.INTERNAL_KESSLER_API_URL || "https://api.kessler.xyz";
 
 // export const internalAPIURL = "https://api.kessler.xyz";
