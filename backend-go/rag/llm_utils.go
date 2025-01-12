@@ -143,6 +143,22 @@ func (model_name LLMModel) RagChat(chatHistory []ChatMessage, filters networking
 	return LLMComplexRequest(requestMultiplex)
 }
 
+func SimpleInstruct(llm LLMModel, prompt string) (string, error) {
+	chatHistory := []ChatMessage{
+		{
+			Role:    "system",
+			Content: prompt,
+		},
+	}
+	response, err := llm.Chat(chatHistory)
+	if err != nil {
+		return "", err
+	}
+	return response.Content, nil
+
+	// TODO: Add a timeout to this function
+}
+
 type LLM interface {
 	Chat(chatHistory []ChatMessage) (ChatMessage, error)
 	RagChat(chatHistory []ChatMessage) (ChatMessage, error)
