@@ -51,9 +51,9 @@ function process_branch() {
         
         # Deploy to appropriate environment
         if [ "$tag" = "latest" ]; then
-            ssh nightly.kessler.xyz "cd /mycorrhiza/infra && helm upgrade kessler-prod ./helm -f helm/values-prod.yaml"
+            ssh root@nightly.kessler.xyz "cd /mycorrhiza/infra && helm upgrade kessler-prod ./helm -f helm/values-prod.yaml"
         else
-            ssh nightly.kessler.xyz "cd /mycorrhiza/infra && helm upgrade kessler-nightly ./helm -f helm/values-nightly.yaml"
+            ssh root@nightly.kessler.xyz "cd /mycorrhiza/infra && helm upgrade kessler-nightly ./helm -f helm/values-nightly.yaml"
         fi
     else
         echo "No new commits found for $branch, skipping..."
