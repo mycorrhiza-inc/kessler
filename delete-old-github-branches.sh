@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Start the SSH agent and load the key
+eval "$(ssh-agent -s)"
+# change this to your key
+ssh-add ~/.ssh/id_ed25519
+
 # Get list of all remote branches and filter out main and release branches
 git branch -r | grep -v "main\|release" > ~/branches_to_check.txt
 
@@ -27,6 +32,9 @@ while IFS= read -r ref_branch; do
     echo "Deleting branch: $branch from $ref"
     git push "$ref" --delete "$branch"
 done < ~/branches_to_delete.txt
+
+# Kill the SSH agent
+ssh-agent -k
 
 # Cleanup temporary files
 rm ~/branches_to_check.txt ~/branches_to_delete.txt
