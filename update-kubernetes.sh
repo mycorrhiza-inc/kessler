@@ -36,7 +36,7 @@ function process_branch() {
     commit_timestamp=$(git log -1 --format=%ct)
     
     # Get Docker image timestamp
-    image_timestamp=$(docker inspect "fractalhuman1/kessler-frontend:${tag}" 2>/dev/null | jq -r '.[0].Created' || echo "1970-01-01T00:00:00Z")
+    image_timestamp=$(docker inspect -f '{{ .Created }}' "fractalhuman1/kessler-frontend:${tag}" || echo "1970-01-01T00:00:00Z")
     image_unix_timestamp=$(date -d "$image_timestamp" +%s)
     
     if [ $commit_timestamp -gt $image_unix_timestamp ]; then

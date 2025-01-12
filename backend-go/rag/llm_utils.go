@@ -112,6 +112,21 @@ func (model_name LLMModel) Chat(chatHistory []ChatMessage) (ChatMessage, error) 
 	return LLMComplexRequest(requestMultiplex)
 }
 
+func SimpleInstruct(model LLMModel, instruction string) (string, error) {
+	chat_history := []ChatMessage{
+		{
+			Role:    "system",
+			Content: instruction,
+		},
+	}
+	instruct_message_result, err := model.Chat(chat_history)
+	if err != nil {
+		return "", err
+	}
+	instruct_result_string := instruct_message_result.Content
+	return instruct_result_string, nil
+}
+
 // TODO: Add this back in when we have a use case for it.
 // var rag_func_call_no_filters = rag_func_call_filters(search.Metadata{})
 
