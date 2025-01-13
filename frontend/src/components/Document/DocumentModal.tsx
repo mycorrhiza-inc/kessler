@@ -7,14 +7,15 @@ import { CompleteFileSchema } from "@/lib/types/backend_schemas";
 import Modal from "../styled-components/Modal";
 
 import { useState } from "react";
-import { publicAPIURL } from "@/lib/env_variables";
+import { getRuntimeEnv } from "@/lib/env_variables_hydration_script";
 type ModalProps = {
   objectId: string;
   children?: React.ReactNode;
   isPage: boolean;
 };
 const DocumentModalBody = ({ objectId, isPage }: ModalProps) => {
-  const semiCompleteFileUrl = `${publicAPIURL}/v2/public/files/${objectId}`;
+  const runtimeConfig = getRuntimeEnv();
+  const semiCompleteFileUrl = `${runtimeConfig.public_api_url}/v2/public/files/${objectId}`;
   const { data, error, isLoading } = useSWRImmutable(
     semiCompleteFileUrl,
     completeFileSchemaGet,

@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { isLocalMode, publicAPIURL } from "./env_variables";
 
 interface KesslerState {
   isLoggedIn: boolean;
@@ -9,7 +8,7 @@ interface KesslerState {
 }
 
 export const useKesslerStore = create<KesslerState>()((set) => ({
-  experimentalFeaturesEnabled: isLocalMode,
+  experimentalFeaturesEnabled: false, // Change later to store this locally or globally with user accounts.
   isLoggedIn: false,
   setIsLoggedIn: (isLoggedIn: boolean) => set({ isLoggedIn }),
   setExperimentalFeaturesEnabled: (experimentalFeaturesEnabled: boolean) =>

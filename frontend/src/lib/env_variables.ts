@@ -1,13 +1,28 @@
 import getConfig from "next/config";
 
-const { publicRuntimeConfig, serverRuntimeConfig } = getConfig();
-
 // This url is for hitting the kessler api from the client
-export const publicAPIURL =
-  publicRuntimeConfig.NEXT_PUBLIC_KESSLER_API_URL || "https://api.kessler.xyz";
-export const isLocalMode = publicAPIURL.indexOf("localhost") !== -1;
+//
 
-// This is the url for hitting the api, for internal use by the nextjs server runtime
-export const internalAPIURL =
-  serverRuntimeConfig.INTERNAL_KESSLER_API_URL || "https://api.kessler.xyz";
-// This url is for hitting the kessler api fVrom the client,
+export type RuntimeEnvConfig = {
+  public_api_url?: string;
+  public_posthog_key?: string;
+  public_posthog_host?: string;
+  internal_api_url?: string;
+  deployment_env?: string;
+  flags?: {
+    enable_all_features?: boolean;
+  };
+};
+
+export const runtimeConfig: RuntimeEnvConfig = {
+  public_api_url: process.env.PUBLIC_KESSLER_API_URL,
+  internal_api_url: process.env.INTERNAL_KESSLER_API_URL,
+  public_posthog_key: process.env.PUBLIC_POSTHOG_KEY,
+  public_posthog_host: process.env.PUBLIC_POSTHOG_HOST,
+  deployment_env: process.env.REACT_APP_ENV || "production",
+  flags: {
+    enable_all_features: true,
+  },
+};
+
+export const internalAPIURL = runtimeConfig.internal_api_url;

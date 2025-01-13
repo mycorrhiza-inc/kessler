@@ -1,11 +1,11 @@
 import axios from "axios";
-import { publicAPIURL } from "../env_variables";
-
+import { getRuntimeEnv } from "../env_variables_hydration_script";
 
 export const GetConversationInformation = async (conversation_id: string) => {
   // get the conversation information from the database
+  const runtimeConfig = getRuntimeEnv();
   const conversation = await axios.get(
-    `${publicAPIURL}/v2/public/conversations/${conversation_id}`,
+    `${runtimeConfig.public_api_url}/v2/public/conversations/${conversation_id}`,
   );
   return conversation.data;
 };

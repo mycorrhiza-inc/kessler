@@ -4,8 +4,8 @@ import MarkdownRenderer from "../MarkdownRenderer";
 
 import { QueryFilterFields } from "@/lib/filters";
 import { getUpdatedChatHistory, Message } from "@/lib/chat";
-import { publicAPIURL } from "@/lib/env_variables";
 import clsx from "clsx";
+import { getRuntimeEnv } from "@/lib/env_variables_hydration_script";
 export const ChatMessages = ({
   messages,
   loading,
@@ -133,9 +133,9 @@ export const ChatBoxInternalsStateless = ({
   const { messages, loadingResponse, selectedModel, ragMode, draftText } =
     chatState;
 
-  const setHighlighted = (value: number) => {
-    setChatState((prev) => ({ ...prev, highlighted: value }));
-  };
+  // const setHighlighted = (value: number) => {
+  //   setChatState((prev) => ({ ...prev, highlighted: value }));
+  // };
   const setMessages = (value: Message[]) =>
     setChatState((prev) => ({ ...prev, messages: value }));
   const setLoadingResponse = (value: boolean) =>
@@ -146,9 +146,10 @@ export const ChatBoxInternalsStateless = ({
     setChatState((prev) => ({ ...prev, ragMode: value }));
   const setDraftText = (value: string) =>
     setChatState((prev) => ({ ...prev, draftText: value }));
+  const runtimeConfig = getRuntimeEnv();
   const chatUrl = ragMode
-    ? `${publicAPIURL}/v2/rag/chat`
-    : `${publicAPIURL}/v2/rag/basic_chat`;
+    ? `${runtimeConfig.public_api_url}/v2/rag/chat`
+    : `${runtimeConfig.public_api_url}/v2/rag/basic_chat`;
 
   const getResponse = async (responseText: string) => {
     if (responseText == "") {

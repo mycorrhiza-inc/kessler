@@ -12,16 +12,17 @@ import {
   AuthorInformation,
   CompleteFileSchema,
 } from "@/lib/types/backend_schemas";
-import { publicAPIURL } from "@/lib/env_variables";
 import Link from "next/link";
 import { ExperimentalChatModalClickDiv } from "../Chat/ChatModal";
 import { FilterField } from "@/lib/filters";
 import { AuthorInfoPill, DocketPill } from "../Tables/TextPills";
+import { getRuntimeEnv } from "@/lib/env_variables_hydration_script";
 
 // import { ErrorBoundary } from "react-error-boundary";
 
 const MarkdownContent = memo(({ docUUID }: { docUUID: string }) => {
-  const markdown_url = `${publicAPIURL}/v2/public/files/${docUUID}/markdown`;
+  const runtimeConfig = getRuntimeEnv();
+  const markdown_url = `${runtimeConfig.public_api_url}/v2/public/files/${docUUID}/markdown`;
   // axios.get(`https://api.kessler.xyz/v2/public/files/${objectid}/markdown`),
   const { data, error, isLoading } = useSWRImmutable(
     markdown_url,
@@ -77,7 +78,8 @@ const MetadataContent = memo(({ metadata }: { metadata: any }) => {
 
 const PDFContent = ({ docUUID }: { docUUID: string }) => {
   const [loading, setLoading] = React.useState(true);
-  const pdfUrl = `${publicAPIURL}/v2/public/files/${docUUID}/raw`;
+  const runtimeConfig = getRuntimeEnv();
+  const pdfUrl = `${runtimeConfig.public_api_url}/v2/public/files/${docUUID}/raw`;
   return (
     <>
       {/* This apparently gets an undefined network error when trying to fetch the pdf from their website not exactly sure why, we need to get the s3 fetch working in golang */}
@@ -101,7 +103,8 @@ const DocumentHeader = ({
   const verified = (documentObject.verified || false) as boolean;
   const summary = documentObject.extra.summary;
   const underscoredTitle = title ? title.replace(/ /g, "_") : "Unkown_Document";
-  const fileUrlNamedDownload = `${publicAPIURL}/v2/public/files/${objectId}/raw/${underscoredTitle}.${extension}`;
+  const runtimeConfig = getRuntimeEnv();
+  const fileUrlNamedDownload = `${runtimeConfig.public_api_url}/v2/public/files/${objectId}/raw/${underscoredTitle}.${extension}`;
   const kesslerFileUrl = `/files/${objectId}`;
   const authors_unpluralized =
     documentObject.authors?.length == 1 ? "Author" : "Authors";
