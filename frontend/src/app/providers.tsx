@@ -1,10 +1,12 @@
 "use client";
+import { getRuntimeEnv } from "@/lib/env_variables_hydration_script";
 import posthog from "posthog-js";
 import { PostHogProvider } from "posthog-js/react";
 
 if (typeof window !== "undefined") {
-  posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
-    api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+  const runtimeConfig = getRuntimeEnv();
+  posthog.init(runtimeConfig.public_posthog_key!, {
+    api_host: runtimeConfig.public_posthog_host,
     person_profiles: "identified_only",
     capture_pageview: true, // Disable automatic pageview capture, as we capture manually
   });

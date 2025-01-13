@@ -70,6 +70,10 @@ export const EnvironmentVariableTestMarkdown = () => {
 INTERNAL_API_URL: ${config.internal_api_url}
 
 PUBLIC_API_URL: ${config.public_api_url}
+
+PUBLIC_POSTHOG_KEY: ${config.public_posthog_key}
+
+PUBLIC_POSTHOG_HOST: ${config.public_posthog_host}
 `;
   return <MarkdownRenderer>{markdown_string}</MarkdownRenderer>;
 };
