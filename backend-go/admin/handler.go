@@ -35,6 +35,11 @@ func DefineAdminRoutes(admin_subrouter *mux.Router) {
 		HandleUnverifedCompleteFileSchemaList,
 	).Methods(http.MethodGet)
 
+	admin_subrouter.HandleFunc(
+		"/generate-email-info/{org_uuid}",
+		ExtractRelaventEmailsFromOrgUUIDHandler,
+	).Methods(http.MethodGet)
+
 	verified := admin_subrouter.Methods(http.MethodPost).Subrouter()
 	verified.HandleFunc(
 		"/quickwit/ingest",
@@ -48,5 +53,4 @@ func DefineAdminRoutes(admin_subrouter *mux.Router) {
 		HandleQuickwitIngestFromPostgres,
 	)
 	unVerified.Use(withVerifiedFileData)
-
 }
