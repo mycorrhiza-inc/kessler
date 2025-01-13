@@ -103,6 +103,8 @@ type LLMModel struct {
 	ModelName string
 }
 
+var DefaultBigLLMModel = LLMModel{ModelName: "gpt-4o"}
+
 func (model_name LLMModel) Chat(chatHistory []ChatMessage) (ChatMessage, error) {
 	requestMultiplex := MultiplexerChatCompletionRequest{
 		ChatHistory: chatHistory,
@@ -110,21 +112,6 @@ func (model_name LLMModel) Chat(chatHistory []ChatMessage) (ChatMessage, error) 
 		Functions:   []FunctionCall{},
 	}
 	return LLMComplexRequest(requestMultiplex)
-}
-
-func SimpleInstruct(model LLMModel, instruction string) (string, error) {
-	chat_history := []ChatMessage{
-		{
-			Role:    "system",
-			Content: instruction,
-		},
-	}
-	instruct_message_result, err := model.Chat(chat_history)
-	if err != nil {
-		return "", err
-	}
-	instruct_result_string := instruct_message_result.Content
-	return instruct_result_string, nil
 }
 
 // TODO: Add this back in when we have a use case for it.
@@ -143,25 +130,24 @@ func (model_name LLMModel) RagChat(chatHistory []ChatMessage, filters networking
 	return LLMComplexRequest(requestMultiplex)
 }
 
-func SimpleInstruct(llm LLMModel, prompt string) (string, error) {
-	chatHistory := []ChatMessage{
-		{
-			Role:    "system",
-			Content: prompt,
-		},
-	}
-	response, err := llm.Chat(chatHistory)
-	if err != nil {
-		return "", err
-	}
-	return response.Content, nil
-
-	// TODO: Add a timeout to this function
-}
-
 type LLM interface {
 	Chat(chatHistory []ChatMessage) (ChatMessage, error)
 	RagChat(chatHistory []ChatMessage) (ChatMessage, error)
+}
+
+func SimpleInstruct(model LLM, instruction string) (string, error) {
+	chat_history := []ChatMessage{
+		{
+			Role:    "system",
+			Content: instruction,
+		},
+	}
+	instruct_message_result, err := model.Chat(chat_history)
+	if err != nil {
+		return "", err
+	}
+	instruct_result_string := instruct_message_result.Content
+	return instruct_result_string, nil
 }
 
 // Wait to add all the llm utils until you understand how to write concurrent code in go more.

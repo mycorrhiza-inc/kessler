@@ -2,18 +2,51 @@ package admin
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"kessler/crud"
 	"kessler/gen/dbstore"
 	"kessler/objects/files"
 	"kessler/rag"
 	"kessler/routing"
+	"net/http"
 	"regexp"
 	"slices"
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 )
+
+func ExtractRelaventEmailsFromOrgUUIDHandler(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	ctx := r.Context()
+	// ctx := context.Background()
+	org_uuid_str := params["org_uuid"]
+	org_uuid, err := uuid.Parse(org_uuid_str)
+	if err != nil {
+		errorstring := fmt.Sprintf("Error parsing org uuid: %v", err)
+		fmt.Println(errorstring)
+		http.Error(w, errorstring, http.StatusBadRequest)
+		return
+	}
+	return_obj, err := ExtractRelaventEmailsFromOrgUUID(ctx, rag.DefaultBigLLMModel, org_uuid)
+	if err != nil {
+		errorstring := fmt.Sprintf("Error extracting emails from org uuid: %v", err)
+		fmt.Println(errorstring)
+		http.Error(w, errorstring, http.StatusInternalServerError)
+		return
+	}
+	response, err := json.Marshal(return_obj)
+	if err != nil {
+		errorstring := fmt.Sprintf("Error marshaling return object: %v", err)
+		fmt.Println(errorstring)
+		http.Error(w, errorstring, http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(response)
+}
 
 func extractEmails(text string) []string {
 	emailRegex := regexp.MustCompile(`[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}`)
@@ -24,7 +57,7 @@ func extractEmails(text string) []string {
 	return matches
 }
 
-func extractRelaventEmails(llm rag.LLMModel, text string, organization_name string) ([]string, error) {
+func extractRelaventEmails(llm rag.LLM, text string, organization_name string) ([]string, error) {
 	emails := extractEmails(text)
 	prompt := `Given the following list of email addresses and an organization name, identify which emails likely belong to members of the organization.
 Consider email patterns, domains, and professional email formats.
@@ -50,7 +83,7 @@ Return only the email addresses that are likely associated with the organization
 	return relavent_emails, nil
 }
 
-func extractRelaventEmailsFromFileUUID(ctx context.Context, q dbstore.Queries, llm rag.LLMModel, file_id uuid.UUID) ([]string, error) {
+func ExtractRelaventEmailsFromFileUUID(ctx context.Context, q dbstore.Queries, llm rag.LLM, file_id uuid.UUID) ([]string, error) {
 	file_object, err := crud.CompleteFileSchemaGetFromUUID(ctx, q, file_id)
 	if err != nil {
 		return []string{}, err
@@ -81,7 +114,7 @@ type EmailInfo struct {
 	AssociatedFiles []uuid.UUID `json:"associated_files"`
 }
 
-func extractRelaventEmailsFromOrgUUID(ctx context.Context, llm rag.LLMModel, org_id uuid.UUID) (EmailOrgExtraction, error) {
+func ExtractRelaventEmailsFromOrgUUID(ctx context.Context, llm rag.LLM, org_id uuid.UUID) (EmailOrgExtraction, error) {
 	q := *routing.DBQueriesFromContext(ctx)
 	information_map := map[string][]uuid.UUID{}
 	org_obj, err := crud.OrgWithFilesGetByID(ctx, &q, org_id)
@@ -91,7 +124,7 @@ func extractRelaventEmailsFromOrgUUID(ctx context.Context, llm rag.LLMModel, org
 	file_obj_list := org_obj.FilesAuthored
 	for _, file_obj := range file_obj_list {
 		file_id := file_obj.ID
-		emails, err := extractRelaventEmailsFromFileUUID(ctx, q, llm, file_id)
+		emails, err := ExtractRelaventEmailsFromFileUUID(ctx, q, llm, file_id)
 		if err != nil {
 			fmt.Printf("Encountered error getting emails from file with uuid: %v", file_id)
 		}
