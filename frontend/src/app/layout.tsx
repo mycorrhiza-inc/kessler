@@ -3,6 +3,7 @@ import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import { PHProvider } from "./providers";
 import dynamic from "next/dynamic";
+import EnvVariablesScript from "@/lib/env_variables_root_script";
 
 const PostHogPageView = dynamic(() => import("./PostHogPageView"), {
   ssr: false,
@@ -37,6 +38,7 @@ export default function RootLayout({
             name="viewport"
             content="width=device-width, initial-scale=1.0"
           />
+          <EnvVariablesScript />
         </head>
         <body className="bg-base-100">
           <ThemeProvider defaultTheme="light">
