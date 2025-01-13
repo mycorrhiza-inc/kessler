@@ -132,7 +132,7 @@ func (model_name LLMModel) RagChat(chatHistory []ChatMessage, filters networking
 
 type LLM interface {
 	Chat(chatHistory []ChatMessage) (ChatMessage, error)
-	RagChat(chatHistory []ChatMessage) (ChatMessage, error)
+	RagChat(chatHistory []ChatMessage, filters networking.FilterFields) (ChatMessage, error)
 }
 
 func SimpleInstruct(model LLM, instruction string) (string, error) {
