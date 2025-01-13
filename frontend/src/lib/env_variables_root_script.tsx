@@ -1,5 +1,5 @@
 import { unstable_noStore as noStore } from "next/cache";
-import { runtimeEnvConfig } from "./env_variables";
+import { runtimeConfig } from "./env_variables";
 import { headers } from "next/headers";
 
 export default function EnvVariablesScript() {
@@ -12,7 +12,7 @@ export default function EnvVariablesScript() {
       id="env-config"
       nonce={nonce || ""}
       dangerouslySetInnerHTML={{
-        __html: JSON.stringify(runtimeEnvConfig),
+        __html: JSON.stringify(runtimeConfig),
       }}
     />
   );

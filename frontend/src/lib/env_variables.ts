@@ -12,7 +12,7 @@ export type RuntimeEnvConfig = {
   };
 };
 
-export const runtimeEnvConfig: RuntimeEnvConfig = {
+export const runtimeConfig: RuntimeEnvConfig = {
   public_api_url: process.env.PUBLIC_KESSLER_API_URL,
   internal_api_url: process.env.INTERNAL_KESSLER_API_URL,
   deployment_env: process.env.REACT_APP_ENV || "production",

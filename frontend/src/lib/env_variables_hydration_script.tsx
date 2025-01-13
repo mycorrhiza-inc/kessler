@@ -9,8 +9,7 @@ import {
 } from "react";
 import { RuntimeEnvConfig } from "./env_variables";
 import { env } from "process";
-
-type EnvVariablesClientConfig = {};
+import MarkdownRenderer from "@/components/MarkdownRenderer";
 
 const defaultEnvVariables = {};
 
@@ -24,8 +23,7 @@ type EnvClientProviderProps = {
 export const EnvVariablesClientProvider: React.FC<EnvClientProviderProps> = ({
   children,
 }) => {
-  const [envs, setEnvs] =
-    useState<EnvVariablesClientConfig>(defaultEnvVariables);
+  const [envs, setEnvs] = useState<RuntimeEnvConfig>(defaultEnvVariables);
 
   useEffect(() => {
     const runtimeEnvs = getRuntimeEnv();
@@ -39,7 +37,7 @@ export const EnvVariablesClientProvider: React.FC<EnvClientProviderProps> = ({
   );
 };
 
-export const useEnvVariablesClientConfig = (): EnvVariablesClientConfig => {
+export const useEnvVariablesClientConfig = (): RuntimeEnvConfig => {
   if (EnvVariablesClientContext === undefined) {
     throw new Error(
       "useEnvVariablesClientConfig must be used within an EnvVariablesClientProvider",
@@ -53,11 +51,25 @@ export const envScriptId = "env-config";
 
 const isSSR = typeof window === "undefined";
 
-export const getRuntimeEnv = (): EnvVariablesClientConfig => {
-  if (isSSR) return env;
+export const getRuntimeEnv = (): RuntimeEnvConfig => {
+  if (isSSR) {
+    throw new Error(
+      "You must call this function in a client component, for a server component just import runtimeConfig from ./env_variables.ts",
+    );
+  }
   const script = window.document.getElementById(
     envScriptId,
   ) as HTMLScriptElement;
 
   return script ? JSON.parse(script.innerText) : undefined;
+};
+
+export const EnvironmentVariableTestMarkdown = () => {
+  const config = useEnvVariablesClientConfig();
+  const markdown_string = `# Environment Variables
+INTERNAL_API_URL: ${config.internal_api_url}
+
+PUBLIC_API_URL: ${config.public_api_url}
+`;
+  return <MarkdownRenderer>{markdown_string}</MarkdownRenderer>;
 };
