@@ -13,6 +13,7 @@ import (
 	"regexp"
 	"slices"
 	"strings"
+	"sync"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -122,19 +123,60 @@ func ExtractRelaventEmailsFromOrgUUID(ctx context.Context, llm rag.LLM, org_id u
 		return EmailOrgExtraction{}, err
 	}
 	file_obj_list := org_obj.FilesAuthored
+	type emailResult struct {
+		fileID uuid.UUID
+		emails []string
+		err    error
+	}
+
+	// Create buffered channels for results
+	resultChan := make(chan emailResult, len(file_obj_list))
+
+	// Use a semaphore to limit concurrent operations
+	semaphore := make(chan struct{}, 20) // Adjust this number based on your needs
+
+	// Launch goroutines for each file
+	var wg sync.WaitGroup
 	for _, file_obj := range file_obj_list {
-		file_id := file_obj.ID
-		emails, err := ExtractRelaventEmailsFromFileUUID(ctx, q, llm, file_id)
-		if err != nil {
-			fmt.Printf("Encountered error getting emails from file with uuid: %v", file_id)
-		}
-		if err == nil {
-			for _, email := range emails {
+		wg.Add(1)
+		go func(fileObj files.FileSchema) {
+			defer wg.Done()
+
+			// Acquire semaphore
+			semaphore <- struct{}{}
+			defer func() { <-semaphore }()
+
+			// Create a new query instance for this goroutine
+			localQ := *routing.DBQueriesFromContext(ctx)
+
+			emails, err := ExtractRelaventEmailsFromFileUUID(ctx, localQ, llm, fileObj.ID)
+			if err != nil {
+				fmt.Printf("Encountered error getting emails from file with uuid: %v: %v\n", fileObj.ID, err)
+			}
+
+			select {
+			case resultChan <- emailResult{fileID: fileObj.ID, emails: emails, err: err}:
+			case <-ctx.Done():
+				return
+			}
+		}(file_obj)
+	}
+
+	// Close result channel when all goroutines complete
+	go func() {
+		wg.Wait()
+		close(resultChan)
+	}()
+
+	// Collect results
+	for result := range resultChan {
+		if result.err == nil {
+			for _, email := range result.emails {
 				results, ok := information_map[email]
 				if ok {
-					information_map[email] = append(results, file_id)
+					information_map[email] = append(results, result.fileID)
 				} else {
-					information_map[email] = []uuid.UUID{file_id}
+					information_map[email] = []uuid.UUID{result.fileID}
 				}
 			}
 		}
