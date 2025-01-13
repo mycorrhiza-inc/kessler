@@ -24,3 +24,5 @@ export const runtimeConfig: RuntimeEnvConfig = {
     enable_all_features: true,
   },
 };
+
+export const internalAPIURL = runtimeConfig.internal_api_url;

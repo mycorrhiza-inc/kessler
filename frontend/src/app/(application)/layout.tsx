@@ -1,6 +1,6 @@
 // import "@/app/globals.css";
 import AuthGuard from "@/components/AuthGuard";
-import { publicAPIURL } from "@/lib/env_variables";
+import { runtimeConfig } from "@/lib/env_variables";
 
 import { createClient } from "@/utils/supabase/server";
 
@@ -19,7 +19,7 @@ export default async function ApplicationLayout({
   const checkLoggedIn = async () => {
     // Make the apps and pages load when you are running it locally even if offline, otherwise it errors out
     // when trying to connect to supabase.
-    if (publicAPIURL == "http://localhost") {
+    if (runtimeConfig.public_api_url == "http://localhost") {
       return true;
     }
     try {

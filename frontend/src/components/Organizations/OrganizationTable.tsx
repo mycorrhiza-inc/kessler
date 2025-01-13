@@ -3,11 +3,11 @@ import axios from "axios";
 import Link from "next/link";
 import LoadingSpinner from "../styled-components/LoadingSpinner";
 
-import { publicAPIURL } from "@/lib/env_variables";
 import { useEffect, useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { queryStringFromPageMaxHits } from "@/lib/pagination";
 import LoadingSpinnerTimeout from "../styled-components/LoadingSpinnerTimeout";
+import { getRuntimeEnv } from "@/lib/env_variables_hydration_script";
 
 const organizationsListGet = async (url: string) => {
   const cleanData = (response: any) => {
@@ -74,8 +74,9 @@ const OrganizationTableInfiniteScroll = () => {
   const [tableData, setTableData] = useState<OrganizationTableSchema[]>([]);
   const getPageResults = async (page: number, limit: number) => {
     const queryString = queryStringFromPageMaxHits(page, limit);
+    const runtimeConfig = getRuntimeEnv();
     const result = await organizationsListGet(
-      `${publicAPIURL}/v2/public/organizations/list${queryString}`,
+      `${runtimeConfig.public_api_url}/v2/public/organizations/list${queryString}`,
     );
     return result;
   };

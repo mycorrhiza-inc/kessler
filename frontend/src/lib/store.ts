@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { isLocalMode, publicAPIURL } from "./env_variables";
+import { isLocalMode, runtimeConfig.public_api_url } from "./env_variables";
 
 interface KesslerState {
   isLoggedIn: boolean;

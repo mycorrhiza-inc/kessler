@@ -5,12 +5,12 @@ import {
 } from "@/lib/filters";
 import { Filing } from "@/lib/types/FilingTypes";
 import axios from "axios";
-import { publicAPIURL } from "../env_variables";
 import {
   CompleteFileSchema,
   CompleteFileSchemaValidator,
 } from "../types/backend_schemas";
 import { queryStringFromPageMaxHits } from "../pagination";
+import { getRuntimeEnv } from "../env_variables_hydration_script";
 
 export const getSearchResults = async (
   queryData: QueryDataFile,
@@ -22,14 +22,18 @@ export const getSearchResults = async (
   const searchFilters = queryData.filters;
   console.log("searchhing for", searchFilters);
   const filterObj: BackendFilterObject = backendFilterGenerate(searchFilters);
+  const runtimeConfig = getRuntimeEnv();
   try {
     const paginationQueryString = queryStringFromPageMaxHits(page, maxHits);
     const searchResults: Filing[] = await axios
       // .post("https://api.kessler.xyz/v2/search", {
-      .post(`${publicAPIURL}/v2/search${paginationQueryString}`, {
-        query: searchQuery,
-        filters: filterObj,
-      })
+      .post(
+        `${runtimeConfig.public_api_url}/v2/search${paginationQueryString}`,
+        {
+          query: searchQuery,
+          filters: filterObj,
+        },
+      )
       // check error conditions
       .then((response) => {
         if (response.data?.length === 0 || typeof response.data === "string") {
@@ -89,8 +93,9 @@ export const getRecentFilings = async (
   // const default_page_size = 40;
   // const limit = page_size || default_page_size;
   // const queryString = queryStringFromPageMaxHits(limit, page_size);
+  const runtimeConfig = getRuntimeEnv();
   const response = await axios.get(
-    `${publicAPIURL}/v2/recent_updates${queryString}`,
+    `${runtimeConfig.public_api_url}/v2/recent_updates${queryString}`,
   );
   // console.log("recent data", response.data);
   if (response.data.length > 0) {
@@ -149,59 +154,5 @@ export const generateFilingFromFileSchema = (
     url: file_schema.mdata.url,
   };
 };
-
-// export const getFilingMetadata = async (id: string): Promise<Filing | null> => {
-//   const valid_id = z.string().uuid().parse(id);
-//   const response = await axios.get(
-//     `${publicAPIURL}/v2/public/files/${valid_id}`,
-//   );
-//   const filing = await ParseFilingDataSingular(response.data);
-//   return filing;
-// };
-// export const ParseFilingDataSingular = async (
-//   f: any,
-// ): Promise<Filing | null> => {
-//   try {
-//     const completeFileSchema: CompleteFileSchema =
-//       CompleteFileSchemaValidator.parse(f);
-//     const newFiling: Filing = generateFilingFromFileSchema(completeFileSchema);
-//     return newFiling;
-//   } catch (error) {}
-//
-//   try {
-//     console.log("Parsing document ID", f);
-//     console.log("filing source id", f.sourceID);
-//     const docID = z.string().uuid().parse(f.sourceID);
-//     const metadata_url = `${publicAPIURL}/v2/public/files/${docID}`;
-//     try {
-//       const completeFileSchema = await completeFileSchemaGet(metadata_url);
-//       const newFiling: Filing =
-//         generateFilingFromFileSchema(completeFileSchema);
-//       return newFiling;
-//     } catch (error) {
-//       console.log("Error getting complete file schema", f, "error:", error);
-//       return null;
-//     }
-//   } catch (error) {
-//     console.log("Invalid document ID", f, "error:", error);
-//     return null;
-//   }
-// };
-//
-// export const ParseFilingData = async (filingData: any): Promise<Filing[]> => {
-//   const out: Filing[] = [];
-//   if (filingData === null) {
-//     return out;
-//   }
-//   const filings_promises: Promise<Filing | null>[] = filingData.map(
-//     ParseFilingDataSingular,
-//   );
-//   const filings_with_errors = await Promise.all(filings_promises);
-//   const filings_null = filings_with_errors.filter(
-//     (f: Filing | null) => f !== null && f !== undefined,
-//   );
-//   const filings = filings_null as Filing[];
-//   return filings;
-// };
 
 export default getSearchResults;

@@ -1,10 +1,10 @@
 "use client";
 import axios from "axios";
-import { publicAPIURL } from "@/lib/env_variables";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useEffect, useState } from "react";
 import LoadingSpinnerTimeout from "../styled-components/LoadingSpinnerTimeout";
 import { useRouter } from "next/navigation";
+import { getRuntimeEnv } from "@/lib/env_variables_hydration_script";
 
 const conversationsListGet = async (url: string) => {
   const cleanData = (response: any) => {
@@ -108,8 +108,9 @@ const ConversationTableInfiniteScroll = ({
 
   const getPageResults = async (page: number, limit: number) => {
     const offset = page * limit;
+    const runtimeConfig = getRuntimeEnv();
     const result = await conversationsListGet(
-      `${publicAPIURL}/v2/public/conversations/list?limit=${limit}&offset=${offset}`,
+      `${runtimeConfig.public_api_url}/v2/public/conversations/list?limit=${limit}&offset=${offset}`,
     );
     return result;
   };
