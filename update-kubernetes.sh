@@ -31,6 +31,9 @@ function process_branch() {
     
     # Switch to branch
     git switch "$branch"
+    git pull
+
+    echo "Switched to branch: $branch and checked for new commits."
     
     # Get latest commit timestamp
     commit_timestamp=$(git log -1 --format=%ct)
