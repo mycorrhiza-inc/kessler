@@ -20,6 +20,16 @@ ALTER TABLE
 ALTER TABLE
     public.docket_documents RENAME COLUMN docket_id TO conversation_uuid;
 
+ALTER TABLE
+    public.docket_conversations
+ADD
+    COLUMN date_published TIMESTAMPTZ NOT NULL DEFAULT '1970-01-01 00:00:00+00';
+
+ALTER TABLE
+    public.file
+ADD
+    COLUMN date_published TIMESTAMPTZ NOT NULL DEFAULT '1970-01-01 00:00:00+00';
+
 -- +goose Down
 ALTER TABLE
     public.docket_documents RENAME COLUMN conversation_uuid TO docket_id;
