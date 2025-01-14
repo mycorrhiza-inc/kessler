@@ -16,11 +16,18 @@ const conversationSemiCompleteInfoList = `-- name: ConversationSemiCompleteInfoL
 SELECT
     dc.id,
     dc.docket_gov_id,
+    dc.state,
     COUNT(dd.file_id) AS document_count,
     dc."name",
     dc.description,
+    dc.matter_type,
+    dc.industry_type,
+    dc.metadata,
+    dc.extra,
+    dc.date_published,
     dc.created_at,
-    dc.updated_at
+    dc.updated_at,
+    dc.deleted_at
 FROM
     public.docket_conversations dc
     LEFT JOIN public.docket_documents dd ON dd.docket_gov_id = dc.id
@@ -33,11 +40,18 @@ ORDER BY
 type ConversationSemiCompleteInfoListRow struct {
 	ID            uuid.UUID
 	DocketGovID   string
+	State         string
 	DocumentCount int64
 	Name          string
 	Description   string
+	MatterType    string
+	IndustryType  string
+	Metadata      []byte
+	Extra         []byte
+	DatePublished pgtype.Timestamptz
 	CreatedAt     pgtype.Timestamp
 	UpdatedAt     pgtype.Timestamp
+	DeletedAt     pgtype.Timestamp
 }
 
 func (q *Queries) ConversationSemiCompleteInfoList(ctx context.Context) ([]ConversationSemiCompleteInfoListRow, error) {
@@ -52,11 +66,18 @@ func (q *Queries) ConversationSemiCompleteInfoList(ctx context.Context) ([]Conve
 		if err := rows.Scan(
 			&i.ID,
 			&i.DocketGovID,
+			&i.State,
 			&i.DocumentCount,
 			&i.Name,
 			&i.Description,
+			&i.MatterType,
+			&i.IndustryType,
+			&i.Metadata,
+			&i.Extra,
+			&i.DatePublished,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.DeletedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -72,12 +93,18 @@ const conversationSemiCompleteInfoListPaginated = `-- name: ConversationSemiComp
 SELECT
     dc.id,
     dc.docket_gov_id,
+    dc.state,
     COUNT(dd.file_id) AS document_count,
     dc."name",
-    dc.state,
     dc.description,
+    dc.matter_type,
+    dc.industry_type,
+    dc.metadata,
+    dc.extra,
+    dc.date_published,
     dc.created_at,
-    dc.updated_at
+    dc.updated_at,
+    dc.deleted_at
 FROM
     public.docket_conversations dc
     LEFT JOIN public.docket_documents dd ON dd.docket_gov_id = dc.id
@@ -97,12 +124,18 @@ type ConversationSemiCompleteInfoListPaginatedParams struct {
 type ConversationSemiCompleteInfoListPaginatedRow struct {
 	ID            uuid.UUID
 	DocketGovID   string
+	State         string
 	DocumentCount int64
 	Name          string
-	State         string
 	Description   string
+	MatterType    string
+	IndustryType  string
+	Metadata      []byte
+	Extra         []byte
+	DatePublished pgtype.Timestamptz
 	CreatedAt     pgtype.Timestamp
 	UpdatedAt     pgtype.Timestamp
+	DeletedAt     pgtype.Timestamp
 }
 
 func (q *Queries) ConversationSemiCompleteInfoListPaginated(ctx context.Context, arg ConversationSemiCompleteInfoListPaginatedParams) ([]ConversationSemiCompleteInfoListPaginatedRow, error) {
@@ -117,12 +150,18 @@ func (q *Queries) ConversationSemiCompleteInfoListPaginated(ctx context.Context,
 		if err := rows.Scan(
 			&i.ID,
 			&i.DocketGovID,
+			&i.State,
 			&i.DocumentCount,
 			&i.Name,
-			&i.State,
 			&i.Description,
+			&i.MatterType,
+			&i.IndustryType,
+			&i.Metadata,
+			&i.Extra,
+			&i.DatePublished,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.DeletedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -138,31 +177,46 @@ const docketConversationCreate = `-- name: DocketConversationCreate :one
 INSERT INTO
     public.docket_conversations (
         docket_gov_id,
+        state,
         name,
         description,
-        state,
+        matter_type,
+        industry_type,
+        metadata,
+        extra,
+        date_published,
         created_at,
         updated_at
     )
 VALUES
-    ($1, $2, $3, $4, NOW(), NOW())
+    ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
 RETURNING
     id
 `
 
 type DocketConversationCreateParams struct {
-	DocketGovID string
-	Name        string
-	Description string
-	State       string
+	DocketGovID   string
+	State         string
+	Name          string
+	Description   string
+	MatterType    string
+	IndustryType  string
+	Metadata      []byte
+	Extra         []byte
+	DatePublished pgtype.Timestamptz
 }
 
 func (q *Queries) DocketConversationCreate(ctx context.Context, arg DocketConversationCreateParams) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, docketConversationCreate,
 		arg.DocketGovID,
+		arg.State,
 		arg.Name,
 		arg.Description,
-		arg.State,
+		arg.MatterType,
+		arg.IndustryType,
+		arg.Metadata,
+		arg.Extra,
+		arg.DatePublished,
 	)
 	var id uuid.UUID
 	err := row.Scan(&id)
@@ -305,19 +359,29 @@ SET
     state = $2,
     name = $3,
     description = $4,
+    matter_type = $5,
+    industry_type = $6,
+    metadata = $7,
+    extra = $8,
+    date_published = $9,
     updated_at = NOW()
 WHERE
-    id = $5
+    id = $10
 RETURNING
     id
 `
 
 type DocketConversationUpdateParams struct {
-	DocketGovID string
-	State       string
-	Name        string
-	Description string
-	ID          uuid.UUID
+	DocketGovID   string
+	State         string
+	Name          string
+	Description   string
+	MatterType    string
+	IndustryType  string
+	Metadata      []byte
+	Extra         []byte
+	DatePublished pgtype.Timestamptz
+	ID            uuid.UUID
 }
 
 func (q *Queries) DocketConversationUpdate(ctx context.Context, arg DocketConversationUpdateParams) (uuid.UUID, error) {
@@ -326,6 +390,11 @@ func (q *Queries) DocketConversationUpdate(ctx context.Context, arg DocketConver
 		arg.State,
 		arg.Name,
 		arg.Description,
+		arg.MatterType,
+		arg.IndustryType,
+		arg.Metadata,
+		arg.Extra,
+		arg.DatePublished,
 		arg.ID,
 	)
 	var id uuid.UUID
