@@ -8,7 +8,7 @@ import RecentUpdatesView from "./RecentUpdatesView";
 export default function RecentUpdatesPage() {
   return (
     <PageContainer breadcrumbs={{ breadcrumbs: [] }}>
-      <div className="grid grid-cols-2 w-full">
+      <div className="grid grid-cols-2 w-full z-1">
         <div>
           <Link className="text-3xl font-bold hover:underline" href="/dockets">
             Dockets
@@ -17,8 +17,8 @@ export default function RecentUpdatesPage() {
             <ConversationTableInfiniteScroll truncate />
           </div>
         </div>
-        <div>
-          <Link className="text-3xl font-bold hover:underline" href="/orgs">
+        <div className="z-[1]">
+          <Link className="text-3xl font-bold hover:underline mb-5 p-10" href="/orgs">
             Organizations
           </Link>
           <div className="max-h-[600px] overflow-x-hidden pl-4">

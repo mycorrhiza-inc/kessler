@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import LoadingSpinnerTimeout from "../styled-components/LoadingSpinnerTimeout";
 import { useRouter } from "next/navigation";
 import { getRuntimeEnv } from "@/lib/env_variables_hydration_script";
+import { ClassNames } from "@emotion/react";
 
 const conversationsListGet = async (url: string) => {
   const cleanData = (response: any) => {
@@ -36,7 +37,7 @@ const ConversationTable = ({
 }) => {
   const router = useRouter();
   return (
-    <table className="table table-pin-rows">
+    <table className="table z-1">
       {/* disable pinned rows due to the top row overlaying the filter sidebar */}
       <thead>
         <tr>

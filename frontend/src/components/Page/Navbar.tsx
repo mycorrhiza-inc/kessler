@@ -1,5 +1,5 @@
 "use client";
-import { UserIcon } from "@/components/Icons";
+import { AngleDownIcon, HamburgerIcon, UserIcon } from "@/components/Icons";
 import { useState } from "react";
 import Modal from "@/components/styled-components/Modal";
 import SettingsContent from "@/components/SettingsContent";
@@ -42,13 +42,13 @@ function HeaderAuth() {
 
 const HeaderMenus = () => {
   return (
-    <div className="dropdown">
-      <div tabIndex={0} role="button" className="btn m-1">
-        Navigation
+    <div className="dropdown z-100">
+      <div tabIndex={0} role="button" className="btn m-1 mr-5">
+        <HamburgerIcon />
       </div>
       <ul
         tabIndex={0}
-        className="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow"
+        className="dropdown-content menu bg-base-100 rounded-box z-50 w-52 p-2 shadow"
       >
         <li>
           <Link href="/home">Home</Link>
@@ -73,10 +73,11 @@ const Navbar = ({ breadcrumbs }: { breadcrumbs: BreadcrumbValues }) => {
   return (
     <div className="navbar bg-base-200 w-max-50">
       <div className="flex-1 font-semibold">
+        <HeaderMenus />
+        <span />
         <HeaderBreadcrumbs breadcrumbs={breadcrumbs} />
       </div>
       <div className="flex-none">
-        <HeaderMenus />
         <HeaderAuth />
       </div>
     </div>

@@ -39,7 +39,7 @@ const OrganizationTable = ({
   orgList: OrganizationTableSchema[];
 }) => {
   return (
-    <table className="table table-pin-rows">
+    <table className="table table-pin-head z-1">
       <thead>
         <tr>
           <td className="w-[80%]">Name</td>
