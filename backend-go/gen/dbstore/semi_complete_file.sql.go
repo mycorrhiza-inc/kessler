@@ -23,6 +23,7 @@ SELECT
     public.file.isPrivate,
     public.file.created_at,
     public.file.updated_at,
+    public.file.date_published,
     public.file_metadata.mdata
 FROM
     public.file
@@ -32,16 +33,17 @@ WHERE
 `
 
 type GetFileListWithMetadataRow struct {
-	ID        uuid.UUID
-	Name      string
-	Extension string
-	Lang      string
-	Verified  pgtype.Bool
-	Hash      string
-	Isprivate pgtype.Bool
-	CreatedAt pgtype.Timestamptz
-	UpdatedAt pgtype.Timestamptz
-	Mdata     []byte
+	ID            uuid.UUID
+	Name          string
+	Extension     string
+	Lang          string
+	Verified      pgtype.Bool
+	Hash          string
+	Isprivate     pgtype.Bool
+	CreatedAt     pgtype.Timestamptz
+	UpdatedAt     pgtype.Timestamptz
+	DatePublished pgtype.Timestamptz
+	Mdata         []byte
 }
 
 func (q *Queries) GetFileListWithMetadata(ctx context.Context, dollar_1 []uuid.UUID) ([]GetFileListWithMetadataRow, error) {
@@ -63,6 +65,7 @@ func (q *Queries) GetFileListWithMetadata(ctx context.Context, dollar_1 []uuid.U
 			&i.Isprivate,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.DatePublished,
 			&i.Mdata,
 		); err != nil {
 			return nil, err
@@ -86,6 +89,7 @@ SELECT
     public.file.isPrivate,
     public.file.created_at,
     public.file.updated_at,
+    public.file.date_published,
     public.file_metadata.mdata
 FROM
     public.file
@@ -95,16 +99,17 @@ WHERE
 `
 
 type GetFileWithMetadataRow struct {
-	ID        uuid.UUID
-	Name      string
-	Extension string
-	Lang      string
-	Verified  pgtype.Bool
-	Hash      string
-	Isprivate pgtype.Bool
-	CreatedAt pgtype.Timestamptz
-	UpdatedAt pgtype.Timestamptz
-	Mdata     []byte
+	ID            uuid.UUID
+	Name          string
+	Extension     string
+	Lang          string
+	Verified      pgtype.Bool
+	Hash          string
+	Isprivate     pgtype.Bool
+	CreatedAt     pgtype.Timestamptz
+	UpdatedAt     pgtype.Timestamptz
+	DatePublished pgtype.Timestamptz
+	Mdata         []byte
 }
 
 func (q *Queries) GetFileWithMetadata(ctx context.Context, id uuid.UUID) (GetFileWithMetadataRow, error) {
@@ -120,6 +125,7 @@ func (q *Queries) GetFileWithMetadata(ctx context.Context, id uuid.UUID) (GetFil
 		&i.Isprivate,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DatePublished,
 		&i.Mdata,
 	)
 	return i, err
@@ -135,6 +141,7 @@ SELECT
     public.file.hash,
     public.file.created_at,
     public.file.updated_at,
+    public.file.date_published,
     public.file_metadata.mdata,
     public.file_extras.extra_obj,
     public.docket_documents.conversation_uuid AS docket_uuid,
@@ -162,6 +169,7 @@ type SemiCompleteFileGetRow struct {
 	Hash             string
 	CreatedAt        pgtype.Timestamptz
 	UpdatedAt        pgtype.Timestamptz
+	DatePublished    pgtype.Timestamptz
 	Mdata            []byte
 	ExtraObj         []byte
 	DocketUuid       uuid.UUID
@@ -189,6 +197,7 @@ func (q *Queries) SemiCompleteFileGet(ctx context.Context, id uuid.UUID) ([]Semi
 			&i.Hash,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.DatePublished,
 			&i.Mdata,
 			&i.ExtraObj,
 			&i.DocketUuid,
@@ -217,6 +226,7 @@ SELECT
     public.file.hash,
     public.file.created_at,
     public.file.updated_at,
+    public.file.date_published,
     public.file_metadata.mdata,
     public.file_extras.extra_obj,
     public.docket_documents.conversation_uuid AS docket_uuid,
@@ -253,6 +263,7 @@ GROUP BY
     FILE.hash,
     FILE.created_at,
     FILE.updated_at,
+    FILE.date_published,
     file_metadata.mdata,
     file_extras.extra_obj,
     docket_documents.conversation_uuid
@@ -267,6 +278,7 @@ type SemiCompleteFileListGetRow struct {
 	Hash              string
 	CreatedAt         pgtype.Timestamptz
 	UpdatedAt         pgtype.Timestamptz
+	DatePublished     pgtype.Timestamptz
 	Mdata             []byte
 	ExtraObj          []byte
 	DocketUuid        uuid.UUID
@@ -293,6 +305,7 @@ func (q *Queries) SemiCompleteFileListGet(ctx context.Context, dollar_1 []uuid.U
 			&i.Hash,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.DatePublished,
 			&i.Mdata,
 			&i.ExtraObj,
 			&i.DocketUuid,

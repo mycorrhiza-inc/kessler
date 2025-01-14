@@ -9,6 +9,7 @@ SELECT
     public.file.isPrivate,
     public.file.created_at,
     public.file.updated_at,
+    public.file.date_published,
     public.file_metadata.mdata
 FROM
     public.file
@@ -27,6 +28,7 @@ SELECT
     public.file.isPrivate,
     public.file.created_at,
     public.file.updated_at,
+    public.file.date_published,
     public.file_metadata.mdata
 FROM
     public.file
@@ -44,6 +46,7 @@ SELECT
     public.file.hash,
     public.file.created_at,
     public.file.updated_at,
+    public.file.date_published,
     public.file_metadata.mdata,
     public.file_extras.extra_obj,
     public.docket_documents.conversation_uuid AS docket_uuid,
@@ -71,6 +74,7 @@ SELECT
     public.file.hash,
     public.file.created_at,
     public.file.updated_at,
+    public.file.date_published,
     public.file_metadata.mdata,
     public.file_extras.extra_obj,
     public.docket_documents.conversation_uuid AS docket_uuid,
@@ -107,6 +111,7 @@ GROUP BY
     FILE.hash,
     FILE.created_at,
     FILE.updated_at,
+    FILE.date_published,
     file_metadata.mdata,
     file_extras.extra_obj,
     docket_documents.conversation_uuid;

@@ -8,6 +8,7 @@ INSERT INTO
         isPrivate,
         hash,
         verified,
+        date_published,
         created_at,
         updated_at
     )
@@ -20,6 +21,7 @@ VALUES
         $4,
         $5,
         $6,
+        $7,
         NOW(),
         NOW()
     )
@@ -52,9 +54,10 @@ SET
     isPrivate = $4,
     hash = $5,
     verified = $6,
+    date_published = $7,
     updated_at = NOW()
 WHERE
-    id = $7;
+    id = $8;
 
 -- name: ReadFile :one
 SELECT

@@ -22,6 +22,7 @@ INSERT INTO
         isPrivate,
         hash,
         verified,
+        date_published,
         created_at,
         updated_at
     )
@@ -34,6 +35,7 @@ VALUES
         $4,
         $5,
         $6,
+        $7,
         NOW(),
         NOW()
     )
@@ -42,12 +44,13 @@ RETURNING
 `
 
 type CreateFileParams struct {
-	Extension string
-	Lang      string
-	Name      string
-	Isprivate pgtype.Bool
-	Hash      string
-	Verified  pgtype.Bool
+	Extension     string
+	Lang          string
+	Name          string
+	Isprivate     pgtype.Bool
+	Hash          string
+	Verified      pgtype.Bool
+	DatePublished pgtype.Timestamptz
 }
 
 func (q *Queries) CreateFile(ctx context.Context, arg CreateFileParams) (uuid.UUID, error) {
@@ -58,6 +61,7 @@ func (q *Queries) CreateFile(ctx context.Context, arg CreateFileParams) (uuid.UU
 		arg.Isprivate,
 		arg.Hash,
 		arg.Verified,
+		arg.DatePublished,
 	)
 	var id uuid.UUID
 	err := row.Scan(&id)
@@ -495,19 +499,21 @@ SET
     isPrivate = $4,
     hash = $5,
     verified = $6,
+    date_published = $7,
     updated_at = NOW()
 WHERE
-    id = $7
+    id = $8
 `
 
 type UpdateFileParams struct {
-	Extension string
-	Lang      string
-	Name      string
-	Isprivate pgtype.Bool
-	Hash      string
-	Verified  pgtype.Bool
-	ID        uuid.UUID
+	Extension     string
+	Lang          string
+	Name          string
+	Isprivate     pgtype.Bool
+	Hash          string
+	Verified      pgtype.Bool
+	DatePublished pgtype.Timestamptz
+	ID            uuid.UUID
 }
 
 func (q *Queries) UpdateFile(ctx context.Context, arg UpdateFileParams) error {
@@ -518,6 +524,7 @@ func (q *Queries) UpdateFile(ctx context.Context, arg UpdateFileParams) error {
 		arg.Isprivate,
 		arg.Hash,
 		arg.Verified,
+		arg.DatePublished,
 		arg.ID,
 	)
 	return err
