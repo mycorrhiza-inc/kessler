@@ -7,11 +7,6 @@ ADD
 ALTER TABLE
     public.docket_conversations
 ADD
-    COLUMN matter_subtype VARCHAR NOT NULL DEFAULT '';
-
-ALTER TABLE
-    public.docket_conversations
-ADD
     COLUMN industry_type VARCHAR NOT NULL DEFAULT '';
 
 ALTER TABLE
@@ -42,6 +37,18 @@ ADD
 
 -- +goose Down
 ALTER TABLE
+    public.file DROP COLUMN date_published;
+
+ALTER TABLE
+    public.docket_conversations DROP COLUMN date_published;
+
+ALTER TABLE
+    public.docket_conversations DROP COLUMN extra;
+
+ALTER TABLE
+    public.docket_conversations DROP COLUMN metadata;
+
+ALTER TABLE
     public.docket_documents RENAME COLUMN conversation_uuid TO docket_id;
 
 ALTER TABLE
@@ -49,9 +56,6 @@ ALTER TABLE
 
 ALTER TABLE
     public.docket_conversations DROP COLUMN industry_type;
-
-ALTER TABLE
-    public.docket_conversations DROP COLUMN matter_subtype;
 
 ALTER TABLE
     public.docket_conversations DROP COLUMN matter_type;

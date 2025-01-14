@@ -235,7 +235,7 @@ func (q *Queries) FileVerifiedUpdate(ctx context.Context, arg FileVerifiedUpdate
 
 const filesList = `-- name: FilesList :many
 SELECT
-    id, lang, name, extension, isprivate, created_at, updated_at, hash, verified
+    id, lang, name, extension, isprivate, created_at, updated_at, hash, verified, date_published
 FROM
     public.file
 ORDER BY
@@ -261,6 +261,7 @@ func (q *Queries) FilesList(ctx context.Context) ([]File, error) {
 			&i.UpdatedAt,
 			&i.Hash,
 			&i.Verified,
+			&i.DatePublished,
 		); err != nil {
 			return nil, err
 		}
@@ -274,7 +275,7 @@ func (q *Queries) FilesList(ctx context.Context) ([]File, error) {
 
 const filesListUnverified = `-- name: FilesListUnverified :many
 SELECT
-    id, lang, name, extension, isprivate, created_at, updated_at, hash, verified
+    id, lang, name, extension, isprivate, created_at, updated_at, hash, verified, date_published
 FROM
     public.file
 WHERE
@@ -304,6 +305,7 @@ func (q *Queries) FilesListUnverified(ctx context.Context, limit int32) ([]File,
 			&i.UpdatedAt,
 			&i.Hash,
 			&i.Verified,
+			&i.DatePublished,
 		); err != nil {
 			return nil, err
 		}
@@ -317,7 +319,7 @@ func (q *Queries) FilesListUnverified(ctx context.Context, limit int32) ([]File,
 
 const getFile = `-- name: GetFile :one
 SELECT
-    id, lang, name, extension, isprivate, created_at, updated_at, hash, verified
+    id, lang, name, extension, isprivate, created_at, updated_at, hash, verified, date_published
 FROM
     public.file
 WHERE
@@ -337,6 +339,7 @@ func (q *Queries) GetFile(ctx context.Context, id uuid.UUID) (File, error) {
 		&i.UpdatedAt,
 		&i.Hash,
 		&i.Verified,
+		&i.DatePublished,
 	)
 	return i, err
 }
@@ -400,7 +403,7 @@ func (q *Queries) InsertMetadata(ctx context.Context, arg InsertMetadataParams) 
 
 const readFile = `-- name: ReadFile :one
 SELECT
-    id, lang, name, extension, isprivate, created_at, updated_at, hash, verified
+    id, lang, name, extension, isprivate, created_at, updated_at, hash, verified, date_published
 FROM
     public.file
 WHERE
@@ -420,6 +423,7 @@ func (q *Queries) ReadFile(ctx context.Context, id uuid.UUID) (File, error) {
 		&i.UpdatedAt,
 		&i.Hash,
 		&i.Verified,
+		&i.DatePublished,
 	)
 	return i, err
 }

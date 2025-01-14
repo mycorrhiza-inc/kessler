@@ -66,8 +66,10 @@ type DocketConversation struct {
 	Name          string
 	Description   string
 	MatterType    string
-	MatterSubtype string
 	IndustryType  string
+	Metadata      []byte
+	Extra         []byte
+	DatePublished pgtype.Timestamptz
 }
 
 type DocketDocument struct {
@@ -103,15 +105,16 @@ type Faction struct {
 }
 
 type File struct {
-	ID        uuid.UUID
-	Lang      string
-	Name      string
-	Extension string
-	Isprivate pgtype.Bool
-	CreatedAt pgtype.Timestamptz
-	UpdatedAt pgtype.Timestamptz
-	Hash      string
-	Verified  pgtype.Bool
+	ID            uuid.UUID
+	Lang          string
+	Name          string
+	Extension     string
+	Isprivate     pgtype.Bool
+	CreatedAt     pgtype.Timestamptz
+	UpdatedAt     pgtype.Timestamptz
+	Hash          string
+	Verified      pgtype.Bool
+	DatePublished pgtype.Timestamptz
 }
 
 type FileExtra struct {

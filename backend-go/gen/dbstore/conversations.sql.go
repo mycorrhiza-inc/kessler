@@ -183,7 +183,7 @@ func (q *Queries) DocketConversationDelete(ctx context.Context, id uuid.UUID) er
 
 const docketConversationFetchByDocketIdMatch = `-- name: DocketConversationFetchByDocketIdMatch :many
 SELECT
-    id, docket_gov_id, state, created_at, updated_at, deleted_at, name, description, matter_type, matter_subtype, industry_type
+    id, docket_gov_id, state, created_at, updated_at, deleted_at, name, description, matter_type, industry_type, metadata, extra, date_published
 FROM
     public.docket_conversations
 WHERE
@@ -209,8 +209,10 @@ func (q *Queries) DocketConversationFetchByDocketIdMatch(ctx context.Context, do
 			&i.Name,
 			&i.Description,
 			&i.MatterType,
-			&i.MatterSubtype,
 			&i.IndustryType,
+			&i.Metadata,
+			&i.Extra,
+			&i.DatePublished,
 		); err != nil {
 			return nil, err
 		}
@@ -224,7 +226,7 @@ func (q *Queries) DocketConversationFetchByDocketIdMatch(ctx context.Context, do
 
 const docketConversationList = `-- name: DocketConversationList :many
 SELECT
-    id, docket_gov_id, state, created_at, updated_at, deleted_at, name, description, matter_type, matter_subtype, industry_type
+    id, docket_gov_id, state, created_at, updated_at, deleted_at, name, description, matter_type, industry_type, metadata, extra, date_published
 FROM
     public.docket_conversations
 ORDER BY
@@ -250,8 +252,10 @@ func (q *Queries) DocketConversationList(ctx context.Context) ([]DocketConversat
 			&i.Name,
 			&i.Description,
 			&i.MatterType,
-			&i.MatterSubtype,
 			&i.IndustryType,
+			&i.Metadata,
+			&i.Extra,
+			&i.DatePublished,
 		); err != nil {
 			return nil, err
 		}
@@ -265,7 +269,7 @@ func (q *Queries) DocketConversationList(ctx context.Context) ([]DocketConversat
 
 const docketConversationRead = `-- name: DocketConversationRead :one
 SELECT
-    id, docket_gov_id, state, created_at, updated_at, deleted_at, name, description, matter_type, matter_subtype, industry_type
+    id, docket_gov_id, state, created_at, updated_at, deleted_at, name, description, matter_type, industry_type, metadata, extra, date_published
 FROM
     public.docket_conversations
 WHERE
@@ -285,8 +289,10 @@ func (q *Queries) DocketConversationRead(ctx context.Context, id uuid.UUID) (Doc
 		&i.Name,
 		&i.Description,
 		&i.MatterType,
-		&i.MatterSubtype,
 		&i.IndustryType,
+		&i.Metadata,
+		&i.Extra,
+		&i.DatePublished,
 	)
 	return i, err
 }
