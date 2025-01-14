@@ -25,6 +25,7 @@ import LoadingSpinnerTimeout from "../styled-components/LoadingSpinnerTimeout";
 
 import { ChatModalClickDiv } from "../Chat/ChatModal";
 import { useKesslerStore } from "@/lib/store";
+import SearchBox from "@/components/Search/SearchBox";
 
 const TableFilters = ({
   searchQuery,
@@ -67,24 +68,39 @@ const ConversationComponent = ({
 }: {
   inheritedFilters: InheritedFilterValues;
 }) => {
+
+  // filter data
   const initialFilterState = useMemo(() => {
     return initialFiltersFromInherited(inheritedFilters);
   }, [inheritedFilters]);
+
   const disabledFilters = useMemo(() => {
     return disableListFromInherited(inheritedFilters);
   }, [inheritedFilters]);
+
   const [searchFilters, setSearchFilters] =
     useState<QueryFilterFields>(initialFilterState);
   // const [searchResults, setSearchResults] = useState<string[]>([]);
-  const [filing_ids, setFilingIds] = useState<string[]>([]);
-  const [filings, setFilings] = useState<Filing[]>([]);
+
+
+
+
+
   const [page, setPage] = useState(0);
   const [isSearching, setIsSearching] = useState(false);
+
+
+  // query data
   const [searchQuery, setSearchQuery] = useState("");
+
   const queryData: QueryDataFile = {
     filters: searchFilters,
     query: searchQuery,
   };
+
+  // query results
+  const [filing_ids, setFilingIds] = useState<string[]>([]);
+  const [filings, setFilings] = useState<Filing[]>([]);
   const pageSize = 40;
 
   const getInitialUpdates = async () => {
@@ -167,6 +183,7 @@ const ConversationComponent = ({
           </div>
         </div>
         <div className="w-full h-full">
+          <SearchBox />
           <InfiniteScroll
             dataLength={filings.length}
             next={getMore}
