@@ -18,6 +18,16 @@ ALTER TABLE
     public.docket_conversations RENAME COLUMN docket_id TO docket_gov_id;
 
 ALTER TABLE
+    public.docket_conversations
+ADD
+    COLUMN metadata JSONB NOT NULL DEFAULT '';
+
+ALTER TABLE
+    public.docket_conversations
+ADD
+    COLUMN extra JSONB NOT NULL DEFAULT '';
+
+ALTER TABLE
     public.docket_documents RENAME COLUMN docket_id TO conversation_uuid;
 
 ALTER TABLE
