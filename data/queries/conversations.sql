@@ -1,3 +1,18 @@
+-- type DocketConversation struct {
+-- 	ID            uuid.UUID
+-- 	DocketGovID   Not null varchar 
+-- 	State         Not null varchar 
+-- 	CreatedAt     pgtype.Timestamp
+-- 	UpdatedAt     pgtype.Timestamp
+-- 	DeletedAt     pgtype.Timestamp
+-- 	Name          Not null varchar 
+-- 	Description   Not null varchar 
+-- 	MatterType    Not null varchar 
+-- 	IndustryType  Not null varchar 
+-- 	Metadata      Not null varchar 
+-- 	Extra         JSONB
+-- 	DatePublished pgtype.Timestamptz
+-- }
 -- name: DocketDocumentInsert :one
 INSERT INTO
     public.docket_documents (
