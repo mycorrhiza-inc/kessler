@@ -15,15 +15,22 @@ import (
 const conversationSemiCompleteInfoList = `-- name: ConversationSemiCompleteInfoList :many
 SELECT
     dc.id,
-    dc.docket_id,
+    dc.docket_gov_id,
+    dc.state,
     COUNT(dd.file_id) AS document_count,
     dc."name",
     dc.description,
+    dc.matter_type,
+    dc.industry_type,
+    dc.metadata,
+    dc.extra,
+    dc.date_published,
     dc.created_at,
-    dc.updated_at
+    dc.updated_at,
+    dc.deleted_at
 FROM
     public.docket_conversations dc
-    LEFT JOIN public.docket_documents dd ON dd.docket_id = dc.id
+    LEFT JOIN public.docket_documents dd ON dd.docket_gov_id = dc.id
 GROUP BY
     dc.id
 ORDER BY
@@ -32,12 +39,19 @@ ORDER BY
 
 type ConversationSemiCompleteInfoListRow struct {
 	ID            uuid.UUID
-	DocketID      string
+	DocketGovID   string
+	State         string
 	DocumentCount int64
 	Name          string
 	Description   string
+	MatterType    string
+	IndustryType  string
+	Metadata      []byte
+	Extra         []byte
+	DatePublished pgtype.Timestamptz
 	CreatedAt     pgtype.Timestamp
 	UpdatedAt     pgtype.Timestamp
+	DeletedAt     pgtype.Timestamp
 }
 
 func (q *Queries) ConversationSemiCompleteInfoList(ctx context.Context) ([]ConversationSemiCompleteInfoListRow, error) {
@@ -51,12 +65,19 @@ func (q *Queries) ConversationSemiCompleteInfoList(ctx context.Context) ([]Conve
 		var i ConversationSemiCompleteInfoListRow
 		if err := rows.Scan(
 			&i.ID,
-			&i.DocketID,
+			&i.DocketGovID,
+			&i.State,
 			&i.DocumentCount,
 			&i.Name,
 			&i.Description,
+			&i.MatterType,
+			&i.IndustryType,
+			&i.Metadata,
+			&i.Extra,
+			&i.DatePublished,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.DeletedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -71,16 +92,22 @@ func (q *Queries) ConversationSemiCompleteInfoList(ctx context.Context) ([]Conve
 const conversationSemiCompleteInfoListPaginated = `-- name: ConversationSemiCompleteInfoListPaginated :many
 SELECT
     dc.id,
-    dc.docket_id,
+    dc.docket_gov_id,
+    dc.state,
     COUNT(dd.file_id) AS document_count,
     dc."name",
-    dc.state,
     dc.description,
+    dc.matter_type,
+    dc.industry_type,
+    dc.metadata,
+    dc.extra,
+    dc.date_published,
     dc.created_at,
-    dc.updated_at
+    dc.updated_at,
+    dc.deleted_at
 FROM
     public.docket_conversations dc
-    LEFT JOIN public.docket_documents dd ON dd.docket_id = dc.id
+    LEFT JOIN public.docket_documents dd ON dd.docket_gov_id = dc.id
 GROUP BY
     dc.id
 ORDER BY
@@ -96,13 +123,19 @@ type ConversationSemiCompleteInfoListPaginatedParams struct {
 
 type ConversationSemiCompleteInfoListPaginatedRow struct {
 	ID            uuid.UUID
-	DocketID      string
+	DocketGovID   string
+	State         string
 	DocumentCount int64
 	Name          string
-	State         string
 	Description   string
+	MatterType    string
+	IndustryType  string
+	Metadata      []byte
+	Extra         []byte
+	DatePublished pgtype.Timestamptz
 	CreatedAt     pgtype.Timestamp
 	UpdatedAt     pgtype.Timestamp
+	DeletedAt     pgtype.Timestamp
 }
 
 func (q *Queries) ConversationSemiCompleteInfoListPaginated(ctx context.Context, arg ConversationSemiCompleteInfoListPaginatedParams) ([]ConversationSemiCompleteInfoListPaginatedRow, error) {
@@ -116,13 +149,19 @@ func (q *Queries) ConversationSemiCompleteInfoListPaginated(ctx context.Context,
 		var i ConversationSemiCompleteInfoListPaginatedRow
 		if err := rows.Scan(
 			&i.ID,
-			&i.DocketID,
+			&i.DocketGovID,
+			&i.State,
 			&i.DocumentCount,
 			&i.Name,
-			&i.State,
 			&i.Description,
+			&i.MatterType,
+			&i.IndustryType,
+			&i.Metadata,
+			&i.Extra,
+			&i.DatePublished,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.DeletedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -137,32 +176,47 @@ func (q *Queries) ConversationSemiCompleteInfoListPaginated(ctx context.Context,
 const docketConversationCreate = `-- name: DocketConversationCreate :one
 INSERT INTO
     public.docket_conversations (
-        docket_id,
+        docket_gov_id,
+        state,
         name,
         description,
-        state,
+        matter_type,
+        industry_type,
+        metadata,
+        extra,
+        date_published,
         created_at,
         updated_at
     )
 VALUES
-    ($1, $2, $3, $4, NOW(), NOW())
+    ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
 RETURNING
     id
 `
 
 type DocketConversationCreateParams struct {
-	DocketID    string
-	Name        string
-	Description string
-	State       string
+	DocketGovID   string
+	State         string
+	Name          string
+	Description   string
+	MatterType    string
+	IndustryType  string
+	Metadata      []byte
+	Extra         []byte
+	DatePublished pgtype.Timestamptz
 }
 
 func (q *Queries) DocketConversationCreate(ctx context.Context, arg DocketConversationCreateParams) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, docketConversationCreate,
-		arg.DocketID,
+		arg.DocketGovID,
+		arg.State,
 		arg.Name,
 		arg.Description,
-		arg.State,
+		arg.MatterType,
+		arg.IndustryType,
+		arg.Metadata,
+		arg.Extra,
+		arg.DatePublished,
 	)
 	var id uuid.UUID
 	err := row.Scan(&id)
@@ -183,15 +237,15 @@ func (q *Queries) DocketConversationDelete(ctx context.Context, id uuid.UUID) er
 
 const docketConversationFetchByDocketIdMatch = `-- name: DocketConversationFetchByDocketIdMatch :many
 SELECT
-    id, docket_id, state, created_at, updated_at, deleted_at, name, description
+    id, docket_gov_id, state, created_at, updated_at, deleted_at, name, description, matter_type, industry_type, metadata, extra, date_published
 FROM
     public.docket_conversations
 WHERE
-    docket_id = $1
+    docket_gov_id = $1
 `
 
-func (q *Queries) DocketConversationFetchByDocketIdMatch(ctx context.Context, docketID string) ([]DocketConversation, error) {
-	rows, err := q.db.Query(ctx, docketConversationFetchByDocketIdMatch, docketID)
+func (q *Queries) DocketConversationFetchByDocketIdMatch(ctx context.Context, docketGovID string) ([]DocketConversation, error) {
+	rows, err := q.db.Query(ctx, docketConversationFetchByDocketIdMatch, docketGovID)
 	if err != nil {
 		return nil, err
 	}
@@ -201,13 +255,18 @@ func (q *Queries) DocketConversationFetchByDocketIdMatch(ctx context.Context, do
 		var i DocketConversation
 		if err := rows.Scan(
 			&i.ID,
-			&i.DocketID,
+			&i.DocketGovID,
 			&i.State,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.DeletedAt,
 			&i.Name,
 			&i.Description,
+			&i.MatterType,
+			&i.IndustryType,
+			&i.Metadata,
+			&i.Extra,
+			&i.DatePublished,
 		); err != nil {
 			return nil, err
 		}
@@ -221,7 +280,7 @@ func (q *Queries) DocketConversationFetchByDocketIdMatch(ctx context.Context, do
 
 const docketConversationList = `-- name: DocketConversationList :many
 SELECT
-    id, docket_id, state, created_at, updated_at, deleted_at, name, description
+    id, docket_gov_id, state, created_at, updated_at, deleted_at, name, description, matter_type, industry_type, metadata, extra, date_published
 FROM
     public.docket_conversations
 ORDER BY
@@ -239,13 +298,18 @@ func (q *Queries) DocketConversationList(ctx context.Context) ([]DocketConversat
 		var i DocketConversation
 		if err := rows.Scan(
 			&i.ID,
-			&i.DocketID,
+			&i.DocketGovID,
 			&i.State,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.DeletedAt,
 			&i.Name,
 			&i.Description,
+			&i.MatterType,
+			&i.IndustryType,
+			&i.Metadata,
+			&i.Extra,
+			&i.DatePublished,
 		); err != nil {
 			return nil, err
 		}
@@ -259,7 +323,7 @@ func (q *Queries) DocketConversationList(ctx context.Context) ([]DocketConversat
 
 const docketConversationRead = `-- name: DocketConversationRead :one
 SELECT
-    id, docket_id, state, created_at, updated_at, deleted_at, name, description
+    id, docket_gov_id, state, created_at, updated_at, deleted_at, name, description, matter_type, industry_type, metadata, extra, date_published
 FROM
     public.docket_conversations
 WHERE
@@ -271,13 +335,18 @@ func (q *Queries) DocketConversationRead(ctx context.Context, id uuid.UUID) (Doc
 	var i DocketConversation
 	err := row.Scan(
 		&i.ID,
-		&i.DocketID,
+		&i.DocketGovID,
 		&i.State,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
 		&i.Name,
 		&i.Description,
+		&i.MatterType,
+		&i.IndustryType,
+		&i.Metadata,
+		&i.Extra,
+		&i.DatePublished,
 	)
 	return i, err
 }
@@ -286,31 +355,46 @@ const docketConversationUpdate = `-- name: DocketConversationUpdate :one
 UPDATE
     public.docket_conversations
 SET
-    docket_id = $1,
+    docket_gov_id = $1,
     state = $2,
     name = $3,
     description = $4,
+    matter_type = $5,
+    industry_type = $6,
+    metadata = $7,
+    extra = $8,
+    date_published = $9,
     updated_at = NOW()
 WHERE
-    id = $5
+    id = $10
 RETURNING
     id
 `
 
 type DocketConversationUpdateParams struct {
-	DocketID    string
-	State       string
-	Name        string
-	Description string
-	ID          uuid.UUID
+	DocketGovID   string
+	State         string
+	Name          string
+	Description   string
+	MatterType    string
+	IndustryType  string
+	Metadata      []byte
+	Extra         []byte
+	DatePublished pgtype.Timestamptz
+	ID            uuid.UUID
 }
 
 func (q *Queries) DocketConversationUpdate(ctx context.Context, arg DocketConversationUpdateParams) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, docketConversationUpdate,
-		arg.DocketID,
+		arg.DocketGovID,
 		arg.State,
 		arg.Name,
 		arg.Description,
+		arg.MatterType,
+		arg.IndustryType,
+		arg.Metadata,
+		arg.Extra,
+		arg.DatePublished,
 		arg.ID,
 	)
 	var id uuid.UUID
@@ -322,18 +406,18 @@ const docketDocumentDeleteAll = `-- name: DocketDocumentDeleteAll :exec
 DELETE FROM
     public.docket_documents
 WHERE
-    docket_id = $1
+    conversation_uuid = $1
 `
 
-func (q *Queries) DocketDocumentDeleteAll(ctx context.Context, docketID uuid.UUID) error {
-	_, err := q.db.Exec(ctx, docketDocumentDeleteAll, docketID)
+func (q *Queries) DocketDocumentDeleteAll(ctx context.Context, conversationUuid uuid.UUID) error {
+	_, err := q.db.Exec(ctx, docketDocumentDeleteAll, conversationUuid)
 	return err
 }
 
 const docketDocumentInsert = `-- name: DocketDocumentInsert :one
 INSERT INTO
     public.docket_documents (
-        docket_id,
+        conversation_uuid,
         file_id,
         created_at,
         updated_at
@@ -341,26 +425,26 @@ INSERT INTO
 VALUES
     ($1, $2, NOW(), NOW())
 RETURNING
-    docket_id
+    conversation_uuid
 `
 
 type DocketDocumentInsertParams struct {
-	DocketID uuid.UUID
-	FileID   uuid.UUID
+	ConversationUuid uuid.UUID
+	FileID           uuid.UUID
 }
 
 func (q *Queries) DocketDocumentInsert(ctx context.Context, arg DocketDocumentInsertParams) (uuid.UUID, error) {
-	row := q.db.QueryRow(ctx, docketDocumentInsert, arg.DocketID, arg.FileID)
-	var docket_id uuid.UUID
-	err := row.Scan(&docket_id)
-	return docket_id, err
+	row := q.db.QueryRow(ctx, docketDocumentInsert, arg.ConversationUuid, arg.FileID)
+	var conversation_uuid uuid.UUID
+	err := row.Scan(&conversation_uuid)
+	return conversation_uuid, err
 }
 
 const docketDocumentUpdate = `-- name: DocketDocumentUpdate :one
 UPDATE
     public.docket_documents
 SET
-    docket_id = $1,
+    conversation_uuid = $1,
     updated_at = NOW()
 WHERE
     file_id = $2
@@ -369,12 +453,12 @@ RETURNING
 `
 
 type DocketDocumentUpdateParams struct {
-	DocketID uuid.UUID
-	FileID   uuid.UUID
+	ConversationUuid uuid.UUID
+	FileID           uuid.UUID
 }
 
 func (q *Queries) DocketDocumentUpdate(ctx context.Context, arg DocketDocumentUpdateParams) (uuid.UUID, error) {
-	row := q.db.QueryRow(ctx, docketDocumentUpdate, arg.DocketID, arg.FileID)
+	row := q.db.QueryRow(ctx, docketDocumentUpdate, arg.ConversationUuid, arg.FileID)
 	var file_id uuid.UUID
 	err := row.Scan(&file_id)
 	return file_id, err

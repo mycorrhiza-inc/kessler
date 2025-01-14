@@ -57,21 +57,26 @@ func (ns NullStageState) Value() (driver.Value, error) {
 }
 
 type DocketConversation struct {
-	ID          uuid.UUID
-	DocketID    string
-	State       string
-	CreatedAt   pgtype.Timestamp
-	UpdatedAt   pgtype.Timestamp
-	DeletedAt   pgtype.Timestamp
-	Name        string
-	Description string
+	ID            uuid.UUID
+	DocketGovID   string
+	State         string
+	CreatedAt     pgtype.Timestamp
+	UpdatedAt     pgtype.Timestamp
+	DeletedAt     pgtype.Timestamp
+	Name          string
+	Description   string
+	MatterType    string
+	IndustryType  string
+	Metadata      []byte
+	Extra         []byte
+	DatePublished pgtype.Timestamptz
 }
 
 type DocketDocument struct {
-	DocketID  uuid.UUID
-	FileID    uuid.UUID
-	CreatedAt pgtype.Timestamp
-	UpdatedAt pgtype.Timestamp
+	ConversationUuid uuid.UUID
+	FileID           uuid.UUID
+	CreatedAt        pgtype.Timestamp
+	UpdatedAt        pgtype.Timestamp
 }
 
 type Encounter struct {
@@ -100,15 +105,16 @@ type Faction struct {
 }
 
 type File struct {
-	ID        uuid.UUID
-	Lang      string
-	Name      string
-	Extension string
-	Isprivate pgtype.Bool
-	CreatedAt pgtype.Timestamptz
-	UpdatedAt pgtype.Timestamptz
-	Hash      string
-	Verified  pgtype.Bool
+	ID            uuid.UUID
+	Lang          string
+	Name          string
+	Extension     string
+	Isprivate     pgtype.Bool
+	CreatedAt     pgtype.Timestamptz
+	UpdatedAt     pgtype.Timestamptz
+	Hash          string
+	Verified      pgtype.Bool
+	DatePublished pgtype.Timestamptz
 }
 
 type FileExtra struct {

@@ -1,7 +1,7 @@
 -- name: DocketDocumentInsert :one
 INSERT INTO
     public.docket_documents (
-        docket_id,
+        conversation_uuid,
         file_id,
         created_at,
         updated_at
@@ -9,13 +9,13 @@ INSERT INTO
 VALUES
     ($1, $2, NOW(), NOW())
 RETURNING
-    docket_id;
+    conversation_uuid;
 
 -- name: DocketDocumentUpdate :one
 UPDATE
     public.docket_documents
 SET
-    docket_id = $1,
+    conversation_uuid = $1,
     updated_at = NOW()
 WHERE
     file_id = $2
@@ -26,20 +26,25 @@ RETURNING
 DELETE FROM
     public.docket_documents
 WHERE
-    docket_id = $1;
+    conversation_uuid = $1;
 
 -- name: DocketConversationCreate :one
 INSERT INTO
     public.docket_conversations (
-        docket_id,
+        docket_gov_id,
+        state,
         name,
         description,
-        state,
+        matter_type,
+        industry_type,
+        metadata,
+        extra,
+        date_published,
         created_at,
         updated_at
     )
 VALUES
-    ($1, $2, $3, $4, NOW(), NOW())
+    ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
 RETURNING
     id;
 
@@ -49,7 +54,7 @@ SELECT
 FROM
     public.docket_conversations
 WHERE
-    docket_id = $1;
+    docket_gov_id = $1;
 
 -- name: DocketConversationRead :one
 SELECT
@@ -71,13 +76,18 @@ ORDER BY
 UPDATE
     public.docket_conversations
 SET
-    docket_id = $1,
+    docket_gov_id = $1,
     state = $2,
     name = $3,
     description = $4,
+    matter_type = $5,
+    industry_type = $6,
+    metadata = $7,
+    extra = $8,
+    date_published = $9,
     updated_at = NOW()
 WHERE
-    id = $5
+    id = $10
 RETURNING
     id;
 
@@ -90,15 +100,22 @@ WHERE
 -- name: ConversationSemiCompleteInfoList :many
 SELECT
     dc.id,
-    dc.docket_id,
+    dc.docket_gov_id,
+    dc.state,
     COUNT(dd.file_id) AS document_count,
     dc."name",
     dc.description,
+    dc.matter_type,
+    dc.industry_type,
+    dc.metadata,
+    dc.extra,
+    dc.date_published,
     dc.created_at,
-    dc.updated_at
+    dc.updated_at,
+    dc.deleted_at
 FROM
     public.docket_conversations dc
-    LEFT JOIN public.docket_documents dd ON dd.docket_id = dc.id
+    LEFT JOIN public.docket_documents dd ON dd.docket_gov_id = dc.id
 GROUP BY
     dc.id
 ORDER BY
@@ -107,16 +124,22 @@ ORDER BY
 -- name: ConversationSemiCompleteInfoListPaginated :many
 SELECT
     dc.id,
-    dc.docket_id,
+    dc.docket_gov_id,
+    dc.state,
     COUNT(dd.file_id) AS document_count,
     dc."name",
-    dc.state,
     dc.description,
+    dc.matter_type,
+    dc.industry_type,
+    dc.metadata,
+    dc.extra,
+    dc.date_published,
     dc.created_at,
-    dc.updated_at
+    dc.updated_at,
+    dc.deleted_at
 FROM
     public.docket_conversations dc
-    LEFT JOIN public.docket_documents dd ON dd.docket_id = dc.id
+    LEFT JOIN public.docket_documents dd ON dd.docket_gov_id = dc.id
 GROUP BY
     dc.id
 ORDER BY

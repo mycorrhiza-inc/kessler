@@ -275,11 +275,11 @@ func (q *Queries) OrganizationDelete(ctx context.Context, id uuid.UUID) error {
 
 const organizationFetchByAliasMatchAll = `-- name: OrganizationFetchByAliasMatchAll :many
 SELECT
-  public.organization_aliases.organization_alias AS alias,
-  public.organization.id AS id,
-  public.organization.name AS name,
-  public.organization.description AS description,
-  public.organization.is_person AS is_person
+    public.organization_aliases.organization_alias AS alias,
+    public.organization.id AS id,
+    public.organization.name AS name,
+    public.organization.description AS description,
+    public.organization.is_person AS is_person
 FROM
     public.organization_aliases
     LEFT JOIN public.organization ON public.organization.id = public.organization_aliases.organization_id
@@ -323,11 +323,11 @@ func (q *Queries) OrganizationFetchByAliasMatchAll(ctx context.Context, organiza
 
 const organizationFetchByAliasMatchSingle = `-- name: OrganizationFetchByAliasMatchSingle :one
 SELECT
-  public.organization_aliases.organization_alias AS alias,
-  public.organization.id AS id,
-  public.organization.name AS name,
-  public.organization.description AS description,
-  public.organization.is_person AS is_person
+    public.organization_aliases.organization_alias AS alias,
+    public.organization.id AS id,
+    public.organization.name AS name,
+    public.organization.description AS description,
+    public.organization.is_person AS is_person
 FROM
     public.organization_aliases
     LEFT JOIN public.organization ON public.organization.id = public.organization_aliases.organization_id
@@ -545,13 +545,13 @@ SELECT
     public.organization.id AS organization_id,
     public.organization.name AS organization_name,
     public.relation_documents_organizations_authorship.document_id,
-    public.docket_conversations.docket_id AS docket_id,
+    public.docket_conversations.docket_gov_id AS docket_gov_id,
     public.docket_conversations.id AS conversation_uuid
 FROM
     public.organization
     LEFT JOIN public.relation_documents_organizations_authorship ON public.organization.id = public.relation_documents_organizations_authorship.organization_id
     LEFT JOIN public.docket_documents ON public.relation_documents_organizations_authorship.document_id = public.docket_documents.file_id
-    LEFT JOIN public.docket_conversations ON public.docket_documents.docket_id = public.docket_conversations.id
+    LEFT JOIN public.docket_conversations ON public.docket_documents.conversation_uuid = public.docket_conversations.id
 WHERE
     public.organization.id = $1
 `
@@ -560,7 +560,7 @@ type OrganizationgGetConversationsAuthoredInRow struct {
 	OrganizationID   uuid.UUID
 	OrganizationName string
 	DocumentID       uuid.UUID
-	DocketID         pgtype.Text
+	DocketGovID      pgtype.Text
 	ConversationUuid uuid.UUID
 }
 
@@ -577,7 +577,7 @@ func (q *Queries) OrganizationgGetConversationsAuthoredIn(ctx context.Context, i
 			&i.OrganizationID,
 			&i.OrganizationName,
 			&i.DocumentID,
-			&i.DocketID,
+			&i.DocketGovID,
 			&i.ConversationUuid,
 		); err != nil {
 			return nil, err

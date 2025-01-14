@@ -29,9 +29,9 @@ WITH update_documents AS (
     UPDATE
         public.docket_documents
     SET
-        docket_id = $2
+        conversation_uuid = $2
     WHERE
-        docket_id = $1
+        conversation_uuid = $1
     RETURNING
         1
 )

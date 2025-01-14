@@ -3,8 +3,9 @@ package files
 import (
 	"context"
 	"fmt"
-
 	"kessler/gen/dbstore"
+	"kessler/objects/timestamp"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -87,22 +88,24 @@ func GetFileObjectRaw(params GetFileParam) (FileSchema, error) {
 }
 
 type FileCreationDataRaw struct {
-	Extension string
-	Lang      string
-	Name      string
-	Hash      string
-	IsPrivate pgtype.Bool
-	Verified  pgtype.Bool
+	Extension     string
+	Lang          string
+	Name          string
+	Hash          string
+	IsPrivate     pgtype.Bool
+	Verified      pgtype.Bool
+	DatePublished timestamp.KesslerTime
 }
 
 func InsertPubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreation FileCreationDataRaw, private bool) (FileSchema, error) {
 	params := dbstore.CreateFileParams{
-		Extension: fileCreation.Extension,
-		Lang:      fileCreation.Lang,
-		Name:      fileCreation.Name,
-		Isprivate: fileCreation.IsPrivate,
-		Hash:      fileCreation.Hash,
-		Verified:  fileCreation.Verified,
+		Extension:     fileCreation.Extension,
+		Lang:          fileCreation.Lang,
+		Name:          fileCreation.Name,
+		Isprivate:     fileCreation.IsPrivate,
+		Hash:          fileCreation.Hash,
+		Verified:      fileCreation.Verified,
+		DatePublished: pgtype.Timestamptz{Time: time.Time(fileCreation.DatePublished), Valid: true},
 	}
 	resultID, err := q.CreateFile(ctx, params)
 	if err != nil {
@@ -114,13 +117,14 @@ func InsertPubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreatio
 
 func UpdatePubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreation FileCreationDataRaw, private bool, pgUUID uuid.UUID) (FileSchema, error) {
 	params := dbstore.UpdateFileParams{
-		Extension: fileCreation.Extension,
-		Lang:      fileCreation.Lang,
-		Name:      fileCreation.Name,
-		Isprivate: fileCreation.IsPrivate,
-		Hash:      fileCreation.Hash,
-		Verified:  fileCreation.Verified,
-		ID:        pgUUID,
+		Extension:     fileCreation.Extension,
+		Lang:          fileCreation.Lang,
+		Name:          fileCreation.Name,
+		Isprivate:     fileCreation.IsPrivate,
+		Hash:          fileCreation.Hash,
+		Verified:      fileCreation.Verified,
+		ID:            pgUUID,
+		DatePublished: pgtype.Timestamptz{Time: time.Time(fileCreation.DatePublished), Valid: true},
 	}
 	err := q.UpdateFile(ctx, params)
 	if err != nil {

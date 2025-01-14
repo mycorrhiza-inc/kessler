@@ -4,6 +4,7 @@ import (
 	"kessler/gen/dbstore"
 	"kessler/objects/authors"
 	"kessler/objects/conversations"
+	"kessler/objects/timestamp"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -32,13 +33,14 @@ func (child_source FileChildTextSource) ChildTextSouceToRealTextSource(id uuid.U
 }
 
 type FileSchema struct {
-	ID        uuid.UUID `json:"id"`
-	Verified  bool      `json:"verified"`
-	Extension string    `json:"extension"`
-	Lang      string    `json:"lang"`
-	Name      string    `json:"name"`
-	Hash      string    `json:"hash"`
-	IsPrivate bool      `json:"is_private"`
+	ID            uuid.UUID             `json:"id"`
+	Verified      bool                  `json:"verified"`
+	Extension     string                `json:"extension"`
+	Lang          string                `json:"lang"`
+	Name          string                `json:"name"`
+	Hash          string                `json:"hash"`
+	IsPrivate     bool                  `json:"is_private"`
+	DatePublished timestamp.KesslerTime `json:"date_published"`
 }
 type FileMetadataSchema map[string]interface{}
 
@@ -51,42 +53,45 @@ type FileGeneratedExtras struct {
 
 // To heavy to include in a default file schema unless the user specifies they want a smaller version
 type CompleteFileSchema struct {
-	ID           uuid.UUID                             `json:"id"`
-	Verified     bool                                  `json:"verified"`
-	Extension    string                                `json:"extension"`
-	Lang         string                                `json:"lang"`
-	Name         string                                `json:"name"`
-	Hash         string                                `json:"hash"`
-	IsPrivate    bool                                  `json:"is_private"`
-	Mdata        FileMetadataSchema                    `json:"mdata"`
-	Stage        DocProcStage                          `json:"stage"`
-	Extra        FileGeneratedExtras                   `json:"extra"`
-	Authors      []authors.AuthorInformation           `json:"authors"`
-	Conversation conversations.ConversationInformation `json:"conversation"`
-	DocTexts     []FileChildTextSource                 `json:"doc_texts"`
+	ID            uuid.UUID                             `json:"id"`
+	Verified      bool                                  `json:"verified"`
+	Extension     string                                `json:"extension"`
+	Lang          string                                `json:"lang"`
+	Name          string                                `json:"name"`
+	Hash          string                                `json:"hash"`
+	IsPrivate     bool                                  `json:"is_private"`
+	DatePublished timestamp.KesslerTime                 `json:"date_published"`
+	Mdata         FileMetadataSchema                    `json:"mdata"`
+	Stage         DocProcStage                          `json:"stage"`
+	Extra         FileGeneratedExtras                   `json:"extra"`
+	Authors       []authors.AuthorInformation           `json:"authors"`
+	Conversation  conversations.ConversationInformation `json:"conversation"`
+	DocTexts      []FileChildTextSource                 `json:"doc_texts"`
 }
 
 func (input CompleteFileSchema) CompleteFileSchemaPrune() FileSchema {
 	return FileSchema{
-		ID:        input.ID,
-		Verified:  input.Verified,
-		Extension: input.Extension,
-		Lang:      input.Lang,
-		Name:      input.Name,
-		Hash:      input.Hash,
-		IsPrivate: input.IsPrivate,
+		ID:            input.ID,
+		Verified:      input.Verified,
+		Extension:     input.Extension,
+		Lang:          input.Lang,
+		Name:          input.Name,
+		Hash:          input.Hash,
+		IsPrivate:     input.IsPrivate,
+		DatePublished: input.DatePublished,
 	}
 }
 
 func (input FileSchema) CompleteFileSchemaInflateFromPartialSchema() CompleteFileSchema {
 	return_schema := CompleteFileSchema{
-		ID:        input.ID,
-		Verified:  input.Verified,
-		Extension: input.Extension,
-		Lang:      input.Lang,
-		Name:      input.Name,
-		Hash:      input.Hash,
-		IsPrivate: input.IsPrivate,
+		ID:            input.ID,
+		Verified:      input.Verified,
+		Extension:     input.Extension,
+		Lang:          input.Lang,
+		Name:          input.Name,
+		Hash:          input.Hash,
+		IsPrivate:     input.IsPrivate,
+		DatePublished: input.DatePublished,
 	}
 	// TODO: Query Metadata json and also get other stuff
 	return return_schema
@@ -94,23 +99,25 @@ func (input FileSchema) CompleteFileSchemaInflateFromPartialSchema() CompleteFil
 
 func (updateInfo CompleteFileSchema) ConvertToCreationData() FileCreationDataRaw {
 	creationData := FileCreationDataRaw{
-		Extension: updateInfo.Extension,
-		Lang:      updateInfo.Lang,
-		Name:      updateInfo.Name,
-		Hash:      updateInfo.Hash,
-		Verified:  pgtype.Bool{Bool: updateInfo.Verified, Valid: true},
+		Extension:     updateInfo.Extension,
+		Lang:          updateInfo.Lang,
+		Name:          updateInfo.Name,
+		Hash:          updateInfo.Hash,
+		Verified:      pgtype.Bool{Bool: updateInfo.Verified, Valid: true},
+		DatePublished: updateInfo.DatePublished,
 	}
 	return creationData
 }
 
 func PublicFileToSchema(file dbstore.File) FileSchema {
 	return FileSchema{
-		ID:        file.ID,
-		Verified:  file.Verified.Bool,
-		Extension: file.Extension,
-		Lang:      file.Lang,
-		Name:      file.Name,
-		Hash:      file.Hash,
-		IsPrivate: file.Isprivate.Bool,
+		ID:            file.ID,
+		Verified:      file.Verified.Bool,
+		Extension:     file.Extension,
+		Lang:          file.Lang,
+		Name:          file.Name,
+		Hash:          file.Hash,
+		IsPrivate:     file.Isprivate.Bool,
+		DatePublished: timestamp.KesslerTime(file.DatePublished.Time),
 	}
 }
