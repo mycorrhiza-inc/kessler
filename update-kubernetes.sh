@@ -53,11 +53,12 @@ function process_branch() {
         sudo docker push "fractalhuman1/kessler-backend-go:${tag}"
         
         # Deploy to appropriate environment
-        if [ "$tag" = "latest" ]; then
-            ssh root@nightly.kessler.xyz "cd /mycorrhiza/infra && helm upgrade kessler-prod ./helm -f helm/values-prod.yaml"
-        else
-            ssh root@nightly.kessler.xyz "cd /mycorrhiza/infra && helm upgrade kessler-nightly ./helm -f helm/values-nightly.yaml"
-        fi
+        #
+           if [ "$tag" = "latest" ]; then
+                ssh root@nightly.kessler.xyz "export KUBECONFIG=/etc/rancher/k3s/k3s.yaml && cd /mycorrhiza/infra && helm upgrade kessler-prod ./helm -f helm/values-prod.yaml"
+            else
+                ssh root@nightly.kessler.xyz "export KUBECONFIG=/etc/rancher/k3s/k3s.yaml && cd /mycorrhiza/infra && helm upgrade kessler-nightly ./helm -f helm/values-nightly.yaml"
+            fi
     else
         echo "No new commits found for $branch, skipping..."
     fi
