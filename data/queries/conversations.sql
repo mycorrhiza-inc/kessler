@@ -1,7 +1,7 @@
 -- name: DocketDocumentInsert :one
 INSERT INTO
     public.docket_documents (
-        docket_gov_id,
+        docket_id,
         file_id,
         created_at,
         updated_at
@@ -9,13 +9,13 @@ INSERT INTO
 VALUES
     ($1, $2, NOW(), NOW())
 RETURNING
-    docket_gov_id;
+    docket_id;
 
 -- name: DocketDocumentUpdate :one
 UPDATE
     public.docket_documents
 SET
-    docket_gov_id = $1,
+    docket_id = $1,
     updated_at = NOW()
 WHERE
     file_id = $2
@@ -26,12 +26,12 @@ RETURNING
 DELETE FROM
     public.docket_documents
 WHERE
-    docket_gov_id = $1;
+    docket_id = $1;
 
 -- name: DocketConversationCreate :one
 INSERT INTO
     public.docket_conversations (
-        docket_gov_id,
+        docket_id,
         name,
         description,
         state,
@@ -49,7 +49,7 @@ SELECT
 FROM
     public.docket_conversations
 WHERE
-    docket_gov_id = $1;
+    docket_id = $1;
 
 -- name: DocketConversationRead :one
 SELECT
@@ -71,7 +71,7 @@ ORDER BY
 UPDATE
     public.docket_conversations
 SET
-    docket_gov_id = $1,
+    docket_id = $1,
     state = $2,
     name = $3,
     description = $4,
@@ -90,7 +90,7 @@ WHERE
 -- name: ConversationSemiCompleteInfoList :many
 SELECT
     dc.id,
-    dc.docket_gov_id,
+    dc.docket_id,
     COUNT(dd.file_id) AS document_count,
     dc."name",
     dc.description,
@@ -98,7 +98,7 @@ SELECT
     dc.updated_at
 FROM
     public.docket_conversations dc
-    LEFT JOIN public.docket_documents dd ON dd.docket_gov_id = dc.id
+    LEFT JOIN public.docket_documents dd ON dd.docket_id = dc.id
 GROUP BY
     dc.id
 ORDER BY
@@ -107,7 +107,7 @@ ORDER BY
 -- name: ConversationSemiCompleteInfoListPaginated :many
 SELECT
     dc.id,
-    dc.docket_gov_id,
+    dc.docket_id,
     COUNT(dd.file_id) AS document_count,
     dc."name",
     dc.state,
@@ -116,7 +116,7 @@ SELECT
     dc.updated_at
 FROM
     public.docket_conversations dc
-    LEFT JOIN public.docket_documents dd ON dd.docket_gov_id = dc.id
+    LEFT JOIN public.docket_documents dd ON dd.docket_id = dc.id
 GROUP BY
     dc.id
 ORDER BY

@@ -3,17 +3,17 @@
 ALTER TABLE
     public.docket_conversations
 ADD
-    COLUMN matter_type VARCHAR NOT NULL DEFAULT '';
+    COLUMN matter_type VARCHAR NOT NULL DEFAULT "";
 
 ALTER TABLE
     public.docket_conversations
 ADD
-    COLUMN matter_subtype VARCHAR NOT NULL DEFAULT '';
+    COLUMN matter_subtype VARCHAR NOT NULL DEFAULT "";
 
 ALTER TABLE
     public.docket_conversations
 ADD
-    COLUMN industry_type VARCHAR NOT NULL DEFAULT '';
+    COLUMN industry_type VARCHAR NOT NULL DEFAULT "";
 
 
 ALTER TABLE
