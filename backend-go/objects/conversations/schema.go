@@ -1,7 +1,7 @@
 package conversations
 
 import (
-	"time"
+	"kessler/objects/timestamp"
 
 	"github.com/google/uuid"
 )
@@ -15,6 +15,6 @@ type ConversationInformation struct {
 	IndustryType  string
 	Metadata      []byte
 	Extra         []byte
-	DatePublished time.Time
+	DatePublished timestamp.KesslerTime
 	ID            uuid.UUID
 }

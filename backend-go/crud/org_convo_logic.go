@@ -10,6 +10,7 @@ import (
 	"kessler/objects/conversations"
 	"kessler/routing"
 	"net/http"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -194,11 +195,17 @@ func verifyConversationUUID(ctx context.Context, q dbstore.Queries, conv_info *c
 		if update {
 			// fmt.Println("Updating existing conversation with data %v", conv_info)
 			args := dbstore.DocketConversationUpdateParams{
-				ID:          conv_info.ID,
-				DocketGovID: conv_info.DocketGovID,
-				State:       conv_info.State,
-				Name:        conv_info.Name,
-				Description: conv_info.Description,
+				ID:            conv_info.ID,
+				DocketGovID:   conv_info.DocketGovID,
+				State:         conv_info.State,
+				Name:          conv_info.Name,
+				Description:   conv_info.Description,
+				MatterType:    conv_info.MatterType,
+				IndustryType:  conv_info.IndustryType,
+				Metadata:      conv_info.Metadata,
+				Extra:         conv_info.Extra,
+				DatePublished: pgtype.Timestamptz{Time: time.Time(conv_info.DatePublished), Valid: true},
+				// conv_info.DatePublished
 			}
 			q.DocketConversationUpdate(ctx, args)
 			if err != nil {
@@ -217,10 +224,15 @@ func verifyConversationUUID(ctx context.Context, q dbstore.Queries, conv_info *c
 
 	// Create new conversation if none exists
 	create_params := dbstore.DocketConversationCreateParams{
-		DocketGovID: conv_info.DocketGovID,
-		State:       conv_info.State,
-		Name:        conv_info.Name,
-		Description: conv_info.Description,
+		DocketGovID:   conv_info.DocketGovID,
+		State:         conv_info.State,
+		Name:          conv_info.Name,
+		Description:   conv_info.Description,
+		MatterType:    conv_info.MatterType,
+		IndustryType:  conv_info.IndustryType,
+		Metadata:      conv_info.Metadata,
+		Extra:         conv_info.Extra,
+		DatePublished: pgtype.Timestamptz{Time: time.Time(conv_info.DatePublished), Valid: true},
 	}
 
 	conv_id, err := q.DocketConversationCreate(ctx, create_params)
