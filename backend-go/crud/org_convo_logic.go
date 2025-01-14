@@ -92,7 +92,7 @@ func ConversationVerifyHandler(w http.ResponseWriter, r *http.Request) {
 	// fmt.Printf("Calling verifyConversationUUID with req: %+v\n", req)
 	conversation_info, err := verifyConversationUUID(ctx, q, &req, true)
 	if err != nil {
-		errorstring := fmt.Sprintf("Error verifying conversation %v: %v\n", req.DocketID, err)
+		errorstring := fmt.Sprintf("Error verifying conversation %v: %v\n", req.DocketGovID, err)
 		fmt.Println(errorstring)
 		http.Error(w, errorstring, http.StatusInternalServerError)
 		return
@@ -180,7 +180,7 @@ func verifyConversationUUID(ctx context.Context, q dbstore.Queries, conv_info *c
 
 	// Try to find existing conversation for this docket
 	// TODO: Change query to also match state if state exists
-	results, err := q.DocketConversationFetchByDocketIdMatch(ctx, conv_info.DocketID)
+	results, err := q.DocketConversationFetchByDocketIdMatch(ctx, conv_info.DocketGovID)
 	if err != nil {
 		fmt.Printf("Error fetching conversation by docket ID: %v\n", err)
 		return *conv_info, err
@@ -195,7 +195,7 @@ func verifyConversationUUID(ctx context.Context, q dbstore.Queries, conv_info *c
 			// fmt.Println("Updating existing conversation with data %v", conv_info)
 			args := dbstore.DocketConversationUpdateParams{
 				ID:          conv_info.ID,
-				DocketID:    conv_info.DocketID,
+				DocketGovID: conv_info.DocketGovID,
 				State:       conv_info.State,
 				Name:        conv_info.Name,
 				Description: conv_info.Description,
@@ -217,7 +217,7 @@ func verifyConversationUUID(ctx context.Context, q dbstore.Queries, conv_info *c
 
 	// Create new conversation if none exists
 	create_params := dbstore.DocketConversationCreateParams{
-		DocketID:    conv_info.DocketID,
+		DocketGovID: conv_info.DocketGovID,
 		State:       conv_info.State,
 		Name:        conv_info.Name,
 		Description: conv_info.Description,
@@ -235,7 +235,7 @@ func verifyConversationUUID(ctx context.Context, q dbstore.Queries, conv_info *c
 func fileConversationUpsert(ctx context.Context, q dbstore.Queries, file_id uuid.UUID, conv_info conversations.ConversationInformation, insert bool) error {
 	// Sometimes this is getting called with an insert when the metadata already exists in the table, this causes a PGERROR, since it violates uniqueness. However, setting it up so it tries to update will fall back to insert if the file doesnt exist. Its probably a good idea to remove this and debug what is causing the new file thing at some point.
 	insert = false
-	shouldnt_process := conv_info.ID == uuid.Nil && conv_info.DocketID == ""
+	shouldnt_process := conv_info.ID == uuid.Nil && conv_info.DocketGovID == ""
 	if shouldnt_process {
 		return nil
 	}
@@ -248,8 +248,8 @@ func fileConversationUpsert(ctx context.Context, q dbstore.Queries, file_id uuid
 	}
 	if !insert {
 		args := dbstore.DocketDocumentUpdateParams{
-			DocketID: new_conv_info.ID,
-			FileID:   file_id,
+			ConversationUuid: new_conv_info.ID,
+			FileID:           file_id,
 		}
 		_, err = q.DocketDocumentUpdate(ctx, args)
 		// If encounter a not found error, break error handling control flow and inserting object
@@ -263,8 +263,8 @@ func fileConversationUpsert(ctx context.Context, q dbstore.Queries, file_id uuid
 	}
 
 	insert_params := dbstore.DocketDocumentInsertParams{
-		DocketID: new_conv_info.ID,
-		FileID:   file_id,
+		ConversationUuid: new_conv_info.ID,
+		FileID:           file_id,
 	}
 	_, err = q.DocketDocumentInsert(ctx, insert_params)
 	return err

@@ -109,7 +109,7 @@ func getFileInformationUUID(file_uuid uuid.UUID, q dbstore.Queries, ctx context.
 	returnInfo.Extras["date"] = file.Mdata["date"]
 	returnInfo.Extras["file_extension"] = file.Extension
 	returnInfo.Extras["parent_docket_name"] = file.Conversation.Name
-	returnInfo.Extras["parent_docket_goverment_id"] = file.Conversation.DocketID
+	returnInfo.Extras["parent_docket_goverment_id"] = file.Conversation.DocketGovID
 	returnInfo.Extras["parent_docket_uuid"] = file.Conversation.ID
 
 	return returnInfo, nil
@@ -122,7 +122,7 @@ func getDocketInformationUnkown(docket_query_string string, q dbstore.Queries, c
 	}
 	return_info := ObjectInfo{
 		UUID:        return_obj.ID,
-		Name:        return_obj.DocketID,
+		Name:        return_obj.DocketGovID,
 		ObjectType:  "docket",
 		Description: return_obj.Name,
 	}

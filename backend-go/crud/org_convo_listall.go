@@ -83,7 +83,7 @@ func ConversationSemiCompleteListAll(w http.ResponseWriter, r *http.Request) {
 		}
 		proceedings[i] = ConversationSemiCompleteInfo{
 			ID:            proceeding_raw.ID,
-			DocketId:      proceeding_raw.DocketID,
+			DocketId:      proceeding_raw.DocketGovID,
 			Name:          proceeding_raw.Name,
 			Description:   parsed_description,
 			DocumentCount: int(proceeding_raw.DocumentCount),
