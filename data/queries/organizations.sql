@@ -180,7 +180,7 @@ SELECT
     public.organization.id AS organization_id,
     public.organization.name AS organization_name,
     public.relation_documents_organizations_authorship.document_id,
-    public.docket_conversations.conversation_uuid AS conversation_uuid,
+    public.docket_conversations.docket_gov_id AS docket_gov_id,
     public.docket_conversations.id AS conversation_uuid
 FROM
     public.organization
