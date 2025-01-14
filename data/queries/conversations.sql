@@ -1,18 +1,3 @@
--- type DocketConversation struct {
--- 	ID            uuid.UUID
--- 	DocketGovID   Not null varchar 
--- 	State         Not null varchar 
--- 	CreatedAt     pgtype.Timestamp
--- 	UpdatedAt     pgtype.Timestamp
--- 	DeletedAt     pgtype.Timestamp
--- 	Name          Not null varchar 
--- 	Description   Not null varchar 
--- 	MatterType    Not null varchar 
--- 	IndustryType  Not null varchar 
--- 	Metadata      Not null varchar 
--- 	Extra         JSONB
--- 	DatePublished pgtype.Timestamptz
--- }
 -- name: DocketDocumentInsert :one
 INSERT INTO
     public.docket_documents (
@@ -47,14 +32,19 @@ WHERE
 INSERT INTO
     public.docket_conversations (
         docket_gov_id,
+        state,
         name,
         description,
-        state,
+        matter_type,
+        industry_type,
+        metadata,
+        extra,
+        date_published,
         created_at,
         updated_at
     )
 VALUES
-    ($1, $2, $3, $4, NOW(), NOW())
+    ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
 RETURNING
     id;
 
@@ -90,9 +80,14 @@ SET
     state = $2,
     name = $3,
     description = $4,
+    matter_type = $5,
+    industry_type = $6,
+    metadata = $7,
+    extra = $8,
+    date_published = $9,
     updated_at = NOW()
 WHERE
-    id = $5
+    id = $10
 RETURNING
     id;
 
@@ -106,11 +101,18 @@ WHERE
 SELECT
     dc.id,
     dc.docket_gov_id,
+    dc.state,
     COUNT(dd.file_id) AS document_count,
     dc."name",
     dc.description,
+    dc.matter_type,
+    dc.industry_type,
+    dc.metadata,
+    dc.extra,
+    dc.date_published,
     dc.created_at,
-    dc.updated_at
+    dc.updated_at,
+    dc.deleted_at
 FROM
     public.docket_conversations dc
     LEFT JOIN public.docket_documents dd ON dd.docket_gov_id = dc.id
@@ -123,12 +125,18 @@ ORDER BY
 SELECT
     dc.id,
     dc.docket_gov_id,
+    dc.state,
     COUNT(dd.file_id) AS document_count,
     dc."name",
-    dc.state,
     dc.description,
+    dc.matter_type,
+    dc.industry_type,
+    dc.metadata,
+    dc.extra,
+    dc.date_published,
     dc.created_at,
-    dc.updated_at
+    dc.updated_at,
+    dc.deleted_at
 FROM
     public.docket_conversations dc
     LEFT JOIN public.docket_documents dd ON dd.docket_gov_id = dc.id
