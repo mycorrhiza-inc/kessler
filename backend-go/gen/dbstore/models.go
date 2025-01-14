@@ -57,21 +57,24 @@ func (ns NullStageState) Value() (driver.Value, error) {
 }
 
 type DocketConversation struct {
-	ID          uuid.UUID
-	DocketID    string
-	State       string
-	CreatedAt   pgtype.Timestamp
-	UpdatedAt   pgtype.Timestamp
-	DeletedAt   pgtype.Timestamp
-	Name        string
-	Description string
+	ID            uuid.UUID
+	DocketGovID   string
+	State         string
+	CreatedAt     pgtype.Timestamp
+	UpdatedAt     pgtype.Timestamp
+	DeletedAt     pgtype.Timestamp
+	Name          string
+	Description   string
+	MatterType    string
+	MatterSubtype string
+	IndustryType  string
 }
 
 type DocketDocument struct {
-	DocketID  uuid.UUID
-	FileID    uuid.UUID
-	CreatedAt pgtype.Timestamp
-	UpdatedAt pgtype.Timestamp
+	ConversationUuid uuid.UUID
+	FileID           uuid.UUID
+	CreatedAt        pgtype.Timestamp
+	UpdatedAt        pgtype.Timestamp
 }
 
 type Encounter struct {

@@ -16,9 +16,9 @@ WITH update_documents AS (
     UPDATE
         public.docket_documents
     SET
-        docket_id = $2
+        conversation_uuid = $2
     WHERE
-        docket_id = $1
+        conversation_uuid = $1
     RETURNING
         1
 )
@@ -29,12 +29,12 @@ WHERE
 `
 
 type ConversationDeduplicateCascadeParams struct {
-	ID       uuid.UUID
-	DocketID uuid.UUID
+	ID               uuid.UUID
+	ConversationUuid uuid.UUID
 }
 
 func (q *Queries) ConversationDeduplicateCascade(ctx context.Context, arg ConversationDeduplicateCascadeParams) error {
-	_, err := q.db.Exec(ctx, conversationDeduplicateCascade, arg.ID, arg.DocketID)
+	_, err := q.db.Exec(ctx, conversationDeduplicateCascade, arg.ID, arg.ConversationUuid)
 	return err
 }
 

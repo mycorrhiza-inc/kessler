@@ -137,7 +137,7 @@ SELECT
     public.file.updated_at,
     public.file_metadata.mdata,
     public.file_extras.extra_obj,
-    public.docket_documents.docket_id AS docket_uuid,
+    public.docket_documents.conversation_uuid AS docket_uuid,
     public.relation_documents_organizations_authorship.is_primary_author,
     public.organization.id AS organization_id,
     public.organization.name AS organization_name,
@@ -219,7 +219,7 @@ SELECT
     public.file.updated_at,
     public.file_metadata.mdata,
     public.file_extras.extra_obj,
-    public.docket_documents.docket_id AS docket_uuid,
+    public.docket_documents.conversation_uuid AS docket_uuid,
     array_agg(
         public.organization.id
         ORDER BY
@@ -255,7 +255,7 @@ GROUP BY
     FILE.updated_at,
     file_metadata.mdata,
     file_extras.extra_obj,
-    docket_documents.docket_id
+    docket_documents.conversation_uuid
 `
 
 type SemiCompleteFileListGetRow struct {
