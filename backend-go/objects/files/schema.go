@@ -111,12 +111,13 @@ func (updateInfo CompleteFileSchema) ConvertToCreationData() FileCreationDataRaw
 
 func PublicFileToSchema(file dbstore.File) FileSchema {
 	return FileSchema{
-		ID:        file.ID,
-		Verified:  file.Verified.Bool,
-		Extension: file.Extension,
-		Lang:      file.Lang,
-		Name:      file.Name,
-		Hash:      file.Hash,
-		IsPrivate: file.Isprivate.Bool,
+		ID:            file.ID,
+		Verified:      file.Verified.Bool,
+		Extension:     file.Extension,
+		Lang:          file.Lang,
+		Name:          file.Name,
+		Hash:          file.Hash,
+		IsPrivate:     file.Isprivate.Bool,
+		DatePublished: timestamp.KesslerTime(file.DatePublished.Time),
 	}
 }
