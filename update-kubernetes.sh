@@ -46,11 +46,11 @@ function process_branch() {
         echo "New commits found, rebuilding images..."
         
         # Build and push Docker images
-        docker build -t "fractalhuman1/kessler-frontend:${tag}" --platform linux/amd64 ./frontend/
-        docker build -t "fractalhuman1/kessler-backend-go:${tag}" --platform linux/amd64 ./backend-go/
+        sudo docker build -t "fractalhuman1/kessler-frontend:${tag}" --platform linux/amd64 ./frontend/
+        sudo docker build -t "fractalhuman1/kessler-backend-go:${tag}" --platform linux/amd64 ./backend-go/
         
-        docker push "fractalhuman1/kessler-frontend:${tag}"
-        docker push "fractalhuman1/kessler-backend-go:${tag}"
+        sudo docker push "fractalhuman1/kessler-frontend:${tag}"
+        sudo docker push "fractalhuman1/kessler-backend-go:${tag}"
         
         # Deploy to appropriate environment
         if [ "$tag" = "latest" ]; then
