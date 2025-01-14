@@ -180,13 +180,13 @@ SELECT
     public.organization.id AS organization_id,
     public.organization.name AS organization_name,
     public.relation_documents_organizations_authorship.document_id,
-    public.docket_conversations.docket_id AS docket_id,
+    public.docket_conversations.docket_gov_id AS docket_gov_id,
     public.docket_conversations.id AS conversation_uuid
 FROM
     public.organization
     LEFT JOIN public.relation_documents_organizations_authorship ON public.organization.id = public.relation_documents_organizations_authorship.organization_id
     LEFT JOIN public.docket_documents ON public.relation_documents_organizations_authorship.document_id = public.docket_documents.file_id
-    LEFT JOIN public.docket_conversations ON public.docket_documents.docket_id = public.docket_conversations.id
+    LEFT JOIN public.docket_conversations ON public.docket_documents.docket_gov_id = public.docket_conversations.id
 WHERE
     public.organization.id = $1;
 
