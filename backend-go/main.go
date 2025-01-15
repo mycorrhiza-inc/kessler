@@ -96,6 +96,12 @@ func withDBTX(next http.Handler) http.Handler {
 	})
 }
 
+func HandleVersionHash(w http.ResponseWriter, r *http.Request) {
+	// Get the version hash from the environment variable
+	versionHash := os.Getenv("VERSION_HASH")
+	w.Write([]byte(versionHash))
+}
+
 func main() {
 	err := godotenv.Load()
 	if err != nil {
@@ -129,6 +135,7 @@ func main() {
 	public_subrouter := regularMux.PathPrefix("/v2/public").Subrouter()
 	crud.DefineCrudRoutes(public_subrouter)
 	regularMux.PathPrefix("/v2/public/").Handler(public_subrouter)
+	regularMux.HandleFunc("/v2/version_hash", HandleVersionHash)
 	regularMux.HandleFunc("/v2/search", search.HandleSearchRequest)
 	regularMux.HandleFunc("/v2/rag/basic_chat", rag.HandleBasicChatRequest)
 	regularMux.HandleFunc("/v2/rag/chat", rag.HandleRagChatRequest)
