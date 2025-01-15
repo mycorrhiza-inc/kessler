@@ -17,7 +17,9 @@ export default function Page() {
   };
   return (
     <PageContainer breadcrumbs={breadcrumbs}>
-      <h1 className="text-3xl font-bold">All Files Search</h1>
+      <div className="flex justify-center">
+        <h1 className="text-3xl font-bold">Files Search</h1>
+      </div>
       <ConversationComponent inheritedFilters={[]} />
     </PageContainer>
   );
