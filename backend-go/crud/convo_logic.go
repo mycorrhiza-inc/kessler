@@ -27,7 +27,7 @@ func ConversationVerifyHandler(w http.ResponseWriter, r *http.Request) {
 	var req conversations.ConversationInformation
 	err = json.Unmarshal(bodyBytes, &req)
 	if err != nil {
-		errorstring := fmt.Sprintf("Error decoding JSON: %v\n", err)
+		errorstring := fmt.Sprintf("Error decoding JSON: %v\n Offending json looked like: %v", err, string(bodyBytes))
 		fmt.Println(errorstring)
 		http.Error(w, errorstring, http.StatusBadRequest)
 		return
@@ -86,8 +86,8 @@ func verifyConversationUUID(ctx context.Context, q dbstore.Queries, conv_info *c
 				Description:   conv_info.Description,
 				MatterType:    conv_info.MatterType,
 				IndustryType:  conv_info.IndustryType,
-				Metadata:      conv_info.Metadata,
-				Extra:         conv_info.Extra,
+				Metadata:      []byte(conv_info.Metadata),
+				Extra:         []byte(conv_info.Extra),
 				DatePublished: pgtype.Timestamptz{Time: time.Time(conv_info.DatePublished), Valid: true},
 				// conv_info.DatePublished
 			}
@@ -114,8 +114,8 @@ func verifyConversationUUID(ctx context.Context, q dbstore.Queries, conv_info *c
 		Description:   conv_info.Description,
 		MatterType:    conv_info.MatterType,
 		IndustryType:  conv_info.IndustryType,
-		Metadata:      conv_info.Metadata,
-		Extra:         conv_info.Extra,
+		Metadata:      []byte(conv_info.Metadata),
+		Extra:         []byte(conv_info.Extra),
 		DatePublished: pgtype.Timestamptz{Time: time.Time(conv_info.DatePublished), Valid: true},
 	}
 

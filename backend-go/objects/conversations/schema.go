@@ -13,8 +13,8 @@ type ConversationInformation struct {
 	Description   string                `json:"description"`
 	MatterType    string                `json:"matter_type"`
 	IndustryType  string                `json:"industry_type"`
-	Metadata      []byte                `json:"metadata"`
-	Extra         []byte                `json:"extra"`
+	Metadata      string                `json:"metadata"`
+	Extra         string                `json:"extra"`
 	DatePublished timestamp.KesslerTime `json:"date_published"`
 	ID            uuid.UUID             `json:"id"`
 }
