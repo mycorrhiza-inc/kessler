@@ -24,10 +24,21 @@ const removeBackslash = (val: string | undefined): string => {
 
 export const runtimeConfig: RuntimeEnvConfig = {
   public_api_url: removeBackslash(process.env.PUBLIC_KESSLER_API_URL),
-  internal_api_url: removeBackslash(process.env.PUBLIC_KESSLER_API_URL),
+  internal_api_url: removeBackslash(process.env.INTERNAL_KESSLER_API_URL),
   public_posthog_key: process.env.PUBLIC_POSTHOG_KEY,
   public_posthog_host: process.env.PUBLIC_POSTHOG_HOST,
   deployment_env: process.env.REACT_APP_ENV || "production",
+  flags: {
+    enable_all_features: true,
+  },
+};
+
+export const emptyRuntimeConfig: RuntimeEnvConfig = {
+  public_api_url: "",
+  internal_api_url: "",
+  public_posthog_key: "",
+  public_posthog_host: "",
+  deployment_env: "",
   flags: {
     enable_all_features: true,
   },
