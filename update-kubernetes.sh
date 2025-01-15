@@ -33,6 +33,14 @@ function process_branch() {
     local api_version_hash_url="${api_url}/v2/version_hash"
 
     echo "Processing branch: $branch with tag: $tag"
+    # Create /mycorrhiza directory if it doesn't exist
+    sudo mkdir -p /mycorrhiza
+    cd /mycorrhiza
+    # Clone kessler repo if it doesn't exist
+    if [ ! -d "/mycorrhiza/kessler" ]; then
+        git clone https://github.com/mycorrhiza-inc/kessler
+    fi
+    cd /mycorrhiza/kessler
     
     # Switch to branch
     git switch "$branch"
