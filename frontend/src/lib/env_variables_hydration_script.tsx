@@ -7,7 +7,11 @@ import {
   useEffect,
   useState,
 } from "react";
-import { RuntimeEnvConfig } from "./env_variables";
+import {
+  RuntimeEnvConfig,
+  emptyRuntimeConfig,
+  runtimeConfig,
+} from "./env_variables";
 import { env } from "process";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 
@@ -61,7 +65,7 @@ export const getRuntimeEnv = (): RuntimeEnvConfig => {
     envScriptId,
   ) as HTMLScriptElement;
 
-  return script ? JSON.parse(script.innerText) : undefined;
+  return script ? JSON.parse(script.innerText) : emptyRuntimeConfig;
 };
 
 export const EnvironmentVariableTestMarkdown = () => {
