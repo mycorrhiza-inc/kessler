@@ -14,8 +14,8 @@ const AuthorColumn = ({ filing }: { filing: Filing }) => {
     <>
       {filing.authors_information
         ? filing.authors_information.map((auth_info: AuthorInformation) => (
-            <AuthorInfoPill author_info={auth_info} />
-          ))
+          <AuthorInfoPill author_info={auth_info} />
+        ))
         : filing.author + " Something isnt working"}
     </>
   );
@@ -31,27 +31,31 @@ const TableRow = ({
   header?: boolean;
 }) => {
   const [open, setOpen] = useState(false);
+  const rowRef = React.useRef<HTMLTableRowElement>(null);
   const handleRowClick = (event: React.MouseEvent<HTMLTableRowElement>) => {
     // Check if the clicked element is the text inside the row
-    const element = event.target as HTMLElement;
-    const tagName = element.tagName; // Ensure type safety
-    const className = element.className;
-    console.log("element", element);
-    console.log("tagName", tagName);
-    console.log("className", className);
+    if (rowRef.current && rowRef.current.contains(event.target as Node)) {
+      const element = event.target as HTMLElement;
+      const tagName = element.tagName; // Ensure type safety
+      const className = element.className;
+      console.log("element", element);
+      console.log("tagName", tagName);
+      console.log("className", className);
 
-    const includesNoClick = className.includes("noclick");
+      const includesNoClick = className.includes("noclick");
 
-    if (tagName === "SPAN" || tagName === "BUTTON" || includesNoClick) {
-      console.log("Text was clicked");
-      // Prevent the event from propagating further if needed
-      event.stopPropagation();
-      return;
+      if (tagName === "SPAN" || tagName === "BUTTON" || includesNoClick) {
+        console.log("Text was clicked");
+        // Prevent the event from propagating further if needed
+        event.stopPropagation();
+        return;
+      }
+
+      // If it's not the specific text, allow the row click to proceed
+      console.log("Row was clicked");
+      setOpen((previous) => !previous);
+
     }
-
-    // If it's not the specific text, allow the row click to proceed
-    console.log("Row was clicked");
-    setOpen((previous) => !previous);
   };
 
   return (
