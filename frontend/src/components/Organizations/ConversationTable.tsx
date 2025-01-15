@@ -28,6 +28,7 @@ type ConversationTableSchema = {
   Description: string;
   Metadata: string;
   DateFiled: string;
+  IndustryType: string;
 };
 
 const ConversationTable = ({
@@ -43,11 +44,12 @@ const ConversationTable = ({
       {/* disable pinned rows due to the top row overlaying the filter sidebar */}
       <thead>
         <tr>
-          <td className="w-[40%]">Name</td>
+          <td className="w-[30%]">Name</td>
           <td className="w-[10%]">Date Filed</td>
           <td className="w-[10%]">ID</td>
           <td className="w-[10%]">Matter Type</td>
           <td className="w-[10%]">Matter Subtype</td>
+          <td className="w-[10%]">Industry</td>
           {!truncate && (
             <>
               <td className="w-[10%]">Organization</td>
@@ -86,6 +88,8 @@ const ConversationTable = ({
               <td className="w-[10%] px-4 py-3">{convo.DocketGovID}</td>
               <td className="w-[10%] px-4 py-3">{matter_type}</td>
               <td className="w-[10%] px-4 py-3">{matter_subtype}</td>
+              <td className="w-[10%] px-4 py-3">{convo.IndustryType}</td>
+
               {!truncate && (
                 <>
                   <td className="w-[10%] px-4 py-3">{organization}</td>
