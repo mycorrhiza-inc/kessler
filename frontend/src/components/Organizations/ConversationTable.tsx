@@ -22,7 +22,7 @@ const conversationsListGet = async (url: string) => {
 
 type ConversationTableSchema = {
   Name: string;
-  DocketID: string;
+  DocketGovID: string;
   DocumentCount: number;
   State: string;
   Description: string;
@@ -73,15 +73,15 @@ const ConversationTable = ({
 
           return (
             <tr
-              key={convo.DocketID}
+              key={convo.DocketGovID}
               className="border-base-300 hover:bg-base-200 transition duration-500 ease-out cursor-pointer"
               onClick={() => {
-                router.push(`/dockets/${convo.DocketID}`);
+                router.push(`/dockets/${convo.DocketGovID}`);
               }}
             >
               <td className="w-[60%] px-4 py-3">{convo.Name}</td>
               <td className="w-[10%] px-4 py-3">{date_filed}</td>
-              <td className="w-[10%] px-4 py-3">{convo.DocketID}</td>
+              <td className="w-[10%] px-4 py-3">{convo.DocketGovID}</td>
               <td className="w-[10%] px-4 py-3">{matter_type}</td>
               <td className="w-[10%] px-4 py-3">{matter_subtype}</td>
               {!truncate && (
