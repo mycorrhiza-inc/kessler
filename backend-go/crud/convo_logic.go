@@ -86,8 +86,8 @@ func verifyConversationUUID(ctx context.Context, q dbstore.Queries, conv_info *c
 				Description:   conv_info.Description,
 				MatterType:    conv_info.MatterType,
 				IndustryType:  conv_info.IndustryType,
-				Metadata:      []byte(conv_info.Metadata),
-				Extra:         []byte(conv_info.Extra),
+				Metadata:      conv_info.Metadata,
+				Extra:         conv_info.Extra,
 				DatePublished: pgtype.Timestamptz{Time: time.Time(conv_info.DatePublished), Valid: true},
 				// conv_info.DatePublished
 			}
@@ -114,8 +114,8 @@ func verifyConversationUUID(ctx context.Context, q dbstore.Queries, conv_info *c
 		Description:   conv_info.Description,
 		MatterType:    conv_info.MatterType,
 		IndustryType:  conv_info.IndustryType,
-		Metadata:      []byte(conv_info.Metadata),
-		Extra:         []byte(conv_info.Extra),
+		Metadata:      conv_info.Metadata,
+		Extra:         conv_info.Extra,
 		DatePublished: pgtype.Timestamptz{Time: time.Time(conv_info.DatePublished), Valid: true},
 	}
 
