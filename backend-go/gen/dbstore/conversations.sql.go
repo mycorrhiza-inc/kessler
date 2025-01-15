@@ -30,7 +30,7 @@ SELECT
     dc.deleted_at
 FROM
     public.docket_conversations dc
-    LEFT JOIN public.docket_documents dd ON dd.docket_gov_id = dc.id
+    LEFT JOIN public.docket_documents dd ON dd.conversation_uuid = dc.id
 GROUP BY
     dc.id
 ORDER BY
@@ -107,7 +107,7 @@ SELECT
     dc.deleted_at
 FROM
     public.docket_conversations dc
-    LEFT JOIN public.docket_documents dd ON dd.docket_gov_id = dc.id
+    LEFT JOIN public.docket_documents dd ON dd.conversation_uuid = dc.id
 GROUP BY
     dc.id
 ORDER BY
