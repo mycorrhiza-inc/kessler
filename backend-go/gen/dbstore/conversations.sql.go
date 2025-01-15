@@ -46,8 +46,8 @@ type ConversationSemiCompleteInfoListRow struct {
 	Description   string
 	MatterType    string
 	IndustryType  string
-	Metadata      []byte
-	Extra         []byte
+	Metadata      string
+	Extra         string
 	DatePublished pgtype.Timestamptz
 	CreatedAt     pgtype.Timestamp
 	UpdatedAt     pgtype.Timestamp
@@ -130,8 +130,8 @@ type ConversationSemiCompleteInfoListPaginatedRow struct {
 	Description   string
 	MatterType    string
 	IndustryType  string
-	Metadata      []byte
-	Extra         []byte
+	Metadata      string
+	Extra         string
 	DatePublished pgtype.Timestamptz
 	CreatedAt     pgtype.Timestamp
 	UpdatedAt     pgtype.Timestamp
@@ -201,8 +201,8 @@ type DocketConversationCreateParams struct {
 	Description   string
 	MatterType    string
 	IndustryType  string
-	Metadata      []byte
-	Extra         []byte
+	Metadata      string
+	Extra         string
 	DatePublished pgtype.Timestamptz
 }
 
@@ -378,8 +378,8 @@ type DocketConversationUpdateParams struct {
 	Description   string
 	MatterType    string
 	IndustryType  string
-	Metadata      []byte
-	Extra         []byte
+	Metadata      string
+	Extra         string
 	DatePublished pgtype.Timestamptz
 	ID            uuid.UUID
 }

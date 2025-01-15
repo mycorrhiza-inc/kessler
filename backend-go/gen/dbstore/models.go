@@ -67,8 +67,8 @@ type DocketConversation struct {
 	Description   string
 	MatterType    string
 	IndustryType  string
-	Metadata      []byte
-	Extra         []byte
+	Metadata      string
+	Extra         string
 	DatePublished pgtype.Timestamptz
 }
 
