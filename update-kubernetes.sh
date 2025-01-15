@@ -16,17 +16,22 @@
 #!/bin/bash
 set -e
 
+
 function process_branch() {
     local branch=$1
-    local tag=""
+    # local tag=""
+    local api_url=""
     
     # Set tag based on branch
     if [ "$branch" = "release" ]; then
-        tag="latest"
+        api_url="https://api.kessler.xyz"
+        # tag="latest"
     else
-        tag="nightly"
+        api_url="https://nightly-api.kessler.xyz"
+        # tag="nightly"
     fi
-    
+    local api_version_hash_url="${api_url}/v2/version_hash"
+
     echo "Processing branch: $branch with tag: $tag"
     
     # Switch to branch
@@ -35,29 +40,30 @@ function process_branch() {
 
     echo "Switched to branch: $branch and checked for new commits."
     
-    # Get latest commit timestamp
-    commit_timestamp=$(git log -1 --format=%ct)
+    # Get current commit hash
+    current_hash=$(git rev-parse HEAD)
+    echo "Current commit hash: $current_hash"
     
-    # Get Docker image timestamp
-    image_timestamp=$(docker inspect -f '{{ .Created }}' "fractalhuman1/kessler-frontend:${tag}" || echo "1970-01-01T00:00:00Z")
-    image_unix_timestamp=$(date -d "$image_timestamp" +%s)
+    # Get deployed version hash
+    deployed_hash=$(curl -s "$api_version_hash_url" || echo "")
+    echo "Deployed version hash: $deployed_hash"
     
-    if [ $commit_timestamp -gt $image_unix_timestamp ]; then
+    if [ "$current_hash" != "$deployed_hash" ]; then
         echo "New commits found, rebuilding images..."
         
         # Build and push Docker images
-        sudo docker build -t "fractalhuman1/kessler-frontend:${tag}" --platform linux/amd64 ./frontend/
-        sudo docker build -t "fractalhuman1/kessler-backend-go:${tag}" --platform linux/amd64 ./backend-go/
+        sudo docker build -t "fractalhuman1/kessler-frontend:${current_hash}" --platform linux/amd64 ./frontend/
+        sudo docker build -t "fractalhuman1/kessler-backend-go:${current_hash}" --platform linux/amd64 ./backend-go/
         
-        sudo docker push "fractalhuman1/kessler-frontend:${tag}"
-        sudo docker push "fractalhuman1/kessler-backend-go:${tag}"
+        sudo docker push "fractalhuman1/kessler-frontend:${current_hash}"
+        sudo docker push "fractalhuman1/kessler-backend-go:${current_hash}"
         
         # Deploy to appropriate environment
         #
            if [ "$tag" = "latest" ]; then
-                ssh root@nightly.kessler.xyz "export KUBECONFIG=/etc/rancher/k3s/k3s.yaml && cd /mycorrhiza/infra && helm upgrade kessler-prod ./helm -f helm/values-prod.yaml"
+                ssh root@nightly.kessler.xyz "export KUBECONFIG=/etc/rancher/k3s/k3s.yaml && cd /mycorrhiza/infra && helm upgrade kessler-prod ./helm -f helm/values-prod.yaml --set versionHash=${current_hash}"
             else
-                ssh root@nightly.kessler.xyz "export KUBECONFIG=/etc/rancher/k3s/k3s.yaml && cd /mycorrhiza/infra && helm upgrade kessler-nightly ./helm -f helm/values-nightly.yaml"
+                ssh root@nightly.kessler.xyz "export KUBECONFIG=/etc/rancher/k3s/k3s.yaml && cd /mycorrhiza/infra && helm upgrade kessler-nightly ./helm -f helm/values-nightly.yaml --set versionHash=${current_hash}"
             fi
     else
         echo "No new commits found for $branch, skipping..."
@@ -66,4 +72,4 @@ function process_branch() {
 
 # Process both branches
 process_branch "main"
-process_branch "release"
+# process_branch "release"
