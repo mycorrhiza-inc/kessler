@@ -4,22 +4,22 @@ import Link from "next/link";
 const oklchSubdivide = (colorNum: number, divisions?: number) => {
   const defaultDivisions = divisions || 15;
   const hue = (colorNum % defaultDivisions) * (360 / defaultDivisions);
-  return `oklch(73% 0.123 ${hue})`;
+  return `oklch(83% 0.123 ${hue})`;
 };
 
 const subdivide15 = [
-  "oklch(73% 0.123 0)",
-  "oklch(73% 0.123 30)",
-  "oklch(73% 0.123 60)",
-  "oklch(73% 0.123 90)",
-  "oklch(73% 0.123 120)",
-  "oklch(73% 0.123 150)",
-  "oklch(73% 0.123 180)",
-  "oklch(73% 0.123 210)",
-  "oklch(73% 0.123 240)",
-  "oklch(73% 0.123 270)",
-  "oklch(73% 0.123 300)",
-  "oklch(73% 0.123 330)",
+  "oklch(83% 0.123 0)",
+  "oklch(83% 0.123 30)",
+  "oklch(83% 0.123 60)",
+  "oklch(83% 0.123 90)",
+  "oklch(83% 0.123 120)",
+  "oklch(83% 0.123 150)",
+  "oklch(83% 0.123 180)",
+  "oklch(83% 0.123 210)",
+  "oklch(83% 0.123 240)",
+  "oklch(83% 0.123 270)",
+  "oklch(83% 0.123 300)",
+  "oklch(83% 0.123 330)",
 ];
 
 type FileColor = {
