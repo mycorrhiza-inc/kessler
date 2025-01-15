@@ -26,6 +26,8 @@ type ConversationTableSchema = {
   DocumentCount: number;
   State: string;
   Description: string;
+  Metadata: string;
+  DateFiled: string;
 };
 
 const ConversationTable = ({
@@ -58,7 +60,7 @@ const ConversationTable = ({
       <tbody>
         {convoList.map((convo: ConversationTableSchema) => {
           var description = null;
-          const description_string = convo.Description;
+          const description_string = convo.Metadata;
           console.log(description_string);
           try {
             description = JSON.parse(description_string);
