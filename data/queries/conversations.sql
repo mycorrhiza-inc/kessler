@@ -111,8 +111,7 @@ SELECT
     dc.extra,
     dc.date_published,
     dc.created_at,
-    dc.updated_at,
-    dc.deleted_at
+    dc.updated_at
 FROM
     public.docket_conversations dc
     LEFT JOIN public.docket_documents dd ON dd.conversation_uuid = dc.id
@@ -135,8 +134,7 @@ SELECT
     dc.extra,
     dc.date_published,
     dc.created_at,
-    dc.updated_at,
-    dc.deleted_at
+    dc.updated_at
 FROM
     public.docket_conversations dc
     LEFT JOIN public.docket_documents dd ON dd.conversation_uuid = dc.id

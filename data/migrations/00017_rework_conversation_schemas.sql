@@ -35,6 +35,10 @@ ALTER TABLE
 ADD
     COLUMN date_published TIMESTAMPTZ NOT NULL DEFAULT '1970-01-01 00:00:00+00';
 
+ALTER TABLE
+    public.docket_conversations DROP COLUMN IF EXISTS deleted_at;
+
+
 -- +goose Down
 ALTER TABLE
     public.file DROP COLUMN date_published;
@@ -59,3 +63,6 @@ ALTER TABLE
 
 ALTER TABLE
     public.docket_conversations DROP COLUMN matter_type;
+
+ALTER TABLE
+    public.docket_conversations ADD COLUMN deleted_at TIMESTAMPTZ;

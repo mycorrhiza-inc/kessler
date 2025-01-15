@@ -62,7 +62,6 @@ type DocketConversation struct {
 	State         string
 	CreatedAt     pgtype.Timestamp
 	UpdatedAt     pgtype.Timestamp
-	DeletedAt     pgtype.Timestamp
 	Name          string
 	Description   string
 	MatterType    string
