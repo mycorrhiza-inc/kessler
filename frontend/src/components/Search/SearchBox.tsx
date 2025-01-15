@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { AngleDownIcon, AngleUpIcon } from '../Icons';
+import { AuthorInfoPill, subdividedHueFromSeed } from '../Tables/TextPills';
 
 // Mock API call
 type Suggestion = {
@@ -12,6 +14,8 @@ type Filter = {
 	id: string;
 	type: string;
 	label: string;
+	exclude?: boolean;
+	excludable: boolean;
 }
 
 const mockFetchSuggestions = async (query: string): Promise<Suggestion[]> => {
@@ -19,10 +23,9 @@ const mockFetchSuggestions = async (query: string): Promise<Suggestion[]> => {
 	await new Promise(resolve => setTimeout(resolve, 300));
 
 	const suggestions: Suggestion[] = [
-		{ id: '1', type: 'organization', label: 'Acme Corp', value: 'acme' },
-		{ id: '2', type: 'organization', label: 'Apple Inc', value: 'apple' },
-		{ id: '3', type: 'case', label: 'Bug Report #123', value: 'bug-123' },
-		{ id: '4', type: 'case', label: 'Feature Request #456', value: 'feature-456' }
+		{ id: '0b544651-0226-4e0d-83af-184ef5aad4e5', type: 'organization', label: 'New York State Department of Public Service', value: 'acme' },
+		{ id: 'be6aa9d6-e03f-4f85-a2f4-ae7e14199ec4', type: 'organization', label: 'Protect Our Coast - LINY', value: 'apple' },
+		{ id: '24-E-0165', type: 'case', label: '24-E-0165: Commission Regarding the Grid of the Future', value: 'bug-123' },
 	].filter(s =>
 		s.label.toLowerCase().includes(query.toLowerCase()) ||
 		s.type.toLowerCase().includes(query.toLowerCase())
@@ -30,12 +33,47 @@ const mockFetchSuggestions = async (query: string): Promise<Suggestion[]> => {
 
 	return suggestions;
 };
+
+
+const AdvancedSearch = () => {
+	const [open, setOpen] = useState(false);
+
+	const flip = () => {
+		setOpen(!open);
+	}
+
+	return (
+		<div className="p-4 text-base-content" onClick={flip}>
+			<div className='tooltip' data-tip='Advanced Search'>
+				{open ? (<AngleUpIcon />) : (<AngleDownIcon />)}
+
+			</div>
+		</div>
+	);
+}
 type FiltersPoolProps = {
 	selected: Filter[];
 	handleFilterRemove: (filterId: string) => void;
+	flipExclude: (filterId: string) => void;
 };
 
-const FiltersPool: React.FC<FiltersPoolProps> = ({ selected, handleFilterRemove }) => {
+const FiltersPool: React.FC<FiltersPoolProps> = ({ selected, handleFilterRemove, flipExclude }) => {
+	const [hoveredId, setHoveredId] = useState<string | null>(null);
+
+	if (!selected || selected.length === 0) {
+		return null;
+	}
+	const bgcolor = (filter: Filter) => {
+		if (filter.exclude) {
+			return '#fde8e8';
+		}
+		if (filter.type === 'organization') {
+			return subdividedHueFromSeed(filter.id);
+		}
+		if (filter.type === 'case') {
+			return subdividedHueFromSeed(filter.label);
+		}
+	}
 	return (
 		selected.length > 0 && (
 			<div>
@@ -44,14 +82,36 @@ const FiltersPool: React.FC<FiltersPoolProps> = ({ selected, handleFilterRemove 
 					{selected.map(filter => (
 						<div
 							key={filter.id}
-							className="flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+							className="flex items-center gap-1 px-3 py-1 rounded-full text-sm group"
+							style={{
+								backgroundColor: bgcolor(filter),
+								color: filter.exclude ? '#f56565' : 'black'
+							}}
+							onMouseEnter={() => setHoveredId(filter.id)}
+							onMouseLeave={() => setHoveredId(null)}
 						>
-							<span className="font-medium">
+							<span className="font-medium flex items-center gap-1">
+								{filter.excludable && !filter.exclude && hoveredId === filter.id && (
+									<button
+										onClick={() => flipExclude(filter.id)}
+										className="text-gray-500 hover:underline"
+									>
+										exclude
+									</button>
+								)}
+								{filter.excludable && filter.exclude && (
+									<button
+										onClick={() => flipExclude(filter.id)}
+										className={`${hoveredId === filter.id ? 'line-through' : ''}`}
+									>
+										exclude
+									</button>
+								)}
 								{filter.type}: {filter.label}
 							</span>
 							<button
 								onClick={() => handleFilterRemove(filter.id)}
-								className="ml-1 text-blue-600 hover:text-blue-800 font-bold"
+								className="ml-1 text-gray-500 hover:text-black font-bold"
 							>
 								×
 							</button>
@@ -108,9 +168,11 @@ const SearchBox = () => {
 		}
 	};
 
+
+
 	const handleSuggestionClick = (suggestion: Suggestion) => {
 		if (!selectedFilters.some(f => f.id === suggestion.id)) {
-			setSelectedFilters([...selectedFilters, suggestion]);
+			setSelectedFilters([...selectedFilters, { ...suggestion, exclude: false, excludable: true }]);
 		}
 		setQuery('');
 		setSuggestions([]);
@@ -121,19 +183,29 @@ const SearchBox = () => {
 	};
 
 
+	const flipExclude = (filterId: string) => {
+		setSelectedFilters(selectedFilters.map(f => {
+			if (f.id === filterId) {
+				return { ...f, exclude: !f.exclude };
+			}
+			return f;
+		}));
+	}
+
+
 	return (
 		<div className="p-4 max-w-xl mx-auto">
 			<div className="flex flex-col gap-2">
 				{/* Search container */}
 				<div className="relative">
 					{/* Search input */}
-					<div className="relative">
+					<div className="relative flex flex-row">
 						<input
 							type="text"
 							value={query}
 							onChange={handleInputChange}
 							placeholder="Search organizations or cases..."
-							className="w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
+							className="w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none bg-base-100"
 						/>
 
 						{isLoading && (
@@ -141,39 +213,38 @@ const SearchBox = () => {
 								<div className="animate-spin h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full" />
 							</div>
 						)}
+						<AdvancedSearch />
 					</div>
 
 					{/* Suggestions dropdown - Now positioned relative to search container */}
 					{suggestions.length > 0 && (
-						<div className="absolute left-0 right-0 top-full mt-1 z-50">
-							<ul className="bg-white border rounded-lg shadow-lg max-h-60 overflow-auto">
+						<div className="absolute left-0 right-0 top-full mt-1 z-50 h-auto bg-base-100 border rounded-lg shadow-lg">
+							<ul className=" max-h-60 overflow-auto">
 								{suggestions.map(suggestion => (
 									<li key={suggestion.id}>
 										<button
 											onClick={() => handleSuggestionClick(suggestion)}
-											className="w-full px-4 py-3 text-left hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
+											className="w-full px-4 py-3 text-left hover:secondary-content  focus:bg-gray-50 focus:outline-none transition-colors"
 										>
-											<span className="text-gray-500 text-sm font-medium">
+											<span className="text-base-500 text-sm font-medium">
 												{suggestion.type}:
 											</span>{' '}
-											<span className="text-gray-900">
+											<span className="text-base-content">
 												{suggestion.label}
 											</span>
 										</button>
 									</li>
 								))}
 
-								<li className='p-2'>
-									<div></div>
-									<FiltersPool selected={selectedFilters} handleFilterRemove={handleFilterRemove} /></li>
 							</ul>
+							<FiltersPool selected={selectedFilters} handleFilterRemove={handleFilterRemove} flipExclude={flipExclude} />
 						</div>
 					)}
 				</div>
 
-				<FiltersPool selected={selectedFilters} handleFilterRemove={handleFilterRemove} />
+				<FiltersPool selected={selectedFilters} handleFilterRemove={handleFilterRemove} flipExclude={flipExclude} />
 			</div>
-		</div>
+		</div >
 	);
 };
 
