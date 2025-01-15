@@ -88,7 +88,7 @@ export default function RecentUpdatesView() {
         <div onClick={getMore}>
           <LoadingSpinnerTimeout
             loadingText="Loading Files"
-            timeoutSeconds={3}
+            timeoutSeconds={10}
           />
         </div>
       }
