@@ -35,6 +35,7 @@ function process_branch() {
     echo "Processing branch: $branch with tag: $tag"
     # Create /mycorrhiza directory if it doesn't exist
     sudo mkdir -p /mycorrhiza
+    sudo chmod 777 -R /mycorrhiza
     cd /mycorrhiza
     # Clone kessler repo if it doesn't exist
     if [ ! -d "/mycorrhiza/kessler" ]; then
@@ -59,12 +60,12 @@ function process_branch() {
     if [ "$current_hash" != "$deployed_hash" ]; then
         echo "New commits found, rebuilding images..."
         
-        # Build and push Docker images
-        sudo docker build -t "fractalhuman1/kessler-frontend:${current_hash}" --platform linux/amd64 ./frontend/
-        sudo docker build -t "fractalhuman1/kessler-backend-go:${current_hash}" --platform linux/amd64 ./backend-go/
-        
-        sudo docker push "fractalhuman1/kessler-frontend:${current_hash}"
-        sudo docker push "fractalhuman1/kessler-backend-go:${current_hash}"
+        # # Build and push Docker images
+        # sudo docker build -t "fractalhuman1/kessler-frontend:${current_hash}" --platform linux/amd64 ./frontend/
+        # sudo docker build -t "fractalhuman1/kessler-backend-go:${current_hash}" --platform linux/amd64 ./backend-go/
+        #
+        # sudo docker push "fractalhuman1/kessler-frontend:${current_hash}"
+        # sudo docker push "fractalhuman1/kessler-backend-go:${current_hash}"
         
         # Deploy to appropriate environment
         #

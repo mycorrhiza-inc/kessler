@@ -16,7 +16,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/joho/godotenv"
 )
 
 var connPool *pgxpool.Pool
@@ -103,12 +102,12 @@ func HandleVersionHash(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	// err := godotenv.Load()
+	// if err != nil {
+	// 	log.Fatal("Error loading .env file")
+	// }
 	// Create database connection
-	connPool, err = pgxpool.NewWithConfig(context.Background(), PgPoolConfig())
+	connPool, err := pgxpool.NewWithConfig(context.Background(), PgPoolConfig())
 	if err != nil {
 		log.Fatal("Error while creating connection to the database!!")
 	}
