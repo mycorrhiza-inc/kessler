@@ -16,7 +16,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/joho/godotenv"
 )
 
 var connPool *pgxpool.Pool
@@ -96,13 +95,19 @@ func withDBTX(next http.Handler) http.Handler {
 	})
 }
 
+func HandleVersionHash(w http.ResponseWriter, r *http.Request) {
+	// Get the version hash from the environment variable
+	versionHash := os.Getenv("VERSION_HASH")
+	w.Write([]byte(versionHash))
+}
+
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	// err := godotenv.Load()
+	// if err != nil {
+	// 	log.Fatal("Error loading .env file")
+	// }
 	// Create database connection
-	connPool, err = pgxpool.NewWithConfig(context.Background(), PgPoolConfig())
+	connPool, err := pgxpool.NewWithConfig(context.Background(), PgPoolConfig())
 	if err != nil {
 		log.Fatal("Error while creating connection to the database!!")
 	}
@@ -129,6 +134,7 @@ func main() {
 	public_subrouter := regularMux.PathPrefix("/v2/public").Subrouter()
 	crud.DefineCrudRoutes(public_subrouter)
 	regularMux.PathPrefix("/v2/public/").Handler(public_subrouter)
+	regularMux.HandleFunc("/v2/version_hash", HandleVersionHash)
 	regularMux.HandleFunc("/v2/search", search.HandleSearchRequest)
 	regularMux.HandleFunc("/v2/rag/basic_chat", rag.HandleBasicChatRequest)
 	regularMux.HandleFunc("/v2/rag/chat", rag.HandleRagChatRequest)

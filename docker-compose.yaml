@@ -44,7 +44,6 @@ services:
       - "air_wd=/app"
     volumes:
       - ./backend-go:/app
-      - ./config/global.env:/app/.env
     working_dir: /app
     expose:
       - 4041
