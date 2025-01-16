@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"kessler/objects/conversations"
 	"kessler/objects/files"
 	"kessler/objects/timestamp"
 	"log"
@@ -117,7 +118,7 @@ func ClearIndex(indexName string, nuke bool) error {
 	return nil
 }
 
-func IngestIntoIndex(indexName string, data []QuickwitFileUploadData) error {
+func IngestIntoIndex[V QuickwitFileUploadData | conversations.ConversationInformation](indexName string, data []V) error {
 	fmt.Println("Initiating ingest into index")
 	var records []string
 	for _, record := range data {
@@ -218,6 +219,31 @@ func MigrateDocketToNYPUC() error {
 	)
 	if err != nil {
 		return fmt.Errorf("error making request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	printResponse(resp)
+	return nil
+}
+
+type DeleteTask struct {
+	Query           string `json:"query"`
+	Start_timestamp string `json:"start_timestamp,omitempty"`
+	End_timestamp   string `json:"end_timestamp,omitempty"`
+}
+
+func CreateDeleteTask(indexName string, task DeleteTask) error {
+	data, err := json.Marshal(task)
+	if err != nil {
+		return fmt.Errorf("error marshalling delete task request: %v\n\ntask: %s", err, task)
+	}
+	resp, err := http.Post(
+		fmt.Sprintf("%s/api/v1/%s/delete-tasks", quickwitEndpoint, indexName),
+		"application/x-ndjson",
+		strings.NewReader(string(data)),
+	)
+	if err != nil {
+		return fmt.Errorf("error submitting delete task request: %v", err)
 	}
 	defer resp.Body.Close()
 
