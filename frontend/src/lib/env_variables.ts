@@ -3,12 +3,14 @@ import getConfig from "next/config";
 // This url is for hitting the kessler api from the client
 //
 
+// All of these clients end up as json on the frontend and can be accessed by anyone looking at the html. Dont put sensitive data here
 export type RuntimeEnvConfig = {
   public_api_url?: string;
   public_posthog_key?: string;
   public_posthog_host?: string;
   internal_api_url?: string;
   deployment_env?: string;
+  version_hash?: string;
   flags?: {
     enable_all_features?: boolean;
   };
@@ -28,6 +30,7 @@ export const runtimeConfig: RuntimeEnvConfig = {
   public_posthog_key: process.env.PUBLIC_POSTHOG_KEY,
   public_posthog_host: process.env.PUBLIC_POSTHOG_HOST,
   deployment_env: process.env.REACT_APP_ENV || "production",
+  version_hash: process.env.VERSION_HASH || "unknown",
   flags: {
     enable_all_features: true,
   },
@@ -39,6 +42,7 @@ export const emptyRuntimeConfig: RuntimeEnvConfig = {
   public_posthog_key: "",
   public_posthog_host: "",
   deployment_env: "",
+  version_hash: "",
   flags: {
     enable_all_features: true,
   },
