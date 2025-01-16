@@ -102,7 +102,7 @@ const OrganizationTableInfiniteScroll = () => {
         next={getMore}
         loader={
           <LoadingSpinnerTimeout
-            timeoutSeconds={3}
+            timeoutSeconds={10}
             loadingText="Loading Conversations"
           />
         }

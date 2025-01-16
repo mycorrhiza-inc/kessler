@@ -15,12 +15,12 @@ ALTER TABLE
 ALTER TABLE
     public.docket_conversations
 ADD
-    COLUMN metadata JSONB NOT NULL DEFAULT '{}'::jsonb;
+    COLUMN metadata VARCHAR NOT NULL DEFAULT '';
 
 ALTER TABLE
     public.docket_conversations
 ADD
-    COLUMN extra JSONB NOT NULL DEFAULT '{}'::jsonb;
+    COLUMN extra VARCHAR NOT NULL DEFAULT '';
 
 ALTER TABLE
     public.docket_documents RENAME COLUMN docket_id TO conversation_uuid;
@@ -34,6 +34,10 @@ ALTER TABLE
     public.file
 ADD
     COLUMN date_published TIMESTAMPTZ NOT NULL DEFAULT '1970-01-01 00:00:00+00';
+
+ALTER TABLE
+    public.docket_conversations DROP COLUMN IF EXISTS deleted_at;
+
 
 -- +goose Down
 ALTER TABLE
@@ -59,3 +63,6 @@ ALTER TABLE
 
 ALTER TABLE
     public.docket_conversations DROP COLUMN matter_type;
+
+ALTER TABLE
+    public.docket_conversations ADD COLUMN deleted_at TIMESTAMPTZ;

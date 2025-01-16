@@ -16,7 +16,7 @@ const getConversationData = async (url: string) => {
     throw new Error("Error fetching data with status " + response.status);
   }
   console.log("organization data", response.data);
-  const json_convo = response.data.Description;
+  const json_convo = response.data.Metadata;
   const convo = JSON.parse(json_convo);
   return convo;
 };

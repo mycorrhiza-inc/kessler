@@ -26,8 +26,7 @@ SELECT
     dc.extra,
     dc.date_published,
     dc.created_at,
-    dc.updated_at,
-    dc.deleted_at
+    dc.updated_at
 FROM
     public.docket_conversations dc
     LEFT JOIN public.docket_documents dd ON dd.conversation_uuid = dc.id
@@ -46,12 +45,11 @@ type ConversationSemiCompleteInfoListRow struct {
 	Description   string
 	MatterType    string
 	IndustryType  string
-	Metadata      []byte
-	Extra         []byte
+	Metadata      string
+	Extra         string
 	DatePublished pgtype.Timestamptz
 	CreatedAt     pgtype.Timestamp
 	UpdatedAt     pgtype.Timestamp
-	DeletedAt     pgtype.Timestamp
 }
 
 func (q *Queries) ConversationSemiCompleteInfoList(ctx context.Context) ([]ConversationSemiCompleteInfoListRow, error) {
@@ -77,7 +75,6 @@ func (q *Queries) ConversationSemiCompleteInfoList(ctx context.Context) ([]Conve
 			&i.DatePublished,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-			&i.DeletedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -103,8 +100,7 @@ SELECT
     dc.extra,
     dc.date_published,
     dc.created_at,
-    dc.updated_at,
-    dc.deleted_at
+    dc.updated_at
 FROM
     public.docket_conversations dc
     LEFT JOIN public.docket_documents dd ON dd.conversation_uuid = dc.id
@@ -130,12 +126,11 @@ type ConversationSemiCompleteInfoListPaginatedRow struct {
 	Description   string
 	MatterType    string
 	IndustryType  string
-	Metadata      []byte
-	Extra         []byte
+	Metadata      string
+	Extra         string
 	DatePublished pgtype.Timestamptz
 	CreatedAt     pgtype.Timestamp
 	UpdatedAt     pgtype.Timestamp
-	DeletedAt     pgtype.Timestamp
 }
 
 func (q *Queries) ConversationSemiCompleteInfoListPaginated(ctx context.Context, arg ConversationSemiCompleteInfoListPaginatedParams) ([]ConversationSemiCompleteInfoListPaginatedRow, error) {
@@ -161,7 +156,6 @@ func (q *Queries) ConversationSemiCompleteInfoListPaginated(ctx context.Context,
 			&i.DatePublished,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-			&i.DeletedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -201,8 +195,8 @@ type DocketConversationCreateParams struct {
 	Description   string
 	MatterType    string
 	IndustryType  string
-	Metadata      []byte
-	Extra         []byte
+	Metadata      string
+	Extra         string
 	DatePublished pgtype.Timestamptz
 }
 
@@ -237,7 +231,7 @@ func (q *Queries) DocketConversationDelete(ctx context.Context, id uuid.UUID) er
 
 const docketConversationFetchByDocketIdMatch = `-- name: DocketConversationFetchByDocketIdMatch :many
 SELECT
-    id, docket_gov_id, state, created_at, updated_at, deleted_at, name, description, matter_type, industry_type, metadata, extra, date_published
+    id, docket_gov_id, state, created_at, updated_at, name, description, matter_type, industry_type, metadata, extra, date_published
 FROM
     public.docket_conversations
 WHERE
@@ -259,7 +253,6 @@ func (q *Queries) DocketConversationFetchByDocketIdMatch(ctx context.Context, do
 			&i.State,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-			&i.DeletedAt,
 			&i.Name,
 			&i.Description,
 			&i.MatterType,
@@ -280,7 +273,7 @@ func (q *Queries) DocketConversationFetchByDocketIdMatch(ctx context.Context, do
 
 const docketConversationList = `-- name: DocketConversationList :many
 SELECT
-    id, docket_gov_id, state, created_at, updated_at, deleted_at, name, description, matter_type, industry_type, metadata, extra, date_published
+    id, docket_gov_id, state, created_at, updated_at, name, description, matter_type, industry_type, metadata, extra, date_published
 FROM
     public.docket_conversations
 ORDER BY
@@ -302,7 +295,6 @@ func (q *Queries) DocketConversationList(ctx context.Context) ([]DocketConversat
 			&i.State,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-			&i.DeletedAt,
 			&i.Name,
 			&i.Description,
 			&i.MatterType,
@@ -323,7 +315,7 @@ func (q *Queries) DocketConversationList(ctx context.Context) ([]DocketConversat
 
 const docketConversationRead = `-- name: DocketConversationRead :one
 SELECT
-    id, docket_gov_id, state, created_at, updated_at, deleted_at, name, description, matter_type, industry_type, metadata, extra, date_published
+    id, docket_gov_id, state, created_at, updated_at, name, description, matter_type, industry_type, metadata, extra, date_published
 FROM
     public.docket_conversations
 WHERE
@@ -339,7 +331,6 @@ func (q *Queries) DocketConversationRead(ctx context.Context, id uuid.UUID) (Doc
 		&i.State,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.DeletedAt,
 		&i.Name,
 		&i.Description,
 		&i.MatterType,
@@ -378,8 +369,8 @@ type DocketConversationUpdateParams struct {
 	Description   string
 	MatterType    string
 	IndustryType  string
-	Metadata      []byte
-	Extra         []byte
+	Metadata      string
+	Extra         string
 	DatePublished pgtype.Timestamptz
 	ID            uuid.UUID
 }
