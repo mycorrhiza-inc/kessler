@@ -226,12 +226,6 @@ func MigrateDocketToNYPUC() error {
 	return nil
 }
 
-type DeleteTask struct {
-	Query           string `json:"query"`
-	Start_timestamp string `json:"start_timestamp,omitempty"`
-	End_timestamp   string `json:"end_timestamp,omitempty"`
-}
-
 func CreateDeleteTask(indexName string, task DeleteTask) error {
 	data, err := json.Marshal(task)
 	if err != nil {
