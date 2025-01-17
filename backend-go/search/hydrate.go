@@ -16,16 +16,21 @@ import (
 
 func doShittyHydration(uuidList []uuid.UUID, ctx context.Context, q dbstore.Queries) ([]files.CompleteFileSchema, error) {
 	intermediate_results, err := q.SemiCompleteFileListGet(ctx, uuidList)
-	results := make([]files.CompleteFileSchema, len(intermediate_results))
 	if err != nil {
 		return nil, err
 	}
+	fmt.Printf("Got %v semi complete files\n", len(intermediate_results))
+	results := make([]files.CompleteFileSchema, len(intermediate_results))
 	for i, schema := range intermediate_results {
 		file, err := unrollSingleSchema(schema)
 		if err != nil {
 			log.Printf("Error hydrating file: %v", err)
+			continue
 		}
 		results[i] = file
+	}
+	if len(results) == 0 {
+		return nil, fmt.Errorf("no valid results found after hydration")
 	}
 	return results, nil
 }

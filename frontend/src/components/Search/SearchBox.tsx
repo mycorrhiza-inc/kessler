@@ -91,6 +91,9 @@ const FiltersPool: React.FC<FiltersPoolProps> = ({
     if (filter.type === "case") {
       return subdividedHueFromSeed(filter.label);
     }
+    if (filter.type === "text") {
+      return "oklch(90% 0.01 30)";
+    }
   };
   return (
     selected.length > 0 && (
@@ -143,6 +146,13 @@ const FiltersPool: React.FC<FiltersPoolProps> = ({
   );
 };
 
+const suggestionToFilter = (suggestion: Suggestion): Filter => {
+  if (suggestion.type === "text") {
+    return { ...suggestion, exclude: false, excludable: false };
+  }
+  return { ...suggestion, exclude: false, excludable: true };
+};
+
 const SearchBox = () => {
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
@@ -175,13 +185,29 @@ const SearchBox = () => {
     };
   }, [suggestions.length]); // Add suggestions.length as dependency
 
+  const wrapReturnedSuggestions = (
+    suggestions: Suggestion[],
+    new_query: string,
+  ) => {
+    const text_query_suggestion = {
+      id: "00000000-0000-0000-0000-000000000000",
+      type: "text",
+      label: new_query,
+      value: new_query,
+    };
+    return [text_query_suggestion, ...suggestions];
+  };
+
   const handleInputChange = async (e: any) => {
     const newQuery = e.target.value;
     setQuery(newQuery);
 
     if (newQuery.trim()) {
       setIsLoading(true);
-      const results = await mockFetchSuggestions(newQuery);
+      const results = wrapReturnedSuggestions(
+        await mockFetchSuggestions(newQuery),
+        newQuery,
+      );
       setSuggestions(results);
       setIsLoading(false);
     } else {
@@ -191,10 +217,7 @@ const SearchBox = () => {
 
   const handleSuggestionClick = (suggestion: Suggestion) => {
     if (!selectedFilters.some((f) => f.id === suggestion.id)) {
-      setSelectedFilters([
-        ...selectedFilters,
-        { ...suggestion, exclude: false, excludable: true },
-      ]);
+      setSelectedFilters([...selectedFilters, suggestionToFilter(suggestion)]);
     }
     setQuery("");
     setSuggestions([]);
@@ -278,4 +301,3 @@ const SearchBox = () => {
 };
 
 export default SearchBox;
-
