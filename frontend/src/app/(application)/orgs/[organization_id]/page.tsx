@@ -1,6 +1,6 @@
 import OrganizationPage, {
   generateOrganizationData,
-} from "@/components/Organizations/OrgPage";
+} from "@/components/ObjectPages/OrgPage";
 import { BreadcrumbValues } from "@/components/SitemapUtils";
 import { stateFromHeaders } from "@/lib/nextjs_misc";
 import { Metadata } from "next";

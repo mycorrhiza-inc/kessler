@@ -1,7 +1,7 @@
 import {
   ConversationPage,
   generateConversationInfo,
-} from "@/components/Conversations/ConversationPage";
+} from "@/components/ObjectPages/ConversationPage";
 import { stateFromHeaders } from "@/lib/nextjs_misc";
 import { Metadata } from "next";
 import { headers } from "next/headers";
