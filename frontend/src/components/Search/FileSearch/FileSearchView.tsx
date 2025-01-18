@@ -21,9 +21,9 @@ import { Filing } from "@/lib/types/FilingTypes";
 import { FilingTable } from "@/components/Tables/FilingTable";
 import { getSearchResults } from "@/lib/requests/search";
 import InfiniteScroll from "react-infinite-scroll-component";
-import LoadingSpinnerTimeout from "../styled-components/LoadingSpinnerTimeout";
+import LoadingSpinnerTimeout from "@/components/styled-components/LoadingSpinnerTimeout";
 
-import { ChatModalClickDiv } from "../Chat/ChatModal";
+import { ChatModalClickDiv } from "@/components/Chat/ChatModal";
 import { useKesslerStore } from "@/lib/store";
 import SearchBox from "@/components/Search/SearchBox";
 
@@ -63,12 +63,11 @@ const TableFilters = ({
   );
 };
 
-const ConversationComponent = ({
+const FileSearchView = ({
   inheritedFilters,
 }: {
   inheritedFilters: InheritedFilterValues;
 }) => {
-
   // filter data
   const initialFilterState = useMemo(() => {
     return initialFiltersFromInherited(inheritedFilters);
@@ -82,13 +81,8 @@ const ConversationComponent = ({
     useState<QueryFilterFields>(initialFilterState);
   // const [searchResults, setSearchResults] = useState<string[]>([]);
 
-
-
-
-
   const [page, setPage] = useState(0);
   const [isSearching, setIsSearching] = useState(false);
-
 
   // query data
   const [searchQuery, setSearchQuery] = useState("");
@@ -225,4 +219,4 @@ const ConversationComponent = ({
   );
 };
 
-export default ConversationComponent;
+export default FileSearchView;

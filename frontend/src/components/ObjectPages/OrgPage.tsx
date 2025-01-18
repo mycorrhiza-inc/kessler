@@ -4,7 +4,8 @@ import {
 } from "@/lib/requests/organizations";
 import { BreadcrumbValues } from "../SitemapUtils";
 import PageContainer from "../Page/PageContainer";
-import ConversationComponent from "../Conversations/ConversationComponent";
+
+import FileSearchView from "@/components/Search/FileSearch/FileSearchView";
 import { FilterField } from "@/lib/filters";
 
 export const generateOrganizationData = async (orgId: string) => {
@@ -34,7 +35,7 @@ export default function OrganizationPage({
           "Automatically generated org descriptions coming soon"}
       </p>
       <h1 className=" text-2xl font-bold">Authored Documents</h1>
-      <ConversationComponent
+      <FileSearchView
         inheritedFilters={[
           { filter: FilterField.MatchAuthorUUID, value: orgInfo.id },
           { filter: FilterField.MatchAuthor, value: orgInfo.name },

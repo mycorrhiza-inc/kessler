@@ -1,5 +1,4 @@
-import ConversationComponent from "@/components/Conversations/ConversationComponent";
-
+import FileSearchView from "@/components/Search/FileSearch/FileSearchView";
 import { FilterField, InheritedFilterValues } from "@/lib/filters";
 import axios from "axios";
 import { BreadcrumbValues } from "../SitemapUtils";
@@ -114,7 +113,7 @@ export const ConversationPage = async ({
   return (
     <PageContainer breadcrumbs={breadcrumbs}>
       <NYConversationDescription conversation={conversation} />
-      <ConversationComponent inheritedFilters={inheritedFilters} />
+      <FileSearchView inheritedFilters={inheritedFilters} />
     </PageContainer>
   );
 };
