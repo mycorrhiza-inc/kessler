@@ -15,6 +15,7 @@ import (
 )
 
 func doShittyHydration(uuidList []uuid.UUID, ctx context.Context, q dbstore.Queries) ([]files.CompleteFileSchema, error) {
+	fmt.Printf("Got Hydration Request for %v files", uuidList)
 	intermediate_results, err := q.SemiCompleteFileListGet(ctx, uuidList)
 	if err != nil {
 		return nil, err
