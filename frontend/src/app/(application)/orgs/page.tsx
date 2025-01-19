@@ -16,14 +16,8 @@ export default async function Page({
 }: {
   params: Promise<{ organization_id: string }>;
 }) {
-  const slug = (await params).organization_id;
   const headersList = headers();
   const state = stateFromHeaders(headersList);
-  const pageContext: PageContext = {
-    state: state,
-    slug: ["dockets", slug],
-    final_identifier: slug,
-  };
   const breadcrumbs: BreadcrumbValues = {
     state: state,
     breadcrumbs: [{ title: "Organizations", value: "orgs" }],
