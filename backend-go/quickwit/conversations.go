@@ -38,10 +38,10 @@ func DeleteConversationsFromIndex(conversationUUIDs []uuid.UUID, index string) e
 	now := time.Now().Format(time.RFC3339)
 	tempIDS := fmt.Sprintf("%s", uuid.UUIDs(conversationUUIDs).Strings())
 	idlist := strings.ReplaceAll(tempIDS, ",", "")
-	query := fmt.Sprintf(`uuid IN %s`, &idlist)
+	query := fmt.Sprintf(`uuid IN %s`, idlist)
 	task := DeleteTask{
-		Query:         query,
-		End_timestamp: now,
+		Query:        query,
+		EndTimestamp: now,
 	}
 	err := CreateDeleteTask(index, task)
 	if err != nil {

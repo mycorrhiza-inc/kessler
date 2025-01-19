@@ -130,7 +130,7 @@ func IngestIntoIndex[V QuickwitFileUploadData | conversations.ConversationInform
 	}
 
 	dataToPost := strings.Join(records, "\n")
-	fmt.Println("Ingesting %d initial data entries into index\n", len(data))
+	fmt.Printf("Ingesting %d initial data entries into index\n", len(data))
 	resp, err := http.Post(
 		fmt.Sprintf("%s/api/v1/%s/ingest", quickwitEndpoint, indexName),
 		"application/x-ndjson",

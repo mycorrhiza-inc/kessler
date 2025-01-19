@@ -31,8 +31,8 @@ func NewClient(baseURL string) *Client {
 // SearchParams represents parameters for a search request
 type SearchParams struct {
 	Query          string          `json:"query"`
-	StartTimestamp *int64          `json:"start_timestamp,omitempty"`
-	EndTimestamp   *int64          `json:"end_timestamp,omitempty"`
+	StartTimestamp string          `json:"start_timestamp,omitempty"`
+	EndTimestamp   string          `json:"end_timestamp,omitempty"`
 	StartOffset    *int            `json:"start_offset,omitempty"`
 	MaxHits        *int            `json:"max_hits,omitempty"`
 	SearchFields   []string        `json:"search_fields,omitempty"`
@@ -127,8 +127,8 @@ func (c *Client) CreateIndex(ctx context.Context, config IndexConfig) error {
 type DeleteTask struct {
 	Query          string   `json:"query"`
 	SearchFields   []string `json:"search_fields,omitempty"`
-	StartTimestamp *int64   `json:"start_timestamp,omitempty"`
-	EndTimestamp   *int64   `json:"end_timestamp,omitempty"`
+	StartTimestamp string   `json:"start_timestamp,omitempty"`
+	EndTimestamp   string   `json:"end_timestamp,omitempty"`
 }
 
 // CreateDeleteTask creates a new delete task for the specified index
