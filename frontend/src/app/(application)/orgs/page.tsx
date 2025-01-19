@@ -1,3 +1,4 @@
+import OrgLookupPage from "@/components/LookupPages/OrgLookup/OrgLookupPage";
 import OrganizationTableInfiniteScroll from "@/components/Organizations/OrganizationTable";
 import PageContainer from "@/components/Page/PageContainer";
 import { BreadcrumbValues } from "@/components/SitemapUtils";
@@ -27,11 +28,5 @@ export default async function Page({
     state: state,
     breadcrumbs: [{ title: "Organizations", value: "orgs" }],
   };
-  return (
-    <>
-      <PageContainer breadcrumbs={breadcrumbs}>
-        <OrganizationTableInfiniteScroll />
-      </PageContainer>
-    </>
-  );
+  return <OrgLookupPage breadcrumbs={breadcrumbs} />;
 }

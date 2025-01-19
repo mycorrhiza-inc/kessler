@@ -1,3 +1,4 @@
+"use client";
 import React, { useEffect, useRef, useState } from "react";
 import { AngleDownIcon, AngleUpIcon } from "../Icons";
 import { AuthorInfoPill, subdividedHueFromSeed } from "../Tables/TextPills";
