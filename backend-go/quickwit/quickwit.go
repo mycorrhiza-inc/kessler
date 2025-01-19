@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"kessler/objects/conversations"
 	"kessler/objects/files"
 	"kessler/objects/timestamp"
 	"log"
@@ -66,99 +67,11 @@ func CreateQuickwitProceedingIndex(indexName string) error {
 				{Name: "name", Type: "text", Fast: true},
 				{Name: "caseNumber", Type: "text", Fast: true},
 				{Name: "description", Type: "text", Fast: true},
-				{Name: "uuid", Type: "boo;", Fast: true},
+				{Name: "uuid", Type: "text", Fast: true},
 			},
 		},
 		SearchSettings: SearchSettings{
 			DefaultSearchFields: []string{"name"},
-		},
-		IndexingSettings: IndexingSettings{
-			MergePolicy: MergePolicy{
-				Type:           "limit_merge",
-				MaxMergeOps:    3,
-				MergeFactor:    10,
-				MaxMergeFactor: 12,
-			},
-			Resources: Resources{
-				MaxMergeWriteThroughput: "80mb",
-			},
-		},
-		Retention: Retention{
-			Period:   "10 years",
-			Schedule: "yearly",
-		},
-	}
-	err := CreateIndex(requestData)
-	return err
-}
-
-func CreateQuickwitAuthorsIndex(indexName string) error {
-	requestData := QuickwitIndex{
-		Version: "0.7",
-		IndexID: indexName,
-		DocMapping: DocMapping{
-			Mode: "dynamic",
-			DynamicMapping: DynamicMapping{
-				Indexed:    true,
-				Stored:     true,
-				Tokenizer:  "default",
-				Record:     "basic",
-				ExpandDots: true,
-				Fast:       true,
-			},
-			FieldMappings: []FieldMapping{
-				{Name: "name", Type: "text", Fast: true},
-				{Name: "uuid", Type: "bool", Fast: true},
-			},
-		},
-		SearchSettings: SearchSettings{
-			DefaultSearchFields: []string{"name"},
-		},
-		IndexingSettings: IndexingSettings{
-			MergePolicy: MergePolicy{
-				Type:           "limit_merge",
-				MaxMergeOps:    3,
-				MergeFactor:    10,
-				MaxMergeFactor: 12,
-			},
-			Resources: Resources{
-				MaxMergeWriteThroughput: "80mb",
-			},
-		},
-		Retention: Retention{
-			Period:   "10 years",
-			Schedule: "yearly",
-		},
-	}
-	err := CreateIndex(requestData)
-	return err
-}
-
-func CreateQuickwitDocketsIndex(indexName string) error {
-	requestData := QuickwitIndex{
-		Version: "0.7",
-		IndexID: indexName,
-		DocMapping: DocMapping{
-			Mode: "dynamic",
-			DynamicMapping: DynamicMapping{
-				Indexed:    true,
-				Stored:     true,
-				Tokenizer:  "default",
-				Record:     "basic",
-				ExpandDots: true,
-				Fast:       true,
-			},
-			FieldMappings: []FieldMapping{
-				{Name: "text", Type: "text", Fast: true},
-				{Name: "name", Type: "text", Fast: true},
-				{Name: "verified", Type: "bool", Fast: true},
-				{Name: "timestamp", Type: "datetime", InputFormats: []string{"unix_timestamp"}, FastPrecision: "seconds", Fast: true},
-				{Name: "date_filed", Type: "datetime", Fast: true},
-			},
-			TimestampField: "timestamp",
-		},
-		SearchSettings: SearchSettings{
-			DefaultSearchFields: []string{"text", "state", "city", "country"},
 		},
 		IndexingSettings: IndexingSettings{
 			MergePolicy: MergePolicy{
@@ -205,7 +118,7 @@ func ClearIndex(indexName string, nuke bool) error {
 	return nil
 }
 
-func IngestIntoIndex(indexName string, data []QuickwitFileUploadData) error {
+func IngestIntoIndex[V QuickwitFileUploadData | conversations.ConversationInformation](indexName string, data []V) error {
 	fmt.Println("Initiating ingest into index")
 	var records []string
 	for _, record := range data {
@@ -217,7 +130,7 @@ func IngestIntoIndex(indexName string, data []QuickwitFileUploadData) error {
 	}
 
 	dataToPost := strings.Join(records, "\n")
-	fmt.Println("Ingesting %d initial data entries into index\n", len(data))
+	fmt.Printf("Ingesting %d initial data entries into index\n", len(data))
 	resp, err := http.Post(
 		fmt.Sprintf("%s/api/v1/%s/ingest", quickwitEndpoint, indexName),
 		"application/x-ndjson",
@@ -306,6 +219,25 @@ func MigrateDocketToNYPUC() error {
 	)
 	if err != nil {
 		return fmt.Errorf("error making request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	printResponse(resp)
+	return nil
+}
+
+func CreateDeleteTask(indexName string, task DeleteTask) error {
+	data, err := json.Marshal(task)
+	if err != nil {
+		return fmt.Errorf("error marshalling delete task request: %v\n\ntask: %s", err, task)
+	}
+	resp, err := http.Post(
+		fmt.Sprintf("%s/api/v1/%s/delete-tasks", quickwitEndpoint, indexName),
+		"application/x-ndjson",
+		strings.NewReader(string(data)),
+	)
+	if err != nil {
+		return fmt.Errorf("error submitting delete task request: %v", err)
 	}
 	defer resp.Body.Close()
 

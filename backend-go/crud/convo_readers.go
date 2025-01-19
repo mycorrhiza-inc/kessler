@@ -48,6 +48,18 @@ func ConversationGetByUnknown(ctx context.Context, q *dbstore.Queries, query_str
 	return ConversationGetByName(ctx, q, query_string)
 }
 
+func ConversationGetListByUUID(ctx context.Context, q *dbstore.Queries, conversation_uuids []uuid.UUID) ([]dbstore.DocketConversation, error) {
+	conversations := []dbstore.DocketConversation{}
+	for _, conv_uuid := range conversation_uuids {
+		convo, err := ConversationGetByUUID(ctx, q, conv_uuid)
+		conversations = append(conversations, convo)
+		if err != nil {
+			return []dbstore.DocketConversation{}, err
+		}
+	}
+	return conversations, nil
+}
+
 func ConversationGetByUUID(ctx context.Context, q *dbstore.Queries, conversation_uuid uuid.UUID) (dbstore.DocketConversation, error) {
 	conv_infos, err := q.DocketConversationRead(ctx, conversation_uuid)
 	if err != nil {
