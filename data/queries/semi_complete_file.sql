@@ -77,7 +77,7 @@ SELECT
     public.file.date_published,
     public.file_metadata.mdata,
     public.file_extras.extra_obj,
-    public.docket_documents.conversation_uuid AS docket_uuid,
+    public.docket_documents.conversation_uuid,
     array_agg(
         public.organization.id
         ORDER BY

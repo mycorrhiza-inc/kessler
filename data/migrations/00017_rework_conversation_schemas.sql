@@ -38,7 +38,6 @@ ADD
 ALTER TABLE
     public.docket_conversations DROP COLUMN IF EXISTS deleted_at;
 
-
 -- +goose Down
 ALTER TABLE
     public.file DROP COLUMN date_published;
@@ -65,4 +64,6 @@ ALTER TABLE
     public.docket_conversations DROP COLUMN matter_type;
 
 ALTER TABLE
-    public.docket_conversations ADD COLUMN deleted_at TIMESTAMPTZ;
+    public.docket_conversations
+ADD
+    COLUMN deleted_at TIMESTAMPTZ;

@@ -229,7 +229,7 @@ SELECT
     public.file.date_published,
     public.file_metadata.mdata,
     public.file_extras.extra_obj,
-    public.docket_documents.conversation_uuid AS docket_uuid,
+    public.docket_documents.conversation_uuid,
     array_agg(
         public.organization.id
         ORDER BY
@@ -281,7 +281,7 @@ type SemiCompleteFileListGetRow struct {
 	DatePublished     pgtype.Timestamptz
 	Mdata             []byte
 	ExtraObj          []byte
-	DocketUuid        uuid.UUID
+	ConversationUuid  uuid.UUID
 	OrganizationIds   []uuid.UUID
 	OrganizationNames []string
 	IsPersonList      []bool
@@ -308,7 +308,7 @@ func (q *Queries) SemiCompleteFileListGet(ctx context.Context, dollar_1 []uuid.U
 			&i.DatePublished,
 			&i.Mdata,
 			&i.ExtraObj,
-			&i.DocketUuid,
+			&i.ConversationUuid,
 			&i.OrganizationIds,
 			&i.OrganizationNames,
 			&i.IsPersonList,
