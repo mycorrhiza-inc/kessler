@@ -172,9 +172,9 @@ type SemiCompleteFileGetRow struct {
 	DatePublished    pgtype.Timestamptz
 	Mdata            []byte
 	ExtraObj         []byte
-	DocketUuid       uuid.UUID
+	DocketUuid       pgtype.UUID
 	IsPrimaryAuthor  pgtype.Bool
-	OrganizationID   uuid.UUID
+	OrganizationID   pgtype.UUID
 	OrganizationName pgtype.Text
 	IsPerson         pgtype.Bool
 }
@@ -281,7 +281,7 @@ type SemiCompleteFileListGetRow struct {
 	DatePublished     pgtype.Timestamptz
 	Mdata             []byte
 	ExtraObj          []byte
-	ConversationUuid  uuid.UUID
+	ConversationUuid  pgtype.UUID
 	OrganizationIds   []uuid.UUID
 	OrganizationNames []string
 	IsPersonList      []bool

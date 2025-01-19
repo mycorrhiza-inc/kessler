@@ -289,7 +289,7 @@ WHERE
 
 type OrganizationFetchByAliasMatchAllRow struct {
 	Alias       string
-	ID          uuid.UUID
+	ID          pgtype.UUID
 	Name        pgtype.Text
 	Description pgtype.Text
 	IsPerson    pgtype.Bool
@@ -337,7 +337,7 @@ WHERE
 
 type OrganizationFetchByAliasMatchSingleRow struct {
 	Alias       string
-	ID          uuid.UUID
+	ID          pgtype.UUID
 	Name        pgtype.Text
 	Description pgtype.Text
 	IsPerson    pgtype.Bool
@@ -559,9 +559,9 @@ WHERE
 type OrganizationgGetConversationsAuthoredInRow struct {
 	OrganizationID   uuid.UUID
 	OrganizationName string
-	DocumentID       uuid.UUID
+	DocumentID       pgtype.UUID
 	DocketGovID      pgtype.Text
-	ConversationUuid uuid.UUID
+	ConversationUuid pgtype.UUID
 }
 
 func (q *Queries) OrganizationgGetConversationsAuthoredIn(ctx context.Context, id uuid.UUID) ([]OrganizationgGetConversationsAuthoredInRow, error) {

@@ -9,6 +9,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createFileTextSource = `-- name: CreateFileTextSource :one
@@ -28,7 +29,7 @@ RETURNING
 `
 
 type CreateFileTextSourceParams struct {
-	FileID         uuid.UUID
+	FileID         pgtype.UUID
 	IsOriginalText bool
 	Language       string
 	Text           string
@@ -53,7 +54,7 @@ WHERE
     file_id = $1
 `
 
-func (q *Queries) DeleteFileTexts(ctx context.Context, fileID uuid.UUID) error {
+func (q *Queries) DeleteFileTexts(ctx context.Context, fileID pgtype.UUID) error {
 	_, err := q.db.Exec(ctx, deleteFileTexts, fileID)
 	return err
 }
@@ -67,7 +68,7 @@ WHERE
     file_id = $1
 `
 
-func (q *Queries) ListTextsOfFile(ctx context.Context, fileID uuid.UUID) ([]FileTextSource, error) {
+func (q *Queries) ListTextsOfFile(ctx context.Context, fileID pgtype.UUID) ([]FileTextSource, error) {
 	rows, err := q.db.Query(ctx, listTextsOfFile, fileID)
 	if err != nil {
 		return nil, err
@@ -105,7 +106,7 @@ WHERE
     AND is_original_text = TRUE
 `
 
-func (q *Queries) ListTextsOfFileOriginal(ctx context.Context, fileID uuid.UUID) ([]FileTextSource, error) {
+func (q *Queries) ListTextsOfFileOriginal(ctx context.Context, fileID pgtype.UUID) ([]FileTextSource, error) {
 	rows, err := q.db.Query(ctx, listTextsOfFileOriginal, fileID)
 	if err != nil {
 		return nil, err
@@ -144,7 +145,7 @@ WHERE
 `
 
 type ListTextsOfFileWithLanguageParams struct {
-	FileID   uuid.UUID
+	FileID   pgtype.UUID
 	Language string
 }
 
