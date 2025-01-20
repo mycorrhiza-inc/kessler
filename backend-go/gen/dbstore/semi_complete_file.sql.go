@@ -144,7 +144,7 @@ SELECT
     public.file.date_published,
     public.file_metadata.mdata,
     public.file_extras.extra_obj,
-    public.docket_documents.conversation_uuid AS docket_uuid,
+    public.docket_documents.conversation_uuid ,
     public.relation_documents_organizations_authorship.is_primary_author,
     public.organization.id AS organization_id,
     public.organization.name AS organization_name,
@@ -172,7 +172,7 @@ type SemiCompleteFileGetRow struct {
 	DatePublished    pgtype.Timestamptz
 	Mdata            []byte
 	ExtraObj         []byte
-	DocketUuid       pgtype.UUID
+	ConversationUuid pgtype.UUID
 	IsPrimaryAuthor  pgtype.Bool
 	OrganizationID   pgtype.UUID
 	OrganizationName pgtype.Text
@@ -200,7 +200,7 @@ func (q *Queries) SemiCompleteFileGet(ctx context.Context, id uuid.UUID) ([]Semi
 			&i.DatePublished,
 			&i.Mdata,
 			&i.ExtraObj,
-			&i.DocketUuid,
+			&i.ConversationUuid,
 			&i.IsPrimaryAuthor,
 			&i.OrganizationID,
 			&i.OrganizationName,
