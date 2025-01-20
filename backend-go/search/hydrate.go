@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"kessler/gen/dbstore"
 	"kessler/objects/files"
+	"kessler/routing"
 	"log"
+	"sync"
 
 	"github.com/google/uuid"
 )
@@ -77,57 +79,57 @@ import (
 // 	return file, nil
 // }
 
-// func doShittyHydration(uuidList []uuid.UUID, ctx context.Context, q dbstore.Queries) ([]files.CompleteFileSchema, error) {
-// 	fmt.Printf("Got Hydration Request for %v files", uuidList)
-//
-// 	// Create buffered channels for results
-// 	resultChan := make(chan files.CompleteFileSchema, len(uuidList))
-//
-// 	// Use a semaphore to limit concurrent operations
-// 	semaphore := make(chan struct{}, 20) // Adjust this number based on your needs
-//
-// 	// Launch goroutines for each file
-// 	var wg sync.WaitGroup
-// 	for _, file_id := range uuidList {
-// 		wg.Add(1)
-// 		go func(fileID uuid.UUID) {
-// 			defer wg.Done()
-//
-// 			// Acquire semaphore
-// 			semaphore <- struct{}{}
-// 			defer func() { <-semaphore }()
-//
-// 			// Create a new query instance for this goroutine
-// 			localQ := *routing.DBQueriesFromContext(ctx)
-//
-// 			semi_complete_file, err := crud.SemiCompleteFileGetFromUUID(ctx, localQ, fileID)
-// 			if err != nil {
-// 				fmt.Printf("Encountered error getting emails from file with uuid: %v: %v\n", fileID, err)
-// 				return
-// 			}
-//
-// 			select {
-// 			case resultChan <- semi_complete_file:
-// 			case <-ctx.Done():
-// 				return
-// 			}
-// 		}(file_id)
-// 	}
-//
-// 	// Close result channel when all goroutines complete
-// 	go func() {
-// 		wg.Wait()
-// 		close(resultChan)
-// 	}()
-//
-// 	// Collect results
-// 	var results []files.CompleteFileSchema
-// 	for result := range resultChan {
-// 		results = append(results, result)
-// 	}
-//
-// 	return results, nil
-// }
+func doShittyHydration(uuidList []uuid.UUID, ctx context.Context, q dbstore.Queries) ([]files.CompleteFileSchema, error) {
+	fmt.Printf("Got Hydration Request for %v files", uuidList)
+
+	// Create buffered channels for results
+	resultChan := make(chan files.CompleteFileSchema, len(uuidList))
+
+	// Use a semaphore to limit concurrent operations
+	semaphore := make(chan struct{}, 20) // Adjust this number based on your needs
+
+	// Launch goroutines for each file
+	var wg sync.WaitGroup
+	for _, file_id := range uuidList {
+		wg.Add(1)
+		go func(fileID uuid.UUID) {
+			defer wg.Done()
+
+			// Acquire semaphore
+			semaphore <- struct{}{}
+			defer func() { <-semaphore }()
+
+			// Create a new query instance for this goroutine
+			localQ := *routing.DBQueriesFromContext(ctx)
+
+			semi_complete_file, err := crud.SemiCompleteFileGetFromUUID(ctx, localQ, fileID)
+			if err != nil {
+				fmt.Printf("Encountered error getting emails from file with uuid: %v: %v\n", fileID, err)
+				return
+			}
+
+			select {
+			case resultChan <- semi_complete_file:
+			case <-ctx.Done():
+				return
+			}
+		}(file_id)
+	}
+
+	// Close result channel when all goroutines complete
+	go func() {
+		wg.Wait()
+		close(resultChan)
+	}()
+
+	// Collect results
+	var results []files.CompleteFileSchema
+	for result := range resultChan {
+		results = append(results, result)
+	}
+
+	return results, nil
+}
 
 type SearchDataHydrated struct {
 	Name     string                   `json:"name"`
