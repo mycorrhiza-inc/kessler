@@ -103,15 +103,15 @@ FROM
 WHERE
     public.file.id = ANY($1 :: UUID [])
 GROUP BY
-    public.file.id,
-    public.file.name,
-    public.file.extension,
-    public.file.lang,
-    public.file.verified,
-    public.file.hash,
-    public.file.created_at,
-    public.file.updated_at,
-    public.file.date_published,
-    public.file_metadata.mdata,
-    public.file_extras.extra_obj,
-    public.docket_documents.conversation_uuid;
+    FILE.id,
+    FILE.name,
+    FILE.extension,
+    FILE.lang,
+    FILE.verified,
+    FILE.hash,
+    FILE.created_at,
+    FILE.updated_at,
+    FILE.date_published,
+    file_metadata.mdata,
+    file_extras.extra_obj,
+    docket_documents.conversation_uuid;
