@@ -13,11 +13,11 @@ sql:
               import: "github.com/google/uuid"
               type: "UUID"
             nullable: false
-          - db_type: "uuid"
-            go_type:
-              import: "github.com/google/uuid"
-              type: "UUID"
-            nullable: true
+          # - db_type: "uuid"
+          #   go_type:
+          #     import: "github.com/google/uuid"
+          #     type: "UUID"
+          #   nullable: true
           # Figure out some way to simplify this list of overrides
           - db_type: "pg_catalog.varchar"
             go_type:

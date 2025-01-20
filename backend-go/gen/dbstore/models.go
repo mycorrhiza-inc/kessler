@@ -264,7 +264,7 @@ type User struct {
 type UserfilesThaumaturgyApiKey struct {
 	KeyName       pgtype.Text
 	KeyBlake3Hash string
-	ID            uuid.UUID
+	ID            pgtype.UUID
 	CreatedAt     pgtype.Timestamptz
 	UpdatedAt     pgtype.Timestamptz
 }

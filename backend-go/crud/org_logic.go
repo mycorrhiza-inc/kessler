@@ -15,13 +15,13 @@ import (
 )
 
 // Make this generic
-func getFirstElement(array []dbstore.Organization) (dbstore.Organization, error) {
-	if len(array) == 0 {
-		return dbstore.Organization{}, fmt.Errorf("List had no elements")
-	}
-	test := array[0] // Is there a way to do this safely?
-	return test, nil
-}
+// func getFirstElement(array []dbstore.Organization) (dbstore.Organization, error) {
+// 	if len(array) == 0 {
+// 		return dbstore.Organization{}, fmt.Errorf("List had no elements")
+// 	}
+// 	test := array[0] // Is there a way to do this safely?
+// 	return test, nil
+// }
 
 type OrganizationRequest struct {
 	OrganizationName string `json:"organization_name"`
@@ -69,7 +69,7 @@ func verifyAuthorOrganizationUUID(ctx context.Context, q dbstore.Queries, author
 	// TODO: Change the sql so that this also matches IsPerson, but for now it shouldnt matter.
 	org_return_info, err := q.OrganizationFetchByAliasMatchSingle(ctx, author_info.AuthorName)
 	if err == nil {
-		org_uuid := org_return_info.ID
+		org_uuid := org_return_info.ID.Bytes
 		author_info.AuthorID = org_uuid
 		author_info.IsPerson = org_return_info.IsPerson.Bool
 		return *author_info, nil

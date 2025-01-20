@@ -1,4 +1,4 @@
-import ConversationComponent from "@/components/Conversations/ConversationComponent";
+import FileSearchView from "@/components/Search/FileSearch/FileSearchView";
 import PageContainer from "@/components/Page/PageContainer";
 import { BreadcrumbValues } from "@/components/SitemapUtils";
 import { stateFromHeaders } from "@/lib/nextjs_misc";
@@ -20,7 +20,7 @@ export default function Page() {
       <div className="flex justify-center">
         <h1 className="text-3xl font-bold">Files Search</h1>
       </div>
-      <ConversationComponent inheritedFilters={[]} />
+      <FileSearchView inheritedFilters={[]} />
     </PageContainer>
   );
 }
