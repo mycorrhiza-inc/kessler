@@ -444,14 +444,14 @@ RETURNING
 `
 
 type StageLogAddParams struct {
-	FileID pgtype.UUID
+	FileID uuid.UUID
 	Status NullStageState
 	Log    []byte
 }
 
 type StageLogAddRow struct {
 	ID     uuid.UUID
-	FileID pgtype.UUID
+	FileID uuid.UUID
 	Status NullStageState
 }
 
@@ -476,7 +476,7 @@ LIMIT
     1
 `
 
-func (q *Queries) StageLogFileGetLatest(ctx context.Context, fileID pgtype.UUID) (StageLog, error) {
+func (q *Queries) StageLogFileGetLatest(ctx context.Context, fileID uuid.UUID) (StageLog, error) {
 	row := q.db.QueryRow(ctx, stageLogFileGetLatest, fileID)
 	var i StageLog
 	err := row.Scan(
