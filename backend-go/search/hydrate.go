@@ -51,7 +51,7 @@ func unrollSingleSchema(schema dbstore.SemiCompleteFileListGetRow) (files.Comple
 		return nilSchema, errors.New(errorstring)
 	}
 	// Missing info here, it doesnt have the name.
-	conv_info := conversations.ConversationInformation{ID: schema.DocketUuid}
+	conv_info := conversations.ConversationInformation{ID: schema.ConversationUuid.Bytes}
 	org_id_list := schema.OrganizationIds
 	org_name_list := schema.OrganizationNames
 	org_personhood_list := schema.IsPersonList

@@ -5,15 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
-	"os"
-
 	"kessler/gen/dbstore"
-	"kessler/routing"
-
 	"kessler/objects/authors"
 	"kessler/objects/conversations"
 	"kessler/objects/files"
+	"kessler/routing"
+	"net/http"
+	"os"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -113,14 +111,14 @@ func SemiCompleteFileGetFromUUID(ctx context.Context, q dbstore.Queries, uuid uu
 		return nilSchema, errors.New(errorstring)
 	}
 	// Missing info here, it doesnt have the name.
-	conv_info := conversations.ConversationInformation{ID: file_raw.DocketUuid}
+	conv_info := conversations.ConversationInformation{ID: file_raw.OrganizationID.Bytes}
 	author_info := make([]authors.AuthorInformation, len(files_raw))
 	for i, author_file_raw := range files_raw {
 		author_info[i] = authors.AuthorInformation{
 			AuthorName:      author_file_raw.OrganizationName.String,
 			IsPerson:        author_file_raw.IsPerson.Bool,
 			IsPrimaryAuthor: author_file_raw.IsPrimaryAuthor.Bool,
-			AuthorID:        author_file_raw.OrganizationID,
+			AuthorID:        author_file_raw.OrganizationID.Bytes,
 		}
 	}
 

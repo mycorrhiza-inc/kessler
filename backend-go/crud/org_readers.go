@@ -56,7 +56,7 @@ func OrgWithFilesGetByUnknown(ctx context.Context, q *dbstore.Queries, orgQuery 
 	if err != nil {
 		return organizations.OrganizationSchemaComplete{}, err
 	}
-	org_id = orgs_pgobject.ID
+	org_id = orgs_pgobject.ID.Bytes
 	return OrgWithFilesGetByID(ctx, q, org_id)
 }
 
