@@ -15,13 +15,13 @@ import (
 )
 
 // Make this generic
-func getFirstElement(array []dbstore.Organization) (dbstore.Organization, error) {
-	if len(array) == 0 {
-		return dbstore.Organization{}, fmt.Errorf("List had no elements")
-	}
-	test := array[0] // Is there a way to do this safely?
-	return test, nil
-}
+// func getFirstElement(array []dbstore.Organization) (dbstore.Organization, error) {
+// 	if len(array) == 0 {
+// 		return dbstore.Organization{}, fmt.Errorf("List had no elements")
+// 	}
+// 	test := array[0] // Is there a way to do this safely?
+// 	return test, nil
+// }
 
 type OrganizationRequest struct {
 	OrganizationName string `json:"organization_name"`
