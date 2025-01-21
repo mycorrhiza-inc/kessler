@@ -2,7 +2,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { AngleDownIcon, AngleUpIcon } from "../Icons";
 import { AuthorInfoPill, subdividedHueFromSeed } from "../Tables/TextPills";
-import { FileQueryFilterFields } from "@/lib/filters";
+import { FileQueryFilterFields, QueryDataFile } from "@/lib/filters";
+import { Query } from "pg";
 
 // Mock API call
 type Suggestion = {
@@ -162,9 +163,7 @@ enum PageContextMode {
 }
 interface FileSearchBoxProps {
   page_context: PageContextMode.Files;
-  set_search_filters: React.Dispatch<
-    React.SetStateAction<FileQueryFilterFields>
-  >;
+  set_search_query: React.Dispatch<React.SetStateAction<QueryDataFile>>;
 }
 interface OrgSearchBoxProps {
   page_context: PageContextMode.Organizations;
@@ -179,14 +178,25 @@ type SearchBoxInputProps =
   | DocketSearchBoxProps;
 
 const setSearchFilters = (props: SearchBoxInputProps, filters: Filter[]) => {
+  const filterTypeDict = filters.reduce(
+    (acc: { [key: string]: Filter[] }, filter: Filter) => {
+      if (!acc[filter.type]) {
+        acc[filter.type] = [];
+      }
+      acc[filter.type].push(filter);
+      return acc;
+    },
+    {},
+  );
+
   if ("page_context" in props) {
     switch (props.page_context) {
       case PageContextMode.Files:
         const fileProps = props as FileSearchBoxProps;
-        fileProps.set_search_filters((previous_file_filters) => {
+        fileProps.set_search_query((previous_file_filters) => {
           const new_filters = generateFileFiltersFromFilterList(
             previous_file_filters,
-            filters,
+            filterTypeDict,
           );
           return new_filters;
         });
@@ -202,9 +212,16 @@ const setSearchFilters = (props: SearchBoxInputProps, filters: Filter[]) => {
 };
 
 const generateFileFiltersFromFilterList = (
-  previous_file_filters: FileQueryFilterFields,
-  filters: Filter[],
+  previous_file_filters: QueryDataFile,
+  filterTypeDict: { [key: string]: Filter[] },
 ) => {
+  if (filterTypeDict.text) {
+    if (filterTypeDict.text.length > 1) {
+      console.log("This paramater shouldnt be more then length 1, ignoring ");
+    }
+    const first_filter_text = filterTypeDict.text[0].label;
+    previous_file_filters.query = first_filter_text;
+  }
   return previous_file_filters;
 };
 const SearchBox = ({ input }: { input: SearchBoxInputProps }) => {
