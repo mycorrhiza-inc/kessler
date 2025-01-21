@@ -3,7 +3,6 @@ import {
   getOrganizationInfo,
 } from "@/lib/requests/organizations";
 import { BreadcrumbValues } from "../SitemapUtils";
-import PageContainer from "../Page/PageContainer";
 
 import FileSearchView from "@/components/Search/FileSearch/FileSearchView";
 import { FilterField } from "@/lib/filters";
@@ -21,14 +20,12 @@ export const generateOrganizationData = async (orgId: string) => {
 };
 
 export default function OrganizationPage({
-  breadcrumbs,
   orgInfo,
 }: {
-  breadcrumbs: BreadcrumbValues;
   orgInfo: OrganizationInfo;
 }) {
   return (
-    <PageContainer breadcrumbs={breadcrumbs}>
+    < >
       <h1 className=" text-2xl font-bold">Organization: {orgInfo.name}</h1>
       <p>
         {orgInfo.description ||
@@ -41,6 +38,6 @@ export default function OrganizationPage({
           { filter: FilterField.MatchAuthor, value: orgInfo.name },
         ]}
       />
-    </PageContainer>
+    </>
   );
 }

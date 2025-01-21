@@ -1,13 +1,12 @@
 import Link from "next/link";
 import ConversationTableInfiniteScroll from "../Organizations/ConversationTable";
-import PageContainer from "../Page/PageContainer";
 import { ExperimentalChatModalClickDiv } from "../Chat/ChatModal";
 import OrganizationTableInfiniteScroll from "../Organizations/OrganizationTable";
 import RecentUpdatesView from "./RecentUpdatesView";
 
 export default function RecentUpdatesPage() {
   return (
-    <PageContainer breadcrumbs={{ breadcrumbs: [] }}>
+    <>
       <div className="grid grid-cols-2 w-full z-1">
         <div>
           <Link className="text-3xl font-bold hover:underline" href="/dockets">
@@ -35,6 +34,6 @@ export default function RecentUpdatesPage() {
 
       <h1 className=" text-2xl font-bold">Newest Docs</h1>
       <RecentUpdatesView />
-    </PageContainer>
+    </>
   );
 }

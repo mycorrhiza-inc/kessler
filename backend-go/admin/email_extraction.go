@@ -8,7 +8,7 @@ import (
 	"kessler/gen/dbstore"
 	"kessler/objects/files"
 	"kessler/rag"
-	"kessler/routing"
+	"kessler/util"
 	"net/http"
 	"regexp"
 	"slices"
@@ -116,7 +116,7 @@ type EmailInfo struct {
 }
 
 func ExtractRelaventEmailsFromOrgUUID(ctx context.Context, llm rag.LLM, org_id uuid.UUID) (EmailOrgExtraction, error) {
-	q := *routing.DBQueriesFromContext(ctx)
+	q := *util.DBQueriesFromContext(ctx)
 	information_map := map[string][]uuid.UUID{}
 	org_obj, err := crud.OrgWithFilesGetByID(ctx, &q, org_id)
 	if err != nil {
@@ -147,7 +147,7 @@ func ExtractRelaventEmailsFromOrgUUID(ctx context.Context, llm rag.LLM, org_id u
 			defer func() { <-semaphore }()
 
 			// Create a new query instance for this goroutine
-			localQ := *routing.DBQueriesFromContext(ctx)
+			localQ := *util.DBQueriesFromContext(ctx)
 
 			emails, err := ExtractRelaventEmailsFromFileUUID(ctx, localQ, llm, fileObj.ID)
 			if err != nil {

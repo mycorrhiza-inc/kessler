@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"kessler/objects/networking"
-	"kessler/routing"
+	"kessler/util"
 	"log"
 	"reflect"
 	"strings"
@@ -37,7 +37,7 @@ func SearchDataPassesFilters(result SearchDataHydrated, filters networking.Filte
 }
 
 func ValidateAgainstFilters(ctx context.Context, results []SearchData, filters networking.FilterFields) ([]SearchDataHydrated, error) {
-	q := *routing.DBQueriesFromContext(ctx)
+	q := *util.DBQueriesFromContext(ctx)
 	hydrated_results, err := HydrateSearchResults(results, ctx, q)
 	if err != nil {
 		return []SearchDataHydrated{}, err

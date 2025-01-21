@@ -3,7 +3,6 @@ import { FilterField, InheritedFilterValues } from "@/lib/filters";
 import axios from "axios";
 import { BreadcrumbValues } from "../SitemapUtils";
 import MarkdownRenderer from "../MarkdownRenderer";
-import PageContainer from "../Page/PageContainer";
 import { internalAPIURL } from "@/lib/env_variables";
 
 const getConversationData = async (url: string) => {
@@ -111,9 +110,9 @@ export const ConversationPage = async ({
   breadcrumbs: BreadcrumbValues;
 }) => {
   return (
-    <PageContainer breadcrumbs={breadcrumbs}>
+    <>
       <NYConversationDescription conversation={conversation} />
       <FileSearchView inheritedFilters={inheritedFilters} />
-    </PageContainer>
+    </>
   );
 };

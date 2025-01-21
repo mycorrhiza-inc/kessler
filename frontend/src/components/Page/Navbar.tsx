@@ -7,7 +7,7 @@ import { useKesslerStore } from "@/lib/store";
 import Link from "next/link";
 import { BreadcrumbValues, HeaderBreadcrumbs } from "@/components/SitemapUtils";
 
-function HeaderAuth() {
+export function HeaderAuth() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const globalStore = useKesslerStore();
 
@@ -75,7 +75,6 @@ const Navbar = ({ breadcrumbs }: { breadcrumbs: BreadcrumbValues }) => {
       <div className="flex-1 font-semibold">
         <HeaderMenus />
         <span />
-        <HeaderBreadcrumbs breadcrumbs={breadcrumbs} />
       </div>
       <div className="flex-none">
         <HeaderAuth />
@@ -83,4 +82,4 @@ const Navbar = ({ breadcrumbs }: { breadcrumbs: BreadcrumbValues }) => {
     </div>
   );
 };
-export default Navbar;
+export default HeaderMenus;

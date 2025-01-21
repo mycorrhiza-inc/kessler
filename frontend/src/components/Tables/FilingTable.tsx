@@ -31,69 +31,66 @@ const TableRow = ({
   header?: boolean;
 }) => {
   const [open, setOpen] = useState(false);
-  const rowRef = React.useRef<HTMLTableRowElement>(null);
   const handleRowClick = (event: React.MouseEvent<HTMLTableRowElement>) => {
     // Check if the clicked element is the text inside the row
-    if (rowRef.current && rowRef.current.contains(event.target as Node)) {
-      const element = event.target as HTMLElement;
-      const tagName = element.tagName; // Ensure type safety
-      const className = element.className;
-      console.log("element", element);
-      console.log("tagName", tagName);
-      console.log("className", className);
+    const element = event.target as HTMLElement;
+    const tagName = element.tagName; // Ensure type safety
+    const className = element.className;
+    console.log("element", element);
+    console.log("tagName", tagName);
+    console.log("className", className);
 
-      const includesNoClick = className.includes("noclick");
+    const includesNoClick = className.includes("noclick");
 
-      if (tagName === "SPAN" || tagName === "BUTTON" || includesNoClick) {
-        console.log("Text was clicked");
-        // Prevent the event from propagating further if needed
-        event.stopPropagation();
-        return;
-      }
-
-      // If it's not the specific text, allow the row click to proceed
-      console.log("Row was clicked");
-      setOpen((previous) => !previous);
-
+    if (tagName === "SPAN" || tagName === "BUTTON" || includesNoClick) {
+      console.log("Text was clicked");
+      // Prevent the event from propagating further if needed
+      event.stopPropagation();
+      return;
     }
-  };
 
-  return (
-    <>
-      <tr
-        className="border-b border-base-300 hover:bg-base-200 transition duration-500 ease-out"
-        onClick={handleRowClick}
-      >
-        <td>
-          <NoclickSpan>{filing.date}</NoclickSpan>
-        </td>
-        <td>
-          <NoclickSpan>
-            <TextPill text={filing.file_class} />
-          </NoclickSpan>
-        </td>
-        <td>
-          {/* Removing the noclick around this, since I think clicking on the tile should actually open the modal */}
-          {filing.title}
-        </td>
-        <td>
-          <NoclickSpan>
-            <AuthorColumn filing={filing} />
-          </NoclickSpan>
-        </td>
-        {DocketColumn && (
-          <td>
-            {filing.docket_id && (
-              <DocketPill docket_named_id={filing.docket_id} />
-            )}
-          </td>
-        )}
+    // If it's not the specific text, allow the row click to proceed
+    console.log("Row was clicked");
+    setOpen((previous) => !previous);
 
-        <td>{filing.item_number}</td>
-      </tr>
-      <DocumentModal open={open} setOpen={setOpen} objectId={filing.id} />
-    </>
-  );
+};
+
+return (
+  <>
+    <tr
+      className="border-b border-base-300 hover:bg-base-200 transition duration-500 ease-out"
+      onClick={handleRowClick}
+    >
+      <td>
+        <NoclickSpan>{filing.date}</NoclickSpan>
+      </td>
+      <td>
+        <NoclickSpan>
+          <TextPill text={filing.file_class} />
+        </NoclickSpan>
+      </td>
+      <td>
+        {/* Removing the noclick around this, since I think clicking on the tile should actually open the modal */}
+        {filing.title}
+      </td>
+      <td>
+        <NoclickSpan>
+          <AuthorColumn filing={filing} />
+        </NoclickSpan>
+      </td>
+      {DocketColumn && (
+        <td>
+          {filing.docket_id && (
+            <DocketPill docket_named_id={filing.docket_id} />
+          )}
+        </td>
+      )}
+
+      <td>{filing.item_number}</td>
+    </tr>
+    <DocumentModal open={open} setOpen={setOpen} objectId={filing.id} />
+  </>
+);
 };
 export const FilingTable = ({
   filings,
@@ -106,7 +103,7 @@ export const FilingTable = ({
   DocketColumn?: boolean;
   PinTableHeader?: boolean;
 }) => {
-  const pinClassName = PinTableHeader ? "table-pin-rows" : "";
+  // const pinClassName = PinTableHeader ? "table-pin-rows" : "";
   return (
     <div
       className={
@@ -117,8 +114,8 @@ export const FilingTable = ({
     >
       <table
         className={clsx(
-          "w-full divide-y divide-gray-200  border-collaps table lg:table-fixed md:table-auto sm:table-auto",
-          pinClassName,
+          "w-full divide-y divide-gray-200  border-collaps table lg:table-fixed md:table-auto sm:table-auto z-1",
+          // pinClassName,
         )}
       >
         <colgroup>

@@ -7,9 +7,9 @@ import (
 	"net/http"
 
 	"kessler/gen/dbstore"
+	"kessler/util"
 
 	"kessler/objects/files"
-	"kessler/routing"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -48,7 +48,7 @@ func makeFileUpsertHandler(config FileUpsertHandlerConfig) func(w http.ResponseW
 				return
 			}
 		}
-		q := *routing.DBQueriesFromRequest(r)
+		q := *util.DBQueriesFromRequest(r)
 		ctx := r.Context()
 		// TODO!!!!!: Enable insert auth at some point
 		// token := r.Header.Get("Authorization")

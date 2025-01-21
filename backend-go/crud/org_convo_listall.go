@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"kessler/gen/dbstore"
 	"kessler/objects/networking"
-	"kessler/routing"
+	"kessler/util"
 	"log"
 	"net/http"
 	"time"
@@ -14,7 +14,7 @@ import (
 
 func OrgSemiCompletePaginated(w http.ResponseWriter, r *http.Request) {
 	paginationData := networking.PaginationFromUrlParams(r)
-	q := routing.DBQueriesFromRequest(r)
+	q := util.DBQueriesFromRequest(r)
 	ctx := r.Context()
 	args := dbstore.OrganizationSemiCompleteInfoListPaginatedParams{
 		Limit:  int32(paginationData.Limit),
@@ -37,7 +37,7 @@ func OrgSemiCompletePaginated(w http.ResponseWriter, r *http.Request) {
 
 func ConversationSemiCompletePaginatedList(w http.ResponseWriter, r *http.Request) {
 	paginationData := networking.PaginationFromUrlParams(r)
-	q := routing.DBQueriesFromRequest(r)
+	q := util.DBQueriesFromRequest(r)
 	ctx := r.Context()
 	args := dbstore.ConversationSemiCompleteInfoListPaginatedParams{
 		Limit:  int32(paginationData.Limit),
@@ -70,7 +70,7 @@ type ConversationSemiCompleteInfo struct {
 
 func ConversationSemiCompleteListAll(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Getting all proceedings")
-	q := *routing.DBQueriesFromRequest(r)
+	q := *util.DBQueriesFromRequest(r)
 
 	ctx := r.Context()
 	proceedings_raw, err := q.ConversationSemiCompleteInfoList(ctx)

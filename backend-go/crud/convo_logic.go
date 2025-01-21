@@ -7,7 +7,7 @@ import (
 	"io"
 	"kessler/gen/dbstore"
 	"kessler/objects/conversations"
-	"kessler/routing"
+	"kessler/util"
 	"net/http"
 	"time"
 
@@ -37,7 +37,7 @@ func ConversationVerifyHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	// ctx := context.Background()
 
-	q := *routing.DBQueriesFromRequest(r)
+	q := *util.DBQueriesFromRequest(r)
 
 	// fmt.Printf("Calling verifyConversationUUID with req: %+v\n", req)
 	conversation_info, err := verifyConversationUUID(ctx, q, &req, true)

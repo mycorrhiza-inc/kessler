@@ -18,8 +18,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-var connPool *pgxpool.Pool
-
 func PgPoolConfig() *pgxpool.Config {
 	const defaultMaxConns = int32(30)
 	const defaultMinConns = int32(0)
@@ -88,13 +86,6 @@ func corsMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func withDBTX(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := context.WithValue(r.Context(), "db", connPool)
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
-}
-
 func HandleVersionHash(w http.ResponseWriter, r *http.Request) {
 	// Get the version hash from the environment variable
 	versionHash := os.Getenv("VERSION_HASH")
@@ -107,6 +98,7 @@ func main() {
 	// 	log.Fatal("Error loading .env file")
 	// }
 	// Create database connection
+	var connPool *pgxpool.Pool
 	connPool, err := pgxpool.NewWithConfig(context.Background(), PgPoolConfig())
 	if err != nil {
 		log.Fatal("Error while creating connection to the database!!")
@@ -118,10 +110,14 @@ func main() {
 	// static.HandleStaticGenerationRouting(mux, connPool)
 	const timeout = time.Second * 20
 	const adminTimeout = time.Minute * 10
-
 	// Create two separate routers for different timeout requirements
 	adminMux := mux.NewRouter()
-	adminMux.Use(withDBTX)
+	adminMux.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := context.WithValue(r.Context(), "db", connPool)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	})
 	adminRouter := adminMux.PathPrefix("/v2/admin/").Subrouter()
 	admin.DefineAdminRoutes(adminRouter)
 	adminMux.PathPrefix("/v2/admin/").Handler(adminRouter)
@@ -130,7 +126,12 @@ func main() {
 
 	// Regular routes with standard timeout
 	regularMux := mux.NewRouter()
-	regularMux.Use(withDBTX)
+	regularMux.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := context.WithValue(r.Context(), "db", connPool)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	})
 	public_subrouter := regularMux.PathPrefix("/v2/public").Subrouter()
 	crud.DefineCrudRoutes(public_subrouter)
 	regularMux.PathPrefix("/v2/public/").Handler(public_subrouter)

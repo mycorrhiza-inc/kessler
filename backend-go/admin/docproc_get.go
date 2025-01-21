@@ -7,7 +7,7 @@ import (
 	"kessler/crud"
 	"kessler/gen/dbstore"
 	"kessler/objects/files"
-	"kessler/routing"
+	"kessler/util"
 	"math/rand"
 	"net/http"
 	"strconv"
@@ -43,7 +43,7 @@ func HandleUnverifedCompleteFileSchemaList(w http.ResponseWriter, r *http.Reques
 }
 
 func UnverifedCompleteFileSchemaRandomList(ctx context.Context, max_responses uint) ([]files.CompleteFileSchema, error) {
-	q := routing.DBQueriesFromContext(ctx)
+	q := util.DBQueriesFromContext(ctx)
 	fmt.Printf("Getting %d unverified files\n", max_responses)
 	db_files, err := q.FilesListUnverified(ctx, int32(max_responses)*2)
 	// If postgres return randomization doesnt work, then you can still get it to kinda work by returning double the results, randomizing and throwing away half.
@@ -74,7 +74,7 @@ func UnverifedCompleteFileSchemaRandomList(ctx context.Context, max_responses ui
 }
 
 func CompleteFileSchemasFromUUIDs(ctx context.Context, uuids []uuid.UUID) ([]files.CompleteFileSchema, error) {
-	dbtx_val := routing.DBTXFromContext(ctx)
+	dbtx_val := util.DBTXFromContext(ctx)
 
 	complete_start := time.Now()
 	complete_files := []files.CompleteFileSchema{}

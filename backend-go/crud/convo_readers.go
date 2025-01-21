@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"kessler/gen/dbstore"
-	"kessler/routing"
+	"kessler/util"
 	"log"
 	"net/http"
 
@@ -15,7 +15,7 @@ import (
 
 func ConversationGetByUnknownHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Getting file with metadata")
-	q := *routing.DBQueriesFromRequest(r)
+	q := *util.DBQueriesFromRequest(r)
 
 	params := mux.Vars(r)
 	docketIdStr := params["name"]
