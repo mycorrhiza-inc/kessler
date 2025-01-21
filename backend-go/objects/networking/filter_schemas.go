@@ -8,15 +8,18 @@ import (
 )
 
 type Metadata struct {
-	Author    string `json:"author"`
-	Date      string `json:"date"`
-	DocketID  string `json:"docket_id"`
-	FileClass string `json:"file_class"`
-	Doctype   string `json:"doctype"`
-	Lang      string `json:"lang"`
-	Language  string `json:"language"`
-	Source    string `json:"source"`
-	Title     string `json:"title"`
+	Author           string      `json:"author"`
+	Date             string      `json:"date"`
+	DocketID         string      `json:"docket_id"`
+	FileClass        string      `json:"file_class"`
+	Doctype          string      `json:"doctype"`
+	Lang             string      `json:"lang"`
+	Language         string      `json:"language"`
+	Source           string      `json:"source"`
+	Title            string      `json:"title"`
+	ConversationUUID uuid.UUID   `json:"conversation_uuid"`
+	Authors          []string    `json:"authors"`
+	AuthorUUIDs      []uuid.UUID `json:"author_uuids"`
 }
 
 func (m Metadata) String() string {

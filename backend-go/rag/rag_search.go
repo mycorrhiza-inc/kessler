@@ -58,7 +58,7 @@ func rag_query_func_generated_from_filters(filters networking.FilterFields) func
 		}
 		// Increase to give llm more results.
 		const truncation = 4
-		var truncated_search_results []search.SearchData
+		var truncated_search_results []search.SearchDataHydrated
 		if len(search_results) < truncation {
 			truncated_search_results = search_results
 		} else {

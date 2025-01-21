@@ -78,19 +78,25 @@ func rerankStringsAndQueryPermutation(ctx context.Context, query string, documen
 	}
 	return permutation, nil
 }
+func (result SearchData) GetSnippet() string         { return result.Snippet }
+func (result SearchDataHydrated) GetSnippet() string { return result.Snippet }
 
-func rerankSearchResults(searchResults []SearchData, query string) ([]SearchData, error) {
+type SnippetGetter interface {
+	GetSnippet() string
+}
+
+func rerankSearchResults[T SnippetGetter](results []T, query string) ([]T, error) {
 	var documents []string
-	for _, result := range searchResults {
-		documents = append(documents, result.Snippet)
+	for _, result := range results {
+		documents = append(documents, result.GetSnippet())
 	}
 	permutation, err := rerankStringsAndQueryPermutation(context.Background(), query, documents)
 	if err != nil {
 		return nil, err
 	}
-	rerankedResults := make([]SearchData, len(searchResults))
+	rerankedResults := make([]T, len(results))
 	for i, permutation := range permutation {
-		rerankedResults[i] = searchResults[permutation]
+		rerankedResults[i] = results[permutation]
 	}
 	return rerankedResults, nil
 }
