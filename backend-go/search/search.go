@@ -83,7 +83,7 @@ func (s SearchData) String() string {
 	return string(jsonData)
 }
 
-func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
+func SearchQuickwit(r SearchRequest) ([]SearchDataHydrated, error) {
 	fmt.Printf("searching quickwit:\n%s", r)
 	r.Index = "NY_PUC"
 	search_index := r.Index
@@ -150,7 +150,7 @@ func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
 	log.Printf("jsondata: \n%s", jsonData)
 	if err != nil {
 		log.Printf("Error Marshalling quickwit request: %s", err)
-		return nil, err
+		return []SearchDataHydrated{}, err
 	}
 
 	request_url := fmt.Sprintf("%s/api/v1/%s/search", quickwitURL, search_index)
@@ -169,21 +169,23 @@ func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
 	// ===== handle response =====
 	if resp.StatusCode != http.StatusOK {
 		log.Printf("Error: received status code %v", resp.StatusCode)
-		a, e := errturn(fmt.Errorf("received status code %v", resp.StatusCode))
-		return a, e
+		if resp.StatusCode != http.StatusOK {
+			log.Printf("Error: received status code %v", resp.StatusCode)
+			return []SearchDataHydrated{}, fmt.Errorf("received status code %v", resp.StatusCode)
+		}
 	}
 	var searchResponse quickwitSearchResponse
 	err = json.NewDecoder(resp.Body).Decode(&searchResponse)
 	if err != nil {
 		log.Printf("Error unmarshalling quickwit response: %s", err)
-		errturn(err)
+		return []SearchDataHydrated{}, err
 	}
 	fmt.Printf("quickwit response: %v\n", resp)
 
 	data, err := ExtractSearchData(searchResponse)
 	if err != nil {
 		log.Printf("Error creating response data: %s", err)
-		errturn(err)
+		return []SearchDataHydrated{}, err
 	}
 
 	return data, nil
@@ -207,8 +209,10 @@ func ExtractSearchData(data quickwitSearchResponse) ([]SearchDataHydrated, error
 			if len(hit.Metadata.Authors) > index {
 				name = hit.Metadata.Authors[index]
 			}
-			author_infos[index] = authors.AuthorInformation{AuthorID: author_id, AuthorName: name}
-
+			author_infos[index] = authors.AuthorInformation{
+				AuthorID:   author_id,
+				AuthorName: name,
+			}
 		}
 		file_id, err := uuid.Parse(hit.SourceID)
 		if err != nil {

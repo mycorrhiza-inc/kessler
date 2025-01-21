@@ -6,11 +6,11 @@ import (
 )
 
 type SearchReturn struct {
-	Results []SearchData
+	Results []SearchDataHydrated
 	Error   error
 }
 
-func HybridSearch(request SearchRequest) ([]SearchData, error) {
+func HybridSearch(request SearchRequest) ([]SearchDataHydrated, error) {
 	// This could absolutely be dryified
 	chanMilvus := make(chan SearchReturn)
 	chanQuickwit := make(chan SearchReturn)
@@ -18,7 +18,7 @@ func HybridSearch(request SearchRequest) ([]SearchData, error) {
 		// Not implemented
 		// results, err := SearchMilvus(request)
 		err := fmt.Errorf("not implemented")
-		return_results := SearchReturn{[]SearchData{}, err}
+		return_results := SearchReturn{[]SearchDataHydrated{}, err}
 		chanMilvus <- return_results
 	}()
 	go func() {
@@ -35,7 +35,7 @@ func HybridSearch(request SearchRequest) ([]SearchData, error) {
 		fmt.Printf("Quickwit returned error: %s", resultsQuickwit.Error)
 	}
 	if resultsMilvus.Error != nil && resultsQuickwit.Error != nil {
-		return []SearchData{}, fmt.Errorf("both Milvus and Quickwit returned errors. milvus error: %s quickwit error: %s", resultsMilvus.Error, resultsQuickwit.Error)
+		return []SearchDataHydrated{}, fmt.Errorf("both Milvus and Quickwit returned errors. milvus error: %s quickwit error: %s", resultsMilvus.Error, resultsQuickwit.Error)
 	}
 	unrankedResults := append(resultsMilvus.Results, resultsQuickwit.Results...)
 	rerankedData, err := rerankSearchResults(unrankedResults, request.Query)

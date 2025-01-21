@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func GetRecentCaseData(maxHits int, offset int) ([]SearchData, error) {
+func GetRecentCaseData(maxHits int, offset int) ([]SearchDataHydrated, error) {
 	// get all documents with a metadata.date_filed since (x)
 	log.Printf("gettings ssssssflkjadflhdsfuhlifadlhf")
 	request := SearchRequest{
@@ -24,7 +24,7 @@ func GetRecentCaseData(maxHits int, offset int) ([]SearchData, error) {
 	}
 	log.Printf("data: \n%v", data)
 	if data == nil {
-		empty := []SearchData{}
+		empty := []SearchDataHydrated{}
 		return empty, nil
 	}
 	return data, nil
