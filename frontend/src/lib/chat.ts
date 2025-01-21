@@ -1,5 +1,5 @@
 import axios from "axios";
-import { QueryFilterFields, backendFilterGenerate } from "./filters";
+import { FileQueryFilterFields, backendFilterGenerate } from "./filters";
 
 export interface Message {
   role: string;
@@ -70,7 +70,7 @@ export interface ChatMessageInterface {
 
 export const getUpdatedChatHistory = async (
   chatHistory: Message[],
-  ragFilters: QueryFilterFields,
+  ragFilters: FileQueryFilterFields,
   chatUrl: string,
   model?: string,
 ) => {

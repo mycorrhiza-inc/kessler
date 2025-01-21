@@ -17,13 +17,13 @@ export type InheritedFilterValues = Array<{
   value: string;
 }>;
 
-export type QueryFilterFields = {
+export type FileQueryFilterFields = {
   [key in FilterField]: string;
 };
 
 export type QueryDataFile = {
   query: string;
-  filters: QueryFilterFields;
+  filters: FileQueryFilterFields;
 };
 
 export const allFilterFields: FilterField[] = Object.values(FilterField);
@@ -46,7 +46,7 @@ export const CaseFilterFields: FilterField[] = [
 //   MatchBeforeDate = "match_before_date",
 //   MatchAfterDate = "match_after_date",
 // }
-export const emptyQueryOptions: QueryFilterFields = {
+export const emptyQueryOptions: FileQueryFilterFields = {
   [FilterField.MatchName]: "",
   [FilterField.MatchSource]: "",
   [FilterField.MatchDoctype]: "",
@@ -70,7 +70,7 @@ export const disableListFromInherited = (
 
 export const initialFiltersFromInherited = (
   inheritedFilters: InheritedFilterValues,
-): QueryFilterFields => {
+): FileQueryFilterFields => {
   var initialFilters = emptyQueryOptions;
   inheritedFilters.map((val) => {
     initialFilters[val.filter] = val.value;
@@ -79,7 +79,7 @@ export const initialFiltersFromInherited = (
 };
 
 export const inheritedFiltersFromValues = (
-  filters: QueryFilterFields,
+  filters: FileQueryFilterFields,
 ): InheritedFilterValues => {
   if (filters == null) {
     return [];
@@ -112,7 +112,7 @@ export interface BackendFilterObject {
 }
 
 export const backendFilterGenerate = (
-  filters: QueryFilterFields,
+  filters: FileQueryFilterFields,
 ): BackendFilterObject => {
   const metadataFilters: BackendFilterObject["metadata_filters"] = {
     name: filters.match_name,
