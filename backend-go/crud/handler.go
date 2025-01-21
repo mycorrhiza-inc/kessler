@@ -7,7 +7,7 @@ import (
 	"io"
 	"kessler/gen/dbstore"
 	"kessler/objects/files"
-	"kessler/routing"
+	"kessler/util"
 	"math/rand"
 	"net/http"
 	"os"
@@ -250,7 +250,7 @@ func GetListAllFiles(ctx context.Context, q dbstore.Queries) ([]files.FileSchema
 
 func getListOfAllPublicFilesHandler(dbtx_val dbstore.DBTX) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		q := *routing.DBQueriesFromRequest(r)
+		q := *util.DBQueriesFromRequest(r)
 
 		ctx := r.Context()
 		fileSchemas, err := GetListAllFiles(ctx, q)

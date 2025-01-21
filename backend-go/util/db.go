@@ -22,6 +22,7 @@ func DBQueriesFromContext(ctx context.Context) *dbstore.Queries {
 	q := dbstore.New(dbtx)
 	return q
 }
+
 func DBQueriesFromRequest(r *http.Request) *dbstore.Queries {
 	ctx := r.Context()
 	q := DBQueriesFromContext(ctx)

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"kessler/crud"
 	"kessler/gen/dbstore"
-	"kessler/routing"
+	"kessler/util"
 
 	"github.com/google/uuid"
 	openai "github.com/sashabaranov/go-openai"
@@ -41,7 +41,7 @@ var more_info_func_schema = openai.FunctionDefinition{
 }
 
 func more_info_func_call(ctx context.Context) FunctionCall {
-	q := *routing.DBQueriesFromContext(ctx)
+	q := *util.DBQueriesFromContext(ctx)
 	return FunctionCall{
 		Schema: rag_query_func_schema,
 		Func: func(query_json string) (ToolCallResults, error) {

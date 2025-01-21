@@ -8,7 +8,7 @@ import (
 	"sync"
 
 	"kessler/gen/dbstore"
-	"kessler/routing"
+	"kessler/util"
 )
 
 func deduplicateOrganizationsOnNames(ctx context.Context, q dbstore.Queries) error {
@@ -108,7 +108,7 @@ func organizationsNameAsAlias(ctx context.Context, q dbstore.Queries) error {
 func completeCleanDatabaseHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("Starting complete clean of database\n")
 	ctx := context.Background()
-	q := *routing.DBQueriesFromRequest(r)
+	q := *util.DBQueriesFromRequest(r)
 
 	err := deduplicateOrganizationsOnNames(ctx, q)
 	if err != nil {
