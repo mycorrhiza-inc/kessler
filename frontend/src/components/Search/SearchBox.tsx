@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { AngleDownIcon, AngleUpIcon } from "../Icons";
 import { AuthorInfoPill, subdividedHueFromSeed } from "../Tables/TextPills";
+import { FileQueryFilterFields } from "@/lib/filters";
 
 // Mock API call
 type Suggestion = {
@@ -160,18 +161,52 @@ enum PageContextMode {
   Dockets,
 }
 interface FileSearchBoxProps {
-  set_search_filters;
+  page_context: PageContextMode.Files;
+  set_search_filters: React.Dispatch<
+    React.SetStateAction<FileQueryFilterFields>
+  >;
 }
-interface OrgSearchBoxProps {}
-interface DocketSearchBoxProps {}
+interface OrgSearchBoxProps {
+  page_context: PageContextMode.Organizations;
+}
+interface DocketSearchBoxProps {
+  page_context: PageContextMode.Dockets;
+}
 
 type SearchBoxInputProps =
   | FileSearchBoxProps
   | OrgSearchBoxProps
   | DocketSearchBoxProps;
 
-const setSearchFilters = (props: SearchBoxInputProps, filters: Filter[]) => {};
+const setSearchFilters = (props: SearchBoxInputProps, filters: Filter[]) => {
+  if ("page_context" in props) {
+    switch (props.page_context) {
+      case PageContextMode.Files:
+        const fileProps = props as FileSearchBoxProps;
+        fileProps.set_search_filters((previous_file_filters) => {
+          const new_filters = generateFileFiltersFromFilterList(
+            previous_file_filters,
+            filters,
+          );
+          return new_filters;
+        });
+        return;
+      case PageContextMode.Organizations:
+        const orgProps = props as OrgSearchBoxProps;
+        return;
+      case PageContextMode.Dockets:
+        const docketProps = props as DocketSearchBoxProps;
+        return;
+    }
+  }
+};
 
+const generateFileFiltersFromFilterList = (
+  previous_file_filters: FileQueryFilterFields,
+  filters: Filter[],
+) => {
+  return previous_file_filters;
+};
 const SearchBox = ({ input }: { input: SearchBoxInputProps }) => {
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
