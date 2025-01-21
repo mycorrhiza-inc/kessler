@@ -9,7 +9,7 @@ import (
 	"kessler/objects/authors"
 	"kessler/objects/conversations"
 	"kessler/objects/files"
-	"kessler/routing"
+	"kessler/util"
 	"net/http"
 	"os"
 
@@ -18,7 +18,7 @@ import (
 )
 
 func FileWithMetaGetHandler(w http.ResponseWriter, r *http.Request) {
-	q := *routing.DBQueriesFromRequest(r)
+	q := *util.DBQueriesFromRequest(r)
 	params := mux.Vars(r)
 	fileID := params["uuid"]
 	parsedUUID, err := uuid.Parse(fileID)
@@ -61,7 +61,7 @@ func FileWithMetaGetHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func FileSemiCompleteGet(w http.ResponseWriter, r *http.Request) {
-	q := *routing.DBQueriesFromRequest(r)
+	q := *util.DBQueriesFromRequest(r)
 
 	params := mux.Vars(r)
 	fileID := params["uuid"]
@@ -191,7 +191,7 @@ func ReadFileHandler(config FileHandlerConfig) http.HandlerFunc {
 	return_type := config.return_type
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		q := *routing.DBQueriesFromRequest(r)
+		q := *util.DBQueriesFromRequest(r)
 
 		// token := r.Header.Get("Authorization")
 		params := mux.Vars(r)

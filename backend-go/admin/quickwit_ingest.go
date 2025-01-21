@@ -8,14 +8,14 @@ import (
 
 	"kessler/gen/dbstore"
 	"kessler/quickwit"
-	"kessler/routing"
+	"kessler/util"
 
 	"github.com/google/uuid"
 )
 
 func HandleQuickwitIngestFromPostgres(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	q := routing.DBQueriesFromRequest(r)
+	q := util.DBQueriesFromRequest(r)
 	filter_out_unverified := ctx.Value("verified_search").(bool)
 
 	fmt.Printf("Starting Quickwit ingest from Postgres (filter_out_unverified=%v)\n", filter_out_unverified)

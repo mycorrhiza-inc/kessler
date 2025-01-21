@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"kessler/crud"
 	"kessler/gen/dbstore"
-	"kessler/routing"
+	"kessler/util"
 	"strings"
 	"time"
 
@@ -24,7 +24,7 @@ func IndexConversations(conversations []dbstore.DocketConversation) error {
 func IndexConversationsFromUUIDs(ids []uuid.UUID, ctx context.Context) error {
 	//
 	// Index conversations from UUIDs
-	q := *routing.DBQueriesFromContext(ctx)
+	q := *util.DBQueriesFromContext(ctx)
 	conversations, err := crud.ConversationGetListByUUID(ctx, &q, ids)
 	if err != nil {
 		return err

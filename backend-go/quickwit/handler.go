@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"kessler/crud"
-	"kessler/routing"
 	util "kessler/util"
 
 	"github.com/gorilla/mux"
@@ -60,7 +59,7 @@ func HandleQuckwitIngestConversations(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	q := *routing.DBQueriesFromRequest(r)
+	q := *util.DBQueriesFromRequest(r)
 	ctx := r.Context()
 
 	conversations, err := crud.ConversationGetListByUUID(ctx, &q, ids)

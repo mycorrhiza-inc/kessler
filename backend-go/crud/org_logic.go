@@ -7,7 +7,7 @@ import (
 	"io"
 	"kessler/gen/dbstore"
 	"kessler/objects/authors"
-	"kessler/routing"
+	"kessler/util"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -46,7 +46,7 @@ func OrganizationVerifyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
-	q := *routing.DBQueriesFromRequest(r)
+	q := *util.DBQueriesFromRequest(r)
 
 	author_info := authors.AuthorInformation{AuthorName: req.OrganizationName, IsPerson: req.IsPerson}
 	author_info, err = verifyAuthorOrganizationUUID(ctx, q, &author_info)
