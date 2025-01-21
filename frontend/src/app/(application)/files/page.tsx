@@ -1,5 +1,4 @@
 import FileSearchView from "@/components/Search/FileSearch/FileSearchView";
-import PageContainer from "@/components/Page/PageContainer";
 import { BreadcrumbValues } from "@/components/SitemapUtils";
 import { stateFromHeaders } from "@/lib/nextjs_misc";
 import { headers } from "next/headers";
@@ -16,11 +15,11 @@ export default function Page() {
     breadcrumbs: [{ title: "Files", value: "files" }],
   };
   return (
-    <PageContainer breadcrumbs={breadcrumbs}>
+    <>
       <div className="flex justify-center">
         <h1 className="text-3xl font-bold">Files Search</h1>
       </div>
       <FileSearchView inheritedFilters={[]} />
-    </PageContainer>
+    </>
   );
 }

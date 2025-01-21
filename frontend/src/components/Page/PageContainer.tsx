@@ -10,7 +10,7 @@ const PageContainer = ({
 }) => {
   return (
     <div className="w-full">
-      <Navbar breadcrumbs={breadcrumbs} />
+      {/* <Navbar breadcrumbs={breadcrumbs} /> */}
       <div className="w-full h-full p-20">{children}</div>
     </div>
   );
