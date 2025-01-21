@@ -22,6 +22,18 @@ type Metadata struct {
 	AuthorUUIDs      []uuid.UUID `json:"author_uuids"`
 }
 
+type SearchMetadata struct {
+	Author    string `json:"author"`
+	Date      string `json:"date"`
+	DocketID  string `json:"docket_id"`
+	FileClass string `json:"file_class"`
+	Doctype   string `json:"doctype"`
+	Lang      string `json:"lang"`
+	Language  string `json:"language"`
+	Source    string `json:"source"`
+	Title     string `json:"title"`
+}
+
 func (m Metadata) String() string {
 	// Marshal the struct to JSON format
 	jsonData, err := json.MarshalIndent(m, "", "  ")
@@ -32,8 +44,18 @@ func (m Metadata) String() string {
 	return string(jsonData)
 }
 
+func (m SearchMetadata) String() string {
+	// Marshal the struct to JSON format
+	jsonData, err := json.MarshalIndent(m, "", "  ")
+	if err != nil {
+		fmt.Println("Error marshalling JSON:", err)
+	}
+	// Print the formatted JSON string
+	return string(jsonData)
+}
+
 type MetadataFilterFields struct {
-	Metadata
+	SearchMetadata
 	DateFrom string `json:"date_from"`
 	DateTo   string `json:"date_to"`
 }
