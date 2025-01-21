@@ -8,6 +8,7 @@ import (
 	"kessler/objects/conversations"
 	"kessler/objects/files"
 	"kessler/objects/networking"
+	"kessler/objects/timestamp"
 	"log"
 	"net/http"
 	"os"
@@ -224,16 +225,23 @@ func ExtractSearchData(data quickwitSearchResponse) ([]SearchDataHydrated, error
 			DocketGovID: hit.Metadata.DocketID,
 			ID:          convo_id,
 		}
+		file_timestamp, _ := timestamp.KessTimeFromString(hit.DateFiled)
 		file_schema := files.CompleteFileSchema{
-			Name: hit.Name,
-
 			ID:           file_id,
-			Authors:      author_infos,
+			Name:         hit.Name,
+			Extension:    hit.Metadata.Doctype,
 			Conversation: convo_info,
 			Mdata: files.FileMetadataSchema{
 				"docket_id":  hit.Metadata.DocketID,
-				"date_filed": hit.Metadata.Date,
+				"date":       hit.Metadata.Date,
+				"file_class": hit.Metadata.FileClass,
 			},
+			IsPrivate:     false,
+			DatePublished: file_timestamp,
+			Authors:       author_infos,
+			DocTexts:      []files.FileChildTextSource{},
+			Stage:         files.DocProcStage{},
+			Extra:         files.FileGeneratedExtras{},
 		}
 		sdata := SearchDataHydrated{
 			Name:     hit.Name,
