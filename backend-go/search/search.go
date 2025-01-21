@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"kessler/objects/authors"
+	"kessler/objects/conversations"
+	"kessler/objects/files"
 	"kessler/objects/networking"
 	"log"
 	"net/http"
@@ -11,6 +14,8 @@ import (
 	"reflect"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 var quickwitURL = os.Getenv("QUICKWIT_ENDPOINT")
@@ -173,6 +178,7 @@ func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
 		log.Printf("Error unmarshalling quickwit response: %s", err)
 		errturn(err)
 	}
+	fmt.Printf("quickwit response: %v\n", resp)
 
 	data, err := ExtractSearchData(searchResponse)
 	if err != nil {
@@ -184,7 +190,54 @@ func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
 }
 
 // Function to create search data array
-func ExtractSearchData(data quickwitSearchResponse) ([]SearchData, error) {
+func ExtractSearchData(data quickwitSearchResponse) ([]SearchDataHydrated, error) {
+	var result []SearchDataHydrated
+
+	// Map snippets text to hit names
+	for i, hit := range data.Hits {
+		var snippet string
+		if len(data.Snippets) > i {
+			if len(data.Snippets[i].Text) > 0 {
+				snippet = data.Snippets[i].Text[0]
+			}
+		}
+		author_infos := make([]authors.AuthorInformation, len(hit.Metadata.AuthorUUIDs))
+		for index, author_id := range hit.Metadata.AuthorUUIDs {
+			name := ""
+			if len(hit.Metadata.Authors) > index {
+				name = hit.Metadata.Authors[index]
+			}
+			author_infos[index] = authors.AuthorInformation{AuthorID: author_id, AuthorName: name}
+
+		}
+		file_id, err := uuid.Parse(hit.SourceID)
+		if err != nil {
+			return []SearchDataHydrated{}, err
+		}
+		convo_id := hit.Metadata.ConversationUUID
+		convo_info := conversations.ConversationInformation{
+			DocketGovID: hit.Metadata.DocketID,
+			ID:          convo_id,
+		}
+		file_schema := files.CompleteFileSchema{
+			ID:           file_id,
+			Authors:      author_infos,
+			Conversation: convo_info,
+		}
+		sdata := SearchDataHydrated{
+			Name:     hit.Name,
+			Snippet:  snippet,
+			DocID:    hit.Metadata.DocketID,
+			SourceID: hit.SourceID,
+			File:     file_schema,
+		}
+		result = append(result, sdata)
+	}
+
+	return result, nil
+}
+
+func ExtractSearchDataPlain(data quickwitSearchResponse) ([]SearchData, error) {
 	var result []SearchData
 
 	// Map snippets text to hit names
