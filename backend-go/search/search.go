@@ -104,7 +104,7 @@ func SearchQuickwit(r SearchRequest) ([]SearchData, error) {
 	uuidFilterString := constructQuickwitUUIDMetadataQueryString(uuidFilters)
 
 	log.Printf(
-		"!!!!!!!!!!\nquery: %s\nfilters: %s\nuuid filters: %s\n!!!!!!!!!!\n",
+		"generating query:{\nnquery: '%s',\nfilters: '%s',\nuuid filters: '%s'\n",
 		queryString,
 		filtersString,
 		uuidFilterString,

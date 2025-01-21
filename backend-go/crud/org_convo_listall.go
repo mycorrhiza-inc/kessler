@@ -50,7 +50,7 @@ func ConversationSemiCompletePaginatedList(w http.ResponseWriter, r *http.Reques
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "wtf", http.StatusInternalServerError)
 		return
 	}
 	response, _ := json.Marshal(proceedings)
