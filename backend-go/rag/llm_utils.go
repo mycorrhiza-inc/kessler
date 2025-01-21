@@ -24,10 +24,10 @@ type SimpleChatMessage struct {
 
 type ChatMessage struct {
 	// SimpleChatMessage
-	Content   string               `json:"content"`
-	Role      string               `json:"role"`
-	Citations *[]search.SearchData `json:"citations,omitempty"`
-	Context   *[]SimpleChatMessage `json:"context,omitempty"`
+	Content   string                       `json:"content"`
+	Role      string                       `json:"role"`
+	Citations *[]search.SearchDataHydrated `json:"citations,omitempty"`
+	Context   *[]SimpleChatMessage         `json:"context,omitempty"`
 }
 
 // Function converting simple to ChatMessage
@@ -36,7 +36,7 @@ func SimpleToChatMessage(msg SimpleChatMessage) ChatMessage {
 		// SimpleChatMessage: msg,
 		Content:   msg.Content,
 		Role:      msg.Role,
-		Citations: &[]search.SearchData{},
+		Citations: &[]search.SearchDataHydrated{},
 		Context:   &[]SimpleChatMessage{},
 	}
 }

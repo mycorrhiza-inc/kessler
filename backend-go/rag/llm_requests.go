@@ -106,7 +106,7 @@ func LLMComplexRequest(messageRequest MultiplexerChatCompletionRequest) (ChatMes
 	// }
 	dialogue = append(dialogue, msg)
 	contextMessages := []openai.ChatCompletionMessage{msg}
-	returnCitations := []search.SearchData{}
+	returnCitations := []search.SearchDataHydrated{}
 	for _, toolCall := range msg.ToolCalls {
 		// toolCallName := tool_call.Function.Name
 		// tool_call_params := tool_call.Function.Arguments
