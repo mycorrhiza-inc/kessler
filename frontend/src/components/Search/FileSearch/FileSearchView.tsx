@@ -25,7 +25,10 @@ import LoadingSpinnerTimeout from "@/components/styled-components/LoadingSpinner
 
 import { ChatModalClickDiv } from "@/components/Chat/ChatModal";
 import { useKesslerStore } from "@/lib/store";
-import SearchBox, { PageContextMode } from "@/components/Search/SearchBox";
+import SearchBox, {
+  FileSearchBoxProps,
+  PageContextMode,
+} from "@/components/Search/SearchBox";
 
 const TableFilters = ({
   searchQuery,
@@ -77,20 +80,14 @@ const FileSearchView = ({
     return disableListFromInherited(inheritedFilters);
   }, [inheritedFilters]);
 
-  const [searchFilters, setSearchFilters] =
-    useState<QueryFileFilterFields>(initialFilterState);
-  // const [searchResults, setSearchResults] = useState<string[]>([]);
-
   const [page, setPage] = useState(0);
   const [isSearching, setIsSearching] = useState(false);
 
   // query data
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const queryData: QueryDataFile = {
-    filters: searchFilters,
-    query: searchQuery,
-  };
+  const [queryData, setQueryData] = useState<QueryDataFile>({
+    filters: initialFilterState,
+    query: "",
+  });
 
   // query results
   const [filing_ids, setFilingIds] = useState<string[]>([]);
@@ -134,7 +131,7 @@ const FileSearchView = ({
   };
   useEffect(() => {
     getInitialUpdates();
-  }, [searchFilters]);
+  }, [queryData]);
 
   const [isFocused, setIsFocused] = useState(true);
   const toggleFilters = () => {
@@ -142,6 +139,10 @@ const FileSearchView = ({
   };
   const globalStore = useKesslerStore();
   const experimentalFeatures = globalStore.experimentalFeaturesEnabled;
+  const searchInput: FileSearchBoxProps = {
+    page_context: PageContextMode.Files,
+    setSearchQuery: setQueryData,
+  };
 
   return (
     <div className="drawer drawer-end">
@@ -177,7 +178,7 @@ const FileSearchView = ({
           </div>
         </div>
         <div className="w-full h-full">
-          <SearchBox input={{ type: PageContextMode.Files }} />
+          <SearchBox input={} />
           <InfiniteScroll
             dataLength={filings.length}
             next={getMore}
