@@ -106,7 +106,7 @@ export const FilingTable = ({
   DocketColumn?: boolean;
   PinTableHeader?: boolean;
 }) => {
-  const pinClassName = PinTableHeader ? "table-pin-rows" : "";
+  // const pinClassName = PinTableHeader ? "table-pin-rows" : "";
   return (
     <div
       className={
@@ -117,8 +117,8 @@ export const FilingTable = ({
     >
       <table
         className={clsx(
-          "w-full divide-y divide-gray-200  border-collaps table lg:table-fixed md:table-auto sm:table-auto",
-          pinClassName,
+          "w-full divide-y divide-gray-200  border-collaps table lg:table-fixed md:table-auto sm:table-auto z-1",
+          // pinClassName,
         )}
       >
         <colgroup>
