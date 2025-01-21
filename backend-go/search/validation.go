@@ -64,7 +64,7 @@ func ValidateHydratedAgainstFilters(results []SearchDataHydrated, filters networ
 func ValidateSearchRequest(searchRequest SearchRequest, searchResults quickwitSearchResponse) quickwitSearchResponse {
 	global_filters := searchRequest.SearchFilters
 	filters := global_filters.MetadataFilters
-	metadata_filters := filters.Metadata
+	metadata_filters := filters.SearchMetadata
 	var validatedResponse quickwitSearchResponse
 
 	for i, hit := range searchResults.Hits {

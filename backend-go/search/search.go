@@ -105,7 +105,7 @@ func SearchQuickwit(r SearchRequest) ([]SearchDataHydrated, error) {
 		// queryString = fmt.Sprintf("((text:(%s) OR name:(%s)) AND verified:true AND %s)", query, query, dateQuery)
 	}
 
-	filtersString := constructQuickwitMetadataQueryString(metadataFilters.Metadata)
+	filtersString := constructQuickwitMetadataQueryString(metadataFilters.SearchMetadata)
 	uuidFilterString := constructQuickwitUUIDMetadataQueryString(uuidFilters)
 
 	log.Printf(
@@ -114,7 +114,8 @@ func SearchQuickwit(r SearchRequest) ([]SearchDataHydrated, error) {
 		filtersString,
 		uuidFilterString,
 	)
-	queryString = queryString + filtersString + uuidFilterString
+	queryString = queryString + filtersString
+	// queryString = queryString + filtersString + uuidFilterString
 	log.Printf("full query string: %s\n", queryString)
 
 	// construct sortby string
@@ -159,9 +160,11 @@ func SearchQuickwit(r SearchRequest) ([]SearchDataHydrated, error) {
 		"application/json",
 		bytes.NewBuffer(jsonData),
 	)
+	curlCmd := fmt.Sprintf("curl -X POST -H 'Content-Type: application/json' -d '%s' %s", string(jsonData), request_url)
 	if err != nil {
-		log.Printf("Error sending request to quickwit: %s", err)
-		errturn(err)
+		log.Printf("Error sending request to quickwit: %s\n", err)
+		log.Printf("Replay with: %s\n", curlCmd)
+		return []SearchDataHydrated{}, err
 	}
 
 	defer resp.Body.Close()
@@ -169,10 +172,8 @@ func SearchQuickwit(r SearchRequest) ([]SearchDataHydrated, error) {
 	// ===== handle response =====
 	if resp.StatusCode != http.StatusOK {
 		log.Printf("Error: received status code %v", resp.StatusCode)
-		if resp.StatusCode != http.StatusOK {
-			log.Printf("Error: received status code %v", resp.StatusCode)
-			return []SearchDataHydrated{}, fmt.Errorf("received status code %v", resp.StatusCode)
-		}
+		log.Printf("Replay with: %s\n", curlCmd)
+		return []SearchDataHydrated{}, fmt.Errorf("received status code %v", resp.StatusCode)
 	}
 	var searchResponse quickwitSearchResponse
 	err = json.NewDecoder(resp.Body).Decode(&searchResponse)
@@ -224,9 +225,15 @@ func ExtractSearchData(data quickwitSearchResponse) ([]SearchDataHydrated, error
 			ID:          convo_id,
 		}
 		file_schema := files.CompleteFileSchema{
+			Name: hit.Name,
+
 			ID:           file_id,
 			Authors:      author_infos,
 			Conversation: convo_info,
+			Mdata: files.FileMetadataSchema{
+				"docket_id":  hit.Metadata.DocketID,
+				"date_filed": hit.Metadata.Date,
+			},
 		}
 		sdata := SearchDataHydrated{
 			Name:     hit.Name,
@@ -312,7 +319,7 @@ var QuickwitFilterMapping = map[string]string{
 	"DateFrom": "date_filed",
 }
 
-func constructQuickwitMetadataQueryString(meta networking.Metadata) string {
+func constructQuickwitMetadataQueryString(meta networking.SearchMetadata) string {
 	values := reflect.ValueOf(meta)
 	types := reflect.TypeOf(meta)
 	return constructGenericFilterQuery(values, types)
