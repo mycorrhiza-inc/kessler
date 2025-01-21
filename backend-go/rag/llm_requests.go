@@ -29,7 +29,7 @@ type FunctionCall struct {
 }
 type ToolCallResults struct {
 	Response  string
-	Citations *[]search.SearchData
+	Citations *[]search.SearchDataHydrated
 }
 
 type MultiplexerChatCompletionRequest struct {

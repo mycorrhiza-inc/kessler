@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"kessler/objects/networking"
-	"kessler/routing"
 	"log"
 	"net/http"
 	"strings"
@@ -61,20 +60,20 @@ func HandleSearchRequest(w http.ResponseWriter, r *http.Request) {
 		RequestData.MaxHits = int(pagination.Limit)
 		RequestData.StartOffset = int(pagination.Offset)
 
-		data, err := SearchQuickwit(RequestData)
+		hydrated_data, err := SearchQuickwit(RequestData)
 		if err != nil {
 			log.Printf("Error searching quickwit: %s", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		q := *routing.DBQueriesFromRequest(r)
-		ctx := r.Context()
-		hydrated_data, err := HydrateSearchResults(data, ctx, q)
-		if err != nil {
-			errorstring := fmt.Sprintf("Error hydrating search results: %v\n", err)
-			log.Println(errorstring)
-			http.Error(w, errorstring, http.StatusInternalServerError)
-			return
-		}
+		// q := *routing.DBQueriesFromRequest(r)
+		// ctx := r.Context()
+		// hydrated_data, err := HydrateSearchResults(data, ctx, q)
+		// if err != nil {
+		// 	errorstring := fmt.Sprintf("Error hydrating search results: %v\n", err)
+		// 	log.Println(errorstring)
+		// 	http.Error(w, errorstring, http.StatusInternalServerError)
+		// 	return
+		// }
 		// TODO : Reneable validation once other stuff is certainly working.
 		_, err = ValidateHydratedAgainstFilters(hydrated_data, RequestData.SearchFilters)
 		if err != nil {
@@ -110,20 +109,20 @@ func HandleRecentUpdatesRequest(w http.ResponseWriter, r *http.Request) {
 		maxHits := int(pagination.Limit)
 		offset := int(pagination.Offset)
 
-		data, err := GetRecentCaseData(maxHits, offset)
+		hydrated_data, err := GetRecentCaseData(maxHits, offset)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		q := *routing.DBQueriesFromRequest(r)
-		ctx := r.Context()
-		hydrated_data, err := HydrateSearchResults(data, ctx, q)
-		if err != nil {
-			errorstring := fmt.Sprintf("Error hydrating search results: %v\n", err)
-			log.Println(errorstring)
-			http.Error(w, errorstring, http.StatusInternalServerError)
-			return
-		}
+		// q := *routing.DBQueriesFromRequest(r)
+		// ctx := r.Context()
+		// hydrated_data, err := HydrateSearchResults(data, ctx, q)
+		// if err != nil {
+		// 	errorstring := fmt.Sprintf("Error hydrating search results: %v\n", err)
+		// 	log.Println(errorstring)
+		// 	http.Error(w, errorstring, http.StatusInternalServerError)
+		// 	return
+		// }
 		respString, err := json.Marshal(hydrated_data)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

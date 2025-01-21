@@ -367,7 +367,7 @@ func SearchMilvus(request SearchRequest) ([]SearchData, error) {
 	return []SearchData{}, fmt.Errorf("not implemented")
 }
 
-func FormatSearchResults(searchResults []SearchData, query string) string {
+func FormatSearchResults(searchResults []SearchDataHydrated, query string) string {
 	searchResultsString := fmt.Sprintf("Query: %s\n", query)
 	for _, result := range searchResults {
 		searchResultsString += fmt.Sprintf("Name: %s\n", result.Name)
