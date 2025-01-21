@@ -2,7 +2,7 @@ import { useState } from "react";
 
 import MarkdownRenderer from "../MarkdownRenderer";
 
-import { QueryFilterFields } from "@/lib/filters";
+import { QueryFileFilterFields } from "@/lib/filters";
 import { getUpdatedChatHistory, Message } from "@/lib/chat";
 import clsx from "clsx";
 import { getRuntimeEnv } from "@/lib/env_variables_hydration_script";
@@ -105,7 +105,7 @@ export const ChatBoxInternals = ({
   ragFilters,
 }: {
   setCitations: React.Dispatch<React.SetStateAction<any[]>>;
-  ragFilters: QueryFilterFields;
+  ragFilters: QueryFileFilterFields;
 }) => {
   const [chatState, setChatState] =
     useState<ChatBoxInternalsState>(initialChatState);
@@ -126,7 +126,7 @@ export const ChatBoxInternalsStateless = ({
   setChatState,
 }: {
   setCitations: React.Dispatch<React.SetStateAction<any[]>>;
-  ragFilters: QueryFilterFields;
+  ragFilters: QueryFileFilterFields;
   chatState: ChatBoxInternalsState;
   setChatState: React.Dispatch<React.SetStateAction<ChatBoxInternalsState>>;
 }) => {

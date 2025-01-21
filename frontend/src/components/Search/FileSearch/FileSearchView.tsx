@@ -8,7 +8,7 @@ import React, {
 } from "react";
 import { BasicDocumentFiltersList } from "@/components/Filters/DocumentFilters";
 import {
-  QueryFilterFields,
+  QueryFileFilterFields,
   CaseFilterFields,
   InheritedFilterValues,
   FilterField,
@@ -25,7 +25,7 @@ import LoadingSpinnerTimeout from "@/components/styled-components/LoadingSpinner
 
 import { ChatModalClickDiv } from "@/components/Chat/ChatModal";
 import { useKesslerStore } from "@/lib/store";
-import SearchBox from "@/components/Search/SearchBox";
+import SearchBox, { PageContextMode } from "@/components/Search/SearchBox";
 
 const TableFilters = ({
   searchQuery,
@@ -37,8 +37,8 @@ const TableFilters = ({
 }: {
   searchQuery: string;
   setSearchQuery: Dispatch<SetStateAction<string>>;
-  searchFilters: QueryFilterFields;
-  setSearchFilters: Dispatch<SetStateAction<QueryFilterFields>>;
+  searchFilters: QueryFileFilterFields;
+  setSearchFilters: Dispatch<SetStateAction<QueryFileFilterFields>>;
   disabledFilters: FilterField[];
   toggleFilters: () => void;
 }) => {
@@ -78,7 +78,7 @@ const FileSearchView = ({
   }, [inheritedFilters]);
 
   const [searchFilters, setSearchFilters] =
-    useState<QueryFilterFields>(initialFilterState);
+    useState<QueryFileFilterFields>(initialFilterState);
   // const [searchResults, setSearchResults] = useState<string[]>([]);
 
   const [page, setPage] = useState(0);
@@ -177,7 +177,7 @@ const FileSearchView = ({
           </div>
         </div>
         <div className="w-full h-full">
-          <SearchBox />
+          <SearchBox input={{ type: PageContextMode.Files }} />
           <InfiniteScroll
             dataLength={filings.length}
             next={getMore}

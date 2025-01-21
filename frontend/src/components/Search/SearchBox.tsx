@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { AngleDownIcon, AngleUpIcon } from "../Icons";
 import { AuthorInfoPill, subdividedHueFromSeed } from "../Tables/TextPills";
-import { FileQueryFilterFields, QueryDataFile } from "@/lib/filters";
+import { QueryFileFilterFields, QueryDataFile } from "@/lib/filters";
 import { Query } from "pg";
 
 // Mock API call
@@ -156,23 +156,23 @@ const suggestionToFilter = (suggestion: Suggestion): Filter => {
   return { ...suggestion, exclude: false, excludable: true };
 };
 
-enum PageContextMode {
+export enum PageContextMode {
   Files,
   Organizations,
   Dockets,
 }
-interface FileSearchBoxProps {
+export interface FileSearchBoxProps {
   page_context: PageContextMode.Files;
   set_search_query: React.Dispatch<React.SetStateAction<QueryDataFile>>;
 }
-interface OrgSearchBoxProps {
+export interface OrgSearchBoxProps {
   page_context: PageContextMode.Organizations;
 }
-interface DocketSearchBoxProps {
+export interface DocketSearchBoxProps {
   page_context: PageContextMode.Dockets;
 }
 
-type SearchBoxInputProps =
+export type SearchBoxInputProps =
   | FileSearchBoxProps
   | OrgSearchBoxProps
   | DocketSearchBoxProps;
@@ -255,6 +255,9 @@ const SearchBox = ({ input }: { input: SearchBoxInputProps }) => {
       document.removeEventListener("touchstart", handleClickOutside, true);
     };
   }, [suggestions.length]); // Add suggestions.length as dependency
+  useEffect(() => {
+    setSearchFilters(input, selectedFilters);
+  }, [selectedFilters]);
 
   const wrapReturnedSuggestions = (
     suggestions: Suggestion[],
