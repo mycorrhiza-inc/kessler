@@ -75,7 +75,6 @@ const Navbar = ({ breadcrumbs }: { breadcrumbs: BreadcrumbValues }) => {
       <div className="flex-1 font-semibold">
         <HeaderMenus />
         <span />
-        <HeaderBreadcrumbs breadcrumbs={breadcrumbs} />
       </div>
       <div className="flex-none">
         <HeaderAuth />

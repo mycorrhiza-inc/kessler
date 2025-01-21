@@ -19,7 +19,8 @@ export const HeaderBreadcrumbs = ({
 }) => {
   const statename = getStateDisplayName(breadcrumbs.state || "");
   const new_breadcrumbs = [
-    { value: "", title: "Kessler - " + statename },
+    { value: "", title: "" },
+    { value: "/", title: statename },
     ...breadcrumbs.breadcrumbs,
   ];
   var breadcrumb_values = new_breadcrumbs.map((b, index) => {

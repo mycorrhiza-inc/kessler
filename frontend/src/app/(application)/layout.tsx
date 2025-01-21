@@ -1,5 +1,6 @@
 // import "@/app/globals.css";
 import AuthGuard from "@/components/AuthGuard";
+import Layout from "@/components/Layout/layout";
 import { runtimeConfig } from "@/lib/env_variables";
 
 import { createClient } from "@/utils/supabase/server";
@@ -35,5 +36,9 @@ export default async function ApplicationLayout({
   };
 
   const isLoggedIn = await checkLoggedIn();
-  return <AuthGuard isLoggedIn={isLoggedIn}>{children}</AuthGuard>;
+  return <AuthGuard isLoggedIn={isLoggedIn}>
+    <Layout>
+      {children}
+    </Layout>
+  </AuthGuard>;
 }
