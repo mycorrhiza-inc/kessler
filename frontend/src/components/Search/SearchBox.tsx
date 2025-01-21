@@ -154,7 +154,25 @@ const suggestionToFilter = (suggestion: Suggestion): Filter => {
   return { ...suggestion, exclude: false, excludable: true };
 };
 
-const SearchBox = () => {
+enum PageContextMode {
+  Files,
+  Organizations,
+  Dockets,
+}
+interface FileSearchBoxProps {
+  set_search_filters;
+}
+interface OrgSearchBoxProps {}
+interface DocketSearchBoxProps {}
+
+type SearchBoxInputProps =
+  | FileSearchBoxProps
+  | OrgSearchBoxProps
+  | DocketSearchBoxProps;
+
+const setSearchFilters = (props: SearchBoxInputProps, filters: Filter[]) => {};
+
+const SearchBox = ({ input }: { input: SearchBoxInputProps }) => {
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [selectedFilters, setSelectedFilters] = useState<Filter[]>([]);
