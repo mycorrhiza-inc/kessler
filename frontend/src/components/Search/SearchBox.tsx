@@ -214,16 +214,19 @@ const generateFileFiltersFromFilterList = (
   previous_file_filters: QueryDataFile,
   filterTypeDict: { [key: string]: Filter[] },
 ) => {
+  const new_file_filters = { ...previous_file_filters };
+
   if (filterTypeDict.text) {
     if (filterTypeDict.text.length > 1) {
       console.log("This paramater shouldnt be more then length 1, ignoring ");
     }
     const first_filter_text = filterTypeDict.text[0].label;
-    previous_file_filters.query = first_filter_text;
+    new_file_filters.query = first_filter_text;
+    console.log("Filters are being updated with text");
   } else {
-    previous_file_filters.query = "";
+    new_file_filters.query = "";
   }
-  return previous_file_filters;
+  return new_file_filters;
 };
 const SearchBox = ({ input }: { input: SearchBoxInputProps }) => {
   const [query, setQuery] = useState("");

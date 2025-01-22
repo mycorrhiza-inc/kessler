@@ -137,7 +137,7 @@ const FileSearchView = ({
   const experimentalFeatures = globalStore.experimentalFeaturesEnabled;
   useEffect(() => {
     getInitialUpdates();
-  }, [queryData.filters, queryData.query]);
+  }, [queryData.filters, queryData.query, queryData]);
 
   return (
     <>
