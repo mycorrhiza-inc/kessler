@@ -162,8 +162,8 @@ export enum PageContextMode {
   Dockets,
 }
 export interface FileSearchBoxProps {
-  page_context: PageContextMode.Files;
-  set_search_query: React.Dispatch<React.SetStateAction<QueryDataFile>>;
+  pageContext: PageContextMode.Files;
+  setSearchData: React.Dispatch<React.SetStateAction<QueryDataFile>>;
 }
 export interface OrgSearchBoxProps {
   page_context: PageContextMode.Organizations;
