@@ -189,7 +189,7 @@ const setSearchFilters = (props: SearchBoxInputProps, filters: Filter[]) => {
     {},
   );
 
-  if ("pageContext" in props) {
+  if (props && "pageContext" in props) {
     if (props.pageContext === PageContextMode.Files) {
       const fileProps = props as FileSearchBoxProps;
       fileProps.setSearchData((previous_file_filters) => {
@@ -233,6 +233,7 @@ const SearchBox = ({ input }: { input: SearchBoxInputProps }) => {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [selectedFilters, setSelectedFilters] = useState<Filter[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
   // Handle clicks outside of the search container
@@ -287,9 +288,33 @@ const SearchBox = ({ input }: { input: SearchBoxInputProps }) => {
         newQuery,
       );
       setSuggestions(results);
+      setHighlightedIndex(0); // Reset highlight to first option
       setIsLoading(false);
     } else {
       setSuggestions([]);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!suggestions.length) return;
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        setHighlightedIndex((prev) =>
+          prev < suggestions.length - 1 ? prev + 1 : prev,
+        );
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : prev));
+        break;
+      case "Enter":
+        e.preventDefault();
+        if (suggestions[highlightedIndex]) {
+          handleSuggestionClick(suggestions[highlightedIndex]);
+        }
+        break;
     }
   };
 
@@ -327,6 +352,7 @@ const SearchBox = ({ input }: { input: SearchBoxInputProps }) => {
               type="text"
               value={query}
               onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
               placeholder="Search anything..."
               className="w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none bg-base-100"
             />
@@ -343,13 +369,18 @@ const SearchBox = ({ input }: { input: SearchBoxInputProps }) => {
           {suggestions.length > 0 && (
             <div className="absolute left-0 right-0 top-full mt-1 z-50 h-auto bg-base-100 border rounded-lg shadow-lg">
               <ul className=" max-h-60 overflow-auto">
-                {suggestions.map((suggestion) => (
+                {suggestions.map((suggestion, index) => (
                   <li key={suggestion.id}>
                     <button
                       onClick={() => handleSuggestionClick(suggestion)}
-                      className="w-full px-4 py-3 text-left hover:secondary-content  focus:bg-gray-50 focus:outline-none transition-colors"
+                      onMouseEnter={() => setHighlightedIndex(index)}
+                      className={`w-full px-4 py-3 text-left transition-colors ${
+                        index === highlightedIndex
+                          ? "bg-primary/10 text-primary"
+                          : "hover:secondary-content"
+                      }`}
                     >
-                      <span className="text-base-500 text-sm font-medium">
+                      <span className={`text-sm font-medium text-primary`}>
                         {suggestion.type}:
                       </span>{" "}
                       <span className="text-base-content">
