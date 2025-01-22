@@ -189,38 +189,25 @@ const setSearchFilters = (props: SearchBoxInputProps, filters: Filter[]) => {
     {},
   );
 
-  const setSearchFilters = (props: SearchBoxInputProps, filters: Filter[]) => {
-    const filterTypeDict = filters.reduce(
-      (acc: { [key: string]: Filter[] }, filter: Filter) => {
-        if (!acc[filter.type]) {
-          acc[filter.type] = [];
-        }
-        acc[filter.type].push(filter);
-        return acc;
-      },
-      {},
-    );
-
-    if ("pageContext" in props) {
-      if (props.pageContext === PageContextMode.Files) {
-        const fileProps = props as FileSearchBoxProps;
-        fileProps.setSearchData((previous_file_filters) => {
-          const new_filters = generateFileFiltersFromFilterList(
-            previous_file_filters,
-            filterTypeDict,
-          );
-          return new_filters;
-        });
-        return;
-      }
-      if (props.pageContext === PageContextMode.Organizations) {
-        return;
-      }
-      if (props.pageContext === PageContextMode.Dockets) {
-        return;
-      }
+  if ("pageContext" in props) {
+    if (props.pageContext === PageContextMode.Files) {
+      const fileProps = props as FileSearchBoxProps;
+      fileProps.setSearchData((previous_file_filters) => {
+        const new_filters = generateFileFiltersFromFilterList(
+          previous_file_filters,
+          filterTypeDict,
+        );
+        return new_filters;
+      });
+      return;
     }
-  };
+    if (props.pageContext === PageContextMode.Organizations) {
+      return;
+    }
+    if (props.pageContext === PageContextMode.Dockets) {
+      return;
+    }
+  }
 };
 
 const generateFileFiltersFromFilterList = (
@@ -233,6 +220,8 @@ const generateFileFiltersFromFilterList = (
     }
     const first_filter_text = filterTypeDict.text[0].label;
     previous_file_filters.query = first_filter_text;
+  } else {
+    previous_file_filters.query = "";
   }
   return previous_file_filters;
 };
