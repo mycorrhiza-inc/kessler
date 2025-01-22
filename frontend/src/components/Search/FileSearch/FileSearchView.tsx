@@ -8,7 +8,7 @@ import React, {
 } from "react";
 import { BasicDocumentFiltersList } from "@/components/Filters/DocumentFilters";
 import {
-  QueryFilterFields,
+  QueryFileFilterFields,
   CaseFilterFields,
   InheritedFilterValues,
   FilterField,
@@ -25,7 +25,10 @@ import LoadingSpinnerTimeout from "@/components/styled-components/LoadingSpinner
 
 import { ChatModalClickDiv } from "@/components/Chat/ChatModal";
 import { useKesslerStore } from "@/lib/store";
-import SearchBox from "@/components/Search/SearchBox";
+import SearchBox, {
+  FileSearchBoxProps,
+  PageContextMode,
+} from "@/components/Search/SearchBox";
 
 const TableFilters = ({
   searchQuery,
@@ -37,8 +40,8 @@ const TableFilters = ({
 }: {
   searchQuery: string;
   setSearchQuery: Dispatch<SetStateAction<string>>;
-  searchFilters: QueryFilterFields;
-  setSearchFilters: Dispatch<SetStateAction<QueryFilterFields>>;
+  searchFilters: QueryFileFilterFields;
+  setSearchFilters: Dispatch<SetStateAction<QueryFileFilterFields>>;
   disabledFilters: FilterField[];
   toggleFilters: () => void;
 }) => {
@@ -77,23 +80,16 @@ const FileSearchView = ({
     return disableListFromInherited(inheritedFilters);
   }, [inheritedFilters]);
 
-  const [searchFilters, setSearchFilters] =
-    useState<QueryFilterFields>(initialFilterState);
-  // const [searchResults, setSearchResults] = useState<string[]>([]);
-
   const [page, setPage] = useState(0);
   const [isSearching, setIsSearching] = useState(false);
 
   // query data
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const queryData: QueryDataFile = {
-    filters: searchFilters,
-    query: searchQuery,
-  };
+  const [queryData, setQueryData] = useState<QueryDataFile>({
+    filters: initialFilterState,
+    query: "",
+  });
 
   // query results
-  const [filing_ids, setFilingIds] = useState<string[]>([]);
   const [filings, setFilings] = useState<Filing[]>([]);
   const pageSize = 40;
 
@@ -132,9 +128,6 @@ const FileSearchView = ({
       setIsSearching(false);
     }
   };
-  useEffect(() => {
-    getInitialUpdates();
-  }, [searchFilters]);
 
   const [isFocused, setIsFocused] = useState(true);
   const toggleFilters = () => {
@@ -142,80 +135,65 @@ const FileSearchView = ({
   };
   const globalStore = useKesslerStore();
   const experimentalFeatures = globalStore.experimentalFeaturesEnabled;
+  useEffect(() => {
+    getInitialUpdates();
+  }, [queryData.filters, queryData.query, queryData]);
 
   return (
-    <div className="drawer drawer-end">
-      <input id="my-drawer" type="checkbox" className="drawer-toggle" />
-      <div className="drawer-content">
-        <div id="conversation-header" className="mb-4 flex justify-between">
-          {experimentalFeatures ? (
-            <ChatModalClickDiv
-              className="btn btn-accent"
-              inheritedFilters={inheritedFiltersFromValues(searchFilters)}
-            >
-              Chat with Document List
-            </ChatModalClickDiv>
-          ) : (
-            <div></div>
-          )}
-          <div>
-            <label
-              htmlFor="my-drawer"
-              className="btn btn-primary drawer-button"
-            >
-              Filters
-            </label>
-            <button
-              onClick={toggleFilters}
-              className="btn btn-outline"
-              style={{
-                display: !isFocused ? "inline-block" : "none",
-              }}
-            >
-              Filters
-            </button>
-          </div>
-        </div>
-        <div className="w-full h-full">
-          <SearchBox />
-          <InfiniteScroll
-            dataLength={filings.length}
-            next={getMore}
-            hasMore={true}
-            loader={
-              <div onClick={getMore}>
-                <LoadingSpinnerTimeout
-                  loadingText="Loading Files"
-                  timeoutSeconds={10}
-                  replacement={
-                    filings.length == 0 ? <p>No Documents Found</p> : <></>
-                  }
-                />
-              </div>
-            }
+    <>
+      <div id="conversation-header" className="mb-4 flex justify-between">
+        {experimentalFeatures ? (
+          <ChatModalClickDiv
+            className="btn btn-accent"
+            inheritedFilters={inheritedFiltersFromValues(queryData.filters)}
           >
-            <FilingTable filings={filings} DocketColumn />
-          </InfiniteScroll>
+            Chat with Document List
+          </ChatModalClickDiv>
+        ) : (
+          <div></div>
+        )}
+        <div>
+          <label htmlFor="my-drawer" className="btn btn-primary drawer-button">
+            Filters
+          </label>
+          <button
+            onClick={toggleFilters}
+            className="btn btn-outline"
+            style={{
+              display: !isFocused ? "inline-block" : "none",
+            }}
+          >
+            Filters
+          </button>
         </div>
       </div>
-      <div className="drawer-side">
-        <label
-          htmlFor="my-drawer"
-          aria-label="close sidebar"
-          className="drawer-overlay"
-        ></label>
-        <ul className="menu bg-base-200 text-base-content min-h-full w-90 p-4 w-1/5">
-          <TableFilters
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            searchFilters={searchFilters}
-            setSearchFilters={setSearchFilters}
-            disabledFilters={disabledFilters}
-            toggleFilters={toggleFilters}
-          />
-        </ul>
+      <div className="w-full h-full">
+        <SearchBox
+          input={{
+            pageContext: PageContextMode.Files,
+            setSearchData: setQueryData,
+          }}
+        />
+        <InfiniteScroll
+          dataLength={filings.length}
+          next={getMore}
+          hasMore={true}
+          loader={
+            <div onClick={getMore}>
+              <LoadingSpinnerTimeout
+                loadingText="Loading Files"
+                timeoutSeconds={10}
+                replacement={
+                  filings.length == 0 ? <p>No Documents Found</p> : <></>
+                }
+              />
+            </div>
+          }
+        >
+          <FilingTable filings={filings} DocketColumn />
+        </InfiniteScroll>
       </div>
-    </div>
+    </>
   );
 };
 

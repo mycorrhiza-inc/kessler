@@ -1,6 +1,6 @@
 import React from "react";
 import { Dispatch, SetStateAction, useMemo } from "react";
-import { FilterField, QueryFilterFields } from "@/lib/filters";
+import { FilterField, QueryFileFilterFields } from "@/lib/filters";
 import clsx from "clsx";
 import {
   InputType,
@@ -15,8 +15,8 @@ export function BasicDocumentFiltersList({
   showQueries,
   disabledQueries,
 }: {
-  queryOptions: QueryFilterFields;
-  setQueryOptions: Dispatch<SetStateAction<QueryFilterFields>>;
+  queryOptions: QueryFileFilterFields;
+  setQueryOptions: Dispatch<SetStateAction<QueryFileFilterFields>>;
   showQueries: FilterField[];
   disabledQueries?: FilterField[];
 }) {
@@ -36,8 +36,8 @@ export function BasicDocumentFiltersGrid({
   showQueries,
   disabledQueries,
 }: {
-  queryOptions: QueryFilterFields;
-  setQueryOptions: Dispatch<SetStateAction<QueryFilterFields>>;
+  queryOptions: QueryFileFilterFields;
+  setQueryOptions: Dispatch<SetStateAction<QueryFileFilterFields>>;
   showQueries: FilterField[];
   disabledQueries?: FilterField[];
 }) {
@@ -60,8 +60,8 @@ export function BasicDocumentFilters({
   max_w_xs,
 }: {
   className?: string;
-  queryOptions: QueryFilterFields;
-  setQueryOptions: Dispatch<SetStateAction<QueryFilterFields>>;
+  queryOptions: QueryFileFilterFields;
+  setQueryOptions: Dispatch<SetStateAction<QueryFileFilterFields>>;
   showQueries: FilterField[];
   disabledQueries?: FilterField[];
   max_w_xs?: boolean;

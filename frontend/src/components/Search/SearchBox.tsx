@@ -2,6 +2,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { AngleDownIcon, AngleUpIcon } from "../Icons";
 import { AuthorInfoPill, subdividedHueFromSeed } from "../Tables/TextPills";
+import { QueryFileFilterFields, QueryDataFile } from "@/lib/filters";
+import { Query } from "pg";
 
 // Mock API call
 type Suggestion = {
@@ -154,7 +156,79 @@ const suggestionToFilter = (suggestion: Suggestion): Filter => {
   return { ...suggestion, exclude: false, excludable: true };
 };
 
-const SearchBox = () => {
+export enum PageContextMode {
+  Files,
+  Organizations,
+  Dockets,
+}
+export interface FileSearchBoxProps {
+  pageContext: PageContextMode.Files;
+  setSearchData: React.Dispatch<React.SetStateAction<QueryDataFile>>;
+}
+export interface OrgSearchBoxProps {
+  page_context: PageContextMode.Organizations;
+}
+export interface DocketSearchBoxProps {
+  page_context: PageContextMode.Dockets;
+}
+
+export type SearchBoxInputProps =
+  | FileSearchBoxProps
+  | OrgSearchBoxProps
+  | DocketSearchBoxProps;
+
+const setSearchFilters = (props: SearchBoxInputProps, filters: Filter[]) => {
+  const filterTypeDict = filters.reduce(
+    (acc: { [key: string]: Filter[] }, filter: Filter) => {
+      if (!acc[filter.type]) {
+        acc[filter.type] = [];
+      }
+      acc[filter.type].push(filter);
+      return acc;
+    },
+    {},
+  );
+
+  if ("pageContext" in props) {
+    if (props.pageContext === PageContextMode.Files) {
+      const fileProps = props as FileSearchBoxProps;
+      fileProps.setSearchData((previous_file_filters) => {
+        const new_filters = generateFileFiltersFromFilterList(
+          previous_file_filters,
+          filterTypeDict,
+        );
+        return new_filters;
+      });
+      return;
+    }
+    if (props.pageContext === PageContextMode.Organizations) {
+      return;
+    }
+    if (props.pageContext === PageContextMode.Dockets) {
+      return;
+    }
+  }
+};
+
+const generateFileFiltersFromFilterList = (
+  previous_file_filters: QueryDataFile,
+  filterTypeDict: { [key: string]: Filter[] },
+) => {
+  const new_file_filters = { ...previous_file_filters };
+
+  if (filterTypeDict.text) {
+    if (filterTypeDict.text.length > 1) {
+      console.log("This paramater shouldnt be more then length 1, ignoring ");
+    }
+    const first_filter_text = filterTypeDict.text[0].label;
+    new_file_filters.query = first_filter_text;
+    console.log("Filters are being updated with text");
+  } else {
+    new_file_filters.query = "";
+  }
+  return new_file_filters;
+};
+const SearchBox = ({ input }: { input: SearchBoxInputProps }) => {
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [selectedFilters, setSelectedFilters] = useState<Filter[]>([]);
@@ -185,6 +259,9 @@ const SearchBox = () => {
       document.removeEventListener("touchstart", handleClickOutside, true);
     };
   }, [suggestions.length]); // Add suggestions.length as dependency
+  useEffect(() => {
+    setSearchFilters(input, selectedFilters);
+  }, [selectedFilters]);
 
   const wrapReturnedSuggestions = (
     suggestions: Suggestion[],
