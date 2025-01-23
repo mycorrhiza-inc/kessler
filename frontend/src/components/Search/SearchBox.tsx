@@ -27,6 +27,49 @@ const mockFetchSuggestions = async (query: string): Promise<Suggestion[]> => {
 
   const suggestions: Suggestion[] = [
     {
+      id: "00000000-0000-0000-0000-000000000000",
+      type: "file_class",
+      label: "Plans and Proposals",
+      value: "Plans and Proposals",
+    },
+    {
+      id: "00000000-0000-0000-0000-000000000000",
+      type: "file_class",
+      label: "Corrospondence",
+      value: "Corrospondence",
+    },
+    {
+      id: "00000000-0000-0000-0000-000000000000",
+      type: "file_class",
+      label: "Exhibits",
+      value: "Exhibits",
+    },
+    {
+      id: "00000000-0000-0000-0000-000000000000",
+      type: "file_class",
+      label: "Testimony",
+      value: "Testimony",
+    },
+    {
+      id: "00000000-0000-0000-0000-000000000000",
+      type: "file_class",
+      label: "Reports",
+      value: "Reports",
+    },
+    {
+      id: "00000000-0000-0000-0000-000000000000",
+      type: "file_class",
+      label: "Comments",
+      value: "Comments",
+    },
+    {
+      id: "00000000-0000-0000-0000-000000000000",
+      type: "file_class",
+      label: "Attachment",
+      value: "Attachment",
+    },
+
+    {
       id: "0b544651-0226-4e0d-83af-184ef5aad4e5",
       type: "organization",
       label: "New York State Department of Public Service",
@@ -177,6 +220,7 @@ export type SearchBoxInputProps =
   | OrgSearchBoxProps
   | DocketSearchBoxProps;
 
+export type FilterTypeDict = { [key: string]: Filter[] };
 const setSearchFilters = (props: SearchBoxInputProps, filters: Filter[]) => {
   const filterTypeDict = filters.reduce(
     (acc: { [key: string]: Filter[] }, filter: Filter) => {
