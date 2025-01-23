@@ -202,7 +202,7 @@ const suggestionToFilter = (suggestion: Suggestion): Filter => {
 export enum PageContextMode {
   Files,
   Organizations,
-  Dockets,
+  Conversations,
 }
 export interface FileSearchBoxProps {
   pageContext: PageContextMode.Files;
@@ -212,7 +212,7 @@ export interface OrgSearchBoxProps {
   page_context: PageContextMode.Organizations;
 }
 export interface DocketSearchBoxProps {
-  page_context: PageContextMode.Dockets;
+  page_context: PageContextMode.Conversations;
 }
 
 export type SearchBoxInputProps =
