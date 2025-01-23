@@ -5,7 +5,7 @@ const OrgLookupPage = () => {
   return (
     <>
       <h1 className="text-3xl font-bold">Organizations</h1>
-      <div className="overflow-x-hidden border-r pr-4">
+      <div className="pr-4 w-full">
         <SearchBox />
         <OrganizationTableInfiniteScroll />
       </div>

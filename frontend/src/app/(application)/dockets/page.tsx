@@ -1,3 +1,4 @@
+import ConvoLookupPage from "@/components/LookupPages/ConvoLookup/ConvoLookupPage";
 import OrgLookupPage from "@/components/LookupPages/OrgLookup/OrgLookupPage";
 import { stateFromHeaders } from "@/lib/nextjs_misc";
 import { headers } from "next/headers";
@@ -13,5 +14,5 @@ export default async function Page({
     breadcrumbs: [{ value: "dockets", title: "Dockets" }],
   };
   // TODO: zustand set breadcrumbs
-  return <OrgLookupPage />;
+  return <ConvoLookupPage />;
 }
