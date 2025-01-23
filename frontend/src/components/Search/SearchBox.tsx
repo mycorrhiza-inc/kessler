@@ -26,6 +26,49 @@ const mockFetchSuggestions = async (query: string): Promise<Suggestion[]> => {
   await new Promise((resolve) => setTimeout(resolve, 300));
 
   const suggestions: Suggestion[] = [
+    // {
+    //   id: "00000000-0000-0000-0000-000000000000",
+    //   type: "file_class",
+    //   label: "Plans and Proposals",
+    //   value: "Plans and Proposals",
+    // },
+    // {
+    //   id: "00000000-0000-0000-0000-000000000000",
+    //   type: "file_class",
+    //   label: "Corrospondence",
+    //   value: "Corrospondence",
+    // },
+    // {
+    //   id: "00000000-0000-0000-0000-000000000000",
+    //   type: "file_class",
+    //   label: "Exhibits",
+    //   value: "Exhibits",
+    // },
+    // {
+    //   id: "00000000-0000-0000-0000-000000000000",
+    //   type: "file_class",
+    //   label: "Testimony",
+    //   value: "Testimony",
+    // },
+    // {
+    //   id: "00000000-0000-0000-0000-000000000000",
+    //   type: "file_class",
+    //   label: "Reports",
+    //   value: "Reports",
+    // },
+    // {
+    //   id: "00000000-0000-0000-0000-000000000000",
+    //   type: "file_class",
+    //   label: "Comments",
+    //   value: "Comments",
+    // },
+    // {
+    //   id: "00000000-0000-0000-0000-000000000000",
+    //   type: "file_class",
+    //   label: "Attachment",
+    //   value: "Attachment",
+    // },
+
     {
       id: "0b544651-0226-4e0d-83af-184ef5aad4e5",
       type: "organization",
@@ -40,7 +83,7 @@ const mockFetchSuggestions = async (query: string): Promise<Suggestion[]> => {
     },
     {
       id: "24-E-0165",
-      type: "case",
+      type: "docket",
       label: "24-E-0165: Commission Regarding the Grid of the Future",
       value: "bug-123",
     },
@@ -91,7 +134,7 @@ const FiltersPool: React.FC<FiltersPoolProps> = ({
     if (filter.type === "organization") {
       return subdividedHueFromSeed(filter.id);
     }
-    if (filter.type === "case") {
+    if (filter.type === "docket") {
       return subdividedHueFromSeed(filter.label);
     }
     if (filter.type === "text") {
@@ -159,7 +202,7 @@ const suggestionToFilter = (suggestion: Suggestion): Filter => {
 export enum PageContextMode {
   Files,
   Organizations,
-  Dockets,
+  Conversations,
 }
 export interface FileSearchBoxProps {
   pageContext: PageContextMode.Files;
@@ -169,7 +212,7 @@ export interface OrgSearchBoxProps {
   page_context: PageContextMode.Organizations;
 }
 export interface DocketSearchBoxProps {
-  page_context: PageContextMode.Dockets;
+  page_context: PageContextMode.Conversations;
 }
 
 export type SearchBoxInputProps =
@@ -177,6 +220,7 @@ export type SearchBoxInputProps =
   | OrgSearchBoxProps
   | DocketSearchBoxProps;
 
+export type FilterTypeDict = { [key: string]: Filter[] };
 const setSearchFilters = (props: SearchBoxInputProps, filters: Filter[]) => {
   const filterTypeDict = filters.reduce(
     (acc: { [key: string]: Filter[] }, filter: Filter) => {
@@ -226,6 +270,28 @@ const generateFileFiltersFromFilterList = (
   } else {
     new_file_filters.query = "";
   }
+  if (filterTypeDict.docket) {
+    if (filterTypeDict.docket.length > 1) {
+      console.log("This paramater shouldnt be more then length 1, ignoring ");
+    }
+    const docket_id = filterTypeDict.docket[0].id;
+    new_file_filters.filters.match_docket_id = docket_id;
+    console.log("Filters are being updated with text");
+  } else {
+    new_file_filters.filters.match_docket_id = "";
+  }
+  if (filterTypeDict.organization) {
+    if (filterTypeDict.organization.length > 1) {
+      console.log("This paramater shouldnt be more then length 1, ignoring ");
+    }
+    const org_id = filterTypeDict.organization[0].id;
+    const org_name = filterTypeDict.organization[0].label;
+    new_file_filters.filters.match_author = org_name;
+    console.log("Filters are being updated with text");
+  } else {
+    new_file_filters.filters.match_author = "";
+  }
+
   return new_file_filters;
 };
 const SearchBox = ({ input }: { input: SearchBoxInputProps }) => {

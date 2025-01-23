@@ -60,6 +60,7 @@ export const getRuntimeEnv = (): RuntimeEnvConfig => {
     throw new Error(
       "You must call this function in a client component, for a server component just import runtimeConfig from ./env_variables.ts",
     );
+    return runtimeConfig;
   }
   const script = window.document.getElementById(
     envScriptId,
