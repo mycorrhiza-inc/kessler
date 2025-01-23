@@ -25,7 +25,7 @@ export default function OrganizationPage({
   orgInfo: OrganizationInfo;
 }) {
   return (
-    < >
+    <>
       <h1 className=" text-2xl font-bold">Organization: {orgInfo.name}</h1>
       <p>
         {orgInfo.description ||
