@@ -3,25 +3,23 @@ package admin
 import (
 	"context"
 	"fmt"
-	"math/rand"
-	"net/http"
-
 	"kessler/gen/dbstore"
 	"kessler/quickwit"
 	"kessler/util"
+	"math/rand"
+	"net/http"
 
 	"github.com/google/uuid"
 )
 
-func HandleQuickwitIngestFromPostgres(w http.ResponseWriter, r *http.Request) {
+func HandleQuickwitConversationsIngestFromPostgres(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	q := util.DBQueriesFromRequest(r)
-	filter_out_unverified := ctx.Value("verified_search").(bool)
+	// filter_out_unverified := ctx.Value("verified_search").(bool)
+	//
+	// fmt.Printf("Starting Quickwit ingest from Postgres (filter_out_unverified=%v)\n", filter_out_unverified)
 
-	fmt.Printf("Starting Quickwit ingest from Postgres (filter_out_unverified=%v)\n", filter_out_unverified)
-
-	err := QuickwitIngestFromPostgres(q, ctx, filter_out_unverified)
-
+	err := QuickwitIngestConversationsFromPostgres(q, ctx)
 	if err != nil {
 		errorstring := fmt.Sprintf("Error ingesting from postgres: %v", err)
 		fmt.Println(errorstring)
@@ -32,32 +30,14 @@ func HandleQuickwitIngestFromPostgres(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Sucessfully ingested from postgres"))
 }
 
-func QuickwitIngestFromPostgres(q *dbstore.Queries, ctx context.Context, filter_out_unverified bool) error {
+func QuickwitIngestConversationsFromPostgres(q *dbstore.Queries, ctx context.Context) error {
 	indexName := quickwit.NYPUCIndexName
 	var files []dbstore.File
 	var err error
 
-	if filter_out_unverified {
-		files, err = q.FilesList(ctx)
-		if err != nil {
-			return err
-		}
-		fmt.Printf("Got raw n files from postgres: %d\n", len(files))
-
-		// Filter out unverified files
-		verifiedFiles := make([]dbstore.File, 0)
-		for _, file := range files {
-			if file.Verified.Bool {
-				verifiedFiles = append(verifiedFiles, file)
-			}
-		}
-		files = verifiedFiles
-
-	} else {
-		files, err = q.FilesList(ctx)
-		if err != nil {
-			return err
-		}
+	files, err = q.FilesList(ctx)
+	if err != nil {
+		return err
 	}
 	ids := make([]uuid.UUID, len(files))
 	for i, file := range files {
