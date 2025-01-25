@@ -49,7 +49,11 @@ func CheckDocumentMetadata(args DocumentMetadataCheck, q dbstore.Queries, ctx co
 	}
 
 	// Check all results for matching metadata
-	var matchingFiles []dbstore.FileCheckForDuplicatesRow
+	type matchedFile struct {
+		row      dbstore.FileCheckForDuplicatesRow
+		metadata map[string]interface{}
+	}
+	var matchingFiles []matchedFile
 	for _, result := range results {
 		var metadata map[string]interface{}
 		err = json.Unmarshal(result.Mdata, &metadata)
@@ -61,7 +65,7 @@ func CheckDocumentMetadata(args DocumentMetadataCheck, q dbstore.Queries, ctx co
 		// Check if date and author match
 		if date, ok := metadata["date"].(string); ok && date == args.DateString {
 			if author, ok := metadata["author"].(string); ok && author == args.AuthorString {
-				matchingFiles = append(matchingFiles, result)
+				matchingFiles = append(matchingFiles, matchedFile{result, metadata})
 			}
 		}
 	}
@@ -72,40 +76,32 @@ func CheckDocumentMetadata(args DocumentMetadataCheck, q dbstore.Queries, ctx co
 	}
 
 	// Use the first matching file
-	file_row := matchingFiles[0]
+	matched := matchingFiles[0]
 	if len(matchingFiles) > 1 {
 		log.Printf("Warning: multiple files match all criteria (name, extension, docket, date, author): %v", matchingFiles)
 	}
 
-	// Unmarshal metadata for the selected file
-	// (bad for perf since your doing it twice, but I also dont care)
-	var mdata_obj map[string]interface{}
 	nilSchema := files.CompleteFileSchema{}
-	err = json.Unmarshal(file_row.Mdata, &mdata_obj)
-	if err != nil {
-		return nilSchema, fmt.Errorf("error unmarshalling file metadata: %w", err)
-	}
-
 	var extra_obj files.FileGeneratedExtras
-	err = json.Unmarshal(file_row.ExtraObj, &extra_obj)
+	err = json.Unmarshal(matched.row.ExtraObj, &extra_obj)
 	if err != nil {
 		return nilSchema, fmt.Errorf("error unmarshalling file extras: %w", err)
 	}
 
 	// Create a minimal ConversationInformation since we only have the UUID
 	conv_info := conversations.ConversationInformation{
-		ID:          file_row.ConversationUuid.Bytes,
-		DocketGovID: file_row.DocketGovID.String,
+		ID:          matched.row.ConversationUuid.Bytes,
+		DocketGovID: matched.row.DocketGovID.String,
 	}
 
 	file := files.CompleteFileSchema{
-		ID:           file_row.ID,
-		Verified:     file_row.Verified.Bool,
-		Extension:    file_row.Extension,
-		Lang:         file_row.Lang,
-		Name:         file_row.Name,
-		Hash:         file_row.Hash,
-		Mdata:        mdata_obj,
+		ID:           matched.row.ID,
+		Verified:     matched.row.Verified.Bool,
+		Extension:    matched.row.Extension,
+		Lang:         matched.row.Lang,
+		Name:         matched.row.Name,
+		Hash:         matched.row.Hash,
+		Mdata:        matched.metadata,
 		Extra:        extra_obj,
 		Conversation: conv_info,
 		// Note: Authors field is left empty as FileCheckForDuplicatesRow doesn't contain author information
