@@ -8,7 +8,11 @@ import (
 	"kessler/objects/authors"
 	"kessler/objects/conversations"
 	"kessler/objects/files"
+	"kessler/util"
 	"log"
+	"net/http"
+
+	"github.com/google/uuid"
 )
 
 type DocumentMetadataCheck struct {
@@ -34,6 +38,38 @@ type DocumentMetadataCheck struct {
 //		ConversationUuid pgtype.UUID
 //		DocketGovID      pgtype.Text
 //	}
+func HandleCheckDocumentMetadata(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var args DocumentMetadataCheck
+	if err := json.NewDecoder(r.Body).Decode(&args); err != nil {
+		http.Error(w, fmt.Sprintf("Invalid request body: %v", err), http.StatusBadRequest)
+		return
+	}
+
+	ctx := r.Context()
+	q := *util.DBQueriesFromRequest(r)
+	file, err := CheckDocumentMetadata(args, q, ctx)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error checking document metadata: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	if file.ID == uuid.Nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(file); err != nil {
+		http.Error(w, fmt.Sprintf("Error encoding response: %v", err), http.StatusInternalServerError)
+		return
+	}
+}
+
 func CheckDocumentMetadata(args DocumentMetadataCheck, q dbstore.Queries, ctx context.Context) (files.CompleteFileSchema, error) {
 	params := dbstore.FileCheckForDuplicatesParams{
 		Name:        args.Name,
