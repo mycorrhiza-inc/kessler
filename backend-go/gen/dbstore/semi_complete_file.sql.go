@@ -144,7 +144,7 @@ SELECT
     public.file.date_published,
     public.file_metadata.mdata,
     public.file_extras.extra_obj,
-    public.docket_documents.conversation_uuid ,
+    public.docket_documents.conversation_uuid,
     public.relation_documents_organizations_authorship.is_primary_author,
     public.organization.id AS organization_id,
     public.organization.name AS organization_name,

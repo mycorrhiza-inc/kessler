@@ -39,6 +39,10 @@ func DefineAdminRoutes(admin_subrouter *mux.Router) {
 		"/generate-email-info/{org_uuid}",
 		ExtractRelaventEmailsFromOrgUUIDHandler,
 	).Methods(http.MethodGet)
+	admin_subrouter.HandleFunc(
+		"/file_metadata_match",
+		HandleCheckDocumentMetadata,
+	).Methods(http.MethodPost)
 
 	verified := admin_subrouter.Methods(http.MethodPost).Subrouter()
 	verified.HandleFunc(
