@@ -47,11 +47,38 @@ func CheckDocumentMetadata(args DocumentMetadataCheck, q dbstore.Queries, ctx co
 	if len(results) == 0 {
 		return files.CompleteFileSchema{}, nil
 	}
-	if len(results) > 1 {
-		log.Printf("Warning, more than one file with the same name and extension and DocketGovID: %v", results)
-	}
-	file_row := results[0]
 
+	// Check all results for matching metadata
+	var matchingFiles []dbstore.FileCheckForDuplicatesRow
+	for _, result := range results {
+		var metadata map[string]interface{}
+		err = json.Unmarshal(result.Mdata, &metadata)
+		if err != nil {
+			log.Printf("Warning: failed to unmarshal metadata for file %v: %v", result.ID, err)
+			continue
+		}
+
+		// Check if date and author match
+		if date, ok := metadata["date"].(string); ok && date == args.DateString {
+			if author, ok := metadata["author"].(string); ok && author == args.AuthorString {
+				matchingFiles = append(matchingFiles, result)
+			}
+		}
+	}
+
+	// If no files match the metadata criteria
+	if len(matchingFiles) == 0 {
+		return files.CompleteFileSchema{}, nil
+	}
+
+	// Use the first matching file
+	file_row := matchingFiles[0]
+	if len(matchingFiles) > 1 {
+		log.Printf("Warning: multiple files match all criteria (name, extension, docket, date, author): %v", matchingFiles)
+	}
+
+	// Unmarshal metadata for the selected file
+	// (bad for perf since your doing it twice, but I also dont care)
 	var mdata_obj map[string]interface{}
 	nilSchema := files.CompleteFileSchema{}
 	err = json.Unmarshal(file_row.Mdata, &mdata_obj)
@@ -86,3 +113,6 @@ func CheckDocumentMetadata(args DocumentMetadataCheck, q dbstore.Queries, ctx co
 	}
 	return file, nil
 }
+
+// Example Metadata Schema
+// {"id": "14f92e3e-6748-4f64-8c1a-1200547bf8e9", "url": "https://documents.dps.ny.gov/public/Common/ViewDoc.aspx?DocRefId={2071B08B-0000-C730-9754-1C39327CCC7D}", "date": "11/08/2023", "lang": "en", "title": "Staff Proposal on the Transition of Utility Reported Community-Scale Energy Usage Data", "author": "New York State Department of Public Service", "source": "New York State Department of Public Service", "authors": ["New York State Department of Public Service"], "language": "en", "docket_id": "20-M-0082", "extension": "pdf", "file_class": "Plans and Proposals", "item_number": "249", "author_email": "", "author_organisation": "New York State Department of Public Service"}
