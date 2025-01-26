@@ -40,7 +40,7 @@ func DefineAdminRoutes(admin_subrouter *mux.Router) {
 		ExtractRelaventEmailsFromOrgUUIDHandler,
 	).Methods(http.MethodGet)
 	admin_subrouter.HandleFunc(
-		"/file_metadata_match",
+		"/file-metadata-match",
 		HandleCheckDocumentMetadata,
 	).Methods(http.MethodPost)
 
