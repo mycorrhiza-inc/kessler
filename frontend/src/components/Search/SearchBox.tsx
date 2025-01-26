@@ -248,7 +248,7 @@ const setSearchFilters = (props: SearchBoxInputProps, filters: Filter[]) => {
     if (props.pageContext === PageContextMode.Organizations) {
       return;
     }
-    if (props.pageContext === PageContextMode.Dockets) {
+    if (props.pageContext === PageContextMode.Conversations) {
       return;
     }
   }
