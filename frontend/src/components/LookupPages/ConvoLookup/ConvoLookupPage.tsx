@@ -1,3 +1,4 @@
+"use client"
 import ConversationTableInfiniteScroll from "@/components/Organizations/ConversationTable";
 import SearchBox, { PageContextMode } from "@/components/Search/SearchBox";
 import { BreadcrumbValues } from "@/components/SitemapUtils";

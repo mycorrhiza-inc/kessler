@@ -1,3 +1,4 @@
+"use client"
 import { Dispatch, SetStateAction, useState, useEffect, useRef } from "react";
 import Tooltip from "@mui/joy/Tooltip";
 import { motion, AnimatePresence } from "framer-motion"; // Import necessary components from framer-motion

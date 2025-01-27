@@ -1,3 +1,4 @@
+"use client"
 import OrganizationTableInfiniteScroll from "@/components/Organizations/OrganizationTable";
 import SearchBox, { PageContextMode } from "@/components/Search/SearchBox";
 
