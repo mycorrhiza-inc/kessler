@@ -1,6 +1,7 @@
 "use client"
 import OrganizationTableInfiniteScroll from "@/components/Organizations/OrganizationTable";
-import SearchBox, { PageContextMode } from "@/components/Search/SearchBox";
+import SearchBox from "@/components/Search/SearchBox";
+import { PageContextMode } from "@/lib/types/SearchTypes";
 
 const OrgLookupPage = () => {
   return (

@@ -4,22 +4,13 @@ import { AngleDownIcon, AngleUpIcon } from "../Icons";
 import { AuthorInfoPill, subdividedHueFromSeed } from "../Tables/TextPills";
 import { QueryFileFilterFields, QueryDataFile } from "@/lib/filters";
 import { Query } from "pg";
-
-// Mock API call
-type Suggestion = {
-  id: string;
-  type: string;
-  label: string;
-  value: string;
-};
-
-type Filter = {
-  id: string;
-  type: string;
-  label: string;
-  exclude?: boolean;
-  excludable: boolean;
-};
+import {
+  FileSearchBoxProps,
+  Filter,
+  PageContextMode,
+  SearchBoxInputProps,
+  Suggestion,
+} from "@/lib/types/SearchTypes";
 
 const mockFetchSuggestions = async (query: string): Promise<Suggestion[]> => {
   // Simulate API delay
@@ -199,28 +190,6 @@ const suggestionToFilter = (suggestion: Suggestion): Filter => {
   return { ...suggestion, exclude: false, excludable: true };
 };
 
-export enum PageContextMode {
-  Files,
-  Organizations,
-  Conversations,
-}
-export interface FileSearchBoxProps {
-  pageContext: PageContextMode.Files;
-  setSearchData: React.Dispatch<React.SetStateAction<QueryDataFile>>;
-}
-export interface OrgSearchBoxProps {
-  page_context: PageContextMode.Organizations;
-}
-export interface DocketSearchBoxProps {
-  page_context: PageContextMode.Conversations;
-}
-
-export type SearchBoxInputProps =
-  | FileSearchBoxProps
-  | OrgSearchBoxProps
-  | DocketSearchBoxProps;
-
-export type FilterTypeDict = { [key: string]: Filter[] };
 const setSearchFilters = (props: SearchBoxInputProps, filters: Filter[]) => {
   const filterTypeDict = filters.reduce(
     (acc: { [key: string]: Filter[] }, filter: Filter) => {

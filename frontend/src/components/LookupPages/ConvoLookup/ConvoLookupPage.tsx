@@ -1,7 +1,8 @@
 "use client"
 import ConversationTableInfiniteScroll from "@/components/Organizations/ConversationTable";
-import SearchBox, { PageContextMode } from "@/components/Search/SearchBox";
+import SearchBox from "@/components/Search/SearchBox";
 import { BreadcrumbValues } from "@/components/SitemapUtils";
+import { PageContextMode } from "@/lib/types/SearchTypes";
 
 const ConvoLookupPage = () => {
   return (
