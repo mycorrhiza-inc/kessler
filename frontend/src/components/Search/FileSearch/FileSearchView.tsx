@@ -25,10 +25,8 @@ import LoadingSpinnerTimeout from "@/components/styled-components/LoadingSpinner
 
 import { ChatModalClickDiv } from "@/components/Chat/ChatModal";
 import { useKesslerStore } from "@/lib/store";
-import SearchBox, {
-  FileSearchBoxProps,
-  PageContextMode,
-} from "@/components/Search/SearchBox";
+import SearchBox from "@/components/Search/SearchBox";
+import { PageContextMode } from "@/lib/types/SearchTypes";
 
 const TableFilters = ({
   searchQuery,
