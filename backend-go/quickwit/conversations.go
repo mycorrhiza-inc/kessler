@@ -84,8 +84,17 @@ func CreateQuickwitIndexConversations() error {
 				{Name: "state", Type: "text", Fast: true},
 				{Name: "docket_id", Type: "text", Fast: true},
 				{Name: "title", Type: "text", Fast: true},
+				{
+					Name:          "timestamp",
+					Type:          "datetime",
+					Fast:          true,
+					InputFormats:  []string{"unix_timestamp"},
+					FastPrecision: "seconds",
+				},
+
 				// {Name: "conversation_id", Type: "text", Fast: true},
 			},
+			TimestampField: "timestamp",
 		},
 		SearchSettings: SearchSettings{
 			DefaultSearchFields: []string{"name"},
