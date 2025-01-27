@@ -65,6 +65,18 @@ func CreateOrganizationIndexJobHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Organization index being created"))
 }
 
+func IndexAllDocketsHandler(w http.ResponseWriter, r *http.Request) {
+	// ctx := r.Context()
+	err := quickwit.IndexAllDockets()
+
+	if err != nil {
+		http.Error(w, "Error indexing dockets", http.StatusInternalServerError)
+		return
+	}
+
+	w.Write([]byte("Dockets being indexed"))
+}
+
 // Create a new index job
 // job := jobManager.NewJob(IndexcollectionJob, nil)
 // err := job.Start(indexCollection, nil)
