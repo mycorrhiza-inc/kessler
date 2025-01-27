@@ -9,20 +9,16 @@ import (
 )
 
 type IndexJob struct {
-	Id     string      `json:"id"`
-	Status JobStatus   `json:"status"`
-	Type   JobType     `json:"type"`
-	Data   interface{} `json:"data"`
-	JobLog []string    `json:"log"`
+	Job
 }
 
 func NewIndexJob(id string, jobType JobType, data interface{}) *IndexJob {
 	return &IndexJob{
-		Id:     id,
-		Status: Pending,
-		Type:   jobType,
-		Data:   data,
-		JobLog: []string{},
+		Job: Job{
+			Id:     id,
+			Status: Pending,
+			JobLog: []string{},
+		},
 	}
 }
 
@@ -41,23 +37,58 @@ func (j *IndexJob) GetType() JobType {
 	return j.Type
 }
 
-func (j *IndexJob) saveStateToFile() error {
+func (j *IndexJob) SaveStateToDisk() error {
 	state, err := json.Marshal(j)
 	if err != nil {
 		log.Errorf("Error marshalling job state: %v", err)
 	}
-	fileName := fmt.Sprintf("job_%d_state.json", j.Id)
+	fileName := fmt.Sprintf("job_%s_state.json", j.Id)
 	file, err := os.Create(fileName)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
-	_, err = file.WriteString(fmt.Sprintf(`%s`, state))
+	_, err = file.Write(state)
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("Worker %d: state saved to %s\n", j.Id, fileName)
+	fmt.Printf("Worker %s: state saved to %s\n", j.Id, fileName)
+	return nil
+}
+
+func (j *IndexJob) LoadStateFromDisk() error {
+	fileName := fmt.Sprintf("job_%s_state.json", j.Id)
+	file, err := os.Open(fileName)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	state := &IndexJob{}
+	err = json.NewDecoder(file).Decode(state)
+	if err != nil {
+		return err
+	}
+
+	j.Status = state.Status
+	j.JobLog = state.JobLog
+
+	fmt.Printf("Worker %s: state loaded from %s\n", j.Id, fileName)
+	return nil
+}
+
+// func (j *IndexJob) Start(f func() error) {
+// 	j.func ()  {
+
+// // 	} = f
+// }
+
+func IndexOrganization(id string, job *IndexJob) error {
+	// get organization data from postgres
+
+	// index organization data in quickwit
+
 	return nil
 }

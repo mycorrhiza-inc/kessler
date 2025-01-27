@@ -5,6 +5,7 @@ import (
 	"kessler/admin"
 	"kessler/autocomplete"
 	"kessler/crud"
+	"kessler/jobs"
 	"kessler/rag"
 	"kessler/search"
 	"log"
@@ -121,6 +122,7 @@ func main() {
 	adminRouter := adminMux.PathPrefix("/v2/admin/").Subrouter()
 	admin.DefineAdminRoutes(adminRouter)
 	adminMux.PathPrefix("/v2/admin/").Handler(adminRouter)
+	// TODO: determine a way for this to be passed differently
 	adminMux.PathPrefix("/v2/crud/").Handler(adminRouter)
 	adminWithTimeout := http.TimeoutHandler(adminMux, adminTimeout, "Admin Timeout!")
 
@@ -133,8 +135,12 @@ func main() {
 		})
 	})
 	public_subrouter := regularMux.PathPrefix("/v2/public").Subrouter()
+	jobs_subrouter := regularMux.PathPrefix("/v2/jobs").Subrouter()
+	jobs.DefineJobRoutes(jobs_subrouter)
+
 	crud.DefineCrudRoutes(public_subrouter)
 	regularMux.PathPrefix("/v2/public/").Handler(public_subrouter)
+	regularMux.PathPrefix("/v2/jobs/").Handler(jobs_subrouter)
 	regularMux.HandleFunc("/v2/version_hash", HandleVersionHash)
 	regularMux.HandleFunc("/v2/search", search.HandleSearchRequest)
 	regularMux.HandleFunc("/v2/rag/basic_chat", rag.HandleBasicChatRequest)

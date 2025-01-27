@@ -84,7 +84,7 @@ func CreateQuickwitIndexConversations() error {
 				{Name: "state", Type: "text", Fast: true},
 				{Name: "docket_id", Type: "text", Fast: true},
 				{Name: "title", Type: "text", Fast: true},
-				{Name: "conversation_id", Type: "boo;", Fast: true},
+				// {Name: "conversation_id", Type: "text", Fast: true},
 			},
 		},
 		SearchSettings: SearchSettings{

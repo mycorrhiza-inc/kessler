@@ -10,17 +10,31 @@ const (
 	Pending JobStatus = "pending"
 )
 
+// Index job types
 const (
 	IndexcollectionJob JobType = "index_collection"
 	ReindexJob         JobType = "reindex"
 	DeleteIndexJob     JobType = "delete_index"
 )
 
-type Job interface {
+// Document processing job types
+const (
+	Reprocess JobType = "reprocess"
+)
+
+type JobInterface interface {
 	AddLog(log string)
 	SetStatus(status JobStatus)
 	GetStatus() JobStatus
-	GetType() JobType
+	Start(fn interface{}, args ...interface{}) error
 	SaveState() error
 	LoadState() error
+}
+
+type Job struct {
+	Id     string      `json:"id"`
+	Status JobStatus   `json:"status"`
+	Type   JobType     `json:"type"`
+	Data   interface{} `json:"data"`
+	JobLog []string    `json:"log"`
 }
