@@ -94,13 +94,13 @@ func SearchQuickwit(r SearchRequest) ([]SearchDataHydrated, error) {
 	var uuidFilters networking.UUIDFilterFields = queryFilters.UUIDFilters
 	log.Printf("zzxxcc: %v\n", uuidFilters)
 
-	var queryString string
+	var dateQueryString string
 	dateQuery, err := ConstructDateQuery(metadataFilters.DateFrom, metadataFilters.DateTo)
 	if err != nil {
 		log.Printf("error constructing date query: %v", err)
 	}
 	if len(r.Query) >= 0 {
-		queryString = fmt.Sprintf("((text:(%s) OR name:(%s)) AND %s)", query, query, dateQuery)
+		dateQueryString = fmt.Sprintf("((text:(%s) OR name:(%s)) AND %s)", query, query, dateQuery)
 		// queryString = fmt.Sprintf("((text:(%s) OR name:(%s)) AND verified:true AND %s)", query, query, dateQuery)
 	}
 
@@ -109,12 +109,12 @@ func SearchQuickwit(r SearchRequest) ([]SearchDataHydrated, error) {
 
 	log.Printf(
 		"!!!!!!!!!!\nquery: %s\nfilters: %s\nuuid filters: %s\n!!!!!!!!!!\n",
-		queryString,
+		dateQueryString,
 		filtersString,
 		uuidFilterString,
 	)
 	// queryString = queryString + filtersString
-	queryString = queryString + filtersString + uuidFilterString
+	queryString := dateQueryString + filtersString + uuidFilterString
 	log.Printf("full query string: %s\n", queryString)
 
 	// construct sortby string
