@@ -115,8 +115,8 @@ func SearchQuickwit(r SearchRequest) ([]SearchDataHydrated, error) {
 		filtersString,
 		uuidFilterString,
 	)
-	queryString = queryString + filtersString
-	// queryString = queryString + filtersString + uuidFilterString
+	// queryString = queryString + filtersString
+	queryString = queryString + filtersString + uuidFilterString
 	log.Printf("full query string: %s\n", queryString)
 
 	// construct sortby string

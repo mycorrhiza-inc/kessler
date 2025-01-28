@@ -19,6 +19,16 @@ type SearchRequest struct {
 	GetText       bool                    `json:"get_text"`
 }
 
+var ExampleSearchRequest = SearchRequest{
+	Index:         "cases",
+	Query:         "test query",
+	SearchFilters: networking.FilterFields{},
+	SortBy:        []string{"timestamp"},
+	MaxHits:       10,
+	StartOffset:   0,
+	GetText:       true,
+}
+
 func (s SearchRequest) String() string {
 	return fmt.Sprintf(
 		"SearchRequest: {\n\tIndex: %s\n\tQuery: %s\n\tFilters: %s\n\tSortBy: %s\n\tMaxHits: %d\n\tStartOffset: %d\nGetText: %t\n}\n",

@@ -17,6 +17,7 @@ import { ExperimentalChatModalClickDiv } from "../Chat/ChatModal";
 import { FilterField } from "@/lib/filters";
 import { AuthorInfoPill, DocketPill } from "../Tables/TextPills";
 import { getRuntimeEnv } from "@/lib/env_variables_hydration_script";
+import { runtimeConfig } from "@/lib/env_variables";
 
 // import { ErrorBoundary } from "react-error-boundary";
 

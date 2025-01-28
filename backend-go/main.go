@@ -6,6 +6,7 @@ import (
 	"kessler/autocomplete"
 	"kessler/crud"
 	"kessler/jobs"
+	"kessler/health"
 	"kessler/rag"
 	"kessler/search"
 	"log"
@@ -139,6 +140,8 @@ func main() {
 	jobs.DefineJobRoutes(jobs_subrouter)
 
 	crud.DefineCrudRoutes(public_subrouter)
+	health_subrouter := regularMux.PathPrefix("/v2/health").Subrouter()
+	health.DefineHealthRoutes(health_subrouter)
 	regularMux.PathPrefix("/v2/public/").Handler(public_subrouter)
 	regularMux.PathPrefix("/v2/jobs/").Handler(jobs_subrouter)
 	regularMux.HandleFunc("/v2/version_hash", HandleVersionHash)

@@ -13,7 +13,7 @@ import type { PDFDocumentProxy } from "pdfjs-dist";
 
 // TODO : Inline at some point so we dont get screwed by a malicious cdn.
 pdfjs.GlobalWorkerOptions.workerSrc =
-  "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.4.168/build/pdf.worker.mjs";
+  "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.8.69/build/pdf.worker.mjs";
 // pdfjs.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url, ).toString();
 
 const options = {

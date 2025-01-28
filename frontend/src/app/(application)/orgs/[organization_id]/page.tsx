@@ -34,10 +34,5 @@ export default async function Page({
   const orgData = await cachedOrgData(slug);
   orgData.breadcrumbs.state = state || "";
 
-  return (
-    <OrganizationPage
-      breadcrumbs={orgData.breadcrumbs}
-      orgInfo={orgData.orgInfo}
-    />
-  );
+  return <OrganizationPage orgInfo={orgData.orgInfo} />;
 }

@@ -1,17 +1,18 @@
+"use client"
 import { Dispatch, SetStateAction, useState, useEffect, useRef } from "react";
 import Tooltip from "@mui/joy/Tooltip";
 import { motion, AnimatePresence } from "framer-motion"; // Import necessary components from framer-motion
 import { SearchIcon, ChatIcon, FileUploadIcon } from "@/components/Icons";
 
-import { QueryFilterFields, allFilterFields } from "@/lib/filters";
+import { QueryFileFilterFields, allFilterFields } from "@/lib/filters";
 import { BasicDocumentFiltersGrid } from "@/components/Filters/DocumentFilters";
 
 const AdvancedFilters = ({
   queryOptions,
   setQueryOptions,
 }: {
-  queryOptions: QueryFilterFields;
-  setQueryOptions: Dispatch<SetStateAction<QueryFilterFields>>;
+  queryOptions: QueryFileFilterFields;
+  setQueryOptions: Dispatch<SetStateAction<QueryFileFilterFields>>;
 }) => {
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(true);
 
@@ -58,8 +59,8 @@ interface SearchBoxProps {
   inSearchSession: boolean;
   chatVisible: boolean;
   setChatVisible: Dispatch<SetStateAction<boolean>>;
-  queryOptions: QueryFilterFields;
-  setQueryOptions: Dispatch<SetStateAction<QueryFilterFields>>;
+  queryOptions: QueryFileFilterFields;
+  setQueryOptions: Dispatch<SetStateAction<QueryFileFilterFields>>;
 }
 const SearchBox = ({
   handleSearch,

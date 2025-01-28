@@ -9,6 +9,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const conversationDeduplicateCascade = `-- name: ConversationDeduplicateCascade :exec
@@ -36,6 +37,89 @@ type ConversationDeduplicateCascadeParams struct {
 func (q *Queries) ConversationDeduplicateCascade(ctx context.Context, arg ConversationDeduplicateCascadeParams) error {
 	_, err := q.db.Exec(ctx, conversationDeduplicateCascade, arg.ID, arg.ConversationUuid)
 	return err
+}
+
+const fileCheckForDuplicates = `-- name: FileCheckForDuplicates :many
+SELECT
+    public.file.id,
+    public.file.name,
+    public.file.extension,
+    public.file.lang,
+    public.file.verified,
+    public.file.hash,
+    public.file.created_at,
+    public.file.updated_at,
+    public.file.date_published,
+    public.file_metadata.mdata,
+    public.file_extras.extra_obj,
+    public.docket_documents.conversation_uuid,
+    public.docket_conversations.docket_gov_id
+FROM
+    public.file
+    LEFT JOIN public.file_metadata ON public.file.id = public.file_metadata.id
+    LEFT JOIN public.file_extras ON public.file.id = public.file_extras.id
+    LEFT JOIN public.docket_documents ON public.file.id = public.docket_documents.file_id
+    LEFT JOIN public.docket_conversations ON public.docket_documents.conversation_uuid = public.docket_conversations.id
+WHERE
+    public.file.name = $1
+    AND public.file.extension = $2
+    AND public.docket_conversations.docket_gov_id = $3
+`
+
+type FileCheckForDuplicatesParams struct {
+	Name        string
+	Extension   string
+	DocketGovID string
+}
+
+type FileCheckForDuplicatesRow struct {
+	ID               uuid.UUID
+	Name             string
+	Extension        string
+	Lang             string
+	Verified         pgtype.Bool
+	Hash             string
+	CreatedAt        pgtype.Timestamptz
+	UpdatedAt        pgtype.Timestamptz
+	DatePublished    pgtype.Timestamptz
+	Mdata            []byte
+	ExtraObj         []byte
+	ConversationUuid pgtype.UUID
+	DocketGovID      pgtype.Text
+}
+
+func (q *Queries) FileCheckForDuplicates(ctx context.Context, arg FileCheckForDuplicatesParams) ([]FileCheckForDuplicatesRow, error) {
+	rows, err := q.db.Query(ctx, fileCheckForDuplicates, arg.Name, arg.Extension, arg.DocketGovID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []FileCheckForDuplicatesRow
+	for rows.Next() {
+		var i FileCheckForDuplicatesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Extension,
+			&i.Lang,
+			&i.Verified,
+			&i.Hash,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DatePublished,
+			&i.Mdata,
+			&i.ExtraObj,
+			&i.ConversationUuid,
+			&i.DocketGovID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const organizationDeduplicateCascade = `-- name: OrganizationDeduplicateCascade :exec
