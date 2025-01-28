@@ -1,8 +1,12 @@
 package search
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io"
 	"log"
+	"net/http"
 	"reflect"
 	"strings"
 )
@@ -44,4 +48,43 @@ func ConstructGenericFilterQuery(values reflect.Value, types reflect.Type) strin
 	}
 	fmt.Printf("filter query: %s\n", filterQuery)
 	return filterQuery
+}
+
+func PerformGenericQuickwitRequest(request QuickwitSearchRequest, search_index string) ([]byte, error) {
+	jsonData, err := json.Marshal(request)
+
+	// ===== submit request to quickwit =====
+	log.Printf("jsondata: \n%s", jsonData)
+	if err != nil {
+		log.Printf("Error Marshalling quickwit request: %s", err)
+		return []byte{}, err
+	}
+
+	request_url := fmt.Sprintf("%s/api/v1/%s/search", quickwitURL, search_index)
+	resp, err := http.Post(
+		request_url,
+		"application/json",
+		bytes.NewBuffer(jsonData),
+	)
+	curlCmd := fmt.Sprintf("curl -X POST -H 'Content-Type: application/json' -d '%s' %s", string(jsonData), request_url)
+	if err != nil {
+		log.Printf("Error sending request to quickwit: %s\n", err)
+		log.Printf("Replay with: %s\n", curlCmd)
+		return []byte{}, err
+	}
+
+	defer resp.Body.Close()
+
+	// ===== handle response =====
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("Error: received status code %v", resp.StatusCode)
+		log.Printf("Replay with: %s\n", curlCmd)
+		return []byte{}, fmt.Errorf("received status code %v", resp.StatusCode)
+	}
+
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return []byte{}, fmt.Errorf("failed to read response body: %v", err)
+	}
+	return bodyBytes, nil
 }

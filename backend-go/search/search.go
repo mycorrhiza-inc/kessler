@@ -10,7 +10,6 @@ import (
 	"kessler/objects/networking"
 	"kessler/objects/timestamp"
 	"log"
-	"net/http"
 	"os"
 	"reflect"
 	"time"
@@ -144,44 +143,18 @@ func SearchQuickwit(r SearchRequest) ([]SearchDataHydrated, error) {
 		StartOffset:   r.StartOffset,
 		SortBy:        sortbyStr,
 	}
-
-	jsonData, err := json.Marshal(request)
-
-	// ===== submit request to quickwit =====
-	log.Printf("jsondata: \n%s", jsonData)
+	return_bytes, err := PerformGenericQuickwitRequest(request, search_index)
 	if err != nil {
-		log.Printf("Error Marshalling quickwit request: %s", err)
+		log.Printf("Error with Quickwit Request: %v", err)
 		return []SearchDataHydrated{}, err
-	}
-
-	request_url := fmt.Sprintf("%s/api/v1/%s/search", quickwitURL, search_index)
-	resp, err := http.Post(
-		request_url,
-		"application/json",
-		bytes.NewBuffer(jsonData),
-	)
-	curlCmd := fmt.Sprintf("curl -X POST -H 'Content-Type: application/json' -d '%s' %s", string(jsonData), request_url)
-	if err != nil {
-		log.Printf("Error sending request to quickwit: %s\n", err)
-		log.Printf("Replay with: %s\n", curlCmd)
-		return []SearchDataHydrated{}, err
-	}
-
-	defer resp.Body.Close()
-
-	// ===== handle response =====
-	if resp.StatusCode != http.StatusOK {
-		log.Printf("Error: received status code %v", resp.StatusCode)
-		log.Printf("Replay with: %s\n", curlCmd)
-		return []SearchDataHydrated{}, fmt.Errorf("received status code %v", resp.StatusCode)
 	}
 	var searchResponse quickwitSearchResponse
-	err = json.NewDecoder(resp.Body).Decode(&searchResponse)
+	err = json.NewDecoder(bytes.NewReader(return_bytes)).Decode(&searchResponse)
 	if err != nil {
-		log.Printf("Error unmarshalling quickwit response: %s", err)
-		return []SearchDataHydrated{}, err
+		fmt.Printf("quickwit response: %v\n", return_bytes)
+		errorstring := fmt.Sprintf("Error decoding JSON: %v\n Offending json looked like: %v", err, string(return_bytes))
+		return []SearchDataHydrated{}, fmt.Errorf(errorstring)
 	}
-	fmt.Printf("quickwit response: %v\n", resp)
 
 	data, err := ExtractSearchData(searchResponse)
 	if err != nil {
