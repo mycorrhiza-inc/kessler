@@ -5,6 +5,7 @@ import (
 	"kessler/admin"
 	"kessler/autocomplete"
 	"kessler/crud"
+	"kessler/health"
 	"kessler/rag"
 	"kessler/search"
 	"log"
@@ -134,6 +135,8 @@ func main() {
 	})
 	public_subrouter := regularMux.PathPrefix("/v2/public").Subrouter()
 	crud.DefineCrudRoutes(public_subrouter)
+	health_subrouter := regularMux.PathPrefix("/v2/health").Subrouter()
+	health.DefineHealthRoutes(health_subrouter)
 	regularMux.PathPrefix("/v2/public/").Handler(public_subrouter)
 	regularMux.HandleFunc("/v2/version_hash", HandleVersionHash)
 	regularMux.HandleFunc("/v2/search", search.HandleSearchRequest)

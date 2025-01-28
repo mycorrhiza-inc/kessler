@@ -8,7 +8,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func DefineHealthCheckRoutes(health_subrouter *mux.Router) {
+func DefineHealthRoutes(health_subrouter *mux.Router) {
 	health_subrouter.HandleFunc(
 		"/complete-check",
 		CompleteHealthCheckHandler,
