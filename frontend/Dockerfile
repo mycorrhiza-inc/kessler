@@ -7,8 +7,8 @@ RUN npm install --force
 COPY ./tsconfig.json ./
 COPY . .
 # build with a dummy .env for build time
-RUN touch .env.local 
-RUN touch .env
+# RUN touch .env.local 
+# RUN touch .env
 RUN npm run build
 
 FROM node:22.4.1-alpine3.20
