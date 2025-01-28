@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"kessler/crud"
 	"kessler/gen/dbstore"
+	"kessler/objects/conversations"
+	"kessler/objects/timestamp"
 	"kessler/util"
 	"strings"
 	"time"
@@ -12,12 +14,35 @@ import (
 	"github.com/google/uuid"
 )
 
-func SearchConversations() {
+type ConversationSearchSchema struct {
+	Query        string `json:"query"`
+	IndustryType string `json:"industry_type"`
+}
+
+func SearchConversations(search_schema ConversationSearchSchema, ctx context.Context) ([]conversations.ConversationInformation, error) {
 	// Search for conversations
 }
 
-func IndexConversations(conversations []dbstore.DocketConversation) error {
+func IndexConversations(convos []dbstore.DocketConversation) error {
 	// Index conversations
+	quickwit_convos := make([]conversations.ConversationInformation, len(convos))
+	for index, convo := range convos {
+		quickwit_convo := conversations.ConversationInformation{
+			DocketGovID:   convo.DocketGovID,
+			State:         convo.State,
+			Name:          convo.Name,
+			Description:   convo.Description,
+			MatterType:    convo.MatterType,
+			IndustryType:  convo.IndustryType,
+			Metadata:      convo.Metadata,
+			Extra:         convo.Extra,
+			DatePublished: timestamp.KesslerTime(convo.DatePublished.Time),
+			ID:            convo.ID,
+		}
+		quickwit_convos[index] = quickwit_convo
+
+	}
+	IngestIntoIndex(NYConversationIndex, quickwit_convos)
 	return nil
 }
 
