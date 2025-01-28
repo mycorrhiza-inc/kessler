@@ -70,9 +70,9 @@ function process_branch() {
         
         # Determine deployment environment
         if [ "$tag" = "latest" ]; then
-            ssh root@nightly.kessler.xyz "export KUBECONFIG=/etc/rancher/k3s/k3s.yaml && cd /mycorrhiza/infra && helm upgrade kessler-prod ./helm -f helm/values-prod.yaml --set versionHash=${current_hash}"
+            ssh root@nightly.kessler.xyz "export KUBECONFIG=/etc/rancher/k3s/k3s.yaml && cd /mycorrhiza/infra && helm upgrade kessler-prod ./helm -f helm/values-prod.yaml --set versionHash=${current_hash} --atomic --timeout 10m"
         else
-            ssh root@nightly.kessler.xyz "export KUBECONFIG=/etc/rancher/k3s/k3s.yaml && cd /mycorrhiza/infra && helm upgrade kessler-nightly ./helm -f helm/values-nightly.yaml --set versionHash=${current_hash}"
+            ssh root@nightly.kessler.xyz "export KUBECONFIG=/etc/rancher/k3s/k3s.yaml && cd /mycorrhiza/infra && helm upgrade kessler-nightly ./helm -f helm/values-nightly.yaml --set versionHash=${current_hash} --atomic --timeout 10m"
         fi
     else
         echo "No changes detected for $branch, skipping deployment."
