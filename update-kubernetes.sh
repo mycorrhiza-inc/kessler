@@ -29,19 +29,28 @@ function process_branch() {
     
     if [ ! -d "/mycorrhiza/kessler" ]; then
         git clone https://github.com/mycorrhiza-inc/kessler
+        git config --global --add safe.directory /mycorrhiza/kessler
     fi
     
     cd kessler
 
-    # Checkout specific commit or update branch
-    if [ -n "$commit_hash" ]; then
-        git checkout "$commit_hash"
-        echo "Checked out specific commit: $commit_hash"
-    else
-        git switch "$branch"
-        git pull
-        echo "Updated branch $branch to latest"
-    fi
+       # Checkout specific commit or update branch
+        if [ -n "$commit_hash" ]; then
+            git clean -fd
+            git fetch
+            git reset --hard HEAD
+            git clean -fd
+            git checkout "$commit_hash"
+            echo "Checked out specific commit: $commit_hash"
+        else
+            git clean -fd
+            git fetch
+            git reset --hard HEAD
+            git clean -fd
+            git switch "$branch"
+            git reset --hard origin/"$branch"
+            echo "Updated branch $branch to latest"
+        fi
 
     local current_hash=$(git rev-parse HEAD)
     echo "Current commit hash: $current_hash"
@@ -147,7 +156,7 @@ if [ -n "$remote_target" ]; then
         fi
     else
         process_branch "main"
-        process_branch "release"
+        # process_branch "release"
     fi
 EOF
     exit 0
@@ -163,7 +172,7 @@ if [[ -n "$prod_commit" || -n "$nightly_commit" ]]; then
     fi
 else
     process_branch "main"
-    process_branch "release"
+    # process_branch "release"
 fi
 #!/bin/bash
 set -e
