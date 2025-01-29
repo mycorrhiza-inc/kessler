@@ -7,15 +7,18 @@ import { useKesslerStore } from "@/lib/store";
 import Link from "next/link";
 import { BreadcrumbValues, HeaderBreadcrumbs } from "@/components/SitemapUtils";
 
-export function HeaderAuth() {
+export function HeaderAuth({ children }: { children?: React.ReactNode }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const globalStore = useKesslerStore();
 
   // useEffect(() => {
   //   console.log("Is logged in:", globalStore.isLoggedIn);
   // }, []);
-  return globalStore.isLoggedIn ? (
-    <>
+  return (
+    <div className="flex gap-2">
+      <div>
+        {children}
+      </div>
       <div
         tabIndex={0}
         role="button"
@@ -27,15 +30,6 @@ export function HeaderAuth() {
       <Modal open={settingsOpen} setOpen={setSettingsOpen}>
         <SettingsContent />
       </Modal>
-    </>
-  ) : (
-    <div className="flex gap-2">
-      <Link href="/sign-in" className="btn btn-outline btn-secondary">
-        Sign in
-      </Link>
-      <Link href="/sign-up" className="btn btn-outline btn-secondary">
-        Sign up
-      </Link>
     </div>
   );
 }
