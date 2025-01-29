@@ -5,18 +5,59 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"kessler/objects/timestamp"
 	"log"
 	"net/http"
 	"reflect"
 	"strings"
+	"time"
 )
+
+func convertToRFC3339(date string) (string, error) {
+	layout := "2006-01-02"
+
+	parsedDate, err := time.Parse(layout, date)
+	if err != nil {
+		return "", fmt.Errorf("invalid date format: %v", err)
+	}
+	parsedDateString := parsedDate.Format(time.RFC3339)
+	return parsedDateString, nil
+}
+
+func ConstructDateQuery(DateFrom timestamp.KesslerTime, DateTo timestamp.KesslerTime) string {
+	// construct date query
+	fromDate := "*"
+	toDate := "*"
+	log.Printf("building date from: %s\n", DateFrom)
+	log.Printf("building date to: %s\n", DateTo)
+
+	if !(DateFrom.IsZero()) {
+		fromDate = DateFrom.String()
+	}
+	if !(DateTo.IsZero()) {
+		fromDate = DateTo.String()
+	}
+	dateQuery := fmt.Sprintf("date_filed:[%s TO %s]", fromDate, toDate)
+	return dateQuery
+}
+
+func ConstructDateTextQuery(DateFrom timestamp.KesslerTime, DateTo timestamp.KesslerTime, query string) string {
+	var dateQueryString string
+	dateQuery := ConstructDateQuery(DateFrom, DateTo)
+	if len(query) >= 0 {
+		dateQueryString = fmt.Sprintf("((text:(%s) OR name:(%s)) AND %s)", query, query, dateQuery)
+		return dateQueryString
+		// queryString = fmt.Sprintf("((text:(%s) OR name:(%s)) AND verified:true AND %s)", query, query, dateQuery)
+	}
+	return dateQuery
+}
 
 func ConstructGenericFilterQuery(values reflect.Value, types reflect.Type) string {
 	var filterQuery string
 	filters := []string{}
 
-	fmt.Printf("values: %v\n", values)
-	fmt.Printf("types: %v\n", types)
+	// fmt.Printf("values: %v\n", values)
+	// fmt.Printf("types: %v\n", types)
 
 	// ===== iterate over metadata for filter =====
 	for i := 0; i < types.NumField(); i++ {
@@ -28,7 +69,7 @@ func ConstructGenericFilterQuery(values reflect.Value, types reflect.Type) strin
 			tag = strings.Split(tag, ",")[0]
 		}
 
-		fmt.Printf("tag: %v\nfield: %v\nvalue: %v\n", tag, field, value)
+		// fmt.Printf("tag: %v\nfield: %v\nvalue: %v\n", tag, field, value)
 
 		if tag == "fileuuid" {
 			tag = "source_id"
@@ -39,7 +80,7 @@ func ConstructGenericFilterQuery(values reflect.Value, types reflect.Type) strin
 		if strings.Contains(s, "00000000-0000-0000-0000-000000000000") {
 			continue
 		}
-		log.Printf("new filter: %s\n", s)
+		// log.Printf("new filter: %s\n", s)
 		filters = append(filters, s)
 	}
 	// concat all filters with AND clauses

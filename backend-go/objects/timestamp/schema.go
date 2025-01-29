@@ -24,6 +24,14 @@ func (t *KesslerTime) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+func (t KesslerTime) IsZero() bool {
+	return time.Time(t).IsZero()
+}
+
+func (t KesslerTime) String() string {
+	return time.Time(t).Format(time.RFC3339)
+}
+
 func KessTimeFromString(str string) (KesslerTime, error) {
 	kt := &KesslerTime{}
 	err := kt.UnmarshalJSON([]byte(fmt.Sprintf("\"%s\"", str)))

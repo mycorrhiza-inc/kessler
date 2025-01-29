@@ -1,24 +1,26 @@
 package jobs
 
 import (
-	"fmt"
 	"kessler/quickwit"
+	"kessler/util"
 	"net/http"
 
 	"github.com/gorilla/mux"
 )
 
 func DefineJobRoutes(parent_router *mux.Router) {
-
 	parent_router.HandleFunc(
-		"/create/index/conversations",
+		"/index/create/conversations",
 		CreateConversationIndexJobHandler,
 	).Methods(http.MethodPost)
 	parent_router.HandleFunc(
-		"/create/index/orgs",
+		"/index/create/orgs",
 		CreateOrganizationIndexJobHandler,
 	).Methods(http.MethodGet)
-	fmt.Println("index subroute added")
+	parent_router.HandleFunc(
+		"/index/repopulate/conversations",
+		CreateOrganizationIndexJobHandler,
+	).Methods(http.MethodGet)
 
 	// 	job_subrouter.HandleFunc(
 	// 		"/new",
@@ -45,7 +47,6 @@ func DefineJobRoutes(parent_router *mux.Router) {
 func CreateConversationIndexJobHandler(w http.ResponseWriter, r *http.Request) {
 	// ctx := r.Context()
 	err := quickwit.CreateQuickwitIndexConversations()
-
 	if err != nil {
 		http.Error(w, "Error creating conversations index", http.StatusInternalServerError)
 		return
@@ -53,10 +54,10 @@ func CreateConversationIndexJobHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Write([]byte("Conversations index being created"))
 }
+
 func CreateOrganizationIndexJobHandler(w http.ResponseWriter, r *http.Request) {
 	// ctx := r.Context()
 	err := quickwit.CreateQuickwitOrganizationsIndex("NY_Organizations")
-
 	if err != nil {
 		http.Error(w, "Error creating conversations index", http.StatusInternalServerError)
 		return
@@ -66,9 +67,9 @@ func CreateOrganizationIndexJobHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func IndexAllDocketsHandler(w http.ResponseWriter, r *http.Request) {
-	// ctx := r.Context()
-	err := quickwit.IndexAllDockets()
-
+	ctx := r.Context()
+	q := *util.DBQueriesFromRequest(r)
+	err := quickwit.IndexAllConversations(q, ctx)
 	if err != nil {
 		http.Error(w, "Error indexing dockets", http.StatusInternalServerError)
 		return

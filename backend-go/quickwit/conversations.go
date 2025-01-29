@@ -23,6 +23,15 @@ func SearchConversations(search_schema ConversationSearchSchema, ctx context.Con
 	// Search for conversations
 }
 
+func IndexAllConversations(q dbstore.Queries, ctx context.Context) error {
+	conversations, err := q.DocketConversationList(ctx)
+	if err != nil {
+		return err
+	}
+	err = IndexConversations(conversations)
+	return err
+}
+
 func IndexConversations(convos []dbstore.DocketConversation) error {
 	// Index conversations
 	quickwit_convos := make([]conversations.ConversationInformation, len(convos))

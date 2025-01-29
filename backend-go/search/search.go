@@ -12,7 +12,6 @@ import (
 	"log"
 	"os"
 	"reflect"
-	"time"
 
 	"github.com/google/uuid"
 )
@@ -93,16 +92,6 @@ func SearchQuickwit(r SearchRequest) ([]SearchDataHydrated, error) {
 	var metadataFilters networking.MetadataFilterFields = queryFilters.MetadataFilters
 	var uuidFilters networking.UUIDFilterFields = queryFilters.UUIDFilters
 	log.Printf("zzxxcc: %v\n", uuidFilters)
-
-	var dateQueryString string
-	dateQuery, err := ConstructDateQuery(metadataFilters.DateFrom, metadataFilters.DateTo)
-	if err != nil {
-		log.Printf("error constructing date query: %v", err)
-	}
-	if len(r.Query) >= 0 {
-		dateQueryString = fmt.Sprintf("((text:(%s) OR name:(%s)) AND %s)", query, query, dateQuery)
-		// queryString = fmt.Sprintf("((text:(%s) OR name:(%s)) AND verified:true AND %s)", query, query, dateQuery)
-	}
 
 	filtersString := constructQuickwitMetadataQueryString(metadataFilters.SearchMetadata)
 	uuidFilterString := constructQuickwitUUIDMetadataQueryString(uuidFilters)
@@ -253,45 +242,6 @@ func ExtractSearchDataPlain(data quickwitSearchResponse) ([]SearchData, error) {
 
 func errturn(err error) ([]SearchData, error) {
 	return nil, err
-}
-
-func convertToRFC3339(date string) (string, error) {
-	layout := "2006-01-02"
-
-	parsedDate, err := time.Parse(layout, date)
-	if err != nil {
-		return "", fmt.Errorf("invalid date format: %v", err)
-	}
-	parsedDateString := parsedDate.Format(time.RFC3339)
-	return parsedDateString, nil
-}
-
-func ConstructDateQuery(DateFrom string, DateTo string) (string, error) {
-	// construct date query
-	fromDate := "*"
-	toDate := "*"
-	log.Printf("building date from: %s\n", DateFrom)
-	log.Printf("building date to: %s\n", DateTo)
-
-	if DateFrom != "" || DateTo != "" {
-		var err error
-		if DateFrom != "" {
-			fromDate, err = convertToRFC3339(DateFrom)
-			if err != nil {
-				return "date_filed:[* TO *]", fmt.Errorf("invalid date format for DateFrom: %v", err)
-			}
-			DateFrom = ""
-		}
-		if DateTo != "" {
-			toDate, err = convertToRFC3339(DateTo)
-			if err != nil {
-				return "date_filed:[* TO *]", fmt.Errorf("invalid date format for DateTo: %v", err)
-			}
-			DateTo = ""
-		}
-	}
-	dateQuery := fmt.Sprintf("date_filed:[%s TO %s]", fromDate, toDate)
-	return dateQuery, nil
 }
 
 // THESE ARE THE IMPORTANT MAPPINGS
