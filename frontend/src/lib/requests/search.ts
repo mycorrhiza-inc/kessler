@@ -26,9 +26,8 @@ export const getSearchResults = async (
   try {
     const paginationQueryString = queryStringFromPageMaxHits(page, maxHits);
     const searchResults: Filing[] = await axios
-      // .post("https://api.kessler.xyz/v2/search", {
       .post(
-        `${runtimeConfig.public_api_url}/v2/search${paginationQueryString}`,
+        `${runtimeConfig.public_api_url}/v2/search/file${paginationQueryString}`,
         {
           query: searchQuery,
           filters: filterObj,
@@ -95,7 +94,7 @@ export const getRecentFilings = async (
   // const queryString = queryStringFromPageMaxHits(limit, page_size);
   const runtimeConfig = getRuntimeEnv();
   const response = await axios.get(
-    `${runtimeConfig.public_api_url}/v2/recent_updates${queryString}`,
+    `${runtimeConfig.public_api_url}/v2/search/file/recent_updates${queryString}`,
   );
   // console.log("recent data", response.data);
   if (response.data.length > 0) {

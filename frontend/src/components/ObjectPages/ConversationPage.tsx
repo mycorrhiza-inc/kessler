@@ -6,10 +6,7 @@ import MarkdownRenderer from "../MarkdownRenderer";
 import { internalAPIURL } from "@/lib/env_variables";
 
 const getConversationData = async (url: string) => {
-  const response = await axios.get(
-    url,
-    // "http://api.kessler.xyz/v2/recent_updates",
-  );
+  const response = await axios.get(url);
   if (response.status !== 200) {
     throw new Error("Error fetching data with status " + response.status);
   }
