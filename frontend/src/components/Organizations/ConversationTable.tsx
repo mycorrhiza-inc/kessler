@@ -7,7 +7,16 @@ import { useRouter } from "next/navigation";
 import { getRuntimeEnv } from "@/lib/env_variables_hydration_script";
 import { ClassNames } from "@emotion/react";
 
-const conversationsListGet = async (url: string) => {
+type ConversationSearchSchema = {
+  query: string;
+  industry_type: string;
+  date_from: string;
+  date_to: string;
+};
+const conversationSearchGet = async (
+  searchData: ConversationSearchSchema,
+  url: string,
+) => {
   const cleanData = (response: any) => {
     // console.log(response.data);
     const return_data: any[] = response.data;
@@ -16,7 +25,9 @@ const conversationsListGet = async (url: string) => {
     }
     return return_data;
   };
-  const result = await axios.get(url).then((res) => cleanData(res));
+  const result = await axios
+    .post(url, searchData)
+    .then((res) => cleanData(res));
   return result as ConversationTableSchema[];
 };
 
@@ -109,9 +120,14 @@ const ConversationTableInfiniteScroll = ({
   const getPageResults = async (page: number, limit: number) => {
     const offset = page * limit;
     const runtimeConfig = getRuntimeEnv();
-    const result = await conversationsListGet(
-      `${runtimeConfig.public_api_url}/v2/public/conversations/list?limit=${limit}&offset=${offset}`,
-    );
+    const searchData = {
+      query: "",
+      industry_type: "",
+      date_from: "",
+      date_to: "",
+    };
+    const url = `${runtimeConfig.public_api_url}/v2/search/conversation?offset=${offset}&limit=${limit}`;
+    const result = await conversationSearchGet(searchData, url);
     return result;
   };
   const getMore = async () => {
