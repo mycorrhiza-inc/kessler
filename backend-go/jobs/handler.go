@@ -19,7 +19,7 @@ func DefineJobRoutes(parent_router *mux.Router) {
 	).Methods(http.MethodGet)
 	parent_router.HandleFunc(
 		"/index/repopulate/conversations",
-		CreateOrganizationIndexJobHandler,
+		IndexAllDocketsHandler,
 	).Methods(http.MethodGet)
 
 	// 	job_subrouter.HandleFunc(
