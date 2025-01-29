@@ -6,9 +6,8 @@ import SettingsContent from "@/components/SettingsContent";
 import { useKesslerStore } from "@/lib/store";
 import Link from "next/link";
 import { BreadcrumbValues, HeaderBreadcrumbs } from "@/components/SitemapUtils";
-import { ClerkProvider, SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
 
-export function HeaderAuth() {
+export function HeaderAuth({ children }: { children?: React.ReactNode }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const globalStore = useKesslerStore();
 
@@ -17,12 +16,9 @@ export function HeaderAuth() {
   // }, []);
   return (
     <div className="flex gap-2">
-      <SignedOut>
-        <SignInButton />
-      </SignedOut>
-      <SignedIn>
-        <UserButton />
-      </SignedIn>
+      <div>
+        {children}
+      </div>
       <div
         tabIndex={0}
         role="button"

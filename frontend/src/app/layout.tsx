@@ -4,7 +4,9 @@ import "./globals.css";
 import { PHProvider } from "./providers";
 import dynamic from "next/dynamic";
 import EnvVariablesScript from "@/lib/env_variables_root_script";
-import { ClerkProvider, SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
+import { ClerkProvider, SignedIn, SignedOut, SignInButton } from '@clerk/nextjs'
+import Header from "@/components/Layout/Header";
+import Link from "next/link";
 
 const PostHogPageView = dynamic(() => import("./PostHogPageView"), {
   ssr: false,
@@ -53,7 +55,6 @@ export default function RootLayout({
               </main>
             </ThemeProvider>
           </body>
-
         </ClerkProvider>
       </PHProvider>
     </html>

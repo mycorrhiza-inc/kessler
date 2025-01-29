@@ -3,6 +3,8 @@ import { ReactNode, useState } from "react";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import { BreadcrumbValues } from "../SitemapUtils";
+import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
+import Link from "next/link";
 
 interface LayoutProps {
   children: ReactNode;
@@ -15,7 +17,6 @@ export default function Layout({ children, breadcrumbs }: LayoutProps) {
   const [sidebarWidth, setSidebarWidth] = useState(200); // 16 * 16 = 256px (w-64)
   return (
     <>
-      <Header breadcrumbs={breadcrumbs} />
       <Sidebar
         width={sidebarWidth}
         isVisible={isSidebarVisible}

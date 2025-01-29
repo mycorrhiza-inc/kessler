@@ -1,9 +1,12 @@
 // import "@/app/globals.css";
 import AuthGuard from "@/components/AuthGuard";
+import Header from "@/components/Layout/Header";
 import Layout from "@/components/Layout/Layout";
 import { runtimeConfig } from "@/lib/env_variables";
 
 import { createClient } from "@/utils/supabase/server";
+import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
+import Link from "next/link";
 
 const defaultUrl = "https://kessler.xyz";
 export const metadata = {
@@ -37,6 +40,25 @@ export default async function ApplicationLayout({
 
   const isLoggedIn = await checkLoggedIn();
   return <AuthGuard isLoggedIn={isLoggedIn}>
+    <Header breadcrumbs={{ breadcrumbs: [] }}>
+      {/* <div className="relative flex gap-3"> */}
+      <SignedIn>
+        <Link
+          href="/dashboard"
+          className="px-4 py-2 rounded-full bg-[#131316] text-white text-sm font-semibold"
+        >
+          Dashboard
+        </Link>
+      </SignedIn>
+      <SignedOut>
+        <SignInButton>
+          <button className="px-4 py-2 rounded-full bg-[#131316] text-white text-sm font-semibold">
+            Sign in
+          </button>
+        </SignInButton>
+      </SignedOut>
+      {/* </div> */}
+    </Header>
     <Layout breadcrumbs={{ breadcrumbs: [] }}>
       {children}
     </Layout>

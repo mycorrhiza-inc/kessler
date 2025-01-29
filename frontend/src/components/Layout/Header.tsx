@@ -5,8 +5,10 @@ import { BreadcrumbValues, HeaderBreadcrumbs } from "../SitemapUtils";
 
 export default function Header({
 	breadcrumbs,
+	children,
 }: {
 	breadcrumbs: BreadcrumbValues;
+	children?: React.ReactNode;
 }) {
 	return (
 		<div className="fixed top-0 left-0 flex flex-row  justify-start h-15 pt-5 w-full bg-base-100 z-50 pr-5">
@@ -24,7 +26,9 @@ export default function Header({
 				<HeaderBreadcrumbs breadcrumbs={breadcrumbs} />
 			</div>
 			<div className="flex-none">
-				<HeaderAuth />
+				<HeaderAuth>
+					{children}
+				</HeaderAuth>
 			</div>
 		</div>
 	)
