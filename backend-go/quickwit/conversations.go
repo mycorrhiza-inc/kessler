@@ -2,25 +2,97 @@ package quickwit
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"kessler/crud"
 	"kessler/gen/dbstore"
 	"kessler/objects/conversations"
+	"kessler/objects/networking"
 	"kessler/objects/timestamp"
+	"kessler/search"
 	"kessler/util"
+	"log"
+	"net/http"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
 )
 
-type ConversationSearchSchema struct {
-	Query        string `json:"query"`
-	IndustryType string `json:"industry_type"`
+type ConvoSearchRequestData struct {
+	Search ConversationSearchSchema `json:"search"`
+	Limit  int                      `json:"limit"`
+	Offset int                      `json:"offset"`
 }
 
-func SearchConversations(search_schema ConversationSearchSchema, ctx context.Context) ([]conversations.ConversationInformation, error) {
+type ConversationSearchSchema struct {
+	Query        string                `json:"query"`
+	IndustryType string                `json:"industry_type"`
+	DateFrom     timestamp.KesslerTime `json:"date_from"`
+	DateTo       timestamp.KesslerTime `json:"date_to"`
+}
+
+func HandleConvoSearch(w http.ResponseWriter, r *http.Request) {
+	log.Println("Received a search request")
+
+	// Create an instance of RequestData
+	var convo_search ConversationSearchSchema
+
+	// Decode the JSON body into the struct
+	err := json.NewDecoder(r.Body).Decode(&convo_search)
+	if err != nil {
+		log.Printf("Error decoding JSON: %v\n", err)
+		http.Error(w, "Error decoding JSON", http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close() // Close the body when done
+
+	pagination := networking.PaginationFromUrlParams(r)
+	convoRequestData := ConvoSearchRequestData{
+		Search: convo_search,
+		Limit:  int(pagination.Limit),
+		Offset: int(pagination.Offset),
+	}
+	results, err := SearchConversations(convoRequestData, r.Context())
+	if err != nil {
+		errorstring := fmt.Sprintf("Error searching conversations: %v\n", err)
+		log.Println(errorstring)
+		http.Error(w, errorstring, http.StatusInternalServerError)
+	}
+
+	respString, err := json.Marshal(results)
+	if err != nil {
+		log.Println("Error marshalling response data")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	fmt.Fprint(w, string(respString))
+}
+
+func SearchConversations(search_data ConvoSearchRequestData, ctx context.Context) ([]conversations.ConversationInformation, error) {
+	search_values := search_data.Search
+	dateQueryString := search.ConstructDateTextQuery(search_values.DateFrom, search_values.DateTo, search_values.Query)
+
+	queryString := dateQueryString
+
 	// Search for conversations
+	search_request := search.QuickwitSearchRequest{
+		Query:       queryString,
+		MaxHits:     search_data.Limit,
+		StartOffset: search_data.Offset,
+	}
+	generic_result_bytes, err := search.PerformGenericQuickwitRequest(search_request, NYConversationIndex)
+	if err != nil {
+		return []conversations.ConversationInformation{}, err
+	}
+	var search_results []conversations.ConversationInformation
+	err = json.Unmarshal(generic_result_bytes, &search_results)
+	if err != nil {
+		return []conversations.ConversationInformation{}, err
+	}
+	return search_results, nil
 }
 
 func IndexAllConversations(q dbstore.Queries, ctx context.Context) error {

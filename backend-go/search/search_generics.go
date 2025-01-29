@@ -42,6 +42,10 @@ func ConstructDateQuery(DateFrom timestamp.KesslerTime, DateTo timestamp.Kessler
 }
 
 func ConstructDateTextQuery(DateFrom timestamp.KesslerTime, DateTo timestamp.KesslerTime, query string) string {
+	if DateFrom.IsZero() && DateTo.IsZero() {
+		dateQueryString := fmt.Sprintf("(text:(%s) OR name:(%s))", query, query)
+		return dateQueryString
+	}
 	var dateQueryString string
 	dateQuery := ConstructDateQuery(DateFrom, DateTo)
 	if len(query) >= 0 {

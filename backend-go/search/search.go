@@ -92,6 +92,7 @@ func SearchQuickwit(r SearchRequest) ([]SearchDataHydrated, error) {
 	var metadataFilters networking.MetadataFilterFields = queryFilters.MetadataFilters
 	var uuidFilters networking.UUIDFilterFields = queryFilters.UUIDFilters
 	log.Printf("zzxxcc: %v\n", uuidFilters)
+	dateQueryString := ConstructDateTextQuery(metadataFilters.DateFrom, metadataFilters.DateTo, query)
 
 	filtersString := constructQuickwitMetadataQueryString(metadataFilters.SearchMetadata)
 	uuidFilterString := constructQuickwitUUIDMetadataQueryString(uuidFilters)
