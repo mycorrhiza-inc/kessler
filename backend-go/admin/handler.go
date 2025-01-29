@@ -46,14 +46,14 @@ func DefineAdminRoutes(admin_subrouter *mux.Router) {
 
 	verified := admin_subrouter.Methods(http.MethodPost).Subrouter()
 	verified.HandleFunc(
-		"/quickwit/ingest",
+		"/quickwit/ingest/verified_only",
 		HandleQuickwitIngestFromPostgres,
 	)
 	verified.Use(withUnverifiedFileData)
 
 	unVerified := admin_subrouter.Methods(http.MethodPost).Subrouter()
 	unVerified.HandleFunc(
-		"/quickwit/ingest/verified_only",
+		"/quickwit/ingest",
 		HandleQuickwitIngestFromPostgres,
 	)
 	unVerified.Use(withVerifiedFileData)

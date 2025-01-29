@@ -45,8 +45,8 @@ type DocMapping struct {
 }
 
 type Retention struct {
-	Period   string `json:"period"`
-	Schedule string `json:"schedule"`
+	Period   string `json:"period,omitempty"`
+	Schedule string `json:"schedule,omitempty"`
 }
 
 type QuickwitIndex struct {

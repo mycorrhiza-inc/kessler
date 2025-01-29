@@ -2,22 +2,127 @@ package quickwit
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"kessler/crud"
 	"kessler/gen/dbstore"
+	"kessler/objects/conversations"
+	"kessler/objects/networking"
+	"kessler/objects/timestamp"
 	"kessler/util"
+	"log"
+	"net/http"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
 )
 
-func SearchConversations() {
-	// Search for conversations
+type ConvoSearchRequestData struct {
+	Search ConversationSearchSchema `json:"search"`
+	Limit  int                      `json:"limit"`
+	Offset int                      `json:"offset"`
 }
 
-func IndexConversations(conversations []dbstore.DocketConversation) error {
+type ConversationSearchSchema struct {
+	Query        string                `json:"query"`
+	IndustryType string                `json:"industry_type"`
+	DateFrom     timestamp.KesslerTime `json:"date_from"`
+	DateTo       timestamp.KesslerTime `json:"date_to"`
+}
+
+func HandleConvoSearch(w http.ResponseWriter, r *http.Request) {
+	log.Println("Received a search request")
+
+	// Create an instance of RequestData
+	var convo_search ConversationSearchSchema
+
+	// Decode the JSON body into the struct
+	err := json.NewDecoder(r.Body).Decode(&convo_search)
+	if err != nil {
+		log.Printf("Error decoding JSON: %v\n", err)
+		http.Error(w, "Error decoding JSON", http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close() // Close the body when done
+
+	pagination := networking.PaginationFromUrlParams(r)
+	convoRequestData := ConvoSearchRequestData{
+		Search: convo_search,
+		Limit:  int(pagination.Limit),
+		Offset: int(pagination.Offset),
+	}
+	results, err := SearchConversations(convoRequestData, r.Context())
+	if err != nil {
+		errorstring := fmt.Sprintf("Error searching conversations: %v\n", err)
+		log.Println(errorstring)
+		http.Error(w, errorstring, http.StatusInternalServerError)
+	}
+
+	respString, err := json.Marshal(results)
+	if err != nil {
+		log.Println("Error marshalling response data")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	fmt.Fprint(w, string(respString))
+}
+
+func SearchConversations(search_data ConvoSearchRequestData, ctx context.Context) ([]conversations.ConversationInformation, error) {
+	search_values := search_data.Search
+	dateQueryString := ConstructDateTextQuery(search_values.DateFrom, search_values.DateTo, search_values.Query)
+
+	queryString := dateQueryString
+
+	// Search for conversations
+	search_request := QuickwitSearchRequest{
+		Query:       queryString,
+		MaxHits:     search_data.Limit,
+		StartOffset: search_data.Offset,
+	}
+	generic_result_bytes, err := PerformGenericQuickwitRequest(search_request, NYConversationIndex)
+	if err != nil {
+		return []conversations.ConversationInformation{}, err
+	}
+	var search_results []conversations.ConversationInformation
+	err = json.Unmarshal(generic_result_bytes, &search_results)
+	if err != nil {
+		return []conversations.ConversationInformation{}, err
+	}
+	return search_results, nil
+}
+
+func IndexAllConversations(q dbstore.Queries, ctx context.Context) error {
+	conversations, err := q.DocketConversationList(ctx)
+	if err != nil {
+		return err
+	}
+	err = IndexConversations(conversations)
+	return err
+}
+
+func IndexConversations(convos []dbstore.DocketConversation) error {
 	// Index conversations
+	quickwit_convos := make([]conversations.ConversationInformation, len(convos))
+	for index, convo := range convos {
+		quickwit_convo := conversations.ConversationInformation{
+			DocketGovID:   convo.DocketGovID,
+			State:         convo.State,
+			Name:          convo.Name,
+			Description:   convo.Description,
+			MatterType:    convo.MatterType,
+			IndustryType:  convo.IndustryType,
+			Metadata:      convo.Metadata,
+			Extra:         convo.Extra,
+			DatePublished: timestamp.KesslerTime(convo.DatePublished.Time),
+			ID:            convo.ID,
+		}
+		quickwit_convos[index] = quickwit_convo
+
+	}
+	IngestIntoIndex(NYConversationIndex, quickwit_convos)
 	return nil
 }
 
@@ -84,8 +189,17 @@ func CreateQuickwitIndexConversations() error {
 				{Name: "state", Type: "text", Fast: true},
 				{Name: "docket_id", Type: "text", Fast: true},
 				{Name: "title", Type: "text", Fast: true},
-				{Name: "conversation_id", Type: "boo;", Fast: true},
+				{
+					Name:          "timestamp",
+					Type:          "datetime",
+					Fast:          true,
+					InputFormats:  []string{"unix_timestamp"},
+					FastPrecision: "seconds",
+				},
+
+				// {Name: "conversation_id", Type: "text", Fast: true},
 			},
+			TimestampField: "timestamp",
 		},
 		SearchSettings: SearchSettings{
 			DefaultSearchFields: []string{"name"},

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"kessler/quickwit"
 	"log"
 	"net/http"
 )
@@ -43,7 +44,7 @@ func GetCaseDataSince(date string, page int) ([]Hit, error) {
 	// if the date string is incorrect return a failure
 	// the failure should be handled on the frontend
 	maxHits := 40
-	request := QuickwitSearchRequest{
+	request := quickwit.QuickwitSearchRequest{
 		Query:         "",
 		SnippetFields: "text",
 		MaxHits:       maxHits,
@@ -60,7 +61,7 @@ func GetCaseDataSince(date string, page int) ([]Hit, error) {
 
 	offset := page * maxHits
 	// get all documents with a metadata.date_filed since (x)
-	request_url := fmt.Sprintf("%s/api/v1/dockets/search?sort_by=date_filed?max_hits=20?start_offset=%d", quickwitURL, offset)
+	request_url := fmt.Sprintf("%s/api/v1/dockets/search?sort_by=date_filed?max_hits=20?start_offset=%d", quickwit.QuickwitURL, offset)
 	log.Printf("request_url: \n%s", request_url)
 	resp, err := http.Post(
 		request_url,

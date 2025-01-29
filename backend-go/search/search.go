@@ -9,17 +9,12 @@ import (
 	"kessler/objects/files"
 	"kessler/objects/networking"
 	"kessler/objects/timestamp"
+	"kessler/quickwit"
 	"log"
-	"net/http"
-	"os"
 	"reflect"
-	"strings"
-	"time"
 
 	"github.com/google/uuid"
 )
-
-var quickwitURL = os.Getenv("QUICKWIT_ENDPOINT")
 
 type Hit struct {
 	CreatedAt     string              `json:"created_at"`
@@ -59,14 +54,6 @@ func (s quickwitSearchResponse) String() string {
 	return string(jsonData)
 }
 
-type QuickwitSearchRequest struct {
-	Query         string `json:"query,omitempty"`
-	SnippetFields string `json:"snippet_fields,omitempty"`
-	MaxHits       int    `json:"max_hits"`
-	StartOffset   int    `json:"start_offset"`
-	SortBy        string `json:"sort_by,omitempty"`
-}
-
 type SearchData struct {
 	Name     string `json:"name"`
 	Snippet  string `json:"snippet,omitempty"`
@@ -95,28 +82,19 @@ func SearchQuickwit(r SearchRequest) ([]SearchDataHydrated, error) {
 	var metadataFilters networking.MetadataFilterFields = queryFilters.MetadataFilters
 	var uuidFilters networking.UUIDFilterFields = queryFilters.UUIDFilters
 	log.Printf("zzxxcc: %v\n", uuidFilters)
-
-	var queryString string
-	dateQuery, err := ConstructDateQuery(metadataFilters.DateFrom, metadataFilters.DateTo)
-	if err != nil {
-		log.Printf("error constructing date query: %v", err)
-	}
-	if len(r.Query) >= 0 {
-		queryString = fmt.Sprintf("((text:(%s) OR name:(%s)) AND %s)", query, query, dateQuery)
-		// queryString = fmt.Sprintf("((text:(%s) OR name:(%s)) AND verified:true AND %s)", query, query, dateQuery)
-	}
+	dateQueryString := quickwit.ConstructDateTextQuery(metadataFilters.DateFrom, metadataFilters.DateTo, query)
 
 	filtersString := constructQuickwitMetadataQueryString(metadataFilters.SearchMetadata)
 	uuidFilterString := constructQuickwitUUIDMetadataQueryString(uuidFilters)
 
 	log.Printf(
 		"!!!!!!!!!!\nquery: %s\nfilters: %s\nuuid filters: %s\n!!!!!!!!!!\n",
-		queryString,
+		dateQueryString,
 		filtersString,
 		uuidFilterString,
 	)
 	// queryString = queryString + filtersString
-	queryString = queryString + filtersString + uuidFilterString
+	queryString := dateQueryString + filtersString + uuidFilterString
 	log.Printf("full query string: %s\n", queryString)
 
 	// construct sortby string
@@ -138,51 +116,25 @@ func SearchQuickwit(r SearchRequest) ([]SearchDataHydrated, error) {
 		r.MaxHits = 40
 	}
 	// construct request
-	request := QuickwitSearchRequest{
+	request := quickwit.QuickwitSearchRequest{
 		Query:         queryString,
 		MaxHits:       r.MaxHits,
 		SnippetFields: snippetFields,
 		StartOffset:   r.StartOffset,
 		SortBy:        sortbyStr,
 	}
-
-	jsonData, err := json.Marshal(request)
-
-	// ===== submit request to quickwit =====
-	log.Printf("jsondata: \n%s", jsonData)
+	return_bytes, err := quickwit.PerformGenericQuickwitRequest(request, search_index)
 	if err != nil {
-		log.Printf("Error Marshalling quickwit request: %s", err)
+		log.Printf("Error with Quickwit Request: %v", err)
 		return []SearchDataHydrated{}, err
-	}
-
-	request_url := fmt.Sprintf("%s/api/v1/%s/search", quickwitURL, search_index)
-	resp, err := http.Post(
-		request_url,
-		"application/json",
-		bytes.NewBuffer(jsonData),
-	)
-	curlCmd := fmt.Sprintf("curl -X POST -H 'Content-Type: application/json' -d '%s' %s", string(jsonData), request_url)
-	if err != nil {
-		log.Printf("Error sending request to quickwit: %s\n", err)
-		log.Printf("Replay with: %s\n", curlCmd)
-		return []SearchDataHydrated{}, err
-	}
-
-	defer resp.Body.Close()
-
-	// ===== handle response =====
-	if resp.StatusCode != http.StatusOK {
-		log.Printf("Error: received status code %v", resp.StatusCode)
-		log.Printf("Replay with: %s\n", curlCmd)
-		return []SearchDataHydrated{}, fmt.Errorf("received status code %v", resp.StatusCode)
 	}
 	var searchResponse quickwitSearchResponse
-	err = json.NewDecoder(resp.Body).Decode(&searchResponse)
+	err = json.NewDecoder(bytes.NewReader(return_bytes)).Decode(&searchResponse)
 	if err != nil {
-		log.Printf("Error unmarshalling quickwit response: %s", err)
-		return []SearchDataHydrated{}, err
+		fmt.Printf("quickwit response: %v\n", return_bytes)
+		errorstring := fmt.Sprintf("Error decoding JSON: %v\n Offending json looked like: %v", err, string(return_bytes))
+		return []SearchDataHydrated{}, fmt.Errorf(errorstring)
 	}
-	fmt.Printf("quickwit response: %v\n", resp)
 
 	data, err := ExtractSearchData(searchResponse)
 	if err != nil {
@@ -283,45 +235,6 @@ func errturn(err error) ([]SearchData, error) {
 	return nil, err
 }
 
-func convertToRFC3339(date string) (string, error) {
-	layout := "2006-01-02"
-
-	parsedDate, err := time.Parse(layout, date)
-	if err != nil {
-		return "", fmt.Errorf("invalid date format: %v", err)
-	}
-	parsedDateString := parsedDate.Format(time.RFC3339)
-	return parsedDateString, nil
-}
-
-func ConstructDateQuery(DateFrom string, DateTo string) (string, error) {
-	// construct date query
-	fromDate := "*"
-	toDate := "*"
-	log.Printf("building date from: %s\n", DateFrom)
-	log.Printf("building date to: %s\n", DateTo)
-
-	if DateFrom != "" || DateTo != "" {
-		var err error
-		if DateFrom != "" {
-			fromDate, err = convertToRFC3339(DateFrom)
-			if err != nil {
-				return "date_filed:[* TO *]", fmt.Errorf("invalid date format for DateFrom: %v", err)
-			}
-			DateFrom = ""
-		}
-		if DateTo != "" {
-			toDate, err = convertToRFC3339(DateTo)
-			if err != nil {
-				return "date_filed:[* TO *]", fmt.Errorf("invalid date format for DateTo: %v", err)
-			}
-			DateTo = ""
-		}
-	}
-	dateQuery := fmt.Sprintf("date_filed:[%s TO %s]", fromDate, toDate)
-	return dateQuery, nil
-}
-
 // THESE ARE THE IMPORTANT MAPPINGS
 var QuickwitFilterMapping = map[string]string{
 	"DateFrom": "date_filed",
@@ -330,52 +243,13 @@ var QuickwitFilterMapping = map[string]string{
 func constructQuickwitMetadataQueryString(meta networking.SearchMetadata) string {
 	values := reflect.ValueOf(meta)
 	types := reflect.TypeOf(meta)
-	return constructGenericFilterQuery(values, types)
+	return quickwit.ConstructGenericFilterQuery(values, types)
 }
 
 func constructQuickwitUUIDMetadataQueryString(meta networking.UUIDFilterFields) string {
 	values := reflect.ValueOf(meta)
 	types := reflect.TypeOf(meta)
-	return constructGenericFilterQuery(values, types)
-}
-
-func constructGenericFilterQuery(values reflect.Value, types reflect.Type) string {
-	var filterQuery string
-	filters := []string{}
-
-	fmt.Printf("values: %v\n", values)
-	fmt.Printf("types: %v\n", types)
-
-	// ===== iterate over metadata for filter =====
-	for i := 0; i < types.NumField(); i++ {
-		// get the field and value
-		field := types.Field(i)
-		value := values.Field(i)
-		tag := field.Tag.Get("json")
-		if strings.Contains(tag, ",omitempty") {
-			tag = strings.Split(tag, ",")[0]
-		}
-
-		fmt.Printf("tag: %v\nfield: %v\nvalue: %v\n", tag, field, value)
-
-		if tag == "fileuuid" {
-			tag = "source_id"
-		}
-		s := fmt.Sprintf("metadata.%s:(%s)", tag, value)
-
-		// exlude empty values
-		if strings.Contains(s, "00000000-0000-0000-0000-000000000000") {
-			continue
-		}
-		log.Printf("new filter: %s\n", s)
-		filters = append(filters, s)
-	}
-	// concat all filters with AND clauses
-	for _, f := range filters {
-		filterQuery += fmt.Sprintf(" AND (%s)", f)
-	}
-	fmt.Printf("filter query: %s\n", filterQuery)
-	return filterQuery
+	return quickwit.ConstructGenericFilterQuery(values, types)
 }
 
 func SearchMilvus(request SearchRequest) ([]SearchData, error) {

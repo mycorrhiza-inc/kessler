@@ -3,6 +3,7 @@ package networking
 import (
 	"encoding/json"
 	"fmt"
+	"kessler/objects/timestamp"
 
 	"github.com/google/uuid"
 )
@@ -56,8 +57,8 @@ func (m SearchMetadata) String() string {
 
 type MetadataFilterFields struct {
 	SearchMetadata
-	DateFrom string `json:"date_from"`
-	DateTo   string `json:"date_to"`
+	DateFrom timestamp.KesslerTime `json:"date_from"`
+	DateTo   timestamp.KesslerTime `json:"date_to"`
 }
 
 // String method for FilterFields struct

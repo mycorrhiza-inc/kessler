@@ -6,10 +6,7 @@ import MarkdownRenderer from "../MarkdownRenderer";
 import { internalAPIURL } from "@/lib/env_variables";
 
 const getConversationData = async (url: string) => {
-  const response = await axios.get(
-    url,
-    // "http://api.kessler.xyz/v2/recent_updates",
-  );
+  const response = await axios.get(url);
   if (response.status !== 200) {
     throw new Error("Error fetching data with status " + response.status);
   }
@@ -75,8 +72,6 @@ export const generateConversationInfo = async (convoNamedID: string) => {
     ? [{ filter: FilterField.MatchDocketId, value: convoNamedID }]
     : [];
 
-  // const url = `${apiURL}/v2/public/conversations/named-lookup/${conversation_id}`;
-  // USE THE PROD URL SINCE LOCALHOST ISNT REACHABLE FROM SERVER COMPONENTS
   const url = `${internalAPIURL}/v2/public/conversations/named-lookup/${convoNamedID}`;
   const conversation = await getConversationData(url);
   // The title of the page looks weird with the really long title, either shorten

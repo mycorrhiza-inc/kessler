@@ -27,9 +27,30 @@ func CreateQuickwitOrganizationsIndex(indexName string) error {
 				Fast:       true,
 			},
 			FieldMappings: []FieldMapping{
-				{Name: "name", Type: "text", Fast: true},
-				{Name: "uuid", Type: "text", Fast: true},
+				{
+					Name: "name",
+					Type: "text",
+					Fast: true,
+				},
+				{
+					Name: "aliases",
+					Type: "array<text>",
+					Fast: true,
+				},
+				{
+					Name: "uuid",
+					Type: "text",
+					Fast: true,
+				},
+				{
+					Name:          "timestamp",
+					Type:          "datetime",
+					Fast:          true,
+					InputFormats:  []string{"unix_timestamp"},
+					FastPrecision: "seconds",
+				},
 			},
+			TimestampField: "timestamp",
 		},
 		SearchSettings: SearchSettings{
 			DefaultSearchFields: []string{"name"},
