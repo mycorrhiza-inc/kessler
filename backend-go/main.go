@@ -8,6 +8,7 @@ import (
 	"kessler/health"
 	"kessler/jobs"
 	"kessler/rag"
+	"kessler/search"
 	"log"
 	"net/http"
 	"os"
@@ -135,12 +136,17 @@ func main() {
 		})
 	})
 	public_subrouter := regularMux.PathPrefix("/v2/public").Subrouter()
+	crud.DefineCrudRoutes(public_subrouter)
+
 	jobs_subrouter := regularMux.PathPrefix("/v2/jobs").Subrouter()
 	jobs.DefineJobRoutes(jobs_subrouter)
 
-	crud.DefineCrudRoutes(public_subrouter)
 	health_subrouter := regularMux.PathPrefix("/v2/health").Subrouter()
 	health.DefineHealthRoutes(health_subrouter)
+
+	search_subrouter := regularMux.PathPrefix("/v2/search").Subrouter()
+	search.DefineSearchRoutes(search_subrouter)
+
 	regularMux.PathPrefix("/v2/public/").Handler(public_subrouter)
 	regularMux.PathPrefix("/v2/jobs/").Handler(jobs_subrouter)
 	regularMux.HandleFunc("/v2/version_hash", HandleVersionHash)
