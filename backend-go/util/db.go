@@ -10,11 +10,11 @@ import (
 
 func DBTXFromContext(ctx context.Context) dbstore.DBTX {
 	pool := ctx.Value("db").(*pgxpool.Pool)
-	connection, err := pool.Acquire(ctx)
-	if err != nil {
-		panic(err)
-	}
-	return connection
+	// connection, err := pool.Acquire(ctx)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	return pool
 }
 
 func DBQueriesFromContext(ctx context.Context) *dbstore.Queries {
