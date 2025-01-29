@@ -4,6 +4,7 @@ import "./globals.css";
 import { PHProvider } from "./providers";
 import dynamic from "next/dynamic";
 import EnvVariablesScript from "@/lib/env_variables_root_script";
+import { ClerkProvider, SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
 
 const PostHogPageView = dynamic(() => import("./PostHogPageView"), {
   ssr: false,
@@ -33,24 +34,27 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <PHProvider>
-        <head>
-          <meta
-            name="viewport"
-            content="width=device-width, initial-scale=1.0"
-          />
-          <EnvVariablesScript />
-        </head>
-        <body className="bg-base-100">
-          <ThemeProvider defaultTheme="light">
-            <PostHogPageView />
-            <main className="">
-              <div className="flex-1 w-100vw flex flex-col items-center">
-                {/* <Navbar user={user} /> */}
-                {children}
-              </div>
-            </main>
-          </ThemeProvider>
-        </body>
+        <ClerkProvider>
+          <head>
+            <meta
+              name="viewport"
+              content="width=device-width, initial-scale=1.0"
+            />
+            <EnvVariablesScript />
+          </head>
+          <body className="bg-base-100">
+            <ThemeProvider defaultTheme="light">
+              <PostHogPageView />
+              <main className="">
+                <div className="flex-1 w-100vw flex flex-col items-center">
+                  {/* <Navbar user={user} /> */}
+                  {children}
+                </div>
+              </main>
+            </ThemeProvider>
+          </body>
+
+        </ClerkProvider>
       </PHProvider>
     </html>
   );

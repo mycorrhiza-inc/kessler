@@ -1,5 +1,8 @@
 import { type NextRequest } from "next/server";
 import { updateSession } from "@/utils/supabase/middleware";
+import { clerkMiddleware } from "@clerk/nextjs/server";
+
+export default clerkMiddleware();
 
 export async function middleware(request: NextRequest) {
   return await updateSession(request);

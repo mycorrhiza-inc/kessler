@@ -6,6 +6,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@clerk/nextjs": "^6.10.3",
     "@deck.gl/core": "^9.0.32",
     "@deck.gl/layers": "^9.0.32",
     "@deck.gl/react": "^9.0.32",
