@@ -16,6 +16,10 @@ func (t KesslerTime) MarshalJSON() ([]byte, error) {
 func (t *KesslerTime) UnmarshalJSON(data []byte) error {
 	str := string(data)
 	str = strings.Trim(str, "\"")
+	if str == "" {
+		*t = KesslerTime{}
+		return nil
+	}
 	parsed, err := time.Parse(time.RFC3339, str)
 	if err != nil {
 		return err
