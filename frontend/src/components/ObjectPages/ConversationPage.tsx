@@ -72,8 +72,6 @@ export const generateConversationInfo = async (convoNamedID: string) => {
     ? [{ filter: FilterField.MatchDocketId, value: convoNamedID }]
     : [];
 
-  // const url = `${apiURL}/v2/public/conversations/named-lookup/${conversation_id}`;
-  // USE THE PROD URL SINCE LOCALHOST ISNT REACHABLE FROM SERVER COMPONENTS
   const url = `${internalAPIURL}/v2/public/conversations/named-lookup/${convoNamedID}`;
   const conversation = await getConversationData(url);
   // The title of the page looks weird with the really long title, either shorten

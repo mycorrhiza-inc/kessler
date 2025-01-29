@@ -21,14 +21,17 @@ const conversationsListGet = async (url: string) => {
 };
 
 type ConversationTableSchema = {
-  Name: string;
-  DocketGovID: string;
-  DocumentCount: number;
-  State: string;
-  Description: string;
-  Metadata: string;
-  DateFiled: string;
-  IndustryType: string;
+  docket_gov_id: string;
+  state: string;
+  name: string;
+  description: string;
+  matter_type: string;
+  industry_type: string;
+  metadata: string;
+  extra: string;
+  documents_count: number;
+  date_published: string;
+  id: string;
 };
 
 const ConversationTable = ({
@@ -45,14 +48,14 @@ const ConversationTable = ({
       <thead>
         <tr>
           <td className="w-[30%]">Name</td>
-          <td className="w-[10%]">Date Filed</td>
+          <td className="w-[10%]">Date Published</td>
           <td className="w-[10%]">ID</td>
           <td className="w-[10%]">Matter Type</td>
-          <td className="w-[10%]">Matter Subtype</td>
+          <td className="w-[10%]">State</td>
           <td className="w-[10%]">Industry</td>
           {!truncate && (
             <>
-              <td className="w-[10%]">Organization</td>
+              <td className="w-[10%]">Description</td>
               <td className="w-[10%]">Document Count</td>
             </>
           )}
@@ -61,39 +64,29 @@ const ConversationTable = ({
 
       <tbody>
         {convoList.map((convo: ConversationTableSchema) => {
-          var description = null;
-          const description_string = convo.Metadata;
-          console.log(description_string);
-          try {
-            description = JSON.parse(description_string);
-            console.log(description);
-          } catch (e) {
-            console.log("Error parsing JSON", e);
-          }
-          const matter_type = description?.matter_type || "unknown";
-          const matter_subtype = description?.matter_subtype || "unknown";
-          const organization = description?.organization || "unknown";
-          const date_filed = description?.date_filed || "unknown";
+          const formattedDate = new Date(
+            convo.date_published,
+          ).toLocaleDateString();
 
           return (
             <tr
-              key={convo.DocketGovID}
+              key={convo.docket_gov_id}
               className="border-base-300 hover:bg-base-200 transition duration-500 ease-out cursor-pointer"
               onClick={() => {
-                router.push(`/dockets/${convo.DocketGovID}`);
+                router.push(`/dockets/${convo.docket_gov_id}`);
               }}
             >
-              <td className="w-[60%] px-4 py-3">{convo.Name}</td>
-              <td className="w-[10%] px-4 py-3">{date_filed}</td>
-              <td className="w-[10%] px-4 py-3">{convo.DocketGovID}</td>
-              <td className="w-[10%] px-4 py-3">{matter_type}</td>
-              <td className="w-[10%] px-4 py-3">{matter_subtype}</td>
-              <td className="w-[10%] px-4 py-3">{convo.IndustryType}</td>
+              <td className="w-[60%] px-4 py-3">{convo.name}</td>
+              <td className="w-[10%] px-4 py-3">{formattedDate}</td>
+              <td className="w-[10%] px-4 py-3">{convo.docket_gov_id}</td>
+              <td className="w-[10%] px-4 py-3">{convo.matter_type}</td>
+              <td className="w-[10%] px-4 py-3">{convo.state}</td>
+              <td className="w-[10%] px-4 py-3">{convo.industry_type}</td>
 
               {!truncate && (
                 <>
-                  <td className="w-[10%] px-4 py-3">{organization}</td>
-                  <td className="w-[10%] px-4 py-3">{convo.DocumentCount}</td>
+                  <td className="w-[10%] px-4 py-3">{convo.description}</td>
+                  <td className="w-[10%] px-4 py-3">{convo.documents_count}</td>
                 </>
               )}
             </tr>
