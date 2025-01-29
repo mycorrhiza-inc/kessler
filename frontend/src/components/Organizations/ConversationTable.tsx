@@ -25,7 +25,9 @@ const conversationSearchGet = async (
     }
     return return_data;
   };
-  const result = await axios.get(url).then((res) => cleanData(res));
+  const result = await axios
+    .post(url, searchData)
+    .then((res) => cleanData(res));
   return result as ConversationTableSchema[];
 };
 

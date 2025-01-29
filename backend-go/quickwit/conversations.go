@@ -40,8 +40,11 @@ func HandleConvoSearch(w http.ResponseWriter, r *http.Request) {
 	// Decode the JSON body into the struct
 	err := json.NewDecoder(r.Body).Decode(&convo_search)
 	if err != nil {
-		log.Printf("Error decoding JSON: %v\n", err)
-		http.Error(w, "Error decoding JSON", http.StatusBadRequest)
+		json_bytes := []byte{}
+		r.Body.Read(json_bytes)
+		errorstring := fmt.Sprintf("Error decoding JSON: %v\nWith this error: %v", json_bytes, err)
+		log.Printf(errorstring)
+		http.Error(w, errorstring, http.StatusBadRequest)
 		return
 	}
 	defer r.Body.Close() // Close the body when done
