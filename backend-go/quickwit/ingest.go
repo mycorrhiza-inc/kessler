@@ -10,7 +10,7 @@ import (
 )
 
 func IngestIntoIndex[V QuickwitFileUploadData | conversations.ConversationInformation | organizations.OrganizationSchemaComplete](indexName string, data []V) error {
-	maxIngestItems := 100
+	maxIngestItems := 1000
 	fmt.Println("Initiating ingest into index")
 
 	for i := 0; i < len(data); i += maxIngestItems {
