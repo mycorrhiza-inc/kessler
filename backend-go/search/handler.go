@@ -4,9 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"kessler/objects/networking"
+	"kessler/quickwit"
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/gorilla/mux"
 )
 
 type SearchRequest struct {
@@ -44,6 +47,12 @@ func (s SearchRequest) String() string {
 
 type RecentUpdatesRequest struct {
 	Page int `json:"page"`
+}
+
+func DefineSearchRoutes(search_router *mux.Router) {
+	search_router.HandleFunc("/file", HandleSearchRequest)
+	search_router.HandleFunc("/file/recent_updates", HandleRecentUpdatesRequest)
+	search_router.HandleFunc("/conversation", quickwit.HandleConvoSearch)
 }
 
 func HandleSearchRequest(w http.ResponseWriter, r *http.Request) {

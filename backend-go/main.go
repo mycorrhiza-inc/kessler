@@ -5,10 +5,9 @@ import (
 	"kessler/admin"
 	"kessler/autocomplete"
 	"kessler/crud"
-	"kessler/jobs"
 	"kessler/health"
+	"kessler/jobs"
 	"kessler/rag"
-	"kessler/search"
 	"log"
 	"net/http"
 	"os"
@@ -145,10 +144,8 @@ func main() {
 	regularMux.PathPrefix("/v2/public/").Handler(public_subrouter)
 	regularMux.PathPrefix("/v2/jobs/").Handler(jobs_subrouter)
 	regularMux.HandleFunc("/v2/version_hash", HandleVersionHash)
-	regularMux.HandleFunc("/v2/search", search.HandleSearchRequest)
 	regularMux.HandleFunc("/v2/rag/basic_chat", rag.HandleBasicChatRequest)
 	regularMux.HandleFunc("/v2/rag/chat", rag.HandleRagChatRequest)
-	regularMux.HandleFunc("/v2/recent_updates", search.HandleRecentUpdatesRequest)
 	autocomplete_subrouter := regularMux.PathPrefix("/v2/autocomplete").Subrouter()
 	autocomplete.DefineAutocompleteRoutes(autocomplete_subrouter)
 	regularWithTimeout := http.TimeoutHandler(regularMux, timeout, "Timeout!")

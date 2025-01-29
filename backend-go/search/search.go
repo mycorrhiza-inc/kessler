@@ -9,14 +9,12 @@ import (
 	"kessler/objects/files"
 	"kessler/objects/networking"
 	"kessler/objects/timestamp"
+	"kessler/quickwit"
 	"log"
-	"os"
 	"reflect"
 
 	"github.com/google/uuid"
 )
-
-var quickwitURL = os.Getenv("QUICKWIT_ENDPOINT")
 
 type Hit struct {
 	CreatedAt     string              `json:"created_at"`
@@ -56,14 +54,6 @@ func (s quickwitSearchResponse) String() string {
 	return string(jsonData)
 }
 
-type QuickwitSearchRequest struct {
-	Query         string `json:"query,omitempty"`
-	SnippetFields string `json:"snippet_fields,omitempty"`
-	MaxHits       int    `json:"max_hits"`
-	StartOffset   int    `json:"start_offset"`
-	SortBy        string `json:"sort_by,omitempty"`
-}
-
 type SearchData struct {
 	Name     string `json:"name"`
 	Snippet  string `json:"snippet,omitempty"`
@@ -92,7 +82,7 @@ func SearchQuickwit(r SearchRequest) ([]SearchDataHydrated, error) {
 	var metadataFilters networking.MetadataFilterFields = queryFilters.MetadataFilters
 	var uuidFilters networking.UUIDFilterFields = queryFilters.UUIDFilters
 	log.Printf("zzxxcc: %v\n", uuidFilters)
-	dateQueryString := ConstructDateTextQuery(metadataFilters.DateFrom, metadataFilters.DateTo, query)
+	dateQueryString := quickwit.ConstructDateTextQuery(metadataFilters.DateFrom, metadataFilters.DateTo, query)
 
 	filtersString := constructQuickwitMetadataQueryString(metadataFilters.SearchMetadata)
 	uuidFilterString := constructQuickwitUUIDMetadataQueryString(uuidFilters)
@@ -126,14 +116,14 @@ func SearchQuickwit(r SearchRequest) ([]SearchDataHydrated, error) {
 		r.MaxHits = 40
 	}
 	// construct request
-	request := QuickwitSearchRequest{
+	request := quickwit.QuickwitSearchRequest{
 		Query:         queryString,
 		MaxHits:       r.MaxHits,
 		SnippetFields: snippetFields,
 		StartOffset:   r.StartOffset,
 		SortBy:        sortbyStr,
 	}
-	return_bytes, err := PerformGenericQuickwitRequest(request, search_index)
+	return_bytes, err := quickwit.PerformGenericQuickwitRequest(request, search_index)
 	if err != nil {
 		log.Printf("Error with Quickwit Request: %v", err)
 		return []SearchDataHydrated{}, err
@@ -253,13 +243,13 @@ var QuickwitFilterMapping = map[string]string{
 func constructQuickwitMetadataQueryString(meta networking.SearchMetadata) string {
 	values := reflect.ValueOf(meta)
 	types := reflect.TypeOf(meta)
-	return ConstructGenericFilterQuery(values, types)
+	return quickwit.ConstructGenericFilterQuery(values, types)
 }
 
 func constructQuickwitUUIDMetadataQueryString(meta networking.UUIDFilterFields) string {
 	values := reflect.ValueOf(meta)
 	types := reflect.TypeOf(meta)
-	return ConstructGenericFilterQuery(values, types)
+	return quickwit.ConstructGenericFilterQuery(values, types)
 }
 
 func SearchMilvus(request SearchRequest) ([]SearchData, error) {

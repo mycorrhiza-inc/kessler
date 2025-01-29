@@ -9,7 +9,6 @@ import (
 	"kessler/objects/conversations"
 	"kessler/objects/networking"
 	"kessler/objects/timestamp"
-	"kessler/search"
 	"kessler/util"
 	"log"
 	"net/http"
@@ -73,17 +72,17 @@ func HandleConvoSearch(w http.ResponseWriter, r *http.Request) {
 
 func SearchConversations(search_data ConvoSearchRequestData, ctx context.Context) ([]conversations.ConversationInformation, error) {
 	search_values := search_data.Search
-	dateQueryString := search.ConstructDateTextQuery(search_values.DateFrom, search_values.DateTo, search_values.Query)
+	dateQueryString := ConstructDateTextQuery(search_values.DateFrom, search_values.DateTo, search_values.Query)
 
 	queryString := dateQueryString
 
 	// Search for conversations
-	search_request := search.QuickwitSearchRequest{
+	search_request := QuickwitSearchRequest{
 		Query:       queryString,
 		MaxHits:     search_data.Limit,
 		StartOffset: search_data.Offset,
 	}
-	generic_result_bytes, err := search.PerformGenericQuickwitRequest(search_request, NYConversationIndex)
+	generic_result_bytes, err := PerformGenericQuickwitRequest(search_request, NYConversationIndex)
 	if err != nil {
 		return []conversations.ConversationInformation{}, err
 	}
