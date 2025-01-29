@@ -1,4 +1,4 @@
-FROM node:22.4.1-alpine3.20 as BUILD_IMAGE
+FROM node:23.6.1-alpine3.20 as BUILD_IMAGE
 WORKDIR /app
 COPY ./package.json ./   
 COPY ./package-lock.json ./     
@@ -11,7 +11,7 @@ COPY . .
 # RUN touch .env
 RUN npm run build
 
-FROM node:22.4.1-alpine3.20
+FROM node:23.6.1-alpine3.20
 WORKDIR /app
 # copy from build image
 COPY --from=BUILD_IMAGE /app/package.json ./package.json
