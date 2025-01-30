@@ -23,4 +23,3 @@ COPY ./tailwind.config.ts ./
 COPY ./postcss.config.js ./
 
 EXPOSE 3000
-

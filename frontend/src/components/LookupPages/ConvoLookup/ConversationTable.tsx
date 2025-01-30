@@ -2,10 +2,11 @@
 import axios from "axios";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useEffect, useState } from "react";
-import LoadingSpinnerTimeout from "../styled-components/LoadingSpinnerTimeout";
+import LoadingSpinnerTimeout from "../../styled-components/LoadingSpinnerTimeout";
 import { useRouter } from "next/navigation";
 import { getRuntimeEnv } from "@/lib/env_variables_hydration_script";
 import { ClassNames } from "@emotion/react";
+import { ConversationLookupData } from "./ConvoLookupTypes";
 
 type ConversationSearchSchema = {
   query: string;
@@ -109,8 +110,10 @@ const ConversationTable = ({
 };
 
 const ConversationTableInfiniteScroll = ({
+  lookup_data,
   truncate,
 }: {
+  lookup_data: ConversationLookupData;
   truncate?: boolean;
 }) => {
   const [tableData, setTableData] = useState<ConversationTableSchema[]>([]);
