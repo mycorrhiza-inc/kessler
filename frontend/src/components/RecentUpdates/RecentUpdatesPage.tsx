@@ -1,7 +1,7 @@
 import Link from "next/link";
 import ConversationTableInfiniteScroll from "../LookupPages/ConvoLookup/ConversationTable";
 import { ExperimentalChatModalClickDiv } from "../Chat/ChatModal";
-import OrganizationTableInfiniteScroll from "../Organizations/OrganizationTable";
+import OrganizationTableInfiniteScroll from "../LookupPages/OrgLookup/OrganizationTable";
 import RecentUpdatesView from "./RecentUpdatesView";
 
 export default function RecentUpdatesPage() {
