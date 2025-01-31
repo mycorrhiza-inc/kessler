@@ -155,7 +155,7 @@ func main() {
 	regularGroup := NewRouteGroup(timeout, "Timeout!", dbMiddleware)
 
 	// Setup admin routes
-	adminGroup.HandlePrefix("/v2/admin/", admin.DefineAdminRoutes)
+	adminGroup.HandlePrefix("/v2/admin", admin.DefineAdminRoutes)
 	adminGroup.HandlePrefix("/v2/jobs", jobs.DefineJobRoutes)
 	// Add more admin prefixes as needed
 
