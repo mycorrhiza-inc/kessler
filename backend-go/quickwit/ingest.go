@@ -29,7 +29,7 @@ func IngestIntoIndex[V QuickwitFileUploadData | conversations.ConversationInform
 		}
 
 		dataToPost := strings.Join(records, "\n")
-		fmt.Printf("Ingesting %d data entries into index (batch %d-%d)\n", len(records), i+1, end)
+		fmt.Printf("Ingesting %d data entries into quickwit index:\"%v\"(batch %d-%d) \n", len(records), indexName, i+1, end)
 		resp, err := http.Post(
 			fmt.Sprintf("%s/api/v1/%s/ingest", quickwitEndpoint, indexName),
 			"application/x-ndjson",
@@ -42,5 +42,11 @@ func IngestIntoIndex[V QuickwitFileUploadData | conversations.ConversationInform
 
 		printResponse(resp)
 	}
+	tailUrl := fmt.Sprintf("%s/api/v1/%s/tail", quickwitEndpoint, indexName)
+	resp, err := http.Get(tailUrl)
+	if err != nil {
+		fmt.Printf("Error tailing index: %v\n", err)
+	}
+	printResponse(resp)
 	return nil
 }
