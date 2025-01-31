@@ -11,6 +11,19 @@ import (
 
 func IngestIntoIndex[V QuickwitFileUploadData | conversations.ConversationInformation | organizations.OrganizationSchemaComplete](indexName string, data []V, clear_index bool) error {
 	if clear_index {
+		clear_url := fmt.Sprintf("%s/api/v1/indexes/%s/clear", quickwitEndpoint, indexName)
+		req, err := http.NewRequest(http.MethodPut, clear_url, nil)
+		if err != nil {
+			return fmt.Errorf("error creating request: %v", err)
+		}
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			return fmt.Errorf("error clearing index: %v", err)
+		}
+		if resp.StatusCode != http.StatusOK {
+			return fmt.Errorf("error clearing index, got bad status code: %v", resp.StatusCode)
+		}
+		defer resp.Body.Close()
 	}
 	maxIngestItems := 1000
 	fmt.Println("Initiating ingest into index")

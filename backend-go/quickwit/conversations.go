@@ -125,7 +125,7 @@ func IndexConversations(convos []dbstore.DocketConversation) error {
 		quickwit_convos[index] = quickwit_convo
 
 	}
-	IngestIntoIndex(NYConversationIndex, quickwit_convos)
+	IngestIntoIndex(NYConversationIndex, quickwit_convos, false)
 	return nil
 }
 
