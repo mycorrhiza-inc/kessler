@@ -58,25 +58,31 @@ func IngestIntoIndex[V QuickwitFileUploadData | conversations.ConversationInform
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("Tailing index gave bad response code: %v\n", resp.StatusCode)
 	}
-	var tailResponse map[string]interface{}
-	if err := json.NewDecoder(resp.Body).Decode(&tailResponse); err != nil {
-		return fmt.Errorf("Error decoding tail response: %v", err)
+
+	body := make([]byte, 1000)
+	n, err := resp.Body.Read(body)
+	if err != nil && err.Error() != "EOF" {
+		return fmt.Errorf("Error reading response body: %v", err)
 	}
-	tailResponse["doc_batch"].(map[string]interface{})["doc_lengths"] = ""
-	fmt.Printf("Tail response: %+v\n", tailResponse)
+	fmt.Printf("Tail response (first %d chars): %s\n", n, string(body[:n]))
+
 	describeUrl := fmt.Sprintf("%s/api/v1/%s/describe", quickwitEndpoint, indexName)
 	resp, err = http.Get(describeUrl)
 	if err != nil {
-		return fmt.Errorf("Error tailing index: %v\n", err)
+		return fmt.Errorf("Error describing index: %v\n", err)
 	}
+	defer resp.Body.Close()
+
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("Tailing index gave bad response code: %v\n", resp.StatusCode)
+		return fmt.Errorf("Describing index gave bad response code: %v\n", resp.StatusCode)
 	}
-	var describeResponse map[string]interface{}
-	if err := json.NewDecoder(resp.Body).Decode(&describeResponse); err != nil {
-		return fmt.Errorf("Error decoding tail response: %v", err)
+
+	body = make([]byte, 1000)
+	n, err = resp.Body.Read(body)
+	if err != nil && err.Error() != "EOF" {
+		return fmt.Errorf("Error reading response body: %v", err)
 	}
-	fmt.Printf("Tail response: %+v\n", describeResponse)
+	fmt.Printf("Describe response (first %d chars): %s\n", n, string(body[:n]))
 
 	return nil
 }
