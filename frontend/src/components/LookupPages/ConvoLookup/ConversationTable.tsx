@@ -2,16 +2,28 @@
 import axios from "axios";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useEffect, useState } from "react";
-import LoadingSpinnerTimeout from "../styled-components/LoadingSpinnerTimeout";
+import LoadingSpinnerTimeout from "../../styled-components/LoadingSpinnerTimeout";
 import { useRouter } from "next/navigation";
 import { getRuntimeEnv } from "@/lib/env_variables_hydration_script";
-import { ClassNames } from "@emotion/react";
 
-type ConversationSearchSchema = {
-  query: string;
-  industry_type: string;
-  date_from: string;
-  date_to: string;
+export type ConversationSearchSchema = {
+  query?: string;
+  industry_type?: string;
+  date_from?: string;
+  date_to?: string;
+};
+
+const InstanitateConversationSearchSchema = (
+  search_schema?: ConversationSearchSchema,
+): ConversationSearchSchema => {
+  return {
+    ...Object.fromEntries(
+      Object.keys(search_schema || {}).map((key) => [
+        key,
+        search_schema?.[key as keyof ConversationSearchSchema] || "",
+      ]),
+    ),
+  } as ConversationSearchSchema;
 };
 const conversationSearchGet = async (
   searchData: ConversationSearchSchema,
@@ -109,8 +121,10 @@ const ConversationTable = ({
 };
 
 const ConversationTableInfiniteScroll = ({
+  lookup_data,
   truncate,
 }: {
+  lookup_data?: ConversationSearchSchema;
   truncate?: boolean;
 }) => {
   const [tableData, setTableData] = useState<ConversationTableSchema[]>([]);
@@ -120,12 +134,7 @@ const ConversationTableInfiniteScroll = ({
   const getPageResults = async (page: number, limit: number) => {
     const offset = page * limit;
     const runtimeConfig = getRuntimeEnv();
-    const searchData = {
-      query: "",
-      industry_type: "",
-      date_from: "",
-      date_to: "",
-    };
+    const searchData = InstanitateConversationSearchSchema(lookup_data);
     const url = `${runtimeConfig.public_api_url}/v2/search/conversation?offset=${offset}&limit=${limit}`;
     const result = await conversationSearchGet(searchData, url);
     return result;

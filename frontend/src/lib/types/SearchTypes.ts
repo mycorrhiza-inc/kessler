@@ -25,10 +25,10 @@ export interface FileSearchBoxProps {
   setSearchData: React.Dispatch<React.SetStateAction<QueryDataFile>>;
 }
 export interface OrgSearchBoxProps {
-  page_context: PageContextMode.Organizations;
+  pageContext: PageContextMode.Organizations;
 }
 export interface DocketSearchBoxProps {
-  page_context: PageContextMode.Conversations;
+  pageContext: PageContextMode.Conversations;
 }
 
 export type SearchBoxInputProps =

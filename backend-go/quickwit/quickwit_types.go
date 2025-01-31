@@ -12,6 +12,8 @@ type QuickwitFileUploadData struct {
 	Timestamp int64                  `json:"timestamp"`
 }
 
-var NYPUCIndex = "NY_PUC"
-var NYConversationIndex = "NY_Conversatons"
-var NYOrganizationIndex = "NY_Organizations"
+var (
+	NYPUCIndex          = "NY_PUC"
+	NYConversationIndex = "NY_Conversations"
+	NYOrganizationIndex = "NY_Organizations"
+)

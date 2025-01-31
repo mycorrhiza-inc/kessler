@@ -12,8 +12,17 @@ import {
   Suggestion,
 } from "@/lib/types/SearchTypes";
 
-const mockFetchSuggestions = async (query: string): Promise<Suggestion[]> => {
+const mockFetchSuggestions = async (
+  query: string,
+  PageContext: PageContextMode,
+): Promise<Suggestion[]> => {
   // Simulate API delay
+  if (PageContext === PageContextMode.Conversations) {
+    return [];
+  }
+  if (PageContext === PageContextMode.Organizations) {
+    return [];
+  }
   await new Promise((resolve) => setTimeout(resolve, 300));
 
   const suggestions: Suggestion[] = [
@@ -319,7 +328,7 @@ const SearchBox = ({ input }: { input: SearchBoxInputProps }) => {
     if (newQuery.trim()) {
       setIsLoading(true);
       const results = wrapReturnedSuggestions(
-        await mockFetchSuggestions(newQuery),
+        await mockFetchSuggestions(newQuery, input.pageContext),
         newQuery,
       );
       setSuggestions(results);

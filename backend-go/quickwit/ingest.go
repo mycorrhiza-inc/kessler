@@ -9,29 +9,74 @@ import (
 	"strings"
 )
 
-func IngestIntoIndex[V QuickwitFileUploadData | conversations.ConversationInformation | organizations.OrganizationSchemaComplete](indexName string, data []V) error {
+func IngestIntoIndex[V QuickwitFileUploadData | conversations.ConversationInformation | organizations.OrganizationSchemaComplete](indexName string, data []V, clear_index bool) error {
+	if clear_index {
+	}
+	maxIngestItems := 1000
 	fmt.Println("Initiating ingest into index")
-	var records []string
-	for _, record := range data {
-		jsonStr, err := json.Marshal(record)
-		if err != nil {
-			return fmt.Errorf("error marshaling records for index: %v", err)
-		}
-		records = append(records, string(jsonStr))
-	}
 
-	dataToPost := strings.Join(records, "\n")
-	fmt.Printf("Ingesting %d initial data entries into index\n", len(data))
-	resp, err := http.Post(
-		fmt.Sprintf("%s/api/v1/%s/ingest", quickwitEndpoint, indexName),
-		"application/x-ndjson",
-		strings.NewReader(dataToPost),
-	)
-	if err != nil {
-		return fmt.Errorf("error submitting data to quickwit: %v", err)
+	// for i := 0; i < len(data); i += maxIngestItems {
+	for i := 0; i < maxIngestItems; i += maxIngestItems {
+		end := i + maxIngestItems
+		if end > len(data) {
+			end = len(data)
+		}
+
+		var records []string
+		for _, record := range data[i:end] {
+			jsonStr, err := json.Marshal(record)
+			if err != nil {
+				return fmt.Errorf("error marshaling records for index: %v", err)
+			}
+			records = append(records, string(jsonStr))
+		}
+
+		dataToPost := strings.Join(records, "\n")
+		fmt.Printf("Ingesting %d data entries into quickwit index:\"%v\"(batch %d-%d) \n", len(records), indexName, i+1, end)
+		resp, err := http.Post(
+			fmt.Sprintf("%s/api/v1/%s/ingest", quickwitEndpoint, indexName),
+			"application/x-ndjson",
+			strings.NewReader(dataToPost),
+		)
+		if err != nil {
+			return fmt.Errorf("error submitting data to quickwit: %v", err)
+		}
+		if resp.StatusCode != http.StatusOK {
+			return fmt.Errorf("Ingesting data into quickwit gave bad response code: %v\n", resp.StatusCode)
+		}
+		defer resp.Body.Close()
+
+		printResponse(resp)
 	}
+	tailUrl := fmt.Sprintf("%s/api/v1/%s/tail", quickwitEndpoint, indexName)
+	resp, err := http.Get(tailUrl)
 	defer resp.Body.Close()
 
-	printResponse(resp)
+	if err != nil {
+		return fmt.Errorf("Error tailing index: %v\n", err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("Tailing index gave bad response code: %v\n", resp.StatusCode)
+	}
+	var tailResponse map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&tailResponse); err != nil {
+		return fmt.Errorf("Error decoding tail response: %v", err)
+	}
+	tailResponse["doc_batch"].(map[string]interface{})["doc_lengths"] = ""
+	fmt.Printf("Tail response: %+v\n", tailResponse)
+	describeUrl := fmt.Sprintf("%s/api/v1/%s/describe", quickwitEndpoint, indexName)
+	resp, err = http.Get(describeUrl)
+	if err != nil {
+		return fmt.Errorf("Error tailing index: %v\n", err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("Tailing index gave bad response code: %v\n", resp.StatusCode)
+	}
+	var describeResponse map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&describeResponse); err != nil {
+		return fmt.Errorf("Error decoding tail response: %v", err)
+	}
+	fmt.Printf("Tail response: %+v\n", describeResponse)
+
 	return nil
 }

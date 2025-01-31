@@ -12,6 +12,18 @@ search, sorta
 
 > warning!!: this code is pre-deployment. Use with anything you care about at your own peril
 
+# Kubernetes Usage
+
+WARNING k8s is still experiencing some bugs, bewarned 
+
+use 
+
+`./update-kubernetes.sh --nigthly-commit <hash>`
+
+
+
+TODO: UPDATE DOCUMENTATION FOR EVERYTHING 
+
 # Usage
 
 ## Prod

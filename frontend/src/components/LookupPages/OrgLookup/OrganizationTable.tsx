@@ -1,15 +1,34 @@
 "use client";
 import axios from "axios";
 import Link from "next/link";
-import LoadingSpinner from "../styled-components/LoadingSpinner";
 
 import { useEffect, useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { queryStringFromPageMaxHits } from "@/lib/pagination";
-import LoadingSpinnerTimeout from "../styled-components/LoadingSpinnerTimeout";
 import { getRuntimeEnv } from "@/lib/env_variables_hydration_script";
+import LoadingSpinnerTimeout from "@/components/styled-components/LoadingSpinnerTimeout";
+import { data } from "autoprefixer";
 
-const organizationsListGet = async (url: string) => {
+export interface OrganizationSearchSchema {
+  query?: string;
+}
+
+const InstanitateOrganizationSearchSchema = (
+  search_schema?: OrganizationSearchSchema,
+): OrganizationSearchSchema => {
+  return {
+    ...Object.fromEntries(
+      Object.keys(search_schema || {}).map((key) => [
+        key,
+        search_schema?.[key as keyof OrganizationSearchSchema] || "",
+      ]),
+    ),
+  } as OrganizationSearchSchema;
+};
+const organizationsListGet = async (
+  url: string,
+  search_schema: OrganizationSearchSchema,
+) => {
   const cleanData = (response: any) => {
     console.log(response.data);
     const return_data: any[] = response.data;
@@ -24,7 +43,7 @@ const organizationsListGet = async (url: string) => {
     // );
     // return valid_data;
   };
-  const result = await axios.get(url).then((res) => cleanData(res));
+  const result = await axios.post(url, data).then((res) => cleanData(res));
   return result as OrganizationTableSchema[];
 };
 
@@ -67,7 +86,11 @@ const OrganizationTable = ({
   );
 };
 
-const OrganizationTableInfiniteScroll = () => {
+const OrganizationTableInfiniteScroll = ({
+  lookup_data,
+}: {
+  lookup_data?: OrganizationSearchSchema;
+}) => {
   const defaultPageSize = 40;
   const [page, setPage] = useState(0);
 
@@ -75,8 +98,10 @@ const OrganizationTableInfiniteScroll = () => {
   const getPageResults = async (page: number, limit: number) => {
     const queryString = queryStringFromPageMaxHits(page, limit);
     const runtimeConfig = getRuntimeEnv();
+    const searchData = InstanitateOrganizationSearchSchema(lookup_data);
     const result = await organizationsListGet(
       `${runtimeConfig.public_api_url}/v2/public/organizations/list${queryString}`,
+      searchData,
     );
     return result;
   };
