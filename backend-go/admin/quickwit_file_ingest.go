@@ -3,12 +3,11 @@ package admin
 import (
 	"context"
 	"fmt"
-	"math/rand"
-	"net/http"
-
 	"kessler/gen/dbstore"
 	"kessler/quickwit"
 	"kessler/util"
+	"math/rand"
+	"net/http"
 
 	"github.com/google/uuid"
 )
@@ -21,7 +20,6 @@ func HandleQuickwitIngestFromPostgres(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("Starting Quickwit ingest from Postgres (filter_out_unverified=%v)\n", filter_out_unverified)
 
 	err := QuickwitIngestFromPostgres(q, ctx, filter_out_unverified)
-
 	if err != nil {
 		errorstring := fmt.Sprintf("Error ingesting from postgres: %v", err)
 		fmt.Println(errorstring)
@@ -105,7 +103,7 @@ func QuickwitIngestFromPostgres(q *dbstore.Queries, ctx context.Context, filter_
 			return err
 		}
 		fmt.Printf("Sucessfully parsed that into %d quickwit entries\n", len(quickwit_data_list_chunk))
-		err = quickwit.IngestIntoIndex(indexName, quickwit_data_list_chunk)
+		err = quickwit.IngestIntoIndex(indexName, quickwit_data_list_chunk, false)
 		if err != nil {
 			fmt.Printf("Error ingesting into index: %v\n", err)
 			return err

@@ -3,9 +3,9 @@ package quickwit
 import (
 	"encoding/json"
 	"fmt"
+	"kessler/crud"
 	"net/http"
 
-	"kessler/crud"
 	util "kessler/util"
 
 	"github.com/gorilla/mux"
@@ -42,13 +42,14 @@ func HandleQuckwitIngest(w http.ResponseWriter, r *http.Request) {
 	var req SearchIngestRequest
 	util.DecodeRequest(r.Body, &req, w)
 	defer r.Body.Close()
-	err := IngestIntoIndex(req.Index, req.Data)
+	err := IngestIntoIndex(req.Index, req.Data, false)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	fmt.Fprint(w, "injest job started")
 }
+
 func HandleQuckwitIngestConversations(w http.ResponseWriter, r *http.Request) {
 	var indexReq IndexConversationsRequest
 	util.DecodeRequest(r.Body, &indexReq, w)
@@ -71,7 +72,6 @@ func HandleQuckwitIngestConversations(w http.ResponseWriter, r *http.Request) {
 }
 
 func HandleQuckwitIngestOrganizations(w http.ResponseWriter, r *http.Request) {
-
 }
 
 // Clear Requests
