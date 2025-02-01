@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"kessler/objects/conversations"
 	"kessler/objects/organizations"
+	"kessler/objects/timestamp"
 	"net/http"
 	"strings"
+	"time"
 )
 
 func IngestIntoIndex[V QuickwitFileUploadData | conversations.ConversationInformation | organizations.OrganizationSchemaComplete](indexName string, data []V, clear_index bool) error {
@@ -37,9 +39,25 @@ func IngestIntoIndex[V QuickwitFileUploadData | conversations.ConversationInform
 
 		var records []string
 		for _, record := range data[i:end] {
-			jsonStr, err := json.Marshal(record)
+			// Convert the record to a map to check for the timestamp field
+			var recordMap map[string]interface{}
+			jsonBytes, err := json.Marshal(record)
 			if err != nil {
-				return fmt.Errorf("error marshaling records for index: %v", err)
+				return fmt.Errorf("error marshaling record: %v", err)
+			}
+			if err := json.Unmarshal(jsonBytes, &recordMap); err != nil {
+				return fmt.Errorf("error unmarshaling record into map: %v", err)
+			}
+
+			// Check if the timestamp field exists; if not, set it
+			if _, exists := recordMap["timestamp"]; !exists {
+				recordMap["timestamp"] = timestamp.KesslerTime(time.Now())
+			}
+
+			// Marshal the modified map into a JSON string
+			jsonStr, err := json.Marshal(recordMap)
+			if err != nil {
+				return fmt.Errorf("error marshaling modified record: %v", err)
 			}
 			records = append(records, string(jsonStr))
 		}
