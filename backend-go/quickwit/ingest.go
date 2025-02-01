@@ -47,7 +47,7 @@ func IngestIntoIndex[V QuickwitFileUploadData | conversations.ConversationInform
 		dataToPost := strings.Join(records, "\n")
 		fmt.Printf("Ingesting %d data entries into quickwit index:\"%v\"(batch %d-%d) \n", len(records), indexName, i+1, end)
 		resp, err := http.Post(
-			fmt.Sprintf("%s/api/v1/%s/ingest", quickwitEndpoint, indexName),
+			fmt.Sprintf("%s/api/v1/%s/ingest?commit=force", quickwitEndpoint, indexName),
 			"application/x-ndjson",
 			strings.NewReader(dataToPost),
 		)
