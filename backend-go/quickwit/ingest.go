@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"kessler/objects/conversations"
 	"kessler/objects/organizations"
-	"kessler/objects/timestamp"
 	"net/http"
 	"strings"
 	"time"
@@ -51,7 +50,9 @@ func IngestIntoIndex[V QuickwitFileUploadData | conversations.ConversationInform
 
 			// Check if the timestamp field exists; if not, set it
 			if _, exists := recordMap["timestamp"]; !exists {
-				recordMap["timestamp"] = timestamp.KesslerTime(time.Now())
+				timestamp_value := time.Now().UTC().Unix()
+				// recordMap["timestamp"] = timestamp.KesslerTime(time.Now())
+				recordMap["timestamp"] = timestamp_value
 			}
 
 			// Marshal the modified map into a JSON string
