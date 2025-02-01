@@ -29,8 +29,8 @@ func IngestIntoIndex[V QuickwitFileUploadData | conversations.ConversationInform
 	maxIngestItems := 1000
 	fmt.Println("Initiating ingest into index")
 
-	// for i := 0; i < len(data); i += maxIngestItems {
-	for i := 0; i < maxIngestItems; i += maxIngestItems {
+	for i := 0; i < len(data); i += maxIngestItems {
+		// for i := 0; i < maxIngestItems; i += maxIngestItems {
 		end := i + maxIngestItems
 		if end > len(data) {
 			end = len(data)
