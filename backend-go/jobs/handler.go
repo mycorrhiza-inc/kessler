@@ -21,6 +21,10 @@ func DefineJobRoutes(parent_router *mux.Router) {
 		"/index/repopulate/conversations",
 		IndexAllDocketsHandler,
 	).Methods(http.MethodGet)
+	parent_router.HandleFunc(
+		"/index/repopulate/files",
+		HandleQuickwitFileIngestFromPostgres,
+	).Methods(http.MethodGet)
 
 	// 	job_subrouter.HandleFunc(
 	// 		"/new",
