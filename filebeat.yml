@@ -4,6 +4,7 @@ filebeat.inputs:
       - /var/lib/docker/containers/*/*.log
 
 output.elasticsearch:
-  hosts: ["http://quickwit-main.tail4a273.ts.net:9200"] # Quickwit's Elasticsearch-compatible endpoint
+  hosts: ["http://quickwit-main.tail4a273.ts.net:9200"]
+  # Quickwit's Elasticsearch-compatible endpoint
   indices:
     - index: "kessler-logs-%{+yyyy.MM.dd}"
