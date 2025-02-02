@@ -85,16 +85,11 @@ func SearchConversations(search_data ConvoSearchRequestData, ctx context.Context
 		MaxHits:     search_data.Limit,
 		StartOffset: search_data.Offset,
 	}
-	generic_result_bytes, err := PerformGenericQuickwitRequest(search_request, NYConversationIndex)
-	if err != nil {
-		return []conversations.ConversationInformation{}, err
-	}
+	search_index := NYConversationIndex
 	var search_results []conversations.ConversationInformation
-	err = json.Unmarshal(generic_result_bytes, &search_results)
-	if err != nil {
-		return []conversations.ConversationInformation{}, err
-	}
-	return search_results, nil
+
+	err := SearchHitsQuickwitGeneric(&search_results, search_request, search_index)
+	return search_results, err
 }
 
 func IndexAllConversations(q dbstore.Queries, ctx context.Context) error {

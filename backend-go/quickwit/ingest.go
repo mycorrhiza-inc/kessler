@@ -10,7 +10,11 @@ import (
 	"time"
 )
 
-func IngestIntoIndex[V QuickwitFileUploadData | conversations.ConversationInformation | organizations.OrganizationSchemaComplete](indexName string, data []V, clear_index bool) error {
+type GenericQuickwitSearchSchema interface {
+	QuickwitFileUploadData | conversations.ConversationInformation | organizations.OrganizationSchemaComplete
+}
+
+func IngestIntoIndex[V GenericQuickwitSearchSchema](indexName string, data []V, clear_index bool) error {
 	if clear_index {
 		clear_url := fmt.Sprintf("%s/api/v1/indexes/%s/clear", quickwitEndpoint, indexName)
 		req, err := http.NewRequest(http.MethodPut, clear_url, nil)
