@@ -71,15 +71,10 @@ function process_branch() {
         sudo docker push "fractalhuman1/kessler-backend-go:${current_hash}"
 
         # Update docker-compose.yml on the server
-        sed -i "s|image: fractalhuman1/kessler-frontend:.*|image: fractalhuman1/kessler-frontend:${current_hash}|" /mycorrhiza/kessler/docker-compose.deploy.yml
-        sed -i "s|image: fractalhuman1/kessler-backend-go:.*|image: fractalhuman1/kessler-backend-go:${current_hash}|" /mycorrhiza/kessler/docker-compose.deploy.yml
-        sed -i "s|CONFIG_HASH:.*|CONFIG_HASH: ${current_hash}|" /mycorrhiza/kessler/docker-compose.deploy.yml
-
-
-        cd /mycorrhiza/kessler
-        docker compose down
-        docker compose up -d
-        
+        ssh root@kessler.xyz "sed -i \"s|image: fractalhuman1/kessler-frontend:.*|image: fractalhuman1/kessler-frontend:${current_hash}|\" /mycorrhiza/kessler/docker-compose.deploy.yml && \
+        sed -i \"s|image: fractalhuman1/kessler-backend-go:.*|image: fractalhuman1/kessler-backend-go:${current_hash}|\" /mycorrhiza/kessler/docker-compose.deploy.yml && \
+        sed -i \"s|CONFIG_HASH:.*|CONFIG_HASH: ${current_hash}|\" /mycorrhiza/kessler/docker-compose.deploy.yml && \
+        cd /mycorrhiza/kessler && docker compose down && docker compose up -d"
     else
         echo "No changes detected for $branch, skipping deployment."
     fi
