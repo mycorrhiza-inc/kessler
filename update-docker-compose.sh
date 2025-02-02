@@ -74,7 +74,7 @@ function process_branch() {
         sed -i \"s|CONFIG_HASH:.*|CONFIG_HASH: ${current_hash}|\" /mycorrhiza/kessler/docker-compose.deploy.yml && \
         cd /mycorrhiza/kessler && git clean -fd && git pull && docker compose down && docker compose up -d"
     else
-        echo "No changes detected for $branch, skipping deployment."
+        echo "No changes detected, deployemnt already on provided hash, skipping deployment: ${current_hash}"
     fi
 }
 
