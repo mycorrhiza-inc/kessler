@@ -1,24 +1,12 @@
 package quickwit
 
-func SearchOrganizations() {
-	// Search for conversations
-}
-
-func IndexOrganizations() {
-	// Index conversations
-}
-
-func ReindexOrganizations(ids []string) {
-	// Reindex conversations
-}
-
-func CreateQuickwitOrganizationsIndex(indexName string) error {
-	if indexName == "" {
-		indexName = NYOrganizationIndex
+func CreateQuickwitNYFileIndex(index_name string) error {
+	if index_name == "" {
+		index_name = NYPUCIndex
 	}
-	requestData := QuickwitIndex{
+	conversationIndex := QuickwitIndex{
 		Version: "0.7",
-		IndexID: indexName,
+		IndexID: index_name,
 		DocMapping: DocMapping{
 			Mode: "dynamic",
 			DynamicMapping: DynamicMapping{
@@ -30,21 +18,12 @@ func CreateQuickwitOrganizationsIndex(indexName string) error {
 				Fast:       true,
 			},
 			FieldMappings: []FieldMapping{
-				{
-					Name: "name",
-					Type: "text",
-					Fast: true,
-				},
-				{
-					Name: "aliases",
-					Type: "array<text>",
-					Fast: true,
-				},
-				{
-					Name: "uuid",
-					Type: "text",
-					Fast: true,
-				},
+				{Name: "text", Type: "text", Fast: true},
+				{Name: "name", Type: "text", Fast: true},
+				{Name: "metadata", Type: "json", Fast: true},
+				{Name: "source_id", Type: "text", Fast: true},
+				{Name: "date_filed", Type: "text", Fast: true},
+				{Name: "verified", Type: "bool", Fast: true},
 				{
 					Name:          "timestamp",
 					Type:          "datetime",
@@ -56,7 +35,7 @@ func CreateQuickwitOrganizationsIndex(indexName string) error {
 			TimestampField: "timestamp",
 		},
 		SearchSettings: SearchSettings{
-			DefaultSearchFields: []string{"name"},
+			DefaultSearchFields: []string{"text", "name"},
 		},
 		IndexingSettings: IndexingSettings{
 			MergePolicy: MergePolicy{
@@ -74,6 +53,6 @@ func CreateQuickwitOrganizationsIndex(indexName string) error {
 			Schedule: "yearly",
 		},
 	}
-	err := CreateIndex(requestData)
+	err := CreateIndex(conversationIndex)
 	return err
 }

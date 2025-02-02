@@ -78,7 +78,7 @@ func QuickwitIngestFromPostgres(q *dbstore.Queries, ctx context.Context, filter_
 		return err
 	}
 	fmt.Printf("Cleared index %s\n", indexName)
-	err = quickwit.CreateQuickwitIndexConversations()
+	err = quickwit.CreateQuickwitNYFileIndex("")
 	if err != nil {
 		return err
 	}

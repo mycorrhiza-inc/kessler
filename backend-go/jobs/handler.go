@@ -61,7 +61,7 @@ func CreateConversationIndexJobHandler(w http.ResponseWriter, r *http.Request) {
 
 func CreateOrganizationIndexJobHandler(w http.ResponseWriter, r *http.Request) {
 	// ctx := r.Context()
-	err := quickwit.CreateQuickwitOrganizationsIndex("NY_Organizations")
+	err := quickwit.CreateQuickwitOrganizationsIndex("") // Empty index name defaults to the production quickwit index
 	if err != nil {
 		http.Error(w, "Error creating conversations index", http.StatusInternalServerError)
 		return
