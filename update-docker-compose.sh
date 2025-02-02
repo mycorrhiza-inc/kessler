@@ -10,7 +10,6 @@ function process_branch() {
     local branch=$1
     local commit_hash=$2  # Optional commit hash
     local api_url=""
-    local tag=""
     
     # Set API URL based on branch
     # if [ "$branch" = "main" ]; then
@@ -21,7 +20,6 @@ function process_branch() {
     #     tag="nightly"
     # fi
     api_url="https://api.kessler.xyz"
-    tag="latest"
     local api_version_hash_url="${api_url}/v2/version_hash"
 
     echo "Processing branch: $branch"
@@ -74,7 +72,7 @@ function process_branch() {
         ssh root@kessler.xyz "sed -i \"s|image: fractalhuman1/kessler-frontend:.*|image: fractalhuman1/kessler-frontend:${current_hash}|\" /mycorrhiza/kessler/docker-compose.deploy.yml && \
         sed -i \"s|image: fractalhuman1/kessler-backend-go:.*|image: fractalhuman1/kessler-backend-go:${current_hash}|\" /mycorrhiza/kessler/docker-compose.deploy.yml && \
         sed -i \"s|CONFIG_HASH:.*|CONFIG_HASH: ${current_hash}|\" /mycorrhiza/kessler/docker-compose.deploy.yml && \
-        cd /mycorrhiza/kessler && docker compose down && docker compose up -d"
+        cd /mycorrhiza/kessler && git clean -fd && git pull && docker compose down && docker compose up -d"
     else
         echo "No changes detected for $branch, skipping deployment."
     fi
