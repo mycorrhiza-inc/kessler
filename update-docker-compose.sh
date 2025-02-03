@@ -72,7 +72,7 @@ function process_branch() {
         ssh root@kessler.xyz "sed -i \"s|image: fractalhuman1/kessler-frontend:.*|image: fractalhuman1/kessler-frontend:${current_hash}|\" /mycorrhiza/kessler/docker-compose.deploy.yaml && \
         sed -i \"s|image: fractalhuman1/kessler-backend-go:.*|image: fractalhuman1/kessler-backend-go:${current_hash}|\" /mycorrhiza/kessler/docker-compose.deploy.yaml && \
         sed -i \"s|CONFIG_HASH:.*|CONFIG_HASH: ${current_hash}|\" /mycorrhiza/kessler/docker-compose.deploy.yaml && \
-        cd /mycorrhiza/kessler && git clean -fd && git pull && docker compose down -f docker-compose.deploy.yaml && docker compose up -d -f docker-compose.deploy.yaml"
+        cd /mycorrhiza/kessler && git clean -fd && git pull && docker compose -f docker-compose.deploy.yaml down && docker compose -f docker-compose.deploy.yaml up -d"
     else
         echo "No changes detected, deployemnt already on provided hash, skipping deployment: ${current_hash}"
     fi
