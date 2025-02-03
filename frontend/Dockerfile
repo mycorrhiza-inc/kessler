@@ -5,9 +5,9 @@ COPY ./package-lock.json ./
 # install dependencies
 RUN npm install --force
 COPY ./tsconfig.json ./
+COPY ./build_time_variables.env ./.env
 COPY . .
 # build with a dummy .env for build time
-# RUN touch .env.local 
 # RUN touch .env
 RUN npm run build
 
