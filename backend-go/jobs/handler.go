@@ -73,7 +73,7 @@ func CreateOrganizationIndexJobHandler(w http.ResponseWriter, r *http.Request) {
 func IndexAllDocketsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	q := *util.DBQueriesFromRequest(r)
-	err := quickwit.IndexAllConversations(q, ctx)
+	err := quickwit.IndexAllConversations(q, ctx, "")
 	if err != nil {
 		http.Error(w, "Error indexing dockets", http.StatusInternalServerError)
 		return

@@ -1,14 +1,28 @@
 package quickwit
 
+import (
+	"context"
+	"kessler/gen/dbstore"
+
+	"github.com/google/uuid"
+)
+
+type OrganizationQuickwitSchema struct {
+	ID                 uuid.UUID `json:"id"`
+	Name               string    `json:"name"`
+	Aliases            []string  `json:"aliases"`
+	FilesAuthoredCount int64     `json:"files_authored_count"`
+}
+
 func SearchOrganizations() {
 	// Search for conversations
 }
 
-func IndexOrganizations() {
+func IndexOrganizations(org_schemas OrganizationQuickwitSchema, ctx context.Context, index_name string) error {
 	// Index conversations
 }
 
-func ReindexOrganizations(ids []string) {
+func ReindexAllOrganizations(ctx context.Context, q dbstore.Queries, index_name string) error {
 	// Reindex conversations
 }
 
