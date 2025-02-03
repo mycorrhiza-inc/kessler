@@ -22,6 +22,10 @@ func DefineJobRoutes(parent_router *mux.Router) {
 		IndexAllDocketsHandler,
 	).Methods(http.MethodGet)
 	parent_router.HandleFunc(
+		"/index/repopulate/organizations",
+		IndexAllDocketsHandler,
+	).Methods(http.MethodGet)
+	parent_router.HandleFunc(
 		"/index/repopulate/files",
 		HandleQuickwitFileIngestFromPostgres,
 	).Methods(http.MethodGet)
@@ -74,6 +78,18 @@ func IndexAllDocketsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	q := *util.DBQueriesFromRequest(r)
 	err := quickwit.IndexAllConversations(q, ctx, "")
+	if err != nil {
+		http.Error(w, "Error indexing dockets", http.StatusInternalServerError)
+		return
+	}
+
+	w.Write([]byte("Dockets being indexed"))
+}
+
+func IndexAllOrganizationsHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	q := *util.DBQueriesFromRequest(r)
+	err := quickwit.ReindexAllOrganizations(ctx, q, "")
 	if err != nil {
 		http.Error(w, "Error indexing dockets", http.StatusInternalServerError)
 		return

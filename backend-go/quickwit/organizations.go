@@ -8,7 +8,6 @@ import (
 	"kessler/gen/dbstore"
 	"kessler/objects/networking"
 	"kessler/objects/organizations"
-	"kessler/objects/timestamp"
 	"log"
 	"net/http"
 )
@@ -20,10 +19,8 @@ type OrgSearchRequestData struct {
 }
 
 type OrganizationSearchSchema struct {
-	Query            string                `json:"query"`
-	MinFilesAuthored int64                 `json:"min_files_authored"`
-	DateFoundedFrom  timestamp.KesslerTime `json:"date_founded_from"`
-	DateFoundedTo    timestamp.KesslerTime `json:"date_founded_to"`
+	Query            string `json:"query"`
+	MinFilesAuthored int64  `json:"min_files_authored"`
 }
 
 func HandleOrgSearch(w http.ResponseWriter, r *http.Request) {
