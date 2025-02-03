@@ -14,8 +14,8 @@ const AuthorColumn = ({ filing }: { filing: Filing }) => {
     <>
       {filing.authors_information
         ? filing.authors_information.map((auth_info: AuthorInformation) => (
-          <AuthorInfoPill author_info={auth_info} />
-        ))
+            <AuthorInfoPill author_info={auth_info} />
+          ))
         : filing.author + " Something isnt working"}
     </>
   );
@@ -52,45 +52,45 @@ const TableRow = ({
     // If it's not the specific text, allow the row click to proceed
     console.log("Row was clicked");
     setOpen((previous) => !previous);
+  };
 
-};
-
-return (
-  <>
-    <tr
-      className="border-b border-base-300 hover:bg-base-200 transition duration-500 ease-out"
-      onClick={handleRowClick}
-    >
-      <td>
-        <NoclickSpan>{filing.date}</NoclickSpan>
-      </td>
-      <td>
-        <NoclickSpan>
-          <TextPill text={filing.file_class} />
-        </NoclickSpan>
-      </td>
-      <td>
-        {/* Removing the noclick around this, since I think clicking on the tile should actually open the modal */}
-        {filing.title}
-      </td>
-      <td>
-        <NoclickSpan>
-          <AuthorColumn filing={filing} />
-        </NoclickSpan>
-      </td>
-      {DocketColumn && (
+  return (
+    <>
+      <tr
+        className="border-b border-base-300 hover:bg-base-200 transition duration-500 ease-out"
+        onClick={handleRowClick}
+      >
         <td>
-          {filing.docket_id && (
-            <DocketPill docket_named_id={filing.docket_id} />
-          )}
+          <NoclickSpan>{filing.date}</NoclickSpan>
+          <DocumentModal open={open} setOpen={setOpen} objectId={filing.id} />
         </td>
-      )}
+        <td>
+          <NoclickSpan>
+            <TextPill text={filing.file_class} />
+          </NoclickSpan>
+        </td>
+        <td>
+          {/* Removing the noclick around this, since I think clicking on the tile should actually open the modal */}
+          {filing.title}
+        </td>
+        <td>
+          <NoclickSpan>
+            <AuthorColumn filing={filing} />
+          </NoclickSpan>
+        </td>
+        {DocketColumn && (
+          <td>
+            {filing.docket_id && (
+              <DocketPill docket_named_id={filing.docket_id} />
+            )}
+          </td>
+        )}
 
-      <td>{filing.item_number}</td>
-    </tr>
-    <DocumentModal open={open} setOpen={setOpen} objectId={filing.id} />
-  </>
-);
+        <td>{filing.item_number}</td>
+      </tr>
+      <div></div>
+    </>
+  );
 };
 export const FilingTable = ({
   filings,
