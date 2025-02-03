@@ -183,10 +183,17 @@ func CreateQuickwitIndexConversations() error {
 				Fast:       true,
 			},
 			FieldMappings: []FieldMapping{
-				{Name: "uuid", Type: "text", Fast: true},
+				{Name: "id", Type: "text", Fast: true},
 				{Name: "state", Type: "text", Fast: true},
 				{Name: "docket_id", Type: "text", Fast: true},
 				{Name: "title", Type: "text", Fast: true},
+				{
+					Name:          "date_published",
+					Type:          "datetime",
+					Fast:          true,
+					InputFormats:  []string{"rfc3339"},
+					FastPrecision: "seconds",
+				},
 				{
 					Name:          "timestamp",
 					Type:          "datetime",

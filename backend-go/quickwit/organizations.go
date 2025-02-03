@@ -41,7 +41,7 @@ func CreateQuickwitOrganizationsIndex(indexName string) error {
 					Fast: true,
 				},
 				{
-					Name: "uuid",
+					Name: "id",
 					Type: "text",
 					Fast: true,
 				},
