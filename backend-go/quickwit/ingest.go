@@ -11,7 +11,7 @@ import (
 )
 
 type GenericQuickwitSearchSchema interface {
-	QuickwitFileUploadData | conversations.ConversationInformation | organizations.OrganizationSchemaComplete
+	QuickwitFileUploadData | conversations.ConversationInformation | organizations.OrganizationQuickwitSchema
 }
 
 func IngestIntoIndex[V GenericQuickwitSearchSchema](indexName string, data []V, clear_index bool) error {
