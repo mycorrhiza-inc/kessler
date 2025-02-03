@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"kessler/crud"
 	"kessler/gen/dbstore"
 	"kessler/objects/networking"
 	"kessler/objects/organizations"
@@ -97,11 +98,15 @@ func ReindexAllOrganizations(ctx context.Context, q dbstore.Queries, indexName s
 
 	quickwitOrgs := make([]organizations.OrganizationQuickwitSchema, len(orgs))
 	for i, org := range orgs {
+		complete_org, err := crud.OrgWithFilesGetByID(ctx, &q, org.ID)
+		if err != nil {
+			fmt.Printf("Error getting org with files: %v\n", err)
+		}
 		quickwitOrgs[i] = organizations.OrganizationQuickwitSchema{
 			ID:                 org.ID,
 			Name:               org.Name,
-			Aliases:            org.Aliases,
-			FilesAuthoredCount: org.FilesAuthoredCount,
+			Aliases:            complete_org.Aliases,
+			FilesAuthoredCount: len(complete_org.FilesAuthoredIDs),
 		}
 	}
 

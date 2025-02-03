@@ -17,5 +17,5 @@ type OrganizationQuickwitSchema struct {
 	ID                 uuid.UUID `json:"id"`
 	Name               string    `json:"name"`
 	Aliases            []string  `json:"aliases"`
-	FilesAuthoredCount int64     `json:"files_authored_count"`
+	FilesAuthoredCount int       `json:"files_authored_count"`
 }
