@@ -7,9 +7,14 @@ import (
 	"kessler/objects/organizations"
 	"net/http"
 	"strings"
+	"time"
 )
 
-func IngestIntoIndex[V QuickwitFileUploadData | conversations.ConversationInformation | organizations.OrganizationSchemaComplete](indexName string, data []V, clear_index bool) error {
+type GenericQuickwitSearchSchema interface {
+	QuickwitFileUploadData | conversations.ConversationInformation | organizations.OrganizationQuickwitSchema
+}
+
+func IngestIntoIndex[V GenericQuickwitSearchSchema](indexName string, data []V, clear_index bool) error {
 	if clear_index {
 		clear_url := fmt.Sprintf("%s/api/v1/indexes/%s/clear", quickwitEndpoint, indexName)
 		req, err := http.NewRequest(http.MethodPut, clear_url, nil)
@@ -28,8 +33,8 @@ func IngestIntoIndex[V QuickwitFileUploadData | conversations.ConversationInform
 	maxIngestItems := 1000
 	fmt.Println("Initiating ingest into index")
 
-	// for i := 0; i < len(data); i += maxIngestItems {
-	for i := 0; i < maxIngestItems; i += maxIngestItems {
+	for i := 0; i < len(data); i += maxIngestItems {
+		// for i := 0; i < maxIngestItems; i += maxIngestItems {
 		end := i + maxIngestItems
 		if end > len(data) {
 			end = len(data)
@@ -37,9 +42,27 @@ func IngestIntoIndex[V QuickwitFileUploadData | conversations.ConversationInform
 
 		var records []string
 		for _, record := range data[i:end] {
-			jsonStr, err := json.Marshal(record)
+			// Convert the record to a map to check for the timestamp field
+			var recordMap map[string]interface{}
+			jsonBytes, err := json.Marshal(record)
 			if err != nil {
-				return fmt.Errorf("error marshaling records for index: %v", err)
+				return fmt.Errorf("error marshaling record: %v", err)
+			}
+			if err := json.Unmarshal(jsonBytes, &recordMap); err != nil {
+				return fmt.Errorf("error unmarshaling record into map: %v", err)
+			}
+
+			// Check if the timestamp field exists; if not, set it
+			if _, exists := recordMap["timestamp"]; !exists {
+				timestamp_value := time.Now().UTC().Unix()
+				// recordMap["timestamp"] = timestamp.KesslerTime(time.Now())
+				recordMap["timestamp"] = timestamp_value
+			}
+
+			// Marshal the modified map into a JSON string
+			jsonStr, err := json.Marshal(recordMap)
+			if err != nil {
+				return fmt.Errorf("error marshaling modified record: %v", err)
 			}
 			records = append(records, string(jsonStr))
 		}
@@ -47,7 +70,7 @@ func IngestIntoIndex[V QuickwitFileUploadData | conversations.ConversationInform
 		dataToPost := strings.Join(records, "\n")
 		fmt.Printf("Ingesting %d data entries into quickwit index:\"%v\"(batch %d-%d) \n", len(records), indexName, i+1, end)
 		resp, err := http.Post(
-			fmt.Sprintf("%s/api/v1/%s/ingest", quickwitEndpoint, indexName),
+			fmt.Sprintf("%s/api/v1/%s/ingest?commit=force", quickwitEndpoint, indexName),
 			"application/x-ndjson",
 			strings.NewReader(dataToPost),
 		)
@@ -79,16 +102,16 @@ func IngestIntoIndex[V QuickwitFileUploadData | conversations.ConversationInform
 	}
 	fmt.Printf("Tail response (first %d chars): %s\n", n, string(body[:n]))
 
-	describeUrl := fmt.Sprintf("%s/api/v1/%s/describe", quickwitEndpoint, indexName)
-	resp, err = http.Get(describeUrl)
-	if err != nil {
-		return fmt.Errorf("Error describing index: %v\n", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("Describing index gave bad response code: %v\n", resp.StatusCode)
-	}
+	// describeUrl := fmt.Sprintf("%s/api/v1/%s/describe", quickwitEndpoint, indexName)
+	// resp, err = http.Get(describeUrl)
+	// if err != nil {
+	// 	return fmt.Errorf("Error describing index: %v\n", err)
+	// }
+	// defer resp.Body.Close()
+	//
+	// if resp.StatusCode != http.StatusOK {
+	// 	return fmt.Errorf("Describing index gave bad response code: %v\n", resp.StatusCode)
+	// }
 
 	body = make([]byte, 1000)
 	n, err = resp.Body.Read(body)

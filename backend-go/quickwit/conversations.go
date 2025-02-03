@@ -4,12 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"kessler/crud"
 	"kessler/gen/dbstore"
 	"kessler/objects/conversations"
 	"kessler/objects/networking"
 	"kessler/objects/timestamp"
-	"kessler/util"
 	"log"
 	"net/http"
 	"strings"
@@ -85,28 +83,26 @@ func SearchConversations(search_data ConvoSearchRequestData, ctx context.Context
 		MaxHits:     search_data.Limit,
 		StartOffset: search_data.Offset,
 	}
-	generic_result_bytes, err := PerformGenericQuickwitRequest(search_request, NYConversationIndex)
-	if err != nil {
-		return []conversations.ConversationInformation{}, err
-	}
+	search_index := NYConversationIndex
 	var search_results []conversations.ConversationInformation
-	err = json.Unmarshal(generic_result_bytes, &search_results)
-	if err != nil {
-		return []conversations.ConversationInformation{}, err
-	}
-	return search_results, nil
+
+	err := SearchHitsQuickwitGeneric(&search_results, search_request, search_index)
+	return search_results, err
 }
 
-func IndexAllConversations(q dbstore.Queries, ctx context.Context) error {
+func IndexAllConversations(q dbstore.Queries, ctx context.Context, index_name string) error {
 	conversations, err := q.DocketConversationList(ctx)
 	if err != nil {
 		return err
 	}
-	err = IndexConversations(conversations)
+	err = IndexConversations(conversations, index_name)
 	return err
 }
 
-func IndexConversations(convos []dbstore.DocketConversation) error {
+func IndexConversations(convos []dbstore.DocketConversation, index_name string) error {
+	if index_name == "" {
+		index_name = NYConversationIndex
+	}
 	// Index conversations
 	quickwit_convos := make([]conversations.ConversationInformation, len(convos))
 	for index, convo := range convos {
@@ -125,19 +121,7 @@ func IndexConversations(convos []dbstore.DocketConversation) error {
 		quickwit_convos[index] = quickwit_convo
 
 	}
-	IngestIntoIndex(NYConversationIndex, quickwit_convos, false)
-	return nil
-}
-
-func IndexConversationsFromUUIDs(ids []uuid.UUID, ctx context.Context) error {
-	//
-	// Index conversations from UUIDs
-	q := *util.DBQueriesFromContext(ctx)
-	conversations, err := crud.ConversationGetListByUUID(ctx, &q, ids)
-	if err != nil {
-		return err
-	}
-	IndexConversations(conversations)
+	IngestIntoIndex(index_name, quickwit_convos, true)
 	return nil
 }
 
@@ -158,21 +142,6 @@ func DeleteConversationsFromIndex(conversationUUIDs []uuid.UUID, index string) e
 	return nil
 }
 
-func ReindexConversationsFromUUID(conversationUUIDs []uuid.UUID, ctx context.Context) error {
-	// Reindex conversations
-	err := DeleteConversationsFromIndex(conversationUUIDs, "NY_Conversations")
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-	err = IndexConversationsFromUUIDs(conversationUUIDs, ctx)
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-	return nil
-}
-
 func CreateQuickwitIndexConversations() error {
 	conversationIndex := QuickwitIndex{
 		Version: "0.7",
@@ -188,10 +157,17 @@ func CreateQuickwitIndexConversations() error {
 				Fast:       true,
 			},
 			FieldMappings: []FieldMapping{
-				{Name: "uuid", Type: "text", Fast: true},
+				{Name: "id", Type: "text", Fast: true},
 				{Name: "state", Type: "text", Fast: true},
 				{Name: "docket_id", Type: "text", Fast: true},
 				{Name: "title", Type: "text", Fast: true},
+				{
+					Name:          "date_published",
+					Type:          "datetime",
+					Fast:          true,
+					InputFormats:  []string{"rfc3339"},
+					FastPrecision: "seconds",
+				},
 				{
 					Name:          "timestamp",
 					Type:          "datetime",
@@ -226,3 +202,30 @@ func CreateQuickwitIndexConversations() error {
 	err := CreateIndex(conversationIndex)
 	return err
 }
+
+// func ReindexConversationsFromUUID(conversationUUIDs []uuid.UUID, ctx context.Context) error {
+// 	// Reindex conversations
+// 	err := DeleteConversationsFromIndex(conversationUUIDs, "NY_Conversations")
+// 	if err != nil {
+// 		fmt.Println(err)
+// 		return err
+// 	}
+// 	err = IndexConversationsFromUUIDs(conversationUUIDs, ctx)
+// 	if err != nil {
+// 		fmt.Println(err)
+// 		return err
+// 	}
+// 	return nil
+// }
+//
+// func IndexConversationsFromUUIDs(ids []uuid.UUID, ctx context.Context) error {
+// 	//
+// 	// Index conversations from UUIDs
+// 	q := *util.DBQueriesFromContext(ctx)
+// 	conversations, err := crud.ConversationGetListByUUID(ctx, &q, ids)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	IndexConversations(conversations)
+// 	return nil
+// }

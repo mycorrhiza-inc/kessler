@@ -97,9 +97,8 @@ func ConstructGenericFilterQuery(values reflect.Value, types reflect.Type) strin
 
 func PerformGenericQuickwitRequest(request QuickwitSearchRequest, search_index string) ([]byte, error) {
 	jsonData, err := json.Marshal(request)
-
 	// ===== submit request to quickwit =====
-	log.Printf("jsondata: \n%s", jsonData)
+	// log.Printf("jsondata: \n%s", jsonData)
 	if err != nil {
 		log.Printf("Error Marshalling quickwit request: %s", err)
 		return []byte{}, err
@@ -122,6 +121,7 @@ func PerformGenericQuickwitRequest(request QuickwitSearchRequest, search_index s
 
 	// ===== handle response =====
 	if resp.StatusCode != http.StatusOK {
+		log.Printf("Error: received status code %v, with body: %s", resp.StatusCode, resp.Body)
 		log.Printf("Error: received status code %v", resp.StatusCode)
 		log.Printf("Replay with: %s\n", curlCmd)
 		return []byte{}, fmt.Errorf("received status code %v", resp.StatusCode)
@@ -132,4 +132,22 @@ func PerformGenericQuickwitRequest(request QuickwitSearchRequest, search_index s
 		return []byte{}, fmt.Errorf("failed to read response body: %v", err)
 	}
 	return bodyBytes, nil
+}
+
+func SearchHitsQuickwitGeneric[V GenericQuickwitSearchSchema](return_hits *[]V, request QuickwitSearchRequest, search_index string) error {
+	type QuickwitHit struct {
+		Hits []V `json:"hits"`
+	}
+	results, err := PerformGenericQuickwitRequest(request, search_index)
+	if err != nil {
+		return err
+	}
+	var testReturnHits QuickwitHit
+	err = json.Unmarshal(results, &testReturnHits)
+	if err != nil {
+		return err
+	}
+	*return_hits = testReturnHits.Hits
+
+	return nil
 }

@@ -169,7 +169,7 @@ WHERE
 
 -- name: OrganizationGetAllAliases :many
 SELECT
-    public.organization_aliases.*
+    *
 FROM
     public.organization_aliases
 WHERE

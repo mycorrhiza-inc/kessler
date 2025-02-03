@@ -43,18 +43,4 @@ func DefineAdminRoutes(admin_subrouter *mux.Router) {
 		"/file-metadata-match",
 		HandleCheckDocumentMetadata,
 	).Methods(http.MethodPost)
-
-	verified := admin_subrouter.Methods(http.MethodPost).Subrouter()
-	verified.HandleFunc(
-		"/quickwit/ingest/verified_only",
-		HandleQuickwitIngestFromPostgres,
-	)
-	verified.Use(withUnverifiedFileData)
-
-	unVerified := admin_subrouter.Methods(http.MethodPost).Subrouter()
-	unVerified.HandleFunc(
-		"/quickwit/ingest",
-		HandleQuickwitIngestFromPostgres,
-	)
-	unVerified.Use(withVerifiedFileData)
 }

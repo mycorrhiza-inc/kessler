@@ -53,6 +53,7 @@ func DefineSearchRoutes(search_router *mux.Router) {
 	search_router.HandleFunc("/file", HandleSearchRequest)
 	search_router.HandleFunc("/file/recent_updates", HandleRecentUpdatesRequest)
 	search_router.HandleFunc("/conversation", quickwit.HandleConvoSearch)
+	search_router.HandleFunc("/organization", quickwit.HandleOrgSearch)
 }
 
 func HandleSearchRequest(w http.ResponseWriter, r *http.Request) {

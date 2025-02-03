@@ -1,6 +1,7 @@
 package jobs
 
 import (
+	"fmt"
 	"kessler/quickwit"
 	"kessler/util"
 	"net/http"
@@ -14,12 +15,20 @@ func DefineJobRoutes(parent_router *mux.Router) {
 		CreateConversationIndexJobHandler,
 	).Methods(http.MethodGet)
 	parent_router.HandleFunc(
-		"/index/create/orgs",
+		"/index/create/organizations",
 		CreateOrganizationIndexJobHandler,
 	).Methods(http.MethodGet)
 	parent_router.HandleFunc(
 		"/index/repopulate/conversations",
 		IndexAllDocketsHandler,
+	).Methods(http.MethodGet)
+	parent_router.HandleFunc(
+		"/index/repopulate/organizations",
+		IndexAllOrganizationsHandler,
+	).Methods(http.MethodGet)
+	parent_router.HandleFunc(
+		"/index/repopulate/files",
+		HandleQuickwitFileIngestFromPostgres,
 	).Methods(http.MethodGet)
 
 	// 	job_subrouter.HandleFunc(
@@ -48,7 +57,9 @@ func CreateConversationIndexJobHandler(w http.ResponseWriter, r *http.Request) {
 	// ctx := r.Context()
 	err := quickwit.CreateQuickwitIndexConversations()
 	if err != nil {
-		http.Error(w, "Error creating conversations index", http.StatusInternalServerError)
+		errorstring := fmt.Sprintf("Error creating quickwit index: %v", err)
+		fmt.Println(errorstring)
+		http.Error(w, errorstring, http.StatusInternalServerError)
 		return
 	}
 
@@ -57,9 +68,11 @@ func CreateConversationIndexJobHandler(w http.ResponseWriter, r *http.Request) {
 
 func CreateOrganizationIndexJobHandler(w http.ResponseWriter, r *http.Request) {
 	// ctx := r.Context()
-	err := quickwit.CreateQuickwitOrganizationsIndex("NY_Organizations")
+	err := quickwit.CreateQuickwitOrganizationsIndex("") // Empty index name defaults to the production quickwit index
 	if err != nil {
-		http.Error(w, "Error creating conversations index", http.StatusInternalServerError)
+		errorstring := fmt.Sprintf("Error creating quickwit index: %v", err)
+		fmt.Println(errorstring)
+		http.Error(w, errorstring, http.StatusInternalServerError)
 		return
 	}
 
@@ -69,9 +82,25 @@ func CreateOrganizationIndexJobHandler(w http.ResponseWriter, r *http.Request) {
 func IndexAllDocketsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	q := *util.DBQueriesFromRequest(r)
-	err := quickwit.IndexAllConversations(q, ctx)
+	err := quickwit.IndexAllConversations(q, ctx, "")
 	if err != nil {
-		http.Error(w, "Error indexing dockets", http.StatusInternalServerError)
+		errorstring := fmt.Sprintf("Error ingesting dockets index: %v", err)
+		fmt.Println(errorstring)
+		http.Error(w, errorstring, http.StatusInternalServerError)
+		return
+	}
+
+	w.Write([]byte("Dockets being indexed"))
+}
+
+func IndexAllOrganizationsHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	q := *util.DBQueriesFromRequest(r)
+	err := quickwit.ReindexAllOrganizations(ctx, q, "")
+	if err != nil {
+		errorstring := fmt.Sprintf("Error ingesting orgs index: %v", err)
+		fmt.Println(errorstring)
+		http.Error(w, errorstring, http.StatusInternalServerError)
 		return
 	}
 

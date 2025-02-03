@@ -81,9 +81,22 @@ func OrgWithFilesGetByID(ctx context.Context, q *dbstore.Queries, orgID uuid.UUI
 		org_file_ids[i] = file_uuid
 	}
 
+	org_aliases_pg, err := q.OrganizationGetAllAliases(ctx, orgID)
+	if err != nil {
+		return organizations.OrganizationSchemaComplete{}, err
+	}
+	org_aliases := make([]string, len(org_aliases_pg))
+	for index, alias_type := range org_aliases_pg {
+		org_aliases[index] = alias_type.OrganizationAlias
+	}
+	if len(org_aliases) == 0 {
+		org_aliases = []string{org_info.Name}
+	}
+
 	return organizations.OrganizationSchemaComplete{
 		ID:               orgID,
 		Name:             org_info.Name,
+		Aliases:          org_aliases,
 		FilesAuthored:    org_files,
 		FilesAuthoredIDs: org_file_ids,
 	}, nil

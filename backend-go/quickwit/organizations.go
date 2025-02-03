@@ -1,18 +1,119 @@
 package quickwit
 
-func SearchOrganizations() {
-	// Search for conversations
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"kessler/gen/dbstore"
+	"kessler/objects/networking"
+	"kessler/objects/organizations"
+	"log"
+	"net/http"
+)
+
+type OrgSearchRequestData struct {
+	Search OrganizationSearchSchema `json:"search"`
+	Limit  int                      `json:"limit"`
+	Offset int                      `json:"offset"`
 }
 
-func IndexOrganizations() {
-	// Index conversations
+type OrganizationSearchSchema struct {
+	Query            string `json:"query"`
+	MinFilesAuthored int64  `json:"min_files_authored"`
 }
 
-func ReindexOrganizations(ids []string) {
-	// Reindex conversations
+func HandleOrgSearch(w http.ResponseWriter, r *http.Request) {
+	log.Println("Received organization search request")
+
+	var orgSearch OrganizationSearchSchema
+	err := json.NewDecoder(r.Body).Decode(&orgSearch)
+	if err != nil {
+		errorstring := fmt.Sprintf("Error decoding JSON: %v", err)
+		log.Println(errorstring)
+		http.Error(w, errorstring, http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+
+	pagination := networking.PaginationFromUrlParams(r)
+	searchData := OrgSearchRequestData{
+		Search: orgSearch,
+		Limit:  int(pagination.Limit),
+		Offset: int(pagination.Offset),
+	}
+
+	results, err := SearchOrganizations(searchData, r.Context())
+	if err != nil {
+		errorstring := fmt.Sprintf("Error searching organizations: %v", err)
+		log.Println(errorstring)
+		http.Error(w, errorstring, http.StatusInternalServerError)
+		return
+	}
+
+	respString, err := json.Marshal(results)
+	if err != nil {
+		log.Println("Error marshaling response data")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(respString)
+}
+
+func SearchOrganizations(searchData OrgSearchRequestData, ctx context.Context) ([]organizations.OrganizationQuickwitSchema, error) {
+	baseQuery := fmt.Sprintf("(name:(%s))", searchData.Search.Query)
+	if searchData.Search.MinFilesAuthored > 0 {
+		baseQuery += fmt.Sprintf(" AND files_authored_count:>=%d", searchData.Search.MinFilesAuthored)
+	}
+
+	searchRequest := QuickwitSearchRequest{
+		Query:       baseQuery,
+		MaxHits:     searchData.Limit,
+		StartOffset: searchData.Offset,
+	}
+
+	var searchResults []organizations.OrganizationQuickwitSchema
+	err := SearchHitsQuickwitGeneric(&searchResults, searchRequest, NYOrganizationIndex)
+	return searchResults, err
+}
+
+func IndexOrganizations(orgs []organizations.OrganizationQuickwitSchema, indexName string) error {
+	if indexName == "" {
+		indexName = NYOrganizationIndex
+	}
+	IngestIntoIndex(indexName, orgs, true)
+	return nil
+}
+
+func ReindexAllOrganizations(ctx context.Context, q dbstore.Queries, indexName string) error {
+	orgs, err := q.OrganizationList(ctx)
+	if err != nil {
+		return err
+	}
+
+	quickwitOrgs := make([]organizations.OrganizationQuickwitSchema, len(orgs))
+	for i, org := range orgs {
+		// TODO: Cache PG query to get aliases and number of documents for each org.
+		// complete_org, err := crud.OrgWithFilesGetByID(ctx, &q, org.ID)
+		if err != nil {
+			fmt.Printf("Error getting org with files: %v\n", err)
+		}
+		quickwitOrgs[i] = organizations.OrganizationQuickwitSchema{
+			ID:                 org.ID,
+			Name:               org.Name,
+			Aliases:            []string{org.Name},
+			FilesAuthoredCount: 0,
+		}
+	}
+
+	return IndexOrganizations(quickwitOrgs, indexName)
 }
 
 func CreateQuickwitOrganizationsIndex(indexName string) error {
+	if indexName == "" {
+		indexName = NYOrganizationIndex
+	}
 	requestData := QuickwitIndex{
 		Version: "0.7",
 		IndexID: indexName,
@@ -38,7 +139,7 @@ func CreateQuickwitOrganizationsIndex(indexName string) error {
 					Fast: true,
 				},
 				{
-					Name: "uuid",
+					Name: "id",
 					Type: "text",
 					Fast: true,
 				},

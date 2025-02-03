@@ -51,9 +51,8 @@ func GetCaseDataSince(date string, page int) ([]Hit, error) {
 	}
 
 	jsonData, err := json.Marshal(request)
-
 	// ===== submit request to quickwit =====
-	log.Printf("jsondata: \n%s", jsonData)
+	// log.Printf("jsondata: \n%s", jsonData)
 	if err != nil {
 		log.Printf("Error Marshalling quickwit request: %s", err)
 		return nil, err
