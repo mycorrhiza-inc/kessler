@@ -48,8 +48,10 @@ const organizationsListGet = async (
 };
 
 type OrganizationTableSchema = {
-  Name: string;
-  DocumentCount: number;
+  name: string;
+  id: string;
+  aliases: string[];
+  files_authored_count: number;
 };
 
 const OrganizationTable = ({
@@ -73,9 +75,11 @@ const OrganizationTable = ({
             className="border-base-300 hover:bg-base-200 transition duration-500 ease-out"
           >
             <td colSpan={2} className="p-0">
-              <Link href={`/orgs/${org.ID}`} className="flex w-full">
-                <div className="w-[80%] px-4 py-3">{org.Name}</div>
-                <div className="w-[20%] px-4 py-3">{org.DocumentCount}</div>
+              <Link href={`/orgs/${org.id}`} className="flex w-full">
+                <div className="w-[80%] px-4 py-3">{org.name}</div>
+                <div className="w-[20%] px-4 py-3">
+                  {org.files_authored_count}
+                </div>
                 {/* <div className="flex-1 px-4 py-3">{org.Description}</div> */}
               </Link>
             </td>
@@ -96,13 +100,12 @@ const OrganizationTableInfiniteScroll = ({
 
   const [tableData, setTableData] = useState<OrganizationTableSchema[]>([]);
   const getPageResults = async (page: number, limit: number) => {
+    const offset = page * limit;
     const queryString = queryStringFromPageMaxHits(page, limit);
     const runtimeConfig = getRuntimeEnv();
     const searchData = InstanitateOrganizationSearchSchema(lookup_data);
-    const result = await organizationsListGet(
-      `${runtimeConfig.public_api_url}/v2/public/organizations/list${queryString}`,
-      searchData,
-    );
+    const url = `${runtimeConfig.public_api_url}/v2/search/organization?offset=${offset}&limit=${limit}`;
+    const result = await organizationsListGet(url, searchData);
     return result;
   };
   const getMore = async () => {
