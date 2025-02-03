@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"kessler/crud"
 	"kessler/gen/dbstore"
 	"kessler/objects/networking"
 	"kessler/objects/organizations"
@@ -63,7 +62,7 @@ func HandleOrgSearch(w http.ResponseWriter, r *http.Request) {
 }
 
 func SearchOrganizations(searchData OrgSearchRequestData, ctx context.Context) ([]organizations.OrganizationQuickwitSchema, error) {
-	baseQuery := fmt.Sprintf("(name:%s OR aliases:%s)", searchData.Search.Query, searchData.Search.Query)
+	baseQuery := fmt.Sprintf("(name:(%s))", searchData.Search.Query)
 	if searchData.Search.MinFilesAuthored > 0 {
 		baseQuery += fmt.Sprintf(" AND files_authored_count:>=%d", searchData.Search.MinFilesAuthored)
 	}
@@ -95,15 +94,16 @@ func ReindexAllOrganizations(ctx context.Context, q dbstore.Queries, indexName s
 
 	quickwitOrgs := make([]organizations.OrganizationQuickwitSchema, len(orgs))
 	for i, org := range orgs {
-		complete_org, err := crud.OrgWithFilesGetByID(ctx, &q, org.ID)
+		// TODO: Cache PG query to get aliases and number of documents for each org.
+		// complete_org, err := crud.OrgWithFilesGetByID(ctx, &q, org.ID)
 		if err != nil {
 			fmt.Printf("Error getting org with files: %v\n", err)
 		}
 		quickwitOrgs[i] = organizations.OrganizationQuickwitSchema{
 			ID:                 org.ID,
 			Name:               org.Name,
-			Aliases:            complete_org.Aliases,
-			FilesAuthoredCount: len(complete_org.FilesAuthoredIDs),
+			Aliases:            []string{org.Name},
+			FilesAuthoredCount: 0,
 		}
 	}
 

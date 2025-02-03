@@ -121,6 +121,7 @@ func PerformGenericQuickwitRequest(request QuickwitSearchRequest, search_index s
 
 	// ===== handle response =====
 	if resp.StatusCode != http.StatusOK {
+		log.Printf("Error: received status code %v, with body: %s", resp.StatusCode, resp.Body)
 		log.Printf("Error: received status code %v", resp.StatusCode)
 		log.Printf("Replay with: %s\n", curlCmd)
 		return []byte{}, fmt.Errorf("received status code %v", resp.StatusCode)
