@@ -121,7 +121,7 @@ const OrganizationTableInfiniteScroll = ({
   };
   useEffect(() => {
     getInitialData();
-  }, []);
+  }, [lookup_data]);
   return (
     <>
       <InfiniteScroll
