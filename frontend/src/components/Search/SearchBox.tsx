@@ -224,11 +224,28 @@ const setSearchFilters = (props: SearchBoxInputProps, filters: Filter[]) => {
       return;
     }
     if (props.pageContext === PageContextMode.Organizations) {
+      props.setSearchQuery(getTextQueryFromFilterList(filterTypeDict));
       return;
     }
     if (props.pageContext === PageContextMode.Conversations) {
+      props.setSearchQuery(getTextQueryFromFilterList(filterTypeDict));
       return;
     }
+  }
+};
+
+const getTextQueryFromFilterList = (filterTypeDict: {
+  [key: string]: Filter[];
+}) => {
+  if (filterTypeDict.text) {
+    if (filterTypeDict.text.length > 1) {
+      console.log("This paramater shouldnt be more then length 1, ignoring ");
+    }
+    const first_filter_text = filterTypeDict.text[0].label;
+    console.log("Filters are being updated with text");
+    return first_filter_text;
+  } else {
+    return "";
   }
 };
 
@@ -237,6 +254,7 @@ const generateFileFiltersFromFilterList = (
   filterTypeDict: { [key: string]: Filter[] },
 ) => {
   const new_file_filters = { ...previous_file_filters };
+  new_file_filters.query = getTextQueryFromFilterList(filterTypeDict);
 
   if (filterTypeDict.text) {
     if (filterTypeDict.text.length > 1) {
