@@ -316,16 +316,23 @@ const generateConvoSearchData = (filterTypeDict: {
   const setQuery = (value: string) => {
     convoSearchData.query = value;
   };
+  const querySchema: filterExtractionSchema = {
+    filters: filterTypeDict.text,
+    valueProperty: "label",
+    elseValue: "",
+    setValueFunc: setQuery,
+  };
+  filterExtractionHelper(querySchema);
   const setIndustry = (value: string) => {
     convoSearchData.industry_type = value;
   };
-  filterExtractionHelper(filterTypeDict.text, "label", "", setQuery);
-  filterExtractionHelper(
-    filterTypeDict.nypuc_docket_industry,
-    "label",
-    "",
-    setIndustry,
-  );
+  const industrySchema: filterExtractionSchema = {
+    filters: filterTypeDict.industrySchema,
+    valueProperty: "label",
+    elseValue: "",
+    setValueFunc: setIndustry,
+  };
+  filterExtractionHelper(industrySchema);
   return convoSearchData;
 };
 
@@ -364,18 +371,29 @@ const generateFileFiltersFromFilterList = (
       const setValue = (value: string) => {
         setNestedValue(new_file_filters, targetPath, value);
       };
-      filterExtractionHelper(filters, valueProperty, elseValue, setValue);
+      filterExtractionHelper({
+        filters: filters,
+        valueProperty: valueProperty,
+        elseValue: elseValue,
+        setValueFunc: setValue,
+      });
     },
   );
 
   return new_file_filters;
 };
-const filterExtractionHelper = (
-  filters: Filter[],
-  valueProperty: string,
-  elseValue: string,
-  setValueFunc: (value: any) => void,
-) => {
+
+interface filterExtractionSchema {
+  filters: Filter[];
+  valueProperty: string;
+  elseValue: string;
+  setValueFunc: (value: any) => void;
+}
+const filterExtractionHelper = (schema: filterExtractionSchema) => {
+  const filters = schema.filters;
+  const setValueFunc = schema.setValueFunc;
+  const elseValue = schema.elseValue;
+  const valueProperty = schema.valueProperty;
   if (filters && filters.length > 0) {
     if (filters.length > 1) {
       console.log(
