@@ -200,6 +200,7 @@ FROM
     public.file
     LEFT JOIN public.file_metadata ON public.file.id = public.file_metadata.id
     LEFT JOIN public.file_extras ON public.file.id = public.file_extras.id
+    LEFT JOIN public.file_text_source ON public.file.id = public.file_text_source.file_id
     LEFT JOIN public.docket_documents ON public.file.id = public.docket_documents.file_id
     LEFT JOIN public.docket_conversations ON public.docket_documents.conversation_uuid = public.docket_conversations.id
     LEFT JOIN public.relation_documents_organizations_authorship ON public.file.id = public.relation_documents_organizations_authorship.document_id
