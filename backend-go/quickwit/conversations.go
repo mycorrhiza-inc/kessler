@@ -71,11 +71,17 @@ func HandleConvoSearch(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, string(respString))
 }
 
-func SearchConversations(search_data ConvoSearchRequestData, ctx context.Context) ([]conversations.ConversationInformation, error) {
+func convoQuickwitMakeQueryString(search_data ConvoSearchRequestData) string {
 	search_values := search_data.Search
 	dateQueryString := ConstructDateTextQuery(search_values.DateFrom, search_values.DateTo, search_values.Query)
+	if search_values.IndustryType != "" {
+		dateQueryString = dateQueryString + fmt.Sprintf(" AND industry_type:(%s)", search_values.IndustryType)
+	}
+	return dateQueryString
+}
 
-	queryString := dateQueryString
+func SearchConversations(search_data ConvoSearchRequestData, ctx context.Context) ([]conversations.ConversationInformation, error) {
+	queryString := convoQuickwitMakeQueryString(search_data)
 
 	// Search for conversations
 	search_request := QuickwitSearchRequest{
