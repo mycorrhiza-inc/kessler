@@ -91,7 +91,7 @@ func SearchConversations(search_data ConvoSearchRequestData, ctx context.Context
 }
 
 func IndexAllConversations(q dbstore.Queries, ctx context.Context, index_name string) error {
-	conversations, err := q.DocketConversationList(ctx)
+	conversations, err := q.ConversationCompleteQuickwitListGet(ctx)
 	if err != nil {
 		return err
 	}
@@ -99,7 +99,7 @@ func IndexAllConversations(q dbstore.Queries, ctx context.Context, index_name st
 	return err
 }
 
-func IndexConversations(convos []dbstore.DocketConversation, index_name string) error {
+func IndexConversations(convos []dbstore.ConversationCompleteQuickwitListGetRow, index_name string) error {
 	if index_name == "" {
 		index_name = NYConversationIndex
 	}
@@ -107,16 +107,17 @@ func IndexConversations(convos []dbstore.DocketConversation, index_name string) 
 	quickwit_convos := make([]conversations.ConversationInformation, len(convos))
 	for index, convo := range convos {
 		quickwit_convo := conversations.ConversationInformation{
-			DocketGovID:   convo.DocketGovID,
-			State:         convo.State,
-			Name:          convo.Name,
-			Description:   convo.Description,
-			MatterType:    convo.MatterType,
-			IndustryType:  convo.IndustryType,
-			Metadata:      convo.Metadata,
-			Extra:         convo.Extra,
-			DatePublished: timestamp.KesslerTime(convo.DatePublished.Time),
-			ID:            convo.ID,
+			DocketGovID:    convo.DocketGovID,
+			State:          convo.State,
+			Name:           convo.Name,
+			Description:    convo.Description,
+			MatterType:     convo.MatterType,
+			IndustryType:   convo.IndustryType,
+			Metadata:       convo.Metadata,
+			Extra:          convo.Extra,
+			DatePublished:  timestamp.KesslerTime(convo.DatePublished.Time),
+			ID:             convo.ID,
+			DocumentsCount: int(convo.TotalDocuments),
 		}
 		quickwit_convos[index] = quickwit_convo
 

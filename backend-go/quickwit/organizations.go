@@ -87,7 +87,7 @@ func IndexOrganizations(orgs []organizations.OrganizationQuickwitSchema, indexNa
 }
 
 func ReindexAllOrganizations(ctx context.Context, q dbstore.Queries, indexName string) error {
-	orgs, err := q.OrganizationList(ctx)
+	orgs, err := q.OrganizationCompleteQuickwitListGet(ctx)
 	if err != nil {
 		return err
 	}
@@ -102,8 +102,8 @@ func ReindexAllOrganizations(ctx context.Context, q dbstore.Queries, indexName s
 		quickwitOrgs[i] = organizations.OrganizationQuickwitSchema{
 			ID:                 org.ID,
 			Name:               org.Name,
-			Aliases:            []string{org.Name},
-			FilesAuthoredCount: 0,
+			Aliases:            org.OrganizationAliases,
+			FilesAuthoredCount: int(org.TotalDocumentsAuthored),
 		}
 	}
 
