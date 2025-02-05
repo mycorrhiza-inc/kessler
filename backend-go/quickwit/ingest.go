@@ -33,56 +33,34 @@ func IngestIntoIndex[V GenericQuickwitSearchSchema](indexName string, data []V, 
 	maxIngestItems := 1000
 	fmt.Println("Initiating ingest into index")
 
+	sem := make(chan struct{}, 3)
+	errChan := make(chan error, len(data)/maxIngestItems+1)
 	for i := 0; i < len(data); i += maxIngestItems {
-		// for i := 0; i < maxIngestItems; i += maxIngestItems {
+
 		end := i + maxIngestItems
 		if end > len(data) {
 			end = len(data)
 		}
 
-		var records []string
-		for _, record := range data[i:end] {
-			// Convert the record to a map to check for the timestamp field
-			var recordMap map[string]interface{}
-			jsonBytes, err := json.Marshal(record)
-			if err != nil {
-				return fmt.Errorf("error marshaling record: %v", err)
+		sem <- struct{}{}
+		go func(start, end int) {
+			defer func() { <-sem }()
+			if err := IngestMinimalIntoQuickwit(indexName, data[start:end]); err != nil {
+				errChan <- err
 			}
-			if err := json.Unmarshal(jsonBytes, &recordMap); err != nil {
-				return fmt.Errorf("error unmarshaling record into map: %v", err)
-			}
+		}(i, end)
 
-			// Check if the timestamp field exists; if not, set it
-			if _, exists := recordMap["timestamp"]; !exists {
-				timestamp_value := time.Now().UTC().Unix()
-				// recordMap["timestamp"] = timestamp.KesslerTime(time.Now())
-				recordMap["timestamp"] = timestamp_value
-			}
-
-			// Marshal the modified map into a JSON string
-			jsonStr, err := json.Marshal(recordMap)
-			if err != nil {
-				return fmt.Errorf("error marshaling modified record: %v", err)
-			}
-			records = append(records, string(jsonStr))
+		select {
+		case err := <-errChan:
+			close(sem)
+			return err
+		default:
 		}
+	}
 
-		dataToPost := strings.Join(records, "\n")
-		fmt.Printf("Ingesting %d data entries into quickwit index:\"%v\"(batch %d-%d) \n", len(records), indexName, i+1, end)
-		resp, err := http.Post(
-			fmt.Sprintf("%s/api/v1/%s/ingest?commit=force", quickwitEndpoint, indexName),
-			"application/x-ndjson",
-			strings.NewReader(dataToPost),
-		)
-		if err != nil {
-			return fmt.Errorf("error submitting data to quickwit: %v", err)
-		}
-		if resp.StatusCode != http.StatusOK {
-			return fmt.Errorf("Ingesting data into quickwit gave bad response code: %v\n", resp.StatusCode)
-		}
-		defer resp.Body.Close()
-
-		printResponse(resp)
+	close(sem)
+	if len(errChan) > 0 {
+		return <-errChan
 	}
 	tailUrl := fmt.Sprintf("%s/api/v1/%s/tail", quickwitEndpoint, indexName)
 	resp, err := http.Get(tailUrl)
@@ -120,5 +98,52 @@ func IngestIntoIndex[V GenericQuickwitSearchSchema](indexName string, data []V, 
 	}
 	fmt.Printf("Describe response (first %d chars): %s\n", n, string(body[:n]))
 
+	return nil
+}
+
+func IngestMinimalIntoQuickwit[V GenericQuickwitSearchSchema](indexName string, data []V) error {
+	records := make([]string, 0, len(data))
+	for _, record := range data {
+		// Convert the record to a map to check for the timestamp field
+		var recordMap map[string]interface{}
+		jsonBytes, err := json.Marshal(record)
+		if err != nil {
+			return fmt.Errorf("error marshaling record: %v", err)
+		}
+		if err := json.Unmarshal(jsonBytes, &recordMap); err != nil {
+			return fmt.Errorf("error unmarshaling record into map: %v", err)
+		}
+
+		// Check if the timestamp field exists; if not, set it
+		if _, exists := recordMap["timestamp"]; !exists {
+			timestamp_value := time.Now().UTC().Unix()
+			// recordMap["timestamp"] = timestamp.KesslerTime(time.Now())
+			recordMap["timestamp"] = timestamp_value
+		}
+
+		// Marshal the modified map into a JSON string
+		jsonStr, err := json.Marshal(recordMap)
+		if err != nil {
+			return fmt.Errorf("error marshaling modified record: %v", err)
+		}
+		records = append(records, string(jsonStr))
+	}
+
+	dataToPost := strings.Join(records, "\n")
+	fmt.Printf("Ingesting %d data entries into quickwit index:\"%v\" \n", len(records), indexName)
+	resp, err := http.Post(
+		fmt.Sprintf("%s/api/v1/%s/ingest?commit=force", quickwitEndpoint, indexName),
+		"application/x-ndjson",
+		strings.NewReader(dataToPost),
+	)
+	if err != nil {
+		return fmt.Errorf("error submitting data to quickwit: %v", err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("Ingesting data into quickwit gave bad response code: %v\n", resp.StatusCode)
+	}
+	defer resp.Body.Close()
+
+	printResponse(resp)
 	return nil
 }
