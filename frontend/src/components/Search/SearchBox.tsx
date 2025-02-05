@@ -316,7 +316,7 @@ const generateConvoSearchData = (filterTypeDict: {
     convoSearchData.query = value;
   };
   const setIndustry = (value: string) => {
-    convoSearchData.query = value;
+    convoSearchData.industry_type = value;
   };
   filterExtractionHelper(filterTypeDict.text, "label", "", setQuery);
   filterExtractionHelper(
