@@ -12,17 +12,6 @@ search, sorta
 
 > warning!!: this code is pre-deployment. Use with anything you care about at your own peril
 
-# Kubernetes Usage
-
-WARNING k8s is still experiencing some bugs, bewarned 
-
-use 
-
-`./update-kubernetes.sh --nigthly-commit <hash>`
-
-
-
-TODO: UPDATE DOCUMENTATION FOR EVERYTHING 
 
 # Usage
 
@@ -40,10 +29,42 @@ docker compose up
 - docker
 - docker compose
 
-## Running the application (production)
+# Running the application (production)
 
-To start the application run `docker compose --env-file ./config/global.env up`
+To update the production enviornment execute the following script:
 
+`./update-docker-compose.sh`
+
+This will go ahead and download the repo to your computer at /mycorrhiza/kessler. Navigate to the latest version of the main branch. Build the containers, and push them under the tag kessler-imagetype:commit-hash-of-main. Then execute a remote command to change the deployment at kessler.xyz to whatever commit you just pushed. (this does require root access on said remote)
+
+If you want to specify a certain commit you can run 
+
+`./update-docker-compose.sh --commit <commit-hash>`
+
+To set prod to a specific version. This does work with rollbacks
+
+IMPORTANT: Its recommended to run this command on an x86 machine. Cross compilation of docker issues to x86 has been known to take a long time.
+
+By default the remote is set to `kessler.xyz` to set a different remote use 
+
+`./update-docker-compose.sh --remote <remote-url> --commit <commit-hash>`
+
+
+
+
+# Kubernetes Usage
+
+TODO: Fix this so it actually works
+
+WARNING k8s is still experiencing some bugs, bewarned 
+
+use 
+
+`./update-kubernetes.sh --nigthly-commit <hash>`
+
+
+
+TODO: UPDATE DOCUMENTATION FOR EVERYTHING 
 # Development
 
 ## Setting Up your Dev Environment

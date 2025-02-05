@@ -43,7 +43,9 @@ const organizationsListGet = async (
     // );
     // return valid_data;
   };
-  const result = await axios.post(url, data).then((res) => cleanData(res));
+  const result = await axios
+    .post(url, search_schema)
+    .then((res) => cleanData(res));
   return result as OrganizationTableSchema[];
 };
 
@@ -121,7 +123,7 @@ const OrganizationTableInfiniteScroll = ({
   };
   useEffect(() => {
     getInitialData();
-  }, []);
+  }, [lookup_data]);
   return (
     <>
       <InfiniteScroll

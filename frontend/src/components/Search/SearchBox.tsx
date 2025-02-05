@@ -12,82 +12,92 @@ import {
   Suggestion,
 } from "@/lib/types/SearchTypes";
 
-const mockFetchSuggestions = async (
-  query: string,
-  PageContext: PageContextMode,
-): Promise<Suggestion[]> => {
-  // Simulate API delay
+const getRawSuggestions = (PageContext: PageContextMode): Suggestion[] => {
   if (PageContext === PageContextMode.Conversations) {
     return [];
   }
   if (PageContext === PageContextMode.Organizations) {
     return [];
   }
-  await new Promise((resolve) => setTimeout(resolve, 300));
+  if (PageContext === PageContextMode.Files) {
+    return [
+      {
+        id: "0b544651-0226-4e0d-83af-184ef5aad4e5",
+        type: "organization",
+        label: "New York State Department of Public Service",
+        value: "acme",
+      },
+      {
+        id: "be6aa9d6-e03f-4f85-a2f4-ae7e14199ec4",
+        type: "organization",
+        label: "Protect Our Coast - LINY",
+        value: "apple",
+      },
+      {
+        id: "24-E-0165",
+        type: "docket",
+        label: "24-E-0165: Commission Regarding the Grid of the Future",
+        value: "bug-123",
+      },
 
-  const suggestions: Suggestion[] = [
-    // {
-    //   id: "00000000-0000-0000-0000-000000000000",
-    //   type: "file_class",
-    //   label: "Plans and Proposals",
-    //   value: "Plans and Proposals",
-    // },
-    // {
-    //   id: "00000000-0000-0000-0000-000000000000",
-    //   type: "file_class",
-    //   label: "Corrospondence",
-    //   value: "Corrospondence",
-    // },
-    // {
-    //   id: "00000000-0000-0000-0000-000000000000",
-    //   type: "file_class",
-    //   label: "Exhibits",
-    //   value: "Exhibits",
-    // },
-    // {
-    //   id: "00000000-0000-0000-0000-000000000000",
-    //   type: "file_class",
-    //   label: "Testimony",
-    //   value: "Testimony",
-    // },
-    // {
-    //   id: "00000000-0000-0000-0000-000000000000",
-    //   type: "file_class",
-    //   label: "Reports",
-    //   value: "Reports",
-    // },
-    // {
-    //   id: "00000000-0000-0000-0000-000000000000",
-    //   type: "file_class",
-    //   label: "Comments",
-    //   value: "Comments",
-    // },
-    // {
-    //   id: "00000000-0000-0000-0000-000000000000",
-    //   type: "file_class",
-    //   label: "Attachment",
-    //   value: "Attachment",
-    // },
+      {
+        id: "fc001a23-5f7e-4b3c-9d2a-8f6e4c7d9e0b",
+        type: "file_class",
+        label: "Plans and Proposals",
+        value: "Plans and Proposals",
+      },
+      {
+        id: "fc002b34-6a8d-4c5f-ae3b-9g7f5d8e0f1c",
+        type: "file_class",
+        label: "Corrospondence",
+        value: "Corrospondence",
+      },
+      {
+        id: "fc003c45-7b9e-5d6g-bf4c-ah8g6e9f1g2d",
+        type: "file_class",
+        label: "Exhibits",
+        value: "Exhibits",
+      },
+      {
+        id: "fc004d56-8c0f-6e7h-cg5d-bi9h7f0g2h3e",
+        type: "file_class",
+        label: "Testimony",
+        value: "Testimony",
+      },
+      {
+        id: "fc005e67-9d1g-7f8i-dh6e-cj0i8g1h3i4f",
+        type: "file_class",
+        label: "Reports",
+        value: "Reports",
+      },
+      {
+        id: "fc006f78-0e2h-8g9j-ei7f-dk1j9h2i4j5g",
+        type: "file_class",
+        label: "Comments",
+        value: "Comments",
+      },
+      {
+        id: "fc007g89-1f3i-9h0k-fj8g-el2k0i3j5k6h",
+        type: "file_class",
+        label: "Attachment",
+        value: "Attachment",
+      },
+    ];
+  }
+  console.error(
+    "Unknown page context for generating raw suggestions",
+    PageContext,
+  );
+  return [];
+};
+const mockFetchSuggestions = async (
+  query: string,
+  PageContext: PageContextMode,
+): Promise<Suggestion[]> => {
+  // Simulate API delay
+  // await new Promise((resolve) => setTimeout(resolve, 300));
 
-    {
-      id: "0b544651-0226-4e0d-83af-184ef5aad4e5",
-      type: "organization",
-      label: "New York State Department of Public Service",
-      value: "acme",
-    },
-    {
-      id: "be6aa9d6-e03f-4f85-a2f4-ae7e14199ec4",
-      type: "organization",
-      label: "Protect Our Coast - LINY",
-      value: "apple",
-    },
-    {
-      id: "24-E-0165",
-      type: "docket",
-      label: "24-E-0165: Commission Regarding the Grid of the Future",
-      value: "bug-123",
-    },
-  ].filter(
+  const suggestions: Suggestion[] = getRawSuggestions(PageContext).filter(
     (s) =>
       s.label.toLowerCase().includes(query.toLowerCase()) ||
       s.type.toLowerCase().includes(query.toLowerCase()),
@@ -224,11 +234,28 @@ const setSearchFilters = (props: SearchBoxInputProps, filters: Filter[]) => {
       return;
     }
     if (props.pageContext === PageContextMode.Organizations) {
+      props.setSearchQuery(getTextQueryFromFilterList(filterTypeDict));
       return;
     }
     if (props.pageContext === PageContextMode.Conversations) {
+      props.setSearchQuery(getTextQueryFromFilterList(filterTypeDict));
       return;
     }
+  }
+};
+
+const getTextQueryFromFilterList = (filterTypeDict: {
+  [key: string]: Filter[];
+}) => {
+  if (filterTypeDict.text) {
+    if (filterTypeDict.text.length > 1) {
+      console.log("This paramater shouldnt be more then length 1, ignoring ");
+    }
+    const first_filter_text = filterTypeDict.text[0].label;
+    console.log("Filters are being updated with text");
+    return first_filter_text;
+  } else {
+    return "";
   }
 };
 
@@ -237,6 +264,7 @@ const generateFileFiltersFromFilterList = (
   filterTypeDict: { [key: string]: Filter[] },
 ) => {
   const new_file_filters = { ...previous_file_filters };
+  new_file_filters.query = getTextQueryFromFilterList(filterTypeDict);
 
   if (filterTypeDict.text) {
     if (filterTypeDict.text.length > 1) {

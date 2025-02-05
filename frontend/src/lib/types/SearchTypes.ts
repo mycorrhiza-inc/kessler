@@ -26,9 +26,11 @@ export interface FileSearchBoxProps {
 }
 export interface OrgSearchBoxProps {
   pageContext: PageContextMode.Organizations;
+  setSearchQuery: React.Dispatch<React.SetStateAction<string>>;
 }
 export interface DocketSearchBoxProps {
   pageContext: PageContextMode.Conversations;
+  setSearchQuery: React.Dispatch<React.SetStateAction<string>>;
 }
 
 export type SearchBoxInputProps =

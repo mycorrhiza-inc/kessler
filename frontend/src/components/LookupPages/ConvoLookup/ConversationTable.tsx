@@ -152,7 +152,7 @@ const ConversationTableInfiniteScroll = ({
   };
   useEffect(() => {
     getInitialData();
-  }, []);
+  }, [lookup_data]);
   return (
     <InfiniteScroll
       dataLength={tableData.length}

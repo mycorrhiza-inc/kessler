@@ -12,7 +12,12 @@ const ConvoLookupPage = () => {
     <>
       <h1 className="text-3xl font-bold">Dockets</h1>
       <div className="pr-4 w-full">
-        <SearchBox input={{ pageContext: PageContextMode.Conversations }} />
+        <SearchBox
+          input={{
+            pageContext: PageContextMode.Conversations,
+            setSearchQuery: setQueryString,
+          }}
+        />
         <ConversationTableInfiniteScroll lookup_data={{ query: queryString }} />
       </div>
     </>
