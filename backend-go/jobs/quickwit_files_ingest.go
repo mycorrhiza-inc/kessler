@@ -90,14 +90,17 @@ func QuickwitIngestFromPostgres(q *dbstore.Queries, ctx context.Context, filter_
 		pagination_params := dbstore.SemiCompleteFileQuickwitListGetPaginatedParams{Limit: int32(page_size), Offset: int32(page * page_size)}
 		temporary_file_results, err := q.SemiCompleteFileQuickwitListGetPaginated(ctx, pagination_params)
 		if err != nil {
-			return err
+			fmt.Printf("Error getting semi complete file list: %v\n", err)
+			// return err
 		}
-		files_raw = append(files_raw, temporary_file_results...)
-		if len(temporary_file_results) < page_size {
-			fmt.Printf("Finished indexing PG after %v pages\n", page)
-			break
+		if err == nil {
+			files_raw = append(files_raw, temporary_file_results...)
+			if len(temporary_file_results) < page_size {
+				fmt.Printf("Finished indexing PG after %v pages\n", page)
+				break
+			}
+			fmt.Printf("Indexed PG page %v\n", page)
 		}
-		fmt.Printf("Indexed PG page %v\n", page)
 	}
 
 	if filter_out_unverified {
