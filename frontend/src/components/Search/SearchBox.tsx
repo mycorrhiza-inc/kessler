@@ -12,82 +12,92 @@ import {
   Suggestion,
 } from "@/lib/types/SearchTypes";
 
-const mockFetchSuggestions = async (
-  query: string,
-  PageContext: PageContextMode,
-): Promise<Suggestion[]> => {
-  // Simulate API delay
+const getRawSuggestions = (PageContext: PageContextMode): Suggestion[] => {
   if (PageContext === PageContextMode.Conversations) {
     return [];
   }
   if (PageContext === PageContextMode.Organizations) {
     return [];
   }
-  await new Promise((resolve) => setTimeout(resolve, 300));
+  if (PageContext === PageContextMode.Files) {
+    return [
+      {
+        id: "0b544651-0226-4e0d-83af-184ef5aad4e5",
+        type: "organization",
+        label: "New York State Department of Public Service",
+        value: "acme",
+      },
+      {
+        id: "be6aa9d6-e03f-4f85-a2f4-ae7e14199ec4",
+        type: "organization",
+        label: "Protect Our Coast - LINY",
+        value: "apple",
+      },
+      {
+        id: "24-E-0165",
+        type: "docket",
+        label: "24-E-0165: Commission Regarding the Grid of the Future",
+        value: "bug-123",
+      },
 
-  const suggestions: Suggestion[] = [
-    // {
-    //   id: "00000000-0000-0000-0000-000000000000",
-    //   type: "file_class",
-    //   label: "Plans and Proposals",
-    //   value: "Plans and Proposals",
-    // },
-    // {
-    //   id: "00000000-0000-0000-0000-000000000000",
-    //   type: "file_class",
-    //   label: "Corrospondence",
-    //   value: "Corrospondence",
-    // },
-    // {
-    //   id: "00000000-0000-0000-0000-000000000000",
-    //   type: "file_class",
-    //   label: "Exhibits",
-    //   value: "Exhibits",
-    // },
-    // {
-    //   id: "00000000-0000-0000-0000-000000000000",
-    //   type: "file_class",
-    //   label: "Testimony",
-    //   value: "Testimony",
-    // },
-    // {
-    //   id: "00000000-0000-0000-0000-000000000000",
-    //   type: "file_class",
-    //   label: "Reports",
-    //   value: "Reports",
-    // },
-    // {
-    //   id: "00000000-0000-0000-0000-000000000000",
-    //   type: "file_class",
-    //   label: "Comments",
-    //   value: "Comments",
-    // },
-    // {
-    //   id: "00000000-0000-0000-0000-000000000000",
-    //   type: "file_class",
-    //   label: "Attachment",
-    //   value: "Attachment",
-    // },
+      {
+        id: "00000000-0000-0000-0000-000000000000",
+        type: "file_class",
+        label: "Plans and Proposals",
+        value: "Plans and Proposals",
+      },
+      {
+        id: "00000000-0000-0000-0000-000000000000",
+        type: "file_class",
+        label: "Corrospondence",
+        value: "Corrospondence",
+      },
+      {
+        id: "00000000-0000-0000-0000-000000000000",
+        type: "file_class",
+        label: "Exhibits",
+        value: "Exhibits",
+      },
+      {
+        id: "00000000-0000-0000-0000-000000000000",
+        type: "file_class",
+        label: "Testimony",
+        value: "Testimony",
+      },
+      {
+        id: "00000000-0000-0000-0000-000000000000",
+        type: "file_class",
+        label: "Reports",
+        value: "Reports",
+      },
+      {
+        id: "00000000-0000-0000-0000-000000000000",
+        type: "file_class",
+        label: "Comments",
+        value: "Comments",
+      },
+      {
+        id: "00000000-0000-0000-0000-000000000000",
+        type: "file_class",
+        label: "Attachment",
+        value: "Attachment",
+      },
+    ];
+  }
+  console.error(
+    "Unknown page context for generating raw suggestions",
+    PageContext,
+  );
+  return [];
+};
+const mockFetchSuggestions = async (
+  query: string,
+  PageContext: PageContextMode,
+): Promise<Suggestion[]> => {
+  // Simulate API delay
+  // await new Promise((resolve) => setTimeout(resolve, 300));
 
-    {
-      id: "0b544651-0226-4e0d-83af-184ef5aad4e5",
-      type: "organization",
-      label: "New York State Department of Public Service",
-      value: "acme",
-    },
-    {
-      id: "be6aa9d6-e03f-4f85-a2f4-ae7e14199ec4",
-      type: "organization",
-      label: "Protect Our Coast - LINY",
-      value: "apple",
-    },
-    {
-      id: "24-E-0165",
-      type: "docket",
-      label: "24-E-0165: Commission Regarding the Grid of the Future",
-      value: "bug-123",
-    },
-  ].filter(
+  const suggestions: Suggestion[] = getRawSuggestions(PageContext).filter(
     (s) =>
       s.label.toLowerCase().includes(query.toLowerCase()) ||
       s.type.toLowerCase().includes(query.toLowerCase()),
