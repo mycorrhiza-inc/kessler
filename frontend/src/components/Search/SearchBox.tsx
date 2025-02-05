@@ -318,40 +318,53 @@ const generateFileFiltersFromFilterList = (
     {
       filterKey: "docket",
       targetPath: ["filters", "match_docket_id"],
-      property: "id",
+      valueProperty: "id",
       elseValue: "",
     },
     {
       filterKey: "organization",
       targetPath: ["filters", "match_author"],
-      property: "label",
+      valueProperty: "label",
       elseValue: "",
     },
     {
       filterKey: "file_class",
       targetPath: ["filters", "match_file_class"],
-      property: "label",
+      valueProperty: "label",
       elseValue: "",
     },
   ];
 
-  filterConfigs.forEach(({ filterKey, targetPath, property, elseValue }) => {
-    const filters = filterTypeDict[filterKey];
-    if (filters && filters.length > 0) {
-      if (filters.length > 1) {
-        console.log(
-          `Parameter '${filterKey}' shouldn't have more than one filter, ignoring extras`,
-        );
-      }
-      const value = filters[0][property as keyof Filter]; // Seems like a total hack.
-      setNestedValue(new_file_filters, targetPath, value);
-      console.log(`Filters updated with ${filterKey}`);
-    } else {
-      setNestedValue(new_file_filters, targetPath, elseValue);
-    }
-  });
+  filterConfigs.forEach(
+    ({ filterKey, targetPath, valueProperty, elseValue }) => {
+      const filters = filterTypeDict[filterKey];
+
+      const setValue = (value: string) => {
+        setNestedValue(new_file_filters, targetPath, value);
+      };
+      filterExtractionHelper(filters, elseValue, valueProperty, setValue);
+    },
+  );
 
   return new_file_filters;
+};
+const filterExtractionHelper = (
+  filters: Filter[],
+  valueProperty: string,
+  elseValue: string,
+  setValueFunc: (value: any) => void,
+) => {
+  if (filters && filters.length > 0) {
+    if (filters.length > 1) {
+      console.log(
+        `Parameter '${filters[0].type}' shouldn't have more than one filter, ignoring extras`,
+      );
+    }
+    const value = filters[0][valueProperty as keyof Filter]; // Seems like a total hack.
+    setValueFunc(value);
+  } else {
+    setValueFunc(elseValue);
+  }
 };
 
 // Helper to set values in nested object paths

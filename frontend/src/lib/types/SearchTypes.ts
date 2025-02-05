@@ -31,6 +31,7 @@ export interface OrgSearchBoxProps {
 export interface DocketSearchBoxProps {
   pageContext: PageContextMode.Conversations;
   setSearchQuery: React.Dispatch<React.SetStateAction<string>>;
+  setNYPUCIndustry: React.Dispatch<React.SetStateAction<string>>;
 }
 
 export type SearchBoxInputProps =
