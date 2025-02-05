@@ -34,7 +34,7 @@ func ConcurrentMapError[T any, R any](input_list []T, f func(T) (R, error), work
 	resultChan := make(chan R, len(input_list))
 	var wg sync.WaitGroup
 
-	for index, value := range input_list {
+	for _, value := range input_list {
 
 		sem <- struct{}{} // Acquire semaphore slot
 		wg.Add(1)

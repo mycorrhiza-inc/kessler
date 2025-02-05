@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"kessler/objects/conversations"
 	"kessler/objects/organizations"
+	"kessler/util"
 	"net/http"
 	"strings"
 	"time"
@@ -33,35 +34,24 @@ func IngestIntoIndex[V GenericQuickwitSearchSchema](indexName string, data []V, 
 	maxIngestItems := 1000
 	fmt.Println("Initiating ingest into index")
 
-	sem := make(chan struct{}, 3)
-	errChan := make(chan error, len(data)/maxIngestItems+1)
-	for i := 0; i < len(data); i += maxIngestItems {
+	var subIngestLists [][]V
 
+	for i := 0; i < len(data); i += maxIngestItems {
 		end := i + maxIngestItems
 		if end > len(data) {
 			end = len(data)
 		}
-
-		sem <- struct{}{}
-		go func(start, end int) {
-			defer func() { <-sem }()
-			if err := IngestMinimalIntoQuickwit(indexName, data[start:end]); err != nil {
-				errChan <- err
-			}
-		}(i, end)
-
-		select {
-		case err := <-errChan:
-			close(sem)
-			return err
-		default:
-		}
+		subIngestLists = append(subIngestLists, data[i:end])
+	}
+	ingestWrapedFunc := func(data []V) (int, error) {
+		return 0, IngestMinimalIntoQuickwit(indexName, data)
+	}
+	workers := 3
+	_, err := util.ConcurrentMapError(subIngestLists, ingestWrapedFunc, workers)
+	if err != nil {
+		return fmt.Errorf("Error ingesting into index: %v\n", err)
 	}
 
-	close(sem)
-	if len(errChan) > 0 {
-		return <-errChan
-	}
 	tailUrl := fmt.Sprintf("%s/api/v1/%s/tail", quickwitEndpoint, indexName)
 	resp, err := http.Get(tailUrl)
 	defer resp.Body.Close()
