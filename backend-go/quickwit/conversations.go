@@ -82,6 +82,7 @@ func SearchConversations(search_data ConvoSearchRequestData, ctx context.Context
 		Query:       queryString,
 		MaxHits:     search_data.Limit,
 		StartOffset: search_data.Offset,
+		SortBy:      "documents_count",
 	}
 	search_index := NYConversationIndex
 	var search_results []conversations.ConversationInformation
