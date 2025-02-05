@@ -12,6 +12,89 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const conversationCompleteQuickwitListGet = `-- name: ConversationCompleteQuickwitListGet :many
+SELECT
+    public.docket_conversations.id,
+    public.docket_conversations.docket_gov_id,
+    public.docket_conversations.state,
+    public.docket_conversations.name,
+    public.docket_conversations.description,
+    public.docket_conversations.matter_type,
+    public.docket_conversations.industry_type,
+    public.docket_conversations.metadata,
+    public.docket_conversations.extra,
+    public.docket_conversations.date_published,
+    public.docket_conversations.created_at,
+    public.docket_conversations.updated_at,
+    COUNT(public.docket_documents.file_id) AS total_documents
+FROM
+    public.docket_conversations
+    LEFT JOIN public.docket_documents ON public.docket_conversations.id = public.docket_documents.conversation_id
+GROUP BY
+    docket_conversations.id,
+    docket_conversations.docket_gov_id,
+    docket_conversations.state,
+    docket_conversations.name,
+    docket_conversations.description,
+    docket_conversations.matter_type,
+    docket_conversations.industry_type,
+    docket_conversations.metadata,
+    docket_conversations.extra,
+    docket_conversations.date_published,
+    docket_conversations.created_at,
+    docket_conversations.updated_at
+`
+
+type ConversationCompleteQuickwitListGetRow struct {
+	ID             uuid.UUID
+	DocketGovID    string
+	State          string
+	Name           string
+	Description    string
+	MatterType     string
+	IndustryType   string
+	Metadata       string
+	Extra          string
+	DatePublished  pgtype.Timestamptz
+	CreatedAt      pgtype.Timestamp
+	UpdatedAt      pgtype.Timestamp
+	TotalDocuments int64
+}
+
+func (q *Queries) ConversationCompleteQuickwitListGet(ctx context.Context) ([]ConversationCompleteQuickwitListGetRow, error) {
+	rows, err := q.db.Query(ctx, conversationCompleteQuickwitListGet)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ConversationCompleteQuickwitListGetRow
+	for rows.Next() {
+		var i ConversationCompleteQuickwitListGetRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.DocketGovID,
+			&i.State,
+			&i.Name,
+			&i.Description,
+			&i.MatterType,
+			&i.IndustryType,
+			&i.Metadata,
+			&i.Extra,
+			&i.DatePublished,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.TotalDocuments,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const organizationCompleteQuickwitListGet = `-- name: OrganizationCompleteQuickwitListGet :many
 SELECT
     public.organization.id,
