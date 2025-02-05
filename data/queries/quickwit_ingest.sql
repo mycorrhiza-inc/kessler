@@ -102,7 +102,7 @@ SELECT
     COUNT(public.docket_documents.file_id) AS total_documents
 FROM
     public.docket_conversations
-    LEFT JOIN public.docket_documents ON public.docket_conversations.id = public.docket_documents.conversation_id
+    LEFT JOIN public.docket_documents ON public.docket_conversations.id = public.docket_documents.conversation_uuid
 GROUP BY
     docket_conversations.id,
     docket_conversations.docket_gov_id,
