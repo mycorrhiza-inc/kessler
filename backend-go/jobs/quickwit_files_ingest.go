@@ -94,8 +94,10 @@ func QuickwitIngestFromPostgres(q *dbstore.Queries, ctx context.Context, filter_
 		}
 		files_raw = append(files_raw, temporary_file_results...)
 		if len(temporary_file_results) < page_size {
+			fmt.Printf("Finished indexing PG after %v pages\n", page)
 			break
 		}
+		fmt.Printf("Indexed PG page %v\n", page)
 	}
 
 	if filter_out_unverified {
