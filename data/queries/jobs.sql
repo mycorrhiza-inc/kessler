@@ -15,7 +15,6 @@ VALUES
 RETURNING
     id;
 
-
 -- name: DeleteJob :exec
 DELETE FROM
     public.jobs
