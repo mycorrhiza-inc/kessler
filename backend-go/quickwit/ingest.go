@@ -70,17 +70,6 @@ func IngestIntoIndex[V GenericQuickwitSearchSchema](indexName string, data []V, 
 	}
 	fmt.Printf("Tail response (first %d chars): %s\n", n, string(body[:n]))
 
-	// describeUrl := fmt.Sprintf("%s/api/v1/%s/describe", quickwitEndpoint, indexName)
-	// resp, err = http.Get(describeUrl)
-	// if err != nil {
-	// 	return fmt.Errorf("Error describing index: %v\n", err)
-	// }
-	// defer resp.Body.Close()
-	//
-	// if resp.StatusCode != http.StatusOK {
-	// 	return fmt.Errorf("Describing index gave bad response code: %v\n", resp.StatusCode)
-	// }
-
 	body = make([]byte, 1000)
 	n, err = resp.Body.Read(body)
 	if err != nil && err.Error() != "EOF" {
