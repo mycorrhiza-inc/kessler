@@ -12,11 +12,13 @@ import (
 	"kessler/quickwit"
 	"kessler/util"
 	"net/http"
+	"time"
 )
 
 func HandleQuickwitFileIngestFromPostgres(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	q := util.DBQueriesFromRequest(r)
+	ctx := context.Background()
+	// ctx := r.Context()
+	q := util.DBQueriesFromContext(ctx)
 	include_unverified := r.URL.Query().Get("include_unverified") == "true"
 	filter_out_unverified := !include_unverified
 
@@ -91,6 +93,8 @@ func QuickwitIngestFromPostgres(q *dbstore.Queries, ctx context.Context, filter_
 		temporary_file_results, err := q.SemiCompleteFileQuickwitListGetPaginated(ctx, pagination_params)
 		if err != nil {
 			fmt.Printf("Error getting semi complete file list: %v\n", err)
+
+			time.Sleep(5 * time.Second)
 			// return err
 		}
 		if err == nil {
