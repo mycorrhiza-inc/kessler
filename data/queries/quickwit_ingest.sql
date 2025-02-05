@@ -62,3 +62,27 @@ GROUP BY
     file_extras.extra_obj,
     docket_documents.conversation_uuid,
     docket_conversations.docket_gov_id;
+
+-- name: OrganizationCompleteQuickwitListGet :many
+SELECT
+    public.organization.id,
+    public.organization.name,
+    public.organization.description,
+    public.organization.is_person,
+    COUNT(
+        public.relation_documents_organizations_authorship.document_id
+    ) AS total_documents_authored,
+    array_agg(
+        public.organization_aliases.organization_alias
+        ORDER BY
+            public.organization_aliases.organization_alias
+    ) :: VARCHAR [] AS organization_aliases
+FROM
+    public.organization
+    LEFT JOIN public.organization_aliases ON public.organization.id = public.organization_aliases.organization_id
+    LEFT JOIN public.relation_documents_organizations_authorship ON public.organization.id = public.relation_documents_organizations_authorship.organization_id
+GROUP BY
+    organization.id,
+    organization.name,
+    organization.description,
+    organization.is_person;
