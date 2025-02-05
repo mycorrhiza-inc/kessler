@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import LoadingSpinnerTimeout from "../../styled-components/LoadingSpinnerTimeout";
 import { useRouter } from "next/navigation";
 import { getRuntimeEnv } from "@/lib/env_variables_hydration_script";
+import { TextPill } from "@/components/Tables/TextPills";
 
 export type ConversationSearchSchema = {
   query?: string;
@@ -104,7 +105,9 @@ const ConversationTable = ({
               <td className="w-[10%] px-4 py-3">{convo.docket_gov_id}</td>
               <td className="w-[10%] px-4 py-3">{convo.matter_type}</td>
               <td className="w-[10%] px-4 py-3">{convo.state}</td>
-              <td className="w-[10%] px-4 py-3">{convo.industry_type}</td>
+              <td className="w-[10%] px-4 py-3">
+                {convo.industry_type && <TextPill text={convo.industry_type} />}
+              </td>
 
               {!truncate && (
                 <>

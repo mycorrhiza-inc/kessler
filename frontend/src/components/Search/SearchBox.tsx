@@ -198,7 +198,8 @@ const FiltersPool: React.FC<FiltersPoolProps> = ({
     if (filter.type === "text") {
       return "oklch(90% 0.01 30)";
     }
-    return "oklch(90% 0.1 80)";
+    return subdividedHueFromSeed(filter.label);
+    // return "oklch(90% 0.1 80)";
   };
   return (
     selected.length > 0 && (
