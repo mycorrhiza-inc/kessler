@@ -37,15 +37,15 @@ func QuickwitIngestFromPostgres(q *dbstore.Queries, ctx context.Context, filter_
 	var files []dbstore.File
 	var err error
 
-	if filter_out_unverified {
-		files, err = q.FilesList(ctx)
-		if err != nil {
-			return err
-		}
-		fmt.Printf("Got raw n files from postgres: %d\n", len(files))
+	files, err = q.SemiCompleteFileQuickwitListGet(ctx)
+	if err != nil {
+		return err
+	}
 
-		// Filter out unverified files
-		verifiedFiles := make([]dbstore.File, 0)
+	if filter_out_unverified {
+		fmt.Printf("Got raw n files from postgres: %d\n", len(files))
+		var new_files []dbstore.File
+
 		for _, file := range files {
 			if file.Verified.Bool {
 				verifiedFiles = append(verifiedFiles, file)
