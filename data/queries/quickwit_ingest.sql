@@ -46,8 +46,6 @@ FROM
     LEFT JOIN public.docket_conversations ON public.docket_documents.conversation_id = public.docket_conversations.id
     LEFT JOIN public.relation_documents_organizations_authorship ON public.file.id = public.relation_documents_organizations_authorship.document_id
     LEFT JOIN public.organization ON public.relation_documents_organizations_authorship.organization_id = public.organization.id
-WHERE
-    public.file.id = ANY($1 :: UUID [])
 GROUP BY
     FILE.id,
     FILE.name,

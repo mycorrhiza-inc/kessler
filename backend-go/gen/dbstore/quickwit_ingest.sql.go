@@ -204,8 +204,6 @@ FROM
     LEFT JOIN public.docket_conversations ON public.docket_documents.conversation_id = public.docket_conversations.id
     LEFT JOIN public.relation_documents_organizations_authorship ON public.file.id = public.relation_documents_organizations_authorship.document_id
     LEFT JOIN public.organization ON public.relation_documents_organizations_authorship.organization_id = public.organization.id
-WHERE
-    public.file.id = ANY($1 :: UUID [])
 GROUP BY
     FILE.id,
     FILE.name,
@@ -243,8 +241,8 @@ type SemiCompleteFileQuickwitListGetRow struct {
 	FileTextLanguages []string
 }
 
-func (q *Queries) SemiCompleteFileQuickwitListGet(ctx context.Context, dollar_1 []uuid.UUID) ([]SemiCompleteFileQuickwitListGetRow, error) {
-	rows, err := q.db.Query(ctx, semiCompleteFileQuickwitListGet, dollar_1)
+func (q *Queries) SemiCompleteFileQuickwitListGet(ctx context.Context) ([]SemiCompleteFileQuickwitListGetRow, error) {
+	rows, err := q.db.Query(ctx, semiCompleteFileQuickwitListGet)
 	if err != nil {
 		return nil, err
 	}
