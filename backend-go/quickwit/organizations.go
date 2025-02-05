@@ -71,6 +71,7 @@ func SearchOrganizations(searchData OrgSearchRequestData, ctx context.Context) (
 		Query:       baseQuery,
 		MaxHits:     searchData.Limit,
 		StartOffset: searchData.Offset,
+		SortBy:      "files_authored_count",
 	}
 
 	var searchResults []organizations.OrganizationQuickwitSchema

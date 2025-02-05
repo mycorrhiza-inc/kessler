@@ -11,10 +11,55 @@ import {
   SearchBoxInputProps,
   Suggestion,
 } from "@/lib/types/SearchTypes";
+import { randomUUID } from "crypto";
+import { ConvoSearchRequestData } from "../LookupPages/SearchRequestData";
 
 const getRawSuggestions = (PageContext: PageContextMode): Suggestion[] => {
   if (PageContext === PageContextMode.Conversations) {
-    return [];
+    return [
+      {
+        id: "fc001a23-4b5c-6d7e-8f9g-0h1i2j3k4l5",
+        type: "nypuc_docket_industry",
+        label: "Miscellaneous",
+        value: "Miscellaneous",
+      },
+      {
+        id: "fc002b34-5c6d-7e8f-9g0h-1i2j3k4l5m6",
+        type: "nypuc_docket_industry",
+        label: "Gas",
+        value: "Gas",
+      },
+      {
+        id: "fc003c45-6d7e-8f9g-0h1i-2j3k4l5m6n7",
+        type: "nypuc_docket_industry",
+        label: "Electric",
+        value: "Electric",
+      },
+      {
+        id: "fc004d56-7e8f-9g0h-1i2j-3k4l5m6n7o8",
+        type: "nypuc_docket_industry",
+        label: "Facility Gen.",
+        value: "Facility Gen.",
+      },
+      {
+        id: "fc005e67-8f9g-0h1i-2j3k-4l5m6n7o8p9",
+        type: "nypuc_docket_industry",
+        label: "Transmission",
+        value: "Transmission",
+      },
+      {
+        id: "fc006f78-9g0h-1i2j-3k4l-5m6n7o8p9q0",
+        type: "nypuc_docket_industry",
+        label: "Water",
+        value: "Water",
+      },
+      {
+        id: "fc007g89-0h1i-2j3k-4l5m-6n7o8p9q0r1",
+        type: "nypuc_docket_industry",
+        label: "Communication",
+        value: "Communication",
+      },
+    ];
   }
   if (PageContext === PageContextMode.Organizations) {
     return [];
@@ -147,9 +192,14 @@ const FiltersPool: React.FC<FiltersPoolProps> = ({
     if (filter.type === "docket") {
       return subdividedHueFromSeed(filter.label);
     }
+    if (filter.type === "file_class") {
+      return subdividedHueFromSeed(filter.label);
+    }
     if (filter.type === "text") {
       return "oklch(90% 0.01 30)";
     }
+    return subdividedHueFromSeed(filter.label);
+    // return "oklch(90% 0.1 80)";
   };
   return (
     selected.length > 0 && (
@@ -238,7 +288,7 @@ const setSearchFilters = (props: SearchBoxInputProps, filters: Filter[]) => {
       return;
     }
     if (props.pageContext === PageContextMode.Conversations) {
-      props.setSearchQuery(getTextQueryFromFilterList(filterTypeDict));
+      props.setSearchData(generateConvoSearchData(filterTypeDict));
       return;
     }
   }
@@ -259,6 +309,26 @@ const getTextQueryFromFilterList = (filterTypeDict: {
   }
 };
 
+const generateConvoSearchData = (filterTypeDict: {
+  [key: string]: Filter[];
+}) => {
+  const convoSearchData: ConvoSearchRequestData = {};
+  const setQuery = (value: string) => {
+    convoSearchData.query = value;
+  };
+  const setIndustry = (value: string) => {
+    convoSearchData.industry_type = value;
+  };
+  filterExtractionHelper(filterTypeDict.text, "label", "", setQuery);
+  filterExtractionHelper(
+    filterTypeDict.nypuc_docket_industry,
+    "label",
+    "",
+    setIndustry,
+  );
+  return convoSearchData;
+};
+
 const generateFileFiltersFromFilterList = (
   previous_file_filters: QueryDataFile,
   filterTypeDict: { [key: string]: Filter[] },
@@ -266,40 +336,68 @@ const generateFileFiltersFromFilterList = (
   const new_file_filters = { ...previous_file_filters };
   new_file_filters.query = getTextQueryFromFilterList(filterTypeDict);
 
-  if (filterTypeDict.text) {
-    if (filterTypeDict.text.length > 1) {
-      console.log("This paramater shouldnt be more then length 1, ignoring ");
-    }
-    const first_filter_text = filterTypeDict.text[0].label;
-    new_file_filters.query = first_filter_text;
-    console.log("Filters are being updated with text");
-  } else {
-    new_file_filters.query = "";
-  }
-  if (filterTypeDict.docket) {
-    if (filterTypeDict.docket.length > 1) {
-      console.log("This paramater shouldnt be more then length 1, ignoring ");
-    }
-    const docket_id = filterTypeDict.docket[0].id;
-    new_file_filters.filters.match_docket_id = docket_id;
-    console.log("Filters are being updated with text");
-  } else {
-    new_file_filters.filters.match_docket_id = "";
-  }
-  if (filterTypeDict.organization) {
-    if (filterTypeDict.organization.length > 1) {
-      console.log("This paramater shouldnt be more then length 1, ignoring ");
-    }
-    const org_id = filterTypeDict.organization[0].id;
-    const org_name = filterTypeDict.organization[0].label;
-    new_file_filters.filters.match_author = org_name;
-    console.log("Filters are being updated with text");
-  } else {
-    new_file_filters.filters.match_author = "";
-  }
+  const filterConfigs = [
+    {
+      filterKey: "docket",
+      targetPath: ["filters", "match_docket_id"],
+      valueProperty: "id",
+      elseValue: "",
+    },
+    {
+      filterKey: "organization",
+      targetPath: ["filters", "match_author"],
+      valueProperty: "label",
+      elseValue: "",
+    },
+    {
+      filterKey: "file_class",
+      targetPath: ["filters", "match_file_class"],
+      valueProperty: "label",
+      elseValue: "",
+    },
+  ];
+
+  filterConfigs.forEach(
+    ({ filterKey, targetPath, valueProperty, elseValue }) => {
+      const filters = filterTypeDict[filterKey];
+
+      const setValue = (value: string) => {
+        setNestedValue(new_file_filters, targetPath, value);
+      };
+      filterExtractionHelper(filters, elseValue, valueProperty, setValue);
+    },
+  );
 
   return new_file_filters;
 };
+const filterExtractionHelper = (
+  filters: Filter[],
+  valueProperty: string,
+  elseValue: string,
+  setValueFunc: (value: any) => void,
+) => {
+  if (filters && filters.length > 0) {
+    if (filters.length > 1) {
+      console.log(
+        `Parameter '${filters[0].type}' shouldn't have more than one filter, ignoring extras`,
+      );
+    }
+    const value = filters[0][valueProperty as keyof Filter]; // Seems like a total hack.
+    setValueFunc(value);
+  } else {
+    setValueFunc(elseValue);
+  }
+};
+
+// Helper to set values in nested object paths
+const setNestedValue = (obj: any, path: string[], value: any) => {
+  let current = obj;
+  for (let i = 0; i < path.length - 1; i++) {
+    current = current[path[i]];
+  }
+  current[path[path.length - 1]] = value;
+};
+
 const SearchBox = ({ input }: { input: SearchBoxInputProps }) => {
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);

@@ -1,3 +1,4 @@
+import { ConvoSearchRequestData } from "@/components/LookupPages/SearchRequestData";
 import { QueryDataFile } from "../filters";
 
 // Mock API call
@@ -30,7 +31,7 @@ export interface OrgSearchBoxProps {
 }
 export interface DocketSearchBoxProps {
   pageContext: PageContextMode.Conversations;
-  setSearchQuery: React.Dispatch<React.SetStateAction<string>>;
+  setSearchData: React.Dispatch<React.SetStateAction<ConvoSearchRequestData>>;
 }
 
 export type SearchBoxInputProps =

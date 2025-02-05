@@ -4,9 +4,11 @@ import SearchBox from "@/components/Search/SearchBox";
 import { BreadcrumbValues } from "@/components/SitemapUtils";
 import { PageContextMode } from "@/lib/types/SearchTypes";
 import { useState } from "react";
+import { ConvoSearchRequestData } from "../SearchRequestData";
 
 const ConvoLookupPage = () => {
-  const [queryString, setQueryString] = useState("");
+  const [convoSearchData, setConvoSearchData] =
+    useState<ConvoSearchRequestData>({});
 
   return (
     <>
@@ -15,10 +17,10 @@ const ConvoLookupPage = () => {
         <SearchBox
           input={{
             pageContext: PageContextMode.Conversations,
-            setSearchQuery: setQueryString,
+            setSearchData: setConvoSearchData,
           }}
         />
-        <ConversationTableInfiniteScroll lookup_data={{ query: queryString }} />
+        <ConversationTableInfiniteScroll lookup_data={convoSearchData} />
       </div>
     </>
   );
