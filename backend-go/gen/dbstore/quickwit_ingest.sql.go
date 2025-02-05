@@ -175,27 +175,27 @@ SELECT
         public.organization.id
         ORDER BY
             public.organization.id
-    ) :: uuid [] AS organization_ids,
+    ) FILTER (WHERE public.organization.id IS NOT NULL) :: uuid [] AS organization_ids,
     array_agg(
         public.organization.name
         ORDER BY
             public.organization.id
-    ) :: text [] AS organization_names,
+    ) FILTER (WHERE public.organization.id IS NOT NULL) :: text [] AS organization_names,
     array_agg(
         public.organization.is_person
         ORDER BY
             public.organization.id
-    ) :: boolean [] AS is_person_list,
+    ) FILTER (WHERE public.organization.id IS NOT NULL) :: boolean [] AS is_person_list,
     array_agg(
         public.file_text_source.text
         ORDER BY
             public.file_text_source.id
-    ) :: VARCHAR [] AS file_texts,
+    ) FILTER (WHERE public.file_text_source.id IS NOT NULL) :: VARCHAR [] AS file_texts,
     array_agg(
         public.file_text_source.language
         ORDER BY
             public.file_text_source.id
-    ) :: VARCHAR [] AS file_text_languages
+    ) FILTER (WHERE public.file_text_source.id IS NOT NULL) :: VARCHAR [] AS file_text_languages
 FROM
     public.file
     LEFT JOIN public.file_metadata ON public.file.id = public.file_metadata.id
