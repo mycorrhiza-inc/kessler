@@ -12,6 +12,7 @@ import {
   Suggestion,
 } from "@/lib/types/SearchTypes";
 import { randomUUID } from "crypto";
+import { ConvoSearchRequestData } from "../LookupPages/SearchRequestData";
 
 const getRawSuggestions = (PageContext: PageContextMode): Suggestion[] => {
   if (PageContext === PageContextMode.Conversations) {
@@ -286,7 +287,7 @@ const setSearchFilters = (props: SearchBoxInputProps, filters: Filter[]) => {
       return;
     }
     if (props.pageContext === PageContextMode.Conversations) {
-      props.setSearchQuery(getTextQueryFromFilterList(filterTypeDict));
+      props.setSearchData(generateConvoSearchData(filterTypeDict));
       return;
     }
   }
@@ -305,6 +306,26 @@ const getTextQueryFromFilterList = (filterTypeDict: {
   } else {
     return "";
   }
+};
+
+const generateConvoSearchData = (filterTypeDict: {
+  [key: string]: Filter[];
+}) => {
+  const convoSearchData: ConvoSearchRequestData = {};
+  const setQuery = (value: string) => {
+    convoSearchData.query = value;
+  };
+  const setIndustry = (value: string) => {
+    convoSearchData.query = value;
+  };
+  filterExtractionHelper(filterTypeDict.text, "label", "", setQuery);
+  filterExtractionHelper(
+    filterTypeDict.nypuc_docket_industry,
+    "label",
+    "",
+    setIndustry,
+  );
+  return convoSearchData;
 };
 
 const generateFileFiltersFromFilterList = (
