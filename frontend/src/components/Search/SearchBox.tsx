@@ -364,7 +364,7 @@ const generateFileFiltersFromFilterList = (
       const setValue = (value: string) => {
         setNestedValue(new_file_filters, targetPath, value);
       };
-      filterExtractionHelper(filters, elseValue, valueProperty, setValue);
+      filterExtractionHelper(filters, valueProperty, elseValue, setValue);
     },
   );
 
