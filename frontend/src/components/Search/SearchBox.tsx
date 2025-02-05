@@ -85,25 +85,25 @@ const getRawSuggestions = (PageContext: PageContextMode): Suggestion[] => {
       },
 
       {
-        id: randomUUID(),
+        id: "fc001a23-5f7e-4b3c-9d2a-8f6e4c7d9e0b",
         type: "file_class",
         label: "Plans and Proposals",
         value: "Plans and Proposals",
       },
       {
-        id: randomUUID(),
+        id: "fc002b34-6a8d-4c5f-ae3b-9g7f5d8e0f1c",
         type: "file_class",
         label: "Corrospondence",
         value: "Corrospondence",
       },
       {
-        id: randomUUID(),
+        id: "fc003c45-7b9e-5d6g-bf4c-ah8g6e9f1g2d",
         type: "file_class",
         label: "Exhibits",
         value: "Exhibits",
       },
       {
-        id: randomUUID(),
+        id: "fc004d56-8c0f-6e7h-cg5d-bi9h7f0g2h3e",
         type: "file_class",
         label: "Testimony",
         value: "Testimony",
