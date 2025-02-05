@@ -147,9 +147,13 @@ const FiltersPool: React.FC<FiltersPoolProps> = ({
     if (filter.type === "docket") {
       return subdividedHueFromSeed(filter.label);
     }
+    if (filter.type === "file_class") {
+      return subdividedHueFromSeed(filter.label);
+    }
     if (filter.type === "text") {
       return "oklch(90% 0.01 30)";
     }
+    return "oklch(90% 0.1 80)";
   };
   return (
     selected.length > 0 && (
@@ -266,40 +270,55 @@ const generateFileFiltersFromFilterList = (
   const new_file_filters = { ...previous_file_filters };
   new_file_filters.query = getTextQueryFromFilterList(filterTypeDict);
 
-  if (filterTypeDict.text) {
-    if (filterTypeDict.text.length > 1) {
-      console.log("This paramater shouldnt be more then length 1, ignoring ");
+  const filterConfigs = [
+    {
+      filterKey: "docket",
+      targetPath: ["filters", "match_docket_id"],
+      property: "id",
+      elseValue: "",
+    },
+    {
+      filterKey: "organization",
+      targetPath: ["filters", "match_author"],
+      property: "label",
+      elseValue: "",
+    },
+    {
+      filterKey: "file_class",
+      targetPath: ["filters", "match_file_class"],
+      property: "label",
+      elseValue: "",
+    },
+  ];
+
+  filterConfigs.forEach(({ filterKey, targetPath, property, elseValue }) => {
+    const filters = filterTypeDict[filterKey];
+    if (filters && filters.length > 0) {
+      if (filters.length > 1) {
+        console.log(
+          `Parameter '${filterKey}' shouldn't have more than one filter, ignoring extras`,
+        );
+      }
+      const value = filters[0][property as keyof Filter]; // Seems like a total hack.
+      setNestedValue(new_file_filters, targetPath, value);
+      console.log(`Filters updated with ${filterKey}`);
+    } else {
+      setNestedValue(new_file_filters, targetPath, elseValue);
     }
-    const first_filter_text = filterTypeDict.text[0].label;
-    new_file_filters.query = first_filter_text;
-    console.log("Filters are being updated with text");
-  } else {
-    new_file_filters.query = "";
-  }
-  if (filterTypeDict.docket) {
-    if (filterTypeDict.docket.length > 1) {
-      console.log("This paramater shouldnt be more then length 1, ignoring ");
-    }
-    const docket_id = filterTypeDict.docket[0].id;
-    new_file_filters.filters.match_docket_id = docket_id;
-    console.log("Filters are being updated with text");
-  } else {
-    new_file_filters.filters.match_docket_id = "";
-  }
-  if (filterTypeDict.organization) {
-    if (filterTypeDict.organization.length > 1) {
-      console.log("This paramater shouldnt be more then length 1, ignoring ");
-    }
-    const org_id = filterTypeDict.organization[0].id;
-    const org_name = filterTypeDict.organization[0].label;
-    new_file_filters.filters.match_author = org_name;
-    console.log("Filters are being updated with text");
-  } else {
-    new_file_filters.filters.match_author = "";
-  }
+  });
 
   return new_file_filters;
 };
+
+// Helper to set values in nested object paths
+const setNestedValue = (obj: any, path: string[], value: any) => {
+  let current = obj;
+  for (let i = 0; i < path.length - 1; i++) {
+    current = current[path[i]];
+  }
+  current[path[path.length - 1]] = value;
+};
+
 const SearchBox = ({ input }: { input: SearchBoxInputProps }) => {
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
