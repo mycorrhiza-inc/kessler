@@ -11,10 +11,54 @@ import {
   SearchBoxInputProps,
   Suggestion,
 } from "@/lib/types/SearchTypes";
+import { randomUUID } from "crypto";
 
 const getRawSuggestions = (PageContext: PageContextMode): Suggestion[] => {
   if (PageContext === PageContextMode.Conversations) {
-    return [];
+    return [
+      {
+        id: "fc001a23-4b5c-6d7e-8f9g-0h1i2j3k4l5",
+        type: "nypuc_docket_industry",
+        label: "Miscellaneous",
+        value: "Miscellaneous",
+      },
+      {
+        id: "fc002b34-5c6d-7e8f-9g0h-1i2j3k4l5m6",
+        type: "nypuc_docket_industry",
+        label: "Gas",
+        value: "Gas",
+      },
+      {
+        id: "fc003c45-6d7e-8f9g-0h1i-2j3k4l5m6n7",
+        type: "nypuc_docket_industry",
+        label: "Electric",
+        value: "Electric",
+      },
+      {
+        id: "fc004d56-7e8f-9g0h-1i2j-3k4l5m6n7o8",
+        type: "nypuc_docket_industry",
+        label: "Facility Gen.",
+        value: "Facility Gen.",
+      },
+      {
+        id: "fc005e67-8f9g-0h1i-2j3k-4l5m6n7o8p9",
+        type: "nypuc_docket_industry",
+        label: "Transmission",
+        value: "Transmission",
+      },
+      {
+        id: "fc006f78-9g0h-1i2j-3k4l-5m6n7o8p9q0",
+        type: "nypuc_docket_industry",
+        label: "Water",
+        value: "Water",
+      },
+      {
+        id: "fc007g89-0h1i-2j3k-4l5m-6n7o8p9q0r1",
+        type: "nypuc_docket_industry",
+        label: "Communication",
+        value: "Communication",
+      },
+    ];
   }
   if (PageContext === PageContextMode.Organizations) {
     return [];
