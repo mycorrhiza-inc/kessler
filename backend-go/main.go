@@ -9,6 +9,7 @@ import (
 	"kessler/jobs"
 	"kessler/rag"
 	"kessler/search"
+	"kessler/util"
 	"log"
 	"net/http"
 	"os"
@@ -16,49 +17,8 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
-
-func PgPoolConfig() *pgxpool.Config {
-	const defaultMaxConns = int32(30)
-	const defaultMinConns = int32(0)
-	const defaultMaxConnLifetime = time.Hour
-	const defaultMaxConnIdleTime = time.Minute * 30
-	const defaultHealthCheckPeriod = time.Minute
-	const defaultConnectTimeout = time.Second * 5
-
-	// Your own Database URL
-	DATABASE_URL := os.Getenv("DATABASE_CONNECTION_STRING")
-
-	dbConfig, err := pgxpool.ParseConfig(DATABASE_URL)
-	if err != nil {
-		log.Fatal("Failed to create a config, error: ", err)
-	}
-
-	dbConfig.MaxConns = defaultMaxConns
-	dbConfig.MinConns = defaultMinConns
-	dbConfig.MaxConnLifetime = defaultMaxConnLifetime
-	dbConfig.MaxConnIdleTime = defaultMaxConnIdleTime
-	dbConfig.HealthCheckPeriod = defaultHealthCheckPeriod
-	dbConfig.ConnConfig.ConnectTimeout = defaultConnectTimeout
-	// Removed to clean up logging in golang
-	dbConfig.BeforeAcquire = func(ctx context.Context, c *pgx.Conn) bool {
-		// log.Println("Before acquiring the connection pool to the database!!")
-		return true
-	}
-
-	dbConfig.AfterRelease = func(c *pgx.Conn) bool {
-		// log.Println("After releasing the connection pool to the database!!")
-		return true
-	}
-
-	dbConfig.BeforeClose = func(c *pgx.Conn) {
-		// log.Println("Closed the connection pool to the database!!")
-	}
-
-	return dbConfig
-}
 
 type UserValidation struct {
 	validated bool
@@ -132,7 +92,7 @@ func main() {
 	// }
 	// Create database connection
 	var connPool *pgxpool.Pool
-	connPool, err := pgxpool.NewWithConfig(context.Background(), PgPoolConfig())
+	connPool, err := pgxpool.NewWithConfig(context.Background(), util.PgPoolConfig(int32(30)))
 	if err != nil {
 		log.Fatal("Error while creating connection to the database!!")
 	}
