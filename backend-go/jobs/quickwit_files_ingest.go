@@ -85,7 +85,7 @@ func QuickwitIngestFromPostgres(q *dbstore.Queries, ctx context.Context, filter_
 	indexName := quickwit.NYPUCIndexName
 	var files_raw []dbstore.SemiCompleteFileQuickwitListGetPaginatedRow
 
-	page_size := 1000
+	page_size := 2000
 
 	// Currently this encounters a hard cap at 10,000,000 files, so this should almost certainly be changed then. But at 1 second per request the ingest job should take 3 hours. So refactoring will be required.
 	for page := range 10000 {
