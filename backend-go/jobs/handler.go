@@ -83,7 +83,8 @@ func CreateOrganizationIndexJobHandler(w http.ResponseWriter, r *http.Request) {
 func IndexAllDocketsHandler(w http.ResponseWriter, r *http.Request) {
 	// ctx := r.Context()
 	ctx := context.Background()
-	q := *util.DBQueriesFromContext(ctx)
+	// q := *util.DBQueriesFromContext(ctx)
+	q := *util.DBQueriesFromRequest(r)
 	err := quickwit.IndexAllConversations(q, ctx, "")
 	if err != nil {
 		errorstring := fmt.Sprintf("Error ingesting dockets index: %v", err)
@@ -98,7 +99,8 @@ func IndexAllDocketsHandler(w http.ResponseWriter, r *http.Request) {
 func IndexAllOrganizationsHandler(w http.ResponseWriter, r *http.Request) {
 	// ctx := r.Context()
 	ctx := context.Background()
-	q := *util.DBQueriesFromContext(ctx)
+	// q := *util.DBQueriesFromContext(ctx)
+	q := *util.DBQueriesFromRequest(r)
 	err := quickwit.ReindexAllOrganizations(ctx, q, "")
 	if err != nil {
 		errorstring := fmt.Sprintf("Error ingesting orgs index: %v", err)

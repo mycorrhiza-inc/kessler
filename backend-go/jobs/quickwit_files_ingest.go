@@ -18,7 +18,8 @@ import (
 func HandleQuickwitFileIngestFromPostgres(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 	// ctx := r.Context()
-	q := util.DBQueriesFromContext(ctx)
+	// q := util.DBQueriesFromContext(ctx)
+	q := util.DBQueriesFromRequest(r)
 	include_unverified := r.URL.Query().Get("include_unverified") == "true"
 	filter_out_unverified := !include_unverified
 
