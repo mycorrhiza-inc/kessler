@@ -45,14 +45,14 @@ const config = {
         {
           "bg-dot-thick": (value: any) => ({
             backgroundImage: `url("${svgToDataUri(
-              `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="16" height="16" fill="none"><circle fill="${value}" id="pattern-circle" cx="10" cy="10" r="2.5"></circle></svg>`,
+              `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="16" height="16" fill="none"><circle fill="${value}" id="pattern-circle" cx="10" cy="10" r="2.5"></circle></svg>`
             )}")`,
           }),
         },
         {
           values: flattenColorPalette(theme("backgroundColor")),
           type: "color",
-        },
+        }
       );
     },
     addVariablesForColors,
@@ -63,11 +63,31 @@ const config = {
   daisyui: {
     themes: [
       {
-        light: {
-          ...require("daisyui/src/theming/themes")["light"],
-          //"base-100": "#FFFFFF",
-          "base-content": "#000000",
+        kessler: {
+          primary: "#FFF388", // Yellow accent color
+          secondary: "#2B2B2B", // Dark gray
+          accent: "#93FF87", // Green accent from design
+          neutral: "#4E4E4E", // Medium gray
+          "base-100": "#EBE9E3", // Main background color
+          "base-200": "#E0DDD4", // Secondary background color
+          "base-300": "#D6D3CA", // Darker background variant
+          "base-content": "#2B2B2B", // Main text color
+
+          // Component specific colors
+          info: "#2B2B2B",
+          success: "#93FF87",
+          warning: "#FFF388",
+          error: "#FF8787",
+
+          // Border radius
+          "--rounded-box": "20px",
+          "--rounded-btn": "8px",
+          "--rounded-badge": "32px",
+
+          // Border width
+          "--border-btn": "1px",
         },
+
         dark: {
           ...require("daisyui/src/theming/themes")["dim"],
           // "base-100": "#000000",
@@ -105,7 +125,7 @@ export default config;
 function addVariablesForColors({ addBase, theme }: any) {
   let allColors = flattenColorPalette(theme("colors"));
   let newVars = Object.fromEntries(
-    Object.entries(allColors).map(([key, val]) => [`--${key}`, val]),
+    Object.entries(allColors).map(([key, val]) => [`--${key}`, val])
   );
 
   addBase({
