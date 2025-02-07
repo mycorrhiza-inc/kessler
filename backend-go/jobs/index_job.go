@@ -1,6 +1,7 @@
 package jobs
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -37,7 +38,7 @@ func (j *IndexJob) GetType() JobType {
 	return j.Type
 }
 
-func (j *IndexJob) SaveStateToDisk() error {
+func (j *IndexJob) SaveState(ctx context.Context) error {
 	state, err := json.Marshal(j)
 	if err != nil {
 		log.Errorf("Error marshalling job state: %v", err)
@@ -58,7 +59,7 @@ func (j *IndexJob) SaveStateToDisk() error {
 	return nil
 }
 
-func (j *IndexJob) LoadStateFromDisk() error {
+func (j *IndexJob) LoadState(ctx context.Context, uuid string) error {
 	fileName := fmt.Sprintf("job_%s_state.json", j.Id)
 	file, err := os.Open(fileName)
 	if err != nil {

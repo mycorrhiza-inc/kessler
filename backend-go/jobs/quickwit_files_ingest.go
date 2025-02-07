@@ -34,6 +34,15 @@ func HandleQuickwitFileIngestFromPostgres(w http.ResponseWriter, r *http.Request
 	fmt.Println("Successfully completed Quickwit ingest from Postgres")
 	w.Write([]byte("Sucessfully ingested from postgres"))
 }
+func HandleIndexRequest(w http.ResponseWriter, r *http.Request) {
+	ctx := context.Background()
+	q := util.DBQueriesFromContext(ctx)
+
+	// 1. iterate through each document, and create new index jobs for them
+	// 2. start each index job
+	// 3. return an "index run started" message
+
+}
 
 type QuickwitAbleFileSchema interface{}
 

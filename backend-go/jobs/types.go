@@ -1,5 +1,7 @@
 package jobs
 
+import "context"
+
 type JobStatus string
 type JobType string
 
@@ -27,8 +29,8 @@ type JobInterface interface {
 	SetStatus(status JobStatus)
 	GetStatus() JobStatus
 	Start(fn interface{}, args ...interface{}) error
-	SaveState() error
-	LoadState() error
+	SaveState(ctx context.Context) error
+	LoadState(ctx context.Context, uuid string) error
 }
 
 type Job struct {
