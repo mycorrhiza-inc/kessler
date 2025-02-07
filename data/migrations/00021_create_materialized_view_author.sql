@@ -17,6 +17,6 @@ FROM public.file
 		ON public.file.id = public.relation_documents_organizations_authorship.document_id
 	LEFT JOIN public.organization 
 		ON public.relation_documents_organizations_authorship.organization_id = public.organization.id
-GROUP BY public.file.id;
+GROUP BY file.id;
 -- +goose Down
 DROP MATERIALIZED VIEW IF EXISTS testmat;
