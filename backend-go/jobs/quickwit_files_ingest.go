@@ -12,11 +12,13 @@ import (
 	"kessler/quickwit"
 	"kessler/util"
 	"net/http"
+	"time"
 )
 
 func HandleQuickwitFileIngestFromPostgres(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	q := util.DBQueriesFromRequest(r)
+	// ctx := context.Background()
+	ctx := util.CreateDBContextWithTimeout(time.Minute*90, 5)
+	q := util.DBQueriesFromContext(ctx)
 	include_unverified := r.URL.Query().Get("include_unverified") == "true"
 	filter_out_unverified := !include_unverified
 
@@ -33,7 +35,9 @@ func HandleQuickwitFileIngestFromPostgres(w http.ResponseWriter, r *http.Request
 	w.Write([]byte("Sucessfully ingested from postgres"))
 }
 
-func ParseQuickwitFileIntoCompleteSchema(file_raw dbstore.SemiCompleteFileQuickwitListGetRow) (files.CompleteFileSchema, error) {
+type QuickwitAbleFileSchema interface{}
+
+func ParseQuickwitFileIntoCompleteSchema(file_raw dbstore.SemiCompleteFileQuickwitListGetPaginatedRow) (files.CompleteFileSchema, error) {
 	var mdata_obj files.FileMetadataSchema
 	err := json.Unmarshal(file_raw.Mdata, &mdata_obj)
 	if err != nil {
@@ -79,17 +83,34 @@ func ParseQuickwitFileIntoCompleteSchema(file_raw dbstore.SemiCompleteFileQuickw
 
 func QuickwitIngestFromPostgres(q *dbstore.Queries, ctx context.Context, filter_out_unverified bool) error {
 	indexName := quickwit.NYPUCIndexName
-	var files []dbstore.File
-	var err error
+	var files_raw []dbstore.SemiCompleteFileQuickwitListGetPaginatedRow
 
-	files_raw, err := q.SemiCompleteFileQuickwitListGet(ctx)
-	if err != nil {
-		return err
+	page_size := 1000
+
+	// Currently this encounters a hard cap at 10,000,000 files, so this should almost certainly be changed then. But at 1 second per request the ingest job should take 3 hours. So refactoring will be required.
+	for page := range 10000 {
+		pagination_params := dbstore.SemiCompleteFileQuickwitListGetPaginatedParams{Limit: int32(page_size), Offset: int32(page * page_size)}
+		temporary_file_results, err := q.SemiCompleteFileQuickwitListGetPaginated(ctx, pagination_params)
+		if err != nil {
+			fmt.Printf("Error getting semi complete file list: %v\n", err)
+
+			time.Sleep(5 * time.Second)
+			// return err
+			break
+		}
+		if err == nil {
+			files_raw = append(files_raw, temporary_file_results...)
+			if len(temporary_file_results) < page_size {
+				fmt.Printf("Finished indexing PG after %v pages\n", page)
+				break
+			}
+			fmt.Printf("Indexed PG page %v\n", page)
+		}
 	}
 
 	if filter_out_unverified {
-		fmt.Printf("Got raw n files from postgres: %d\n", len(files))
-		var new_raw_files []dbstore.SemiCompleteFileQuickwitListGetRow
+		fmt.Printf("Got raw n files from postgres: %d\n", len(files_raw))
+		var new_raw_files []dbstore.SemiCompleteFileQuickwitListGetPaginatedRow
 
 		for _, file := range files_raw {
 			if file.Verified.Bool {
@@ -101,6 +122,9 @@ func QuickwitIngestFromPostgres(q *dbstore.Queries, ctx context.Context, filter_
 	complete_file_schema_results := util.MapErrorDiscard(files_raw, ParseQuickwitFileIntoCompleteSchema)
 
 	quickwit_data_list_chunk, err := quickwit.ResolveFileSchemaForDocketIngest(complete_file_schema_results)
+	if err != nil {
+		fmt.Println("Error converting complete file schema into quickwit schema for file inest: %s", err)
+	}
 	// Randomize the uuids so that you dont have weird unexpected behavior near the beginning or end.
 	err = quickwit.IngestIntoIndex(indexName, quickwit_data_list_chunk, true)
 

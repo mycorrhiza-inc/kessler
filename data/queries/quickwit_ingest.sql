@@ -1,4 +1,4 @@
--- name: SemiCompleteFileQuickwitListGet :many
+-- name: SemiCompleteFileQuickwitListGetPaginated :many
 SELECT
     public.file.id,
     public.file.name,
@@ -17,33 +17,34 @@ SELECT
         public.organization.id
         ORDER BY
             public.organization.id
-    ) :: uuid [] AS organization_ids,
+    ) FILTER (WHERE public.organization.id IS NOT NULL) :: uuid [] AS organization_ids,
     array_agg(
         public.organization.name
         ORDER BY
             public.organization.id
-    ) :: text [] AS organization_names,
+    ) FILTER (WHERE public.organization.id IS NOT NULL) :: text [] AS organization_names,
     array_agg(
         public.organization.is_person
         ORDER BY
             public.organization.id
-    ) :: boolean [] AS is_person_list,
+    ) FILTER (WHERE public.organization.id IS NOT NULL) :: boolean [] AS is_person_list,
     array_agg(
         public.file_text_source.text
         ORDER BY
             public.file_text_source.id
-    ) :: VARCHAR [] AS file_texts,
+    ) FILTER (WHERE public.file_text_source.id IS NOT NULL) :: VARCHAR [] AS file_texts,
     array_agg(
         public.file_text_source.language
         ORDER BY
             public.file_text_source.id
-    ) :: VARCHAR [] AS file_text_languages
+    ) FILTER (WHERE public.file_text_source.id IS NOT NULL) :: VARCHAR [] AS file_text_languages
 FROM
     public.file
     LEFT JOIN public.file_metadata ON public.file.id = public.file_metadata.id
     LEFT JOIN public.file_extras ON public.file.id = public.file_extras.id
+    LEFT JOIN public.file_text_source ON public.file.id = public.file_text_source.file_id
     LEFT JOIN public.docket_documents ON public.file.id = public.docket_documents.file_id
-    LEFT JOIN public.docket_conversations ON public.docket_documents.conversation_id = public.docket_conversations.id
+    LEFT JOIN public.docket_conversations ON public.docket_documents.conversation_uuid = public.docket_conversations.id
     LEFT JOIN public.relation_documents_organizations_authorship ON public.file.id = public.relation_documents_organizations_authorship.document_id
     LEFT JOIN public.organization ON public.relation_documents_organizations_authorship.organization_id = public.organization.id
 GROUP BY
@@ -59,8 +60,9 @@ GROUP BY
     file_metadata.mdata,
     file_extras.extra_obj,
     docket_documents.conversation_uuid,
-    docket_conversations.docket_gov_id;
-
+    docket_conversations.docket_gov_id
+LIMIT
+    $1 OFFSET $2;
 -- name: OrganizationCompleteQuickwitListGet :many
 SELECT
     public.organization.id,

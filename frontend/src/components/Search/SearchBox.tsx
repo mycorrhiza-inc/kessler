@@ -127,6 +127,30 @@ const getRawSuggestions = (PageContext: PageContextMode): Suggestion[] => {
         label: "Attachment",
         value: "Attachment",
       },
+      {
+        id: "e1ed3a38-7164-47a4-ad7f-5bd3715ec894",
+        type: "file_class",
+        label: "Rulings",
+        value: "Rulings",
+      },
+      {
+        id: "b4c9e0e0-5510-4cb0-a5f8-ead7ebbc61a8",
+        type: "file_class",
+        label: "Orders",
+        value: "Orders",
+      },
+      {
+        id: "3693bac9-f2c8-4f5a-9f8b-b023ad029f93",
+        type: "file_class",
+        label: "Transcripts",
+        value: "Transcripts",
+      },
+      {
+        id: "040f8217-2afd-4939-8117-35bbf333cfc1",
+        type: "file_class",
+        label: "Letters",
+        value: "Letters",
+      },
     ];
   }
   console.error(
