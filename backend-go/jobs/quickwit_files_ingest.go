@@ -110,6 +110,7 @@ func QuickwitIngestFromPostgres(q *dbstore.Queries, ctx context.Context, filter_
 
 	// Currently this encounters a hard cap at 10,000,000 files, so this should almost certainly be changed then. But at 1 second per request the ingest job should take 3 hours. So refactoring will be required.
 	for page := range 10000 {
+		// for page := range 3 {
 		pagination_params := dbstore.FilePrecomputedQuickwitListGetPaginatedParams{Limit: int32(page_size), Offset: int32(page * page_size)}
 		temporary_file_results, err := q.FilePrecomputedQuickwitListGetPaginated(ctx, pagination_params)
 		if err != nil {
@@ -147,7 +148,7 @@ func QuickwitIngestFromPostgres(q *dbstore.Queries, ctx context.Context, filter_
 		fmt.Println("Error converting complete file schema into quickwit schema for file inest: %s", err)
 	}
 	// Randomize the uuids so that you dont have weird unexpected behavior near the beginning or end.
-	err = quickwit.IngestIntoIndex(indexName, quickwit_data_list_chunk, false)
+	err = quickwit.IngestIntoIndex(indexName, quickwit_data_list_chunk, true)
 
 	return nil
 }
