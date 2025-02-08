@@ -52,21 +52,23 @@ export const getSearchResults = async (
 };
 
 export const hydratedSearchResultsToFilings = (
-  hydratedSearchResults: any,
+  hydratedSearchResults: any | null,
 ): Filing[] => {
   const verifified_nullable_files: Array<CompleteFileSchema | null> =
-    hydratedSearchResults.map(
-      (hydrated_result: any): CompleteFileSchema | null => {
-        const maybe_file = hydrated_result.file;
-        try {
-          const file = CompleteFileSchemaValidator.parse(maybe_file);
-          return file;
-        } catch (error) {
-          console.log("Error parsing file", error);
-          return null;
-        }
-      },
-    );
+    hydratedSearchResults
+      ? hydratedSearchResults.map(
+          (hydrated_result: any): CompleteFileSchema | null => {
+            const maybe_file = hydrated_result.file;
+            try {
+              const file = CompleteFileSchemaValidator.parse(maybe_file);
+              return file;
+            } catch (error) {
+              console.log("Error parsing file", error);
+              return null;
+            }
+          },
+        )
+      : [];
   const valid_files: CompleteFileSchema[] = verifified_nullable_files.filter(
     (file) => file !== null,
   ) as CompleteFileSchema[]; // filter out null _files.filter
