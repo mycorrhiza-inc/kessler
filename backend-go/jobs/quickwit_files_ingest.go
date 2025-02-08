@@ -147,7 +147,7 @@ func QuickwitIngestFromPostgres(q *dbstore.Queries, ctx context.Context, filter_
 		fmt.Println("Error converting complete file schema into quickwit schema for file inest: %s", err)
 	}
 	// Randomize the uuids so that you dont have weird unexpected behavior near the beginning or end.
-	err = quickwit.IngestIntoIndex(indexName, quickwit_data_list_chunk, true)
+	err = quickwit.IngestIntoIndex(indexName, quickwit_data_list_chunk, false)
 
 	return nil
 }
