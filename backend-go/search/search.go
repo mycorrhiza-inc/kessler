@@ -243,13 +243,13 @@ var QuickwitFilterMapping = map[string]string{
 func constructQuickwitMetadataQueryString(meta networking.SearchMetadata) string {
 	values := reflect.ValueOf(meta)
 	types := reflect.TypeOf(meta)
-	return quickwit.ConstructGenericFilterQuery(values, types)
+	return quickwit.ConstructGenericFilterQuery(values, types, true)
 }
 
 func constructQuickwitUUIDMetadataQueryString(meta networking.UUIDFilterFields) string {
 	values := reflect.ValueOf(meta)
 	types := reflect.TypeOf(meta)
-	return quickwit.ConstructGenericFilterQuery(values, types)
+	return quickwit.ConstructGenericFilterQuery(values, types, false)
 }
 
 func SearchMilvus(request SearchRequest) ([]SearchData, error) {
