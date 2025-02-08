@@ -35,6 +35,20 @@ FROM public.file AS f
   LEFT JOIN public.docket_conversations dc ON dd.conversation_uuid = dc.id
   LEFT JOIN public.relation_documents_organizations_authorship rdoa ON f.id = rdoa.document_id
   LEFT JOIN public.organization o ON rdoa.organization_id = o.id
-GROUP BY f.id;
+GROUP BY 
+    f.id,
+    f.name,
+    f.extension,
+    f.lang,
+    f.verified,
+    f.hash,
+    f.created_at,
+    f.updated_at,
+    f.date_published,
+    fm.mdata,
+    fe.extra_obj,
+    dd.conversation_uuid,
+    dc.docket_gov_id,
+    fts.text;
 -- +goose Down
 DROP MATERIALIZED VIEW IF EXISTS testmat;
