@@ -1,5 +1,5 @@
 import { ConvoSearchRequestData } from "@/components/LookupPages/SearchRequestData";
-import { QueryDataFile } from "../filters";
+import { InheritedFilterValues, QueryDataFile } from "../filters";
 
 // Mock API call
 export type Suggestion = {
@@ -24,6 +24,7 @@ export enum PageContextMode {
 export interface FileSearchBoxProps {
   pageContext: PageContextMode.Files;
   setSearchData: React.Dispatch<React.SetStateAction<QueryDataFile>>;
+  inheritedFileFilters: Array<InheritedFilterValues>;
 }
 export interface OrgSearchBoxProps {
   pageContext: PageContextMode.Organizations;

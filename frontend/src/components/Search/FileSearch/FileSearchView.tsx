@@ -170,6 +170,7 @@ const FileSearchView = ({
           input={{
             pageContext: PageContextMode.Files,
             setSearchData: setQueryData,
+            innheritedFileFilters: inheritedFilters,
           }}
         />
         <InfiniteScroll

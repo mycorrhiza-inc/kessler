@@ -2,7 +2,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import { AngleDownIcon, AngleUpIcon } from "../Icons";
 import { AuthorInfoPill, subdividedHueFromSeed } from "../Tables/TextPills";
-import { QueryFileFilterFields, QueryDataFile } from "@/lib/filters";
+import {
+  QueryFileFilterFields,
+  QueryDataFile,
+  InheritedFilterValues,
+  initialFiltersFromInherited,
+} from "@/lib/filters";
 import { Query } from "pg";
 import {
   FileSearchBoxProps,
@@ -361,24 +366,28 @@ const generateConvoSearchData = (filterTypeDict: {
 };
 
 const generateFileFiltersFromFilterList = (
-  previous_file_filters: QueryDataFile,
+  inheritedFileFilters: InheritedFilterValues,
   filterTypeDict: { [key: string]: Filter[] },
 ) => {
-  const new_file_filters = { ...previous_file_filters };
-  new_file_filters.query = getTextQueryFromFilterList(filterTypeDict);
+  const new_file_filters_metadata =
+    initialFiltersFromInherited(inheritedFileFilters);
+  const new_file_filters: QueryDataFile = {
+    filters: new_file_filters_metadata,
+    query: getTextQueryFromFilterList(filterTypeDict),
+  };
 
   const filterConfigs = [
     {
       filterKey: "docket",
       targetPath: ["filters", "match_docket_id"],
       valueProperty: "id",
-      elseValue: "",
+      elseValue: new_file_filters_metadata.match_docket_id,
     },
     {
       filterKey: "organization",
       targetPath: ["filters", "match_author"],
       valueProperty: "label",
-      elseValue: "",
+      elseValue: new_file_filters_metadata.match_author,
     },
     {
       filterKey: "file_class",
