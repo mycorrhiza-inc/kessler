@@ -26,7 +26,7 @@ import LoadingSpinnerTimeout from "@/components/styled-components/LoadingSpinner
 import { ChatModalClickDiv } from "@/components/Chat/ChatModal";
 import { useKesslerStore } from "@/lib/store";
 import SearchBox from "@/components/Search/SearchBox";
-import { PageContextMode } from "@/lib/types/SearchTypes";
+import { FileSearchBoxProps, PageContextMode } from "@/lib/types/SearchTypes";
 
 const TableFilters = ({
   searchQuery,
@@ -137,6 +137,12 @@ const FileSearchView = ({
     getInitialUpdates();
   }, [queryData.filters, queryData.query, queryData]);
 
+  const searchBoxProp: FileSearchBoxProps = {
+    pageContext: PageContextMode.Files,
+    setSearchData: setQueryData,
+    inheritedFileFilters: inheritedFilters,
+  };
+
   return (
     <>
       <div id="conversation-header" className="mb-4 flex justify-between">
@@ -166,12 +172,7 @@ const FileSearchView = ({
         </div>
       </div>
       <div className="w-full h-full">
-        <SearchBox
-          input={{
-            pageContext: PageContextMode.Files,
-            setSearchData: setQueryData,
-          }}
-        />
+        <SearchBox input={searchBoxProp} />
         <InfiniteScroll
           dataLength={filings.length}
           next={getMore}

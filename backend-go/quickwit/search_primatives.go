@@ -56,7 +56,7 @@ func ConstructDateTextQuery(DateFrom timestamp.KesslerTime, DateTo timestamp.Kes
 	return dateQuery
 }
 
-func ConstructGenericFilterQuery(values reflect.Value, types reflect.Type) string {
+func ConstructGenericFilterQuery(values reflect.Value, types reflect.Type, useQuotes bool) string {
 	var filterQuery string
 	filters := []string{}
 
@@ -79,6 +79,9 @@ func ConstructGenericFilterQuery(values reflect.Value, types reflect.Type) strin
 			tag = "source_id"
 		}
 		s := fmt.Sprintf("metadata.%s:(%s)", tag, value)
+		if useQuotes && !(value.IsZero()) {
+			s = fmt.Sprintf("metadata.%s:(\"%s\")", tag, value)
+		}
 
 		// exlude empty values
 		if strings.Contains(s, "00000000-0000-0000-0000-000000000000") {

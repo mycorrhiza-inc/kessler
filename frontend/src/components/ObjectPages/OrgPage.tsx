@@ -34,7 +34,7 @@ export default function OrganizationPage({
       <h1 className=" text-2xl font-bold">Authored Documents</h1>
       <FileSearchView
         inheritedFilters={[
-          { filter: FilterField.MatchAuthorUUID, value: orgInfo.id },
+          // { filter: FilterField.MatchAuthorUUID, value: orgInfo.id },
           { filter: FilterField.MatchAuthor, value: orgInfo.name },
         ]}
       />

@@ -13,8 +13,6 @@ import (
 	"os"
 	"strings"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 var quickwitEndpoint = os.Getenv("QUICKWIT_ENDPOINT")
@@ -123,9 +121,12 @@ func ResolveFileSchemaForDocketIngest(complete_files []files.CompleteFileSchema)
 		metadata["source_id"] = input_file.ID
 		metadata["source"] = "ny-puc-energyefficiency-filedocs"
 		metadata["conversation_uuid"] = input_file.Conversation.ID.String()
-		author_uuids := make([]uuid.UUID, len(input_file.Authors))
+		author_uuids := make([]string, len(input_file.Authors))
+		if len(input_file.Authors) == 0 {
+			fmt.Printf("No authors found in file: %v\n", input_file.ID)
+		}
 		for i, author := range input_file.Authors {
-			author_uuids[i] = author.AuthorID
+			author_uuids[i] = author.AuthorID.String()
 		}
 		metadata["author_uuids"] = author_uuids
 		// FIXME: IMPLEMENT A date_published FIELD IN PG AND RENDER THIS BASED ON THAT
@@ -144,7 +145,7 @@ func ResolveFileSchemaForDocketIngest(complete_files []files.CompleteFileSchema)
 			// Do nothing, an error here means to text was found.
 		}
 		if englishText == "" {
-			englishText = "Example Text!"
+			englishText = ""
 		}
 		newRecord.Text = englishText
 		newRecord.SourceID = file.ID

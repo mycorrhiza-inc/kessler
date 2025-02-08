@@ -31,7 +31,7 @@ func IngestIntoIndex[V GenericQuickwitSearchSchema](indexName string, data []V, 
 		}
 		defer resp.Body.Close()
 	}
-	maxIngestItems := 1000
+	maxIngestItems := 100
 	fmt.Println("Initiating ingest into index")
 
 	var subIngestLists [][]V
@@ -46,7 +46,7 @@ func IngestIntoIndex[V GenericQuickwitSearchSchema](indexName string, data []V, 
 	ingestWrapedFunc := func(data []V) (int, error) {
 		return 0, IngestMinimalIntoQuickwit(indexName, data)
 	}
-	workers := 5
+	workers := 15
 	_, err := util.ConcurrentMapError(subIngestLists, ingestWrapedFunc, workers)
 	if err != nil {
 		return fmt.Errorf("Error ingesting into index: %v\n", err)
@@ -103,6 +103,7 @@ func IngestMinimalIntoQuickwit[V GenericQuickwitSearchSchema](indexName string, 
 		// Marshal the modified map into a JSON string
 		jsonStr, err := json.Marshal(recordMap)
 		if err != nil {
+			fmt.Printf("error marshaling modified record: %v\n", err)
 			return fmt.Errorf("error marshaling modified record: %v", err)
 		}
 		records = append(records, string(jsonStr))
@@ -116,13 +117,15 @@ func IngestMinimalIntoQuickwit[V GenericQuickwitSearchSchema](indexName string, 
 		strings.NewReader(dataToPost),
 	)
 	if err != nil {
+		fmt.Println(err)
 		return fmt.Errorf("error submitting data to quickwit: %v", err)
 	}
 	if resp.StatusCode != http.StatusOK {
+		fmt.Printf("Encountered bad response code: %v\n", resp.StatusCode)
 		return fmt.Errorf("Ingesting data into quickwit gave bad response code: %v\n", resp.StatusCode)
 	}
+	printResponse(resp)
 	defer resp.Body.Close()
 
-	printResponse(resp)
 	return nil
 }
