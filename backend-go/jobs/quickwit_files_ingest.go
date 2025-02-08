@@ -13,6 +13,8 @@ import (
 	"kessler/util"
 	"net/http"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 func HandleQuickwitFileIngestFromPostgres(w http.ResponseWriter, r *http.Request) {
@@ -35,28 +37,47 @@ func HandleQuickwitFileIngestFromPostgres(w http.ResponseWriter, r *http.Request
 	w.Write([]byte("Sucessfully ingested from postgres"))
 }
 
-type QuickwitAbleFileSchema interface{}
+func parsePrimativeAuthorSchema(author_schemas []byte) []authors.AuthorInformation {
+	type SimpleAuthorSchema struct {
+		ID       uuid.UUID `json:"id"`
+		Name     string    `json:"name"`
+		IsPerson bool      `json:"is_person"`
+	}
+	var simple_schemas []SimpleAuthorSchema
+	err := json.Unmarshal(author_schemas, simple_schemas)
+	if err != nil {
+		return []authors.AuthorInformation{}
+	}
+	return_schemas := make([]authors.AuthorInformation, len(simple_schemas))
+	for index, simple_schema := range simple_schemas {
+		return_schemas[index] = authors.AuthorInformation{
+			AuthorID:   simple_schema.ID,
+			AuthorName: simple_schema.Name,
+			IsPerson:   simple_schema.IsPerson,
+		}
+	}
+	return return_schemas
+}
 
-func ParseQuickwitFileIntoCompleteSchema(file_raw dbstore.SemiCompleteFileQuickwitListGetPaginatedRow) (files.CompleteFileSchema, error) {
+func ParseQuickwitFileIntoCompleteSchema(file_raw dbstore.Testmat) (files.CompleteFileSchema, error) {
 	var mdata_obj files.FileMetadataSchema
 	err := json.Unmarshal(file_raw.Mdata, &mdata_obj)
 	if err != nil {
 		return files.CompleteFileSchema{}, err
 	}
-	author_list := make([]authors.AuthorInformation, len(file_raw.OrganizationIds))
-	for i := range file_raw.OrganizationIds {
-		author_list[i] = authors.AuthorInformation{
-			AuthorName: file_raw.OrganizationNames[i],
-			AuthorID:   file_raw.OrganizationIds[i],
-		}
+	var extra_obj files.FileGeneratedExtras
+	err = json.Unmarshal(file_raw.Mdata, &extra_obj)
+	if err != nil {
+		fmt.Printf("encountered error decoding extras for file: %v\n", file_raw.ID)
+		// return files.CompleteFileSchema{}, err
 	}
-	text_list := make([]files.FileChildTextSource, len(file_raw.FileTexts))
-	for i := range file_raw.FileTexts {
-		text_list[i] = files.FileChildTextSource{
+	author_list := parsePrimativeAuthorSchema(file_raw.Organizations)
+	text_list := []files.FileChildTextSource{
+		{
 			IsOriginalText: false,
-			Text:           file_raw.FileTexts[i],
-			Language:       file_raw.FileTextLanguages[i],
-		}
+			Text:           file_raw.FileText,
+			Language:       "en",
+		},
 	}
 
 	file := files.CompleteFileSchema{
@@ -70,7 +91,7 @@ func ParseQuickwitFileIntoCompleteSchema(file_raw dbstore.SemiCompleteFileQuickw
 		DatePublished: timestamp.KesslerTime(file_raw.DatePublished.Time),
 		Mdata:         mdata_obj,
 		Stage:         files.DocProcStage{},
-		Extra:         files.FileGeneratedExtras{},
+		Extra:         extra_obj,
 		Authors:       author_list,
 		Conversation: conversations.ConversationInformation{
 			DocketGovID: file_raw.DocketGovID.String,
@@ -83,14 +104,14 @@ func ParseQuickwitFileIntoCompleteSchema(file_raw dbstore.SemiCompleteFileQuickw
 
 func QuickwitIngestFromPostgres(q *dbstore.Queries, ctx context.Context, filter_out_unverified bool) error {
 	indexName := quickwit.NYPUCIndexName
-	var files_raw []dbstore.SemiCompleteFileQuickwitListGetPaginatedRow
+	var files_raw []dbstore.Testmat
 
 	page_size := 1000
 
 	// Currently this encounters a hard cap at 10,000,000 files, so this should almost certainly be changed then. But at 1 second per request the ingest job should take 3 hours. So refactoring will be required.
 	for page := range 10000 {
-		pagination_params := dbstore.SemiCompleteFileQuickwitListGetPaginatedParams{Limit: int32(page_size), Offset: int32(page * page_size)}
-		temporary_file_results, err := q.SemiCompleteFileQuickwitListGetPaginated(ctx, pagination_params)
+		pagination_params := dbstore.FilePrecomputedQuickwitListGetPaginatedParams{Limit: int32(page_size), Offset: int32(page * page_size)}
+		temporary_file_results, err := q.FilePrecomputedQuickwitListGetPaginated(ctx, pagination_params)
 		if err != nil {
 			fmt.Printf("Error getting semi complete file list: %v\n", err)
 
@@ -110,7 +131,7 @@ func QuickwitIngestFromPostgres(q *dbstore.Queries, ctx context.Context, filter_
 
 	if filter_out_unverified {
 		fmt.Printf("Got raw n files from postgres: %d\n", len(files_raw))
-		var new_raw_files []dbstore.SemiCompleteFileQuickwitListGetPaginatedRow
+		var new_raw_files []dbstore.Testmat
 
 		for _, file := range files_raw {
 			if file.Verified.Bool {
