@@ -24,7 +24,7 @@ export enum PageContextMode {
 export interface FileSearchBoxProps {
   pageContext: PageContextMode.Files;
   setSearchData: React.Dispatch<React.SetStateAction<QueryDataFile>>;
-  inheritedFileFilters: Array<InheritedFilterValues>;
+  inheritedFileFilters: InheritedFilterValues;
 }
 export interface OrgSearchBoxProps {
   pageContext: PageContextMode.Organizations;

@@ -303,13 +303,12 @@ const setSearchFilters = (props: SearchBoxInputProps, filters: Filter[]) => {
   if (props && "pageContext" in props) {
     if (props.pageContext === PageContextMode.Files) {
       const fileProps = props as FileSearchBoxProps;
-      fileProps.setSearchData((previous_file_filters) => {
-        const new_filters = generateFileFiltersFromFilterList(
-          previous_file_filters,
+      fileProps.setSearchData(
+        generateFileFiltersFromFilterList(
+          props.inheritedFileFilters,
           filterTypeDict,
-        );
-        return new_filters;
-      });
+        ),
+      );
       return;
     }
     if (props.pageContext === PageContextMode.Organizations) {
