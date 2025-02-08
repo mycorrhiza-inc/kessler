@@ -272,6 +272,24 @@ type StageLog struct {
 	FileID    uuid.UUID
 }
 
+type Testmat struct {
+	ID               uuid.UUID
+	Name             string
+	Extension        string
+	Lang             string
+	Verified         pgtype.Bool
+	Hash             string
+	CreatedAt        pgtype.Timestamptz
+	UpdatedAt        pgtype.Timestamptz
+	DatePublished    pgtype.Timestamptz
+	Mdata            []byte
+	ExtraObj         []byte
+	ConversationUuid pgtype.UUID
+	DocketGovID      pgtype.Text
+	FileText         string
+	Organizations    []byte
+}
+
 type User struct {
 	ID        uuid.UUID
 	Username  string
