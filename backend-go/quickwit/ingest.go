@@ -31,7 +31,7 @@ func IngestIntoIndex[V GenericQuickwitSearchSchema](indexName string, data []V, 
 		}
 		defer resp.Body.Close()
 	}
-	maxIngestItems := 200
+	maxIngestItems := 100
 	fmt.Println("Initiating ingest into index")
 
 	var subIngestLists [][]V
