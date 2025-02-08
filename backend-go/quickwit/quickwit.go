@@ -124,6 +124,9 @@ func ResolveFileSchemaForDocketIngest(complete_files []files.CompleteFileSchema)
 		metadata["source"] = "ny-puc-energyefficiency-filedocs"
 		metadata["conversation_uuid"] = input_file.Conversation.ID.String()
 		author_uuids := make([]uuid.UUID, len(input_file.Authors))
+		if len(input_file.Authors) == 0 {
+			fmt.Printf("No authors found in file: %v\n", input_file.ID)
+		}
 		for i, author := range input_file.Authors {
 			author_uuids[i] = author.AuthorID
 		}
@@ -144,7 +147,7 @@ func ResolveFileSchemaForDocketIngest(complete_files []files.CompleteFileSchema)
 			// Do nothing, an error here means to text was found.
 		}
 		if englishText == "" {
-			englishText = "Example Text!"
+			englishText = ""
 		}
 		newRecord.Text = englishText
 		newRecord.SourceID = file.ID
