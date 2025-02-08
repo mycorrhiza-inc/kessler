@@ -20,6 +20,10 @@ func DefineJobRoutes(parent_router *mux.Router) {
 		CreateOrganizationIndexJobHandler,
 	).Methods(http.MethodGet)
 	parent_router.HandleFunc(
+		"/index/create/files",
+		CreateFileIndexJobHandler,
+	).Methods(http.MethodGet)
+	parent_router.HandleFunc(
 		"/index/repopulate/conversations",
 		IndexAllDocketsHandler,
 	).Methods(http.MethodGet)
@@ -70,6 +74,19 @@ func CreateConversationIndexJobHandler(w http.ResponseWriter, r *http.Request) {
 func CreateOrganizationIndexJobHandler(w http.ResponseWriter, r *http.Request) {
 	// ctx := r.Context()
 	err := quickwit.CreateQuickwitOrganizationsIndex("") // Empty index name defaults to the production quickwit index
+	if err != nil {
+		errorstring := fmt.Sprintf("Error creating quickwit index: %v", err)
+		fmt.Println(errorstring)
+		http.Error(w, errorstring, http.StatusInternalServerError)
+		return
+	}
+
+	w.Write([]byte("Organization index being created"))
+}
+
+func CreateFileIndexJobHandler(w http.ResponseWriter, r *http.Request) {
+	// ctx := r.Context()
+	err := quickwit.CreateQuickwitNYFileIndex("") // Empty index name defaults to the production quickwit index
 	if err != nil {
 		errorstring := fmt.Sprintf("Error creating quickwit index: %v", err)
 		fmt.Println(errorstring)

@@ -46,7 +46,7 @@ func IngestIntoIndex[V GenericQuickwitSearchSchema](indexName string, data []V, 
 	ingestWrapedFunc := func(data []V) (int, error) {
 		return 0, IngestMinimalIntoQuickwit(indexName, data)
 	}
-	workers := 5
+	workers := 2
 	_, err := util.ConcurrentMapError(subIngestLists, ingestWrapedFunc, workers)
 	if err != nil {
 		return fmt.Errorf("Error ingesting into index: %v\n", err)
