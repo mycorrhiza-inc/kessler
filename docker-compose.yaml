@@ -1,10 +1,31 @@
 # local development docker compose
 services:
+  reverse-proxy:
+    image: traefik:v3.1.2
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.constraints=Label(`traefik.namespace`,`kessler`)"
+    expose:
+      - 80
+      - 443
+    ports:
+      - "80:80"
+      - "${PROXY_UI_PORT:-8083}:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
   frontend:
     hostname: "kessler.xyz"
     build:
       context: ./frontend
       dockerfile: ./Dockerfile-dev
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "logging-nixos-docker.tail4a273.ts.net:4317"
+        fluentd-async: "true"
+        tag: "kessler.frontend"
+        mode: "non-blocking"
     env_file:
       - config/global.env
     volumes:
@@ -20,24 +41,17 @@ services:
       - "run"
       - "dev"
 
-  reverse-proxy:
-    image: traefik:v3.1.2
-    command:
-      - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--providers.docker.constraints=Label(`traefik.namespace`,`kessler`)"
-    expose:
-      - 80
-      - 443
-    ports:
-      - "80:80"
-      - "${PROXY_UI_PORT:-8083}:8080"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
   backend-go:
     image: cosmtrek/air
     command:
       - "air"
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "logging-nixos-docker.tail4a273.ts.net:4317"
+        fluentd-async: "true"
+        tag: "kessler.backend"
+        mode: "non-blocking"
     env_file:
       - config/global.env
     environment:
