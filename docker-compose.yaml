@@ -43,13 +43,6 @@ services:
     image: cosmtrek/air
     command:
       - "air"
-    logging:
-      driver: "otl"
-      options:
-        # For gRPC endpoint (4317)
-        otlp-endpoint: "logging-nixos-docker.tail4a273.ts.net:4317"
-        otlp-protocol: grpc
-        otlp-insecure: "true" # Use "false" for TLS
     env_file:
       - config/global.env
     environment:
@@ -65,3 +58,10 @@ services:
       - "traefik.namespace=kessler"
       - "traefik.http.routers.go-backend.rule=PathPrefix(`/v2`)"
       - "traefik.http.middlewares.test-stripprefix.stripprefix.prefixes=/v2"
+  vector:
+    image: timberio/vector:latest
+    volumes:
+      - ./vector.toml:/etc/vector/vector.toml
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    command: --config /etc/vector/vector.toml
+    restart: unless-stopped
