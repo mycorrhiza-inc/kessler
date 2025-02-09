@@ -2,9 +2,9 @@ package networking
 
 import (
 	"encoding/json"
-	"fmt"
 	"kessler/objects/timestamp"
 
+	"github.com/charmbracelet/log"
 	"github.com/google/uuid"
 )
 

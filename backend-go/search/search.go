@@ -10,8 +10,9 @@ import (
 	"kessler/objects/networking"
 	"kessler/objects/timestamp"
 	"kessler/quickwit"
-	"charmbracelet/log"
 	"reflect"
+
+	"github.com/charmbracelet/log"
 
 	"github.com/google/uuid"
 )

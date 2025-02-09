@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"kessler/objects/networking"
 	"testing"
+
+	"github.com/charmbracelet/log"
 )
 
 var example_search_request = SearchRequest{

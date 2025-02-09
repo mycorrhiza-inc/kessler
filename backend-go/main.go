@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/charmbracelet/log"
 	"kessler/admin"
 	"kessler/autocomplete"
 	"kessler/crud"
@@ -10,7 +11,6 @@ import (
 	"kessler/rag"
 	"kessler/search"
 	"kessler/util"
-	"charmbracelet/log"
 	"net/http"
 	"os"
 	"strings"

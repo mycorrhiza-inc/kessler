@@ -3,10 +3,10 @@ package crud
 import (
 	"context"
 	"fmt"
+	"kessler/gen/dbstore"
 	"os"
 
-	"kessler/gen/dbstore"
-
+	"github.com/charmbracelet/log"
 	"github.com/jackc/pgx/v5"
 )
 

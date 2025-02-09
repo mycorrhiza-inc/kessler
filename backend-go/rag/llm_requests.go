@@ -6,6 +6,7 @@ import (
 	"kessler/search"
 	"os"
 
+	"github.com/charmbracelet/log"
 	openai "github.com/sashabaranov/go-openai"
 )
 

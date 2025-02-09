@@ -3,12 +3,13 @@ package admin
 import (
 	"context"
 	"fmt"
+	"kessler/gen/dbstore"
+	"kessler/util"
 	"net/http"
 	"strings"
 	"sync"
 
-	"kessler/gen/dbstore"
-	"kessler/util"
+	"github.com/charmbracelet/log"
 )
 
 func deduplicateOrganizationsOnNames(ctx context.Context, q dbstore.Queries) error {

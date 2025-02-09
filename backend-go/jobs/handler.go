@@ -7,6 +7,7 @@ import (
 	"kessler/util"
 	"net/http"
 
+	"github.com/charmbracelet/log"
 	"github.com/gorilla/mux"
 )
 

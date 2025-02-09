@@ -1,9 +1,10 @@
 package rag
 
 import (
-	"fmt"
 	"kessler/objects/networking"
 	"testing"
+
+	"github.com/charmbracelet/log"
 )
 
 func TestRag(t *testing.T) {

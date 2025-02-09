@@ -1,8 +1,9 @@
 package util
 
 import (
-	"fmt"
 	"sync"
+
+	"github.com/charmbracelet/log"
 )
 
 func Map[T any, R any](input_list []T, f func(T) R) []R {

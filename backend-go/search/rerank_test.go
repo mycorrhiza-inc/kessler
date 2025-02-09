@@ -2,9 +2,10 @@ package search
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
+
+	"github.com/charmbracelet/log"
 )
 
 func Test_reranker(t *testing.T) {

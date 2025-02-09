@@ -2,7 +2,8 @@ package search
 
 import (
 	"fmt"
-	"charmbracelet/log"
+
+	"github.com/charmbracelet/log"
 )
 
 type SearchReturn struct {

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/charmbracelet/log"
 	openai "github.com/sashabaranov/go-openai"
 	"github.com/sashabaranov/go-openai/jsonschema"
 )

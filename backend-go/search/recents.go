@@ -5,8 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"kessler/quickwit"
-	"charmbracelet/log"
 	"net/http"
+
+	"github.com/charmbracelet/log"
 )
 
 func GetRecentCaseData(maxHits int, offset int) ([]SearchDataHydrated, error) {

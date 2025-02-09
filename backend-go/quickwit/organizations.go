@@ -1,7 +1,6 @@
 package quickwit
 
 import (
-	"charmbracelet/log"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -9,6 +8,8 @@ import (
 	"kessler/objects/networking"
 	"kessler/objects/organizations"
 	"net/http"
+
+	"github.com/charmbracelet/log"
 )
 
 type OrgSearchRequestData struct {

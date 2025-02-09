@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"kessler/objects/networking"
 	"kessler/quickwit"
-	"charmbracelet/log"
 	"net/http"
 	"strings"
+
+	"github.com/charmbracelet/log"
 
 	"github.com/gorilla/mux"
 )

@@ -4,13 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"kessler/gen/dbstore"
+	"kessler/objects/files"
+	"kessler/util"
 	"net/http"
 
-	"kessler/gen/dbstore"
-	"kessler/util"
-
-	"kessler/objects/files"
-
+	"github.com/charmbracelet/log"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgtype"

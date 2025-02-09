@@ -8,11 +8,12 @@ import (
 	"io"
 	"kessler/objects/files"
 	"kessler/objects/timestamp"
-	"charmbracelet/log"
 	"net/http"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/charmbracelet/log"
 )
 
 var quickwitEndpoint = os.Getenv("QUICKWIT_ENDPOINT")

@@ -6,6 +6,8 @@ import (
 	"kessler/objects/networking"
 	"net/http"
 	"strings"
+
+	"github.com/charmbracelet/log"
 )
 
 type ChatRequestBody struct {

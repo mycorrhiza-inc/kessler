@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"kessler/gen/dbstore"
 	"kessler/objects/files"
-	"charmbracelet/log"
+
+	"github.com/charmbracelet/log"
 
 	"github.com/google/uuid"
 )
