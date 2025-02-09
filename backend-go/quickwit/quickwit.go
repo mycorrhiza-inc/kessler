@@ -8,7 +8,7 @@ import (
 	"io"
 	"kessler/objects/files"
 	"kessler/objects/timestamp"
-	"log"
+	"charmbracelet/log"
 	"net/http"
 	"os"
 	"strings"

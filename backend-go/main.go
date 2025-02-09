@@ -10,7 +10,7 @@ import (
 	"kessler/rag"
 	"kessler/search"
 	"kessler/util"
-	"log"
+	"charmbracelet/log"
 	"net/http"
 	"os"
 	"strings"
@@ -151,7 +151,7 @@ func main() {
 		WriteTimeout: adminTimeout,
 	}
 
-	log.Println("Starting server on :4041")
+	log.Info("Starting server on :4041")
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("Webserver Failed: %s", err)
 	}

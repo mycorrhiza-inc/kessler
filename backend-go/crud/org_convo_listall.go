@@ -5,7 +5,7 @@ import (
 	"kessler/gen/dbstore"
 	"kessler/objects/networking"
 	"kessler/util"
-	"log"
+	"charmbracelet/log"
 	"net/http"
 	"time"
 

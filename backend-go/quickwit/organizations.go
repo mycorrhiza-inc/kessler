@@ -1,13 +1,13 @@
 package quickwit
 
 import (
+	"charmbracelet/log"
 	"context"
 	"encoding/json"
 	"fmt"
 	"kessler/gen/dbstore"
 	"kessler/objects/networking"
 	"kessler/objects/organizations"
-	"log"
 	"net/http"
 )
 
@@ -23,13 +23,13 @@ type OrganizationSearchSchema struct {
 }
 
 func HandleOrgSearch(w http.ResponseWriter, r *http.Request) {
-	log.Println("Received organization search request")
+	log.Info("Received organization search request")
 
 	var orgSearch OrganizationSearchSchema
 	err := json.NewDecoder(r.Body).Decode(&orgSearch)
 	if err != nil {
 		errorstring := fmt.Sprintf("Error decoding JSON: %v", err)
-		log.Println(errorstring)
+		log.Info(errorstring)
 		http.Error(w, errorstring, http.StatusBadRequest)
 		return
 	}
@@ -45,14 +45,14 @@ func HandleOrgSearch(w http.ResponseWriter, r *http.Request) {
 	results, err := SearchOrganizations(searchData, r.Context())
 	if err != nil {
 		errorstring := fmt.Sprintf("Error searching organizations: %v", err)
-		log.Println(errorstring)
+		log.Info(errorstring)
 		http.Error(w, errorstring, http.StatusInternalServerError)
 		return
 	}
 
 	respString, err := json.Marshal(results)
 	if err != nil {
-		log.Println("Error marshaling response data")
+		log.Info("Error marshaling response data")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

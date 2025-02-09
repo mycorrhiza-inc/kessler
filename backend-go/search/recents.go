@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"kessler/quickwit"
-	"log"
+	"charmbracelet/log"
 	"net/http"
 )
 

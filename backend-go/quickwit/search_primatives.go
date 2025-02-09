@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 	"kessler/objects/timestamp"
-	"log"
+	"charmbracelet/log"
 	"net/http"
 	"os"
 	"reflect"

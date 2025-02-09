@@ -8,7 +8,7 @@ import (
 	"kessler/objects/conversations"
 	"kessler/objects/networking"
 	"kessler/objects/timestamp"
-	"log"
+	"charmbracelet/log"
 	"net/http"
 	"strings"
 	"time"
@@ -30,7 +30,7 @@ type ConversationSearchSchema struct {
 }
 
 func HandleConvoSearch(w http.ResponseWriter, r *http.Request) {
-	log.Println("Received a search request")
+	log.Info("Received a search request")
 
 	// Create an instance of RequestData
 	var convo_search ConversationSearchSchema
@@ -56,13 +56,13 @@ func HandleConvoSearch(w http.ResponseWriter, r *http.Request) {
 	results, err := SearchConversations(convoRequestData, r.Context())
 	if err != nil {
 		errorstring := fmt.Sprintf("Error searching conversations: %v\n", err)
-		log.Println(errorstring)
+		log.Info(errorstring)
 		http.Error(w, errorstring, http.StatusInternalServerError)
 	}
 
 	respString, err := json.Marshal(results)
 	if err != nil {
-		log.Println("Error marshalling response data")
+		log.Info("Error marshalling response data")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

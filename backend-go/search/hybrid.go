@@ -2,7 +2,7 @@ package search
 
 import (
 	"fmt"
-	"log"
+	"charmbracelet/log"
 )
 
 type SearchReturn struct {

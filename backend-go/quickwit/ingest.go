@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/charmbracelet/log"
 )
 
 type GenericQuickwitSearchSchema interface {

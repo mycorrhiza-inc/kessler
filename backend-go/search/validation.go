@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"kessler/objects/networking"
 	"kessler/util"
-	"log"
+	"charmbracelet/log"
 	"reflect"
 	"strings"
 )

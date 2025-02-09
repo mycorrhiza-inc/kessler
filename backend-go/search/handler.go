@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"kessler/objects/networking"
 	"kessler/quickwit"
-	"log"
+	"charmbracelet/log"
 	"net/http"
 	"strings"
 
@@ -62,7 +62,7 @@ func HandleSearchRequest(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "Hi there!")
 		return
 	case http.MethodPost:
-		log.Println("Received a search request")
+		log.Info("Received a search request")
 
 		// Create an instance of RequestData
 		var RequestData SearchRequest
@@ -90,7 +90,7 @@ func HandleSearchRequest(w http.ResponseWriter, r *http.Request) {
 		// hydrated_data, err := HydrateSearchResults(data, ctx, q)
 		// if err != nil {
 		// 	errorstring := fmt.Sprintf("Error hydrating search results: %v\n", err)
-		// 	log.Println(errorstring)
+		// 	log.Info(errorstring)
 		// 	http.Error(w, errorstring, http.StatusInternalServerError)
 		// 	return
 		// }
@@ -98,14 +98,14 @@ func HandleSearchRequest(w http.ResponseWriter, r *http.Request) {
 		_, err = ValidateHydratedAgainstFilters(hydrated_data, RequestData.SearchFilters)
 		if err != nil {
 			errorstring := fmt.Sprintf("Returned results did not match filters: %v\n", err)
-			log.Println(errorstring)
+			log.Info(errorstring)
 			http.Error(w, errorstring, http.StatusInternalServerError)
 			return
 		}
 
 		respString, err := json.Marshal(hydrated_data)
 		if err != nil {
-			log.Println("Error marshalling response data")
+			log.Info("Error marshalling response data")
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -139,7 +139,7 @@ func HandleRecentUpdatesRequest(w http.ResponseWriter, r *http.Request) {
 		// hydrated_data, err := HydrateSearchResults(data, ctx, q)
 		// if err != nil {
 		// 	errorstring := fmt.Sprintf("Error hydrating search results: %v\n", err)
-		// 	log.Println(errorstring)
+		// 	log.Info(errorstring)
 		// 	http.Error(w, errorstring, http.StatusInternalServerError)
 		// 	return
 		// }
