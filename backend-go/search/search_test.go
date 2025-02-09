@@ -19,9 +19,9 @@ var example_search_request = SearchRequest{
 func TestQuickwit(t *testing.T) {
 	results, err := SearchQuickwit(example_search_request)
 	if err != nil {
-		fmt.Println("Error:", err)
+		log.Info("Error:", err)
 		return
 	}
 	resultsString := fmt.Sprintf("%v", results)
-	fmt.Println("Results:", resultsString)
+	log.Info("Results:", resultsString)
 }

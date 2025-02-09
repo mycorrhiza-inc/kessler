@@ -39,7 +39,7 @@ func (m Metadata) String() string {
 	// Marshal the struct to JSON format
 	jsonData, err := json.MarshalIndent(m, "", "  ")
 	if err != nil {
-		fmt.Println("Error marshalling JSON:", err)
+		log.Info("Error marshalling JSON:", err)
 	}
 	// Print the formatted JSON string
 	return string(jsonData)
@@ -49,7 +49,7 @@ func (m SearchMetadata) String() string {
 	// Marshal the struct to JSON format
 	jsonData, err := json.MarshalIndent(m, "", "  ")
 	if err != nil {
-		fmt.Println("Error marshalling JSON:", err)
+		log.Info("Error marshalling JSON:", err)
 	}
 	// Print the formatted JSON string
 	return string(jsonData)
@@ -65,7 +65,7 @@ type MetadataFilterFields struct {
 func (f MetadataFilterFields) String() string {
 	jsonData, err := json.MarshalIndent(f, "", "  ")
 	if err != nil {
-		fmt.Println("Error marshalling JSON:", err)
+		log.Info("Error marshalling JSON:", err)
 	}
 	return string(jsonData)
 }
@@ -79,7 +79,7 @@ type UUIDFilterFields struct {
 func (f UUIDFilterFields) String() string {
 	jsonData, err := json.MarshalIndent(f, "", "  ")
 	if err != nil {
-		fmt.Println("Error marshalling JSON:", err)
+		log.Info("Error marshalling JSON:", err)
 	}
 	return string(jsonData)
 }

@@ -26,14 +26,14 @@ func HandleUnverifedCompleteFileSchemaList(w http.ResponseWriter, r *http.Reques
 	max_responses, err := strconv.Atoi(max_responses_str)
 	if err != nil || max_responses < 0 {
 		errorstring := fmt.Sprintf("Error parsing max responses: %v", err)
-		fmt.Println(errorstring)
+		log.Info(errorstring)
 		http.Error(w, errorstring, http.StatusBadRequest)
 		return
 	}
 	files, err := UnverifedCompleteFileSchemaRandomList(ctx, uint(max_responses))
 	if err != nil {
 		errorstring := fmt.Sprintf("Error getting unverified files: %v", err)
-		fmt.Println(errorstring)
+		log.Info(errorstring)
 		http.Error(w, errorstring, http.StatusInternalServerError)
 		return
 	}

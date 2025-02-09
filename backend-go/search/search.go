@@ -48,7 +48,7 @@ func (s quickwitSearchResponse) String() string {
 	// Marshal the struct to JSON format
 	jsonData, err := json.MarshalIndent(s, "", "  ")
 	if err != nil {
-		fmt.Println("Error marshalling JSON:", err)
+		log.Info("Error marshalling JSON:", err)
 	}
 	// Print the formatted JSON string
 	return string(jsonData)
@@ -65,7 +65,7 @@ func (s SearchData) String() string {
 	// Marshal the struct to JSON format
 	jsonData, err := json.MarshalIndent(s, "", "  ")
 	if err != nil {
-		fmt.Println("Error marshalling JSON:", err)
+		log.Info("Error marshalling JSON:", err)
 	}
 	// Print the formatted JSON string
 	return string(jsonData)

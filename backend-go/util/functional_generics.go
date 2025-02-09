@@ -18,7 +18,7 @@ func MapErrorDiscard[T any, R any](input_list []T, f func(T) (R, error)) []R {
 	for i, item := range input_list {
 		result, err := f(item)
 		if err != nil {
-			fmt.Println("Error in Generic Map, told to discard: ", err)
+			log.Info("Error in Generic Map, told to discard: ", err)
 		}
 		results[i] = result
 	}

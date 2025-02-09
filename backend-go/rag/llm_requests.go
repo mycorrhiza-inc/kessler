@@ -18,7 +18,7 @@ func createOpenaiClientFromString(model_name string) (*openai.Client, string) {
 		// Apparently "gpt-4o" supports function calling but "gpt-4o-latest" doesnt. Good software design fellas
 		return openai.NewClient(openaiKey), "gpt-4o"
 	default:
-		fmt.Println("Model not found, using default model: gpt-4o")
+		log.Info("Model not found, using default model: gpt-4o")
 		return openai.NewClient(openaiKey), "gpt-4o"
 	}
 }

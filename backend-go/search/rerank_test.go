@@ -24,18 +24,18 @@ func Test_reranker(t *testing.T) {
 	if err != nil {
 		t.Fatal("Error:", err)
 	}
-	fmt.Println("Permutation:")
+	log.Info("Permutation:")
 	for _, docperm := range rerankedDocPermutation {
-		fmt.Println(docperm)
+		log.Info(docperm)
 	}
 	rerankedDocs := make([]string, len(rerankedDocPermutation))
 	for i, permutation := range rerankedDocPermutation {
 		rerankedDocs[i] = documents[permutation]
 	}
 
-	fmt.Println("Query:", query)
-	fmt.Println("Reranked Documents:")
+	log.Info("Query:", query)
+	log.Info("Reranked Documents:")
 	for _, doc := range rerankedDocs {
-		fmt.Println(doc)
+		log.Info(doc)
 	}
 }

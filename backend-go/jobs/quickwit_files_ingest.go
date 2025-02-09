@@ -29,11 +29,11 @@ func HandleQuickwitFileIngestFromPostgres(w http.ResponseWriter, r *http.Request
 	err := QuickwitIngestFromPostgres(q, ctx, filter_out_unverified)
 	if err != nil {
 		errorstring := fmt.Sprintf("Error ingesting from postgres: %v", err)
-		fmt.Println(errorstring)
+		log.Info(errorstring)
 		http.Error(w, errorstring, http.StatusInternalServerError)
 		return
 	}
-	fmt.Println("Successfully completed Quickwit ingest from Postgres")
+	log.Info("Successfully completed Quickwit ingest from Postgres")
 	w.Write([]byte("Sucessfully ingested from postgres"))
 }
 
@@ -145,7 +145,7 @@ func QuickwitIngestFromPostgres(q *dbstore.Queries, ctx context.Context, filter_
 
 	quickwit_data_list_chunk, err := quickwit.ResolveFileSchemaForDocketIngest(complete_file_schema_results)
 	if err != nil {
-		fmt.Println("Error converting complete file schema into quickwit schema for file inest: %s", err)
+		log.Info("Error converting complete file schema into quickwit schema for file inest: %s", err)
 	}
 	// Randomize the uuids so that you dont have weird unexpected behavior near the beginning or end.
 	err = quickwit.IngestIntoIndex(indexName, quickwit_data_list_chunk, true)

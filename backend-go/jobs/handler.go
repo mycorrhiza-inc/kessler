@@ -63,7 +63,7 @@ func CreateConversationIndexJobHandler(w http.ResponseWriter, r *http.Request) {
 	err := quickwit.CreateQuickwitIndexConversations()
 	if err != nil {
 		errorstring := fmt.Sprintf("Error creating quickwit index: %v", err)
-		fmt.Println(errorstring)
+		log.Info(errorstring)
 		http.Error(w, errorstring, http.StatusInternalServerError)
 		return
 	}
@@ -76,7 +76,7 @@ func CreateOrganizationIndexJobHandler(w http.ResponseWriter, r *http.Request) {
 	err := quickwit.CreateQuickwitOrganizationsIndex("") // Empty index name defaults to the production quickwit index
 	if err != nil {
 		errorstring := fmt.Sprintf("Error creating quickwit index: %v", err)
-		fmt.Println(errorstring)
+		log.Info(errorstring)
 		http.Error(w, errorstring, http.StatusInternalServerError)
 		return
 	}
@@ -89,7 +89,7 @@ func CreateFileIndexJobHandler(w http.ResponseWriter, r *http.Request) {
 	err := quickwit.CreateQuickwitNYFileIndex("") // Empty index name defaults to the production quickwit index
 	if err != nil {
 		errorstring := fmt.Sprintf("Error creating quickwit index: %v", err)
-		fmt.Println(errorstring)
+		log.Info(errorstring)
 		http.Error(w, errorstring, http.StatusInternalServerError)
 		return
 	}
@@ -105,7 +105,7 @@ func IndexAllDocketsHandler(w http.ResponseWriter, r *http.Request) {
 	err := quickwit.IndexAllConversations(q, ctx, "")
 	if err != nil {
 		errorstring := fmt.Sprintf("Error ingesting dockets index: %v", err)
-		fmt.Println(errorstring)
+		log.Info(errorstring)
 		http.Error(w, errorstring, http.StatusInternalServerError)
 		return
 	}
@@ -121,7 +121,7 @@ func IndexAllOrganizationsHandler(w http.ResponseWriter, r *http.Request) {
 	err := quickwit.ReindexAllOrganizations(ctx, q, "")
 	if err != nil {
 		errorstring := fmt.Sprintf("Error ingesting orgs index: %v", err)
-		fmt.Println(errorstring)
+		log.Info(errorstring)
 		http.Error(w, errorstring, http.StatusInternalServerError)
 		return
 	}

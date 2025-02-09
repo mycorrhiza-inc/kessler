@@ -91,7 +91,7 @@ func upsertFileExtras(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID
 	extras_json_obj, err := json.Marshal(extras)
 	if err != nil {
 		err = fmt.Errorf("error marshalling extras json object, to my understanding this should be absolutely impossible: %v", err)
-		fmt.Println(err)
+		log.Info(err)
 		panic(err)
 	}
 	pgPrivate := pgtype.Bool{

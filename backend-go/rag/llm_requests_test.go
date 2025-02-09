@@ -86,9 +86,9 @@ func TestSimpleChatCompletionString(t *testing.T) {
 	result, err := createSimpleChatCompletionString(multiplex_request)
 	if err != nil {
 		t.Fail()
-		fmt.Println("Error:", err)
+		log.Info("Error:", err)
 	}
-	fmt.Println("Result:", result)
+	log.Info("Result:", result)
 }
 
 var test_document_func_schema = openai.FunctionDefinition{

@@ -19,7 +19,7 @@ func ConversationVerifyHandler(w http.ResponseWriter, r *http.Request) {
 	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {
 		errorstring := fmt.Sprintf("Error reading request body: %v\n", err)
-		fmt.Println(errorstring)
+		log.Info(errorstring)
 		http.Error(w, errorstring, http.StatusBadRequest)
 		return
 	}
@@ -28,7 +28,7 @@ func ConversationVerifyHandler(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(bodyBytes, &req)
 	if err != nil {
 		errorstring := fmt.Sprintf("Error decoding JSON: %v\n Offending json looked like: %v", err, string(bodyBytes))
-		fmt.Println(errorstring)
+		log.Info(errorstring)
 		http.Error(w, errorstring, http.StatusBadRequest)
 		return
 	}
@@ -43,7 +43,7 @@ func ConversationVerifyHandler(w http.ResponseWriter, r *http.Request) {
 	conversation_info, err := verifyConversationUUID(ctx, q, &req, true)
 	if err != nil {
 		errorstring := fmt.Sprintf("Error verifying conversation %v: %v\n", req.DocketGovID, err)
-		fmt.Println(errorstring)
+		log.Info(errorstring)
 		http.Error(w, errorstring, http.StatusInternalServerError)
 		return
 	}
@@ -59,7 +59,7 @@ func verifyConversationUUID(ctx context.Context, q dbstore.Queries, conv_info *c
 	// fmt.Printf("Starting verifyConversationUUID with conv_info: %+v, update: %v\n", conv_info, update)
 
 	if conv_info.ID != uuid.Nil && !update {
-		fmt.Println("Existing UUID found and no update requested, returning early")
+		log.Info("Existing UUID found and no update requested, returning early")
 		return *conv_info, nil
 	}
 
@@ -77,7 +77,7 @@ func verifyConversationUUID(ctx context.Context, q dbstore.Queries, conv_info *c
 		conv := results[0]
 		conv_info.ID = conv.ID
 		if update {
-			// fmt.Println("Updating existing conversation with data %v", conv_info)
+			// log.Info("Updating existing conversation with data %v", conv_info)
 			args := dbstore.DocketConversationUpdateParams{
 				ID:            conv_info.ID,
 				DocketGovID:   conv_info.DocketGovID,
@@ -101,7 +101,7 @@ func verifyConversationUUID(ctx context.Context, q dbstore.Queries, conv_info *c
 		conv_info.State = conv.State
 		conv_info.Name = conv.Name
 		conv_info.Description = conv.Description
-		// fmt.Println("Returning existing conversation without update")
+		// log.Info("Returning existing conversation without update")
 		return *conv_info, nil
 
 	}

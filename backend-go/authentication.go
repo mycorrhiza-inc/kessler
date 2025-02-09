@@ -22,7 +22,7 @@ var SupabaseSecret = os.Getenv("SUPABASE_ANON_KEY")
 // 			// Strip prefix and decode Base64 part.
 // 			if !strings.HasPrefix(cookie.Value, "base64-") {
 // 				// Json will catch if invalid
-// 				fmt.Println("Cookie is not base64 decodable.")
+// 				log.Info("Cookie is not base64 decodable.")
 // 			}
 // 			encodedData := strings.TrimSpace(strings.TrimPrefix(cookie.Value, "base64-"))
 // 			decodedData, err := base64.URLEncoding.DecodeString(encodedData)
@@ -43,7 +43,7 @@ var SupabaseSecret = os.Getenv("SUPABASE_ANON_KEY")
 // 			hopefullyToken := strings.Split(stringDataStripped, `"`)[0]
 // 			_ = hopefullyToken // here to prevent the compiler from complaining
 // 			// token = fmt.Sprintf("Bearer %s", hopefullyToken)
-// 			// fmt.Println(token)
+// 			// log.Info(token)
 //
 // 		}
 // 		// Check for "Bearer " prefix in the authorization header (expected format)
@@ -63,7 +63,7 @@ var SupabaseSecret = os.Getenv("SUPABASE_ANON_KEY")
 // 			// // Replacing this with PBKDF2 or something would be more secure, but it should matter since every API key can be gaurenteed to have at least 128/256 bits of strength.
 // 			// hash := blake2b.Sum256([]byte(token[trim:]))
 // 			// encodedHash := base64.URLEncoding.EncodeToString(hash[:])
-// 			// fmt.Println("Checking Database for Hashed API Key:", encodedHash)
+// 			// log.Info("Checking Database for Hashed API Key:", encodedHash)
 // 			// ctx := r.Context()
 // 			// result, err := q.CheckIfThaumaturgyAPIKeyExists(ctx, encodedHash)
 // 			// if result.KeyBlake3Hash == encodedHash && err != nil {
@@ -85,7 +85,7 @@ var SupabaseSecret = os.Getenv("SUPABASE_ANON_KEY")
 // 			return jwtSecret, nil
 // 		}
 // 		parsedToken, err := jwt.Parse(tokenString, keyFunc)
-// 		// fmt.Println(parsedToken)
+// 		// log.Info(parsedToken)
 // 		if err != nil {
 // 			fmt.Printf("Encountered error with token validation since that functionality hasnt been implemented yet, and the backend assumes every HMAC signature is valid, this is probably good to fix if we dont want to get royally screwed %v", err)
 // 			// FIXME : HIGHLY INSECURE, GET THE HMAC SECRET FROM SUPABASE AND THROW IT IN HERE AS AN NEV VARAIBLE.
@@ -95,7 +95,7 @@ var SupabaseSecret = os.Getenv("SUPABASE_ANON_KEY")
 // 		// FIXME : HIGHLY INSECURE, GET THE HMAC SECRET FROM SUPABASE AND THROW IT IN HERE AS AN NEV VARAIBLE.
 // 		claims, ok := parsedToken.Claims.(jwt.MapClaims)
 //
-// 		fmt.Println(claims)
+// 		log.Info(claims)
 // 		ok = ok || !ok
 //
 // 		// if ok && parsedToken.Valid {
@@ -122,7 +122,7 @@ var SupabaseSecret = os.Getenv("SUPABASE_ANON_KEY")
 // 				next.ServeHTTP(w, r)
 //
 // 			} else {
-// 				fmt.Println("Auth Failed, for ip address", r.RemoteAddr)
+// 				log.Info("Auth Failed, for ip address", r.RemoteAddr)
 // 				http.Error(w, "Authentication failed", http.StatusUnauthorized)
 // 			}
 // 		})

@@ -24,7 +24,7 @@ func FileWithMetaGetHandler(w http.ResponseWriter, r *http.Request) {
 	parsedUUID, err := uuid.Parse(fileID)
 	if err != nil {
 		errorstring := fmt.Sprintf("Error parsing file %v: %v\n", fileID, err)
-		fmt.Println(errorstring)
+		log.Info(errorstring)
 		http.Error(w, errorstring, http.StatusBadRequest)
 		return
 	}
@@ -32,7 +32,7 @@ func FileWithMetaGetHandler(w http.ResponseWriter, r *http.Request) {
 	file_raw, err := q.GetFileWithMetadata(ctx, parsedUUID)
 	if err != nil {
 		errorstring := fmt.Sprintf("Error Retriving file %v: %v\n", fileID, err)
-		fmt.Println(errorstring)
+		log.Info(errorstring)
 		http.Error(w, errorstring, http.StatusNotFound)
 		return
 	}
@@ -40,7 +40,7 @@ func FileWithMetaGetHandler(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(file_raw.Mdata, &mdata_obj)
 	if err != nil {
 		errorstring := fmt.Sprintf("Error Unmarshalling file %v: %v\n", fileID, err)
-		fmt.Println(errorstring)
+		log.Info(errorstring)
 		http.Error(w, errorstring, http.StatusInternalServerError)
 		return
 	}
@@ -68,14 +68,14 @@ func FileSemiCompleteGet(w http.ResponseWriter, r *http.Request) {
 	parsedUUID, err := uuid.Parse(fileID)
 	if err != nil {
 		errorstring := fmt.Sprintf("Error parsing file %v: %v\n", fileID, err)
-		fmt.Println(errorstring)
+		log.Info(errorstring)
 		http.Error(w, errorstring, http.StatusBadRequest)
 		return
 	}
 	ctx := r.Context()
 	file, err := SemiCompleteFileGetFromUUID(ctx, q, parsedUUID)
 	if err != nil {
-		fmt.Println(err)
+		log.Info(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -226,7 +226,7 @@ func ReadFileHandler(config FileHandlerConfig) http.HandlerFunc {
 			file, err := files.GetFileObjectRaw(file_params)
 			if err != nil {
 				error_string := fmt.Sprintf("Error retrieving file object %v", err)
-				fmt.Println(error_string)
+				log.Info(error_string)
 				http.Error(w, error_string, http.StatusNotFound)
 				return
 			}

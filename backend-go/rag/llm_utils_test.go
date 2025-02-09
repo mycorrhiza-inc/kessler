@@ -23,5 +23,5 @@ func TestRag(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Println("Result:", result)
+	log.Info("Result:", result)
 }

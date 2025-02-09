@@ -29,6 +29,6 @@ func TestPostgresConnection() (string, error) {
 
 	}
 	truncatedFiles := files[:100]
-	fmt.Println("Successfully listed files:", truncatedFiles)
+	log.Info("Successfully listed files:", truncatedFiles)
 	return "Success", nil
 }

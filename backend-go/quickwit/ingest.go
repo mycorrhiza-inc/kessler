@@ -32,7 +32,7 @@ func IngestIntoIndex[V GenericQuickwitSearchSchema](indexName string, data []V, 
 		defer resp.Body.Close()
 	}
 	maxIngestItems := 100
-	fmt.Println("Initiating ingest into index")
+	log.Info("Initiating ingest into index")
 
 	var subIngestLists [][]V
 
@@ -117,7 +117,7 @@ func IngestMinimalIntoQuickwit[V GenericQuickwitSearchSchema](indexName string, 
 		strings.NewReader(dataToPost),
 	)
 	if err != nil {
-		fmt.Println(err)
+		log.Info(err)
 		return fmt.Errorf("error submitting data to quickwit: %v", err)
 	}
 	if resp.StatusCode != http.StatusOK {

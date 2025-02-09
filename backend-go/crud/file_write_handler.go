@@ -33,7 +33,7 @@ func makeFileUpsertHandler(config FileUpsertHandlerConfig) func(w http.ResponseW
 		var err error
 		if !insert && r.URL.Path == "/v2/public/files/insert" {
 			errorstring := "UNREACHABLE CODE: Using insert endpoint with update configuration"
-			fmt.Println(errorstring)
+			log.Info(errorstring)
 			http.Error(w, errorstring, http.StatusInternalServerError)
 			return
 		}
@@ -68,14 +68,14 @@ func makeFileUpsertHandler(config FileUpsertHandlerConfig) func(w http.ResponseW
 		bodyBytes, err := io.ReadAll(r.Body)
 		if err != nil {
 			errorstring := fmt.Sprintf("Error reading request body: %v\n", err)
-			fmt.Println(errorstring)
+			log.Info(errorstring)
 			http.Error(w, errorstring, http.StatusBadRequest)
 			return
 		}
 		err = json.Unmarshal(bodyBytes, &newDocInfo)
 		if err != nil {
 			errorstring := fmt.Sprintf("Error reading request body json: %v\n", err)
-			fmt.Println(errorstring)
+			log.Info(errorstring)
 			http.Error(w, errorstring, http.StatusBadRequest)
 			return
 		}
@@ -83,7 +83,7 @@ func makeFileUpsertHandler(config FileUpsertHandlerConfig) func(w http.ResponseW
 		hash := newDocInfo.Hash
 		if hash == "" { // Maybe replace with a comprehensive check to see if the hash is a valid 256 bit base 64 hash
 			err := fmt.Errorf("hash is empty, cannot insert document without hash")
-			fmt.Println(err)
+			log.Info(err)
 			http.Error(w, fmt.Sprintf("Error inserting/updating document: %v\n", err), http.StatusBadRequest)
 			return
 		}
@@ -91,7 +91,7 @@ func makeFileUpsertHandler(config FileUpsertHandlerConfig) func(w http.ResponseW
 			ids, err := files.HashGetUUIDsFile(q, ctx, hash)
 			if err != nil {
 				errorstring := fmt.Sprintf("Error getting document ids from hash for deduplication: %v\n", err)
-				fmt.Println(errorstring)
+				log.Info(errorstring)
 				http.Error(w, errorstring, http.StatusInternalServerError)
 				return
 			}
@@ -119,7 +119,7 @@ func makeFileUpsertHandler(config FileUpsertHandlerConfig) func(w http.ResponseW
 			if doc_uuid == empty_uuid {
 				err := fmt.Errorf("ASSERT FAILURE: docUUID should never have a null uuid, when updating document.")
 				errorstring := fmt.Sprint(err)
-				fmt.Println(errorstring)
+				log.Info(errorstring)
 				http.Error(w, errorstring, http.StatusInternalServerError)
 				return
 			}
@@ -136,7 +136,7 @@ func makeFileUpsertHandler(config FileUpsertHandlerConfig) func(w http.ResponseW
 		if newDocInfo.ID == empty_uuid {
 			err := fmt.Errorf("ASSERT FAILURE: docUUID should never have a null uuid.")
 			errorstring := fmt.Sprint(err)
-			fmt.Println(errorstring)
+			log.Info(errorstring)
 			http.Error(w, errorstring, http.StatusInternalServerError)
 			return
 		}
@@ -147,7 +147,7 @@ func makeFileUpsertHandler(config FileUpsertHandlerConfig) func(w http.ResponseW
 		fmt.Printf("Attempting to insert all file extras, texts, metadata for uuid: %s\n", doc_uuid)
 		if err := upsertFileTexts(ctx, q, doc_uuid, newDocInfo.DocTexts, insert); err != nil {
 			errorstring := fmt.Sprintf("Error in upsertFileTexts: %v", err)
-			fmt.Println(errorstring)
+			log.Info(errorstring)
 			has_db_errored = true
 			db_error_string = db_error_string + errorstring + "\n"
 		}
@@ -156,14 +156,14 @@ func makeFileUpsertHandler(config FileUpsertHandlerConfig) func(w http.ResponseW
 		if err := upsertFileMetadata(ctx, q, doc_uuid, newDocInfo.Mdata, insert); err != nil {
 			fmt.Printf("Is it getting past the if block?")
 			errorstring := fmt.Sprintf("Error in upsertFileMetadata: %v", err)
-			fmt.Println(errorstring)
+			log.Info(errorstring)
 			has_db_errored = true
 			db_error_string = db_error_string + errorstring + "\n"
 		}
 
 		if err := upsertFileExtras(ctx, q, doc_uuid, newDocInfo.Extra, insert); err != nil {
 			errorstring := fmt.Sprintf("Error in upsertFileExtras: %v", err)
-			fmt.Println(errorstring)
+			log.Info(errorstring)
 			has_db_errored = true
 			db_error_string = db_error_string + errorstring + "\n"
 		}
@@ -171,13 +171,13 @@ func makeFileUpsertHandler(config FileUpsertHandlerConfig) func(w http.ResponseW
 		// fmt.Printf("Starting fileAuthorsUpsert for uuid: %s\n", doc_uuid)
 		if err := fileAuthorsUpsert(ctx, q, doc_uuid, newDocInfo.Authors, insert); err != nil {
 			errorstring := fmt.Sprintf("Error in fileAuthorsUpsert: %v", err)
-			fmt.Println(errorstring)
+			log.Info(errorstring)
 			has_db_errored = true
 			db_error_string = db_error_string + errorstring + "\n"
 		}
 		if err := fileConversationUpsert(ctx, q, doc_uuid, newDocInfo.Conversation, insert); err != nil {
 			errorstring := fmt.Sprintf("Error in fileConversationUpsert: %v", err)
-			fmt.Println(errorstring)
+			log.Info(errorstring)
 			has_db_errored = true
 			db_error_string = db_error_string + errorstring + "\n"
 		}
@@ -186,7 +186,7 @@ func makeFileUpsertHandler(config FileUpsertHandlerConfig) func(w http.ResponseW
 		// This doesnt do anything for the time being, so its better to exclude imho
 		// if err := juristictionFileUpsert(ctx, q, doc_uuid, newDocInfo.Juristiction, insert); err != nil {
 		// 	errorstring := fmt.Sprintf("Error in juristictionFileUpsert: %v", err)
-		// 	fmt.Println(errorstring)
+		// 	log.Info(errorstring)
 		// 	has_db_errored = true
 		// 	db_error_string = db_error_string + errorstring + "\n"
 		// }
@@ -196,7 +196,7 @@ func makeFileUpsertHandler(config FileUpsertHandlerConfig) func(w http.ResponseW
 
 		if err := fileStatusInsert(ctx, q, doc_uuid, newDocInfo.Stage); err != nil {
 			errorstring := fmt.Sprintf("Error in fileStatusInsert: %v", err)
-			fmt.Println(errorstring)
+			log.Info(errorstring)
 			has_db_errored = true
 			// db_error_string = db_error_string + errorstring + "\n"
 		}
@@ -211,7 +211,7 @@ func makeFileUpsertHandler(config FileUpsertHandlerConfig) func(w http.ResponseW
 			_, err := q.FileVerifiedUpdate(ctx, params)
 			if err != nil {
 				errorstring := fmt.Sprintf("Error in FileVerifiedUpdate, this shouldnt effect anything, but might mean something weird is going on, since this code is only called if every other DB operation succeeded: %v", err)
-				fmt.Println(errorstring)
+				log.Info(errorstring)
 			}
 		}
 
@@ -221,7 +221,7 @@ func makeFileUpsertHandler(config FileUpsertHandlerConfig) func(w http.ResponseW
 		response, err := json.Marshal(newDocInfo)
 		if err != nil {
 			errorstring := fmt.Sprintf("Error marshalling response: %v", err)
-			fmt.Println(errorstring)
+			log.Info(errorstring)
 			// http.Error(w, errorstring, http.StatusInternalServerError)
 			// return
 		}

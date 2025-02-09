@@ -145,7 +145,7 @@ func DeleteConversationsFromIndex(conversationUUIDs []uuid.UUID, index string) e
 	}
 	err := CreateDeleteTask(index, task)
 	if err != nil {
-		fmt.Println(err)
+		log.Info(err)
 	}
 	return nil
 }
@@ -215,12 +215,12 @@ func CreateQuickwitIndexConversations() error {
 // 	// Reindex conversations
 // 	err := DeleteConversationsFromIndex(conversationUUIDs, "NY_Conversations")
 // 	if err != nil {
-// 		fmt.Println(err)
+// 		log.Info(err)
 // 		return err
 // 	}
 // 	err = IndexConversationsFromUUIDs(conversationUUIDs, ctx)
 // 	if err != nil {
-// 		fmt.Println(err)
+// 		log.Info(err)
 // 		return err
 // 	}
 // 	return nil

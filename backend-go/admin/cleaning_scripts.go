@@ -113,7 +113,7 @@ func completeCleanDatabaseHandler(w http.ResponseWriter, r *http.Request) {
 	err := deduplicateOrganizationsOnNames(ctx, q)
 	if err != nil {
 		errorstring := fmt.Sprintf("Error deduping orgs: %v\n", err)
-		fmt.Println(errorstring)
+		log.Info(errorstring)
 		http.Error(w, errorstring, http.StatusInternalServerError)
 		return
 	}
@@ -121,7 +121,7 @@ func completeCleanDatabaseHandler(w http.ResponseWriter, r *http.Request) {
 	err = organizationsNameAsAlias(ctx, q)
 	if err != nil {
 		errorstring := fmt.Sprintf("Error ensuring organization aliases: %v\n", err)
-		fmt.Println(errorstring)
+		log.Info(errorstring)
 		http.Error(w, errorstring, http.StatusInternalServerError)
 		return
 	}

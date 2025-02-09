@@ -27,21 +27,21 @@ func ExtractRelaventEmailsFromOrgUUIDHandler(w http.ResponseWriter, r *http.Requ
 	org_uuid, err := uuid.Parse(org_uuid_str)
 	if err != nil {
 		errorstring := fmt.Sprintf("Error parsing org uuid: %v", err)
-		fmt.Println(errorstring)
+		log.Info(errorstring)
 		http.Error(w, errorstring, http.StatusBadRequest)
 		return
 	}
 	return_obj, err := ExtractRelaventEmailsFromOrgUUID(ctx, rag.DefaultBigLLMModel, org_uuid)
 	if err != nil {
 		errorstring := fmt.Sprintf("Error extracting emails from org uuid: %v", err)
-		fmt.Println(errorstring)
+		log.Info(errorstring)
 		http.Error(w, errorstring, http.StatusInternalServerError)
 		return
 	}
 	response, err := json.Marshal(return_obj)
 	if err != nil {
 		errorstring := fmt.Sprintf("Error marshaling return object: %v", err)
-		fmt.Println(errorstring)
+		log.Info(errorstring)
 		http.Error(w, errorstring, http.StatusInternalServerError)
 		return
 	}
