@@ -32,14 +32,14 @@ func ConversationVerifyHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, errorstring, http.StatusBadRequest)
 		return
 	}
-	// fmt.Printf("Unmarshaled request: %+v\n", req)
+	// log.Info(fmt.Sprintf("Unmarshaled request: %+v\n", req))
 
 	ctx := r.Context()
 	// ctx := context.Background()
 
 	q := *util.DBQueriesFromRequest(r)
 
-	// fmt.Printf("Calling verifyConversationUUID with req: %+v\n", req)
+	// log.Info(fmt.Sprintf("Calling verifyConversationUUID with req: %+v\n", req))
 	conversation_info, err := verifyConversationUUID(ctx, q, &req, true)
 	if err != nil {
 		errorstring := fmt.Sprintf("Error verifying conversation %v: %v\n", req.DocketGovID, err)
@@ -47,7 +47,7 @@ func ConversationVerifyHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, errorstring, http.StatusInternalServerError)
 		return
 	}
-	// fmt.Printf("verifyConversationUUID returned: %+v\n", conversation_info)
+	// log.Info(fmt.Sprintf("verifyConversationUUID returned: %+v\n", conversation_info))
 
 	// No error handling since we always want it to retun a 200 at this point.
 	response, _ := json.Marshal(conversation_info)
@@ -56,7 +56,7 @@ func ConversationVerifyHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func verifyConversationUUID(ctx context.Context, q dbstore.Queries, conv_info *conversations.ConversationInformation, update bool) (conversations.ConversationInformation, error) {
-	// fmt.Printf("Starting verifyConversationUUID with conv_info: %+v, update: %v\n", conv_info, update)
+	// log.Info(fmt.Sprintf("Starting verifyConversationUUID with conv_info: %+v, update: %v\n", conv_info, update))
 
 	if conv_info.ID != uuid.Nil && !update {
 		log.Info("Existing UUID found and no update requested, returning early")
@@ -67,13 +67,13 @@ func verifyConversationUUID(ctx context.Context, q dbstore.Queries, conv_info *c
 	// TODO: Change query to also match state if state exists
 	results, err := q.DocketConversationFetchByDocketIdMatch(ctx, conv_info.DocketGovID)
 	if err != nil {
-		fmt.Printf("Error fetching conversation by docket ID: %v\n", err)
+		log.Info(fmt.Sprintf("Error fetching conversation by docket ID: %v\n", err))
 		return *conv_info, err
 	}
 
 	// If conversation exists, return it
 	if len(results) > 0 {
-		fmt.Printf("Found existing conversation with %d results\n", len(results))
+		log.Info(fmt.Sprintf("Found existing conversation with %d results\n", len(results)))
 		conv := results[0]
 		conv_info.ID = conv.ID
 		if update {
@@ -93,7 +93,7 @@ func verifyConversationUUID(ctx context.Context, q dbstore.Queries, conv_info *c
 			}
 			q.DocketConversationUpdate(ctx, args)
 			if err != nil {
-				fmt.Printf("Error updating conversation: %v\n", err)
+				log.Info(fmt.Sprintf("Error updating conversation: %v\n", err))
 				return *conv_info, err
 			}
 			return *conv_info, nil

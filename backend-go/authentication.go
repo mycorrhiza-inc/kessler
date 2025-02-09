@@ -28,14 +28,14 @@ var SupabaseSecret = os.Getenv("SUPABASE_ANON_KEY")
 // 			decodedData, err := base64.URLEncoding.DecodeString(encodedData)
 // 			if err != nil {
 // 				// Json will catch if invalid
-// 				fmt.Printf("Error decoding base64 %v\n", err)
+// 				log.Info(fmt.Sprintf("Error decoding base64 %v\n", err))
 // 			}
 // 			stringData := string(decodedData)
 // 			// var tokenData AccessTokenData
 // 			// TODO : Fix horrible moneky wrench solution for decoding this with something not shit
 // 			// err = json.Unmarshal([]byte(string(decodedData)), &tokenData)
 // 			// if err != nil {
-// 			// 	fmt.Printf("Error unmarshalling %v\n", err)
+// 			// 	log.Info(fmt.Sprintf("Error unmarshalling %v\n", err))
 // 			// 	return UserValidation{validated: false}
 // 			// }
 // 			// token = fmt.Sprintf("Bearer %s", tokenData.AccessToken)
@@ -87,7 +87,7 @@ var SupabaseSecret = os.Getenv("SUPABASE_ANON_KEY")
 // 		parsedToken, err := jwt.Parse(tokenString, keyFunc)
 // 		// log.Info(parsedToken)
 // 		if err != nil {
-// 			fmt.Printf("Encountered error with token validation since that functionality hasnt been implemented yet, and the backend assumes every HMAC signature is valid, this is probably good to fix if we dont want to get royally screwed %v", err)
+// 			log.Info(fmt.Sprintf("Encountered error with token validation since that functionality hasnt been implemented yet, and the backend assumes every HMAC signature is valid, this is probably good to fix if we dont want to get royally screwed %v", err))
 // 			// FIXME : HIGHLY INSECURE, GET THE HMAC SECRET FROM SUPABASE AND THROW IT IN HERE AS AN NEV VARAIBLE.
 // 			// return UserValidation{validated: false}
 // 		}
@@ -118,7 +118,7 @@ var SupabaseSecret = os.Getenv("SUPABASE_ANON_KEY")
 // 			userInfo := tokenValidator(r)
 // 			if userInfo.validated {
 // 				r.Header.Set("Authorization", fmt.Sprintf("Authenticated %s", userInfo.userID))
-// 				// fmt.Printf("Authenticated Request for user %v\n", userInfo.userID)
+// 				// log.Info(fmt.Sprintf("Authenticated Request for user %v\n", userInfo.userID))
 // 				next.ServeHTTP(w, r)
 //
 // 			} else {

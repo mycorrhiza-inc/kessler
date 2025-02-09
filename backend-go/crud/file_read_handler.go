@@ -209,7 +209,7 @@ func ReadFileHandler(config FileHandlerConfig) http.HandlerFunc {
 		// 		http.Error(w, "Forbidden", http.StatusForbidden)
 		// 	}
 		// 	if err != nil {
-		// 		fmt.Printf("Ran into the follwing error with authentication $v", err)
+		// 		log.Info(fmt.Sprintf("Ran into the follwing error with authentication $v", err))
 		// 	}
 		// }
 		// Since all three of these methods share the same authentication and database connection prerecs
@@ -274,7 +274,7 @@ func ReadFileHandler(config FileHandlerConfig) http.HandlerFunc {
 			w.Header().Set("Content-Type", "application/json")
 			w.Write(response)
 		default:
-			fmt.Printf("Encountered unreachable code with file return type %v", return_type)
+			log.Info(fmt.Sprintf("Encountered unreachable code with file return type %v", return_type))
 			http.Error(w, "Congradulations for encountering unreachable code about support types!", http.StatusInternalServerError)
 		}
 	}

@@ -44,13 +44,13 @@ func HandleUnverifedCompleteFileSchemaList(w http.ResponseWriter, r *http.Reques
 
 func UnverifedCompleteFileSchemaRandomList(ctx context.Context, max_responses uint) ([]files.CompleteFileSchema, error) {
 	q := util.DBQueriesFromContext(ctx)
-	fmt.Printf("Getting %d unverified files\n", max_responses)
+	log.Info(fmt.Sprintf("Getting %d unverified files\n", max_responses))
 	db_files, err := q.FilesListUnverified(ctx, int32(max_responses)*2)
 	// If postgres return randomization doesnt work, then you can still get it to kinda work by returning double the results, randomizing and throwing away half.
 	if err != nil {
 		return []files.CompleteFileSchema{}, err
 	}
-	fmt.Printf("Got unverified files, randomizing uuids\n")
+	log.Info(fmt.Sprintf("Got unverified files, randomizing uuids\n"))
 	unverified_raw_uuids := make([]uuid.UUID, len(db_files))
 	for i, file := range db_files {
 		unverified_raw_uuids[i] = file.ID
@@ -92,14 +92,14 @@ func CompleteFileSchemasFromUUIDs(ctx context.Context, uuids []uuid.UUID) ([]fil
 			// elapsed := time.Since(start)
 			// TODO: Debug why these loading times are so fucking slow.
 			// if elapsed > 10*time.Second {
-			// 	fmt.Printf("Slow query for file %v, took %v seconds.\n", file_uuid, elapsed/time.Second)
+			// 	log.Info(fmt.Sprintf("Slow query for file %v, took %v seconds.\n", file_uuid, elapsed/time.Second))
 			// }
 			if err != nil {
-				fmt.Printf("Error getting file %v: %v\n", file_uuid, err)
+				log.Info(fmt.Sprintf("Error getting file %v: %v\n", file_uuid, err))
 				// errChan <- err
 				return
 			}
-			// fmt.Printf("Got complete file %v\n", file_uuid)
+			// log.Info(fmt.Sprintf("Got complete file %v\n", file_uuid))
 			fileChan <- complete_file
 		}(file_uuid, dbtx_val)
 	}
@@ -116,6 +116,6 @@ func CompleteFileSchemasFromUUIDs(ctx context.Context, uuids []uuid.UUID) ([]fil
 		complete_files = append(complete_files, file)
 	}
 	elapsed := time.Since(complete_start)
-	fmt.Printf("Got %d complete files in %v\n", len(complete_files), elapsed)
+	log.Info(fmt.Sprintf("Got %d complete files in %v\n", len(complete_files), elapsed))
 	return complete_files, nil
 }

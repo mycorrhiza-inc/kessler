@@ -53,7 +53,7 @@ func upsertFileMetadata(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UU
 	// UPDATE: I am pretty sure I solved it this should be safe to take out soon - nic
 	insert = false
 	metadata["id"] = doc_uuid.String()
-	// fmt.Printf("Is it the json marshall?\n")
+	// log.Info(fmt.Sprintf("Is it the json marshall?\n"))
 
 	json_obj, err := json.Marshal(metadata)
 	if err != nil {
@@ -64,10 +64,10 @@ func upsertFileMetadata(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UU
 		Valid: true,
 	}
 
-	// fmt.Printf("Wasnt it, is it any of the db operations?\n")
+	// log.Info(fmt.Sprintf("Wasnt it, is it any of the db operations?\n"))
 	if !insert {
 		args := dbstore.UpdateMetadataParams{ID: doc_uuid, Isprivate: pgPrivate, Mdata: json_obj}
-		// fmt.Printf("Defined args successfully\n")
+		// log.Info(fmt.Sprintf("Defined args successfully\n"))
 		_, err = q.UpdateMetadata(ctx, args)
 		// If encounter a not found error, break error handling control flow and inserting the file metadata.
 		if err == nil {
@@ -77,10 +77,10 @@ func upsertFileMetadata(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UU
 			return err
 		}
 	}
-	// fmt.Printf("Failed and trying to insert metadta instead")
+	// log.Info(fmt.Sprintf("Failed and trying to insert metadta instead"))
 	insert_args := dbstore.InsertMetadataParams{ID: doc_uuid, Isprivate: pgPrivate, Mdata: json_obj}
 	_, err = q.InsertMetadata(ctx, insert_args)
-	// fmt.Printf("What the actual fuck is going on?")
+	// log.Info(fmt.Sprintf("What the actual fuck is going on?"))
 	return err
 }
 

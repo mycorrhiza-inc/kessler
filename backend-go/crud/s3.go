@@ -97,14 +97,14 @@ func (manager *KesslerFileManager) pushFileToS3GivenHash(filePath, hash string) 
 func (manager *KesslerFileManager) downloadFileFromS3(hash string) (string, error) {
 	// listInput := s3.ListObjectsInput{Bucket: aws.String(manager.S3Bucket)}
 	// result, err := manager.S3Client.ListObjects(&listInput)
-	// fmt.Printf("result: %v\nerror: %v\n", result, err)
+	// log.Info(fmt.Sprintf("result: %v\nerror: %v\n", result, err))
 
 	localFilePath := filepath.Join("/", manager.RawDir, hash)
 	if _, err := os.Stat(localFilePath); err == nil {
 		return localFilePath, nil
 	}
 	fileKey := manager.getS3KeyFromHash(hash)
-	fmt.Printf("Attempting to download %s from s3 bucket %s\n", fileKey, manager.S3Bucket)
+	log.Info(fmt.Sprintf("Attempting to download %s from s3 bucket %s\n", fileKey, manager.S3Bucket))
 	result_s3, err := manager.S3Client.GetObject(&s3.GetObjectInput{
 		Bucket: aws.String(manager.S3Bucket),
 		Key:    aws.String(fileKey),
@@ -112,7 +112,7 @@ func (manager *KesslerFileManager) downloadFileFromS3(hash string) (string, erro
 	if err != nil {
 		return "", err
 	}
-	fmt.Printf("Got file from s3 successfully\n")
+	log.Info(fmt.Sprintf("Got file from s3 successfully\n"))
 	var body io.ReadCloser = result_s3.Body
 	defer body.Close()
 
@@ -126,7 +126,7 @@ func (manager *KesslerFileManager) downloadFileFromS3(hash string) (string, erro
 	if err != nil {
 		return "", err
 	}
-	fmt.Printf("Created local file successfully\n")
+	log.Info(fmt.Sprintf("Created local file successfully\n"))
 	defer out.Close()
 
 	// Copy the body to the file
@@ -134,6 +134,6 @@ func (manager *KesslerFileManager) downloadFileFromS3(hash string) (string, erro
 	if err != nil {
 		return "", err
 	}
-	fmt.Printf("Copied file successfully\n")
+	log.Info(fmt.Sprintf("Copied file successfully\n"))
 	return localFilePath, nil
 }

@@ -68,14 +68,14 @@ func IngestIntoIndex[V GenericQuickwitSearchSchema](indexName string, data []V, 
 	if err != nil && err.Error() != "EOF" {
 		return fmt.Errorf("Error reading response body: %v", err)
 	}
-	fmt.Printf("Tail response (first %d chars): %s\n", n, string(body[:n]))
+	log.Info(fmt.Sprintf("Tail response (first %d chars): %s\n", n, string(body[:n])))
 
 	body = make([]byte, 1000)
 	n, err = resp.Body.Read(body)
 	if err != nil && err.Error() != "EOF" {
 		return fmt.Errorf("Error reading response body: %v", err)
 	}
-	fmt.Printf("Describe response (first %d chars): %s\n", n, string(body[:n]))
+	log.Info(fmt.Sprintf("Describe response (first %d chars): %s\n", n, string(body[:n])))
 
 	return nil
 }
@@ -103,14 +103,14 @@ func IngestMinimalIntoQuickwit[V GenericQuickwitSearchSchema](indexName string, 
 		// Marshal the modified map into a JSON string
 		jsonStr, err := json.Marshal(recordMap)
 		if err != nil {
-			fmt.Printf("error marshaling modified record: %v\n", err)
+			log.Info(fmt.Sprintf("error marshaling modified record: %v\n", err))
 			return fmt.Errorf("error marshaling modified record: %v", err)
 		}
 		records = append(records, string(jsonStr))
 	}
 
 	dataToPost := strings.Join(records, "\n")
-	fmt.Printf("Ingesting %d data entries into quickwit index:\"%v\" \n", len(records), indexName)
+	log.Info(fmt.Sprintf("Ingesting %d data entries into quickwit index:\"%v\" \n", len(records), indexName))
 	resp, err := http.Post(
 		fmt.Sprintf("%s/api/v1/%s/ingest?commit=force", quickwitEndpoint, indexName),
 		"application/x-ndjson",
@@ -121,7 +121,7 @@ func IngestMinimalIntoQuickwit[V GenericQuickwitSearchSchema](indexName string, 
 		return fmt.Errorf("error submitting data to quickwit: %v", err)
 	}
 	if resp.StatusCode != http.StatusOK {
-		fmt.Printf("Encountered bad response code: %v\n", resp.StatusCode)
+		log.Info(fmt.Sprintf("Encountered bad response code: %v\n", resp.StatusCode))
 		return fmt.Errorf("Ingesting data into quickwit gave bad response code: %v\n", resp.StatusCode)
 	}
 	printResponse(resp)

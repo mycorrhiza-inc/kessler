@@ -29,10 +29,10 @@ func HybridSearch(request SearchRequest) ([]SearchDataHydrated, error) {
 	resultsMilvus := <-chanMilvus
 	resultsQuickwit := <-chanQuickwit
 	if resultsMilvus.Error == nil {
-		fmt.Printf("Milvus returned error: %s", resultsMilvus.Error)
+		log.Info(fmt.Sprintf("Milvus returned error: %s", resultsMilvus.Error))
 	}
 	if resultsQuickwit.Error == nil {
-		fmt.Printf("Quickwit returned error: %s", resultsQuickwit.Error)
+		log.Info(fmt.Sprintf("Quickwit returned error: %s", resultsQuickwit.Error))
 	}
 	if resultsMilvus.Error != nil && resultsQuickwit.Error != nil {
 		return []SearchDataHydrated{}, fmt.Errorf("both Milvus and Quickwit returned errors. milvus error: %s quickwit error: %s", resultsMilvus.Error, resultsQuickwit.Error)

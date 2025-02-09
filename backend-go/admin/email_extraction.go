@@ -151,7 +151,7 @@ func ExtractRelaventEmailsFromOrgUUID(ctx context.Context, llm rag.LLM, org_id u
 
 			emails, err := ExtractRelaventEmailsFromFileUUID(ctx, localQ, llm, fileObj.ID)
 			if err != nil {
-				fmt.Printf("Encountered error getting emails from file with uuid: %v: %v\n", fileObj.ID, err)
+				log.Info(fmt.Sprintf("Encountered error getting emails from file with uuid: %v: %v\n", fileObj.ID, err))
 			}
 
 			select {

@@ -120,7 +120,7 @@ func fileAuthorsUpsert(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUI
 	for _, author_info := range authors_info {
 		err := fileAuthorInsert(author_info)
 		if err != nil {
-			fmt.Printf("Encountered error while inserting author for document %s, ignoring and continuing: %v", doc_uuid, err)
+			log.Info(fmt.Sprintf("Encountered error while inserting author for document %s, ignoring and continuing: %v", doc_uuid, err))
 		}
 	}
 

@@ -98,7 +98,7 @@ func makeFileUpsertHandler(config FileUpsertHandlerConfig) func(w http.ResponseW
 			if len(ids) > 0 {
 				id := ids[0]
 				if len(ids) > 1 {
-					fmt.Printf("More than one document with this hash, this shouldnt happen, continuing deduplication with id: %s\n", id)
+					log.Info(fmt.Sprintf("More than one document with this hash, this shouldnt happen, continuing deduplication with id: %s\n", id))
 				}
 				insert = false
 				doc_uuid = id
@@ -112,7 +112,7 @@ func makeFileUpsertHandler(config FileUpsertHandlerConfig) func(w http.ResponseW
 		rawFileCreationData.Verified = pgtype.Bool{Bool: false, Valid: true}
 		var fileSchema files.FileSchema
 		// TODO : For print debugging only, might be a good idea to put these in a deubug logger with lowest priority??
-		fmt.Printf("Inserting document with uuid: %s\n", doc_uuid)
+		log.Info(fmt.Sprintf("Inserting document with uuid: %s\n", doc_uuid))
 		if insert {
 			fileSchema, err = files.InsertPubPrivateFileObj(q, ctx, rawFileCreationData, private)
 		} else {
@@ -144,7 +144,7 @@ func makeFileUpsertHandler(config FileUpsertHandlerConfig) func(w http.ResponseW
 		db_error_string := ""
 
 		// TODO : For print debugging only, might be a good idea to put these in a deubug logger with lowest priority??
-		fmt.Printf("Attempting to insert all file extras, texts, metadata for uuid: %s\n", doc_uuid)
+		log.Info(fmt.Sprintf("Attempting to insert all file extras, texts, metadata for uuid: %s\n", doc_uuid))
 		if err := upsertFileTexts(ctx, q, doc_uuid, newDocInfo.DocTexts, insert); err != nil {
 			errorstring := fmt.Sprintf("Error in upsertFileTexts: %v", err)
 			log.Info(errorstring)
@@ -152,9 +152,9 @@ func makeFileUpsertHandler(config FileUpsertHandlerConfig) func(w http.ResponseW
 			db_error_string = db_error_string + errorstring + "\n"
 		}
 
-		// fmt.Printf("Starting upsertFileMetadata for uuid: %s\n", doc_uuid)
+		// log.Info(fmt.Sprintf("Starting upsertFileMetadata for uuid: %s\n", doc_uuid))
 		if err := upsertFileMetadata(ctx, q, doc_uuid, newDocInfo.Mdata, insert); err != nil {
-			fmt.Printf("Is it getting past the if block?")
+			log.Info(fmt.Sprintf("Is it getting past the if block?"))
 			errorstring := fmt.Sprintf("Error in upsertFileMetadata: %v", err)
 			log.Info(errorstring)
 			has_db_errored = true
@@ -168,7 +168,7 @@ func makeFileUpsertHandler(config FileUpsertHandlerConfig) func(w http.ResponseW
 			db_error_string = db_error_string + errorstring + "\n"
 		}
 
-		// fmt.Printf("Starting fileAuthorsUpsert for uuid: %s\n", doc_uuid)
+		// log.Info(fmt.Sprintf("Starting fileAuthorsUpsert for uuid: %s\n", doc_uuid))
 		if err := fileAuthorsUpsert(ctx, q, doc_uuid, newDocInfo.Authors, insert); err != nil {
 			errorstring := fmt.Sprintf("Error in fileAuthorsUpsert: %v", err)
 			log.Info(errorstring)
@@ -182,7 +182,7 @@ func makeFileUpsertHandler(config FileUpsertHandlerConfig) func(w http.ResponseW
 			db_error_string = db_error_string + errorstring + "\n"
 		}
 
-		// fmt.Printf("Starting juristictionFileUpsert for uuid: %s\n", doc_uuid)
+		// log.Info(fmt.Sprintf("Starting juristictionFileUpsert for uuid: %s\n", doc_uuid))
 		// This doesnt do anything for the time being, so its better to exclude imho
 		// if err := juristictionFileUpsert(ctx, q, doc_uuid, newDocInfo.Juristiction, insert); err != nil {
 		// 	errorstring := fmt.Sprintf("Error in juristictionFileUpsert: %v", err)
@@ -216,7 +216,7 @@ func makeFileUpsertHandler(config FileUpsertHandlerConfig) func(w http.ResponseW
 		}
 
 		// TODO : For print debugging only, might be a good idea to put these in a deubug logger with lowest priority??
-		fmt.Printf("Completed all DB Operations for uuid, returning schema: %s\n", doc_uuid)
+		log.Info(fmt.Sprintf("Completed all DB Operations for uuid, returning schema: %s\n", doc_uuid))
 
 		response, err := json.Marshal(newDocInfo)
 		if err != nil {

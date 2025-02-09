@@ -72,7 +72,7 @@ func (s SearchData) String() string {
 }
 
 func SearchQuickwit(r SearchRequest) ([]SearchDataHydrated, error) {
-	fmt.Printf("searching quickwit:\n%s", r)
+	log.Info(fmt.Sprintf("searching quickwit:\n%s", r))
 	r.Index = "NY_PUC"
 	search_index := r.Index
 	// ===== construct search request =====
@@ -131,7 +131,7 @@ func SearchQuickwit(r SearchRequest) ([]SearchDataHydrated, error) {
 	var searchResponse quickwitSearchResponse
 	err = json.NewDecoder(bytes.NewReader(return_bytes)).Decode(&searchResponse)
 	if err != nil {
-		fmt.Printf("quickwit response: %v\n", return_bytes)
+		log.Info(fmt.Sprintf("quickwit response: %v\n", return_bytes))
 		errorstring := fmt.Sprintf("Error decoding JSON: %v\n Offending json looked like: %v", err, string(return_bytes))
 		return []SearchDataHydrated{}, fmt.Errorf(errorstring)
 	}

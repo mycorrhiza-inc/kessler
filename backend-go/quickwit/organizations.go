@@ -98,7 +98,7 @@ func ReindexAllOrganizations(ctx context.Context, q dbstore.Queries, indexName s
 		// TODO: Cache PG query to get aliases and number of documents for each org.
 		// complete_org, err := crud.OrgWithFilesGetByID(ctx, &q, org.ID)
 		if err != nil {
-			fmt.Printf("Error getting org with files: %v\n", err)
+			log.Info(fmt.Sprintf("Error getting org with files: %v\n", err))
 		}
 		quickwitOrgs[i] = organizations.OrganizationQuickwitSchema{
 			ID:                 org.ID,

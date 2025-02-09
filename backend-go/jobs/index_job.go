@@ -54,7 +54,7 @@ func (j *IndexJob) SaveStateToDisk() error {
 		return err
 	}
 
-	fmt.Printf("Worker %s: state saved to %s\n", j.Id, fileName)
+	log.Info(fmt.Sprintf("Worker %s: state saved to %s\n", j.Id, fileName))
 	return nil
 }
 
@@ -75,7 +75,7 @@ func (j *IndexJob) LoadStateFromDisk() error {
 	j.Status = state.Status
 	j.JobLog = state.JobLog
 
-	fmt.Printf("Worker %s: state loaded from %s\n", j.Id, fileName)
+	log.Info(fmt.Sprintf("Worker %s: state loaded from %s\n", j.Id, fileName))
 	return nil
 }
 
