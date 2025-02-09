@@ -59,7 +59,7 @@ services:
       - "traefik.http.routers.go-backend.rule=PathPrefix(`/v2`)"
       - "traefik.http.middlewares.test-stripprefix.stripprefix.prefixes=/v2"
   vector:
-    image: timberio/vector:latest
+    image: timberio/vector:latest-alpine
     volumes:
       - ./vector.toml:/etc/vector/vector.toml
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
