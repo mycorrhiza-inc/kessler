@@ -8,9 +8,18 @@
   # Add any generators if needed
 
 [sinks.otlp_sink]
-  type = "otlp"
-  protocol = "grpc"
-  endpoint = "logging-nixos-docker.tail4a273.ts.net:4317"
+  type = "opentelemetry"
+  endpoint = "
+		protocol:
+			type: http
+			uri: "http://logging-nixos-docker.tail4a273.ts.net:4318/v1/logs"
+			method: post
+			encoding:
+				codec: json
+			framing:
+				method: newline_delimited
+			headers:
+				content-type: application/json
 
   # Optional: Authentication and other settings
   # insecure = true
