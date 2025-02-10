@@ -8,10 +8,9 @@ import Link from "next/link";
 
 interface LayoutProps {
   children: ReactNode;
-  breadcrumbs: BreadcrumbValues;
 }
 
-export default function Layout({ children, breadcrumbs }: LayoutProps) {
+export default function Layout({ children }: LayoutProps) {
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [isSidebarPinned, setIsSidebarPinned] = useState(true);
   const [sidebarWidth, setSidebarWidth] = useState(200); // 16 * 16 = 256px (w-64)
@@ -42,4 +41,3 @@ export default function Layout({ children, breadcrumbs }: LayoutProps) {
     </>
   );
 }
-
