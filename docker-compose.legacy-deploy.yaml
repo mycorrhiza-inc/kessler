@@ -21,7 +21,7 @@ services:
     volumes:
       - "${VOLUMES_DIRECTORY:-./volumes}/letsencrypt:/letsencrypt"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
-      - "./traefik_dynamic.yaml:/etc/traefik/traefik_dynamic.yaml:ro"
+      # - "./traefik_dynamic.yaml:/etc/traefik/traefik_dynamic.yaml:ro"
   frontend:
     image: fractalhuman1/kessler-frontend:latest
     env_file:
