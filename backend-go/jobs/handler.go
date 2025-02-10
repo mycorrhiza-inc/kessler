@@ -21,10 +21,6 @@ func DefineJobRoutes(parent_router *mux.Router) {
 		CreateOrganizationIndexJobHandler,
 	).Methods(http.MethodGet)
 	parent_router.HandleFunc(
-		"/index/create/files",
-		CreateFileIndexJobHandler,
-	).Methods(http.MethodGet)
-	parent_router.HandleFunc(
 		"/index/repopulate/conversations",
 		IndexAllDocketsHandler,
 	).Methods(http.MethodGet)
@@ -33,8 +29,20 @@ func DefineJobRoutes(parent_router *mux.Router) {
 		IndexAllOrganizationsHandler,
 	).Methods(http.MethodGet)
 	parent_router.HandleFunc(
+		"/index/create/files",
+		CreateFileIndexJobHandlerFactory(false),
+	).Methods(http.MethodGet)
+	parent_router.HandleFunc(
 		"/index/repopulate/files",
-		HandleQuickwitFileIngestFromPostgres,
+		HandleQuickwitFileIngestFromPostgresFactory(false),
+	).Methods(http.MethodGet)
+	parent_router.HandleFunc(
+		"/index/create/files/test",
+		CreateFileIndexJobHandlerFactory(true),
+	).Methods(http.MethodGet)
+	parent_router.HandleFunc(
+		"/index/repopulate/files/test",
+		HandleQuickwitFileIngestFromPostgresFactory(true),
 	).Methods(http.MethodGet)
 
 	// 	job_subrouter.HandleFunc(
@@ -85,17 +93,24 @@ func CreateOrganizationIndexJobHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Organization index being created"))
 }
 
-func CreateFileIndexJobHandler(w http.ResponseWriter, r *http.Request) {
-	// ctx := r.Context()
-	err := quickwit.CreateQuickwitNYFileIndex("") // Empty index name defaults to the production quickwit index
-	if err != nil {
-		errorstring := fmt.Sprintf("Error creating quickwit index: %v", err)
-		log.Info(errorstring)
-		http.Error(w, errorstring, http.StatusInternalServerError)
-		return
+func CreateFileIndexJobHandlerFactory(isTest bool) func(http.ResponseWriter,
+	*http.Request) {
+	indexName := quickwit.NYPUCIndex
+	if isTest {
+		indexName = quickwit.TestNYPUCIndex
 	}
+	return func(w http.ResponseWriter, r *http.Request) {
+		// ctx := r.Context()
+		err := quickwit.CreateQuickwitNYFileIndex(indexName) // Empty index name defaults to the production quickwit index
+		if err != nil {
+			errorstring := fmt.Sprintf("Error creating quickwit index: %v", err)
+			log.Info(errorstring)
+			http.Error(w, errorstring, http.StatusInternalServerError)
+			return
+		}
 
-	w.Write([]byte("Organization index being created"))
+		w.Write([]byte("Organization index being created"))
+	}
 }
 
 func IndexAllDocketsHandler(w http.ResponseWriter, r *http.Request) {

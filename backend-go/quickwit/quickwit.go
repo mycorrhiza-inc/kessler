@@ -124,7 +124,7 @@ func ResolveFileSchemaForDocketIngest(complete_files []files.CompleteFileSchema)
 		metadata["conversation_uuid"] = input_file.Conversation.ID.String()
 		author_uuids := make([]string, len(input_file.Authors))
 		if len(input_file.Authors) == 0 {
-			log.Info(fmt.Sprintf("No authors found in file: %v\n", input_file.ID))
+			log.Info("No authors found in file:", "file_id", input_file.ID)
 		}
 		for i, author := range input_file.Authors {
 			author_uuids[i] = author.AuthorID.String()

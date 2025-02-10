@@ -18,36 +18,43 @@ import (
 	"github.com/google/uuid"
 )
 
-func HandleQuickwitFileIngestFromPostgres(w http.ResponseWriter, r *http.Request) {
-	// ctx := context.Background()
-	ctx := util.CreateDBContextWithTimeout(time.Minute*90, 5)
-	q := util.DBQueriesFromContext(ctx)
-	include_unverified := r.URL.Query().Get("include_unverified") == "true"
-	filter_out_unverified := !include_unverified
-
-	log.Info(fmt.Sprintf("Starting Quickwit ingest from Postgres (filter_out_unverified=%v)\n", filter_out_unverified))
-
-	err := QuickwitIngestFromPostgres(q, ctx, filter_out_unverified)
-	if err != nil {
-		errorstring := fmt.Sprintf("Error ingesting from postgres: %v", err)
-		log.Info(errorstring)
-		http.Error(w, errorstring, http.StatusInternalServerError)
-		return
+func HandleQuickwitFileIngestFromPostgresFactory(isTest bool) func(http.ResponseWriter,
+	*http.Request) {
+	indexName := quickwit.NYPUCIndex
+	if isTest {
+		indexName = quickwit.TestNYPUCIndex
 	}
-	log.Info("Successfully completed Quickwit ingest from Postgres")
-	w.Write([]byte("Sucessfully ingested from postgres"))
+	return func(w http.ResponseWriter, r *http.Request) {
+		// ctx := context.Background()
+		ctx := util.CreateDBContextWithTimeout(time.Minute*90, 5)
+		q := util.DBQueriesFromContext(ctx)
+		include_unverified := r.URL.Query().Get("include_unverified") == "true"
+		filter_out_unverified := !include_unverified
+
+		log.Info(fmt.Sprintf("Starting Quickwit ingest from Postgres (filter_out_unverified=%v)\n", filter_out_unverified))
+
+		err := QuickwitIngestFromPostgres(q, ctx, filter_out_unverified, indexName)
+		if err != nil {
+			errorstring := fmt.Sprintf("Error ingesting from postgres: %v", err)
+			log.Info(errorstring)
+			http.Error(w, errorstring, http.StatusInternalServerError)
+			return
+		}
+		log.Info("Successfully completed Quickwit ingest from Postgres")
+		w.Write([]byte("Sucessfully ingested from postgres"))
+	}
 }
 
-func parsePrimativeAuthorSchema(author_schemas []byte) []authors.AuthorInformation {
+func parsePrimativeAuthorSchema(author_schemas []byte) ([]authors.AuthorInformation, error) {
 	type SimpleAuthorSchema struct {
 		ID       uuid.UUID `json:"id"`
 		Name     string    `json:"name"`
 		IsPerson bool      `json:"is_person"`
 	}
 	var simple_schemas []SimpleAuthorSchema
-	err := json.Unmarshal(author_schemas, simple_schemas)
+	err := json.Unmarshal(author_schemas, &simple_schemas)
 	if err != nil {
-		return []authors.AuthorInformation{}
+		return []authors.AuthorInformation{}, err
 	}
 	return_schemas := make([]authors.AuthorInformation, len(simple_schemas))
 	for index, simple_schema := range simple_schemas {
@@ -57,7 +64,7 @@ func parsePrimativeAuthorSchema(author_schemas []byte) []authors.AuthorInformati
 			IsPerson:   simple_schema.IsPerson,
 		}
 	}
-	return return_schemas
+	return return_schemas, nil
 }
 
 func ParseQuickwitFileIntoCompleteSchema(file_raw dbstore.Testmat) (files.CompleteFileSchema, error) {
@@ -69,10 +76,14 @@ func ParseQuickwitFileIntoCompleteSchema(file_raw dbstore.Testmat) (files.Comple
 	var extra_obj files.FileGeneratedExtras
 	err = json.Unmarshal(file_raw.Mdata, &extra_obj)
 	if err != nil {
-		log.Info(fmt.Sprintf("encountered error decoding extras for file: %v\n", file_raw.ID))
+		log.Info("encountered error decoding extras for file", "file_id", file_raw.ID)
 		// return files.CompleteFileSchema{}, err
 	}
-	author_list := parsePrimativeAuthorSchema(file_raw.Organizations)
+	author_list, err := parsePrimativeAuthorSchema(file_raw.Organizations)
+	if err != nil {
+		log.Info("encountered error decoding author list for file", "file_id", file_raw.ID)
+		// return files.CompleteFileSchema{}, err
+	}
 	text_list := []files.FileChildTextSource{
 		{
 			IsOriginalText: false,
@@ -103,14 +114,18 @@ func ParseQuickwitFileIntoCompleteSchema(file_raw dbstore.Testmat) (files.Comple
 	return file, nil
 }
 
-func QuickwitIngestFromPostgres(q *dbstore.Queries, ctx context.Context, filter_out_unverified bool) error {
-	indexName := quickwit.NYPUCIndexName
+func QuickwitIngestFromPostgres(q *dbstore.Queries, ctx context.Context, filter_out_unverified bool, indexName string) error {
 	var files_raw []dbstore.Testmat
 
 	page_size := 1000
 
 	// Currently this encounters a hard cap at 10,000,000 files, so this should almost certainly be changed then. But at 1 second per request the ingest job should take 3 hours. So refactoring will be required.
-	for page := range 10000 {
+	cap := 10000
+	if indexName == quickwit.TestNYPUCIndex {
+		cap = 3
+	}
+
+	for page := range cap {
 		// for page := range 3 {
 		pagination_params := dbstore.FilePrecomputedQuickwitListGetPaginatedParams{Limit: int32(page_size), Offset: int32(page * page_size)}
 		temporary_file_results, err := q.FilePrecomputedQuickwitListGetPaginated(ctx, pagination_params)

@@ -17,3 +17,9 @@ var (
 	NYConversationIndex = "NY_Conversations"
 	NYOrganizationIndex = "NY_Organizations"
 )
+
+var (
+	TestNYPUCIndex          = "TEST_NY_PUC"
+	TestNYConversationIndex = "TEST_NY_Conversations"
+	TestNYOrganizationIndex = "TEST_NY_Organizations"
+)

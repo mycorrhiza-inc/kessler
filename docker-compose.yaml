@@ -57,10 +57,10 @@ services:
       - "traefik.namespace=kessler"
       - "traefik.http.routers.go-backend.rule=PathPrefix(`/v2`)"
       - "traefik.http.middlewares.test-stripprefix.stripprefix.prefixes=/v2"
-  vector:
-    image: timberio/vector:latest-alpine
-    volumes:
-      - ./vector.yaml:/etc/vector/vector.yaml
-      - /var/run/docker.sock:/var/run/docker.sock
-    command: --config /etc/vector/vector.yaml
-    restart: unless-stopped
+  # vector:
+  #   image: timberio/vector:latest-alpine
+  #   volumes:
+  #     - ./vector.yaml:/etc/vector/vector.yaml
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #   command: --config /etc/vector/vector.yaml
+  #   restart: unless-stopped
