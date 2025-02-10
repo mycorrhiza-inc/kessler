@@ -94,8 +94,10 @@ const ConversationTable = ({
             // const formattedDate = new Date(
             //   convo.date_published,
             // ).toLocaleDateString();
+            // I apologize for my sins, we were under constraints
 
-            const formattedDate = JSON.parse(convo.metadata)["date_filed"];
+            const hackDate = JSON.parse(convo.metadata)["date_filed"];
+            const hackMatterType = JSON.parse(convo.metadata)["matter_type"];
 
             return (
               <tr
@@ -106,9 +108,9 @@ const ConversationTable = ({
                 }}
               >
                 <td className="w-[60%] px-4 py-3">{convo.name}</td>
-                <td className="w-[10%] px-4 py-3">{formattedDate}</td>
+                <td className="w-[10%] px-4 py-3">{hackDate}</td>
                 <td className="w-[10%] px-4 py-3">{convo.docket_gov_id}</td>
-                <td className="w-[10%] px-4 py-3">{convo.matter_type}</td>
+                <td className="w-[10%] px-4 py-3">{hackMatterType}</td>
                 {state && <td className="w-[10%] px-4 py-3">{convo.state}</td>}
                 <td className="w-[10%] px-4 py-3">
                   {convo.industry_type && (
