@@ -14,8 +14,8 @@ const AuthorColumn = ({ filing }: { filing: Filing }) => {
     <>
       {filing.authors_information
         ? filing.authors_information.map((auth_info: AuthorInformation) => (
-            <AuthorInfoPill author_info={auth_info} />
-          ))
+          <AuthorInfoPill author_info={auth_info} />
+        ))
         : filing.author + " Something isnt working"}
     </>
   );
@@ -24,11 +24,9 @@ const AuthorColumn = ({ filing }: { filing: Filing }) => {
 const TableRow = ({
   filing,
   DocketColumn,
-  header,
 }: {
   filing: Filing;
   DocketColumn?: boolean;
-  header?: boolean;
 }) => {
   const [open, setOpen] = useState(false);
   const handleRowClick = (event: React.MouseEvent<HTMLTableRowElement>) => {
@@ -104,6 +102,7 @@ export const FilingTable = ({
   PinTableHeader?: boolean;
 }) => {
   // const pinClassName = PinTableHeader ? "table-pin-rows" : "";
+
   return (
     <div
       className={
