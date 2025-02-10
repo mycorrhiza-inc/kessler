@@ -5,24 +5,31 @@ import { Code, Database, FileText, Menu, Settings } from "lucide-react";
 import { GiMushroomsCluster } from "react-icons/gi";
 import { BsArrowBarLeft, BsArrowBarRight } from "react-icons/bs";
 import Link from "next/link";
-import { IoHomeSharp, IoDocument } from "react-icons/io5";
+import { IoHomeSharp, IoDocument, IoSettingsSharp } from "react-icons/io5";
 import { FaRectangleList, FaUserGroup } from "react-icons/fa6";
+import { useKesslerStore } from "@/lib/store";
+import { AngleDownIcon, HamburgerIcon, UserIcon } from "@/components/Icons";
+import Modal from "@/components/styled-components/Modal";
+import SettingsContent from "@/components/SettingsContent";
 
 
 interface SidebarButtonProps {
   icon?: React.ElementType;
   label: string;
-  href: string;
+  onClick?: () => void;
+  href?: string;
 }
 
 const SidebarLink: React.FC<SidebarButtonProps> = ({
   icon: Icon,
   label,
+  onClick,
   href,
 }) => (
   <Link
     className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-base-700 dark:text-base-300 hover:bg-base-300 dark:hover:bg-base-800 rounded"
-    href={href}
+    href={href ? href : ""}
+    onClick={onClick ? onClick : undefined}
   >
     {Icon && <Icon size={16} />}
     <span>{label}</span>
@@ -47,6 +54,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   onResize,
 }) => {
   const [isResizing, setIsResizing] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  // const globalStore = useKesslerStore();
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -102,6 +111,8 @@ const Sidebar: React.FC<SidebarProps> = ({
             <Menu size={24} />
           </button>
         )}
+        <div className="flex gap-2">
+        </div>
       </div>
 
       {/* Sidebar Content */}
@@ -124,6 +135,8 @@ const Sidebar: React.FC<SidebarProps> = ({
                 <SidebarLink icon={FaRectangleList} href="/dockets" label="Dockets" />
                 <SidebarLink icon={FaUserGroup} href="/orgs" label="Organizations" />
                 <SidebarLink icon={IoDocument} href="/files" label="All Files" />
+                <SidebarLink icon={IoSettingsSharp} label="Settings" onClick={() => setSettingsOpen((prev) => !prev)}
+                />
                 {/* <SidebarLink icon={Code} label="Query editor" />
                   <SidebarLink icon={Code} label="Query editor" />
                   <SidebarLink icon={Code} label="Query editor" />
@@ -148,6 +161,17 @@ const Sidebar: React.FC<SidebarProps> = ({
             </nav>
           </div>
         </div>
+        <div
+          tabIndex={0}
+          role="button"
+          className="btn btn-primary rounded-btn"
+          onClick={() => setSettingsOpen((prev) => !prev)}
+        >
+          <UserIcon />
+        </div>
+        <Modal open={settingsOpen} setOpen={setSettingsOpen}>
+          <SettingsContent />
+        </Modal>
 
         {/* Resize Handle */}
         <div

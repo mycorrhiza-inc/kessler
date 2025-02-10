@@ -22,7 +22,7 @@ export default function Header({
         <HeaderBreadcrumbs breadcrumbs={breadcrumbs} />
       </div>
       <div className="flex-none">
-        <HeaderAuth>{children}</HeaderAuth>
+        {/* <HeaderAuth>{children}</HeaderAuth> */}
       </div>
     </div>
   );
