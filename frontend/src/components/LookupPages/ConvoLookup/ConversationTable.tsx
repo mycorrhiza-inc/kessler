@@ -6,6 +6,8 @@ import LoadingSpinnerTimeout from "../../styled-components/LoadingSpinnerTimeout
 import { useRouter } from "next/navigation";
 import { getRuntimeEnv } from "@/lib/env_variables_hydration_script";
 import { TextPill } from "@/components/Tables/TextPills";
+import clsx from "clsx";
+import { TableStyled } from "@/components/styled-components/TableStyled";
 
 export type ConversationSearchSchema = {
   query?: string;
@@ -61,24 +63,22 @@ type ConversationTableSchema = {
 const ConversationTable = ({
   truncate,
   convoList,
-  state
+  state,
 }: {
   truncate?: boolean;
-  state?: boolean;  
+  state?: boolean;
   convoList: ConversationTableSchema[];
 }) => {
   const router = useRouter();
   return (
-    <table className="table z-1">
-      {/* disable pinned rows due to the top row overlaying the filter sidebar */}
-      <thead>
-        <tr>
+    <TableStyled
+      header_row_content={
+        <>
           <td className="w-[30%]">Name</td>
           <td className="w-[10%]">Date Published</td>
           <td className="w-[10%]">ID</td>
           <td className="w-[10%]">Matter Type</td>
-          {state && (<td className="w-[10%]">State</td>
-)}
+          {state && <td className="w-[10%]">State</td>}
           <td className="w-[10%]">Industry</td>
           {!truncate && (
             <>
@@ -86,43 +86,48 @@ const ConversationTable = ({
               <td className="w-[10%]">Document Count</td>
             </>
           )}
-        </tr>
-      </thead>
+        </>
+      }
+      table_content={
+        <>
+          {convoList.map((convo: ConversationTableSchema) => {
+            const formattedDate = new Date(
+              convo.date_published,
+            ).toLocaleDateString();
 
-      <tbody>
-        {convoList.map((convo: ConversationTableSchema) => {
-          const formattedDate = new Date(
-            convo.date_published,
-          ).toLocaleDateString();
+            return (
+              <tr
+                key={convo.docket_gov_id}
+                className="border-base-300 hover:bg-base-200 transition duration-500 ease-out cursor-pointer"
+                onClick={() => {
+                  router.push(`/dockets/${convo.docket_gov_id}`);
+                }}
+              >
+                <td className="w-[60%] px-4 py-3">{convo.name}</td>
+                <td className="w-[10%] px-4 py-3">{formattedDate}</td>
+                <td className="w-[10%] px-4 py-3">{convo.docket_gov_id}</td>
+                <td className="w-[10%] px-4 py-3">{convo.matter_type}</td>
+                {state && <td className="w-[10%] px-4 py-3">{convo.state}</td>}
+                <td className="w-[10%] px-4 py-3">
+                  {convo.industry_type && (
+                    <TextPill text={convo.industry_type} />
+                  )}
+                </td>
 
-          return (
-            <tr
-              key={convo.docket_gov_id}
-              className="border-base-300 hover:bg-base-200 transition duration-500 ease-out cursor-pointer"
-              onClick={() => {
-                router.push(`/dockets/${convo.docket_gov_id}`);
-              }}
-            >
-              <td className="w-[60%] px-4 py-3">{convo.name}</td>
-              <td className="w-[10%] px-4 py-3">{formattedDate}</td>
-              <td className="w-[10%] px-4 py-3">{convo.docket_gov_id}</td>
-              <td className="w-[10%] px-4 py-3">{convo.matter_type}</td>
-              {state && (<td className="w-[10%] px-4 py-3">{convo.state}</td>)}
-              <td className="w-[10%] px-4 py-3">
-                {convo.industry_type && <TextPill text={convo.industry_type} />}
-              </td>
-
-              {!truncate && (
-                <>
-                  <td className="w-[10%] px-4 py-3">{convo.description}</td>
-                  <td className="w-[10%] px-4 py-3">{convo.documents_count}</td>
-                </>
-              )}
-            </tr>
-          );
-        })}
-      </tbody>
-    </table>
+                {!truncate && (
+                  <>
+                    <td className="w-[10%] px-4 py-3">{convo.description}</td>
+                    <td className="w-[10%] px-4 py-3">
+                      {convo.documents_count}
+                    </td>
+                  </>
+                )}
+              </tr>
+            );
+          })}
+        </>
+      }
+    />
   );
 };
 
