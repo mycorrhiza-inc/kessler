@@ -18,51 +18,59 @@ const getConversationData = async (url: string) => {
 
 const NYConversationDescription = ({ conversation }: { conversation: any }) => {
   return (
-    <div className="conversation-description gap-4">
-      <h1 className="text-2xl font-bold">
-        {conversation.title} <br />
-      </h1>
+    <div className="conversation-description  card  rounded-lg border-2">
+      <div className="card-body  ">
+        <h1 className="text-2xl font-bold pb-10 card-title">
+          {conversation.title} <br />
+        </h1>
+        <div className="">
+          <table className="table-auto">
+            <colgroup>
+              <col width="20%" />
+              <col width="80%" />
+            </colgroup>
+            <tbody>
+              <tr>
+                <td>Case Number:</td>
+                <td>
+                  {conversation.docket_id + "         "}
+                  <a
+                    href={`https://documents.dps.ny.gov/public/MatterManagement/CaseMaster.aspx?MatterCaseNo=${conversation.docket_id}`}
+                    className="btn btn-secondary btn-xs"
+                  >
+                    Browse on New York State Website
+                  </a>
+                </td>
+              </tr>
+              <tr>
+                <td>Title of Matter:</td>
+                <td>
+                  <MarkdownRenderer>{conversation.title}</MarkdownRenderer>
+                </td>
+              </tr>
+              <tr>
+                <td>Company/Organization: </td>
+                <td>{conversation.organization}</td>
+              </tr>
+              <tr>
+                <td>Matter Type: </td>
+                <td>{conversation.matter_type}</td>
+              </tr>
+              <tr>
+                <td>Matter Subtype: </td>
+                <td>{conversation.matter_subtype}</td>
+              </tr>
+              <tr>
+                <td>Date Filed: </td>
+                <td>{conversation.date_filed}</td>
+              </tr>
 
-      <table className="table-auto">
-        <tbody>
-          <tr>
-            <td>Case Number:</td>
-            <td>
-              {conversation.docket_id + "         "}
-              <a
-                href={`https://documents.dps.ny.gov/public/MatterManagement/CaseMaster.aspx?MatterCaseNo=${conversation.docket_id}`}
-                className="btn btn-secondary btn-xs"
-              >
-                Browse on New York State Website
-              </a>
-            </td>
-          </tr>
-          <tr>
-            <td>Title of Matter:</td>
-            <td>
-              <MarkdownRenderer>{conversation.title}</MarkdownRenderer>
-            </td>
-          </tr>
-          <tr>
-            <td>Company/Organization: </td>
-            <td>{conversation.organization}</td>
-          </tr>
-          <tr>
-            <td>Matter Type: </td>
-            <td>{conversation.matter_type}</td>
-          </tr>
-          <tr>
-            <td>Matter Subtype: </td>
-            <td>{conversation.matter_subtype}</td>
-          </tr>
-          <tr>
-            <td>Date Filed: </td>
-            <td>{conversation.date_filed}</td>
-          </tr>
+              <tr></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-          <tr></tr>
-        </tbody>
-      </table>
     </div>
   );
 };
@@ -107,7 +115,7 @@ export const ConversationPage = async ({
   return (
     <>
       <NYConversationDescription conversation={conversation} />
-      <FileSearchView inheritedFilters={inheritedFilters} />
+      <FileSearchView inheritedFilters={inheritedFilters}   />
     </>
   );
 };
