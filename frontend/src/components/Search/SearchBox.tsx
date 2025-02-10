@@ -448,7 +448,7 @@ const setNestedValue = (obj: any, path: string[], value: any) => {
   current[path[path.length - 1]] = value;
 };
 
-const SearchBox = ({ input }: { input: SearchBoxInputProps }) => {
+const SearchBox = ({ input, ShowAdvancedSearch }: { input: SearchBoxInputProps, ShowAdvancedSearch?: boolean }) => {
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [selectedFilters, setSelectedFilters] = useState<Filter[]>([]);
@@ -582,7 +582,8 @@ const SearchBox = ({ input }: { input: SearchBoxInputProps }) => {
                 <div className="animate-spin h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full" />
               </div>
             )}
-            <AdvancedSearch />
+            {ShowAdvancedSearch && (
+              <AdvancedSearch />)}
           </div>
 
           {/* Suggestions dropdown - Now positioned relative to search container */}
@@ -594,11 +595,10 @@ const SearchBox = ({ input }: { input: SearchBoxInputProps }) => {
                     <button
                       onClick={() => handleSuggestionClick(suggestion)}
                       onMouseEnter={() => setHighlightedIndex(index)}
-                      className={`w-full px-4 py-3 text-left transition-colors ${
-                        index === highlightedIndex
-                          ? "bg-primary/10 text-primary"
-                          : "hover:secondary-content"
-                      }`}
+                      className={`w-full px-4 py-3 text-left transition-colors ${index === highlightedIndex
+                        ? "bg-primary/10 text-primary"
+                        : "hover:secondary-content"
+                        }`}
                     >
                       <span className={`text-sm font-medium text-primary`}>
                         {suggestion.type}:
