@@ -119,20 +119,18 @@ export const FilingTable = ({
       }
       header_row_content={
         <>
-          <tr className="border-b border-gray-200">
-            <th className="text-left sticky top-0 filing-table-date">
-              Date Filed
-            </th>
-            <th className="text-left sticky top-0 filing-table-doc-class">
-              Document Class
-            </th>
-            <th className="text-left sticky top-0">Title</th>
-            <th className="text-left sticky top-0">Author</th>
-            {DocketColumn && (
-              <th className="text-left sticky top-0">Docket ID</th>
-            )}
-            <th className="text-left sticky top-0">Item Number</th>
-          </tr>
+          <th className="text-left sticky top-0 filing-table-date">
+            Date Filed
+          </th>
+          <th className="text-left sticky top-0 filing-table-doc-class">
+            Document Class
+          </th>
+          <th className="text-left sticky top-0">Title</th>
+          <th className="text-left sticky top-0">Author</th>
+          {DocketColumn && (
+            <th className="text-left sticky top-0">Docket ID</th>
+          )}
+          <th className="text-left sticky top-0">Item Number</th>
         </>
       }
       table_content={
