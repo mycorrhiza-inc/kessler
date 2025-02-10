@@ -1,7 +1,4 @@
-import {
-  getStateDisplayName,
-  rootApplicationSlug,
-} from "@/lib/page_context";
+import { getStateDisplayName, rootApplicationSlug } from "@/lib/page_context";
 import Link from "next/link";
 
 export interface BreadcrumbValues {
@@ -45,7 +42,9 @@ export const HeaderBreadcrumbs = ({
           if (b.url) {
             return (
               <li key={b.title}>
-                <Link href={b.url}>{b.title}</Link>
+                <Link className="font-bold text-lg" href={b.url}>
+                  {b.title}
+                </Link>
               </li>
             );
           }
