@@ -9,11 +9,15 @@ sinks:
       type: http
       uri: http://logging-nixos-docker.tail4a273.ts.net:4318/v1/logs
       method: post
-      encoding:
-        codec: json
+      codec: protobuf
+      protobuf:
+        desc_file: path/to/proto.desc
+        message_type: Type.Name
       framing:
-        method: newline_delimited
+        method: bytes
+      batch:
+        max_events: 1
       headers:
-        content-type: application/json
+        content-type: application/protobuf
     inputs:
       - docker_logs_source
