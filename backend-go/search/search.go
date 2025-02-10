@@ -185,9 +185,10 @@ func ExtractSearchData(data quickwitSearchResponse) ([]SearchDataHydrated, error
 			Extension:    hit.Metadata.Doctype,
 			Conversation: convo_info,
 			Mdata: files.FileMetadataSchema{
-				"docket_id":  hit.Metadata.DocketID,
-				"date":       hit.Metadata.Date,
-				"file_class": hit.Metadata.FileClass,
+				"docket_id":   hit.Metadata.DocketID,
+				"date":        hit.Metadata.Date,
+				"file_class":  hit.Metadata.FileClass,
+				"item_number": hit.Metadata.ItemNumber,
 			},
 			IsPrivate:     false,
 			DatePublished: file_timestamp,

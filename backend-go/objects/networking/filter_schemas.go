@@ -9,6 +9,7 @@ import (
 )
 
 type Metadata struct {
+	ItemNumber       string      `json:"item_number"`
 	Author           string      `json:"author"`
 	Date             string      `json:"date"`
 	DocketID         string      `json:"docket_id"`
