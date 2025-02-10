@@ -15,6 +15,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/charmbracelet/log"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
@@ -27,21 +28,21 @@ func ExtractRelaventEmailsFromOrgUUIDHandler(w http.ResponseWriter, r *http.Requ
 	org_uuid, err := uuid.Parse(org_uuid_str)
 	if err != nil {
 		errorstring := fmt.Sprintf("Error parsing org uuid: %v", err)
-		fmt.Println(errorstring)
+		log.Info(errorstring)
 		http.Error(w, errorstring, http.StatusBadRequest)
 		return
 	}
 	return_obj, err := ExtractRelaventEmailsFromOrgUUID(ctx, rag.DefaultBigLLMModel, org_uuid)
 	if err != nil {
 		errorstring := fmt.Sprintf("Error extracting emails from org uuid: %v", err)
-		fmt.Println(errorstring)
+		log.Info(errorstring)
 		http.Error(w, errorstring, http.StatusInternalServerError)
 		return
 	}
 	response, err := json.Marshal(return_obj)
 	if err != nil {
 		errorstring := fmt.Sprintf("Error marshaling return object: %v", err)
-		fmt.Println(errorstring)
+		log.Info(errorstring)
 		http.Error(w, errorstring, http.StatusInternalServerError)
 		return
 	}
@@ -151,7 +152,7 @@ func ExtractRelaventEmailsFromOrgUUID(ctx context.Context, llm rag.LLM, org_id u
 
 			emails, err := ExtractRelaventEmailsFromFileUUID(ctx, localQ, llm, fileObj.ID)
 			if err != nil {
-				fmt.Printf("Encountered error getting emails from file with uuid: %v: %v\n", fileObj.ID, err)
+				log.Info(fmt.Sprintf("Encountered error getting emails from file with uuid: %v: %v\n", fileObj.ID, err))
 			}
 
 			select {

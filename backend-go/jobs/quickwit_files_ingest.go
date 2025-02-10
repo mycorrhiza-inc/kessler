@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/charmbracelet/log"
 	"github.com/google/uuid"
 )
 
@@ -24,16 +25,16 @@ func HandleQuickwitFileIngestFromPostgres(w http.ResponseWriter, r *http.Request
 	include_unverified := r.URL.Query().Get("include_unverified") == "true"
 	filter_out_unverified := !include_unverified
 
-	fmt.Printf("Starting Quickwit ingest from Postgres (filter_out_unverified=%v)\n", filter_out_unverified)
+	log.Info(fmt.Sprintf("Starting Quickwit ingest from Postgres (filter_out_unverified=%v)\n", filter_out_unverified))
 
 	err := QuickwitIngestFromPostgres(q, ctx, filter_out_unverified)
 	if err != nil {
 		errorstring := fmt.Sprintf("Error ingesting from postgres: %v", err)
-		fmt.Println(errorstring)
+		log.Info(errorstring)
 		http.Error(w, errorstring, http.StatusInternalServerError)
 		return
 	}
-	fmt.Println("Successfully completed Quickwit ingest from Postgres")
+	log.Info("Successfully completed Quickwit ingest from Postgres")
 	w.Write([]byte("Sucessfully ingested from postgres"))
 }
 
@@ -68,7 +69,7 @@ func ParseQuickwitFileIntoCompleteSchema(file_raw dbstore.Testmat) (files.Comple
 	var extra_obj files.FileGeneratedExtras
 	err = json.Unmarshal(file_raw.Mdata, &extra_obj)
 	if err != nil {
-		fmt.Printf("encountered error decoding extras for file: %v\n", file_raw.ID)
+		log.Info(fmt.Sprintf("encountered error decoding extras for file: %v\n", file_raw.ID))
 		// return files.CompleteFileSchema{}, err
 	}
 	author_list := parsePrimativeAuthorSchema(file_raw.Organizations)
@@ -114,7 +115,7 @@ func QuickwitIngestFromPostgres(q *dbstore.Queries, ctx context.Context, filter_
 		pagination_params := dbstore.FilePrecomputedQuickwitListGetPaginatedParams{Limit: int32(page_size), Offset: int32(page * page_size)}
 		temporary_file_results, err := q.FilePrecomputedQuickwitListGetPaginated(ctx, pagination_params)
 		if err != nil {
-			fmt.Printf("Error getting semi complete file list: %v\n", err)
+			log.Info(fmt.Sprintf("Error getting semi complete file list: %v\n", err))
 
 			time.Sleep(5 * time.Second)
 			// return err
@@ -123,15 +124,15 @@ func QuickwitIngestFromPostgres(q *dbstore.Queries, ctx context.Context, filter_
 		if err == nil {
 			files_raw = append(files_raw, temporary_file_results...)
 			if len(temporary_file_results) < page_size {
-				fmt.Printf("Finished indexing PG after %v pages\n", page)
+				log.Info(fmt.Sprintf("Finished indexing PG after %v pages\n", page))
 				break
 			}
-			fmt.Printf("Indexed PG page %v\n", page)
+			log.Info(fmt.Sprintf("Indexed PG page %v\n", page))
 		}
 	}
 
 	if filter_out_unverified {
-		fmt.Printf("Got raw n files from postgres: %d\n", len(files_raw))
+		log.Info(fmt.Sprintf("Got raw n files from postgres: %d\n", len(files_raw)))
 		var new_raw_files []dbstore.Testmat
 
 		for _, file := range files_raw {
@@ -145,7 +146,7 @@ func QuickwitIngestFromPostgres(q *dbstore.Queries, ctx context.Context, filter_
 
 	quickwit_data_list_chunk, err := quickwit.ResolveFileSchemaForDocketIngest(complete_file_schema_results)
 	if err != nil {
-		fmt.Println("Error converting complete file schema into quickwit schema for file inest: %s", err)
+		log.Info("Error converting complete file schema into quickwit schema for file inest: %s", err)
 	}
 	// Randomize the uuids so that you dont have weird unexpected behavior near the beginning or end.
 	err = quickwit.IngestIntoIndex(indexName, quickwit_data_list_chunk, true)

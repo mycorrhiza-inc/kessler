@@ -45,7 +45,7 @@ package static
 
 // 		list_all_files, err := crud.GetListAllRawFiles(ctx, q)
 // 		if err != nil {
-// 			fmt.Printf("Error encountered while getting all files %s", err)
+// 			log.Info(fmt.Sprintf("Error encountered while getting all files %s", err))
 // 		}
 // 		var filteredFiles []crud.RawFileSchema
 // 		for _, file := range list_all_files {
@@ -56,7 +56,7 @@ package static
 // 		chanFileList <- filteredFiles
 // 	}()
 // 	filteredFiles := <-chanFileList
-// 	fmt.Printf("Generating %v static document pages\n", len(filteredFiles))
+// 	log.Info(fmt.Sprintf("Generating %v static document pages\n", len(filteredFiles)))
 //
 // 	var wg sync.WaitGroup
 // 	fileChan := make(chan int)
@@ -68,7 +68,7 @@ package static
 // 			fileSchema := filteredFiles[index]
 // 			err := RenderStaticKesslerObj(fileSchema, dbtx_val, ctx)
 // 			if err != nil {
-// 				fmt.Printf("Encountered error on document %v, with error %v ", index, err)
+// 				log.Info(fmt.Sprintf("Encountered error on document %v, with error %v ", index, err))
 // 				// Handle error or return from here if needed
 // 			}
 // 		}
@@ -90,6 +90,6 @@ package static
 // 	// Close channel and wait for workers to finish
 // 	close(fileChan)
 // 	wg.Wait()
-// 	fmt.Printf("Successfully built site map\n")
+// 	log.Info(fmt.Sprintf("Successfully built site map\n"))
 // 	return nil
 // }

@@ -1,10 +1,29 @@
 # local development docker compose
+version: "3.8"
+x-common-env: &common-env
+  OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector:4317
 services:
+  reverse-proxy:
+    image: traefik:v3.1.2
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.constraints=Label(`traefik.namespace`,`kessler`)"
+    expose:
+      - 80
+      - 443
+    ports:
+      - "80:80"
+      - "${PROXY_UI_PORT:-8083}:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
   frontend:
     hostname: "kessler.xyz"
     build:
       context: ./frontend
       dockerfile: ./Dockerfile-dev
+    environment:
+      <<: *common-env
     env_file:
       - config/global.env
     volumes:
@@ -20,20 +39,6 @@ services:
       - "run"
       - "dev"
 
-  reverse-proxy:
-    image: traefik:v3.1.2
-    command:
-      - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--providers.docker.constraints=Label(`traefik.namespace`,`kessler`)"
-    expose:
-      - 80
-      - 443
-    ports:
-      - "80:80"
-      - "${PROXY_UI_PORT:-8083}:8080"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
   backend-go:
     image: cosmtrek/air
     command:
@@ -41,7 +46,8 @@ services:
     env_file:
       - config/global.env
     environment:
-      - "air_wd=/app"
+      <<: *common-env
+      air_wd: "/app"
     volumes:
       - ./backend-go:/app
     working_dir: /app
@@ -52,3 +58,10 @@ services:
       - "traefik.namespace=kessler"
       - "traefik.http.routers.go-backend.rule=PathPrefix(`/v2`)"
       - "traefik.http.middlewares.test-stripprefix.stripprefix.prefixes=/v2"
+  vector:
+    image: timberio/vector:latest-alpine
+    volumes:
+      - ./vector.yaml:/etc/vector/vector.yaml
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --config /etc/vector/vector.yaml
+    restart: unless-stopped

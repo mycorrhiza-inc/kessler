@@ -13,6 +13,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/charmbracelet/log"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
@@ -212,7 +213,7 @@ func privateUploadFactory(dbtx_val dbstore.DBTX) func(w http.ResponseWriter, r *
 		keFileMan := NewKeFileManager()
 		hash, err := keFileMan.uploadFileToS3(randomFileName)
 		if err != nil {
-			fmt.Printf("Error uploading to s3, %v", err)
+			log.Info(fmt.Sprintf("Error uploading to s3, %v", err))
 		}
 		fmt.Fprintf(w, "File %s uploaded successfully with hash %s", fileName, hash)
 	}

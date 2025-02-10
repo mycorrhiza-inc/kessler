@@ -7,6 +7,7 @@ import (
 	"kessler/objects/timestamp"
 	"time"
 
+	"github.com/charmbracelet/log"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -128,13 +129,13 @@ func UpdatePubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreatio
 	}
 	err := q.UpdateFile(ctx, params)
 	if err != nil {
-		fmt.Printf("Error updating file: %v\n", err)
+		log.Info(fmt.Sprintf("Error updating file: %v\n", err))
 		return FileSchema{}, err
 	}
 
 	resultFile, err := q.ReadFile(ctx, pgUUID)
 	if err != nil {
-		fmt.Printf("Error reading file after update: %v\n", err)
+		log.Info(fmt.Sprintf("Error reading file after update: %v\n", err))
 		return FileSchema{}, err
 	}
 	update_succeded_check := func(updatedFile dbstore.File, fileCreated FileCreationDataRaw) error {

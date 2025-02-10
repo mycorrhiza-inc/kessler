@@ -8,11 +8,12 @@ import (
 	"io"
 	"kessler/objects/files"
 	"kessler/objects/timestamp"
-	"log"
 	"net/http"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/charmbracelet/log"
 )
 
 var quickwitEndpoint = os.Getenv("QUICKWIT_ENDPOINT")
@@ -123,7 +124,7 @@ func ResolveFileSchemaForDocketIngest(complete_files []files.CompleteFileSchema)
 		metadata["conversation_uuid"] = input_file.Conversation.ID.String()
 		author_uuids := make([]string, len(input_file.Authors))
 		if len(input_file.Authors) == 0 {
-			fmt.Printf("No authors found in file: %v\n", input_file.ID)
+			log.Info(fmt.Sprintf("No authors found in file: %v\n", input_file.ID))
 		}
 		for i, author := range input_file.Authors {
 			author_uuids[i] = author.AuthorID.String()
@@ -161,9 +162,9 @@ func ResolveFileSchemaForDocketIngest(complete_files []files.CompleteFileSchema)
 		newRecord.Timestamp = time.Now().Unix()
 		data = append(data, newRecord)
 	}
-	// fmt.Printf("len(data) is %d, len(complete_files) is %d\n", len(data), len(complete_files))
+	// log.Info(fmt.Sprintf("len(data) is %d, len(complete_files) is %d\n", len(data), len(complete_files)))
 	if len(data) != len(complete_files) {
-		fmt.Printf("len(data) is %d, len(complete_files) is %d. THEY ARE NOT EUQAL THIS SHOULD NEVER HAPPEN\n", len(data), len(complete_files))
+		log.Info(fmt.Sprintf("len(data) is %d, len(complete_files) is %d. THEY ARE NOT EUQAL THIS SHOULD NEVER HAPPEN\n", len(data), len(complete_files)))
 		return nil, errors.New("ASSERTION ERROR: len(data) is not equal to len(complete_files), dispite no logical way for that to happen!")
 	}
 

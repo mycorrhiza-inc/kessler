@@ -6,6 +6,7 @@ import (
 	"kessler/search"
 	"os"
 
+	"github.com/charmbracelet/log"
 	openai "github.com/sashabaranov/go-openai"
 )
 
@@ -18,7 +19,7 @@ func createOpenaiClientFromString(model_name string) (*openai.Client, string) {
 		// Apparently "gpt-4o" supports function calling but "gpt-4o-latest" doesnt. Good software design fellas
 		return openai.NewClient(openaiKey), "gpt-4o"
 	default:
-		fmt.Println("Model not found, using default model: gpt-4o")
+		log.Info("Model not found, using default model: gpt-4o")
 		return openai.NewClient(openaiKey), "gpt-4o"
 	}
 }
@@ -75,7 +76,7 @@ func LLMComplexRequest(messageRequest MultiplexerChatCompletionRequest) (ChatMes
 	tools := FunctionCallsToOAI(messageRequest.Functions)
 	toolDictionary := generateFunctionDictionary(messageRequest.Functions)
 
-	fmt.Printf("Calling OpenAI model %v\n", modelID)
+	log.Info(fmt.Sprintf("Calling OpenAI model %v\n", modelID))
 	resp, err := client.CreateChatCompletion(ctx,
 		openai.ChatCompletionRequest{
 			Model:    modelID,
@@ -83,7 +84,7 @@ func LLMComplexRequest(messageRequest MultiplexerChatCompletionRequest) (ChatMes
 			Tools:    tools,
 		},
 	)
-	// fmt.Printf("Finished calling OpenAI model %v\n", modelID)
+	// log.Info(fmt.Sprintf("Finished calling OpenAI model %v\n", modelID))
 
 	if err != nil || len(resp.Choices) != 1 {
 		return ChatMessage{}, fmt.Errorf("completion error: err:%v len(choices):%v", err, len(resp.Choices))
@@ -102,7 +103,7 @@ func LLMComplexRequest(messageRequest MultiplexerChatCompletionRequest) (ChatMes
 	}
 	// if len(msg.ToolCalls) > 1 {
 	// 	// return ChatMessage{}, fmt.Errorf("we only support one function call per message, got %v, please fix", len(msg.ToolCalls))
-	// 	fmt.Printf("Warning: we only support one function call per message, got %v, proceeding to only do the first tool call.\n", len(msg.ToolCalls))
+	// 	log.Info(fmt.Sprintf("Warning: we only support one function call per message, got %v, proceeding to only do the first tool call.\n", len(msg.ToolCalls)))
 	// }
 	dialogue = append(dialogue, msg)
 	contextMessages := []openai.ChatCompletionMessage{msg}
@@ -130,7 +131,7 @@ func LLMComplexRequest(messageRequest MultiplexerChatCompletionRequest) (ChatMes
 		}
 
 	}
-	fmt.Printf("Asked OAI for all tool calls,\n")
+	log.Info(fmt.Sprintf("Asked OAI for all tool calls,\n"))
 	resp, err = client.CreateChatCompletion(ctx,
 		openai.ChatCompletionRequest{
 			// Removing ability to recursively call tools, it gets one shot for now.
@@ -140,16 +141,16 @@ func LLMComplexRequest(messageRequest MultiplexerChatCompletionRequest) (ChatMes
 			Tools:    []openai.Tool{},
 		},
 	)
-	fmt.Printf("Finished calling OpenAI model %v\n", modelID)
+	log.Info(fmt.Sprintf("Finished calling OpenAI model %v\n", modelID))
 	if err != nil || len(resp.Choices) != 1 {
-		fmt.Printf("2nd OpenAI completion error: err:%v len(choices):%v\n", err, len(resp.Choices))
+		log.Info(fmt.Sprintf("2nd OpenAI completion error: err:%v len(choices):%v\n", err, len(resp.Choices)))
 		return ChatMessage{}, fmt.Errorf("2nd completion error: err:%v len(choices):%v", err, len(resp.Choices))
 	}
 
 	// display OpenAI's response to the original question utilizing our function
 	msg = resp.Choices[0].Message
 	if msg.Content == "" {
-		fmt.Printf("OpenAI returned an empty response\n")
+		log.Info(fmt.Sprintf("OpenAI returned an empty response\n"))
 		return ChatMessage{}, fmt.Errorf("OpenAI returned an empty response")
 	}
 	simple_returns := OAIMessagesToSimples(contextMessages)

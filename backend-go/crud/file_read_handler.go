@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/charmbracelet/log"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
@@ -24,7 +25,7 @@ func FileWithMetaGetHandler(w http.ResponseWriter, r *http.Request) {
 	parsedUUID, err := uuid.Parse(fileID)
 	if err != nil {
 		errorstring := fmt.Sprintf("Error parsing file %v: %v\n", fileID, err)
-		fmt.Println(errorstring)
+		log.Info(errorstring)
 		http.Error(w, errorstring, http.StatusBadRequest)
 		return
 	}
@@ -32,7 +33,7 @@ func FileWithMetaGetHandler(w http.ResponseWriter, r *http.Request) {
 	file_raw, err := q.GetFileWithMetadata(ctx, parsedUUID)
 	if err != nil {
 		errorstring := fmt.Sprintf("Error Retriving file %v: %v\n", fileID, err)
-		fmt.Println(errorstring)
+		log.Info(errorstring)
 		http.Error(w, errorstring, http.StatusNotFound)
 		return
 	}
@@ -40,7 +41,7 @@ func FileWithMetaGetHandler(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(file_raw.Mdata, &mdata_obj)
 	if err != nil {
 		errorstring := fmt.Sprintf("Error Unmarshalling file %v: %v\n", fileID, err)
-		fmt.Println(errorstring)
+		log.Info(errorstring)
 		http.Error(w, errorstring, http.StatusInternalServerError)
 		return
 	}
@@ -68,14 +69,14 @@ func FileSemiCompleteGet(w http.ResponseWriter, r *http.Request) {
 	parsedUUID, err := uuid.Parse(fileID)
 	if err != nil {
 		errorstring := fmt.Sprintf("Error parsing file %v: %v\n", fileID, err)
-		fmt.Println(errorstring)
+		log.Info(errorstring)
 		http.Error(w, errorstring, http.StatusBadRequest)
 		return
 	}
 	ctx := r.Context()
 	file, err := SemiCompleteFileGetFromUUID(ctx, q, parsedUUID)
 	if err != nil {
-		fmt.Println(err)
+		log.Info(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -209,7 +210,7 @@ func ReadFileHandler(config FileHandlerConfig) http.HandlerFunc {
 		// 		http.Error(w, "Forbidden", http.StatusForbidden)
 		// 	}
 		// 	if err != nil {
-		// 		fmt.Printf("Ran into the follwing error with authentication $v", err)
+		// 		log.Info(fmt.Sprintf("Ran into the follwing error with authentication $v", err))
 		// 	}
 		// }
 		// Since all three of these methods share the same authentication and database connection prerecs
@@ -226,7 +227,7 @@ func ReadFileHandler(config FileHandlerConfig) http.HandlerFunc {
 			file, err := files.GetFileObjectRaw(file_params)
 			if err != nil {
 				error_string := fmt.Sprintf("Error retrieving file object %v", err)
-				fmt.Println(error_string)
+				log.Info(error_string)
 				http.Error(w, error_string, http.StatusNotFound)
 				return
 			}
@@ -274,7 +275,7 @@ func ReadFileHandler(config FileHandlerConfig) http.HandlerFunc {
 			w.Header().Set("Content-Type", "application/json")
 			w.Write(response)
 		default:
-			fmt.Printf("Encountered unreachable code with file return type %v", return_type)
+			log.Info(fmt.Sprintf("Encountered unreachable code with file return type %v", return_type))
 			http.Error(w, "Congradulations for encountering unreachable code about support types!", http.StatusInternalServerError)
 		}
 	}

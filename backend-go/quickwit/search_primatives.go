@@ -6,11 +6,12 @@ import (
 	"fmt"
 	"io"
 	"kessler/objects/timestamp"
-	"log"
 	"net/http"
 	"os"
 	"reflect"
 	"strings"
+
+	"github.com/charmbracelet/log"
 )
 
 // Maybe this should go in its own module base class at some point to avoid recursive dependancies
@@ -60,8 +61,8 @@ func ConstructGenericFilterQuery(values reflect.Value, types reflect.Type, useQu
 	var filterQuery string
 	filters := []string{}
 
-	// fmt.Printf("values: %v\n", values)
-	// fmt.Printf("types: %v\n", types)
+	// log.Info(fmt.Sprintf("values: %v\n", values))
+	// log.Info(fmt.Sprintf("types: %v\n", types))
 
 	// ===== iterate over metadata for filter =====
 	for i := 0; i < types.NumField(); i++ {
@@ -73,7 +74,7 @@ func ConstructGenericFilterQuery(values reflect.Value, types reflect.Type, useQu
 			tag = strings.Split(tag, ",")[0]
 		}
 
-		// fmt.Printf("tag: %v\nfield: %v\nvalue: %v\n", tag, field, value)
+		// log.Info(fmt.Sprintf("tag: %v\nfield: %v\nvalue: %v\n", tag, field, value))
 
 		if tag == "fileuuid" {
 			tag = "source_id"
@@ -94,7 +95,7 @@ func ConstructGenericFilterQuery(values reflect.Value, types reflect.Type, useQu
 	for _, f := range filters {
 		filterQuery += fmt.Sprintf(" AND (%s)", f)
 	}
-	fmt.Printf("filter query: %s\n", filterQuery)
+	log.Info(fmt.Sprintf("filter query: %s\n", filterQuery))
 	return filterQuery
 }
 

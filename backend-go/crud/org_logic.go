@@ -10,6 +10,7 @@ import (
 	"kessler/util"
 	"net/http"
 
+	"github.com/charmbracelet/log"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -32,7 +33,7 @@ func OrganizationVerifyHandler(w http.ResponseWriter, r *http.Request) {
 	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {
 		errorstring := fmt.Sprintf("Error reading request body: %v\n", err)
-		fmt.Println(errorstring)
+		log.Info(errorstring)
 		http.Error(w, errorstring, http.StatusBadRequest)
 		return
 	}
@@ -40,7 +41,7 @@ func OrganizationVerifyHandler(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(bodyBytes, &req)
 	if err != nil {
 		errorstring := fmt.Sprintf("Error decoding JSON: %v\n", err)
-		fmt.Println(errorstring)
+		log.Info(errorstring)
 		http.Error(w, errorstring, http.StatusBadRequest)
 		return
 	}
@@ -52,7 +53,7 @@ func OrganizationVerifyHandler(w http.ResponseWriter, r *http.Request) {
 	author_info, err = verifyAuthorOrganizationUUID(ctx, q, &author_info)
 	if err != nil {
 		errorstring := fmt.Sprintf("Error verifying author %v: %v\n", req.OrganizationName, err)
-		fmt.Println(errorstring)
+		log.Info(errorstring)
 		http.Error(w, errorstring, http.StatusInternalServerError)
 		return
 	}
@@ -81,7 +82,7 @@ func verifyAuthorOrganizationUUID(ctx context.Context, q dbstore.Queries, author
 	}
 	pg_org_id, err := q.CreateOrganization(ctx, org_create_params)
 	if err != nil {
-		fmt.Println(err)
+		log.Info(err)
 		return *author_info, err
 	}
 	org_uuid := pg_org_id
@@ -120,7 +121,7 @@ func fileAuthorsUpsert(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUI
 	for _, author_info := range authors_info {
 		err := fileAuthorInsert(author_info)
 		if err != nil {
-			fmt.Printf("Encountered error while inserting author for document %s, ignoring and continuing: %v", doc_uuid, err)
+			log.Info(fmt.Sprintf("Encountered error while inserting author for document %s, ignoring and continuing: %v", doc_uuid, err))
 		}
 	}
 

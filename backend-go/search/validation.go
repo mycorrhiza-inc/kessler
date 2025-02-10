@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"kessler/objects/networking"
 	"kessler/util"
-	"log"
 	"reflect"
 	"strings"
+
+	"github.com/charmbracelet/log"
 )
 
 func SearchDataPassesFilters(result SearchDataHydrated, filters networking.FilterFields) bool {

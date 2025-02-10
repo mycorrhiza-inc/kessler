@@ -9,8 +9,9 @@ import (
 	"kessler/objects/conversations"
 	"kessler/objects/files"
 	"kessler/util"
-	"log"
 	"net/http"
+
+	"github.com/charmbracelet/log"
 
 	"github.com/google/uuid"
 )

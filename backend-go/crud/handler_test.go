@@ -3,10 +3,10 @@ package crud
 import (
 	"context"
 	"fmt"
+	"kessler/gen/dbstore"
 	"os"
 
-	"kessler/gen/dbstore"
-
+	"github.com/charmbracelet/log"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -29,6 +29,6 @@ func TestPostgresConnection() (string, error) {
 
 	}
 	truncatedFiles := files[:100]
-	fmt.Println("Successfully listed files:", truncatedFiles)
+	log.Info("Successfully listed files:", truncatedFiles)
 	return "Success", nil
 }

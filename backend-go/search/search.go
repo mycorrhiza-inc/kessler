@@ -10,8 +10,9 @@ import (
 	"kessler/objects/networking"
 	"kessler/objects/timestamp"
 	"kessler/quickwit"
-	"log"
 	"reflect"
+
+	"github.com/charmbracelet/log"
 
 	"github.com/google/uuid"
 )
@@ -48,7 +49,7 @@ func (s quickwitSearchResponse) String() string {
 	// Marshal the struct to JSON format
 	jsonData, err := json.MarshalIndent(s, "", "  ")
 	if err != nil {
-		fmt.Println("Error marshalling JSON:", err)
+		log.Info("Error marshalling JSON:", err)
 	}
 	// Print the formatted JSON string
 	return string(jsonData)
@@ -65,14 +66,14 @@ func (s SearchData) String() string {
 	// Marshal the struct to JSON format
 	jsonData, err := json.MarshalIndent(s, "", "  ")
 	if err != nil {
-		fmt.Println("Error marshalling JSON:", err)
+		log.Info("Error marshalling JSON:", err)
 	}
 	// Print the formatted JSON string
 	return string(jsonData)
 }
 
 func SearchQuickwit(r SearchRequest) ([]SearchDataHydrated, error) {
-	fmt.Printf("searching quickwit:\n%s", r)
+	log.Info(fmt.Sprintf("searching quickwit:\n%s", r))
 	r.Index = "NY_PUC"
 	search_index := r.Index
 	// ===== construct search request =====
@@ -131,7 +132,7 @@ func SearchQuickwit(r SearchRequest) ([]SearchDataHydrated, error) {
 	var searchResponse quickwitSearchResponse
 	err = json.NewDecoder(bytes.NewReader(return_bytes)).Decode(&searchResponse)
 	if err != nil {
-		fmt.Printf("quickwit response: %v\n", return_bytes)
+		log.Info(fmt.Sprintf("quickwit response: %v\n", return_bytes))
 		errorstring := fmt.Sprintf("Error decoding JSON: %v\n Offending json looked like: %v", err, string(return_bytes))
 		return []SearchDataHydrated{}, fmt.Errorf(errorstring)
 	}

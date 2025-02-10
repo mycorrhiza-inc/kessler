@@ -8,8 +8,9 @@ import (
 	"kessler/objects/files"
 	"kessler/objects/organizations"
 	"kessler/util"
-	"log"
 	"net/http"
+
+	"github.com/charmbracelet/log"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"

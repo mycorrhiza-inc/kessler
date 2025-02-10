@@ -1,9 +1,10 @@
 package rag
 
 import (
-	"fmt"
 	"kessler/objects/networking"
 	"testing"
+
+	"github.com/charmbracelet/log"
 )
 
 func TestRag(t *testing.T) {
@@ -23,5 +24,5 @@ func TestRag(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Println("Result:", result)
+	log.Info("Result:", result)
 }

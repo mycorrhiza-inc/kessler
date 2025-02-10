@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"kessler/gen/dbstore"
 	"kessler/objects/files"
-	"log"
+
+	"github.com/charmbracelet/log"
 
 	"github.com/google/uuid"
 )
@@ -37,17 +38,17 @@ func HydrateSearchResults(results []SearchData, ctx context.Context, q dbstore.Q
 	for i, r := range results {
 		uuid, err := uuid.Parse(r.SourceID)
 		if err != nil {
-			fmt.Printf("Error parsing uuid: %v\n", err)
+			log.Info(fmt.Sprintf("Error parsing uuid: %v\n", err))
 		}
 		uuid_list[i] = uuid
 	}
-	fmt.Printf("Hydrating %v files\n", len(uuid_list))
+	log.Info(fmt.Sprintf("Hydrating %v files\n", len(uuid_list)))
 	files_complete, err := doShittyHydration(uuid_list, ctx, q)
 	if err != nil {
 		log.Printf("Error hydrating search results: %v\n", err)
 		return []SearchDataHydrated{}, err
 	}
-	fmt.Printf("Got back %v complete files for hydration, out of %v requested files\n", len(files_complete), len(results))
+	log.Info(fmt.Sprintf("Got back %v complete files for hydration, out of %v requested files\n", len(files_complete), len(results)))
 
 	// Create map of file ID to complete file
 	fileMap := make(map[uuid.UUID]files.CompleteFileSchema)
@@ -64,12 +65,12 @@ func HydrateSearchResults(results []SearchData, ctx context.Context, q dbstore.Q
 			files_actually_hydrated++
 			results_hydrated[i] = setupSearchDataHydrated(res, file)
 		} else {
-			fmt.Printf("Error hydrating search result: %v\n", uuid)
+			log.Info(fmt.Sprintf("Error hydrating search result: %v\n", uuid))
 			res.Name = "ERROR HYDRATING SEARCH RESULT W/ PG DATA: " + res.Name
 			results_hydrated[i] = setupSearchDataHydrated(res, files.CompleteFileSchema{})
 		}
 	}
-	fmt.Printf("Hydrated %v of %v files\n", files_actually_hydrated, len(results))
+	log.Info(fmt.Sprintf("Hydrated %v of %v files\n", files_actually_hydrated, len(results)))
 	return results_hydrated, nil
 }
 

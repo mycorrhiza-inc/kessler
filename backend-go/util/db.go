@@ -3,10 +3,11 @@ package util
 import (
 	"context"
 	"kessler/gen/dbstore"
-	"log"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/charmbracelet/log"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -39,17 +40,17 @@ func PgPoolConfig(maxConns int32) *pgxpool.Config {
 	dbConfig.ConnConfig.ConnectTimeout = defaultConnectTimeout
 	// Removed to clean up logging in golang
 	dbConfig.BeforeAcquire = func(ctx context.Context, c *pgx.Conn) bool {
-		// log.Println("Before acquiring the connection pool to the database!!")
+		// log.Info("Before acquiring the connection pool to the database!!")
 		return true
 	}
 
 	dbConfig.AfterRelease = func(c *pgx.Conn) bool {
-		// log.Println("After releasing the connection pool to the database!!")
+		// log.Info("After releasing the connection pool to the database!!")
 		return true
 	}
 
 	dbConfig.BeforeClose = func(c *pgx.Conn) {
-		// log.Println("Closed the connection pool to the database!!")
+		// log.Info("Closed the connection pool to the database!!")
 	}
 
 	return dbConfig

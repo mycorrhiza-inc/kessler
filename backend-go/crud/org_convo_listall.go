@@ -5,9 +5,10 @@ import (
 	"kessler/gen/dbstore"
 	"kessler/objects/networking"
 	"kessler/util"
-	"log"
 	"net/http"
 	"time"
+
+	"github.com/charmbracelet/log"
 
 	"github.com/google/uuid"
 )

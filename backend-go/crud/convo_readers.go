@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/charmbracelet/log"
 	"kessler/gen/dbstore"
 	"kessler/util"
-	"log"
 	"net/http"
 
 	"github.com/google/uuid"

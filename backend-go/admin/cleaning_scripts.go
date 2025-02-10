@@ -3,12 +3,13 @@ package admin
 import (
 	"context"
 	"fmt"
+	"kessler/gen/dbstore"
+	"kessler/util"
 	"net/http"
 	"strings"
 	"sync"
 
-	"kessler/gen/dbstore"
-	"kessler/util"
+	"github.com/charmbracelet/log"
 )
 
 func deduplicateOrganizationsOnNames(ctx context.Context, q dbstore.Queries) error {
@@ -39,7 +40,7 @@ func deduplicateOrganizationsOnNames(ctx context.Context, q dbstore.Queries) err
 			if err != nil {
 				return err
 			}
-			fmt.Printf("Deduplicated org name: %s\n", orgname)
+			log.Info(fmt.Sprintf("Deduplicated org name: %s\n", orgname))
 		} else {
 			orgMap[orgname] = org
 		}
@@ -86,7 +87,7 @@ func organizationsNameAsAlias(ctx context.Context, q dbstore.Queries) error {
 					errChan <- err
 					return
 				}
-				fmt.Printf("Ensured Aliases for org : %s\n", orgname)
+				log.Info(fmt.Sprintf("Ensured Aliases for org : %s\n", orgname))
 			}
 		}(org)
 	}
@@ -106,26 +107,26 @@ func organizationsNameAsAlias(ctx context.Context, q dbstore.Queries) error {
 }
 
 func completeCleanDatabaseHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("Starting complete clean of database\n")
+	log.Info(fmt.Sprintf("Starting complete clean of database\n"))
 	ctx := context.Background()
 	q := *util.DBQueriesFromRequest(r)
 
 	err := deduplicateOrganizationsOnNames(ctx, q)
 	if err != nil {
 		errorstring := fmt.Sprintf("Error deduping orgs: %v\n", err)
-		fmt.Println(errorstring)
+		log.Info(errorstring)
 		http.Error(w, errorstring, http.StatusInternalServerError)
 		return
 	}
-	fmt.Printf("Sucessfully deduplicated orgs\n")
+	log.Info(fmt.Sprintf("Sucessfully deduplicated orgs\n"))
 	err = organizationsNameAsAlias(ctx, q)
 	if err != nil {
 		errorstring := fmt.Sprintf("Error ensuring organization aliases: %v\n", err)
-		fmt.Println(errorstring)
+		log.Info(errorstring)
 		http.Error(w, errorstring, http.StatusInternalServerError)
 		return
 	}
-	fmt.Printf("Sucessfully ensured org aliases\n")
+	log.Info(fmt.Sprintf("Sucessfully ensured org aliases\n"))
 	w.Header().Set("Content-Type", "text/plain")
 	w.Write([]byte("Successfully cleaned database"))
 }
