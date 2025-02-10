@@ -18,24 +18,31 @@ import (
 	"github.com/google/uuid"
 )
 
-func HandleQuickwitFileIngestFromPostgres(w http.ResponseWriter, r *http.Request) {
-	// ctx := context.Background()
-	ctx := util.CreateDBContextWithTimeout(time.Minute*90, 5)
-	q := util.DBQueriesFromContext(ctx)
-	include_unverified := r.URL.Query().Get("include_unverified") == "true"
-	filter_out_unverified := !include_unverified
-
-	log.Info(fmt.Sprintf("Starting Quickwit ingest from Postgres (filter_out_unverified=%v)\n", filter_out_unverified))
-
-	err := QuickwitIngestFromPostgres(q, ctx, filter_out_unverified)
-	if err != nil {
-		errorstring := fmt.Sprintf("Error ingesting from postgres: %v", err)
-		log.Info(errorstring)
-		http.Error(w, errorstring, http.StatusInternalServerError)
-		return
+func HandleQuickwitFileIngestFromPostgresFactory(isTest bool) func(http.ResponseWriter,
+	*http.Request) {
+	indexName := quickwit.NYPUCIndex
+	if isTest {
+		indexName = quickwit.TestNYPUCIndex
 	}
-	log.Info("Successfully completed Quickwit ingest from Postgres")
-	w.Write([]byte("Sucessfully ingested from postgres"))
+	return func(w http.ResponseWriter, r *http.Request) {
+		// ctx := context.Background()
+		ctx := util.CreateDBContextWithTimeout(time.Minute*90, 5)
+		q := util.DBQueriesFromContext(ctx)
+		include_unverified := r.URL.Query().Get("include_unverified") == "true"
+		filter_out_unverified := !include_unverified
+
+		log.Info(fmt.Sprintf("Starting Quickwit ingest from Postgres (filter_out_unverified=%v)\n", filter_out_unverified))
+
+		err := QuickwitIngestFromPostgres(q, ctx, filter_out_unverified, indexName)
+		if err != nil {
+			errorstring := fmt.Sprintf("Error ingesting from postgres: %v", err)
+			log.Info(errorstring)
+			http.Error(w, errorstring, http.StatusInternalServerError)
+			return
+		}
+		log.Info("Successfully completed Quickwit ingest from Postgres")
+		w.Write([]byte("Sucessfully ingested from postgres"))
+	}
 }
 
 func parsePrimativeAuthorSchema(author_schemas []byte) []authors.AuthorInformation {
@@ -103,8 +110,7 @@ func ParseQuickwitFileIntoCompleteSchema(file_raw dbstore.Testmat) (files.Comple
 	return file, nil
 }
 
-func QuickwitIngestFromPostgres(q *dbstore.Queries, ctx context.Context, filter_out_unverified bool) error {
-	indexName := quickwit.NYPUCIndexName
+func QuickwitIngestFromPostgres(q *dbstore.Queries, ctx context.Context, filter_out_unverified bool, indexName string) error {
 	var files_raw []dbstore.Testmat
 
 	page_size := 1000
