@@ -3,36 +3,9 @@ import { AngleDownIcon, HamburgerIcon, UserIcon } from "@/components/Icons";
 import { useState } from "react";
 import Modal from "@/components/styled-components/Modal";
 import SettingsContent from "@/components/SettingsContent";
-import { useKesslerStore } from "@/lib/store";
 import Link from "next/link";
 import { BreadcrumbValues, HeaderBreadcrumbs } from "@/components/SitemapUtils";
 
-export function HeaderAuth({ children }: { children?: React.ReactNode }) {
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const globalStore = useKesslerStore();
-
-  // useEffect(() => {
-  //   console.log("Is logged in:", globalStore.isLoggedIn);
-  // }, []);
-  return (
-    <div className="flex gap-2">
-      <div>
-        {children}
-      </div>
-      <div
-        tabIndex={0}
-        role="button"
-        className="btn btn-primary rounded-btn"
-        onClick={() => setSettingsOpen((prev) => !prev)}
-      >
-        <UserIcon />
-      </div>
-      <Modal open={settingsOpen} setOpen={setSettingsOpen}>
-        <SettingsContent />
-      </Modal>
-    </div>
-  );
-}
 
 const HeaderMenus = () => {
   return (
@@ -69,9 +42,6 @@ const Navbar = ({ breadcrumbs }: { breadcrumbs: BreadcrumbValues }) => {
       <div className="flex-1 font-semibold">
         <HeaderMenus />
         <span />
-      </div>
-      <div className="flex-none">
-        <HeaderAuth />
       </div>
     </div>
   );
