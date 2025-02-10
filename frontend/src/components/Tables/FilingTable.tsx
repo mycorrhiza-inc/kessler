@@ -4,6 +4,7 @@ import { AuthorInformation } from "@/lib/types/backend_schemas";
 import { AuthorInfoPill, DocketPill, TextPill } from "./TextPills";
 import DocumentModal from "../Document/DocumentModal";
 import clsx from "clsx";
+import { TableStyled } from "../styled-components/TableStyled";
 
 const NoclickSpan = ({ children }: { children: React.ReactNode }) => {
   return <span className="noclick">{children}</span>;
@@ -14,8 +15,8 @@ const AuthorColumn = ({ filing }: { filing: Filing }) => {
     <>
       {filing.authors_information
         ? filing.authors_information.map((auth_info: AuthorInformation) => (
-          <AuthorInfoPill author_info={auth_info} />
-        ))
+            <AuthorInfoPill author_info={auth_info} />
+          ))
         : filing.author + " Something isnt working"}
     </>
   );
@@ -86,7 +87,6 @@ const TableRow = ({
 
         <td>{filing.item_number}</td>
       </tr>
-      <div></div>
     </>
   );
 };
@@ -104,19 +104,6 @@ export const FilingTable = ({
   // const pinClassName = PinTableHeader ? "table-pin-rows" : "";
 
   return (
-    <div
-      className={
-        scroll
-          ? "max-h-[1000px] overflow-y-scroll overflow-x-scroll"
-          : "overflow-y-auto"
-      }
-    >
-      <table
-        className={clsx(
-          "w-full divide-y divide-gray-200  border-collaps table lg:table-fixed md:table-auto sm:table-auto z-1",
-          // pinClassName,
-        )}
-      >
         <colgroup>
           <col width="40px" />
           <col width="80px" />
@@ -127,7 +114,9 @@ export const FilingTable = ({
           {DocketColumn && <col width="50px" />}
           <col width="50px" />
         </colgroup>
-        <thead>
+    <TableStyled
+      header_row_content={
+        <>
           <tr className="border-b border-gray-200">
             <th className="text-left sticky top-0 filing-table-date">
               Date Filed
@@ -142,8 +131,10 @@ export const FilingTable = ({
             )}
             <th className="text-left sticky top-0">Item Number</th>
           </tr>
-        </thead>
-        <tbody>
+        </>
+      }
+      table_content={
+        <>
           {filings.map((filing) => (
             <TableRow
               filing={filing}
@@ -151,9 +142,9 @@ export const FilingTable = ({
               key={filing.id}
             />
           ))}
-        </tbody>
-      </table>
-    </div>
+        </>
+      }
+    />
   );
 };
 export default FilingTable;
