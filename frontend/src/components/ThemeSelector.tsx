@@ -10,15 +10,7 @@ interface ThemeData {
 }
 
 export const themeDataDictionary: { [key: string]: ThemeData } = {
-  dark: { name: "dark", value: "dark", lightdark: "dark" },
-  black: { name: "black", value: "black", lightdark: "dark" },
-  forest: { name: "forest", value: "forest", lightdark: "dark" },
-  sunset: { name: "sunset", value: "sunset", lightdark: "dark" },
-  bumblebee: { name: "light", value: "bumblebee", lightdark: "light" },
-  emerald: { name: "emerald", value: "emerald", lightdark: "light" },
-  cmyk: { name: "cmyk", value: "cmyk", lightdark: "light" },
-  corporate: { name: "corporate", value: "corporate", lightdark: "light" },
-  acid: { name: "acid", value: "acid", lightdark: "light" },
+  light: { name: "light", value: "light", lightdark: "light" },
 };
 export const themeDataList: ThemeData[] = Object.values(themeDataDictionary);
 const ThemeSelector = () => {
