@@ -3,11 +3,11 @@ import Navbar, { HeaderAuth } from "@/components/Page/Navbar";
 import { BreadcrumbValues, HeaderBreadcrumbs } from "../SitemapUtils";
 
 export default function Header({
-  breadcrumbs,
   children,
+  breadcrumbs,
 }: {
-  breadcrumbs: BreadcrumbValues;
   children?: React.ReactNode;
+  breadcrumbs: BreadcrumbValues;
 }) {
   return (
     <div className="fixed top-0 left-0 flex flex-row  justify-start h-15 pt-5 w-full bg-base-100 z-50 pr-5">
