@@ -6,6 +6,7 @@ import { BreadcrumbValues } from "../SitemapUtils";
 
 import FileSearchView from "@/components/Search/FileSearch/FileSearchView";
 import { FilterField } from "@/lib/filters";
+import HeaderCard from "./HeaderCard";
 
 export const generateOrganizationData = async (orgId: string) => {
   const orgInfo = await getOrganizationInfo(orgId);
@@ -26,12 +27,12 @@ export default function OrganizationPage({
 }) {
   return (
     <>
-      <h1 className=" text-2xl font-bold">Organization: {orgInfo.name}</h1>
-      <p>
-        {orgInfo.description ||
-          "Automatically generated org descriptions coming soon"}
-      </p>
-      <h1 className=" text-2xl font-bold">Authored Documents</h1>
+      <HeaderCard title={orgInfo.name}>
+        <p>
+          {orgInfo.description ||
+            "Automatically generated org descriptions coming soon"}
+        </p>
+      </HeaderCard>
       <FileSearchView
         inheritedFilters={[
           // { filter: FilterField.MatchAuthorUUID, value: orgInfo.id },
