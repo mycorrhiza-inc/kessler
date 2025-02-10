@@ -61,8 +61,10 @@ type ConversationTableSchema = {
 const ConversationTable = ({
   truncate,
   convoList,
+  state
 }: {
   truncate?: boolean;
+  state?: boolean;  
   convoList: ConversationTableSchema[];
 }) => {
   const router = useRouter();
@@ -75,7 +77,8 @@ const ConversationTable = ({
           <td className="w-[10%]">Date Published</td>
           <td className="w-[10%]">ID</td>
           <td className="w-[10%]">Matter Type</td>
-          <td className="w-[10%]">State</td>
+          {state && (<td className="w-[10%]">State</td>
+)}
           <td className="w-[10%]">Industry</td>
           {!truncate && (
             <>
@@ -104,7 +107,7 @@ const ConversationTable = ({
               <td className="w-[10%] px-4 py-3">{formattedDate}</td>
               <td className="w-[10%] px-4 py-3">{convo.docket_gov_id}</td>
               <td className="w-[10%] px-4 py-3">{convo.matter_type}</td>
-              <td className="w-[10%] px-4 py-3">{convo.state}</td>
+              {state && (<td className="w-[10%] px-4 py-3">{convo.state}</td>)}
               <td className="w-[10%] px-4 py-3">
                 {convo.industry_type && <TextPill text={convo.industry_type} />}
               </td>
