@@ -120,7 +120,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           <div className="p-4">
             <nav className="space-y-6">
               <div>
-                <SidebarLink icon={IoHomeSharp} href="/home" label="Home" />
+                <SidebarLink icon={IoHomeSharp} href="/" label="Home" />
                 <SidebarLink icon={FaRectangleList} href="/dockets" label="Dockets" />
                 <SidebarLink icon={FaUserGroup} href="/orgs" label="Organizations" />
                 <SidebarLink icon={IoDocument} href="/files" label="All Files" />
