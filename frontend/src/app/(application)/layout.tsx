@@ -46,6 +46,7 @@ export default async function ApplicationLayout({
         breadcrumbs={{ state: "ny", breadcrumbs: [] } as BreadcrumbValues}
       >
         {/* <div className="relative flex gap-3"> */}
+        {/* </div> */}
         <SignedIn>
           <Link
             href="/dashboard"
@@ -61,7 +62,6 @@ export default async function ApplicationLayout({
             </button>
           </SignInButton>
         </SignedOut>
-        {/* </div> */}
       </Header>
       <Layout>{children}</Layout>
     </AuthGuard>

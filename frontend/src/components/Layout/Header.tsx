@@ -1,7 +1,7 @@
 import { GiMushroomsCluster } from "react-icons/gi";
-import Navbar, { HeaderAuth } from "@/components/Page/Navbar";
+import Navbar from "@/components/Page/Navbar";
 import { BreadcrumbValues, HeaderBreadcrumbs } from "../SitemapUtils";
-
+import { SignInButton } from "@clerk/nextjs";
 export default function Header({
   children,
   breadcrumbs,
@@ -22,7 +22,7 @@ export default function Header({
         <HeaderBreadcrumbs breadcrumbs={breadcrumbs} />
       </div>
       <div className="flex-none">
-        {/* <HeaderAuth>{children}</HeaderAuth> */}
+        {children}
       </div>
     </div>
   );
