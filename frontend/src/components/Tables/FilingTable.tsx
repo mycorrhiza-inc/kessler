@@ -104,7 +104,9 @@ export const FilingTable = ({
   // const pinClassName = PinTableHeader ? "table-pin-rows" : "";
 
   return (
-        <colgroup>
+    <TableStyled
+      colgroup={
+        <>
           <col width="40px" />
           <col width="80px" />
           <col width="200px" />
@@ -113,8 +115,8 @@ export const FilingTable = ({
           {/* docket id column */}
           {DocketColumn && <col width="50px" />}
           <col width="50px" />
-        </colgroup>
-    <TableStyled
+        </>
+      }
       header_row_content={
         <>
           <tr className="border-b border-gray-200">
