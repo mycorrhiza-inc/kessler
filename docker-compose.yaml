@@ -1,5 +1,4 @@
 # local development docker compose
-version: "3.8"
 x-common-env: &common-env
   OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector:4317
 services:

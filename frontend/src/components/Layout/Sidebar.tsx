@@ -5,6 +5,9 @@ import { Code, Database, FileText, Menu, Settings } from "lucide-react";
 import { GiMushroomsCluster } from "react-icons/gi";
 import { BsArrowBarLeft, BsArrowBarRight } from "react-icons/bs";
 import Link from "next/link";
+import { IoHomeSharp, IoDocument } from "react-icons/io5";
+import { FaRectangleList, FaUserGroup } from "react-icons/fa6";
+
 
 interface SidebarButtonProps {
   icon?: React.ElementType;
@@ -103,9 +106,8 @@ const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Sidebar Content */}
       <div
-        className={`fixed left-0 top-0 h-full bg-primary-100 transition-transform duration-100 ease-in-out transform ${
-          isVisible || isPinned ? "translate-x-0" : "-translate-x-full z-100"
-        }`}
+        className={`fixed left-0 top-0 h-full bg-primary-100 transition-transform duration-100 ease-in-out transform ${isVisible || isPinned ? "translate-x-0" : "-translate-x-full z-100"
+          }`}
         style={{ width: `${width}px` }}
         onMouseLeave={() => !isPinned && onVisibilityChange(false)}
       >
@@ -118,11 +120,10 @@ const Sidebar: React.FC<SidebarProps> = ({
           <div className="p-4">
             <nav className="space-y-6">
               <div>
-                <SidebarLink icon={Code} label="Home" href="/home" />
-                <SidebarLink href="/dockets" label="Dockets" />
-                <SidebarLink href="/orgs" label="Organizations" />
-                <SidebarLink href="/files" label="All Files" />
-                <SidebarLink href="/" label="Landing Page" />
+                <SidebarLink icon={IoHomeSharp} href="/home" label="Home" />
+                <SidebarLink icon={FaRectangleList} href="/dockets" label="Dockets" />
+                <SidebarLink icon={FaUserGroup} href="/orgs" label="Organizations" />
+                <SidebarLink icon={IoDocument} href="/files" label="All Files" />
                 {/* <SidebarLink icon={Code} label="Query editor" />
                   <SidebarLink icon={Code} label="Query editor" />
                   <SidebarLink icon={Code} label="Query editor" />
@@ -150,9 +151,8 @@ const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Resize Handle */}
         <div
-          className={`w-2 h-full cursor-col-resize hover:bg-base-400/50 active:bg-base-400 relative group ${
-            isResizing ? "bg-base-400" : "bg-transparent"
-          }`}
+          className={`w-2 h-full cursor-col-resize hover:bg-base-400/50 active:bg-base-400 relative group ${isResizing ? "bg-base-400" : "bg-transparent"
+            }`}
           onMouseDown={handleMouseDown}
         >
           <div className="absolute inset-y-0 left-1/2 w-0.5 bg-base-300 dark:bg-base-600 group-hover:bg-base-400 dark:group-hover:bg-base-500" />
