@@ -91,9 +91,11 @@ const ConversationTable = ({
       table_content={
         <>
           {convoList.map((convo: ConversationTableSchema) => {
-            const formattedDate = new Date(
-              convo.date_published,
-            ).toLocaleDateString();
+            // const formattedDate = new Date(
+            //   convo.date_published,
+            // ).toLocaleDateString();
+
+            const formattedDate = JSON.parse(convo.metadata)["date_filed"];
 
             return (
               <tr
