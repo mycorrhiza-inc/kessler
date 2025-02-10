@@ -4,6 +4,7 @@ import axios from "axios";
 import { BreadcrumbValues } from "../SitemapUtils";
 import MarkdownRenderer from "../MarkdownRenderer";
 import { internalAPIURL } from "@/lib/env_variables";
+import HeaderCard from "./HeaderCard";
 
 const getConversationData = async (url: string) => {
   const response = await axios.get(url);
@@ -18,12 +19,12 @@ const getConversationData = async (url: string) => {
 
 const NYConversationDescription = ({ conversation }: { conversation: any }) => {
   return (
-    <div className="conversation-description gap-4">
-      <h1 className="text-2xl font-bold">
-        {conversation.title} <br />
-      </h1>
-
+    <HeaderCard title={conversation.title}>
       <table className="table-auto">
+        <colgroup>
+          <col width="20%" />
+          <col width="80%" />
+        </colgroup>
         <tbody>
           <tr>
             <td>Case Number:</td>
@@ -63,7 +64,7 @@ const NYConversationDescription = ({ conversation }: { conversation: any }) => {
           <tr></tr>
         </tbody>
       </table>
-    </div>
+    </HeaderCard>
   );
 };
 

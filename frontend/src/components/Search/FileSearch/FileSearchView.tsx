@@ -66,8 +66,10 @@ const TableFilters = ({
 
 const FileSearchView = ({
   inheritedFilters,
+  DocketColumn,
 }: {
   inheritedFilters: InheritedFilterValues;
+  DocketColumn?: boolean;
 }) => {
   // filter data
   const initialFilterState = useMemo(() => {
@@ -145,7 +147,7 @@ const FileSearchView = ({
 
   return (
     <>
-      <div id="conversation-header" className="mb-4 flex justify-between">
+      <div id="conversation-header" className=" flex justify-between">
         {experimentalFeatures ? (
           <ChatModalClickDiv
             className="btn btn-accent"
@@ -156,20 +158,6 @@ const FileSearchView = ({
         ) : (
           <div></div>
         )}
-        <div>
-          <label htmlFor="my-drawer" className="btn btn-primary drawer-button">
-            Filters
-          </label>
-          <button
-            onClick={toggleFilters}
-            className="btn btn-outline"
-            style={{
-              display: !isFocused ? "inline-block" : "none",
-            }}
-          >
-            Filters
-          </button>
-        </div>
       </div>
       <div className="w-full h-full">
         <SearchBox input={searchBoxProp} />
@@ -189,7 +177,7 @@ const FileSearchView = ({
             </div>
           }
         >
-          <FilingTable filings={filings} DocketColumn />
+          <FilingTable filings={filings} DocketColumn={DocketColumn} />
         </InfiniteScroll>
       </div>
     </>
