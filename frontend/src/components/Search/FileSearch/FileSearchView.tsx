@@ -136,7 +136,6 @@ const FileSearchView = ({
   };
   const globalStore = useKesslerStore();
   const experimentalFeatures = globalStore.experimentalFeaturesEnabled;
-
   const searchBoxProp: FileSearchBoxProps = {
     pageContext: PageContextMode.Files,
     setSearchData: setQueryData,
