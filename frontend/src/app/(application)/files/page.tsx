@@ -16,7 +16,7 @@ export default function Page() {
   };
   return (
     <>
-      <div className="flex justify-center">
+      <div className="flex">
         <h1 className="text-3xl font-bold">Files Search</h1>
       </div>
       <FileSearchView inheritedFilters={[]} />
