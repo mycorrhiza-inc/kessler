@@ -112,7 +112,7 @@ const DocumentHeader = ({
   return (
     <>
       <div className="card-title flex justify-between items-center">
-        <h1>{title}</h1>
+        <h1 className="text-3xl">{title}</h1>
         <div className="flex gap-2">
           <a
             className="btn btn-primary"
@@ -144,27 +144,29 @@ const DocumentHeader = ({
         </div>
       </div>
       <p>
-        Case Number: {"   "}
+        <b>Case Number:</b> {"   "}
         <DocketPill
           docket_named_id={documentObject.mdata.docket_id as string}
         />
       </p>
       {documentObject.authors && (
         <p>
-          {authors_unpluralized}:{" "}
+          <b>{authors_unpluralized}:</b>{" "}
           {documentObject.authors.map((a: AuthorInformation) => (
             <AuthorInfoPill author_info={a} />
           ))}
         </p>
       )}
-      {verified && <MarkdownRenderer>{summary}</MarkdownRenderer>}
-      {!verified && (
-        <MarkdownRenderer>
-          {
-            "The document hasnt finished processing yet. Come back later for a completed summary and document chat!"
-          }
-        </MarkdownRenderer>
-      )}
+      <div className="p-4" />
+      <h2 className="text-xl">
+        <b>LLM Summary:</b>
+      </h2>
+      <MarkdownRenderer>
+        {verified
+          ? summary
+          : "The document hasnt finished processing yet. Come back later for a completed summary and document chat!"}
+      </MarkdownRenderer>
+      <div className="p-12" />
     </>
   );
 };
@@ -206,20 +208,32 @@ export const DocumentMainTabs = ({
         role="tablist tabs tabs-bordered tabs-lg"
         defaultValue={defaultTab}
       >
-        <Tabs.List className="TabsList" aria-label="What Documents ">
+        <Tabs.List
+          className="TabsList flex gap-2 border-b border-base-300"
+          aria-label="Document Sections"
+        >
           {showRawDocument && (
-            <Tabs.Trigger className="TabsTrigger tab" value="tab1">
-              Document
+            <Tabs.Trigger
+              className="TabsTrigger px-6 py-3 font-bold hover:bg-base-200 transition-colors duration-200 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary"
+              value="tab1"
+            >
+              📄 Document
             </Tabs.Trigger>
           )}
 
           {showText && (
-            <Tabs.Trigger className="TabsTrigger tab" value="tab2">
-              Document Text
+            <Tabs.Trigger
+              className="TabsTrigger px-6 py-3 font-bold hover:bg-base-200 transition-colors duration-200 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary"
+              value="tab2"
+            >
+              📝 Document Text
             </Tabs.Trigger>
           )}
-          <Tabs.Trigger className="TabsTrigger tab" value="tab3">
-            Metadata
+          <Tabs.Trigger
+            className="TabsTrigger px-6 py-3 font-bold hover:bg-base-200 transition-colors duration-200 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary"
+            value="tab3"
+          >
+            ℹ️ Metadata
           </Tabs.Trigger>
         </Tabs.List>
         {showRawDocument && (
