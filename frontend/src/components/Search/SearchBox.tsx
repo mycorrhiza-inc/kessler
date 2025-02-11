@@ -408,7 +408,7 @@ const SearchBox = ({
   };
 
   return (
-    <div className="p-4 max-w-xl mx-auto">
+    <div className="p-12 max-w-xl mx-auto">
       <div className="flex flex-col gap-2">
         {/* Search container */}
         <div className="relative">
