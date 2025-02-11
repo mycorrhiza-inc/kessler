@@ -8,6 +8,7 @@ import { getRuntimeEnv } from "@/lib/env_variables_hydration_script";
 import { TextPill } from "@/components/Tables/TextPills";
 import clsx from "clsx";
 import { TableStyled } from "@/components/styled-components/TableStyled";
+import InfiniteScrollPlus from "@/components/InfiniteScroll/InfiniteScroll";
 
 export type ConversationSearchSchema = {
   query?: string;
@@ -165,23 +166,15 @@ const ConversationTableInfiniteScroll = ({
     setTableData(result);
     setPage(numPageFetch);
   };
-  useEffect(() => {
-    getInitialData();
-  }, [lookup_data]);
   return (
-    <InfiniteScroll
+    <InfiniteScrollPlus
       dataLength={tableData.length}
-      hasMore={true}
-      next={getMore}
-      loader={
-        <LoadingSpinnerTimeout
-          timeoutSeconds={10}
-          loadingText="Loading Conversations"
-        />
-      }
+      getMore={getMore}
+      loadInitial={getInitialData}
+      reloadOnChangeObj={lookup_data}
     >
       <ConversationTable convoList={tableData} truncate={truncate} />
-    </InfiniteScroll>
+    </InfiniteScrollPlus>
   );
 };
 

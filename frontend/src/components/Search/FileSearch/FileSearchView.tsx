@@ -27,6 +27,7 @@ import { ChatModalClickDiv } from "@/components/Chat/ChatModal";
 import { useKesslerStore } from "@/lib/store";
 import SearchBox from "@/components/Search/SearchBox";
 import { FileSearchBoxProps, PageContextMode } from "@/lib/types/SearchTypes";
+import InfiniteScrollPlus from "@/components/InfiniteScroll/InfiniteScroll";
 
 const TableFilters = ({
   searchQuery,
@@ -135,10 +136,6 @@ const FileSearchView = ({
   };
   const globalStore = useKesslerStore();
   const experimentalFeatures = globalStore.experimentalFeaturesEnabled;
-  useEffect(() => {
-    getInitialUpdates();
-  }, [queryData.filters, queryData.query, queryData]);
-
   const searchBoxProp: FileSearchBoxProps = {
     pageContext: PageContextMode.Files,
     setSearchData: setQueryData,
@@ -161,24 +158,15 @@ const FileSearchView = ({
       </div>
       <div className="w-full h-full">
         <SearchBox input={searchBoxProp} />
-        <InfiniteScroll
+        <InfiniteScrollPlus
           dataLength={filings.length}
-          next={getMore}
+          getMore={getMore}
           hasMore={true}
-          loader={
-            <div onClick={getMore}>
-              <LoadingSpinnerTimeout
-                loadingText="Loading Files"
-                timeoutSeconds={10}
-                replacement={
-                  filings.length == 0 ? <p>No Documents Found</p> : <></>
-                }
-              />
-            </div>
-          }
+          loadInitial={getInitialUpdates}
+          reloadOnChangeObj={queryData}
         >
           <FilingTable filings={filings} DocketColumn={DocketColumn} />
-        </InfiniteScroll>
+        </InfiniteScrollPlus>
       </div>
     </>
   );
