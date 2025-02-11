@@ -9,6 +9,7 @@ import { getRuntimeEnv } from "@/lib/env_variables_hydration_script";
 import LoadingSpinnerTimeout from "@/components/styled-components/LoadingSpinnerTimeout";
 import { data } from "autoprefixer";
 import { TableStyled } from "@/components/styled-components/TableStyled";
+import InfiniteScrollPlus from "@/components/InfiniteScroll/InfiniteScroll";
 
 export interface OrganizationSearchSchema {
   query?: string;
@@ -123,24 +124,17 @@ const OrganizationTableInfiniteScroll = ({
     setTableData(result);
     setPage(numPageFetch);
   };
-  useEffect(() => {
-    getInitialData();
-  }, [lookup_data]);
   return (
     <>
-      <InfiniteScroll
+      <InfiniteScrollPlus
         dataLength={tableData.length}
         hasMore={true}
-        next={getMore}
-        loader={
-          <LoadingSpinnerTimeout
-            timeoutSeconds={10}
-            loadingText="Loading Conversations"
-          />
-        }
+        getMore={getMore}
+        loadInitial={getInitialData}
+        reloadOnChangeObj={lookup_data}
       >
         <OrganizationTable orgList={tableData} />
-      </InfiniteScroll>
+      </InfiniteScrollPlus>
     </>
   );
 };
