@@ -43,7 +43,15 @@ const conversationSearchGet = async (
   };
   const result = await axios
     .post(url, searchData)
-    .then((res) => cleanData(res));
+    .then((res) => {
+      if (res.status >= 400) {
+        throw new Error(`Request failed with status code ${res.status}`);
+      }
+      return cleanData(res);
+    })
+    .catch((error) => {
+      throw error;
+    });
   return result as ConversationTableSchema[];
 };
 
