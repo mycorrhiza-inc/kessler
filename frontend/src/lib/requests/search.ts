@@ -35,11 +35,14 @@ export const getSearchResults = async (
       )
       // check error conditions
       .then((response) => {
+        if (response.status >= 400) {
+          throw new Error(`Request failed with status code ${response.status}`);
+        }
         if (response.data?.length === 0 || typeof response.data === "string") {
           return [];
         }
+
         const filings = hydratedSearchResultsToFilings(response.data);
-        console.log("response data:::::", response.data);
         return filings;
       });
     console.log("getting data");
@@ -98,6 +101,9 @@ export const getRecentFilings = async (
   const response = await axios.get(
     `${runtimeConfig.public_api_url}/v2/search/file/recent_updates${queryString}`,
   );
+  if (response.status >= 400) {
+    throw new Error(`Request failed with status code ${response.status}`);
+  }
   // console.log("recent data", response.data);
   if (response.data.length > 0) {
     return hydratedSearchResultsToFilings(response.data);

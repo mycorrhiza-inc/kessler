@@ -20,14 +20,37 @@ const InfiniteScrollPlus = ({
   dataLength: number;
 }) => {
   const [isTableReloading, setIsTableReloading] = useState(false);
+  const [hasErrored, setHasErrored] = useState(false);
   const wrappedLoadInitial = async () => {
     setIsTableReloading(true);
-    await loadInitial();
+    try {
+      await loadInitial();
+    } catch {
+      setHasErrored(true);
+    }
     setIsTableReloading(false);
   };
   useEffect(() => {
     wrappedLoadInitial();
   }, [reloadOnChangeObj]);
+  if (hasErrored) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 m-4 rounded-lg bg-error/10 text-error">
+        <div className="text-5xl mb-4">⚠️</div>
+        <h3 className="text-xl font-bold mb-2">Oops! Something went wrong</h3>
+        <p className="text-center mb-4">
+          We encountered an error while loading the data. Please try refreshing
+          the page.
+        </p>
+        <button
+          onClick={() => window.location.reload()}
+          className="btn btn-error btn-outline"
+        >
+          Reload Page
+        </button>
+      </div>
+    );
+  }
 
   if (isTableReloading) {
     return <LoadingSpinner loadingText="Reloading..." />;

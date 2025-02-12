@@ -45,9 +45,12 @@ const organizationsListGet = async (
     // );
     // return valid_data;
   };
-  const result = await axios
-    .post(url, search_schema)
-    .then((res) => cleanData(res));
+  const result = await axios.post(url, search_schema).then((res) => {
+    if (res.status >= 400) {
+      throw new Error(`Request failed with status code ${res.status}`);
+    }
+    return cleanData(res);
+  });
   return result as OrganizationTableSchema[];
 };
 
