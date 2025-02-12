@@ -53,7 +53,7 @@ const InfiniteScrollPlus = ({
   }
 
   if (isTableReloading) {
-    return <LoadingSpinner loadingText="Reloading..." />;
+    return <LoadingSpinner loadingText="Loading..." />;
   }
   return (
     <InfiniteScroll
