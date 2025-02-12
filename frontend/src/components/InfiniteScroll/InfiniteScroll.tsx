@@ -19,7 +19,7 @@ const InfiniteScrollPlus = ({
   reloadOnChangeObj?: any;
   dataLength: number;
 }) => {
-  const [isTableReloading, setIsTableReloading] = useState(false);
+  const [isTableReloading, setIsTableReloading] = useState(true);
   const [hasErrored, setHasErrored] = useState(false);
   const wrappedLoadInitial = async () => {
     setIsTableReloading(true);
