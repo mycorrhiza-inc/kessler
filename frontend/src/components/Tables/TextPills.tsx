@@ -2,6 +2,7 @@ import { AuthorInformation } from "@/lib/types/backend_schemas";
 import Link from "next/link";
 import { FaFilePdf, FaFileWord, FaFileExcel, FaHtml5 } from "react-icons/fa";
 import { AiOutlineFileUnknown } from "react-icons/ai";
+import { FileExtension } from "./FileExtension";
 
 const oklchSubdivide = (colorNum: number, divisions?: number) => {
   const defaultDivisions = divisions || 18;
@@ -107,7 +108,7 @@ export const RawPill = ({
   );
 };
 
-const getIcon = (ext: FileExtension) => {
+export const getExtensionIcon = (ext: FileExtension) => {
   switch (ext) {
     case FileExtension.PDF:
       return <FaFilePdf />;
@@ -122,14 +123,7 @@ const getIcon = (ext: FileExtension) => {
       return <AiOutlineFileUnknown />;
   }
 };
-export enum FileExtension {
-  PDF,
-  XLSX,
-  DOCX,
-  HTML,
-  UNKNOWN,
-}
-const fileTypeColor: Record<FileExtension, string> = {
+export const fileTypeColor: Record<FileExtension, string> = {
   [FileExtension.PDF]: "oklch(65.55% 0.133 0)",
   [FileExtension.DOCX]: "oklch(70.55% 0.13 240)",
   [FileExtension.XLSX]: "oklch(75.55% 0.133 140)",
@@ -139,7 +133,7 @@ const fileTypeColor: Record<FileExtension, string> = {
 
 export const ExtensionPill = ({ ext }: { ext: FileExtension }) => {
   const colorString = fileTypeColor[ext];
-  const icon = getIcon(ext);
+  const icon = getExtensionIcon(ext);
 
   return (
     <RawPill color={colorString}>
