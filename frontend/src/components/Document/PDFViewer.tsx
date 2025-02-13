@@ -54,6 +54,7 @@ const PDFViewer = ({ file }: { file: string }) => {
     } catch (error) {
       setDownloading(false);
       const errString = `Failed to fetch PDF: ${error}`;
+      console.log(errString);
       setErr(errString);
       throw new Error(errString);
     }
