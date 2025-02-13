@@ -1,6 +1,6 @@
 const XlsxViewer = ({ file }: { file: string }) => {
   return (
-    <div className="flex flex-col items-center justify-center p-8 m-4 rounded-lg bg-success/10 text-success">
+    <div className="flex flex-col items-center justify-center p-8 m-4 rounded-lg bg-success/10 text-success-content">
       <div className="text-5xl mb-4">⚠️</div>
       <h3 className="text-xl font-bold mb-2">
         Unforuntately, we dont have support for viewing Excel Spreadsheets in
@@ -14,7 +14,7 @@ const XlsxViewer = ({ file }: { file: string }) => {
         href={file}
         target="_blank"
         onClick={() => window.location.reload()}
-        className="btn btn-success btn-outline"
+        className="btn btn-success-content btn-outline"
       >
         Download File
       </a>
