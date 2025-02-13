@@ -124,9 +124,9 @@ export const getExtensionIcon = (ext: FileExtension) => {
   }
 };
 export const fileTypeColor: Record<FileExtension, string> = {
-  [FileExtension.PDF]: "oklch(65.55% 0.133 0)",
+  [FileExtension.PDF]: "oklch(60.37% 0.2391 29.86)", // Get the exact adobe red off their website
   [FileExtension.DOCX]: "oklch(70.55% 0.13 240)",
-  [FileExtension.XLSX]: "oklch(75.55% 0.133 140)",
+  [FileExtension.XLSX]: "oklch(75.55% 0.17 140)",
   [FileExtension.HTML]: "oklch(80.55% 0.08 60)",
   [FileExtension.UNKNOWN]: "oklch(60% 0.3 0)",
 };
