@@ -18,6 +18,9 @@ import { FilterField } from "@/lib/filters";
 import { AuthorInfoPill, DocketPill } from "../Tables/TextPills";
 import { getRuntimeEnv } from "@/lib/env_variables_hydration_script";
 import { runtimeConfig } from "@/lib/env_variables";
+import { FileExtension, fileExtensionFromText } from "../Tables/FileExtension";
+import XlsxViewer from "./XlsxViewer";
+import ErrorMessage from "../ErrorMessage";
 
 // import { ErrorBoundary } from "react-error-boundary";
 
@@ -77,13 +80,22 @@ const MetadataContent = memo(({ metadata }: { metadata: any }) => {
   );
 });
 
-const PDFContent = ({ docUUID }: { docUUID: string }) => {
+const DocumentContent = ({
+  docUUID,
+  extension,
+}: {
+  docUUID: string;
+  extension: FileExtension;
+}) => {
   const runtimeConfig = getRuntimeEnv();
-  const pdfUrl = `${runtimeConfig.public_api_url}/v2/public/files/${docUUID}/raw`;
-  {
-    /* This apparently gets an undefined network error when trying to fetch the pdf from their website not exactly sure why, we need to get the s3 fetch working in golang */
+  const documentUrl = `${runtimeConfig.public_api_url}/v2/public/files/${docUUID}/raw`;
+  if (extension == FileExtension.PDF) {
+    return <PDFViewer file={documentUrl} />;
   }
-  return <PDFViewer file={pdfUrl} />;
+  if (extension == FileExtension.XLSX) {
+    return <XlsxViewer file={documentUrl} />;
+  }
+  return <ErrorMessage error={`Cannot Display Document Type`} />;
 };
 
 const DocumentHeader = ({
@@ -180,8 +192,8 @@ export const DocumentMainTabs = ({
   const showText =
     documentObject?.verified && documentObject?.extension != "xlsx";
   // Temporary fix while we sort out the bad documents
-  const showRawDocument =
-    documentObject?.extension == "pdf" && documentObject?.verified;
+  const showRawDocument = documentObject?.verified;
+  const extension = fileExtensionFromText(documentObject?.extension);
   const getDefaultTab = (
     showRawDocument: boolean,
     showText: boolean,
@@ -233,7 +245,7 @@ export const DocumentMainTabs = ({
         </Tabs.List>
         {showRawDocument && (
           <Tabs.Content className="TabsContent" value="tab1">
-            <PDFContent docUUID={objectId} />
+            <DocumentContent docUUID={objectId} extension={extension} />
           </Tabs.Content>
         )}
         {showText && (
