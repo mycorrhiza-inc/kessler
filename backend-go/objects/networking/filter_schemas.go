@@ -14,7 +14,7 @@ type Metadata struct {
 	Date             string      `json:"date"`
 	DocketID         string      `json:"docket_id"`
 	FileClass        string      `json:"file_class"`
-	Doctype          string      `json:"doctype"`
+	Extension        string      `json:"extension"`
 	Lang             string      `json:"lang"`
 	Language         string      `json:"language"`
 	Source           string      `json:"source"`
