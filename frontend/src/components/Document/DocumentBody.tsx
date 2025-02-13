@@ -23,10 +23,19 @@ import XlsxViewer from "./XlsxViewer";
 import ErrorMessage from "../ErrorMessage";
 
 // import { ErrorBoundary } from "react-error-boundary";
+//
+const getSafePublicAPIUrl = () => {
+  const runtimeConfig = getRuntimeEnv();
+  try {
+    const rawPublicUrl = runtimeConfig?.public_api_url;
+    return rawPublicUrl || "https://api.kessler.xyz";
+  } catch {
+    return "https://api.kessler.xyz";
+  }
+};
 
 const MarkdownContent = memo(({ docUUID }: { docUUID: string }) => {
-  const runtimeConfig = getRuntimeEnv();
-  const markdown_url = `${runtimeConfig.public_api_url}/v2/public/files/${docUUID}/markdown`;
+  const markdown_url = `${getSafePublicAPIUrl()}/v2/public/files/${docUUID}/markdown`;
   // axios.get(`https://api.kessler.xyz/v2/public/files/${objectid}/markdown`),
   const { data, error, isLoading } = useSWRImmutable(
     markdown_url,
@@ -87,8 +96,7 @@ const DocumentContent = ({
   docUUID: string;
   extension: FileExtension;
 }) => {
-  const runtimeConfig = getRuntimeEnv();
-  const documentUrl = `${runtimeConfig.public_api_url}/v2/public/files/${docUUID}/raw`;
+  const documentUrl = `${getSafePublicAPIUrl()}/v2/public/files/${docUUID}/raw`;
   if (extension == FileExtension.PDF) {
     return <PDFViewer file={documentUrl} />;
   }
