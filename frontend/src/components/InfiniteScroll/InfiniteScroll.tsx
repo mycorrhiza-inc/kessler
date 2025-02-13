@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import LoadingSpinnerTimeout from "../styled-components/LoadingSpinnerTimeout";
 import InfiniteScroll from "react-infinite-scroll-component";
 import LoadingSpinner from "../styled-components/LoadingSpinner";
+import ErrorMessage from "../ErrorMessage";
 
 const InfiniteScrollPlus = ({
   children,
@@ -20,35 +21,26 @@ const InfiniteScrollPlus = ({
   dataLength: number;
 }) => {
   const [isTableReloading, setIsTableReloading] = useState(true);
-  const [hasErrored, setHasErrored] = useState(false);
+  const [err, setErr] = useState("");
   const wrappedLoadInitial = async () => {
     setIsTableReloading(true);
     try {
       await loadInitial();
-    } catch {
-      setHasErrored(true);
+    } catch (error) {
+      setErr((error as Error).message);
     }
     setIsTableReloading(false);
   };
   useEffect(() => {
     wrappedLoadInitial();
   }, [reloadOnChangeObj]);
-  if (hasErrored) {
+  if (err != "") {
     return (
-      <div className="flex flex-col items-center justify-center p-8 m-4 rounded-lg bg-error/10 text-error">
-        <div className="text-5xl mb-4">⚠️</div>
-        <h3 className="text-xl font-bold mb-2">Oops! Something went wrong</h3>
-        <p className="text-center mb-4">
-          We encountered an error while loading the data. Please try refreshing
-          the page.
-        </p>
-        <button
-          onClick={() => window.location.reload()}
-          className="btn btn-error btn-outline"
-        >
-          Reload Page
-        </button>
-      </div>
+      <ErrorMessage
+        reload
+        message="We encountered an error while loading the data. Please try refreshing the page"
+        error={err}
+      />
     );
   }
 
