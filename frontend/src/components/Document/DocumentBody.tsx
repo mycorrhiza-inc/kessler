@@ -78,17 +78,12 @@ const MetadataContent = memo(({ metadata }: { metadata: any }) => {
 });
 
 const PDFContent = ({ docUUID }: { docUUID: string }) => {
-  const [loading, setLoading] = React.useState(true);
   const runtimeConfig = getRuntimeEnv();
   const pdfUrl = `${runtimeConfig.public_api_url}/v2/public/files/${docUUID}/raw`;
-  return (
-    <>
-      {/* This apparently gets an undefined network error when trying to fetch the pdf from their website not exactly sure why, we need to get the s3 fetch working in golang */}
-      <PDFViewer file={pdfUrl} setLoading={setLoading}></PDFViewer>
-
-      {loading && <LoadingSpinner loadingText="PDF Viewer Loading" />}
-    </>
-  );
+  {
+    /* This apparently gets an undefined network error when trying to fetch the pdf from their website not exactly sure why, we need to get the s3 fetch working in golang */
+  }
+  return <PDFViewer file={pdfUrl} />;
 };
 
 const DocumentHeader = ({
