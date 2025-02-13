@@ -1,10 +1,16 @@
 import React, { useState } from "react";
 import { Filing } from "@/lib/types/FilingTypes";
 import { AuthorInformation } from "@/lib/types/backend_schemas";
-import { AuthorInfoPill, DocketPill, TextPill } from "./TextPills";
+import {
+  AuthorInfoPill,
+  DocketPill,
+  ExtensionPill,
+  TextPill,
+} from "./TextPills";
 import DocumentModal from "../Document/DocumentModal";
 import clsx from "clsx";
 import { TableStyled } from "../styled-components/TableStyled";
+import { fileExtensionFromText } from "./FileExtension";
 
 const NoclickSpan = ({ children }: { children: React.ReactNode }) => {
   return <span className="noclick">{children}</span>;
@@ -86,6 +92,9 @@ const TableRow = ({
         )}
 
         <td>{filing.item_number}</td>
+        <td>
+          <ExtensionPill ext={fileExtensionFromText(filing.extension)} />
+        </td>
       </tr>
     </>
   );
@@ -115,6 +124,7 @@ export const FilingTable = ({
           {/* docket id column */}
           {DocketColumn && <col width="50px" />}
           <col width="50px" />
+          <col width="50px" />
         </>
       }
       header_row_content={
@@ -131,6 +141,7 @@ export const FilingTable = ({
             <th className="text-left sticky top-0">Docket ID</th>
           )}
           <th className="text-left sticky top-0">Item Number</th>
+          <th className="text-left sticky top-0">Extension</th>
         </>
       }
       table_content={

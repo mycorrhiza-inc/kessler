@@ -159,6 +159,7 @@ export const generateFilingFromFileSchema = (
     file_class: file_schema.mdata.file_class,
     docket_id: file_schema.mdata.docket_id,
     url: file_schema.mdata.url,
+    extension: file_schema.extension,
   };
 };
 

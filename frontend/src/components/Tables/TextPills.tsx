@@ -1,37 +1,42 @@
 import { AuthorInformation } from "@/lib/types/backend_schemas";
 import Link from "next/link";
+import { FaFilePdf, FaFileWord, FaFileExcel, FaHtml5 } from "react-icons/fa";
+import { AiOutlineFileUnknown } from "react-icons/ai";
+import { FileExtension } from "./FileExtension";
 
 const oklchSubdivide = (colorNum: number, divisions?: number) => {
-  const defaultDivisions = divisions || 15;
+  const defaultDivisions = divisions || 18;
   const hue = (colorNum % defaultDivisions) * (360 / defaultDivisions);
   return `oklch(83% 0.123 ${hue})`;
 };
 
-const subdivide15 = [
+const subdivide20 = [
   "oklch(83% 0.123 0)",
-  "oklch(83% 0.123 30)",
-  "oklch(83% 0.123 60)",
+  "oklch(83% 0.123 18)",
+  "oklch(83% 0.123 36)",
+  "oklch(83% 0.123 54)",
+  "oklch(83% 0.123 72)",
   "oklch(83% 0.123 90)",
-  "oklch(83% 0.123 120)",
-  "oklch(83% 0.123 150)",
+  "oklch(83% 0.123 108)",
+  "oklch(83% 0.123 126)",
+  "oklch(83% 0.123 144)",
+  "oklch(83% 0.123 162)",
   "oklch(83% 0.123 180)",
-  "oklch(83% 0.123 210)",
-  "oklch(83% 0.123 240)",
+  "oklch(83% 0.123 198)",
+  "oklch(83% 0.123 216)",
+  "oklch(83% 0.123 234)",
+  "oklch(83% 0.123 252)",
   "oklch(83% 0.123 270)",
-  "oklch(83% 0.123 300)",
-  "oklch(83% 0.123 330)",
+  "oklch(83% 0.123 288)",
+  "oklch(83% 0.123 306)",
+  "oklch(83% 0.123 324)",
+  "oklch(83% 0.123 342)",
 ];
 
 type FileColor = {
   pdf: string;
   doc: string;
   xlsx: string;
-};
-
-const fileTypeColor = {
-  pdf: "oklch(65.55% 0.133 0)",
-  doc: "oklch(60.55% 0.13 240)",
-  xlsx: "oklch(75.55% 0.133 140)",
 };
 
 const IsFiletypeColor = (key: string): key is keyof FileColor => {
@@ -42,13 +47,15 @@ export const subdividedHueFromSeed = (seed?: string): string => {
   if (seed === undefined) {
     return "oklch(40% 0.33 0)";
   }
-  const seed_integer =
-    Math.abs(
-      seed
-        .split("")
-        .reduce((acc, char) => (acc * 3 + 2 * char.charCodeAt(0)) % 27, 0),
-    ) % 9;
-  return oklchSubdivide(seed_integer, 15);
+  const seed_integer = Math.abs(
+    seed
+      .split("")
+      .reduce(
+        (acc, char) => (1 + acc * 31 + 224 * char.charCodeAt(0)) % 217,
+        0,
+      ),
+  );
+  return oklchSubdivide(seed_integer, 18);
 };
 
 export const TextPill = ({
@@ -62,31 +69,79 @@ export const TextPill = ({
 }) => {
   const textDefined: string = text || "Unknown";
   const actualSeed = seed || textDefined;
-  var pillColor = "";
-  if (IsFiletypeColor(textDefined)) {
-    pillColor = fileTypeColor[textDefined];
-  } else {
-    pillColor = subdividedHueFromSeed(actualSeed);
-  }
+  const pillColor = subdividedHueFromSeed(actualSeed);
   // btn-[${pillColor}]
+  return (
+    <RawPill color={pillColor} href={href}>
+      {textDefined}
+    </RawPill>
+  );
+};
+
+export const RawPill = ({
+  children,
+  color,
+  href,
+}: {
+  children: React.ReactNode;
+  color: string;
+  href?: string;
+}) => {
   if (href) {
     return (
       <Link
-        style={{ backgroundColor: pillColor }}
+        style={{ backgroundColor: color }}
         className={`btn btn-xs m-1 h-auto pb-1 text-black noclick text-pretty	`}
         href={href}
       >
-        {text}
+        {children}
       </Link>
     );
   }
   return (
     <button
-      style={{ backgroundColor: pillColor }}
-      className={`btn  btn-xs m-1 h-auto pb-1 no-animation text-black mt-2 mb-2 noclick text-pretty`}
+      style={{ backgroundColor: color }}
+      className={`btn btn-xs m-1 h-auto pb-1 no-animation text-black mt-2 mb-2 noclick text-pretty`}
     >
-      {text}
+      {children}
     </button>
+  );
+};
+
+export const getExtensionIcon = (ext: FileExtension) => {
+  switch (ext) {
+    case FileExtension.PDF:
+      return <FaFilePdf />;
+    case FileExtension.DOCX:
+      return <FaFileWord />;
+    case FileExtension.XLSX:
+      return <FaFileExcel />;
+    case FileExtension.HTML:
+      return <FaHtml5 />;
+    case FileExtension.UNKNOWN:
+    default:
+      return <AiOutlineFileUnknown />;
+  }
+};
+export const fileTypeColor: Record<FileExtension, string> = {
+  [FileExtension.PDF]: "oklch(60.37% 0.2391 29.86)", // Get the exact adobe red off their website
+  [FileExtension.DOCX]: "oklch(70.55% 0.13 240)",
+  [FileExtension.XLSX]: "oklch(75.55% 0.17 140)",
+  [FileExtension.HTML]: "oklch(80.55% 0.08 60)",
+  [FileExtension.UNKNOWN]: "oklch(60% 0.3 0)",
+};
+
+export const ExtensionPill = ({ ext }: { ext: FileExtension }) => {
+  const colorString = fileTypeColor[ext];
+  const icon = getExtensionIcon(ext);
+
+  return (
+    <RawPill color={colorString}>
+      <span className="flex items-center">
+        <span className="mr-2">{icon}</span>
+        {FileExtension[ext].toUpperCase()}
+      </span>
+    </RawPill>
   );
 };
 

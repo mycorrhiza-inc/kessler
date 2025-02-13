@@ -182,7 +182,7 @@ func ExtractSearchData(data quickwitSearchResponse) ([]SearchDataHydrated, error
 		file_schema := files.CompleteFileSchema{
 			ID:           file_id,
 			Name:         hit.Name,
-			Extension:    hit.Metadata.Doctype,
+			Extension:    hit.Metadata.Extension,
 			Conversation: convo_info,
 			Mdata: files.FileMetadataSchema{
 				"docket_id":   hit.Metadata.DocketID,
