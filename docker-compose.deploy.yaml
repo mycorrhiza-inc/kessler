@@ -27,7 +27,7 @@ services:
     env_file:
       - config/global.env
     environment:
-      CONFIG_HASH: latest
+      VERSION_HASH: latest
     volumes:
       - ./config/frontend.env.local:/app.env.local
       - ./config/global.env:/app/.env
@@ -63,7 +63,7 @@ services:
     env_file:
       - config/global.env
     environment:
-      CONFIG_HASH: latest
+      VERSION_HASH: latest
     expose:
       - 4041
     labels:
