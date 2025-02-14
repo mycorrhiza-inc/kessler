@@ -59,7 +59,7 @@ const TableRow = ({
 
     // If it's not the specific text, allow the row click to proceed
     console.log("Row was clicked");
-    setOpen((previous) => !previous);
+    OpenRow(filing.id);
   };
 
   return (
