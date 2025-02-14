@@ -1,14 +1,12 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import { AngleDownIcon, AngleUpIcon } from "../Icons";
-import { AuthorInfoPill, subdividedHueFromSeed } from "../Tables/TextPills";
+import { subdividedHueFromSeed } from "../Tables/TextPills";
 import {
-  QueryFileFilterFields,
   QueryDataFile,
   InheritedFilterValues,
   initialFiltersFromInherited,
 } from "@/lib/filters";
-import { Query } from "pg";
 import {
   FileSearchBoxProps,
   Filter,
@@ -16,7 +14,6 @@ import {
   SearchBoxInputProps,
   Suggestion,
 } from "@/lib/types/SearchTypes";
-import { randomUUID } from "crypto";
 import { ConvoSearchRequestData } from "../LookupPages/SearchRequestData";
 import { mockFetchSuggestions } from "./SearchSuggestions";
 
