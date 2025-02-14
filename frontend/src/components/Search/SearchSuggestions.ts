@@ -56,25 +56,6 @@ export const getRawSuggestions = (
   if (PageContext === PageContextMode.Files) {
     return [
       {
-        id: "0b544651-0226-4e0d-83af-184ef5aad4e5",
-        type: "organization",
-        label: "New York State Department of Public Service",
-        value: "acme",
-      },
-      {
-        id: "be6aa9d6-e03f-4f85-a2f4-ae7e14199ec4",
-        type: "organization",
-        label: "Protect Our Coast - LINY",
-        value: "apple",
-      },
-      {
-        id: "24-E-0165",
-        type: "docket",
-        label: "24-E-0165: Commission Regarding the Grid of the Future",
-        value: "bug-123",
-      },
-
-      {
         id: "fc001a23-5f7e-4b3c-9d2a-8f6e4c7d9e0b",
         type: "file_class",
         label: "Plans and Proposals",
