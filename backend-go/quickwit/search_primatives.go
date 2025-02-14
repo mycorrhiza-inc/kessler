@@ -69,6 +69,9 @@ func ConstructGenericFilterQuery(values reflect.Value, types reflect.Type, useQu
 		// get the field and value
 		field := types.Field(i)
 		value := values.Field(i)
+		if value.IsZero() {
+			break
+		}
 		tag := field.Tag.Get("json")
 		if strings.Contains(tag, ",omitempty") {
 			tag = strings.Split(tag, ",")[0]

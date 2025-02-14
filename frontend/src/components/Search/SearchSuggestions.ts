@@ -1,3 +1,4 @@
+import { getRuntimeEnv } from "@/lib/env_variables_hydration_script";
 import { PageContextMode, Suggestion } from "@/lib/types/SearchTypes";
 
 export const getRawSuggestions = (
@@ -148,6 +149,33 @@ export const getRawSuggestions = (
   return [];
 };
 
+interface RawSuggestion {
+  id: string;
+  name: string;
+  type: string;
+}
+
+const rawToRealSuggestions = (sug: RawSuggestion): Suggestion => {
+  return { id: sug.id, type: sug.type, label: sug.name, value: sug.id };
+};
+
+export const fetchSuggestionsQuickwitAsync = async (
+  query: string,
+): Promise<Suggestion[]> => {
+  const runtimeClientConfig = getRuntimeEnv();
+  // IF issues replace this line
+  // const apiUrl =
+  // runtimeClientConfig?.public_api_url || "https://api.kessler.xyz";
+  const apiUrl = runtimeClientConfig?.public_api_url;
+  const url = `${apiUrl}/v2/autocomplete/files-basic?query=${query}`;
+  const res = await fetch(url);
+  const suggestions = await res.json();
+  const return_sugs = (suggestions as RawSuggestion[]).map(
+    rawToRealSuggestions,
+  );
+  return return_sugs;
+};
+
 export const mockFetchSuggestions = async (
   query: string,
   PageContext: PageContextMode,
@@ -155,11 +183,14 @@ export const mockFetchSuggestions = async (
   // Simulate API delay
   // await new Promise((resolve) => setTimeout(resolve, 300));
 
-  const suggestions: Suggestion[] = getRawSuggestions(PageContext).filter(
+  let suggestions: Suggestion[] = getRawSuggestions(PageContext).filter(
     (s) =>
       s.label.toLowerCase().includes(query.toLowerCase()) ||
       s.type.toLowerCase().includes(query.toLowerCase()),
   );
+  if (query.length < 3) return suggestions;
+  const new_sugs = await fetchSuggestionsQuickwitAsync(query);
+  suggestions = [...suggestions, ...new_sugs];
 
   return suggestions;
 };

@@ -45,14 +45,14 @@ const config = {
         {
           "bg-dot-thick": (value: any) => ({
             backgroundImage: `url("${svgToDataUri(
-              `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="16" height="16" fill="none"><circle fill="${value}" id="pattern-circle" cx="10" cy="10" r="2.5"></circle></svg>`
+              `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="16" height="16" fill="none"><circle fill="${value}" id="pattern-circle" cx="10" cy="10" r="2.5"></circle></svg>`,
             )}")`,
           }),
         },
         {
           values: flattenColorPalette(theme("backgroundColor")),
           type: "color",
-        }
+        },
       );
     },
     addVariablesForColors,
@@ -75,7 +75,8 @@ const config = {
 
           // Component specific colors
           info: "#2B2B2B",
-          success: "#93FF87",
+          success: "oklch(90.79% 0.1866 141.82)",
+          "success-content": "oklch(29.12% 0.0802 141.82)",
           warning: "#FFF388",
           error: "#FF8787",
 
@@ -98,7 +99,7 @@ export default config;
 function addVariablesForColors({ addBase, theme }: any) {
   let allColors = flattenColorPalette(theme("colors"));
   let newVars = Object.fromEntries(
-    Object.entries(allColors).map(([key, val]) => [`--${key}`, val])
+    Object.entries(allColors).map(([key, val]) => [`--${key}`, val]),
   );
 
   addBase({
