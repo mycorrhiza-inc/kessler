@@ -7,10 +7,11 @@ import {
   ExtensionPill,
   TextPill,
 } from "./TextPills";
-import DocumentModal from "../Document/DocumentModal";
+import DocumentModal from '../Document/DocumentModal';
 import clsx from "clsx";
 import { TableStyle } from "../styles/Table";
 import { fileExtensionFromText } from "./FileExtension";
+import { string } from "zod";
 
 const NoclickSpan = ({ children }: { children: React.ReactNode }) => {
   return <span className="noclick">{children}</span>;
@@ -31,9 +32,11 @@ const AuthorColumn = ({ filing }: { filing: Filing }) => {
 const TableRow = ({
   filing,
   DocketColumn,
+  OpenRow
 }: {
   filing: Filing;
   DocketColumn?: boolean;
+  OpenRow: (id: string) => void
 }) => {
   const [open, setOpen] = useState(false);
   const handleRowClick = (event: React.MouseEvent<HTMLTableRowElement>) => {
@@ -110,47 +113,57 @@ export const FilingTable = ({
   PinTableHeader?: boolean;
 }) => {
   // const pinClassName = PinTableHeader ? "table-pin-rows" : "";
+  const [modalIsOpen, setModalIsOpen] = useState(false);
+  const [modalObjectId, setModalObjectId] = useState("");
+  const OpenRowInModal = (id: string) => {
+    setModalObjectId(id);
+    setModalIsOpen(true);
+  };
 
   return (
-    <table className={TableStyle}>
-      <colgroup>
-        <col width="40px" />
-        <col width="80px" />
-        <col width="200px" />
-        {/* authors column */}
-        {DocketColumn ? <col width="200px" /> : <col width="300px" />}
-        {/* docket id column */}
-        {DocketColumn && <col width="50px" />}
-        <col width="50px" />
-        <col width="50px" />
-      </colgroup>
-      <thead>
-        <tr>
-          <th className="text-left sticky top-0 filing-table-date">
-            Date Filed
-          </th>
-          <th className="text-left sticky top-0 filing-table-doc-class">
-            Document Class
-          </th>
-          <th className="text-left sticky top-0">Title</th>
-          <th className="text-left sticky top-0">Author</th>
-          {DocketColumn && (
-            <th className="text-left sticky top-0">Docket ID</th>
-          )}
-          <th className="text-left sticky top-0">Item Number</th>
-          <th className="text-left sticky top-0">Extension</th>
-        </tr>
-      </thead>
-      <tbody>
-        {filings.map((filing) => (
-          <TableRow
-            filing={filing}
-            {...(DocketColumn !== undefined ? { DocketColumn } : {})}
-            key={filing.id}
-          />
-        ))}
-      </tbody>
-    </table>
+    <div>
+      <table className={TableStyle}>
+        <colgroup>
+          <col width="40px" />
+          <col width="80px" />
+          <col width="200px" />
+          {/* authors column */}
+          {DocketColumn ? <col width="200px" /> : <col width="300px" />}
+          {/* docket id column */}
+          {DocketColumn && <col width="50px" />}
+          <col width="50px" />
+          <col width="50px" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th className="text-left sticky top-0 filing-table-date">
+              Date Filed
+            </th>
+            <th className="text-left sticky top-0 filing-table-doc-class">
+              Document Class
+            </th>
+            <th className="text-left sticky top-0">Title</th>
+            <th className="text-left sticky top-0">Author</th>
+            {DocketColumn && (
+              <th className="text-left sticky top-0">Docket ID</th>
+            )}
+            <th className="text-left sticky top-0">Item Number</th>
+            <th className="text-left sticky top-0">Extension</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filings.map((filing) => (
+            <TableRow
+              OpenRow={OpenRowInModal}
+              filing={filing}
+              {...(DocketColumn !== undefined ? { DocketColumn } : {})}
+              key={filing.id}
+            />
+          ))}
+        </tbody>
+      </table>
+      <DocumentModal objectId={modalObjectId} open={modalIsOpen} setOpen={setModalIsOpen} />
+    </div>
   );
 };
 export default FilingTable;
