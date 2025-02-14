@@ -14,7 +14,7 @@ import (
 
 func DefineAutocompleteRoutes(autocomplete_subrouter *mux.Router) {
 	autocomplete_subrouter.HandleFunc(
-		"/files-autocomplete",
+		"/files-basic",
 		AutocompleteFileHandler,
 	).Methods(http.MethodGet)
 }
@@ -66,7 +66,8 @@ func AutoCompleteFileGetResults(query string, ctx context.Context) ([]AutoComple
 			convoChan <- AsyncResult{Err: err}
 			return
 		}
-		autocomplete_hits := make([]AutoCompleteHit, 0, len(results))
+		log.Info("Creating Autocomplete Hits")
+		autocomplete_hits := make([]AutoCompleteHit, len(results))
 		for index, result := range results {
 			autocomplete_hits[index] = AutoCompleteHit{
 				ID:   result.ID,
@@ -92,7 +93,8 @@ func AutoCompleteFileGetResults(query string, ctx context.Context) ([]AutoComple
 			orgChan <- AsyncResult{Err: err}
 			return
 		}
-		autocomplete_hits := make([]AutoCompleteHit, 0, len(results))
+		autocomplete_hits := make([]AutoCompleteHit, len(results))
+		log.Info("Creating Autocomplete Hits")
 		for index, result := range results {
 			autocomplete_hits[index] = AutoCompleteHit{
 				ID:   result.ID,
@@ -111,5 +113,6 @@ func AutoCompleteFileGetResults(query string, ctx context.Context) ([]AutoComple
 	if convoResults.Err != nil {
 		return []AutoCompleteHit{}, nil
 	}
+	log.Info("Got autocomplete results!")
 	return append(orgResults.Results, convoResults.Results...), nil
 }
