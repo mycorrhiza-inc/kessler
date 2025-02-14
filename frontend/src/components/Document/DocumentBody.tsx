@@ -17,18 +17,20 @@ import { ExperimentalChatModalClickDiv } from "../Chat/ChatModal";
 import { FilterField } from "@/lib/filters";
 import { AuthorInfoPill, DocketPill } from "../Tables/TextPills";
 import { getRuntimeEnv } from "@/lib/env_variables_hydration_script";
-import { runtimeConfig } from "@/lib/env_variables";
 import { FileExtension, fileExtensionFromText } from "../Tables/FileExtension";
 import XlsxViewer from "./XlsxViewer";
 import ErrorMessage from "../ErrorMessage";
+import { runtimeConfig } from "@/lib/env_variables";
 
 // import { ErrorBoundary } from "react-error-boundary";
 //
 const getSafePublicAPIUrl = () => {
-  const runtimeConfig = getRuntimeEnv();
+  const runtimeConfigClient = getRuntimeEnv();
   try {
-    const rawPublicUrl = runtimeConfig?.public_api_url;
-    return rawPublicUrl || "https://api.kessler.xyz";
+    const rawPublicUrl = runtimeConfigClient?.public_api_url;
+    return (
+      rawPublicUrl || runtimeConfig?.public_api_url || "https://api.kessler.xyz"
+    );
   } catch {
     return "https://api.kessler.xyz";
   }
