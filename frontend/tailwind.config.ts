@@ -64,9 +64,9 @@ const config = {
     themes: [
       {
         light: {
-          primary: "#FFF388", // Yellow accent color
+          primary: "#E1D889", // Yellow accent color
           secondary: "#2B2B2B", // Dark gray
-          accent: "#93FF87", // Green accent from design
+          accent: "#8BCF83", // Green accent from design
           neutral: "#4E4E4E", // Medium gray
           "base-100": "#EBE9E3", // Main background color
           "base-200": "#E0DDD4", // Secondary background color

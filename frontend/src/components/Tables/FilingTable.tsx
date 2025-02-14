@@ -9,7 +9,7 @@ import {
 } from "./TextPills";
 import DocumentModal from "../Document/DocumentModal";
 import clsx from "clsx";
-import { TableStyle } from "../styled-components/TableStyled";
+import { TableStyle } from "../styles/Table";
 import { fileExtensionFromText } from "./FileExtension";
 
 const NoclickSpan = ({ children }: { children: React.ReactNode }) => {
