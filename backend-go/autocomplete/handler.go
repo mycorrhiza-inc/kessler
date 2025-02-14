@@ -2,6 +2,8 @@ package autocomplete
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"kessler/quickwit"
 	"net/http"
 
@@ -18,7 +20,21 @@ func DefineAutocompleteRoutes(autocomplete_subrouter *mux.Router) {
 }
 
 func AutocompleteFileHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Hello world"))
+	ctx := r.Context()
+	query := r.URL.Query().Get("query")
+	autocomplete_hits, err := AutoCompleteFileGetResults(query, ctx)
+	if err != nil {
+		log.Error("Error getting autocomplete results", "err", err)
+		http.Error(w, fmt.Sprintf("Error getting autocomplete results: %v", err), http.StatusInternalServerError)
+		return
+	}
+	return_bytes, err := json.Marshal(autocomplete_hits)
+	if err != nil {
+		log.Error("Error marshaling autocomplete results", "err", err)
+		http.Error(w, fmt.Sprintf("Error marshaling autocomplete results: %v", err), http.StatusInternalServerError)
+		return
+	}
+	w.Write(return_bytes)
 }
 
 type AutoCompleteHit struct {
