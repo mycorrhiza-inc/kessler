@@ -9,7 +9,7 @@ import {
 } from "./TextPills";
 import DocumentModal from "../Document/DocumentModal";
 import clsx from "clsx";
-import { TableStyled } from "../styled-components/TableStyled";
+import { TableStyle } from "../styled-components/TableStyled";
 import { fileExtensionFromText } from "./FileExtension";
 
 const NoclickSpan = ({ children }: { children: React.ReactNode }) => {
@@ -21,8 +21,8 @@ const AuthorColumn = ({ filing }: { filing: Filing }) => {
     <>
       {filing.authors_information
         ? filing.authors_information.map((auth_info: AuthorInformation) => (
-            <AuthorInfoPill author_info={auth_info} />
-          ))
+          <AuthorInfoPill author_info={auth_info} />
+        ))
         : filing.author + " Something isnt working"}
     </>
   );
@@ -67,7 +67,6 @@ const TableRow = ({
       >
         <td>
           <NoclickSpan>{filing.date}</NoclickSpan>
-          <DocumentModal open={open} setOpen={setOpen} objectId={filing.id} />
         </td>
         <td>
           <NoclickSpan>
@@ -113,22 +112,20 @@ export const FilingTable = ({
   // const pinClassName = PinTableHeader ? "table-pin-rows" : "";
 
   return (
-    <TableStyled
-      colgroup={
-        <>
-          <col width="40px" />
-          <col width="80px" />
-          <col width="200px" />
-          {/* authors column */}
-          {DocketColumn ? <col width="200px" /> : <col width="300px" />}
-          {/* docket id column */}
-          {DocketColumn && <col width="50px" />}
-          <col width="50px" />
-          <col width="50px" />
-        </>
-      }
-      header_row_content={
-        <>
+    <table className={TableStyle}>
+      <colgroup>
+        <col width="40px" />
+        <col width="80px" />
+        <col width="200px" />
+        {/* authors column */}
+        {DocketColumn ? <col width="200px" /> : <col width="300px" />}
+        {/* docket id column */}
+        {DocketColumn && <col width="50px" />}
+        <col width="50px" />
+        <col width="50px" />
+      </colgroup>
+      <thead>
+        <tr>
           <th className="text-left sticky top-0 filing-table-date">
             Date Filed
           </th>
@@ -142,20 +139,18 @@ export const FilingTable = ({
           )}
           <th className="text-left sticky top-0">Item Number</th>
           <th className="text-left sticky top-0">Extension</th>
-        </>
-      }
-      table_content={
-        <>
-          {filings.map((filing) => (
-            <TableRow
-              filing={filing}
-              {...(DocketColumn !== undefined ? { DocketColumn } : {})}
-              key={filing.id}
-            />
-          ))}
-        </>
-      }
-    />
+        </tr>
+      </thead>
+      <tbody>
+        {filings.map((filing) => (
+          <TableRow
+            filing={filing}
+            {...(DocketColumn !== undefined ? { DocketColumn } : {})}
+            key={filing.id}
+          />
+        ))}
+      </tbody>
+    </table>
   );
 };
 export default FilingTable;
