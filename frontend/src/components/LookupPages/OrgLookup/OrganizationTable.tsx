@@ -8,7 +8,7 @@ import { queryStringFromPageMaxHits } from "@/lib/pagination";
 import { getRuntimeEnv } from "@/lib/env_variables_hydration_script";
 import LoadingSpinnerTimeout from "@/components/styled-components/LoadingSpinnerTimeout";
 import { data } from "autoprefixer";
-import { TableStyled } from "@/components/styled-components/TableStyled";
+import { TableStyle } from "@/components/styles/Table";
 import InfiniteScrollPlus from "@/components/InfiniteScroll/InfiniteScroll";
 
 export interface OrganizationSearchSchema {
@@ -67,34 +67,30 @@ const OrganizationTable = ({
   orgList: OrganizationTableSchema[];
 }) => {
   return (
-    <TableStyled
-      header_row_content={
-        <>
-          <td className="w-[80%]">Name</td>
-          <td className="w-[20%]">Documents Authored</td>
-        </>
-      }
-      table_content={
-        <>
-          {orgList.map((org: any) => (
-            <tr
-              key={org.ID}
-              className="border-base-300 hover:bg-base-200 transition duration-500 ease-out"
-            >
-              <td colSpan={2} className="p-0">
-                <Link href={`/orgs/${org.id}`} className="flex w-full">
-                  <div className="w-[80%] px-4 py-3">{org.name}</div>
-                  <div className="w-[20%] px-4 py-3">
-                    {org.files_authored_count}
-                  </div>
-                  {/* <div className="flex-1 px-4 py-3">{org.Description}</div> */}
-                </Link>
-              </td>
-            </tr>
-          ))}
-        </>
-      }
-    />
+    <table className={TableStyle}>
+      <thead>
+        <td className="w-[80%]">Name</td>
+        <td className="w-[20%]">Documents Authored</td>
+      </thead>
+      <tbody>
+        {orgList.map((org: any) => (
+          <tr
+            key={org.ID}
+            className="border-base-300 hover:bg-base-200 transition duration-500 ease-out"
+          >
+            <td colSpan={2} className="p-0">
+              <Link href={`/orgs/${org.id}`} className="flex w-full">
+                <div className="w-[80%] px-4 py-3">{org.name}</div>
+                <div className="w-[20%] px-4 py-3">
+                  {org.files_authored_count}
+                </div>
+                {/* <div className="flex-1 px-4 py-3">{org.Description}</div> */}
+              </Link>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table >
   );
 };
 

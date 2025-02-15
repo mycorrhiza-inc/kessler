@@ -1,14 +1,12 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import { AngleDownIcon, AngleUpIcon } from "../Icons";
-import { AuthorInfoPill, subdividedHueFromSeed } from "../Tables/TextPills";
+import { subdividedHueFromSeed } from "../Tables/TextPills";
 import {
-  QueryFileFilterFields,
   QueryDataFile,
   InheritedFilterValues,
   initialFiltersFromInherited,
 } from "@/lib/filters";
-import { Query } from "pg";
 import {
   FileSearchBoxProps,
   Filter,
@@ -16,7 +14,6 @@ import {
   SearchBoxInputProps,
   Suggestion,
 } from "@/lib/types/SearchTypes";
-import { randomUUID } from "crypto";
 import { ConvoSearchRequestData } from "../LookupPages/SearchRequestData";
 import { mockFetchSuggestions } from "./SearchSuggestions";
 
@@ -431,7 +428,7 @@ const SearchBox = ({
             {ShowAdvancedSearch && <AdvancedSearch />}
           </div>
 
-          {/* Suggestions dropdown - Now positioned relative to search container */}
+          {/* Suggestions dropdown - positioned relative to search container */}
           {suggestions.length > 0 && (
             <div className="absolute left-0 right-0 top-full mt-1 z-50 h-auto bg-base-100 border rounded-lg shadow-lg">
               <ul className=" max-h-60 overflow-auto">
@@ -446,7 +443,7 @@ const SearchBox = ({
                           : "hover:secondary-content"
                       }`}
                     >
-                      <span className={`text-sm font-medium text-primary`}>
+                      <span className={`text-sm font-medium text-secondary`}>
                         {suggestion.type}:
                       </span>{" "}
                       <span className="text-base-content">

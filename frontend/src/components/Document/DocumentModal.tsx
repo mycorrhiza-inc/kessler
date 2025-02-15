@@ -41,17 +41,6 @@ const DocumentModal = ({
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
-  const [previousOpenState, setPreviousOpenState] = useState(open);
-  // useEffect(() => {
-  //   if (previousOpenState != open) {
-  //     if (open) {
-  //       nextJSRouter.push(`/file/${objectId}`);
-  //     } else {
-  //       nextJSRouter.back();
-  //     }
-  //   }
-  //   setPreviousOpenState(open);
-  // }, [open]);
   return (
     <Modal open={open} setOpen={setOpen}>
       <DocumentModalBody objectId={objectId} isPage={false} />
