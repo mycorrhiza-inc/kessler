@@ -85,6 +85,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       <div
         className="fixed bottom-4 left-4 z-30"
         onMouseEnter={() => onVisibilityChange(true)}
+        onMouseLeave={() =>  !isPinned && onVisibilityChange(false)}
       >
         {isVisible || isPinned ? (
           <button
@@ -137,27 +138,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 <SidebarLink icon={IoDocument} href="/files" label="All Files" />
                 <SidebarLink icon={IoSettingsSharp} label="Settings" onClick={() => setSettingsOpen((prev) => !prev)}
                 />
-                {/* <SidebarLink icon={Code} label="Query editor" />
-                  <SidebarLink icon={Code} label="Query editor" />
-                  <SidebarLink icon={Code} label="Query editor" />
-                  <SidebarLink icon={Code} label="Query editor" /> */}
               </div>
-              {/* <div>
-                <h3 className="text-sm font-medium text-base-500 dark:text-base-400 mb-2">Discover</h3>
-                <div className="space-y-1">
-                  <SidebarLink icon={Code} label="Query editor" />
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-sm font-medium text-base-500 dark:text-base-400 mb-2">Admin</h3>
-                <div className="space-y-1">
-                  <SidebarButton icon={Database} label="Indexes" />
-                  <SidebarButton icon={Settings} label="Cluster" />
-                  <SidebarButton icon={FileText} label="Node info" />
-                  <SidebarButton icon={Code} label="API" />
-                </div>
-              </div> */}
             </nav>
           </div>
         </div>

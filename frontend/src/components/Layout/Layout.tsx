@@ -11,8 +11,9 @@ interface LayoutProps {
 }
 
 export default function Layout({ children }: LayoutProps) {
-  const [isSidebarVisible, setIsSidebarVisible] = useState(true);
-  const [isSidebarPinned, setIsSidebarPinned] = useState(true);
+  const [isSidebarVisible, setIsSidebarVisible] = useState(false);
+  const [isSidebarPinned, setIsSidebarPinned] = useState(false);
+
   const [sidebarWidth, setSidebarWidth] = useState(200); // 16 * 16 = 256px (w-64)
   return (
     <>
