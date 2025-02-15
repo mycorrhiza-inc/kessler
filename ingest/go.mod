@@ -4,6 +4,7 @@ go 1.23.4
 
 require (
 	github.com/gorilla/mux v1.8.1
+	github.com/swaggo/http-swagger/example/gorilla v0.0.0-20240815064334-3a7ae3083475
 	github.com/swaggo/http-swagger/v2 v2.0.2
 )
 
