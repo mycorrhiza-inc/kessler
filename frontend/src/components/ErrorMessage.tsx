@@ -16,7 +16,7 @@ const ErrorMessage = ({
       <h3 className="text-xl font-bold mb-2">Oops! Something went wrong</h3>
       <p className="text-center mb-4">{message}</p>
       {error && (
-        <p className="text-center text-sm mb-4">
+        <p className="text-center text-xs mb-4">
           If this keeps happening,{" "}
           <a
             href="https://github.com/mycorrhiza-inc/kessler/issues/new"
