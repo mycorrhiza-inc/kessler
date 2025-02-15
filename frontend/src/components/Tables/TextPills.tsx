@@ -58,6 +58,9 @@ export const subdividedHueFromSeed = (seed?: string): string => {
   return oklchSubdivide(seed_integer, 18);
 };
 
+const PillButtonStyle = "btn btn-xs m-1 h-auto pb-2 pt-2 no-animation text-black mt-2 mb-2 noclick text-pretty"
+const PillLinkStyle = "btn btn-xs m-1 h-auto pb-2 pt-2 text-black noclick text-pretty"
+
 export const TextPill = ({
   text,
   href,
@@ -91,7 +94,7 @@ export const RawPill = ({
     return (
       <Link
         style={{ backgroundColor: color }}
-        className={`btn btn-xs m-1 h-auto pb-1 text-black noclick text-pretty	`}
+        className={PillLinkStyle}
         href={href}
       >
         {children}
@@ -101,7 +104,7 @@ export const RawPill = ({
   return (
     <button
       style={{ backgroundColor: color }}
-      className={`btn btn-xs m-1 h-auto pb-1 no-animation text-black mt-2 mb-2 noclick text-pretty`}
+      className={PillButtonStyle}
     >
       {children}
     </button>
@@ -124,7 +127,7 @@ export const getExtensionIcon = (ext: FileExtension) => {
   }
 };
 export const fileTypeColor: Record<FileExtension, string> = {
-  [FileExtension.PDF]: "oklch(60.37% 0.2391 29.86)", // Get the exact adobe red off their website
+  [FileExtension.PDF]: "oklch(57.53% 0.1831 25.02)", // Get the exact adobe red off their website
   [FileExtension.DOCX]: "oklch(70.55% 0.13 240)",
   [FileExtension.XLSX]: "oklch(75.55% 0.17 140)",
   [FileExtension.HTML]: "oklch(80.55% 0.08 60)",
@@ -137,9 +140,9 @@ export const ExtensionPill = ({ ext }: { ext: FileExtension }) => {
 
   return (
     <RawPill color={colorString}>
-      <span className="flex items-center">
+      <span className="flex items-center text-white">
         <span className="mr-2">{icon}</span>
-        {FileExtension[ext].toUpperCase()}
+        <span>{FileExtension[ext].toUpperCase()}</span>
       </span>
     </RawPill>
   );
