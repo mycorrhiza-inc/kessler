@@ -230,7 +230,7 @@ func GetListAllRawFiles(ctx context.Context, q dbstore.Queries) ([]files.FileSch
 	}
 	var fileSchemas []files.FileSchema
 	for _, fileRaw := range db_files {
-		rawSchema := files.PublicFileToSchema(fileRaw)
+		rawSchema := PublicFileToSchema(fileRaw)
 		fileSchemas = append(fileSchemas, rawSchema)
 	}
 	return fileSchemas, nil

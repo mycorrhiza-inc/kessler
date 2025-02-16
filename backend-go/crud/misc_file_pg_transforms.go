@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"kessler/gen/dbstore"
 	"kessler/objects/files"
+	"kessler/objects/timestamp"
 	"time"
 
 	"github.com/charmbracelet/log"
@@ -83,7 +84,7 @@ func GetFileObjectRaw(params GetFileParam) (files.FileSchema, error) {
 		if err != nil {
 			return files.FileSchema{}, err
 		}
-		return files.PublicFileToSchema(file), nil
+		return PublicFileToSchema(file), nil
 	}
 	return files.FileSchema{}, fmt.Errorf("private files not implemented")
 }
@@ -103,7 +104,7 @@ func InsertPubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreatio
 		return files.FileSchema{ID: resultID}, err
 	}
 	resultFile, err := q.ReadFile(ctx, resultID)
-	return files.PublicFileToSchema(resultFile), err
+	return PublicFileToSchema(resultFile), err
 }
 
 func UpdatePubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreation files.FileCreationDataRaw, private bool, pgUUID uuid.UUID) (files.FileSchema, error) {
@@ -154,7 +155,7 @@ func UpdatePubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreatio
 		return files.FileSchema{}, err
 	}
 
-	return files.PublicFileToSchema(resultFile), nil
+	return PublicFileToSchema(resultFile), nil
 }
 
 func InsertPriPubFileText(q dbstore.Queries, ctx context.Context, text files.FileTextSchema, private bool) error {
@@ -179,4 +180,17 @@ func HashGetUUIDsFile(q dbstore.Queries, ctx context.Context, hash string) ([]uu
 		fileIDs = append(fileIDs, fileUUID)
 	}
 	return fileIDs, nil
+}
+
+func PublicFileToSchema(file dbstore.File) files.FileSchema {
+	return files.FileSchema{
+		ID:            file.ID,
+		Verified:      file.Verified.Bool,
+		Extension:     file.Extension,
+		Lang:          file.Lang,
+		Name:          file.Name,
+		Hash:          file.Hash,
+		IsPrivate:     file.Isprivate.Bool,
+		DatePublished: timestamp.KesslerTime(file.DatePublished.Time),
+	}
 }
