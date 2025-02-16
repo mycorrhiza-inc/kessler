@@ -1,7 +1,6 @@
 package files
 
 import (
-	"thaumaturgy/gen/dbstore"
 	"thaumaturgy/objects/authors"
 	"thaumaturgy/objects/conversations"
 	"thaumaturgy/objects/timestamp"
@@ -107,17 +106,4 @@ func (updateInfo CompleteFileSchema) ConvertToCreationData() FileCreationDataRaw
 		DatePublished: updateInfo.DatePublished,
 	}
 	return creationData
-}
-
-func PublicFileToSchema(file dbstore.File) FileSchema {
-	return FileSchema{
-		ID:            file.ID,
-		Verified:      file.Verified.Bool,
-		Extension:     file.Extension,
-		Lang:          file.Lang,
-		Name:          file.Name,
-		Hash:          file.Hash,
-		IsPrivate:     file.Isprivate.Bool,
-		DatePublished: timestamp.KesslerTime(file.DatePublished.Time),
-	}
 }
