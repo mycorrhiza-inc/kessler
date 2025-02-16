@@ -87,7 +87,7 @@ func makeFileUpsertHandler(config FileUpsertHandlerConfig) func(w http.ResponseW
 			return
 		}
 		if insert && deduplicate_with_respect_to_hash {
-			ids, err := files.HashGetUUIDsFile(q, ctx, hash)
+			ids, err := HashGetUUIDsFile(q, ctx, hash)
 			if err != nil {
 				errorstring := fmt.Sprintf("Error getting document ids from hash for deduplication: %v\n", err)
 				log.Info(errorstring)
@@ -113,7 +113,7 @@ func makeFileUpsertHandler(config FileUpsertHandlerConfig) func(w http.ResponseW
 		// TODO : For print debugging only, might be a good idea to put these in a deubug logger with lowest priority??
 		log.Info(fmt.Sprintf("Inserting document with uuid: %s\n", doc_uuid))
 		if insert {
-			fileSchema, err = files.InsertPubPrivateFileObj(q, ctx, rawFileCreationData, private)
+			fileSchema, err = InsertPubPrivateFileObj(q, ctx, rawFileCreationData, private)
 		} else {
 			if doc_uuid == empty_uuid {
 				err := fmt.Errorf("ASSERT FAILURE: docUUID should never have a null uuid, when updating document.")
@@ -122,7 +122,7 @@ func makeFileUpsertHandler(config FileUpsertHandlerConfig) func(w http.ResponseW
 				http.Error(w, errorstring, http.StatusInternalServerError)
 				return
 			}
-			fileSchema, err = files.UpdatePubPrivateFileObj(q, ctx, rawFileCreationData, private, doc_uuid)
+			fileSchema, err = UpdatePubPrivateFileObj(q, ctx, rawFileCreationData, private, doc_uuid)
 		}
 		if err != nil {
 			errorstring := fmt.Sprintf("Error inserting/updating document: %v\n", err)

@@ -216,7 +216,7 @@ func ReadFileHandler(config FileHandlerConfig) http.HandlerFunc {
 		// Since all three of these methods share the same authentication and database connection prerecs
 		// switching functionality using an if else, or a cases switch lets code get reused
 		// TODO: This is horrible, I need to refactor
-		file_params := files.GetFileParam{
+		file_params := GetFileParam{
 			Queries: q,
 			Context: ctx,
 			PgUUID:  parsedUUID,
@@ -224,7 +224,7 @@ func ReadFileHandler(config FileHandlerConfig) http.HandlerFunc {
 		}
 		switch return_type {
 		case "raw":
-			file, err := files.GetFileObjectRaw(file_params)
+			file, err := GetFileObjectRaw(file_params)
 			if err != nil {
 				error_string := fmt.Sprintf("Error retrieving file object %v", err)
 				log.Info(error_string)
@@ -255,7 +255,7 @@ func ReadFileHandler(config FileHandlerConfig) http.HandlerFunc {
 			originalLang := r.URL.Query().Get("original_lang") == "true"
 			matchLang := r.URL.Query().Get("match_lang")
 			// TODO: Add suport for non english text retrieval and original text retrieval
-			markdownText, err := files.GetSpecificFileText(file_params, matchLang, originalLang)
+			markdownText, err := GetSpecificFileText(file_params, matchLang, originalLang)
 			if err != nil {
 				http.Error(w, "Error retrieving texts or no texts found that mach query params", http.StatusNotFound)
 				return
@@ -263,7 +263,7 @@ func ReadFileHandler(config FileHandlerConfig) http.HandlerFunc {
 			w.Header().Set("Content-Type", "text/plain")
 			w.Write([]byte(markdownText))
 		case "object-minimal":
-			file, err := files.GetFileObjectRaw(file_params)
+			file, err := GetFileObjectRaw(file_params)
 			if err != nil {
 				http.Error(w, "File not found", http.StatusNotFound)
 				return

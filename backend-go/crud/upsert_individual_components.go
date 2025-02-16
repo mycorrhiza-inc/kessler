@@ -36,7 +36,7 @@ func upsertFileTexts(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID,
 			Language:       text.Language,
 			Text:           text.Text,
 		}
-		err := files.InsertPriPubFileText(q, ctx, textRaw, false)
+		err := InsertPriPubFileText(q, ctx, textRaw, false)
 		if err != nil {
 			fmt.Print("Error adding a text value, not doing anything and procceeding since error handling is hard.")
 			error_list = append(error_list, err)

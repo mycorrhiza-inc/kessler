@@ -1,6 +1,7 @@
 k8s/templates/secrets.yaml
 
 
+
 hidden_service
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
@@ -10,8 +11,8 @@ backend-python/.env
 backend-go/.env
 **/pnpm-lock.yaml
 
-mage-code/.file_versions
-mage-code/.ssh_tunnel
+**/tmp
+ingest/tmp
 
 backend-go/tmp
 backend-go/static/assets

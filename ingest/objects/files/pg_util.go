@@ -1,7 +1,7 @@
 package files
 
 import (
-	"kessler/objects/timestamp"
+	"thaumaturgy/objects/timestamp"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )
