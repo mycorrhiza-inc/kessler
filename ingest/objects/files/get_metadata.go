@@ -2,7 +2,7 @@ package files
 
 import (
 	"context"
-	// "kessler/gen/dbstore"
+	// "thaumaturgy/gen/dbstore"
 )
 
 func GetFileMetadataFromID(id string, ctx context.Context) (string, error) {

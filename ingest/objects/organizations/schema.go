@@ -1,7 +1,7 @@
 package organizations
 
 import (
-	"kessler/objects/files"
+	"thaumaturgy/objects/files"
 
 	"github.com/google/uuid"
 )

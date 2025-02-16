@@ -2,7 +2,7 @@ package networking
 
 import (
 	"encoding/json"
-	"kessler/objects/timestamp"
+	"thaumaturgy/objects/timestamp"
 
 	"github.com/charmbracelet/log"
 	"github.com/google/uuid"

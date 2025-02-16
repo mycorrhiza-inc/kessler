@@ -3,8 +3,8 @@ package files
 import (
 	"context"
 	"fmt"
-	"kessler/gen/dbstore"
-	"kessler/objects/timestamp"
+	"thaumaturgy/gen/dbstore"
+	"thaumaturgy/objects/timestamp"
 	"time"
 
 	"github.com/charmbracelet/log"
