@@ -44,12 +44,6 @@ type ScraperInfo struct {
 	ItemNumber            string `json:"item_number"`
 }
 
-type DocTextInfo struct {
-	Language       string `json:"language"`
-	Text           string `json:"text"`
-	IsOriginalText bool   `json:"is_original_text"`
-}
-
 type BulkProcessInfo struct {
 	GenerateReport      bool                `json:"generate_report"`
 	ReportID            string              `json:"report_id"`
@@ -104,5 +98,5 @@ func NewTask(
 }
 
 func (t Task) URL() string {
-	return "https://thaum.kessler.xyz/v1/status/" + t.ID.String()
+	return "https://api.kessler.xyz/ingest_v1/tasks/" + t.ID.String()
 }
