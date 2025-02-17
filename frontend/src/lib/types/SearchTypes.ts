@@ -1,32 +1,22 @@
 import { ConvoSearchRequestData } from "@/components/LookupPages/SearchRequestData";
 import { InheritedFilterValues, QueryDataFile } from "../filters";
 import { Range } from "react-date-range";
+import { InputType } from "@/components/Filters/FiltersInfo";
 
 // Mock API call
 
-enum BasicSuggestions {
-  Text = "text",
-  Author = "author",
-  Docket = "docket",
-  Class = "class",
-  Extension = "extension",
-}
-
-enum DateSuggestionType {
-  Date = "date",
-}
-
-type SuggestionTypes = BasicSuggestions | DateSuggestionType;
 
 export interface BasicSuggestion {
   id: string;
-  type: SuggestionTypes;
+  type: InputType;
   label: string;
-  value: any;
+  value?: any;
+  exclude?: boolean;
+  excludable?: boolean;
 }
 export interface DateSuggestion extends BasicSuggestion {
   id: string;
-  type: DateSuggestionType;
+  type: InputType.Date;
   label: string;
   value: Range;
 }
@@ -34,12 +24,13 @@ export interface TextSuggestion extends BasicSuggestion {
   id: "";
 }
 
-export type Suggestion = BasicSuggestion | DateSuggestion;
+export type Suggestion = BasicSuggestion ;
 
-export type Filter = {
+export interface Filter extends BasicSuggestion {
   id: string;
-  type: string;
+  type: InputType;
   label: string;
+  value?: any;
   exclude?: boolean;
   excludable: boolean;
 };
