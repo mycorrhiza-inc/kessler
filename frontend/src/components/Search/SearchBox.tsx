@@ -38,6 +38,18 @@ type FiltersPoolProps = {
   flipExclude: (filterId: string) => void;
 };
 
+const displayTypeDict = {
+  nypuc_docket_industry: "Docket Industry",
+};
+const getDisplayType = (val: string): string => {
+  if (val in displayTypeDict) {
+    return displayTypeDict[val as keyof typeof displayTypeDict];
+  }
+  return val
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+};
 const FiltersPool: React.FC<FiltersPoolProps> = ({
   selected,
   handleFilterRemove,
@@ -102,7 +114,7 @@ const FiltersPool: React.FC<FiltersPoolProps> = ({
                     exclude
                   </button>
                 )}
-                {filter.type}: {filter.label}
+                {getDisplayType(filter.type)}: {filter.label}
               </span>
               <button
                 onClick={() => handleFilterRemove(filter.id)}
@@ -444,7 +456,7 @@ const SearchBox = ({
                       }`}
                     >
                       <span className={`text-sm font-medium text-secondary`}>
-                        {suggestion.type}:
+                        {getDisplayType(suggestion.type)}:
                       </span>{" "}
                       <span className="text-base-content">
                         {suggestion.label}
