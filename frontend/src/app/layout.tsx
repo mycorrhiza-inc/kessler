@@ -51,7 +51,7 @@ export default function RootLayout({
             <EnvVariablesScript />
           </head>
           <body className="bg-base-100">
-            <ThemeProvider defaultTheme="light">
+            <ThemeProvider defaultTheme="kessler">
               <PostHogPageView />
               <main className="">
                 <div className="flex-1 w-100vw flex flex-col items-center">
