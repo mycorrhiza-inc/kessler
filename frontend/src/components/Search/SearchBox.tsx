@@ -177,7 +177,7 @@ const getTextQueryFromFilterList = (filterTypeDict: {
 const generateConvoSearchData = (filterTypeDict: {
   [key: string]: Filter[];
 }) => {
-  const convoSearchData: ConvoSearchRequestData = {};
+  var convoSearchData: ConvoSearchRequestData = {};
   const setQuery = (value: string) => {
     convoSearchData.query = value;
   };
@@ -192,7 +192,7 @@ const generateConvoSearchData = (filterTypeDict: {
     convoSearchData.industry_type = value;
   };
   const industrySchema: filterExtractionSchema = {
-    filters: filterTypeDict.industrySchema,
+    filters: filterTypeDict.nypuc_docket_industry,
     valueProperty: "label",
     elseValue: "",
     setValueFunc: setIndustry,
