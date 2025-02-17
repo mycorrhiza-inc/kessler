@@ -8,6 +8,10 @@ export enum InputType {
   NotShown = "not_shown",
   OrgMultiselect = "org_multiselect",
   ConvoMultiselect = "convo_multiselect",
+  Organization = "organization",
+  Docket = "docket",
+  FileClass = "file_class",
+  NYDocket = "nypuc_docket_industry"
 }
 export type PropertyInformation = {
   type: InputType;
@@ -101,6 +105,13 @@ export const queryFiltersInformation: QueryFiltersInformation = {
     displayName: "After Date",
     description: "The date related to the document.",
     details: "Filters results by the specified date.",
+  },
+  match_date_range: {
+    type: InputType.Date,
+    index: 8,
+    displayName: "Within Date Range",
+    description: "The range of dates related to the document.",
+    details: "Filters results by the specified date range.",
   },
   match_file_uuid: {
     type: InputType.NotShown,

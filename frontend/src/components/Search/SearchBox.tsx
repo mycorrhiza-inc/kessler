@@ -16,6 +16,8 @@ import {
 } from "@/lib/types/SearchTypes";
 import { ConvoSearchRequestData } from "../LookupPages/SearchRequestData";
 import { mockFetchSuggestions } from "./SearchSuggestions";
+import { Range as DateRange } from "react-date-range";
+import { InputType } from "../Filters/FiltersInfo";
 
 const AdvancedSearch = () => {
   const [open, setOpen] = useState(false);
@@ -284,6 +286,16 @@ const setNestedValue = (obj: any, path: string[], value: any) => {
   }
   current[path[path.length - 1]] = value;
 };
+const newDateFilter = () => {
+  const newRange: DateRange = {}
+  return {
+    id: "-1",
+    type: InputType.Date,
+    label: "Date",
+    value: newRange,
+    excludable: false
+  }
+}
 
 const SearchBox = ({
   input,
@@ -294,7 +306,7 @@ const SearchBox = ({
 }) => {
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
-  const [selectedFilters, setSelectedFilters] = useState<Filter[]>([]);
+  const [selectedFilters, setSelectedFilters] = useState<Filter[]>([newDateFilter()]);
   const [isLoading, setIsLoading] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const searchContainerRef = useRef<HTMLDivElement>(null);
@@ -437,11 +449,10 @@ const SearchBox = ({
                     <button
                       onClick={() => handleSuggestionClick(suggestion)}
                       onMouseEnter={() => setHighlightedIndex(index)}
-                      className={`w-full px-4 py-3 text-left transition-colors ${
-                        index === highlightedIndex
-                          ? "bg-primary/10 text-primary"
-                          : "hover:secondary-content"
-                      }`}
+                      className={`w-full px-4 py-3 text-left transition-colors ${index === highlightedIndex
+                        ? "bg-primary/10 text-primary"
+                        : "hover:secondary-content"
+                        }`}
                     >
                       <span className={`text-sm font-medium text-secondary`}>
                         {suggestion.type}:
