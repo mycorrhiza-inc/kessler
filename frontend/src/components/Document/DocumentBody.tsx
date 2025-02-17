@@ -129,7 +129,7 @@ const DocumentHeader = ({
   return (
     <>
       <div className="card-title flex justify-between items-start">
-        <h1 className="text-3xl break-words max-w-[60%]">{title}</h1>
+        <h1 className="text-3xl break-words max-w-[70%]">{title}</h1>
         <div className="flex gap-2">
           <a
             className="btn btn-primary"
