@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
-import { AngleDownIcon, AngleUpIcon } from "../Icons";
+import { ChevronDownIcon, ChevronUpIcon } from "../Icons";
 import { subdividedHueFromSeed } from "../Tables/TextPills";
 import {
   QueryDataFile,
@@ -27,7 +27,7 @@ const AdvancedSearch = () => {
   return (
     <div className="p-4 text-base-content" onClick={flip}>
       <div className="tooltip" data-tip="Advanced Search">
-        {open ? <AngleUpIcon /> : <AngleDownIcon />}
+        {open ? <ChevronUpIcon /> : <ChevronDownIcon />}
       </div>
     </div>
   );
