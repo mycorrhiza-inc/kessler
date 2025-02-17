@@ -185,7 +185,7 @@ export interface Filters {
   author: string;
   date: string;
   docket_id: string;
-  doctype: string;
+  extension: string;
   lang: string;
   language: string;
   source: string;

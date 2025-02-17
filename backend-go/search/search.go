@@ -19,7 +19,7 @@ import (
 
 type Hit struct {
 	CreatedAt     string              `json:"created_at"`
-	Doctype       string              `json:"doctype"`
+	Extension     string              `json:"extension"`
 	Hash          string              `json:"hash"`
 	Lang          string              `json:"lang"`
 	DateFiled     string              `json:"updated_at"`
