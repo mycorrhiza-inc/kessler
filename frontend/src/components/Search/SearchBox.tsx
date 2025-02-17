@@ -238,6 +238,12 @@ const generateFileFiltersFromFilterList = (
       elseValue: new_file_filters_metadata.match_author,
     },
     {
+      filterKey: "extension",
+      targetPath: ["filters", "match_extension"],
+      valueProperty: "label",
+      elseValue: "",
+    },
+    {
       filterKey: "file_class",
       targetPath: ["filters", "match_file_class"],
       valueProperty: "label",
