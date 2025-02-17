@@ -1,21 +1,11 @@
 import { ChevronDownIcon, ChevronUpIcon } from '@/components/Icons';
 import { data } from 'autoprefixer';
+import { endOfDay } from 'date-fns';
 import { range } from 'lodash-es';
 import React, { useState } from 'react';
 import { DateRangePicker, RangeKeyDict } from 'react-date-range';
 import 'react-date-range/dist/styles.css'; // main style file
 import 'react-date-range/dist/theme/default.css'; // theme css file
-
-declare global {
-	namespace JSX {
-		interface IntrinsicElements {
-			'calendar-date': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>;
-			'calendar-month': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>;
-			'calendar-range': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>;
-		}
-	}
-}
-
 
 type DateRangePickerProps = {
 	startPick: Date | null;
@@ -30,8 +20,8 @@ const RangePicker = ({ startPick, endPick, setStartPick, setEndPick }: DateRange
 	}
 
 	const selectionRange = {
-		startDate: new Date(),
-		endDate: new Date(),
+		startDate: startPick !== null ? startPick : new Date(),
+		endOfDate: endPick !== null ? endPick : new Date(),
 		key: 'selection',
 	}
 
