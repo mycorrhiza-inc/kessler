@@ -71,7 +71,7 @@ func HandleSearchRequest(w http.ResponseWriter, r *http.Request) {
 		// Decode the JSON body into the struct
 		err := json.NewDecoder(r.Body).Decode(&RequestData)
 		if err != nil {
-			log.Printf("Error decoding JSON: %v\n", err)
+			log.Info(fmt.Sprintf("Error decoding JSON: %v\n", err))
 			http.Error(w, "Error decoding JSON", http.StatusBadRequest)
 			return
 		}
@@ -83,7 +83,7 @@ func HandleSearchRequest(w http.ResponseWriter, r *http.Request) {
 
 		hydrated_data, err := SearchQuickwit(RequestData)
 		if err != nil {
-			log.Printf("Error searching quickwit: %s", err)
+			log.Info(fmt.Sprintf("Error searching quickwit: %s", err))
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		// q := *util.DBQueriesFromRequest(r)

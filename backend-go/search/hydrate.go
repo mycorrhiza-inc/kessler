@@ -45,7 +45,7 @@ func HydrateSearchResults(results []SearchData, ctx context.Context, q dbstore.Q
 	log.Info(fmt.Sprintf("Hydrating %v files\n", len(uuid_list)))
 	files_complete, err := doShittyHydration(uuid_list, ctx, q)
 	if err != nil {
-		log.Printf("Error hydrating search results: %v\n", err)
+		log.Info(fmt.Sprintf("Error hydrating search results: %v\n", err))
 		return []SearchDataHydrated{}, err
 	}
 	log.Info(fmt.Sprintf("Got back %v complete files for hydration, out of %v requested files\n", len(files_complete), len(results)))
@@ -77,7 +77,7 @@ func HydrateSearchResults(results []SearchData, ctx context.Context, q dbstore.Q
 func SearchThenHydrate(r SearchRequest, ctx context.Context) ([]files.FileMetadataSchema, error) {
 	data, err := SearchQuickwit(r)
 	if err != nil {
-		log.Printf("search-then-hydrate: error getting quickwit data", err)
+		log.Info(fmt.Sprintf("search-then-hydrate: error getting quickwit data", err))
 	}
 	idList := make([]string, len(data))
 	for i, d := range data {

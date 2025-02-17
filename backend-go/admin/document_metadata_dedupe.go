@@ -95,7 +95,7 @@ func CheckDocumentMetadata(args DocumentMetadataCheck, q dbstore.Queries, ctx co
 		var metadata map[string]interface{}
 		err = json.Unmarshal(result.Mdata, &metadata)
 		if err != nil {
-			log.Printf("Warning: failed to unmarshal metadata for file %v: %v", result.ID, err)
+			log.Info(fmt.Sprintf("Warning: failed to unmarshal metadata for file %v: %v", result.ID, err))
 			continue
 		}
 
@@ -115,7 +115,7 @@ func CheckDocumentMetadata(args DocumentMetadataCheck, q dbstore.Queries, ctx co
 	// Use the first matching file
 	matched := matchingFiles[0]
 	if len(matchingFiles) > 1 {
-		log.Printf("Warning: multiple files match all criteria (name, extension, docket, date, author): %v", matchingFiles)
+		log.Info(fmt.Sprintf("Warning: multiple files match all criteria (name, extension, docket, date, author): %v", matchingFiles))
 	}
 
 	nilSchema := files.CompleteFileSchema{}

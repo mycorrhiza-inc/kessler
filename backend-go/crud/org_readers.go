@@ -17,7 +17,7 @@ import (
 )
 
 func OrgGetWithFilesHandler(w http.ResponseWriter, r *http.Request) {
-	log.Printf("Getting file with metadata")
+	log.Info(fmt.Sprintf("Getting file with metadata"))
 	q := *util.DBQueriesFromRequest(r)
 
 	params := mux.Vars(r)
@@ -31,7 +31,7 @@ func OrgGetWithFilesHandler(w http.ResponseWriter, r *http.Request) {
 
 	complete_org_info, err := OrgWithFilesGetByID(ctx, &q, parsedUUID)
 	if err != nil {
-		log.Printf("Error reading organization: %v", err)
+		log.Info(fmt.Sprintf("Error reading organization: %v", err))
 		if err.Error() == "no rows in result set" {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return

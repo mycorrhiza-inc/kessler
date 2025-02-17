@@ -42,7 +42,7 @@ func HandleConvoSearch(w http.ResponseWriter, r *http.Request) {
 		json_bytes := []byte{}
 		r.Body.Read(json_bytes)
 		errorstring := fmt.Sprintf("Error decoding JSON: %v\nWith this error: %v", json_bytes, err)
-		log.Printf(errorstring)
+		log.Info(fmt.Sprintf(errorstring))
 		http.Error(w, errorstring, http.StatusBadRequest)
 		return
 	}

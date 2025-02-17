@@ -14,7 +14,7 @@ import (
 )
 
 func ConversationGetByUnknownHandler(w http.ResponseWriter, r *http.Request) {
-	log.Printf("Getting file with metadata")
+	log.Info(fmt.Sprintf("Getting file with metadata"))
 	q := *util.DBQueriesFromRequest(r)
 
 	params := mux.Vars(r)
@@ -23,7 +23,7 @@ func ConversationGetByUnknownHandler(w http.ResponseWriter, r *http.Request) {
 
 	conv_info, err := ConversationGetByUnknown(ctx, &q, docketIdStr)
 	if err != nil {
-		log.Printf("Error reading organization: %v", err)
+		log.Info(fmt.Sprintf("Error reading organization: %v", err))
 		if err.Error() == "no rows in result set" {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return

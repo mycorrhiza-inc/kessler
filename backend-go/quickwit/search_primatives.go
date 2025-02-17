@@ -29,8 +29,8 @@ func ConstructDateQuery(DateFrom timestamp.KesslerTime, DateTo timestamp.Kessler
 	// construct date query
 	fromDate := "*"
 	toDate := "*"
-	log.Printf("building date from: %s\n", DateFrom)
-	log.Printf("building date to: %s\n", DateTo)
+	log.Info(fmt.Sprintf("building date from: %s\n", DateFrom))
+	log.Info(fmt.Sprintf("building date to: %s\n", DateTo))
 
 	if !(DateFrom.IsZero()) {
 		fromDate = DateFrom.String()
@@ -91,7 +91,7 @@ func ConstructGenericFilterQuery(values reflect.Value, types reflect.Type, useQu
 		if strings.Contains(s, "00000000-0000-0000-0000-000000000000") {
 			continue
 		}
-		// log.Printf("new filter: %s\n", s)
+		// log.Info(fmt.Sprintf("new filter: %s\n", s))
 		filters = append(filters, s)
 	}
 	// concat all filters with AND clauses
@@ -105,9 +105,9 @@ func ConstructGenericFilterQuery(values reflect.Value, types reflect.Type, useQu
 func PerformGenericQuickwitRequest(request QuickwitSearchRequest, search_index string) ([]byte, error) {
 	jsonData, err := json.Marshal(request)
 	// ===== submit request to quickwit =====
-	// log.Printf("jsondata: \n%s", jsonData)
+	// log.Info(fmt.Sprintf("jsondata: \n%s", jsonData))
 	if err != nil {
-		log.Printf("Error Marshalling quickwit request: %s", err)
+		log.Info(fmt.Sprintf("Error Marshalling quickwit request: %s", err))
 		return []byte{}, err
 	}
 
@@ -119,8 +119,8 @@ func PerformGenericQuickwitRequest(request QuickwitSearchRequest, search_index s
 	)
 	curlCmd := fmt.Sprintf("curl -X POST -H 'Content-Type: application/json' -d '%s' %s", string(jsonData), request_url)
 	if err != nil {
-		log.Printf("Error sending request to quickwit: %s\n", err)
-		log.Printf("Replay with: %s\n", curlCmd)
+		log.Info(fmt.Sprintf("Error sending request to quickwit: %s\n", err))
+		log.Info(fmt.Sprintf("Replay with: %s\n", curlCmd))
 		return []byte{}, err
 	}
 
@@ -128,9 +128,9 @@ func PerformGenericQuickwitRequest(request QuickwitSearchRequest, search_index s
 
 	// ===== handle response =====
 	if resp.StatusCode != http.StatusOK {
-		log.Printf("Error: received status code %v, with body: %s", resp.StatusCode, resp.Body)
-		log.Printf("Error: received status code %v", resp.StatusCode)
-		log.Printf("Replay with: %s\n", curlCmd)
+		log.Info(fmt.Sprintf("Error: received status code %v, with body: %s", resp.StatusCode, resp.Body))
+		log.Info(fmt.Sprintf("Error: received status code %v", resp.StatusCode))
+		log.Info(fmt.Sprintf("Replay with: %s\n", curlCmd))
 		return []byte{}, fmt.Errorf("received status code %v", resp.StatusCode)
 	}
 
