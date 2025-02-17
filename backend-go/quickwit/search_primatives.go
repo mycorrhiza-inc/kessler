@@ -69,9 +69,6 @@ func ConstructGenericFilterQuery(values reflect.Value, types reflect.Type, useQu
 		// get the field and value
 		field := types.Field(i)
 		value := values.Field(i)
-		if value.IsZero() {
-			break
-		}
 		tag := field.Tag.Get("json")
 		if strings.Contains(tag, ",omitempty") {
 			tag = strings.Split(tag, ",")[0]
@@ -88,11 +85,10 @@ func ConstructGenericFilterQuery(values reflect.Value, types reflect.Type, useQu
 		}
 
 		// exlude empty values
-		if strings.Contains(s, "00000000-0000-0000-0000-000000000000") {
-			continue
-		}
 		// log.Info(fmt.Sprintf("new filter: %s\n", s))
-		filters = append(filters, s)
+		if !(value.IsZero()) {
+			filters = append(filters, s)
+		}
 	}
 	// concat all filters with AND clauses
 	for _, f := range filters {
