@@ -88,10 +88,13 @@ func SearchQuickwit(r SearchRequest) ([]SearchDataHydrated, error) {
 	filtersString := constructQuickwitMetadataQueryString(metadataFilters.SearchMetadata)
 	uuidFilterString := constructQuickwitUUIDMetadataQueryString(uuidFilters)
 
-	log.Info(fmt.Sprintf()
+	log.Info(
 		"!!!!!!!!!!\nquery: %s\nfilters: %s\nuuid filters: %s\n!!!!!!!!!!\n",
+		"dateQueryString",
 		dateQueryString,
+		"filtersString",
 		filtersString,
+		"uuidFilterString",
 		uuidFilterString,
 	)
 	// queryString = queryString + filtersString
