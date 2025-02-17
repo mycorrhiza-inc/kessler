@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import { AngleDownIcon, AngleUpIcon } from "../Icons";
-import { subdividedHueFromSeed } from "../Tables/TextPills";
+import { fileTypeColor, subdividedHueFromSeed } from "../Tables/TextPills";
 import {
   QueryDataFile,
   InheritedFilterValues,
@@ -16,6 +16,7 @@ import {
 } from "@/lib/types/SearchTypes";
 import { ConvoSearchRequestData } from "../LookupPages/SearchRequestData";
 import { mockFetchSuggestions } from "./SearchSuggestions";
+import { fileExtensionFromText } from "../Tables/FileExtension";
 
 const AdvancedSearch = () => {
   const [open, setOpen] = useState(false);
@@ -75,6 +76,9 @@ const FiltersPool: React.FC<FiltersPoolProps> = ({
     }
     if (filter.type === "text") {
       return "oklch(90% 0.01 30)";
+    }
+    if (filter.type === "extension") {
+      return fileTypeColor[fileExtensionFromText(filter.label)];
     }
     return subdividedHueFromSeed(filter.label);
     // return "oklch(90% 0.1 80)";
