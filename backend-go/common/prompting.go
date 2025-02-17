@@ -12,12 +12,12 @@ type LLM interface {
 }
 
 type LLMUtils struct {
-	LLM        LLM
+	LLM        LLMModel
 	Retries    int
 	RetryDelay time.Duration
 }
 
-func NewLLMUtils(llm LLM, retries int, retryDelay time.Duration) *LLMUtils {
+func NewLLMUtils(llm LLMModel, retries int, retryDelay time.Duration) *LLMUtils {
 	return &LLMUtils{
 		LLM:        llm,
 		Retries:    retries,
