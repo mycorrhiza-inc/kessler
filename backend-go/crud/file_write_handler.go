@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 	"kessler/gen/dbstore"
-	"kessler/objects/files"
+	"kessler/common/objects/files"
 	"kessler/util"
 	"net/http"
 

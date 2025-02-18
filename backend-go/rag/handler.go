@@ -3,7 +3,7 @@ package rag
 import (
 	"encoding/json"
 	"fmt"
-	"kessler/objects/networking"
+	"kessler/common/objects/networking"
 	"net/http"
 	"strings"
 

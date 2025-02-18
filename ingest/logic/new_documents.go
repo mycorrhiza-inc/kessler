@@ -11,7 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"thaumaturgy/objects/files"
+	"thaumaturgy/common/objects/files"
 	"time"
 
 	"github.com/google/uuid"

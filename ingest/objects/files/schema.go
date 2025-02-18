@@ -1,9 +1,9 @@
 package files
 
 import (
-	"thaumaturgy/objects/authors"
-	"thaumaturgy/objects/conversations"
-	"thaumaturgy/objects/timestamp"
+	"thaumaturgy/common/objects/authors"
+	"thaumaturgy/common/objects/conversations"
+	"thaumaturgy/common/objects/timestamp"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"

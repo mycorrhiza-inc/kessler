@@ -1,7 +1,7 @@
 package rag
 
 import (
-	"kessler/objects/networking"
+	"kessler/common/objects/networking"
 	"testing"
 
 	"github.com/charmbracelet/log"

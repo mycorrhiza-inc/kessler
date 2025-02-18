@@ -1,7 +1,7 @@
 package conversations
 
 import (
-	"thaumaturgy/objects/timestamp"
+	"thaumaturgy/common/objects/timestamp"
 
 	"github.com/google/uuid"
 )

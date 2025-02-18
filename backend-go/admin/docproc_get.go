@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"kessler/crud"
 	"kessler/gen/dbstore"
-	"kessler/objects/files"
+	"kessler/common/objects/files"
 	"kessler/util"
 	"math/rand"
 	"net/http"

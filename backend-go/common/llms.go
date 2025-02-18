@@ -2,7 +2,7 @@ package common
 
 import (
 	"context"
-	"kessler/objects/networking"
+	"kessler/common/objects/networking"
 	"kessler/search"
 
 	openai "github.com/sashabaranov/go-openai"
