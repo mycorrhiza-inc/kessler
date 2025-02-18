@@ -2,7 +2,7 @@ package search
 
 import (
 	"fmt"
-	"kessler/objects/networking"
+	"kessler/common/objects/networking"
 	"testing"
 
 	"github.com/charmbracelet/log"

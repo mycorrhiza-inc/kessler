@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"kessler/gen/dbstore"
-	"kessler/objects/networking"
+	"kessler/common/objects/networking"
 	"kessler/util"
 	"net/http"
 	"time"

@@ -2,7 +2,7 @@ package networking
 
 import (
 	"encoding/json"
-	"thaumaturgy/objects/timestamp"
+	"thaumaturgy/common/objects/timestamp"
 
 	"github.com/charmbracelet/log"
 	"github.com/google/uuid"

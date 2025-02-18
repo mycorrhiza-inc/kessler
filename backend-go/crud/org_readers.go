@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"kessler/gen/dbstore"
-	"kessler/objects/files"
-	"kessler/objects/organizations"
+	"kessler/common/objects/files"
+	"kessler/common/objects/organizations"
 	"kessler/util"
 	"net/http"
 

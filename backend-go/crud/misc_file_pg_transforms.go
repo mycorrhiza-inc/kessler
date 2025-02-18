@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"kessler/gen/dbstore"
-	"kessler/objects/files"
-	"kessler/objects/timestamp"
+	"kessler/common/objects/files"
+	"kessler/common/objects/timestamp"
 	"time"
 
 	"github.com/charmbracelet/log"

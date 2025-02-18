@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"kessler/gen/dbstore"
-	"kessler/objects/authors"
-	"kessler/objects/conversations"
-	"kessler/objects/files"
+	"kessler/common/objects/authors"
+	"kessler/common/objects/conversations"
+	"kessler/common/objects/files"
 	"kessler/util"
 	"net/http"
 

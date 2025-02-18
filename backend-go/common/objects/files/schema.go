@@ -1,9 +1,9 @@
 package files
 
 import (
-	"kessler/objects/authors"
-	"kessler/objects/conversations"
-	"kessler/objects/timestamp"
+	"kessler/common/objects/authors"
+	"kessler/common/objects/conversations"
+	"kessler/common/objects/timestamp"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"

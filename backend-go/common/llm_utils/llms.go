@@ -1,9 +1,7 @@
-package rag
+package llm_utils
 
 import (
 	"context"
-	"kessler/objects/networking"
-	"kessler/search"
 
 	openai "github.com/sashabaranov/go-openai"
 )
@@ -24,10 +22,32 @@ type SimpleChatMessage struct {
 
 type ChatMessage struct {
 	// SimpleChatMessage
-	Content   string                       `json:"content"`
-	Role      string                       `json:"role"`
-	Citations *[]search.SearchDataHydrated `json:"citations,omitempty"`
-	Context   *[]SimpleChatMessage         `json:"context,omitempty"`
+	Content   string               `json:"content"`
+	Role      string               `json:"role"`
+	Citations *[]Citation          `json:"citations,omitempty"`
+	Context   *[]SimpleChatMessage `json:"context,omitempty"`
+}
+
+func OAIMessagesToCommon(oaiMsgs []openai.ChatCompletionMessage) []ChatMessage {
+	var msgs []ChatMessage
+	for _, oaiMsg := range oaiMsgs {
+		msgs = append(msgs, ChatMessage{
+			Content: oaiMsg.Content,
+			Role:    string(oaiMsg.Role),
+		})
+	}
+	return msgs
+}
+
+func CommonToOAIMessages(messages []ChatMessage) []openai.ChatCompletionMessage {
+	var oaiMessages []openai.ChatCompletionMessage
+	for _, msg := range messages {
+		oaiMessages = append(oaiMessages, openai.ChatCompletionMessage{
+			Role:    msg.Role,
+			Content: msg.Content,
+		})
+	}
+	return oaiMessages
 }
 
 // Function converting simple to ChatMessage
@@ -36,7 +56,7 @@ func SimpleToChatMessage(msg SimpleChatMessage) ChatMessage {
 		// SimpleChatMessage: msg,
 		Content:   msg.Content,
 		Role:      msg.Role,
-		Citations: &[]search.SearchDataHydrated{},
+		Citations: &[]Citation{},
 		Context:   &[]SimpleChatMessage{},
 	}
 }
@@ -105,7 +125,7 @@ type LLMModel struct {
 
 var DefaultBigLLMModel = LLMModel{ModelName: "gpt-4o"}
 
-func (model_name LLMModel) Chat(chatHistory []ChatMessage) (ChatMessage, error) {
+func (model_name LLMModel) Chat(ctx context.Context, chatHistory []ChatMessage) (ChatMessage, error) {
 	requestMultiplex := MultiplexerChatCompletionRequest{
 		ChatHistory: chatHistory,
 		ModelName:   model_name.ModelName,
@@ -116,38 +136,3 @@ func (model_name LLMModel) Chat(chatHistory []ChatMessage) (ChatMessage, error) 
 
 // TODO: Add this back in when we have a use case for it.
 // var rag_func_call_no_filters = rag_func_call_filters(search.Metadata{})
-
-func (model_name LLMModel) RagChat(chatHistory []ChatMessage, filters networking.FilterFields) (ChatMessage, error) {
-	ctx := context.Background()
-	requestMultiplex := MultiplexerChatCompletionRequest{
-		ChatHistory: chatHistory,
-		ModelName:   model_name.ModelName,
-		Functions: []FunctionCall{
-			rag_func_call_filters(filters),
-			more_info_func_call(ctx),
-		},
-	}
-	return LLMComplexRequest(requestMultiplex)
-}
-
-type LLM interface {
-	Chat(chatHistory []ChatMessage) (ChatMessage, error)
-	RagChat(chatHistory []ChatMessage, filters networking.FilterFields) (ChatMessage, error)
-}
-
-func SimpleInstruct(model LLM, instruction string) (string, error) {
-	chat_history := []ChatMessage{
-		{
-			Role:    "system",
-			Content: instruction,
-		},
-	}
-	instruct_message_result, err := model.Chat(chat_history)
-	if err != nil {
-		return "", err
-	}
-	instruct_result_string := instruct_message_result.Content
-	return instruct_result_string, nil
-}
-
-// Wait to add all the llm utils until you understand how to write concurrent code in go more.
