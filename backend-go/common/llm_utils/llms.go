@@ -2,7 +2,6 @@ package llm_utils
 
 import (
 	"context"
-	"kessler/search"
 
 	openai "github.com/sashabaranov/go-openai"
 )
@@ -23,10 +22,10 @@ type SimpleChatMessage struct {
 
 type ChatMessage struct {
 	// SimpleChatMessage
-	Content   string                       `json:"content"`
-	Role      string                       `json:"role"`
-	Citations *[]search.SearchDataHydrated `json:"citations,omitempty"`
-	Context   *[]SimpleChatMessage         `json:"context,omitempty"`
+	Content   string               `json:"content"`
+	Role      string               `json:"role"`
+	Citations *[]Citation          `json:"citations,omitempty"`
+	Context   *[]SimpleChatMessage `json:"context,omitempty"`
 }
 
 func OAIMessagesToCommon(oaiMsgs []openai.ChatCompletionMessage) []ChatMessage {
@@ -57,7 +56,7 @@ func SimpleToChatMessage(msg SimpleChatMessage) ChatMessage {
 		// SimpleChatMessage: msg,
 		Content:   msg.Content,
 		Role:      msg.Role,
-		Citations: &[]search.SearchDataHydrated{},
+		Citations: &[]Citation{},
 		Context:   &[]SimpleChatMessage{},
 	}
 }

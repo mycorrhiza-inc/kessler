@@ -3,7 +3,6 @@ package llm_utils
 import (
 	"context"
 	"fmt"
-	"kessler/search"
 	"os"
 
 	"github.com/charmbracelet/log"
@@ -28,9 +27,12 @@ type FunctionCall struct {
 	Schema openai.FunctionDefinition
 	Func   func(string) (ToolCallResults, error)
 }
+
+type Citation any
+
 type ToolCallResults struct {
 	Response  string
-	Citations *[]search.SearchDataHydrated
+	Citations []Citation
 }
 
 type MultiplexerChatCompletionRequest struct {
@@ -107,7 +109,7 @@ func LLMComplexRequest(messageRequest MultiplexerChatCompletionRequest) (ChatMes
 	// }
 	dialogue = append(dialogue, msg)
 	contextMessages := []openai.ChatCompletionMessage{msg}
-	returnCitations := []search.SearchDataHydrated{}
+	returnCitations := []Citation{}
 	for _, toolCall := range msg.ToolCalls {
 		// toolCallName := tool_call.Function.Name
 		// tool_call_params := tool_call.Function.Arguments
@@ -127,7 +129,7 @@ func LLMComplexRequest(messageRequest MultiplexerChatCompletionRequest) (ChatMes
 		dialogue = append(dialogue, toolMsg)
 		contextMessages = append(contextMessages, toolMsg)
 		if run_results.Citations != nil {
-			returnCitations = append(returnCitations, *run_results.Citations...)
+			returnCitations = append(returnCitations, run_results.Citations...)
 		}
 
 	}
