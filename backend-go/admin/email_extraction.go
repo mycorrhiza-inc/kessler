@@ -4,9 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"kessler/common/llm_utils"
+	"kessler/common/objects/files"
 	"kessler/crud"
 	"kessler/gen/dbstore"
-	"kessler/common/objects/files"
 	"kessler/rag"
 	"kessler/util"
 	"net/http"
@@ -59,7 +60,7 @@ func extractEmails(text string) []string {
 	return matches
 }
 
-func extractRelaventEmails(llm rag.LLM, text string, organization_name string) ([]string, error) {
+func extractRelaventEmails(llm llm_utils.LLM, text string, organization_name string) ([]string, error) {
 	emails := extractEmails(text)
 	prompt := `Given the following list of email addresses and an organization name, identify which emails likely belong to members of the organization.
 Consider email patterns, domains, and professional email formats.
@@ -69,7 +70,7 @@ Email addresses: ` + strings.Join(emails, ", ") + `
 
 Return only the email addresses that are likely associated with the organization, one per line.`
 
-	response, err := rag.SimpleInstruct(llm, prompt)
+	response, err := llm_utils.SimpleInstruct(llm, prompt)
 	if err != nil {
 		return emails, err
 	}

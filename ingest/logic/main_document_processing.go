@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
-	"thaumaturgy/common/llm"
+	"thaumaturgy/common/llm_utils"
 
 	"github.com/google/uuid"
 	// Assume these are implemented in other packages

@@ -1,8 +1,6 @@
-package common
+package llm_utils
 
 import (
-	"context"
-	"kessler/common/objects/networking"
 	"kessler/search"
 
 	openai "github.com/sashabaranov/go-openai"
@@ -138,16 +136,3 @@ func (model_name LLMModel) Chat(chatHistory []ChatMessage) (ChatMessage, error) 
 
 // TODO: Add this back in when we have a use case for it.
 // var rag_func_call_no_filters = rag_func_call_filters(search.Metadata{})
-
-func (model_name LLMModel) RagChat(chatHistory []ChatMessage, filters networking.FilterFields) (ChatMessage, error) {
-	ctx := context.Background()
-	requestMultiplex := MultiplexerChatCompletionRequest{
-		ChatHistory: chatHistory,
-		ModelName:   model_name.ModelName,
-		Functions: []FunctionCall{
-			rag_func_call_filters(filters),
-			more_info_func_call(ctx),
-		},
-	}
-	return LLMComplexRequest(requestMultiplex)
-}

@@ -1,4 +1,4 @@
-package common
+package llm_utils
 
 import (
 	"context"
