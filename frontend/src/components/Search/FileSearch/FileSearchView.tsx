@@ -89,6 +89,10 @@ const FileSearchView = ({
     filters: initialFilterState,
     query: "",
   });
+  
+  const SetComplexQuery = (querydata : QueryDataFile) => {
+
+  }
 
   // query results
   const [filings, setFilings] = useState<Filing[]>([]);
@@ -156,7 +160,7 @@ const FileSearchView = ({
           <div></div>
         )}
       </div>
-      <div className="w-full h-full">
+      <div className="w-full h-full z-50">
         <SearchBox input={searchBoxProp} />
         <InfiniteScrollPlus
           dataLength={filings.length}

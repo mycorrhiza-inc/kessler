@@ -3,46 +3,45 @@ import { data } from 'autoprefixer';
 import { endOfDay } from 'date-fns';
 import { range } from 'lodash-es';
 import React, { useState } from 'react';
-import { DateRangePicker, RangeKeyDict } from 'react-date-range';
+import { DateRangePicker, RangeKeyDict, Range as DateRange } from 'react-date-range';
 import 'react-date-range/dist/styles.css'; // main style file
 import 'react-date-range/dist/theme/default.css'; // theme css file
 
 type DateRangePickerProps = {
-	startPick: Date | null;
-	endPick: Date | null;
-	setStartPick: (date: Date) => void;
-	setEndPick: (date: Date) => void;
+	baseRange: DateRange
+	updateRange: (newRange: DateRange) => void
 }
-const RangePicker = ({ startPick, endPick, setStartPick, setEndPick }: DateRangePickerProps) => {
+export const RangePicker = ({ baseRange, updateRange }: DateRangePickerProps) => {
 	const [open, setOpen] = useState(false);
 	const flip = () => {
 		setOpen((prev) => !prev)
 	}
 
 	const selectionRange = {
-		startDate: startPick !== null ? startPick : new Date(),
-		endOfDate: endPick !== null ? endPick : new Date(),
+		startDate: baseRange.startDate !== null ? baseRange.startDate : new Date(),
+		endDate: baseRange.endDate !== null ? baseRange.endDate : new Date(),
 		key: 'selection',
 	}
 
 	const handleChange = (rangesByKey: RangeKeyDict) => {
-		const range = rangesByKey[0];
-		if (range.startDate) { setStartPick(range.startDate) }
-		if (range.endDate) { setEndPick(range.endDate) }
+		const newRange = Object.values(rangesByKey)[0];
+		console.log("!@#!@#!@#", rangesByKey)
+		 { updateRange({ ...baseRange, startDate: newRange.startDate, endDate: newRange.endDate }) }
 	}
 	return (
 		<div className='flex flex-row'>
 			<details className="dropdown">
 				<summary className='' onClick={flip}>
-					<u>{startPick !== null ? startPick.toLocaleDateString("en-US") : "?"}</u> to
-					<u>{endPick !== null ? endPick.toLocaleDateString("en-US") : "?"}</u>
-					{open ? <ChevronDownIcon /> : <ChevronUpIcon />}
+					Date from <u>{baseRange.startDate !== undefined ? baseRange.startDate.toLocaleDateString("en-US") : "?"}</u> to
+					<u>{baseRange.endDate !== undefined ? baseRange.endDate.toLocaleDateString("en-US") : "?"}</u>
 				</summary>
-				<div className='dropdown-content'>
+				<div className='dropdown-content  z-[9910]'>
+					<div className=" bg-base-100 rounded-lg">
 					<DateRangePicker
 						ranges={[selectionRange]}
 						onChange={handleChange}
 					/>
+					</div>
 				</div>
 			</details>
 		</div>

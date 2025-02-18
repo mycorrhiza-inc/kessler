@@ -20,11 +20,8 @@ export interface DateSuggestion extends BasicSuggestion {
   label: string;
   value: Range;
 }
-export interface TextSuggestion extends BasicSuggestion {
-  id: "";
-}
 
-export type Suggestion = BasicSuggestion ;
+export type Suggestion = BasicSuggestion;
 
 export interface Filter extends BasicSuggestion {
   id: string;
