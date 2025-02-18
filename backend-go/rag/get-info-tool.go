@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"kessler/common/llm_utils"
 	"kessler/crud"
 	"kessler/gen/dbstore"
 	"kessler/util"
@@ -40,35 +41,35 @@ var more_info_func_schema = openai.FunctionDefinition{
 	},
 }
 
-func more_info_func_call(ctx context.Context) FunctionCall {
+func more_info_func_call(ctx context.Context) llm_utils.FunctionCall {
 	q := *util.DBQueriesFromContext(ctx)
-	return FunctionCall{
+	return llm_utils.FunctionCall{
 		Schema: rag_query_func_schema,
-		Func: func(query_json string) (ToolCallResults, error) {
+		Func: func(query_json string) (llm_utils.ToolCallResults, error) {
 			var queryData map[string]string
 			err := json.Unmarshal([]byte(query_json), &queryData)
 			if err != nil {
-				return ToolCallResults{}, fmt.Errorf("error unmarshaling query_json: %v", err)
+				return llm_utils.ToolCallResults{}, fmt.Errorf("error unmarshaling query_json: %v", err)
 			}
 			search_query, ok := queryData["query"]
 			if !ok {
-				return ToolCallResults{}, fmt.Errorf("query field is missing in query_json")
+				return llm_utils.ToolCallResults{}, fmt.Errorf("query field is missing in query_json")
 			}
 			object_type, ok := queryData["type"]
 			if !ok {
-				return ToolCallResults{}, fmt.Errorf("query field is missing in query_json")
+				return llm_utils.ToolCallResults{}, fmt.Errorf("query field is missing in query_json")
 			}
 			obj_info, err := getObjectInformation(search_query, object_type, q, ctx)
 			if err != nil {
-				return ToolCallResults{}, err
+				return llm_utils.ToolCallResults{}, err
 			}
 			// TODO: I dont know if returning yaml instead of json is good, typically yaml has better performance,
 			// but the entire interface is already in json, and randomly swapping to yaml isnt probably going to improve things.
 			obj_info_json, err := json.Marshal(obj_info)
 			if err != nil {
-				return ToolCallResults{}, err
+				return llm_utils.ToolCallResults{}, err
 			}
-			return ToolCallResults{
+			return llm_utils.ToolCallResults{
 				Response: string(obj_info_json),
 			}, nil
 		},

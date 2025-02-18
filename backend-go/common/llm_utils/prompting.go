@@ -37,9 +37,9 @@ func (u *LLMUtils) withRetries(ctx context.Context, fn func() (ChatMessage, erro
 	return ChatMessage{}, fmt.Errorf("after %d attempts: %w", u.Retries, err)
 }
 
-func SimpleQuestion(ctx context.Context, llm LLM, content string) (string, error) {
+func SimpleInstruct(ctx context.Context, llm LLM, prompt string) (string, error) {
 	history := []ChatMessage{
-		{Role: "user", Content: content},
+		{Role: "user", Content: prompt},
 	}
 	res, err := llm.Chat(ctx, history)
 	return res.Content, err

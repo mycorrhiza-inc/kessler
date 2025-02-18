@@ -1,6 +1,7 @@
 package llm_utils
 
 import (
+	"context"
 	"kessler/search"
 
 	openai "github.com/sashabaranov/go-openai"
@@ -125,7 +126,7 @@ type LLMModel struct {
 
 var DefaultBigLLMModel = LLMModel{ModelName: "gpt-4o"}
 
-func (model_name LLMModel) Chat(chatHistory []ChatMessage) (ChatMessage, error) {
+func (model_name LLMModel) Chat(ctx context.Context, chatHistory []ChatMessage) (ChatMessage, error) {
 	requestMultiplex := MultiplexerChatCompletionRequest{
 		ChatHistory: chatHistory,
 		ModelName:   model_name.ModelName,
