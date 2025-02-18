@@ -2,6 +2,7 @@ package crud
 
 import (
 	"encoding/json"
+	"fmt"
 	"kessler/gen/dbstore"
 	"kessler/objects/networking"
 	"kessler/util"
@@ -23,7 +24,7 @@ func OrgSemiCompletePaginated(w http.ResponseWriter, r *http.Request) {
 	}
 	organizations, err := q.OrganizationSemiCompleteInfoListPaginated(ctx, args)
 	if err != nil {
-		log.Printf("Error reading organization: %v", err)
+		log.Info(fmt.Sprintf("Error reading organization: %v", err))
 		if err.Error() == "no rows in result set" {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
@@ -46,7 +47,7 @@ func ConversationSemiCompletePaginatedList(w http.ResponseWriter, r *http.Reques
 	}
 	proceedings, err := q.ConversationSemiCompleteInfoListPaginated(ctx, args)
 	if err != nil {
-		log.Printf("Error reading organization: %v", err)
+		log.Info(fmt.Sprintf("Error reading organization: %v", err))
 		if err.Error() == "no rows in result set" {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
@@ -70,7 +71,7 @@ type ConversationSemiCompleteInfo struct {
 }
 
 func ConversationSemiCompleteListAll(w http.ResponseWriter, r *http.Request) {
-	log.Printf("Getting all proceedings")
+	log.Info(fmt.Sprintf("Getting all proceedings"))
 	q := *util.DBQueriesFromRequest(r)
 
 	ctx := r.Context()

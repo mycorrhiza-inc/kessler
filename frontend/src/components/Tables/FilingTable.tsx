@@ -7,10 +7,11 @@ import {
   ExtensionPill,
   TextPill,
 } from "./TextPills";
-import DocumentModal from "../Document/DocumentModal";
+import DocumentModal from '../Document/DocumentModal';
 import clsx from "clsx";
-import { TableStyled } from "../styled-components/TableStyled";
+import { TableStyle } from "../styles/Table";
 import { fileExtensionFromText } from "./FileExtension";
+import { string } from "zod";
 
 const NoclickSpan = ({ children }: { children: React.ReactNode }) => {
   return <span className="noclick">{children}</span>;
@@ -21,8 +22,8 @@ const AuthorColumn = ({ filing }: { filing: Filing }) => {
     <>
       {filing.authors_information
         ? filing.authors_information.map((auth_info: AuthorInformation) => (
-            <AuthorInfoPill author_info={auth_info} />
-          ))
+          <AuthorInfoPill author_info={auth_info} />
+        ))
         : filing.author + " Something isnt working"}
     </>
   );
@@ -31,9 +32,11 @@ const AuthorColumn = ({ filing }: { filing: Filing }) => {
 const TableRow = ({
   filing,
   DocketColumn,
+  OpenRow
 }: {
   filing: Filing;
   DocketColumn?: boolean;
+  OpenRow: (id: string) => void
 }) => {
   const [open, setOpen] = useState(false);
   const handleRowClick = (event: React.MouseEvent<HTMLTableRowElement>) => {
@@ -56,7 +59,7 @@ const TableRow = ({
 
     // If it's not the specific text, allow the row click to proceed
     console.log("Row was clicked");
-    setOpen((previous) => !previous);
+    OpenRow(filing.id);
   };
 
   return (
@@ -67,7 +70,6 @@ const TableRow = ({
       >
         <td>
           <NoclickSpan>{filing.date}</NoclickSpan>
-          <DocumentModal open={open} setOpen={setOpen} objectId={filing.id} />
         </td>
         <td>
           <NoclickSpan>
@@ -111,11 +113,17 @@ export const FilingTable = ({
   PinTableHeader?: boolean;
 }) => {
   // const pinClassName = PinTableHeader ? "table-pin-rows" : "";
+  const [modalIsOpen, setModalIsOpen] = useState(false);
+  const [modalObjectId, setModalObjectId] = useState("");
+  const OpenRowInModal = (id: string) => {
+    setModalObjectId(id);
+    setModalIsOpen(true);
+  };
 
   return (
-    <TableStyled
-      colgroup={
-        <>
+    <div>
+      <table className={TableStyle}>
+        <colgroup>
           <col width="40px" />
           <col width="80px" />
           <col width="200px" />
@@ -125,37 +133,37 @@ export const FilingTable = ({
           {DocketColumn && <col width="50px" />}
           <col width="50px" />
           <col width="50px" />
-        </>
-      }
-      header_row_content={
-        <>
-          <th className="text-left sticky top-0 filing-table-date">
-            Date Filed
-          </th>
-          <th className="text-left sticky top-0 filing-table-doc-class">
-            Document Class
-          </th>
-          <th className="text-left sticky top-0">Title</th>
-          <th className="text-left sticky top-0">Author</th>
-          {DocketColumn && (
-            <th className="text-left sticky top-0">Docket ID</th>
-          )}
-          <th className="text-left sticky top-0">Item Number</th>
-          <th className="text-left sticky top-0">Extension</th>
-        </>
-      }
-      table_content={
-        <>
+        </colgroup>
+        <thead>
+          <tr>
+            <th className="text-left sticky top-0 filing-table-date">
+              Date Filed
+            </th>
+            <th className="text-left sticky top-0 filing-table-doc-class">
+              Document Class
+            </th>
+            <th className="text-left sticky top-0">Title</th>
+            <th className="text-left sticky top-0">Author</th>
+            {DocketColumn && (
+              <th className="text-left sticky top-0">Docket ID</th>
+            )}
+            <th className="text-left sticky top-0">Item Number</th>
+            <th className="text-left sticky top-0">Extension</th>
+          </tr>
+        </thead>
+        <tbody>
           {filings.map((filing) => (
             <TableRow
+              OpenRow={OpenRowInModal}
               filing={filing}
               {...(DocketColumn !== undefined ? { DocketColumn } : {})}
               key={filing.id}
             />
           ))}
-        </>
-      }
-    />
+        </tbody>
+      </table>
+      <DocumentModal objectId={modalObjectId} open={modalIsOpen} setOpen={setModalIsOpen} />
+    </div>
   );
 };
 export default FilingTable;

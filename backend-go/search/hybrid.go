@@ -42,7 +42,7 @@ func HybridSearch(request SearchRequest) ([]SearchDataHydrated, error) {
 	rerankedData, err := rerankSearchResults(unrankedResults, request.Query)
 	// Fail semi silently and returns the regular unranked results
 	if err != nil {
-		log.Printf("Error reranking results: %s", err)
+		log.Info(fmt.Sprintf("Error reranking results: %s", err))
 		return unrankedResults, nil
 	}
 

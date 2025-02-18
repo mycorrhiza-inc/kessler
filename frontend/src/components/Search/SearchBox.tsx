@@ -1,14 +1,12 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import { AngleDownIcon, AngleUpIcon } from "../Icons";
-import { AuthorInfoPill, subdividedHueFromSeed } from "../Tables/TextPills";
+import { fileTypeColor, subdividedHueFromSeed } from "../Tables/TextPills";
 import {
-  QueryFileFilterFields,
   QueryDataFile,
   InheritedFilterValues,
   initialFiltersFromInherited,
 } from "@/lib/filters";
-import { Query } from "pg";
 import {
   FileSearchBoxProps,
   Filter,
@@ -16,9 +14,9 @@ import {
   SearchBoxInputProps,
   Suggestion,
 } from "@/lib/types/SearchTypes";
-import { randomUUID } from "crypto";
 import { ConvoSearchRequestData } from "../LookupPages/SearchRequestData";
 import { mockFetchSuggestions } from "./SearchSuggestions";
+import { fileExtensionFromText } from "../Tables/FileExtension";
 
 const AdvancedSearch = () => {
   const [open, setOpen] = useState(false);
@@ -41,6 +39,18 @@ type FiltersPoolProps = {
   flipExclude: (filterId: string) => void;
 };
 
+const displayTypeDict = {
+  nypuc_docket_industry: "Docket Industry",
+};
+const getDisplayType = (val: string): string => {
+  if (val in displayTypeDict) {
+    return displayTypeDict[val as keyof typeof displayTypeDict];
+  }
+  return val
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+};
 const FiltersPool: React.FC<FiltersPoolProps> = ({
   selected,
   handleFilterRemove,
@@ -66,6 +76,9 @@ const FiltersPool: React.FC<FiltersPoolProps> = ({
     }
     if (filter.type === "text") {
       return "oklch(90% 0.01 30)";
+    }
+    if (filter.type === "extension") {
+      return fileTypeColor[fileExtensionFromText(filter.label)];
     }
     return subdividedHueFromSeed(filter.label);
     // return "oklch(90% 0.1 80)";
@@ -105,7 +118,7 @@ const FiltersPool: React.FC<FiltersPoolProps> = ({
                     exclude
                   </button>
                 )}
-                {filter.type}: {filter.label}
+                {getDisplayType(filter.type)}: {filter.label}
               </span>
               <button
                 onClick={() => handleFilterRemove(filter.id)}
@@ -180,7 +193,7 @@ const getTextQueryFromFilterList = (filterTypeDict: {
 const generateConvoSearchData = (filterTypeDict: {
   [key: string]: Filter[];
 }) => {
-  const convoSearchData: ConvoSearchRequestData = {};
+  var convoSearchData: ConvoSearchRequestData = {};
   const setQuery = (value: string) => {
     convoSearchData.query = value;
   };
@@ -195,7 +208,7 @@ const generateConvoSearchData = (filterTypeDict: {
     convoSearchData.industry_type = value;
   };
   const industrySchema: filterExtractionSchema = {
-    filters: filterTypeDict.industrySchema,
+    filters: filterTypeDict.nypuc_docket_industry,
     valueProperty: "label",
     elseValue: "",
     setValueFunc: setIndustry,
@@ -227,6 +240,12 @@ const generateFileFiltersFromFilterList = (
       targetPath: ["filters", "match_author"],
       valueProperty: "label",
       elseValue: new_file_filters_metadata.match_author,
+    },
+    {
+      filterKey: "extension",
+      targetPath: ["filters", "match_extension"],
+      valueProperty: "label",
+      elseValue: "",
     },
     {
       filterKey: "file_class",
@@ -431,7 +450,7 @@ const SearchBox = ({
             {ShowAdvancedSearch && <AdvancedSearch />}
           </div>
 
-          {/* Suggestions dropdown - Now positioned relative to search container */}
+          {/* Suggestions dropdown - positioned relative to search container */}
           {suggestions.length > 0 && (
             <div className="absolute left-0 right-0 top-full mt-1 z-50 h-auto bg-base-100 border rounded-lg shadow-lg">
               <ul className=" max-h-60 overflow-auto">
@@ -446,8 +465,8 @@ const SearchBox = ({
                           : "hover:secondary-content"
                       }`}
                     >
-                      <span className={`text-sm font-medium text-primary`}>
-                        {suggestion.type}:
+                      <span className={`text-sm font-medium text-secondary`}>
+                        {getDisplayType(suggestion.type)}:
                       </span>{" "}
                       <span className="text-base-content">
                         {suggestion.label}

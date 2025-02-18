@@ -29,7 +29,7 @@ type SearchMetadata struct {
 	Date      string `json:"date"`
 	DocketID  string `json:"docket_id"`
 	FileClass string `json:"file_class"`
-	Doctype   string `json:"doctype"`
+	Doctype   string `json:"extension"`
 	Lang      string `json:"lang"`
 	Language  string `json:"language"`
 	Source    string `json:"source"`

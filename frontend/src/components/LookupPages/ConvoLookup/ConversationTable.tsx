@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { getRuntimeEnv } from "@/lib/env_variables_hydration_script";
 import { TextPill } from "@/components/Tables/TextPills";
 import clsx from "clsx";
-import { TableStyled } from "@/components/styled-components/TableStyled";
+import { TableStyle } from "@/components/styles/Table";
 import InfiniteScrollPlus from "@/components/InfiniteScroll/InfiniteScroll";
 
 export type ConversationSearchSchema = {
@@ -80,67 +80,62 @@ const ConversationTable = ({
 }) => {
   const router = useRouter();
   return (
-    <TableStyled
-      header_row_content={
-        <>
-          <td className="w-[30%]">Name</td>
-          <td className="w-[10%]">Date Published</td>
-          <td className="w-[10%]">ID</td>
-          <td className="w-[10%]">Matter Type</td>
-          {state && <td className="w-[10%]">State</td>}
-          <td className="w-[10%]">Industry</td>
-          {!truncate && (
-            <>
-              <td className="w-[10%]">Description</td>
-              <td className="w-[10%]">Document Count</td>
-            </>
-          )}
-        </>
-      }
-      table_content={
-        <>
-          {convoList.map((convo: ConversationTableSchema) => {
-            // const formattedDate = new Date(
-            //   convo.date_published,
-            // ).toLocaleDateString();
-            // I apologize for my sins, we were under constraints
+    <table className={TableStyle}>
+      <thead>
+        <td className="w-[30%]">Name</td>
+        <td className="w-[10%]">Date Published</td>
+        <td className="w-[10%]">ID</td>
+        <td className="w-[10%]">Matter Type</td>
+        {state && <td className="w-[10%]">State</td>}
+        <td className="w-[10%]">Industry</td>
+        {!truncate && (
+          <>
+            <td className="w-[10%]">Description</td>
+            <td className="w-[10%]">Document Count</td>
+          </>
+        )}
+      </thead>
+      <tbody>
+        {convoList.map((convo: ConversationTableSchema) => {
+          // const formattedDate = new Date(
+          //   convo.date_published,
+          // ).toLocaleDateString();
+          // I apologize for my sins, we were under constraints
 
-            const hackDate = JSON.parse(convo.metadata)["date_filed"];
-            const hackMatterType = JSON.parse(convo.metadata)["matter_type"];
+          const hackDate = JSON.parse(convo.metadata)["date_filed"];
+          const hackMatterType = JSON.parse(convo.metadata)["matter_type"];
 
-            return (
-              <tr
-                key={convo.docket_gov_id}
-                className="border-base-300 hover:bg-base-200 transition duration-500 ease-out cursor-pointer"
-                onClick={() => {
-                  router.push(`/dockets/${convo.docket_gov_id}`);
-                }}
-              >
-                <td className="w-[60%] px-4 py-3">{convo.name}</td>
-                <td className="w-[10%] px-4 py-3">{hackDate}</td>
-                <td className="w-[10%] px-4 py-3">{convo.docket_gov_id}</td>
-                <td className="w-[10%] px-4 py-3">{hackMatterType}</td>
-                {state && <td className="w-[10%] px-4 py-3">{convo.state}</td>}
-                <td className="w-[10%] px-4 py-3">
-                  {convo.industry_type && (
-                    <TextPill text={convo.industry_type} />
-                  )}
-                </td>
-
-                {!truncate && (
-                  <>
-                    <td className="w-[10%] px-4 py-3">{convo.description}</td>
-                    <td className="w-[10%] px-4 py-3">
-                      {convo.documents_count}
-                    </td>
-                  </>
+          return (
+            <tr
+              key={convo.docket_gov_id}
+              className="border-base-300 hover:bg-base-200 transition duration-500 ease-out cursor-pointer"
+              onClick={() => {
+                router.push(`/dockets/${convo.docket_gov_id}`);
+              }}
+            >
+              <td className="w-[60%] px-4 py-3">{convo.name}</td>
+              <td className="w-[10%] px-4 py-3">{hackDate}</td>
+              <td className="w-[10%] px-4 py-3">{convo.docket_gov_id}</td>
+              <td className="w-[10%] px-4 py-3">{hackMatterType}</td>
+              {state && <td className="w-[10%] px-4 py-3">{convo.state}</td>}
+              <td className="w-[10%] px-4 py-3">
+                {convo.industry_type && (
+                  <TextPill text={convo.industry_type} />
                 )}
-              </tr>
-            );
-          })}
-        </>
-      }
-    />
+              </td>
+              {!truncate && (
+                <>
+                  <td className="w-[10%] px-4 py-3">{convo.description}</td>
+                  <td className="w-[10%] px-4 py-3">
+                    {convo.documents_count}
+                  </td>
+                </>
+              )}
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
   );
 };
 

@@ -32,7 +32,8 @@ type PDFFile = string | File | null;
 
 const PDFViewer = ({ file }: { file: string }) => {
   const [downloading, setDownloading] = useState(true);
-  const [err, setErr] = useState("");
+  const [networkErr, setNetworkErr] = useState("");
+  const [renderErr, setRenderErr] = useState("");
   const [fileData, setFileData] = useState<File>();
 
   const getPDFData = async (url: string): Promise<File> => {
@@ -55,7 +56,7 @@ const PDFViewer = ({ file }: { file: string }) => {
       setDownloading(false);
       const errString = `Failed to fetch PDF: ${error}`;
       console.log(errString);
-      setErr(errString);
+      setNetworkErr(errString);
       throw new Error(errString);
     }
   };
@@ -76,21 +77,36 @@ const PDFViewer = ({ file }: { file: string }) => {
   if (downloading) {
     return <LoadingSpinner loadingText="Loading PDF Data" />;
   }
-  if (err) {
-    return <ErrorMessage error={err} />;
+  if (networkErr || renderErr) {
+    var message;
+    if (networkErr) {
+      message = "Sorry, our servers couldnt fetch the pdf :(";
+    }
+    if (renderErr) {
+      message = "Sorry, the client couldnt render the pdf :(";
+    }
+    return <ErrorMessage message={message} error={networkErr || renderErr} />;
   }
   if (fileData === undefined) {
     return <ErrorMessage error="PDF Data is Undefined" />;
   }
-  return <PDFViewerRaw file={fileData} setLoading={() => {}} />;
+  const onError = (err: Error) => {
+    console.log(err);
+    setRenderErr(err.message);
+  };
+  return (
+    <PDFViewerRaw file={fileData} setLoading={() => {}} onLoadError={onError} />
+  );
 };
 
 function PDFViewerRaw({
   file,
   setLoading,
+  onLoadError,
 }: {
   file: PDFFile;
   setLoading: (val: boolean) => void;
+  onLoadError: (val: Error) => void;
 }) {
   const [numPages, setNumPages] = useState<number>();
   const [containerRef, setContainerRef] = useState<HTMLElement | null>(null);
@@ -121,7 +137,7 @@ function PDFViewerRaw({
             file={file}
             onLoadSuccess={onDocumentLoadSuccess}
             options={options}
-            onLoadError={console.error}
+            onLoadError={onLoadError}
           >
             {Array.from(new Array(numPages), (el, index) => (
               <Page
