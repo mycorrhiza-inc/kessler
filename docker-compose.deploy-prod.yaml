@@ -35,12 +35,7 @@ services:
       - "traefik.enable=true"
       - "traefik.namespace=kessler"
       - "traefik.http.routers.frontend.rule=Host(`kessler.xyz`) && PathPrefix(`/`)"
-      - "traefik.http.routers.frontend.rule=Host(`ny.kessler.xyz`) && PathPrefix(`/`)"
-      - "traefik.http.routers.frontend.rule=Host(`co.kessler.xyz`) && PathPrefix(`/`)"
-      - "traefik.http.routers.frontend.rule=Host(`ma.kessler.xyz`) && PathPrefix(`/`)"
-      - "traefik.http.routers.frontend.rule=HostRegexp(`{state:al|ak|az|ar|ca|co|ct|de|fl|ga|hi|id|il|in|ia|ks|ky|la|me|md|ma|mi|mn|ms|mo|mt|ne|nv|nh|nj|nm|ny|nc|nd|oh|ok|or|pa|ri|sc|sd|tn|tx|ut|vt|va|wa|wv|wi|wy}.kessler.xyz`)"
       - traefik.http.routers.blog.tls.domains[0].main=kessler.xyz
-      - traefik.http.routers.blog.tls.domains[0].sans=*.kessler.xyz
       # - "traefik.http.routers.frontend.middlewares=state-redirect@file"
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.routers.frontend.tls.certresolver=myresolver"
