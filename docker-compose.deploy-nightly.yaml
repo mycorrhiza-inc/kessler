@@ -1,4 +1,3 @@
-# local development docker compose
 x-common-env: &common-env
   OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector:4317
   VERSION_HASH: prod
@@ -7,14 +6,13 @@ x-common-env: &common-env
   INTERNAL_KESSLER_API_URL: "http://backend-go:4041"
 services:
   reverse-proxy:
-    # official image
     image: traefik:v3.0
     command:
-      # - "--log.level=DEBUG"
       - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--providers.docker.constraints=Label(`traefik.namespace`,`kessler`)"
-      - "--providers.docker.exposedbydefault=false"
+      # Use Podman provider instead of Docker
+      - "--providers.podman=true"
+      - "--providers.podman.constraints=Label(`traefik.namespace`,`kessler`)"
+      - "--providers.podman.exposedbydefault=false"
       - "--entryPoints.websecure.address=:443"
       - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
       - "--certificatesresolvers.myresolver.acme.email=mbright@kessler.xyz"
@@ -26,8 +24,12 @@ services:
       - "${PROXY_UI_PORT:-8083}:8080"
     volumes:
       - "${VOLUMES_DIRECTORY:-./volumes}/letsencrypt:/letsencrypt"
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      # Podman socket (rootless example; adjust path if needed)
+      - "/run/user/1000/podman/podman.sock:/run/podman/podman.sock:ro"
       - "./traefik_dynamic.yaml:/etc/traefik/traefik_dynamic.yaml:ro"
+    # Optional: Required for rootless Podman socket permissions
+    user: "1000:1000" # Match your host UID/GID
+
   frontend:
     image: fractalhuman1/kessler-frontend:latest
     env_file:
@@ -41,22 +43,20 @@ services:
       - "traefik.enable=true"
       - "traefik.namespace=kessler"
       - "traefik.http.routers.frontend.rule=Host(`nightly.kessler.xyz`) && PathPrefix(`/`)"
-      - traefik.http.routers.blog.tls.domains[0].main=kessler.xyz
-      # - "traefik.http.routers.frontend.middlewares=state-redirect@file"
+      - "traefik.http.routers.blog.tls.domains[0].main=nightly.kessler.xyz"
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.routers.frontend.tls.certresolver=myresolver"
-      - "traefik.http.routers.whoami.rule=Host(`kessler.xyz`)"
+      - "traefik.http.routers.whoami.rule=Host(`nightly.kessler.xyz`)"
       - "traefik.http.routers.whoami.entrypoints=websecure"
       - "traefik.http.routers.whoami.tls.certresolver=myresolver"
+      # # Explicitly define the port (optional but recommended)
+      # - "traefik.http.services.frontend.loadbalancer.server.port=3000"
     expose:
       - 3000
     command:
-      # - "sleep"
-      # - "9999999999d"
       - "npm"
       - "run"
       - "start"
-
   backend-go:
     image: fractalhuman1/kessler-backend-go:latest
     command:

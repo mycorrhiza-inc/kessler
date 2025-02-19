@@ -51,8 +51,6 @@ services:
     expose:
       - 3000
     command:
-      # - "sleep"
-      # - "9999999999d"
       - "npm"
       - "run"
       - "start"
