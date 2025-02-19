@@ -87,8 +87,8 @@ function process_branch() {
         sed -i \"s|image: fractalhuman1/kessler-frontend:.*|image: fractalhuman1/kessler-frontend:${current_hash}|\" \"/mycorrhiza/kessler/${compose_file}\" && \
         sed -i \"s|image: fractalhuman1/kessler-backend-go:.*|image: fractalhuman1/kessler-backend-go:${current_hash}|\" \"/mycorrhiza/kessler/${compose_file}\" && \
         sed -i \"s|VERSION_HASH:.*|VERSION_HASH: ${current_hash}|\" \"/mycorrhiza/kessler/${compose_file}\" && \
-        docker compose -f \"${compose_file}\" down && \
-        docker compose -f \"${compose_file}\" up -d"
+        podman-compose -f \"${compose_file}\" down && \
+        podman-compose -f \"${compose_file}\" up -d"
     else
         echo "No changes detected, deployemnt already on provided hash, skipping deployment: ${current_hash}"
     fi
