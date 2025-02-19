@@ -1,4 +1,10 @@
 # local development docker compose
+x-common-env: &common-env
+  OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector:4317
+  VERSION_HASH: prod
+  DOMAIN: "kessler.xyz"
+  PUBLIC_KESSLER_API_URL: "https://api.kessler.xyz"
+  INTERNAL_KESSLER_API_URL: "http://backend-go:4041"
 services:
   reverse-proxy:
     # official image
@@ -27,7 +33,7 @@ services:
     env_file:
       - config/global.env
     environment:
-      VERSION_HASH: latest
+      <<: *common-env
     volumes:
       - ./config/frontend.env.local:/app.env.local
       - ./config/global.env:/app/.env
@@ -58,7 +64,7 @@ services:
     env_file:
       - config/global.env
     environment:
-      VERSION_HASH: latest
+      <<: *common-env
     expose:
       - 4041
     labels:
