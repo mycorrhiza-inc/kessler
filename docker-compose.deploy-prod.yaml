@@ -1,4 +1,10 @@
 # local development docker compose
+x-common-env: &common-env
+  OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector:4317
+  VERSION_HASH: prod
+  DOMAIN: "kessler.xyz"
+  PUBLIC_KESSLER_API_URL: "https://api.kessler.xyz"
+  INTERNAL_KESSLER_API_URL: "http://backend-go:4041"
 services:
   reverse-proxy:
     # official image
@@ -21,11 +27,13 @@ services:
     volumes:
       - "${VOLUMES_DIRECTORY:-./volumes}/letsencrypt:/letsencrypt"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
-      # - "./traefik_dynamic.yaml:/etc/traefik/traefik_dynamic.yaml:ro"
+      - "./traefik_dynamic.yaml:/etc/traefik/traefik_dynamic.yaml:ro"
   frontend:
     image: fractalhuman1/kessler-frontend:latest
     env_file:
       - config/global.env
+    environment:
+      <<: *common-env
     volumes:
       - ./config/frontend.env.local:/app.env.local
       - ./config/global.env:/app/.env
@@ -33,9 +41,7 @@ services:
       - "traefik.enable=true"
       - "traefik.namespace=kessler"
       - "traefik.http.routers.frontend.rule=Host(`kessler.xyz`) && PathPrefix(`/`)"
-      - "traefik.http.routers.frontend.rule=HostRegexp(`{state:al|ak|az|ar|ca|co|ct|de|fl|ga|hi|id|il|in|ia|ks|ky|la|me|md|ma|mi|mn|ms|mo|mt|ne|nv|nh|nj|nm|ny|nc|nd|oh|ok|or|pa|ri|sc|sd|tn|tx|ut|vt|va|wa|wv|wi|wy}.kessler.xyz`)"
       - traefik.http.routers.blog.tls.domains[0].main=kessler.xyz
-      - traefik.http.routers.blog.tls.domains[0].sans=*.kessler.xyz
       # - "traefik.http.routers.frontend.middlewares=state-redirect@file"
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.routers.frontend.tls.certresolver=myresolver"
@@ -57,6 +63,8 @@ services:
       - "./kessler-backend-go"
     env_file:
       - config/global.env
+    environment:
+      <<: *common-env
     expose:
       - 4041
     labels:

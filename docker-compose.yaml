@@ -2,6 +2,9 @@
 x-common-env: &common-env
   OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector:4317
   VERSION_HASH: dev
+  DOMAIN: "localhost"
+  PUBLIC_KESSLER_API_URL: "http://localhost"
+  INTERNAL_KESSLER_API_URL: "http://backend-go:4041"
 services:
   reverse-proxy:
     image: traefik:v3.1.2

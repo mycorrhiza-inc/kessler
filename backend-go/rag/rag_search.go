@@ -76,7 +76,8 @@ func rag_query_func_generated_from_filters(filters networking.FilterFields) func
 			truncated_search_results = search_results[:truncation]
 		}
 		format_string := search.FormatSearchResults(truncated_search_results, search_query)
-		result := llm_utils.ToolCallResults{Response: format_string, Citations: &truncated_search_results}
+		result := llm_utils.ToolCallResults{Response: format_string}
+		// result := llm_utils.ToolCallResults{Response: format_string, Citations: []llm_utils.Citation(truncated_search_results)}
 
 		return result, nil
 	}

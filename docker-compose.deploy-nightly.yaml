@@ -1,4 +1,10 @@
 # local development docker compose
+x-common-env: &common-env
+  OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector:4317
+  VERSION_HASH: prod
+  DOMAIN: "nightly.kessler.xyz"
+  PUBLIC_KESSLER_API_URL: "https://nightly-api.kessler.xyz"
+  INTERNAL_KESSLER_API_URL: "http://backend-go:4041"
 services:
   reverse-proxy:
     # official image
@@ -27,20 +33,15 @@ services:
     env_file:
       - config/global.env
     environment:
-      VERSION_HASH: latest
+      <<: *common-env
     volumes:
       - ./config/frontend.env.local:/app.env.local
       - ./config/global.env:/app/.env
     labels:
       - "traefik.enable=true"
       - "traefik.namespace=kessler"
-      - "traefik.http.routers.frontend.rule=Host(`kessler.xyz`) && PathPrefix(`/`)"
-      - "traefik.http.routers.frontend.rule=Host(`ny.kessler.xyz`) && PathPrefix(`/`)"
-      - "traefik.http.routers.frontend.rule=Host(`co.kessler.xyz`) && PathPrefix(`/`)"
-      - "traefik.http.routers.frontend.rule=Host(`ma.kessler.xyz`) && PathPrefix(`/`)"
-      - "traefik.http.routers.frontend.rule=HostRegexp(`{state:al|ak|az|ar|ca|co|ct|de|fl|ga|hi|id|il|in|ia|ks|ky|la|me|md|ma|mi|mn|ms|mo|mt|ne|nv|nh|nj|nm|ny|nc|nd|oh|ok|or|pa|ri|sc|sd|tn|tx|ut|vt|va|wa|wv|wi|wy}.kessler.xyz`)"
+      - "traefik.http.routers.frontend.rule=Host(`nightly.kessler.xyz`) && PathPrefix(`/`)"
       - traefik.http.routers.blog.tls.domains[0].main=kessler.xyz
-      - traefik.http.routers.blog.tls.domains[0].sans=*.kessler.xyz
       # - "traefik.http.routers.frontend.middlewares=state-redirect@file"
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.routers.frontend.tls.certresolver=myresolver"
@@ -63,13 +64,13 @@ services:
     env_file:
       - config/global.env
     environment:
-      VERSION_HASH: latest
+      <<: *common-env
     expose:
       - 4041
     labels:
       - "traefik.enable=true"
       - "traefik.namespace=kessler"
-      - "traefik.http.routers.backend-go.rule=Host(`api.kessler.xyz`) && PathPrefix(`/v2`)"
+      - "traefik.http.routers.backend-go.rule=Host(`nightly-api.kessler.xyz`) && PathPrefix(`/v2`)"
       # - "traefik.http.routers.backend-go.middlewares=state-redirect@file"
       - "traefik.http.middlewares.test-stripprefix.stripprefix.prefixes=/v2"
       - "traefik.http.routers.backend-go.entrypoints=websecure"
