@@ -6,6 +6,11 @@ x-common-env: &common-env
   PUBLIC_KESSLER_API_URL: "http://localhost"
   INTERNAL_KESSLER_API_URL: "http://backend-go:4041"
 services:
+  memcached:
+    image: memcached:latest
+    container_name: memcached
+    networks:
+      - mynetwork
   reverse-proxy:
     image: traefik:v3.1.2
     command:
