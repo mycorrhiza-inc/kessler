@@ -6,10 +6,6 @@ x-common-env: &common-env
   INTERNAL_KESSLER_API_URL: "http://backend-go:4041"
 
 services:
-  # I seem to be running into some permission errors when running podman-compose as a root user atm:
-  # [reverse-proxy] | 2025-02-20T21:12:09Z ERR The ACME resolve is skipped from the resolvers list error="unable to get ACME account: open /letsencrypt/acme.json: permission denied" resolver=myresolver
-
-  # [reverse-proxy] | 2025-02-20T21:12:09Z ERR Command error error="command traefik error: error while building entryPoint websecure: error preparing server: error opening listener: listen tcp :443: bind: permission denied"
   reverse-proxy:
     image: traefik:v3.0
     command:
