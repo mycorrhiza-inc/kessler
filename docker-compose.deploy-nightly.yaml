@@ -25,7 +25,7 @@ services:
     volumes:
       - "${VOLUMES_DIRECTORY:-./volumes}/letsencrypt:/letsencrypt"
       # Podman socket (rootless example; adjust path if needed)
-      - "/run/podman/podman.sock:/run/podman/podman.sock:ro"
+      - "/run/podman/podman.sock:/var/run/docker.sock:ro"
       - "./traefik_dynamic.yaml:/etc/traefik/traefik_dynamic.yaml:ro"
     # Optional: Required for rootless Podman socket permissions
     user: "1000:1000" # Match your host UID/GID
