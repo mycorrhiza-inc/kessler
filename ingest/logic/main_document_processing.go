@@ -7,18 +7,12 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
-	"thaumaturgy/common/llm_utils"
 
 	"github.com/google/uuid"
 	// Assume these are implemented in other packages
 )
 
-var (
-	KESSLER_API_URL    = os.Getenv("KESSLER_API_URL")
-	OS_TMPDIR          = os.Getenv("OS_TMPDIR")
-	OS_HASH_FILEDIR    = os.Getenv("OS_HASH_FILEDIR")
-	MOCK_DB_CONNECTION = os.Getenv("MOCK_DB_CONNECTION")
-)
+var OS_HASH_FILEDIR = os.Getenv("OS_HASH_FILEDIR")
 
 type DocumentStatus int
 

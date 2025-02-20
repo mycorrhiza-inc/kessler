@@ -24,12 +24,6 @@ const (
 	Update
 )
 
-type KeLLMUtils struct {
-	// Assumed implementation details
-}
-
-type S3FileManager struct{}
-
 func upsertFullFileToDB(ctx context.Context, obj files.CompleteFileSchema, interact DatabaseInteraction) (*files.CompleteFileSchema, error) {
 	if MOCK_DB_CONNECTION {
 		return &obj, nil
