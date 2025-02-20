@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"kessler/gen/dbstore"
 	"kessler/common/objects/authors"
 	"kessler/common/objects/conversations"
 	"kessler/common/objects/files"
-	"kessler/util"
+	"kessler/db"
+	"kessler/gen/dbstore"
 	"net/http"
 
 	"github.com/charmbracelet/log"
@@ -52,7 +52,7 @@ func HandleCheckDocumentMetadata(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
-	q := *util.DBQueriesFromRequest(r)
+	q := *db.GetTx()
 	file, err := CheckDocumentMetadata(args, q, ctx)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error checking document metadata: %v", err), http.StatusInternalServerError)

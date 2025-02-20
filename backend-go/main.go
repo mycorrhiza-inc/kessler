@@ -2,22 +2,22 @@ package main
 
 import (
 	"context"
-	"github.com/charmbracelet/log"
+	"fmt"
 	"kessler/admin"
 	"kessler/autocomplete"
 	"kessler/crud"
+	"kessler/db"
 	"kessler/health"
 	"kessler/jobs"
 	"kessler/rag"
 	"kessler/search"
-	"kessler/util"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 
+	"github.com/charmbracelet/log"
+
 	"github.com/gorilla/mux"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type UserValidation struct {
@@ -54,98 +54,82 @@ func HandleVersionHash(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(versionHash))
 }
 
-type RouteGroup struct {
-	router         *mux.Router
-	timeoutHandler http.Handler
-	prefixes       []string
-}
+func timeoutMiddleware(timeout time.Duration) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx, cancel := context.WithTimeout(r.Context(), timeout)
+			defer cancel()
 
-// NewRouteGroup creates a new RouteGroup with specified timeout and middleware
-func NewRouteGroup(timeout time.Duration, timeoutMsg string, middleware ...mux.MiddlewareFunc) *RouteGroup {
-	r := mux.NewRouter()
-	for _, m := range middleware {
-		r.Use(m)
+			r = r.WithContext(ctx)
+
+			done := make(chan bool)
+			go func() {
+				next.ServeHTTP(w, r)
+				done <- true
+			}()
+
+			select {
+			case <-ctx.Done():
+				w.WriteHeader(http.StatusGatewayTimeout)
+				fmt.Fprintf(w, "Request timeout after %v\n", timeout)
+				return
+			case <-done:
+				return
+			}
+		})
 	}
-	return &RouteGroup{
-		router:         r,
-		timeoutHandler: http.TimeoutHandler(r, timeout, timeoutMsg),
-		prefixes:       []string{},
-	}
-}
-
-// HandlePrefix registers a new path prefix and sets up routes using the provided function
-func (rg *RouteGroup) HandlePrefix(prefix string, setup func(*mux.Router)) {
-	sub := rg.router.PathPrefix(prefix).Subrouter()
-	setup(sub)
-	rg.prefixes = append(rg.prefixes, prefix)
-}
-
-// HandleFunc registers a direct route without path prefixing
-func (rg *RouteGroup) HandleFunc(path string, handler http.HandlerFunc) {
-	rg.router.HandleFunc(path, handler)
 }
 
 func main() {
-	// err := godotenv.Load()
-	// if err != nil {
-	// 	log.Fatal("Error loading .env file")
-	// }
-	// Create database connection
-	var connPool *pgxpool.Pool
-	connPool, err := pgxpool.NewWithConfig(context.Background(), util.PgPoolConfig(int32(30)))
-	if err != nil {
-		log.Fatal("Error while creating connection to the database!!")
-	}
+	// initialize the database connection pool
+	db.Init(30)
+	defer db.ConnPool.Close()
 
-	defer connPool.Close()
+	r := mux.NewRouter()
+	rootRoute := r.PathPrefix("/v2").Subrouter()
 
-	// mux_route := mux.NewRouter()
-	// static.HandleStaticGenerationRouting(mux, connPool)
-	const timeout = time.Second * 20
+	// default subrouter
+	const standardTimeout = time.Second * 20
+	standardRoute := rootRoute.PathPrefix("").Subrouter()
+	standardRoute.Use(timeoutMiddleware(standardTimeout))
+
+	// standard rest
+	publicSubroute := standardRoute.PathPrefix("/public").Subrouter()
+	crud.DefineCrudRoutes(publicSubroute)
+
+	// heathcheck
+	healthSubroute := standardRoute.PathPrefix("/health").Subrouter()
+	health.DefineHealthRoutes(healthSubroute)
+
+	// search endpoints
+	searchSubroute := standardRoute.PathPrefix("/search").Subrouter()
+	search.DefineSearchRoutes(searchSubroute)
+
+	// search autocomplete sugggestions endpoints
+	autocompleteSubroute := standardRoute.PathPrefix("/autocomplete").Subrouter()
+	autocomplete.DefineAutocompleteRoutes(autocompleteSubroute)
+
+	ragSubroute := standardRoute.PathPrefix("/rag").Subrouter()
+	ragSubroute.HandleFunc("/basic_chat", rag.HandleBasicChatRequest)
+	ragSubroute.HandleFunc("/chat", rag.HandleRagChatRequest)
+
+	standardRoute.HandleFunc("/version_hash", HandleVersionHash)
+
+	// admin route
 	const adminTimeout = time.Minute * 10
-	dbMiddleware := func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ctx := context.WithValue(r.Context(), "db", connPool)
-			next.ServeHTTP(w, r.WithContext(ctx))
-		})
-	}
+	adminRoute := rootRoute.PathPrefix("/admin").Subrouter()
+	adminRoute.Use(timeoutMiddleware(adminTimeout))
+	admin.DefineAdminRoutes(adminRoute)
 
-	// Initialize route groups
-	adminGroup := NewRouteGroup(adminTimeout, "Admin Timeout!", dbMiddleware)
-	regularGroup := NewRouteGroup(timeout, "Timeout!", dbMiddleware)
+	// jobs routes
+	jobSubroute := rootRoute.PathPrefix("/jobs").Subrouter()
+	jobs.DefineJobRoutes(jobSubroute)
 
-	// Setup admin routes
-	adminGroup.HandlePrefix("/v2/admin", admin.DefineAdminRoutes)
-	adminGroup.HandlePrefix("/v2/jobs", jobs.DefineJobRoutes)
-	// Add more admin prefixes as needed
-
-	// Setup regular routes
-	regularGroup.HandlePrefix("/v2/public", crud.DefineCrudRoutes)
-	regularGroup.HandlePrefix("/v2/health", health.DefineHealthRoutes)
-	regularGroup.HandlePrefix("/v2/search", search.DefineSearchRoutes)
-	regularGroup.HandlePrefix("/v2/autocomplete", autocomplete.DefineAutocompleteRoutes)
-
-	regularGroup.HandleFunc("/v2/version_hash", HandleVersionHash)
-	regularGroup.HandleFunc("/v2/rag/basic_chat", rag.HandleBasicChatRequest)
-	regularGroup.HandleFunc("/v2/rag/chat", rag.HandleRagChatRequest)
-
-	// Final handler automatically routes based on registered prefixes
-	finalHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		currentPath := r.URL.Path
-		for _, prefix := range adminGroup.prefixes {
-			if strings.HasPrefix(currentPath, prefix) {
-				adminGroup.timeoutHandler.ServeHTTP(w, r)
-				return
-			}
-		}
-		regularGroup.timeoutHandler.ServeHTTP(w, r)
-	})
-
-	handler := corsMiddleware(finalHandler)
+	mux.CORSMethodMiddleware(r)
 
 	server := &http.Server{
 		Addr:    ":4041",
-		Handler: handler,
+		Handler: r,
 		// Set longer timeouts at server level to allow for admin operations
 		ReadTimeout:  adminTimeout,
 		WriteTimeout: adminTimeout,

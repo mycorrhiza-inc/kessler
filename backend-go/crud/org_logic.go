@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"kessler/gen/dbstore"
 	"kessler/common/objects/authors"
-	"kessler/util"
+	"kessler/db"
+	"kessler/gen/dbstore"
 	"net/http"
 
 	"github.com/charmbracelet/log"
@@ -47,7 +47,7 @@ func OrganizationVerifyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
-	q := *util.DBQueriesFromRequest(r)
+	q := *db.GetTx()
 
 	author_info := authors.AuthorInformation{AuthorName: req.OrganizationName, IsPerson: req.IsPerson}
 	author_info, err = verifyAuthorOrganizationUUID(ctx, q, &author_info)
