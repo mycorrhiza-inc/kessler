@@ -3,8 +3,8 @@ package admin
 import (
 	"context"
 	"fmt"
+	"kessler/db"
 	"kessler/gen/dbstore"
-	"kessler/util"
 	"net/http"
 	"strings"
 	"sync"
@@ -12,7 +12,7 @@ import (
 	"github.com/charmbracelet/log"
 )
 
-func deduplicateOrganizationsOnNames(ctx context.Context, q dbstore.Queries) error {
+func deduplicateOrganizationsOnNames(ctx context.Context, q *dbstore.Queries) error {
 	all_orgs, err := q.OrganizationList(ctx)
 	if err != nil {
 		return err
@@ -107,9 +107,9 @@ func organizationsNameAsAlias(ctx context.Context, q dbstore.Queries) error {
 }
 
 func completeCleanDatabaseHandler(w http.ResponseWriter, r *http.Request) {
-	log.Info(fmt.Sprintf("Starting complete clean of database\n"))
+	log.Info("Starting complete clean of database\n")
 	ctx := context.Background()
-	q := *util.DBQueriesFromRequest(r)
+	q := db.GetTx()
 
 	err := deduplicateOrganizationsOnNames(ctx, q)
 	if err != nil {
@@ -118,15 +118,15 @@ func completeCleanDatabaseHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, errorstring, http.StatusInternalServerError)
 		return
 	}
-	log.Info(fmt.Sprintf("Sucessfully deduplicated orgs\n"))
-	err = organizationsNameAsAlias(ctx, q)
+	log.Info("Sucessfully deduplicated orgs\n")
+	err = organizationsNameAsAlias(ctx, *q)
 	if err != nil {
 		errorstring := fmt.Sprintf("Error ensuring organization aliases: %v\n", err)
 		log.Info(errorstring)
 		http.Error(w, errorstring, http.StatusInternalServerError)
 		return
 	}
-	log.Info(fmt.Sprintf("Sucessfully ensured org aliases\n"))
+	log.Info("Sucessfully ensured org aliases\n")
 	w.Header().Set("Content-Type", "text/plain")
 	w.Write([]byte("Successfully cleaned database"))
 }

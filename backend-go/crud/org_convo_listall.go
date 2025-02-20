@@ -3,8 +3,9 @@ package crud
 import (
 	"encoding/json"
 	"fmt"
-	"kessler/gen/dbstore"
 	"kessler/common/objects/networking"
+	"kessler/db"
+	"kessler/gen/dbstore"
 	"kessler/util"
 	"net/http"
 	"time"
@@ -72,7 +73,7 @@ type ConversationSemiCompleteInfo struct {
 
 func ConversationSemiCompleteListAll(w http.ResponseWriter, r *http.Request) {
 	log.Info(fmt.Sprintf("Getting all proceedings"))
-	q := *util.DBQueriesFromRequest(r)
+	q := db.GetTx()
 
 	ctx := r.Context()
 	proceedings_raw, err := q.ConversationSemiCompleteInfoList(ctx)

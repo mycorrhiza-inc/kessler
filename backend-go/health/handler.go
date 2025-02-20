@@ -1,19 +1,19 @@
 package health
 
 import (
+	"kessler/db"
 	"kessler/search"
-	"kessler/util"
 	"net/http"
 
 	"github.com/gorilla/mux"
 )
 
-func DefineHealthRoutes(health_subrouter *mux.Router) {
-	health_subrouter.HandleFunc(
+func DefineHealthRoutes(r *mux.Router) {
+	r.HandleFunc(
 		"/complete-check",
 		CompleteHealthCheckHandler,
 	).Methods(http.MethodPost)
-	health_subrouter.HandleFunc(
+	r.HandleFunc(
 		"/complete-check",
 		MinimalHealthCheckHandler,
 	).Methods(http.MethodPost)
@@ -40,7 +40,7 @@ func MinimalHealthCheckHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func MinimalHealthCheck(r *http.Request) error {
-	q := *util.DBQueriesFromRequest(r)
+	q := db.GetTx()
 	ctx := r.Context()
 	_, err := q.HealthCheck(ctx)
 	if err != nil {

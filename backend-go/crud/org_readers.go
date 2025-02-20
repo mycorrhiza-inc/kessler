@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"kessler/gen/dbstore"
 	"kessler/common/objects/files"
 	"kessler/common/objects/organizations"
-	"kessler/util"
+	"kessler/db"
+	"kessler/gen/dbstore"
 	"net/http"
 
 	"github.com/charmbracelet/log"
@@ -18,7 +18,7 @@ import (
 
 func OrgGetWithFilesHandler(w http.ResponseWriter, r *http.Request) {
 	log.Info(fmt.Sprintf("Getting file with metadata"))
-	q := *util.DBQueriesFromRequest(r)
+	q := db.GetTx()
 
 	params := mux.Vars(r)
 	orgID := params["uuid"]
@@ -29,7 +29,7 @@ func OrgGetWithFilesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx := r.Context()
 
-	complete_org_info, err := OrgWithFilesGetByID(ctx, &q, parsedUUID)
+	complete_org_info, err := OrgWithFilesGetByID(ctx, q, parsedUUID)
 	if err != nil {
 		log.Info(fmt.Sprintf("Error reading organization: %v", err))
 		if err.Error() == "no rows in result set" {

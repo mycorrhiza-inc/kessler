@@ -41,7 +41,7 @@ package static
 // 	ctx := context.Background()
 // 	chanFileList := make(chan []crud.RawFileSchema)
 // 	go func() {
-// 				q := *util.DBQueriesFromRequest(r)
+// 				q := db.GetTx()
 
 // 		list_all_files, err := crud.GetListAllRawFiles(ctx, q)
 // 		if err != nil {
