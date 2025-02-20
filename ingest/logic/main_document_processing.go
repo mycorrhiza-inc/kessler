@@ -119,11 +119,14 @@ func ProcessFileRaw(ctx context.Context, obj *CompleteFileSchema, stopAt *Docume
 		case DocumentStatusStage1:
 			nextStage, err = processStageOne(ctx, obj, mdextract, texts)
 		case DocumentStatusStage2:
-			nextStage, err = processStageTwo(ctx, obj, mdextract, texts)
+			nextStage, err = DocumentStatusStage2, fmt.Errorf("not implemented")
+			// nextStage, err = processStageTwo(ctx, obj, mdextract, texts)
 		case DocumentStatusStage3:
-			nextStage, err = createLLMExtras(ctx, obj)
+			nextStage, err = DocumentStatusStage3, fmt.Errorf("not implemented")
+			// nextStage, err = createLLMExtras(ctx, obj)
 		case DocumentStatusSummarizationCompleted:
-			nextStage, err = processEmbeddings(ctx, obj)
+			nextStage, err = DocumentStatusSummarizationCompleted, fmt.Errorf("not implemented")
+			// nextStage, err = processEmbeddings(ctx, obj)
 		case DocumentStatusEmbeddingsCompleted:
 			nextStage = DocumentStatusCompleted
 		default:
@@ -149,7 +152,7 @@ func ProcessFileRaw(ctx context.Context, obj *CompleteFileSchema, stopAt *Docume
 }
 
 func processStageHandleExtension(ctx context.Context, obj *CompleteFileSchema) (DocumentStatus, error) {
-	validExtension, err := common.ValidateAndRectifyFileExtension(obj.Extension)
+	validExtension, err := common.FileExtensionFromString(obj.Extension)
 	if err != nil {
 		return DocumentStatusUnprocessed, fmt.Errorf("invalid file extension: %w", err)
 	}
@@ -191,38 +194,38 @@ func processStageOne(ctx context.Context, obj *CompleteFileSchema, extractor *Ma
 	return DocumentStatusStage2, nil
 }
 
-func processStageTwo(ctx context.Context, obj *CompleteFileSchema, extractor *MarkdownExtractor, texts map[string]string) (DocumentStatus, error) {
-	if obj.Lang == "en" {
-		return DocumentStatusStage3, errors.New("invalid state: document already in english")
-	}
+// func processStageTwo(ctx context.Context, obj *CompleteFileSchema, extractor *MarkdownExtractor, texts map[string]string) (DocumentStatus, error) {
+// 	if obj.Lang == "en" {
+// 		return DocumentStatusStage3, errors.New("invalid state: document already in english")
+// 	}
+//
+// 	translated, err := extractor.TranslateText(texts["originalText"], obj.Lang)
+// 	if err != nil {
+// 		return DocumentStatusStage2, fmt.Errorf("translation failed: %w", err)
+// 	}
+//
+// 	obj.DocTexts = append(obj.DocTexts, FileTextSchema{
+// 		IsOriginalText: false,
+// 		Language:       "en",
+// 		Text:           translated,
+// 	})
+// 	texts["englishText"] = translated
+// 	return DocumentStatusStage3, nil
+// }
 
-	translated, err := extractor.TranslateText(texts["originalText"], obj.Lang)
-	if err != nil {
-		return DocumentStatusStage2, fmt.Errorf("translation failed: %w", err)
-	}
-
-	obj.DocTexts = append(obj.DocTexts, FileTextSchema{
-		IsOriginalText: false,
-		Language:       "en",
-		Text:           translated,
-	})
-	texts["englishText"] = translated
-	return DocumentStatusStage3, nil
-}
-
-func createLLMExtras(ctx context.Context, obj *CompleteFileSchema) (DocumentStatus, error) {
-	extras, err := common.GenerateExtras(obj)
-	if err != nil {
-		return DocumentStatusStage3, fmt.Errorf("LLM extras generation failed: %w", err)
-	}
-
-	obj.Extra = extras
-	return DocumentStatusSummarizationCompleted, nil
-}
-
-func processEmbeddings(ctx context.Context, obj *CompleteFileSchema) (DocumentStatus, error) {
-	if err := common.InsertEmbeddings(obj); err != nil {
-		return DocumentStatusSummarizationCompleted, fmt.Errorf("embeddings failed: %w", err)
-	}
-	return DocumentStatusEmbeddingsCompleted, nil
-}
+// func createLLMExtras(ctx context.Context, obj *CompleteFileSchema) (DocumentStatus, error) {
+// 	extras, err := common.GenerateExtras(obj)
+// 	if err != nil {
+// 		return DocumentStatusStage3, fmt.Errorf("LLM extras generation failed: %w", err)
+// 	}
+//
+// 	obj.Extra = extras
+// 	return DocumentStatusSummarizationCompleted, nil
+// }
+//
+// func processEmbeddings(ctx context.Context, obj *CompleteFileSchema) (DocumentStatus, error) {
+// 	if err := common.InsertEmbeddings(obj); err != nil {
+// 		return DocumentStatusSummarizationCompleted, fmt.Errorf("embeddings failed: %w", err)
+// 	}
+// 	return DocumentStatusEmbeddingsCompleted, nil
+// }
