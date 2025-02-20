@@ -11,9 +11,11 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"thaumaturgy/common/objects/authors"
 	"thaumaturgy/common/objects/files"
 	"time"
 
+	"github.com/charmbracelet/log"
 	"github.com/google/uuid"
 )
 
@@ -92,7 +94,7 @@ func upsertFullFileToDB(ctx context.Context, obj files.CompleteFileSchema, inter
 
 func checkPgForDuplicateMetadata(ctx context.Context, fileObj files.CompleteFileSchema) (*files.CompleteFileSchema, error) {
 	payload := map[string]interface{}{
-		"named_docket_id": fileObj.Conversation.DocketID,
+		"named_docket_id": fileObj.Conversation.DocketGovID,
 		"date_string":     fileObj.Mdata["date"],
 		"name":            fileObj.Name,
 		"extension":       fileObj.Extension,
@@ -158,7 +160,7 @@ func addURLRaw(ctx context.Context, fileURL string, fileObj files.CompleteFileSc
 }
 
 func addFileRaw(ctx context.Context, tmpFilePath string, fileObj files.CompleteFileSchema, disableIngestIfHash bool) (string, *files.CompleteFileSchema, error) {
-	fileManager := S3FileManager{Logger: defaultLogger}
+	fileManager := S3FileManager{}
 
 	if err := validateMetadata(fileObj.Mdata); err != nil {
 		return "", nil, err
@@ -179,7 +181,7 @@ func addFileRaw(ctx context.Context, tmpFilePath string, fileObj files.CompleteF
 	authorNames, _ := fileObj.Mdata["author"].(string)
 	authors, err := splitAuthorField(authorNames)
 	if err != nil {
-		defaultLogger.Error(fmt.Sprintf("Author splitting failed: %v", err))
+		log.Error("Author splitting failed", "err", err)
 	}
 
 	fileObj.Authors = authors
@@ -202,16 +204,16 @@ func validateMetadata(metadata map[string]interface{}) error {
 	return nil
 }
 
-func splitAuthorField(authorStr string) ([]AuthorInformation, error) {
+func splitAuthorField(authorStr string) ([]authors.AuthorInformation, error) {
 	if authorStr == "" {
 		return nil, nil
 	}
 
 	// Simplified version splitting on commas
-	authors := strings.Split(authorStr, ",")
-	var result []AuthorInformation
-	for _, a := range authors {
-		result = append(result, AuthorInformation{
+	authors_obj := strings.Split(authorStr, ",")
+	var result []authors.AuthorInformation
+	for _, a := range authors_obj {
+		result = append(result, authors.AuthorInformation{
 			AuthorID:   uuid.Nil,
 			AuthorName: strings.TrimSpace(a),
 		})
@@ -219,7 +221,7 @@ func splitAuthorField(authorStr string) ([]AuthorInformation, error) {
 	return result, nil
 }
 
-func getListAuthors(authors []AuthorInformation) []string {
+func getListAuthors(authors []authors.AuthorInformation) []string {
 	var names []string
 	for _, a := range authors {
 		names = append(names, a.AuthorName)

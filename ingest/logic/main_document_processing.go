@@ -98,7 +98,6 @@ func ProcessFileRaw(ctx context.Context, obj *CompleteFileSchema, stopAt *Docume
 		priority: priority,
 	}
 
-	fileManager := &S3FileManager{logger: logger}
 	texts := make(map[string]string)
 
 	for i := 0; i < 1000; i++ {
