@@ -98,11 +98,11 @@ function process_branch() {
 is_prod=false
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --prod-commit)
+        --commit)
             commit="$2"
             shift 2
             ;;
-        --prod-commit=*)
+        --commit=*)
             commit="${1#*=}"
             shift
             ;;
