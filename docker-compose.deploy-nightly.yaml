@@ -10,9 +10,9 @@ services:
     command:
       - "--api.insecure=true"
       # Use Podman provider instead of Docker
-      - "--providers.podman=true"
-      - "--providers.podman.constraints=Label(`traefik.namespace`,`kessler`)"
-      - "--providers.podman.exposedbydefault=false"
+      - "--providers.docker=true"
+      - "--providers.docker.constraints=Label(`traefik.namespace`,`kessler`)"
+      - "--providers.docker.exposedbydefault=false"
       - "--entryPoints.websecure.address=:443"
       - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
       - "--certificatesresolvers.myresolver.acme.email=mbright@kessler.xyz"
