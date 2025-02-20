@@ -36,3 +36,54 @@ func main() {
 
 	log.Fatal(http.ListenAndServe(":4042", r))
 }
+
+// const (
+// 	redisAddr    = "127.0.0.1:6379"
+// 	concurrency  = 30 // Max concurrent tasks
+// )
+//
+// func main() {
+// 	// Create asyncq client
+// 	client := asynq.NewClient(asynq.RedisClientOpt{Addr: redisAddr})
+// 	defer client.Close()
+//
+// 	// Create and start worker
+// 	worker := asynq.NewServer(
+// 		asynq.RedisClientOpt{Addr: redisAddr},
+// 		asynq.Config{
+// 			Concurrency: concurrency,
+// 			Queues: map[string]int{
+// 				"default": 1,
+// 			},
+// 		},
+// 	)
+//
+// 	// Create mux and register handlers
+// 	mux := asynq.NewServeMux()
+// 	mux.Use(tasksMiddleware(client))
+// 	mux.HandleFunc(tasks.TypeAddFileScraper, tasks.HandleAddFileScraperTask)
+// 	mux.HandleFunc(tasks.TypeProcessExistingFile, tasks.HandleProcessFileTask)
+//
+// 	// Run worker in separate goroutine
+// 	go func() {
+// 		if err := worker.Run(mux); err != nil {
+// 			log.Fatalf("Failed to start worker: %v", err)
+// 		}
+// 	}()
+//
+// 	// Set up shutdown handling
+// 	quit := make(chan os.Signal, 1)
+// 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+// 	<-quit
+// 	log.Println("Shutting down...")
+// 	worker.Shutdown()
+// }
+//
+// func tasksMiddleware(client *asynq.Client) asynq.MiddlewareFunc {
+// 	return func(h asynq.Handler) asynq.Handler {
+// 		return asynq.HandlerFunc(func(ctx context.Context, t *asynq.Task) error {
+// 			ctx = tasks.WithClient(ctx, client)
+// 			return h.ProcessTask(ctx, t)
+// 		})
+// 	}
+// }
