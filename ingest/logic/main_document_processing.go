@@ -7,7 +7,10 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"thaumaturgy/common/hashes"
 	"thaumaturgy/common/objects/files"
+	"thaumaturgy/common/s3utils"
+	"thaumaturgy/validators"
 
 	"github.com/google/uuid"
 	// Assume these are implemented in other packages
@@ -116,14 +119,11 @@ func ProcessFileRaw(ctx context.Context, obj *CompleteFileSchema, stopAt *Docume
 		case DocumentStatusStage1:
 			nextStage, err = processStageOne(ctx, obj, mdextract, texts)
 		case DocumentStatusStage2:
-			nextStage, err = DocumentStatusStage2, fmt.Errorf("not implemented")
-			// nextStage, err = processStageTwo(ctx, obj, mdextract, texts)
+			nextStage, err = processStageTwo(ctx, obj, mdextract, texts)
 		case DocumentStatusStage3:
-			nextStage, err = DocumentStatusStage3, fmt.Errorf("not implemented")
-			// nextStage, err = createLLMExtras(ctx, obj)
+			nextStage, err = createLLMExtras(ctx, obj)
 		case DocumentStatusSummarizationCompleted:
-			nextStage, err = DocumentStatusSummarizationCompleted, fmt.Errorf("not implemented")
-			// nextStage, err = processEmbeddings(ctx, obj)
+			nextStage, err = processEmbeddings(ctx, obj)
 		case DocumentStatusEmbeddingsCompleted:
 			nextStage = DocumentStatusCompleted
 		default:
@@ -153,76 +153,87 @@ func processStageHandleExtension(ctx context.Context, obj *CompleteFileSchema) (
 	if err != nil {
 		return DocumentStatusUnprocessed, fmt.Errorf("invalid file extension: %w", err)
 	}
+	s3_obj := s3utils.NewKeFileManager()
+	obj_hash, err := hashes.FromString(obj.Hash)
+	if err != nil {
+		return DocumentStatusUnprocessed, fmt.Errorf("invalid hash: %w", err)
+	}
 
-	valid, validationErr := common.ValidateFileHashVsExtension(obj.Hash, validExtension)
-	if !valid {
+	err = validators.ValidateExtensionFromHash(*s3_obj, obj_hash, validExtension)
+	if err != nil {
 		obj.Stage.SkipProcessing = true
-		return DocumentStatusUnprocessed, fmt.Errorf("file validation failed: %v", validationErr)
+		return DocumentStatusUnprocessed, fmt.Errorf("file validation failed: %v", err)
 	}
 
 	obj.Extension = string(validExtension)
-	if validExtension == common.KnownFileExtensionXLSX {
+	if validExtension == files.KnownFileExtensionXLSX {
 		return DocumentStatusCompleted, nil
 	}
 	return DocumentStatusStage1, nil
 }
 
 func processStageOne(ctx context.Context, obj *CompleteFileSchema, extractor *MarkdownExtractor, texts map[string]string) (DocumentStatus, error) {
-	processedText, err := extractor.ProcessRawDocument(obj.Hash, obj.Lang, obj.Extension)
-	if err != nil {
-		if _, ok := err.(*common.FormatError); ok {
-			obj.Stage.SkipProcessing = true
-		}
-		return DocumentStatusStage1, err
-	}
-
-	obj.DocTexts = append(obj.DocTexts, FileTextSchema{
-		IsOriginalText: true,
-		Language:       obj.Lang,
-		Text:           processedText,
-	})
-
-	if obj.Lang == "en" {
-		texts["englishText"] = processedText
-		return DocumentStatusStage3, nil
-	}
-
-	texts["originalText"] = processedText
-	return DocumentStatusStage2, nil
+	return DocumentStatusStage1, errors.New("not implemented")
+	// processedText, err := extractor.ProcessRawDocument(obj.Hash, obj.Lang, obj.Extension)
+	// if err != nil {
+	// 	if _, ok := err.(*common.FormatError); ok {
+	// 		obj.Stage.SkipProcessing = true
+	// 	}
+	// 	return DocumentStatusStage1, err
+	// }
+	//
+	// obj.DocTexts = append(obj.DocTexts, FileTextSchema{
+	// 	IsOriginalText: true,
+	// 	Language:       obj.Lang,
+	// 	Text:           processedText,
+	// })
+	//
+	// if obj.Lang == "en" {
+	// 	texts["englishText"] = processedText
+	// 	return DocumentStatusStage3, nil
+	// }
+	//
+	// texts["originalText"] = processedText
+	// return DocumentStatusStage2, nil
 }
 
-// func processStageTwo(ctx context.Context, obj *CompleteFileSchema, extractor *MarkdownExtractor, texts map[string]string) (DocumentStatus, error) {
-// 	if obj.Lang == "en" {
-// 		return DocumentStatusStage3, errors.New("invalid state: document already in english")
-// 	}
-//
-// 	translated, err := extractor.TranslateText(texts["originalText"], obj.Lang)
-// 	if err != nil {
-// 		return DocumentStatusStage2, fmt.Errorf("translation failed: %w", err)
-// 	}
-//
-// 	obj.DocTexts = append(obj.DocTexts, FileTextSchema{
-// 		IsOriginalText: false,
-// 		Language:       "en",
-// 		Text:           translated,
-// 	})
-// 	texts["englishText"] = translated
-// 	return DocumentStatusStage3, nil
-// }
+func processStageTwo(ctx context.Context, obj *CompleteFileSchema, extractor *MarkdownExtractor, texts map[string]string) (DocumentStatus, error) {
+	return DocumentStatusStage2, errors.New("not implemented")
+	// if obj.Lang == "en" {
+	// 	return DocumentStatusStage3, errors.New("invalid state: document already in english")
+	// }
+	//
+	// translated, err := extractor.TranslateText(texts["originalText"], obj.Lang)
+	// if err != nil {
+	// 	return DocumentStatusStage2, fmt.Errorf("translation failed: %w", err)
+	// }
+	//
+	// obj.DocTexts = append(obj.DocTexts, FileTextSchema{
+	// 	IsOriginalText: false,
+	// 	Language:       "en",
+	// 	Text:           translated,
+	// })
+	// texts["englishText"] = translated
+	// return DocumentStatusStage3, nil
+}
 
-// func createLLMExtras(ctx context.Context, obj *CompleteFileSchema) (DocumentStatus, error) {
-// 	extras, err := common.GenerateExtras(obj)
-// 	if err != nil {
-// 		return DocumentStatusStage3, fmt.Errorf("LLM extras generation failed: %w", err)
-// 	}
-//
-// 	obj.Extra = extras
-// 	return DocumentStatusSummarizationCompleted, nil
-// }
-//
-// func processEmbeddings(ctx context.Context, obj *CompleteFileSchema) (DocumentStatus, error) {
-// 	if err := common.InsertEmbeddings(obj); err != nil {
-// 		return DocumentStatusSummarizationCompleted, fmt.Errorf("embeddings failed: %w", err)
-// 	}
-// 	return DocumentStatusEmbeddingsCompleted, nil
-// }
+func createLLMExtras(ctx context.Context, obj *CompleteFileSchema) (DocumentStatus, error) {
+	return DocumentStatusStage3, errors.New("not implemented")
+	// extras, err := common.GenerateExtras(obj)
+	//
+	//	if err != nil {
+	//		return DocumentStatusStage3, fmt.Errorf("LLM extras generation failed: %w", err)
+	//	}
+	//
+	// obj.Extra = extras
+	// return DocumentStatusSummarizationCompleted, nil
+}
+
+func processEmbeddings(ctx context.Context, obj *CompleteFileSchema) (DocumentStatus, error) {
+	return DocumentStatusSummarizationCompleted, errors.New("not implemented")
+	//	if err := common.InsertEmbeddings(obj); err != nil {
+	//		return DocumentStatusSummarizationCompleted, fmt.Errorf("embeddings failed: %w", err)
+	//	}
+	//
+	// return DocumentStatusEmbeddingsCompleted, nil
+}

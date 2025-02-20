@@ -13,6 +13,7 @@ import (
 	"strings"
 	"thaumaturgy/common/objects/authors"
 	"thaumaturgy/common/objects/files"
+	"thaumaturgy/common/s3utils"
 	"time"
 
 	"github.com/charmbracelet/log"
@@ -144,7 +145,7 @@ func addURLRaw(ctx context.Context, fileURL string, fileObj files.CompleteFileSc
 		return "", nil, err
 	}
 
-	resultPath, err := downloadFile(fileURL, downloadDir)
+	resultPath, err := s3utils.DownloadFile(fileURL, downloadDir)
 	if err != nil {
 		return "", nil, err
 	}
@@ -160,23 +161,19 @@ func addURLRaw(ctx context.Context, fileURL string, fileObj files.CompleteFileSc
 }
 
 func addFileRaw(ctx context.Context, tmpFilePath string, fileObj files.CompleteFileSchema, disableIngestIfHash bool) (string, *files.CompleteFileSchema, error) {
-	fileManager := S3FileManager{}
+	fileManager := s3utils.NewKeFileManager()
 
 	if err := validateMetadata(fileObj.Mdata); err != nil {
 		return "", nil, err
 	}
 
-	hashResult, err := fileManager.saveFileToHash(tmpFilePath)
+	hashResult, err := fileManager.UploadFileToS3(tmpFilePath)
 	if err != nil {
 		return "", nil, err
 	}
 
-	fileObj.Hash = hashResult.Hash
+	fileObj.Hash = hashResult.String()
 	os.Remove(tmpFilePath)
-
-	if hashResult.DidExist && disableIngestIfHash {
-		return "file already exists", &fileObj, nil
-	}
 
 	authorNames, _ := fileObj.Mdata["author"].(string)
 	authors, err := splitAuthorField(authorNames)
@@ -230,23 +227,8 @@ func getListAuthors(authors []authors.AuthorInformation) []string {
 }
 
 // Mock implementations and constants
-var (
-	MOCK_DB_CONNECTION = false
-	KESSLER_API_URL    = "http://localhost:8080"
-	OS_TMPDIR          = "/tmp"
-)
 
 type hashResult struct {
 	Hash     string
 	DidExist bool
-}
-
-func (s *S3FileManager) saveFileToHash(path string) (*hashResult, error) {
-	// Implementation assumed
-	return &hashResult{Hash: "mockhash", DidExist: false}, nil
-}
-
-func downloadFile(url, dir string) (string, error) {
-	// Implementation assumed
-	return filepath.Join(dir, "downloaded_file"), nil
 }

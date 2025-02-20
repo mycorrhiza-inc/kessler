@@ -17,7 +17,7 @@ import (
 	"github.com/charmbracelet/log"
 )
 
-func downloadFile(url, dir string) (string, error) {
+func DownloadFile(url, dir string) (string, error) {
 	resp, err := http.Get(url)
 	if err != nil {
 		return "", fmt.Errorf("failed to download file: %w", err)
@@ -88,7 +88,7 @@ func (manager *KesslerFileManager) getLocalPathFromHash(hash hashes.KesslerHash)
 }
 
 // Upload file to S3
-func (manager *KesslerFileManager) uploadFileToS3(filePath string) (hashes.KesslerHash, error) {
+func (manager *KesslerFileManager) UploadFileToS3(filePath string) (hashes.KesslerHash, error) {
 	// F_ile opened twice, potential for optimisation.
 	hash_result, err := hashes.HashFromFile(filePath)
 	if err != nil {
@@ -113,7 +113,7 @@ func (manager *KesslerFileManager) pushFileToS3GivenHash(filePath string, hash h
 	return err
 }
 
-func (manager *KesslerFileManager) downloadFileFromS3(hash hashes.KesslerHash) (string, error) {
+func (manager *KesslerFileManager) DownloadFileFromS3(hash hashes.KesslerHash) (string, error) {
 	// listInput := s3.ListObjectsInput{Bucket: aws.String(manager.S3Bucket)}
 	// result, err := manager.S3Client.ListObjects(&listInput)
 	// log.Info(fmt.Sprintf("result: %v\nerror: %v\n", result, err))
