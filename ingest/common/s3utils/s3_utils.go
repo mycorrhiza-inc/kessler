@@ -1,12 +1,14 @@
-package crud
+package s3utils
 
 import (
+	"crypto/md5"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"path/filepath"
-
-	"golang.org/x/crypto/blake2b"
+	"thaumaturgy/common/hashes"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -15,8 +17,33 @@ import (
 	"github.com/charmbracelet/log"
 )
 
-// Configuration constants
-const ()
+func downloadFile(url, dir string) (string, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return "", fmt.Errorf("failed to download file: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("server returned status code %d", resp.StatusCode)
+	}
+
+	randomName := fmt.Sprintf("%x", md5.Sum([]byte(time.Now().String())))
+	filePath := filepath.Join(dir, randomName)
+
+	out, err := os.Create(filePath)
+	if err != nil {
+		return "", fmt.Errorf("failed to create file: %w", err)
+	}
+	defer out.Close()
+
+	_, err = io.Copy(out, resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("failed to write file: %w", err)
+	}
+
+	return filePath, nil
+}
 
 // Client structure for S3
 type KesslerFileManager struct {
@@ -51,35 +78,26 @@ func NewKeFileManager() *KesslerFileManager {
 }
 
 // Hash computation
-func calculateBlake2bHash(filePath string) (string, error) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return "", err
-	}
-	defer file.Close()
-	var key []byte
-	hash, err := blake2b.New256(key)
-	if _, err := io.Copy(hash, file); err != nil {
-		return "", err
-	}
-	return fmt.Sprintf("%x", hash.Sum(nil)), nil
+
+func (manager *KesslerFileManager) getS3KeyFromHash(hash hashes.KesslerHash) string {
+	return filepath.Join(manager.S3RawDir, hash.String())
 }
 
-func (manager *KesslerFileManager) getS3KeyFromHash(hash string) string {
-	return filepath.Join(manager.S3RawDir, hash)
+func (manager *KesslerFileManager) getLocalPathFromHash(hash hashes.KesslerHash) string {
+	return filepath.Join("/", manager.RawDir, hash.String())
 }
 
 // Upload file to S3
-func (manager *KesslerFileManager) uploadFileToS3(filePath string) (string, error) {
+func (manager *KesslerFileManager) uploadFileToS3(filePath string) (hashes.KesslerHash, error) {
 	// F_ile opened twice, potential for optimisation.
-	hash, err := calculateBlake2bHash(filePath)
+	hash_result, err := hashes.HashFromFile(filePath)
 	if err != nil {
-		return "", fmt.Errorf("Error hashing file: %v", err)
+		return hashes.KesslerHash{}, fmt.Errorf("Error hashing file: %v", err)
 	}
-	return hash, manager.pushFileToS3GivenHash(filePath, hash)
+	return hash_result, manager.pushFileToS3GivenHash(filePath, hash_result)
 }
 
-func (manager *KesslerFileManager) pushFileToS3GivenHash(filePath, hash string) error {
+func (manager *KesslerFileManager) pushFileToS3GivenHash(filePath string, hash hashes.KesslerHash) error {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return err
@@ -95,12 +113,12 @@ func (manager *KesslerFileManager) pushFileToS3GivenHash(filePath, hash string) 
 	return err
 }
 
-func (manager *KesslerFileManager) downloadFileFromS3(hash string) (string, error) {
+func (manager *KesslerFileManager) downloadFileFromS3(hash hashes.KesslerHash) (string, error) {
 	// listInput := s3.ListObjectsInput{Bucket: aws.String(manager.S3Bucket)}
 	// result, err := manager.S3Client.ListObjects(&listInput)
 	// log.Info(fmt.Sprintf("result: %v\nerror: %v\n", result, err))
 
-	localFilePath := filepath.Join("/", manager.RawDir, hash)
+	localFilePath := manager.getLocalPathFromHash(hash)
 	if _, err := os.Stat(localFilePath); err == nil {
 		return localFilePath, nil
 	}

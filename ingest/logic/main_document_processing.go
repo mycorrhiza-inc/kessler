@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"thaumaturgy/common/objects/files"
 
 	"github.com/google/uuid"
 	// Assume these are implemented in other packages
@@ -69,10 +70,6 @@ type MarkdownExtractor struct {
 	logger   *slog.Logger
 	tmpDir   string
 	priority bool
-}
-
-type S3FileManager struct {
-	logger *slog.Logger
 }
 
 func ProcessFileRaw(ctx context.Context, obj *CompleteFileSchema, stopAt *DocumentStatus, priority bool) (*CompleteFileSchema, error) {
@@ -152,7 +149,7 @@ func ProcessFileRaw(ctx context.Context, obj *CompleteFileSchema, stopAt *Docume
 }
 
 func processStageHandleExtension(ctx context.Context, obj *CompleteFileSchema) (DocumentStatus, error) {
-	validExtension, err := common.FileExtensionFromString(obj.Extension)
+	validExtension, err := files.FileExtensionFromString(obj.Extension)
 	if err != nil {
 		return DocumentStatusUnprocessed, fmt.Errorf("invalid file extension: %w", err)
 	}
