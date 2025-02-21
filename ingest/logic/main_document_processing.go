@@ -155,7 +155,7 @@ func processStageHandleExtension(ctx context.Context, obj *CompleteFileSchema) (
 		return DocumentStatusUnprocessed, fmt.Errorf("invalid file extension: %w", err)
 	}
 	s3_obj := s3utils.NewKeFileManager()
-	obj_hash, err := hashes.FromString(obj.Hash)
+	obj_hash, err := hashes.HashFromString(obj.Hash)
 	if err != nil {
 		return DocumentStatusUnprocessed, fmt.Errorf("invalid hash: %w", err)
 	}

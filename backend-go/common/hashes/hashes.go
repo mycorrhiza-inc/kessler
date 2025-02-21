@@ -11,11 +11,6 @@ import (
 
 type KesslerHash [32]byte
 
-func HashFromBytes(b []byte) KesslerHash {
-	result := blake2b.Sum256(b)
-	return result
-}
-
 func (hash KesslerHash) String() string {
 	return base64.URLEncoding.EncodeToString(hash[:])
 }
@@ -31,6 +26,27 @@ func HashFromString(s string) (KesslerHash, error) {
 	var result KesslerHash
 	copy(result[:], decoded)
 	return result, nil
+}
+
+func (hash KesslerHash) MarshalJSON() ([]byte, error) {
+	return []byte(fmt.Sprintf(`"%s"`, hash.String())), nil
+}
+
+func (hash *KesslerHash) UnmarshalJSON(data []byte) error {
+	if len(data) < 2 || data[0] != '"' || data[len(data)-1] != '"' {
+		return fmt.Errorf("invalid JSON string")
+	}
+	result, err := HashFromString(string(data[1 : len(data)-1]))
+	if err != nil {
+		return err
+	}
+	*hash = result
+	return nil
+}
+
+func HashFromBytes(b []byte) KesslerHash {
+	result := blake2b.Sum256(b)
+	return result
 }
 
 func HashFromFile(filePath string) (KesslerHash, error) {

@@ -7,7 +7,7 @@ import (
 )
 
 func TestKesslerHashRoundTrip(t *testing.T) {
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 1000; i++ {
 		// Generate random 32-byte KesslerHash
 		// Or better, fill with random bytes:
 		original := hashes.KesslerHash{}

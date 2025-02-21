@@ -168,6 +168,9 @@ func addFileRaw(ctx context.Context, tmpFilePath string, fileObj files.CompleteF
 		return "", nil, err
 	}
 
+	extension, err := files.FileExtensionFromString(fileObj.Extension)
+	err = validators.ValidateFileFromPath(tmpFilePath, fileObj.Mdata)
+
 	hashResult, err := fileManager.UploadFileToS3(tmpFilePath)
 	if err != nil {
 		return "", nil, err
