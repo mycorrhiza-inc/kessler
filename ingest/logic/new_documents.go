@@ -162,23 +162,23 @@ func addURLRaw(ctx context.Context, fileURL string, fileObj files.CompleteFileSc
 	return addFileRaw(ctx, resultPath, fileObj, disableIngestIfHash)
 }
 
-func addFileRaw(ctx context.Context, tmpFilePath string, fileObj files.CompleteFileSchema, disableIngestIfHash bool) (string, *files.CompleteFileSchema, error) {
+func addFileRaw(ctx context.Context, tmpFilePath string, fileObj files.CompleteFileSchema, disableIngestIfHash bool) (*files.CompleteFileSchema, error) {
 	if err := validateMetadata(fileObj.Mdata); err != nil {
-		return "", nil, err
+		return nil, err
 	}
 	extension, err := files.FileExtensionFromString(fileObj.Extension)
 	if err != nil {
-		return "", nil, err
+		return nil, err
 	}
 	err = validators.ValidateExtensionFromFilepath(tmpFilePath, extension)
 	if err != nil {
-		return "", nil, err
+		return nil, err
 	}
 
 	fileManager := s3utils.NewKeFileManager()
 	hashResult, err := fileManager.UploadFileToS3(tmpFilePath)
 	if err != nil {
-		return "", nil, err
+		return nil, err
 	}
 
 	fileObj.Hash = hashResult.String()
@@ -193,7 +193,7 @@ func addFileRaw(ctx context.Context, tmpFilePath string, fileObj files.CompleteF
 	fileObj.Authors = authors
 	fileObj.Mdata["authors"] = getListAuthors(authors)
 
-	return "", &fileObj, nil
+	return &fileObj, nil
 }
 
 // Helper functions and assumed implementations
