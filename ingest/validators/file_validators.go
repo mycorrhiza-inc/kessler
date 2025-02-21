@@ -1,33 +1,50 @@
 package validators
 
 import (
+	"fmt"
+	"net/http"
+	"os"
 	"thaumaturgy/common/objects/files"
 )
 
-func ValidateFileVsFileExtension(filepath string, extension files.KnownFileExtension) error {
+func ValidateExtensionFromFilepath(filepath string, extension files.KnownFileExtension) error {
 	if extension == files.KnownFileExtensionPDF {
 		return ValidatePDF(filepath)
 	}
 	return nil
 }
 
-// mime = magic.Magic(mime=True)
-// file_mime = mime.from_file(filepath)
-// is_text = is_text_file(filepath)
-//
-// match extension:
-//
-//	case KnownFileExtension.pdf:
-//	    with open(filepath, "rb") as pdf_file:
-//	        header = pdf_file.read(4)
-//	        if header != b"%PDF":
-//	            logger.info(f"File with path {filepath} is a valid PDF")
-//	            return False, "not a valid pdf header"
-//	    if is_text:
-//	        return False, "pdf is text file"
-//	    if file_mime != "application/pdf":
-//	        logger.error(f"Invalid MIME type for PDF: {file_mime}")
-//	        return False, "invalid mime type for pdf"
+// ValidatePDF validates whether the given file is a valid PDF file.
+// It performs checks on the file's header, MIME type, and whether it's a text file.
 func ValidatePDF(filepath string) error {
+	// Open the file for reading
+	file, err := os.Open(filepath)
+	if err != nil {
+		return err
+	}
+	defer file.Close() // Ensure the file is closed after processing
+
+	// Read the first 4 bytes to check the PDF header
+	header := make([]byte, 512)
+	_, err = file.Read(header)
+	if err != nil {
+		return err
+	}
+	if string(header[:4]) != "%PDF" {
+		err := fmt.Errorf("File %s does not have a valid PDF header", filepath)
+		return err
+	}
+
+	mimeType := http.DetectContentType(header)
+	// Check if the MIME type indicates a text file
+	if mimeType == "text/plain" {
+		err := fmt.Errorf("File %s is a text file", filepath)
+		return err
+	}
+	if mimeType != "application/pdf" {
+		err := fmt.Errorf("Invalid MIME type for PDF: %s", mimeType)
+		return err
+	}
+
 	return nil
 }
