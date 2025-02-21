@@ -15,6 +15,7 @@ import (
 	"thaumaturgy/common/objects/authors"
 	"thaumaturgy/common/objects/files"
 	"thaumaturgy/common/s3utils"
+	"thaumaturgy/validators"
 	"time"
 
 	"github.com/charmbracelet/log"
@@ -162,15 +163,19 @@ func addURLRaw(ctx context.Context, fileURL string, fileObj files.CompleteFileSc
 }
 
 func addFileRaw(ctx context.Context, tmpFilePath string, fileObj files.CompleteFileSchema, disableIngestIfHash bool) (string, *files.CompleteFileSchema, error) {
-	fileManager := s3utils.NewKeFileManager()
-
 	if err := validateMetadata(fileObj.Mdata); err != nil {
 		return "", nil, err
 	}
-
 	extension, err := files.FileExtensionFromString(fileObj.Extension)
-	err = validators.ValidateFileFromPath(tmpFilePath, fileObj.Mdata)
+	if err != nil {
+		return "", nil, err
+	}
+	err = validators.ValidateExtensionFromFilepath(tmpFilePath, extension)
+	if err != nil {
+		return "", nil, err
+	}
 
+	fileManager := s3utils.NewKeFileManager()
 	hashResult, err := fileManager.UploadFileToS3(tmpFilePath)
 	if err != nil {
 		return "", nil, err
