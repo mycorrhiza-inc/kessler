@@ -2,8 +2,8 @@ package hashes_test
 
 import (
 	"crypto/rand"
-	"testing"
 	"kessler/common/hashes"
+	"testing"
 )
 
 func TestKesslerHashRoundTrip(t *testing.T) {
@@ -17,7 +17,7 @@ func TestKesslerHashRoundTrip(t *testing.T) {
 		s := original.String()
 
 		// Convert back from string
-		decoded, err := hashes.FromString(s)
+		decoded, err := hashes.HashFromString(s)
 		if err != nil {
 			t.Errorf("Error decoding string on iteration %d: %v", i, err)
 			continue

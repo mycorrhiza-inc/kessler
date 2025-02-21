@@ -20,7 +20,7 @@ func (hash KesslerHash) String() string {
 	return base64.URLEncoding.EncodeToString(hash[:])
 }
 
-func FromString(s string) (KesslerHash, error) {
+func HashFromString(s string) (KesslerHash, error) {
 	decoded, err := base64.URLEncoding.DecodeString(s)
 	if err != nil {
 		return KesslerHash{}, err
