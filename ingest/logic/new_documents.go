@@ -135,7 +135,7 @@ func checkPgForDuplicateMetadata(ctx context.Context, fileObj files.CompleteFile
 	return &result, nil
 }
 
-func addURLRaw(ctx context.Context, fileURL string, fileObj files.CompleteFileSchema, disableIngestIfHash bool) (string, *files.CompleteFileSchema, error) {
+func addURLRaw(ctx context.Context, fileURL string, fileObj files.CompleteFileSchema, disableIngestIfHash bool) (*files.CompleteFileSchema, error) {
 	existingFile, err := checkPgForDuplicateMetadata(ctx, fileObj)
 	if err == nil && existingFile != nil {
 		fileObj = *existingFile
@@ -144,12 +144,12 @@ func addURLRaw(ctx context.Context, fileURL string, fileObj files.CompleteFileSc
 
 	downloadDir := filepath.Join(constants.OS_TMPDIR, "downloads")
 	if err := os.MkdirAll(downloadDir, 0755); err != nil {
-		return "", nil, err
+		return nil, err
 	}
 
 	resultPath, err := s3utils.DownloadFile(fileURL, downloadDir)
 	if err != nil {
-		return "", nil, err
+		return nil, err
 	}
 
 	if fileObj.Extension == "" {
