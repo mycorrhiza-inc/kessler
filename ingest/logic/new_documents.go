@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"thaumaturgy/common/constants"
 	"thaumaturgy/common/objects/authors"
 	"thaumaturgy/common/objects/files"
 	"thaumaturgy/common/s3utils"
@@ -28,21 +29,21 @@ const (
 )
 
 func upsertFullFileToDB(ctx context.Context, obj files.CompleteFileSchema, interact DatabaseInteraction) (*files.CompleteFileSchema, error) {
-	if MOCK_DB_CONNECTION {
-		return &obj, nil
-	}
+	// if constants.MOCK_DB_CONNECTION {
+	// 	return &obj, nil
+	// }
 
 	originalID := obj.ID
 	var url string
 
 	switch interact {
 	case Insert:
-		url = fmt.Sprintf("%s/v2/public/files/insert", KESSLER_API_URL)
+		url = fmt.Sprintf("%s/v2/public/files/insert", constants.KESSLER_INTERNAL_API_URL)
 	case Update:
 		if obj.ID == uuid.Nil {
 			return nil, errors.New("cannot update a file with a null uuid")
 		}
-		url = fmt.Sprintf("%s/v2/public/files/%s/update", KESSLER_API_URL, obj.ID.String())
+		url = fmt.Sprintf("%s/v2/public/files/%s/update", constants.KESSLER_INTERNAL_API_URL, obj.ID.String())
 	default:
 		return &obj, nil
 	}
@@ -103,7 +104,7 @@ func checkPgForDuplicateMetadata(ctx context.Context, fileObj files.CompleteFile
 	}
 
 	jsonData, _ := json.Marshal(payload)
-	url := fmt.Sprintf("%s/v2/admin/file-metadata-match", KESSLER_API_URL)
+	url := fmt.Sprintf("%s/v2/admin/file-metadata-match", constants.KESSLER_INTERNAL_API_URL)
 
 	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(jsonData))
 	if err != nil {
@@ -140,7 +141,7 @@ func addURLRaw(ctx context.Context, fileURL string, fileObj files.CompleteFileSc
 		disableIngestIfHash = true
 	}
 
-	downloadDir := filepath.Join(OS_TMPDIR, "downloads")
+	downloadDir := filepath.Join(constants.OS_TMPDIR, "downloads")
 	if err := os.MkdirAll(downloadDir, 0755); err != nil {
 		return "", nil, err
 	}

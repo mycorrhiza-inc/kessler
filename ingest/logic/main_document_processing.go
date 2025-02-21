@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"thaumaturgy/common/constants"
 	"thaumaturgy/common/hashes"
 	"thaumaturgy/common/objects/files"
 	"thaumaturgy/common/s3utils"
@@ -94,7 +95,7 @@ func ProcessFileRaw(ctx context.Context, obj *CompleteFileSchema, stopAt *Docume
 
 	mdextract := &MarkdownExtractor{
 		logger:   logger,
-		tmpDir:   OS_TMPDIR,
+		tmpDir:   constants.OS_TMPDIR,
 		priority: priority,
 	}
 
