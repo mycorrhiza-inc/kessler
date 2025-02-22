@@ -212,7 +212,7 @@ func validateMetadata(metadata map[string]interface{}) error {
 
 func splitAuthorField(authorStr string) ([]authors.AuthorInformation, error) {
 	if authorStr == "" {
-		return nil, nil
+		return []authors.AuthorInformation{}, nil
 	}
 
 	// Simplified version splitting on commas
