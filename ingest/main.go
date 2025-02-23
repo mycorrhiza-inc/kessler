@@ -1,12 +1,12 @@
 package main
 
 import (
-	"context"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+	"thaumaturgy/routes"
 	"thaumaturgy/tasks"
 
 	"github.com/gorilla/mux"
@@ -35,20 +35,21 @@ const (
 	concurrency = 30 // Max concurrent tasks
 )
 
-func tasksMiddleware(client *asynq.Client) asynq.MiddlewareFunc {
-	return func(h asynq.Handler) asynq.Handler {
-		return asynq.HandlerFunc(func(ctx context.Context, t *asynq.Task) error {
-			ctx = tasks.WithClient(ctx, client)
-			return h.ProcessTask(ctx, t)
+// In main.go add this middleware
+func clientMiddleware(client *asynq.Client) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := tasks.WithClient(r.Context(), client)
+			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }
 
 func main() {
 	// Initialize router and root path
+
 	r := mux.NewRouter()
 	root := "/ingest_v1"
-
 	// Set up Swagger endpoint
 	r.PathPrefix(root + "/swagger").Handler(httpSwagger.Handler(
 		httpSwagger.URL("http://localhost/ingest_v1/swagger/doc.json"),
@@ -60,6 +61,12 @@ func main() {
 	// Create asynq client
 	client := asynq.NewClient(asynq.RedisClientOpt{Addr: redisAddr})
 	defer client.Close()
+
+	// Create API subrouter with client middleware
+	api := r.PathPrefix(root).Subrouter()
+	api.Use(clientMiddleware(client))
+	routes.DefineGlobalRouter(api) // Pass the subrouter to routes package
+	// Create asynq client
 
 	// Create and start worker
 	worker := asynq.NewServer(

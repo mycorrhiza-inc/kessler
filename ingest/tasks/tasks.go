@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -51,52 +50,6 @@ func NewProcessFileTask(payload ProcessFilePayload) (*asynq.Task, error) {
 		return nil, fmt.Errorf("failed to marshal payload: %v", err)
 	}
 	return asynq.NewTask(TypeProcessExistingFile, p, asynq.MaxRetry(5), asynq.Timeout(20*time.Minute)), nil
-}
-
-func HandleAddFileScraperTask(ctx context.Context, t *asynq.Task) error {
-	var p ScraperInfoPayload
-	if err := json.Unmarshal(t.Payload(), &p); err != nil {
-		return fmt.Errorf("failed to unmarshal payload: %v", err)
-	}
-
-	log.Printf("Processing file from scraper: %s", p.FileURL)
-
-	// Generate UUID for the file
-	fileID := uuid.New()
-
-	// Create process file task
-	processTask, err := NewProcessFileTask(ProcessFilePayload{
-		FileID:   fileID,
-		Metadata: make(map[string]string),
-	})
-	if err != nil {
-		return fmt.Errorf("failed to create process task: %v", err)
-	}
-
-	// Get client from context
-	client := GetClient(ctx)
-	if _, err := client.Enqueue(processTask); err != nil {
-		return fmt.Errorf("failed to enqueue process task: %v", err)
-	}
-
-	return nil
-}
-
-func HandleProcessFileTask(ctx context.Context, t *asynq.Task) error {
-	var p ProcessFilePayload
-	if err := json.Unmarshal(t.Payload(), &p); err != nil {
-		return fmt.Errorf("failed to unmarshal payload: %v", err)
-	}
-
-	if p.DocumentStatus.SkipProcessing {
-		log.Printf("Skipping processing for file: %s", p.FileID)
-		return nil
-	}
-
-	log.Printf("Processing file: %s", p.FileID)
-	// Add your actual processing logic here
-
-	return nil
 }
 
 type contextKey string
