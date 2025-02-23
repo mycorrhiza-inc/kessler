@@ -29,7 +29,7 @@ docker compose up
 - docker
 - docker compose
 
-# Running the application (production)
+# Running the application 
 
 To update the nightly enviornment execute the following script:
 
@@ -56,20 +56,6 @@ By default the remote is set to `kessler.xyz` to set a different remote use
 
 
 
-
-# Kubernetes Usage
-
-TODO: Fix this so it actually works
-
-WARNING k8s is still experiencing some bugs, bewarned 
-
-use 
-
-`./update-kubernetes.sh --nigthly-commit <hash>`
-
-
-
-TODO: UPDATE DOCUMENTATION FOR EVERYTHING 
 # Development
 
 ## Setting Up your Dev Environment
