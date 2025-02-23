@@ -29,9 +29,9 @@ docker compose up
 - docker
 - docker compose
 
-# Running the application (production)
+# Running the application 
 
-To update the production enviornment execute the following script:
+To update the nightly enviornment execute the following script:
 
 `./update-docker-compose.sh`
 
@@ -41,30 +41,21 @@ If you want to specify a certain commit you can run
 
 `./update-docker-compose.sh --commit <commit-hash>`
 
+To update prod instead of nightly run 
+`./update-docker-compose.sh --prod`
+or
+`./update-docker-compose.sh --commit <commit-hash> --prod`
+
 To set prod to a specific version. This does work with rollbacks
 
 IMPORTANT: Its recommended to run this command on an x86 machine. Cross compilation of docker issues to x86 has been known to take a long time.
 
 By default the remote is set to `kessler.xyz` to set a different remote use 
 
-`./update-docker-compose.sh --remote <remote-url> --commit <commit-hash>`
+`./update-docker-compose.sh --commit <commit-hash>`
 
 
 
-
-# Kubernetes Usage
-
-TODO: Fix this so it actually works
-
-WARNING k8s is still experiencing some bugs, bewarned 
-
-use 
-
-`./update-kubernetes.sh --nigthly-commit <hash>`
-
-
-
-TODO: UPDATE DOCUMENTATION FOR EVERYTHING 
 # Development
 
 ## Setting Up your Dev Environment
@@ -94,13 +85,13 @@ docker compose -f docker-compose.dev.yml up --force-recreate
 Adding packages to the frontend or the backend requires a rebuild for the
 respective container.
 
-```
+```bash
 docker compose up -d --no-deps --build frontend
 ```
 
 and
 
-```
+```bash
 docker compose up -d --no-deps --build backend
 ```
 

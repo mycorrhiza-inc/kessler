@@ -11,9 +11,14 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"thaumaturgy/common/constants"
+	"thaumaturgy/common/objects/authors"
 	"thaumaturgy/common/objects/files"
+	"thaumaturgy/common/s3utils"
+	"thaumaturgy/validators"
 	"time"
 
+	"github.com/charmbracelet/log"
 	"github.com/google/uuid"
 )
 
@@ -24,28 +29,22 @@ const (
 	Update
 )
 
-type KeLLMUtils struct {
-	// Assumed implementation details
-}
-
-type S3FileManager struct{}
-
 func upsertFullFileToDB(ctx context.Context, obj files.CompleteFileSchema, interact DatabaseInteraction) (*files.CompleteFileSchema, error) {
-	if MOCK_DB_CONNECTION {
-		return &obj, nil
-	}
+	// if constants.MOCK_DB_CONNECTION {
+	// 	return &obj, nil
+	// }
 
 	originalID := obj.ID
 	var url string
 
 	switch interact {
 	case Insert:
-		url = fmt.Sprintf("%s/v2/public/files/insert", KESSLER_API_URL)
+		url = fmt.Sprintf("%s/v2/public/files/insert", constants.KESSLER_INTERNAL_API_URL)
 	case Update:
 		if obj.ID == uuid.Nil {
 			return nil, errors.New("cannot update a file with a null uuid")
 		}
-		url = fmt.Sprintf("%s/v2/public/files/%s/update", KESSLER_API_URL, obj.ID.String())
+		url = fmt.Sprintf("%s/v2/public/files/%s/update", constants.KESSLER_INTERNAL_API_URL, obj.ID.String())
 	default:
 		return &obj, nil
 	}
@@ -98,7 +97,7 @@ func upsertFullFileToDB(ctx context.Context, obj files.CompleteFileSchema, inter
 
 func checkPgForDuplicateMetadata(ctx context.Context, fileObj files.CompleteFileSchema) (*files.CompleteFileSchema, error) {
 	payload := map[string]interface{}{
-		"named_docket_id": fileObj.Conversation.DocketID,
+		"named_docket_id": fileObj.Conversation.DocketGovID,
 		"date_string":     fileObj.Mdata["date"],
 		"name":            fileObj.Name,
 		"extension":       fileObj.Extension,
@@ -106,7 +105,7 @@ func checkPgForDuplicateMetadata(ctx context.Context, fileObj files.CompleteFile
 	}
 
 	jsonData, _ := json.Marshal(payload)
-	url := fmt.Sprintf("%s/v2/admin/file-metadata-match", KESSLER_API_URL)
+	url := fmt.Sprintf("%s/v2/admin/file-metadata-match", constants.KESSLER_INTERNAL_API_URL)
 
 	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(jsonData))
 	if err != nil {
@@ -136,21 +135,21 @@ func checkPgForDuplicateMetadata(ctx context.Context, fileObj files.CompleteFile
 	return &result, nil
 }
 
-func addURLRaw(ctx context.Context, fileURL string, fileObj files.CompleteFileSchema, disableIngestIfHash bool) (string, *files.CompleteFileSchema, error) {
+func addURLRaw(ctx context.Context, fileURL string, fileObj files.CompleteFileSchema, disableIngestIfHash bool) (*files.CompleteFileSchema, error) {
 	existingFile, err := checkPgForDuplicateMetadata(ctx, fileObj)
 	if err == nil && existingFile != nil {
 		fileObj = *existingFile
 		disableIngestIfHash = true
 	}
 
-	downloadDir := filepath.Join(OS_TMPDIR, "downloads")
+	downloadDir := filepath.Join(constants.OS_TMPDIR, "downloads")
 	if err := os.MkdirAll(downloadDir, 0755); err != nil {
-		return "", nil, err
+		return nil, err
 	}
 
-	resultPath, err := downloadFile(fileURL, downloadDir)
+	resultPath, err := s3utils.DownloadFile(fileURL, downloadDir)
 	if err != nil {
-		return "", nil, err
+		return nil, err
 	}
 
 	if fileObj.Extension == "" {
@@ -163,35 +162,38 @@ func addURLRaw(ctx context.Context, fileURL string, fileObj files.CompleteFileSc
 	return addFileRaw(ctx, resultPath, fileObj, disableIngestIfHash)
 }
 
-func addFileRaw(ctx context.Context, tmpFilePath string, fileObj files.CompleteFileSchema, disableIngestIfHash bool) (string, *files.CompleteFileSchema, error) {
-	fileManager := S3FileManager{Logger: defaultLogger}
-
+func addFileRaw(ctx context.Context, tmpFilePath string, fileObj files.CompleteFileSchema, disableIngestIfHash bool) (*files.CompleteFileSchema, error) {
 	if err := validateMetadata(fileObj.Mdata); err != nil {
-		return "", nil, err
+		return nil, err
 	}
-
-	hashResult, err := fileManager.saveFileToHash(tmpFilePath)
+	extension, err := files.FileExtensionFromString(fileObj.Extension)
 	if err != nil {
-		return "", nil, err
+		return nil, err
+	}
+	err = validators.ValidateExtensionFromFilepath(tmpFilePath, extension)
+	if err != nil {
+		return nil, err
 	}
 
-	fileObj.Hash = hashResult.Hash
+	fileManager := s3utils.NewKeFileManager()
+	hashResult, err := fileManager.UploadFileToS3(tmpFilePath)
+	if err != nil {
+		return nil, err
+	}
+
+	fileObj.Hash = hashResult.String()
 	os.Remove(tmpFilePath)
-
-	if hashResult.DidExist && disableIngestIfHash {
-		return "file already exists", &fileObj, nil
-	}
 
 	authorNames, _ := fileObj.Mdata["author"].(string)
 	authors, err := splitAuthorField(authorNames)
 	if err != nil {
-		defaultLogger.Error(fmt.Sprintf("Author splitting failed: %v", err))
+		log.Error("Author splitting failed", "err", err)
 	}
 
 	fileObj.Authors = authors
 	fileObj.Mdata["authors"] = getListAuthors(authors)
 
-	return "", &fileObj, nil
+	return &fileObj, nil
 }
 
 // Helper functions and assumed implementations
@@ -208,16 +210,16 @@ func validateMetadata(metadata map[string]interface{}) error {
 	return nil
 }
 
-func splitAuthorField(authorStr string) ([]AuthorInformation, error) {
+func splitAuthorField(authorStr string) ([]authors.AuthorInformation, error) {
 	if authorStr == "" {
-		return nil, nil
+		return []authors.AuthorInformation{}, nil
 	}
 
 	// Simplified version splitting on commas
-	authors := strings.Split(authorStr, ",")
-	var result []AuthorInformation
-	for _, a := range authors {
-		result = append(result, AuthorInformation{
+	authors_obj := strings.Split(authorStr, ",")
+	var result []authors.AuthorInformation
+	for _, a := range authors_obj {
+		result = append(result, authors.AuthorInformation{
 			AuthorID:   uuid.Nil,
 			AuthorName: strings.TrimSpace(a),
 		})
@@ -225,7 +227,7 @@ func splitAuthorField(authorStr string) ([]AuthorInformation, error) {
 	return result, nil
 }
 
-func getListAuthors(authors []AuthorInformation) []string {
+func getListAuthors(authors []authors.AuthorInformation) []string {
 	var names []string
 	for _, a := range authors {
 		names = append(names, a.AuthorName)
@@ -234,23 +236,8 @@ func getListAuthors(authors []AuthorInformation) []string {
 }
 
 // Mock implementations and constants
-var (
-	MOCK_DB_CONNECTION = false
-	KESSLER_API_URL    = "http://localhost:8080"
-	OS_TMPDIR          = "/tmp"
-)
 
 type hashResult struct {
 	Hash     string
 	DidExist bool
-}
-
-func (s *S3FileManager) saveFileToHash(path string) (*hashResult, error) {
-	// Implementation assumed
-	return &hashResult{Hash: "mockhash", DidExist: false}, nil
-}
-
-func downloadFile(url, dir string) (string, error) {
-	// Implementation assumed
-	return filepath.Join(dir, "downloaded_file"), nil
 }
