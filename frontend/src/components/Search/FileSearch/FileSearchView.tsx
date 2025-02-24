@@ -76,13 +76,13 @@ const FileSearchView = ({
   const initialFilterState = useMemo(() => {
     return initialFiltersFromInherited(inheritedFilters);
   }, [inheritedFilters]);
+  const [hasMore, setHasMore] = useState(true);
 
-  const disabledFilters = useMemo(() => {
-    return disableListFromInherited(inheritedFilters);
-  }, [inheritedFilters]);
+  // const disabledFilters = useMemo(() => {
+  //   return disableListFromInherited(inheritedFilters);
+  // }, [inheritedFilters]);
 
   const [page, setPage] = useState(0);
-  const [isSearching, setIsSearching] = useState(false);
 
   // query data
   const [queryData, setQueryData] = useState<QueryDataFile>({
@@ -94,40 +94,36 @@ const FileSearchView = ({
   const [filings, setFilings] = useState<Filing[]>([]);
   const pageSize = 40;
 
+  const getPageResults = async (
+    page: number,
+    limit: number,
+  ): Promise<Filing[]> => {
+    const new_filings: Filing[] = await getSearchResults(
+      queryData,
+      page,
+      limit,
+    );
+    setFilings((prev: Filing[]): Filing[] => [...prev, ...new_filings]);
+    if (new_filings.length < limit) {
+      setHasMore(false);
+    }
+    return new_filings;
+  };
+
   const getInitialUpdates = async () => {
+    setHasMore(true);
     const load_initial_pages = 2;
-    setPage(0);
-    setIsSearching(true);
+    const limit = pageSize * load_initial_pages;
     setFilings([]);
     console.log("getting recent updates");
-    const filings: Filing[] = await getSearchResults(
-      queryData,
-      0,
-      pageSize * load_initial_pages,
-    );
+    await getPageResults(0, limit);
 
-    setFilings(filings);
     setPage(load_initial_pages);
-    setIsSearching(false);
   };
 
   const getMore = async () => {
-    setIsSearching(true);
-    try {
-      const new_filings: Filing[] = await getSearchResults(
-        queryData,
-        page,
-        pageSize,
-      );
-      setPage((prev) => prev + 1);
-      if (new_filings.length > 0) {
-        setFilings((prev: Filing[]): Filing[] => [...prev, ...new_filings]);
-      }
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setIsSearching(false);
-    }
+    await getPageResults(page, pageSize);
+    setPage((prev) => prev + 1);
   };
 
   const [isFocused, setIsFocused] = useState(true);
@@ -161,7 +157,7 @@ const FileSearchView = ({
         <InfiniteScrollPlus
           dataLength={filings.length}
           getMore={getMore}
-          hasMore={true}
+          hasMore={hasMore}
           loadInitial={getInitialUpdates}
           reloadOnChangeObj={queryData}
         >

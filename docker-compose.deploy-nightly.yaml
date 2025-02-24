@@ -4,15 +4,16 @@ x-common-env: &common-env
   DOMAIN: "nightly.kessler.xyz"
   PUBLIC_KESSLER_API_URL: "https://nightly-api.kessler.xyz"
   INTERNAL_KESSLER_API_URL: "http://backend-go:4041"
+
 services:
   reverse-proxy:
     image: traefik:v3.0
     command:
       - "--api.insecure=true"
       # Use Podman provider instead of Docker
-      - "--providers.podman=true"
-      - "--providers.podman.constraints=Label(`traefik.namespace`,`kessler`)"
-      - "--providers.podman.exposedbydefault=false"
+      - "--providers.docker=true"
+      - "--providers.docker.constraints=Label(`traefik.namespace`,`kessler`)"
+      - "--providers.docker.exposedbydefault=false"
       - "--entryPoints.websecure.address=:443"
       - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
       - "--certificatesresolvers.myresolver.acme.email=mbright@kessler.xyz"
@@ -25,10 +26,9 @@ services:
     volumes:
       - "${VOLUMES_DIRECTORY:-./volumes}/letsencrypt:/letsencrypt"
       # Podman socket (rootless example; adjust path if needed)
-      - "/run/podman/podman.sock:/run/podman/podman.sock:ro"
+      - "/run/podman/podman.sock:/var/run/docker.sock:ro"
       - "./traefik_dynamic.yaml:/etc/traefik/traefik_dynamic.yaml:ro"
     # Optional: Required for rootless Podman socket permissions
-    user: "1000:1000" # Match your host UID/GID
 
   frontend:
     image: fractalhuman1/kessler-frontend:latest

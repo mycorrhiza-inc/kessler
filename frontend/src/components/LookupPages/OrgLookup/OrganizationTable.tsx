@@ -90,7 +90,7 @@ const OrganizationTable = ({
           </tr>
         ))}
       </tbody>
-    </table >
+    </table>
   );
 };
 
@@ -101,6 +101,7 @@ const OrganizationTableInfiniteScroll = ({
 }) => {
   const defaultPageSize = 40;
   const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
 
   const [tableData, setTableData] = useState<OrganizationTableSchema[]>([]);
   const getPageResults = async (page: number, limit: number) => {
@@ -110,24 +111,28 @@ const OrganizationTableInfiniteScroll = ({
     const searchData = InstanitateOrganizationSearchSchema(lookup_data);
     const url = `${runtimeConfig.public_api_url}/v2/search/organization?offset=${offset}&limit=${limit}`;
     const result = await organizationsListGet(url, searchData);
+    setTableData((prev) => [...prev, ...result]);
+    if (result.length < limit) {
+      setHasMore(false);
+    }
     return result;
   };
   const getMore = async () => {
-    const result = await getPageResults(page, defaultPageSize);
-    setTableData((prev) => [...prev, ...result]);
+    await getPageResults(page, defaultPageSize);
     setPage((prev) => prev + 1);
   };
   const getInitialData = async () => {
+    setHasMore(true);
     const numPageFetch = 3;
-    const result = await getPageResults(0, defaultPageSize * numPageFetch);
-    setTableData(result);
+    setTableData([]);
+    await getPageResults(0, defaultPageSize * numPageFetch);
     setPage(numPageFetch);
   };
   return (
     <>
       <InfiniteScrollPlus
         dataLength={tableData.length}
-        hasMore={true}
+        hasMore={hasMore}
         getMore={getMore}
         loadInitial={getInitialData}
         reloadOnChangeObj={lookup_data}
