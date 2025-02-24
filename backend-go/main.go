@@ -32,12 +32,20 @@ type AccessTokenData struct {
 // CORS middleware function
 func corsDomainMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Bob-Loblaws-Law-Blog", "I-am-confused") // or specify allowed origin
 		domain := os.Getenv("DOMAIN")
-		if domain == "" {
+		log.Info("Got domain for middleware", "domain", domain)
+		if domain != "" {
 			domain = "https://" + domain
 			// Set CORS headers
 			w.Header().Set("Access-Control-Allow-Origin", domain) // or specify allowed origin
+		} else {
+			w.Header().Set("Access-Control-Allow-Origin", "*") // or specify allowed origin
 		}
+		// Putting these in here temporarially, it seems that our cursed wrapping multiple
+		// timeouts inside multiple routers broke mux's traditonal cors method handling.
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, Origin")
 
 		// Call the next handler
 		next.ServeHTTP(w, r)
@@ -121,7 +129,9 @@ func main() {
 	jobSubroute := rootRoute.PathPrefix("/jobs").Subrouter()
 	jobs.DefineJobRoutes(jobSubroute)
 
-	r.Use(mux.CORSMethodMiddleware(r))
+	// Commenting out temporarially, it seems that our cursed wrapping multiple
+	// timeouts inside multiple routers broke it.
+	// r.Use(mux.CORSMethodMiddleware(r))
 	r.Use(corsDomainMiddleware)
 
 	server := &http.Server{
