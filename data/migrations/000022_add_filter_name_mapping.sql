@@ -1,4 +1,5 @@
 -- +goose Up
+-- +goose StatementBegin
 BEGIN;
 
 -- Enable UUID extension if not already enabled
@@ -37,7 +38,7 @@ BEGIN
     NEW.updated_at = CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
-$$ language 'plpgsql';
+$$ LANGUAGE plpgsql;
 
 -- Create triggers
 CREATE TRIGGER update_filters_timestamp
@@ -51,6 +52,8 @@ CREATE TRIGGER update_filter_dataset_mappings_timestamp
     EXECUTE FUNCTION update_timestamp();
 
 COMMIT;
+-- +goose StatementEnd
+
 
 -- +goose Down
 -- Drop triggers first
