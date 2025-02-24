@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
-import { AngleDownIcon, AngleUpIcon } from "../Icons";
+import { ChevronDownIcon, ChevronUpIcon } from "../Icons";
 import { fileTypeColor, subdividedHueFromSeed } from "../Tables/TextPills";
 import {
   QueryDataFile,
@@ -16,6 +16,10 @@ import {
 } from "@/lib/types/SearchTypes";
 import { ConvoSearchRequestData } from "../LookupPages/SearchRequestData";
 import { mockFetchSuggestions } from "./SearchSuggestions";
+import {  Range as DateRange } from "react-date-range";
+import { InputType } from "../Filters/FiltersInfo";
+import { RangePicker } from "./filters/DatePickerPill";
+import { filter } from "lodash-es";
 import { fileExtensionFromText } from "../Tables/FileExtension";
 
 const AdvancedSearch = () => {
@@ -28,7 +32,7 @@ const AdvancedSearch = () => {
   return (
     <div className="p-4 text-base-content" onClick={flip}>
       <div className="tooltip" data-tip="Advanced Search">
-        {open ? <AngleUpIcon /> : <AngleDownIcon />}
+        {open ? <ChevronUpIcon /> : <ChevronDownIcon />}
       </div>
     </div>
   );
@@ -37,6 +41,7 @@ type FiltersPoolProps = {
   selected: Filter[];
   handleFilterRemove: (filterId: string) => void;
   flipExclude: (filterId: string) => void;
+  updateFilter: (filterId: string, value: any) => void;
 };
 
 const displayTypeDict = {
@@ -54,9 +59,13 @@ const getDisplayType = (val: string): string => {
 const FiltersPool: React.FC<FiltersPoolProps> = ({
   selected,
   handleFilterRemove,
+  updateFilter,
   flipExclude,
 }) => {
+
+  const newRange: DateRange = {}
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [range, setRange] = useState<DateRange>(newRange);
 
   if (!selected || selected.length === 0) {
     return null;
@@ -77,9 +86,9 @@ const FiltersPool: React.FC<FiltersPoolProps> = ({
     if (filter.type === "text") {
       return "oklch(90% 0.01 30)";
     }
-    if (filter.type === "extension") {
-      return fileTypeColor[fileExtensionFromText(filter.label)];
-    }
+    // if (filter.type === "extension") {
+    //   return fileTypeColor[fileExtensionFromText(filter.label)];
+    // }
     return subdividedHueFromSeed(filter.label);
     // return "oklch(90% 0.1 80)";
   };
@@ -118,14 +127,24 @@ const FiltersPool: React.FC<FiltersPoolProps> = ({
                     exclude
                   </button>
                 )}
-                {getDisplayType(filter.type)}: {filter.label}
+                {filter.type === InputType.Date ? (
+                  <RangePicker baseRange={range} updateRange={setRange}  />
+                ) : (
+                  <>
+                    {filter.type}: {filter.label}
+                  </>
+                )}
               </span>
-              <button
-                onClick={() => handleFilterRemove(filter.id)}
-                className="ml-1 text-gray-500 hover:text-black font-bold"
-              >
-                ×
-              </button>
+              {filter.type === InputType.Date ? (
+                <span />
+              ) : (
+                <button
+                  onClick={() => handleFilterRemove(filter.id)}
+                  className="ml-1 text-gray-500 hover:text-black font-bold"
+                >
+                  ×
+                </button>
+              )}
             </div>
           ))}
         </div>
@@ -147,7 +166,19 @@ const setSearchFilters = (props: SearchBoxInputProps, filters: Filter[]) => {
       if (!acc[filter.type]) {
         acc[filter.type] = [];
       }
-      acc[filter.type].push(filter);
+      let toPush = filter;
+      if (filter.type === "date") {
+        const coercedValue: DateRange = filter.value as DateRange;
+        if (coercedValue.startDate != undefined )  {
+        acc[InputType.Date].push({ ...filter, value: coercedValue.startDate });
+        }
+        if (coercedValue.endDate != undefined )  {
+        acc[InputType.Date].push({ ...filter, value: coercedValue.endDate });
+        }
+      } else {
+        acc[filter.type].push(filter);
+        
+      }
       return acc;
     },
     {},
@@ -306,9 +337,20 @@ const setNestedValue = (obj: any, path: string[], value: any) => {
   }
   current[path[path.length - 1]] = value;
 };
+const newDateFilter = () => {
+  const newRange: DateRange = {}
+  return {
+    id: "-1",
+    type: InputType.Date,
+    label: "Date",
+    value: newRange,
+    excludable: false
+  }
+}
 
 const SearchBox = ({
   input,
+  // setSearchData,
   ShowAdvancedSearch,
 }: {
   input: SearchBoxInputProps;
@@ -316,7 +358,7 @@ const SearchBox = ({
 }) => {
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
-  const [selectedFilters, setSelectedFilters] = useState<Filter[]>([]);
+  const [selectedFilters, setSelectedFilters] = useState<Filter[]>([newDateFilter()]);
   const [isLoading, setIsLoading] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const searchContainerRef = useRef<HTMLDivElement>(null);
@@ -353,9 +395,9 @@ const SearchBox = ({
     suggestions: Suggestion[],
     new_query: string,
   ) => {
-    const text_query_suggestion = {
+    const text_query_suggestion: Suggestion = {
       id: "00000000-0000-0000-0000-000000000000",
-      type: "text",
+      type: InputType.Text,
       label: new_query,
       value: new_query,
     };
@@ -415,6 +457,17 @@ const SearchBox = ({
     setSelectedFilters(selectedFilters.filter((f) => f.id !== filterId));
   };
 
+  const updateDate = (value: any) => {
+    setSelectedFilters(
+      selectedFilters.map((f) => {
+        if (f.id === "-1") {
+          return { ...f, value: value };
+        }
+        return f;
+      }),
+    );
+  }
+
   const flipExclude = (filterId: string) => {
     setSelectedFilters(
       selectedFilters.map((f) => {
@@ -452,18 +505,17 @@ const SearchBox = ({
 
           {/* Suggestions dropdown - positioned relative to search container */}
           {suggestions.length > 0 && (
-            <div className="absolute left-0 right-0 top-full mt-1 z-50 h-auto bg-base-100 border rounded-lg shadow-lg">
+            <div className="absolute left-0 right-0 top-full mt-1 z-[999999] h-auto bg-base-100 border rounded-lg shadow-lg">
               <ul className=" max-h-60 overflow-auto">
                 {suggestions.map((suggestion, index) => (
                   <li key={suggestion.id}>
                     <button
                       onClick={() => handleSuggestionClick(suggestion)}
                       onMouseEnter={() => setHighlightedIndex(index)}
-                      className={`w-full px-4 py-3 text-left transition-colors ${
-                        index === highlightedIndex
-                          ? "bg-primary/10 text-primary"
-                          : "hover:secondary-content"
-                      }`}
+                      className={`w-full px-4 py-3 text-left transition-colors ${index === highlightedIndex
+                        ? "bg-primary/10 text-primary"
+                        : "hover:secondary-content"
+                        }`}
                     >
                       <span className={`text-sm font-medium text-secondary`}>
                         {getDisplayType(suggestion.type)}:
@@ -479,6 +531,7 @@ const SearchBox = ({
                 selected={selectedFilters}
                 handleFilterRemove={handleFilterRemove}
                 flipExclude={flipExclude}
+                updateFilter={updateDate}
               />
             </div>
           )}
@@ -488,6 +541,7 @@ const SearchBox = ({
           selected={selectedFilters}
           handleFilterRemove={handleFilterRemove}
           flipExclude={flipExclude}
+          updateFilter={updateDate}
         />
       </div>
     </div>

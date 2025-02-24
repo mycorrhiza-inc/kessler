@@ -63,7 +63,7 @@ const config = {
   daisyui: {
     themes: [
       {
-        light: {
+        kessler: {
           primary: "#E1D889", // Yellow accent color
           secondary: "#2B2B2B", // Dark gray
           accent: "#8BCF83", // Green accent from design
