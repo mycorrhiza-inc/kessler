@@ -7,7 +7,6 @@ import (
 	"kessler/common/objects/authors"
 	"kessler/common/objects/conversations"
 	"kessler/common/objects/files"
-	"kessler/db"
 	"kessler/gen/dbstore"
 	"net/http"
 
@@ -52,7 +51,7 @@ func HandleCheckDocumentMetadata(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
-	q := *db.GetTx()
+	q := *database.GetTx()
 	file, err := CheckDocumentMetadata(args, q, ctx)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error checking document metadata: %v", err), http.StatusInternalServerError)

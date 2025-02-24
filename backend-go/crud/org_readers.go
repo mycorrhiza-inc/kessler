@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"kessler/common/objects/files"
 	"kessler/common/objects/organizations"
-	"kessler/db"
 	"kessler/gen/dbstore"
 	"net/http"
 
@@ -18,7 +17,7 @@ import (
 
 func OrgGetWithFilesHandler(w http.ResponseWriter, r *http.Request) {
 	log.Info(fmt.Sprintf("Getting file with metadata"))
-	q := db.GetTx()
+	q := database.GetTx()
 
 	params := mux.Vars(r)
 	orgID := params["uuid"]

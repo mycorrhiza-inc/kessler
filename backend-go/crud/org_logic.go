@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"kessler/common/objects/authors"
-	"kessler/db"
 	"kessler/gen/dbstore"
 	"net/http"
 
@@ -47,7 +46,7 @@ func OrganizationVerifyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
-	q := *db.GetTx()
+	q := *database.GetTx()
 
 	author_info := authors.AuthorInformation{AuthorName: req.OrganizationName, IsPerson: req.IsPerson}
 	author_info, err = verifyAuthorOrganizationUUID(ctx, q, &author_info)

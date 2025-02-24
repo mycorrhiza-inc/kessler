@@ -1,4 +1,5 @@
--- name: GetFilterString :one
+-- name: GetFiltersByState :many
 SELECT *
-from filter_map
-where filter = $1;
+FROM filters
+WHERE state = $1 AND is_active = true
+ORDER BY created_at DESC;

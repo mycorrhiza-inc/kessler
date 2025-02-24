@@ -86,7 +86,7 @@ func HandleSearchRequest(w http.ResponseWriter, r *http.Request) {
 			log.Info(fmt.Sprintf("Error searching quickwit: %s", err))
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		// q := db.GetTx()
+		// q := database.GetTx()
 		// ctx := r.Context()
 		// hydrated_data, err := HydrateSearchResults(data, ctx, q)
 		// if err != nil {
@@ -135,7 +135,7 @@ func HandleRecentUpdatesRequest(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		// q := db.GetTx()
+		// q := database.GetTx()
 		// ctx := r.Context()
 		// hydrated_data, err := HydrateSearchResults(data, ctx, q)
 		// if err != nil {

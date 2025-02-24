@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"kessler/db"
 	"kessler/gen/dbstore"
 	"net/http"
 
@@ -16,7 +15,7 @@ import (
 
 func ConversationGetByUnknownHandler(w http.ResponseWriter, r *http.Request) {
 	log.Info(fmt.Sprintf("Getting file with metadata"))
-	q := db.GetTx()
+	q := database.GetTx()
 
 	params := mux.Vars(r)
 	docketIdStr := params["name"]

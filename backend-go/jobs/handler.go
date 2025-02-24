@@ -3,7 +3,6 @@ package jobs
 import (
 	"context"
 	"fmt"
-	"kessler/db"
 	"kessler/quickwit"
 	"net/http"
 
@@ -96,7 +95,7 @@ func IndexAllDocketsHandler(w http.ResponseWriter, r *http.Request) {
 	// ctx := r.Context()
 	ctx := context.Background()
 	// q := *util.DBQueriesFromContext(ctx)
-	q := db.GetTx()
+	q := database.GetTx()
 	err := quickwit.IndexAllConversations(*q, ctx, "")
 	if err != nil {
 		errorstring := fmt.Sprintf("Error ingesting dockets index: %v", err)
@@ -112,7 +111,7 @@ func IndexAllOrganizationsHandler(w http.ResponseWriter, r *http.Request) {
 	// ctx := r.Context()
 	ctx := context.Background()
 	// q := *util.DBQueriesFromContext(ctx)
-	q := db.GetTx()
+	q := database.GetTx()
 	err := quickwit.ReindexAllOrganizations(ctx, *q, "")
 	if err != nil {
 		errorstring := fmt.Sprintf("Error ingesting orgs index: %v", err)

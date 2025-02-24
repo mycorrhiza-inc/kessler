@@ -3,7 +3,7 @@ package admin
 import (
 	"context"
 	"fmt"
-	"kessler/db"
+	"kessler/database"
 	"kessler/gen/dbstore"
 	"net/http"
 	"strings"
@@ -109,7 +109,7 @@ func organizationsNameAsAlias(ctx context.Context, q dbstore.Queries) error {
 func completeCleanDatabaseHandler(w http.ResponseWriter, r *http.Request) {
 	log.Info("Starting complete clean of database\n")
 	ctx := context.Background()
-	q := db.GetTx()
+	q := database.GetTx()
 
 	err := deduplicateOrganizationsOnNames(ctx, q)
 	if err != nil {

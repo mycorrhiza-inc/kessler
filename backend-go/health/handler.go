@@ -1,7 +1,6 @@
 package health
 
 import (
-	"kessler/db"
 	"kessler/search"
 	"net/http"
 
@@ -40,7 +39,7 @@ func MinimalHealthCheckHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func MinimalHealthCheck(r *http.Request) error {
-	q := db.GetTx()
+	q := database.GetTx()
 	ctx := r.Context()
 	_, err := q.HealthCheck(ctx)
 	if err != nil {
