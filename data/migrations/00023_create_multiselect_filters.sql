@@ -9,19 +9,26 @@ CREATE TABLE multiselect_values (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     -- Ensure no duplicate values for the same filter
-    UNIQUE(filter_id, value),
-    -- Constraint to ensure only multiselect filters can have values
-    CONSTRAINT multiselect_only CHECK (
-        EXISTS (
-            SELECT 1
-            FROM filters
-            WHERE filters.id = filter_id
-                AND filters.filter_type = 'multiselect'
-        )
-    )
+    UNIQUE(filter_id, value)
 );
--- Create indexes for common query patterns
 CREATE INDEX idx_multiselect_values_filter_id ON multiselect_values(filter_id);
+-- Function to validate filter type
+CREATE OR REPLACE FUNCTION check_filter_type() RETURNS TRIGGER AS $$ BEGIN IF NOT EXISTS (
+        SELECT 1
+        FROM filters
+        WHERE id = NEW.filter_id
+            AND filter_type = 'multiselect'
+    ) THEN RAISE EXCEPTION 'filter_id must reference a multiselect filter';
+END IF;
+RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+-- Trigger to ensure only multiselect filters can have values
+CREATE TRIGGER ensure_multiselect_filter BEFORE
+INSERT
+    OR
+UPDATE ON multiselect_values FOR EACH ROW EXECUTE FUNCTION check_filter_type();
+-- Function to update parent filter timestamp
 CREATE OR REPLACE FUNCTION update_parent_filter_timestamp() RETURNS TRIGGER AS $$ BEGIN
 UPDATE filters
 SET updated_at = CURRENT_TIMESTAMP
@@ -32,7 +39,6 @@ WHERE id = CASE
 RETURN COALESCE(NEW, OLD);
 END;
 $$ LANGUAGE plpgsql;
--- Create triggers for insert, update, and delete operations
 CREATE TRIGGER update_filter_on_multiselect_change
 AFTER
 INSERT
