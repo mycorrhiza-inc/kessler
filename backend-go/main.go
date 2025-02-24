@@ -32,11 +32,8 @@ type AccessTokenData struct {
 // CORS middleware function
 func corsDomainMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Bob-Loblaws-Law-Blog", "I-am-confused") // or specify allowed origin
 		domain := os.Getenv("DOMAIN")
-		log.Info("Got domain for middleware", "domain", domain)
 		if domain != "" {
-			domain = "https://" + domain
 			// Set CORS headers
 			w.Header().Set("Access-Control-Allow-Origin", domain) // or specify allowed origin
 		} else {
