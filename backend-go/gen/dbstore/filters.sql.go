@@ -10,7 +10,7 @@ import (
 )
 
 const getFiltersByState = `-- name: GetFiltersByState :many
-SELECT id, name, state, description, is_active, created_at, updated_at
+SELECT id, name, state, filter_type, description, is_active, created_at, updated_at
 FROM filters
 WHERE state = $1 AND is_active = true
 ORDER BY created_at DESC
@@ -29,6 +29,7 @@ func (q *Queries) GetFiltersByState(ctx context.Context, state string) ([]Filter
 			&i.ID,
 			&i.Name,
 			&i.State,
+			&i.FilterType,
 			&i.Description,
 			&i.IsActive,
 			&i.CreatedAt,

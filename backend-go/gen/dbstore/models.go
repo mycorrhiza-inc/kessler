@@ -146,6 +146,7 @@ type Filter struct {
 	ID          uuid.UUID
 	Name        string
 	State       string
+	FilterType  string
 	Description pgtype.Text
 	IsActive    pgtype.Bool
 	CreatedAt   pgtype.Timestamptz
@@ -189,6 +190,14 @@ type JuristictionInformation struct {
 	Extra          []byte
 	CreatedAt      pgtype.Timestamptz
 	UpdatedAt      pgtype.Timestamptz
+}
+
+type MultiselectValue struct {
+	ID        uuid.UUID
+	FilterID  uuid.UUID
+	Value     string
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
 }
 
 type Organization struct {
