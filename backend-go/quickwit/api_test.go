@@ -14,19 +14,18 @@ const (
 )
 
 func TestEndToEndOperations(t *testing.T) {
-	client := NewClient(testBaseURL)
-	ctx := context.Background()
+	client := NewClient(testBaseURL, context.Background())
 
 	// Step 1: Create index
 	t.Log("Creating test index...")
-	err := createTestIndex(ctx, client)
+	err := createTestIndex(&client)
 	if err != nil {
 		t.Fatalf("Failed to create index: %v", err)
 	}
 
 	// Step 2: Ingest test documents
 	t.Log("Ingesting test documents...")
-	err = ingestTestDocuments(ctx, client)
+	err = ingestTestDocuments(&client)
 	if err != nil {
 		t.Fatalf("Failed to ingest documents: %v", err)
 	}
@@ -36,14 +35,14 @@ func TestEndToEndOperations(t *testing.T) {
 
 	// Step 3: Search documents
 	t.Log("Searching documents...")
-	err = searchTestDocuments(ctx, client)
+	err = searchTestDocuments(&client)
 	if err != nil {
 		t.Fatalf("Failed to search documents: %v", err)
 	}
 
 	// Step 4: Create delete task
 	t.Log("Creating delete task...")
-	err = createTestDeleteTask(ctx, client)
+	err = createTestDeleteTask(&client)
 	if err != nil {
 		t.Fatalf("Failed to create delete task: %v", err)
 	}
@@ -53,20 +52,20 @@ func TestEndToEndOperations(t *testing.T) {
 
 	// Step 5: Verify deletion with search
 	t.Log("Verifying deletion...")
-	err = verifyDeletion(ctx, client)
+	err = verifyDeletion(&client)
 	if err != nil {
 		t.Fatalf("Failed to verify deletion: %v", err)
 	}
 
 	// Final Step: Delete index
 	t.Log("Cleaning up - deleting test index...")
-	err = client.DeleteIndex(ctx, testIndexID)
+	err = client.DeleteIndex(testIndexID)
 	if err != nil {
 		t.Fatalf("Failed to delete index: %v", err)
 	}
 }
 
-func createTestIndex(ctx context.Context, client *Client) error {
+func createTestIndex(client *QuickwitClient) error {
 	// Create a basic index configuration
 	docMapping := map[string]interface{}{
 		"field_mappings": []map[string]interface{}{
@@ -111,10 +110,10 @@ func createTestIndex(ctx context.Context, client *Client) error {
 		SearchSettings: searchSettingsJSON,
 	}
 
-	return client.CreateIndex(ctx, config)
+	return client.CreateIndex(config)
 }
 
-func ingestTestDocuments(ctx context.Context, client *Client) error {
+func ingestTestDocuments(client *QuickwitClient) error {
 	now := time.Now().Format(time.RFC3339)
 	docs := []interface{}{
 		map[string]interface{}{
@@ -129,17 +128,17 @@ func ingestTestDocuments(ctx context.Context, client *Client) error {
 		},
 	}
 
-	return client.IngestDocuments(ctx, testIndexID, docs, "wait_for")
+	return client.IngestDocuments(testIndexID, docs, "wait_for")
 }
 
-func searchTestDocuments(ctx context.Context, client *Client) error {
+func searchTestDocuments(client *QuickwitClient) error {
 	maxHits := 10
 	params := SearchParams{
 		Query:   "test",
 		MaxHits: &maxHits,
 	}
 
-	resp, err := client.Search(ctx, testIndexID, params)
+	resp, err := client.Search(testIndexID, params)
 	if err != nil {
 		return err
 	}
@@ -151,22 +150,22 @@ func searchTestDocuments(ctx context.Context, client *Client) error {
 	return nil
 }
 
-func createTestDeleteTask(ctx context.Context, client *Client) error {
+func createTestDeleteTask(client *QuickwitClient) error {
 	task := DeleteTask{
 		Query: "body:deleted",
 	}
 
-	return client.CreateDeleteTask(ctx, testIndexID, task)
+	return client.CreateDeleteTask(testIndexID, task)
 }
 
-func verifyDeletion(ctx context.Context, client *Client) error {
+func verifyDeletion(client *QuickwitClient) error {
 	maxHits := 10
 	params := SearchParams{
 		Query:   "body:deleted",
 		MaxHits: &maxHits,
 	}
 
-	resp, err := client.Search(ctx, testIndexID, params)
+	resp, err := client.Search(testIndexID, params)
 	if err != nil {
 		return err
 	}
