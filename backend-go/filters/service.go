@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"kessler/database"
 	"kessler/gen/dbstore"
+	"kessler/logger"
 
 	"github.com/bradfitz/gomemcache/memcache"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -27,6 +28,18 @@ type FilterService struct {
 	logger      *zap.Logger
 }
 
+// NewFilterService creates a new instance of FilterService
+func NewFilterService(db *pgxpool.Pool, cache *memcache.Client) *FilterService {
+	registry := NewFilterRegistry(db, cache)
+	log := logger.GetLogger("filter_service")
+	qe := database.GetTx()
+	return &FilterService{
+		db:          db,
+		registry:    registry,
+		queryEngine: qe,
+		logger:      log,
+	}
+}
 func (s *FilterService) RegisterDefaultFilters() error {
 	// daterange filter
 	err := s.registry.Register("daterange", NewDateRangeFilter(s.logger))
@@ -44,17 +57,6 @@ func (s *FilterService) RegisterDefaultFilters() error {
 	}
 
 	return nil
-}
-
-// NewFilterService creates a new instance of FilterService
-func NewFilterService(db *pgxpool.Pool, registry *FilterRegistry, logger *zap.Logger) *FilterService {
-	qe := database.GetTx()
-	return &FilterService{
-		db:          db,
-		registry:    registry,
-		queryEngine: qe,
-		logger:      logger.With(zap.String("component", "filter_service")),
-	}
 }
 
 // GetFiltersByState retrieves filters by their state

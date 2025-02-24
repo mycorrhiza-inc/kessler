@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/bradfitz/gomemcache/memcache"
+	"go.uber.org/zap"
 )
 
 // FilterFunc represents a filter implementation
@@ -14,18 +15,15 @@ type FilterFunc func(input interface{}) (interface{}, error)
 type FilterRegistry struct {
 	mu       sync.RWMutex
 	filters  map[string]FilterFunc
+	logger   *zap.Logger
 	mcClient *memcache.Client
 }
 
 // NewFilterRegistry creates and initializes a new FilterRegistry
-func NewFilterRegistry(memcachedServers []string) (*FilterRegistry, error) {
-	if len(memcachedServers) == 0 {
-		return nil, fmt.Errorf("memcached servers list cannot be empty")
-	}
-
+func NewFilterRegistry(cache *memcache.Client) (*FilterRegistry, error) {
 	return &FilterRegistry{
 		filters:  make(map[string]FilterFunc),
-		mcClient: memcache.New(memcachedServers...),
+		mcClient: cache,
 	}, nil
 }
 
