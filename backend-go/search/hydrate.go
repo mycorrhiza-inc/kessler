@@ -2,13 +2,11 @@ package search
 
 import (
 	"context"
-	"fmt"
-	"kessler/gen/dbstore"
 	"kessler/common/objects/files"
-
-	"github.com/charmbracelet/log"
+	"kessler/gen/dbstore"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
 
 func doShittyHydration(uuidList []uuid.UUID, ctx context.Context, q dbstore.Queries) ([]files.CompleteFileSchema, error) {
@@ -38,17 +36,19 @@ func HydrateSearchResults(results []SearchData, ctx context.Context, q dbstore.Q
 	for i, r := range results {
 		uuid, err := uuid.Parse(r.SourceID)
 		if err != nil {
-			log.Info(fmt.Sprintf("Error parsing uuid: %v\n", err))
+			log.Info("Error parsing uuid", zap.Error(err))
 		}
 		uuid_list[i] = uuid
 	}
-	log.Info(fmt.Sprintf("Hydrating %v files\n", len(uuid_list)))
+	log.Info("Hydrating files", zap.Int("count", len(uuid_list)))
 	files_complete, err := doShittyHydration(uuid_list, ctx, q)
 	if err != nil {
-		log.Info(fmt.Sprintf("Error hydrating search results: %v\n", err))
+		log.Info("Error hydrating search results", zap.Error(err))
 		return []SearchDataHydrated{}, err
 	}
-	log.Info(fmt.Sprintf("Got back %v complete files for hydration, out of %v requested files\n", len(files_complete), len(results)))
+	log.Info("Got complete files for hydration",
+		zap.Int("complete_files", len(files_complete)),
+		zap.Int("requested_files", len(results)))
 
 	// Create map of file ID to complete file
 	fileMap := make(map[uuid.UUID]files.CompleteFileSchema)
@@ -65,19 +65,21 @@ func HydrateSearchResults(results []SearchData, ctx context.Context, q dbstore.Q
 			files_actually_hydrated++
 			results_hydrated[i] = setupSearchDataHydrated(res, file)
 		} else {
-			log.Info(fmt.Sprintf("Error hydrating search result: %v\n", uuid))
+			log.Info("Error hydrating search result", zap.String("uuid", uuid.String()))
 			res.Name = "ERROR HYDRATING SEARCH RESULT W/ PG DATA: " + res.Name
 			results_hydrated[i] = setupSearchDataHydrated(res, files.CompleteFileSchema{})
 		}
 	}
-	log.Info(fmt.Sprintf("Hydrated %v of %v files\n", files_actually_hydrated, len(results)))
+	log.Info("Hydration complete",
+		zap.Int("hydrated_files", files_actually_hydrated),
+		zap.Int("total_files", len(results)))
 	return results_hydrated, nil
 }
 
 func SearchThenHydrate(r SearchRequest, ctx context.Context) ([]files.FileMetadataSchema, error) {
 	data, err := SearchQuickwit(r)
 	if err != nil {
-		log.Info(fmt.Sprintf("search-then-hydrate: error getting quickwit data", err))
+		log.Info("search-then-hydrate: error getting quickwit data", zap.Error(err))
 	}
 	idList := make([]string, len(data))
 	for i, d := range data {

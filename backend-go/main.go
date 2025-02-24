@@ -9,21 +9,16 @@ import (
 	"kessler/database"
 	"kessler/health"
 	"kessler/jobs"
+	"kessler/logger"
 	"kessler/rag"
 	"kessler/search"
 	"net/http"
 	"os"
 	"time"
 
-	"github.com/charmbracelet/log"
-
 	"github.com/gorilla/mux"
+	"go.uber.org/zap"
 )
-
-type UserValidation struct {
-	validated bool
-	userID    string
-}
 
 type AccessTokenData struct {
 	AccessToken string `json:"access_token"`
@@ -89,9 +84,29 @@ func timeoutMiddleware(timeout time.Duration) mux.MiddlewareFunc {
 
 func main() {
 	// initialize the database connection pool
-	database.Init(30)
-	defer database.ConnPool.Close()
+	logger.Init(os.Getenv("GO_ENV"))
+	defer logger.Sync()
 
+	log := logger.GetLogger("main")
+
+	log.Debug("starting application",
+		zap.String("env", os.Getenv("GO_ENV")),
+		zap.Int("port", 4041))
+
+	log.Info("connecting to database")
+	if err := database.Init(30); err != nil {
+		log.Fatal("unable to connect to connect to the database ", zap.Error(err))
+	}
+	log.Info("database connection successiful")
+
+	defer database.ConnPool.Close()
+	// log.Info("initializing memecached")
+	// if err := cache.InitMemcached(); err != nil {
+	// 	log.Fatal("unable to connect to memcached", zap.Error(err))
+	// }
+	// log.Info("cache initialized")
+
+	log.Info("registering api routes")
 	r := mux.NewRouter()
 	rootRoute := r.PathPrefix("/v2").Subrouter()
 
@@ -136,6 +151,7 @@ func main() {
 	// timeouts inside multiple routers broke it.
 	// r.Use(mux.CORSMethodMiddleware(r))
 	r.Use(corsDomainMiddleware)
+	log.Info("routes registered")
 
 	server := &http.Server{
 		Addr:    ":4041",
@@ -144,9 +160,9 @@ func main() {
 		ReadTimeout:  adminTimeout,
 		WriteTimeout: adminTimeout,
 	}
-
-	log.Info("Starting server on :4041")
+	log.Info("server started",
+		zap.String("address", ":4041"))
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		log.Fatalf("Webserver Failed: %s", err)
+		log.Fatal("Webserver Failed: %s", zap.Error(err))
 	}
 }

@@ -2,11 +2,13 @@ package filters
 
 import (
 	"context"
-	"database/sql"
+	"encoding/json"
 	"fmt"
 	"kessler/database"
 	"kessler/gen/dbstore"
+	"kessler/logger"
 
+	"github.com/bradfitz/gomemcache/memcache"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
 )
@@ -27,34 +29,67 @@ type FilterService struct {
 }
 
 // NewFilterService creates a new instance of FilterService
-func NewFilterService(db *pgxpool.Pool, registry *FilterRegistry, logger *zap.Logger) *FilterService {
+func NewFilterService(db *pgxpool.Pool, cache *memcache.Client) *FilterService {
+	registry := NewFilterRegistry(db, cache)
+	log := logger.GetLogger("filter_service")
 	qe := database.GetTx()
 	return &FilterService{
 		db:          db,
 		registry:    registry,
 		queryEngine: qe,
-		logger:      logger.With(zap.String("component", "filter_service")),
+		logger:      log,
 	}
+}
+func (s *FilterService) RegisterDefaultFilters() error {
+	// daterange filter
+	err := s.registry.Register("daterange", NewDateRangeFilter(s.logger))
+	if err != nil {
+		s.logger.Error("failed to register date range filter",
+			zap.Error(err))
+		return fmt.Errorf("failed to register date range filter: %w", err)
+	}
+
+	err = s.registry.Register("text", NewTextFilter(s.logger))
+	if err != nil {
+		s.logger.Error("failed to register text filter",
+			zap.Error(err))
+		return fmt.Errorf("failed to register text filter: %w", err)
+	}
+
+	return nil
 }
 
 // GetFiltersByState retrieves filters by their state
-func (s *FilterService) GetFiltersByState(ctx context.Context, state string) ([]Filter, error) {
+func (s *FilterService) GetFiltersByState(ctx context.Context, state string) ([]dbstore.Filter, error) {
 	if state == "" {
 		return nil, fmt.Errorf("%w: empty state", ErrInvalidFilterState)
 	}
 
-	s.logger.Debug("fetching filters by state",
-		zap.String("state", state))
+	// Try cache first
+	cacheKey := fmt.Sprintf("filters:state:%s", state)
+	if item, err := s.registry.mcClient.Get(cacheKey); err == nil {
+		var filters []dbstore.Filter
+		if err := json.Unmarshal(item.Value, &filters); err == nil {
+			s.logger.Debug("cache hit for filters", zap.String("state", state))
+			return filters, nil
+		}
+	}
 
 	filters, err := s.queryEngine.GetFiltersByState(ctx, state)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return []Filter{}, nil
-		}
 		s.logger.Error("failed to fetch filters",
 			zap.String("state", state),
 			zap.Error(err))
 		return nil, fmt.Errorf("%w: %v", ErrDatabaseOperation, err)
+	}
+
+	// Cache the results
+	if cacheData, err := json.Marshal(filters); err == nil {
+		s.registry.mcClient.Set(&memcache.Item{
+			Key:        cacheKey,
+			Value:      cacheData,
+			Expiration: 300, // 5 minute TTL
+		})
 	}
 
 	return filters, nil

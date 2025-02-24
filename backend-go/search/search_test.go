@@ -5,7 +5,7 @@ import (
 	"kessler/common/objects/networking"
 	"testing"
 
-	"github.com/charmbracelet/log"
+	"go.uber.org/zap"
 )
 
 var example_search_request = SearchRequest{
@@ -21,9 +21,9 @@ var example_search_request = SearchRequest{
 func TestQuickwit(t *testing.T) {
 	results, err := SearchQuickwit(example_search_request)
 	if err != nil {
-		log.Info("Error:", err)
+		log.Info("search error", zap.Error(err))
 		return
 	}
 	resultsString := fmt.Sprintf("%v", results)
-	log.Info("Results:", resultsString)
+	log.Info("search results", zap.String("results", resultsString))
 }
