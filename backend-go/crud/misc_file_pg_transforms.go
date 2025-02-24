@@ -3,9 +3,9 @@ package crud
 import (
 	"context"
 	"fmt"
+	"kessler/common/objects/files"
+	"kessler/common/objects/timestamp"
 	"kessler/gen/dbstore"
-	"kessler/objects/files"
-	"kessler/objects/timestamp"
 	"time"
 
 	"github.com/charmbracelet/log"

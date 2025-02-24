@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"kessler/gen/dbstore"
-	"kessler/objects/files"
+	"kessler/common/objects/files"
 
 	"github.com/charmbracelet/log"
 	"github.com/google/uuid"

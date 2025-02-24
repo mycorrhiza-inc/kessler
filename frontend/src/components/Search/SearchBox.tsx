@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import { ChevronDownIcon, ChevronUpIcon } from "../Icons";
-import { subdividedHueFromSeed } from "../Tables/TextPills";
+import { fileTypeColor, subdividedHueFromSeed } from "../Tables/TextPills";
 import {
   QueryDataFile,
   InheritedFilterValues,
@@ -20,6 +20,7 @@ import {  Range as DateRange } from "react-date-range";
 import { InputType } from "../Filters/FiltersInfo";
 import { RangePicker } from "./filters/DatePickerPill";
 import { filter } from "lodash-es";
+import { fileExtensionFromText } from "../Tables/FileExtension";
 
 const AdvancedSearch = () => {
   const [open, setOpen] = useState(false);
@@ -43,6 +44,18 @@ type FiltersPoolProps = {
   updateFilter: (filterId: string, value: any) => void;
 };
 
+const displayTypeDict = {
+  nypuc_docket_industry: "Docket Industry",
+};
+const getDisplayType = (val: string): string => {
+  if (val in displayTypeDict) {
+    return displayTypeDict[val as keyof typeof displayTypeDict];
+  }
+  return val
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+};
 const FiltersPool: React.FC<FiltersPoolProps> = ({
   selected,
   handleFilterRemove,
@@ -73,8 +86,10 @@ const FiltersPool: React.FC<FiltersPoolProps> = ({
     if (filter.type === "text") {
       return "oklch(90% 0.01 30)";
     }
-    if (filter.type === "date")
-      return subdividedHueFromSeed(filter.label);
+    // if (filter.type === "extension") {
+    //   return fileTypeColor[fileExtensionFromText(filter.label)];
+    // }
+    return subdividedHueFromSeed(filter.label);
     // return "oklch(90% 0.1 80)";
   };
   return (
@@ -209,7 +224,7 @@ const getTextQueryFromFilterList = (filterTypeDict: {
 const generateConvoSearchData = (filterTypeDict: {
   [key: string]: Filter[];
 }) => {
-  const convoSearchData: ConvoSearchRequestData = {};
+  var convoSearchData: ConvoSearchRequestData = {};
   const setQuery = (value: string) => {
     convoSearchData.query = value;
   };
@@ -224,7 +239,7 @@ const generateConvoSearchData = (filterTypeDict: {
     convoSearchData.industry_type = value;
   };
   const industrySchema: filterExtractionSchema = {
-    filters: filterTypeDict.industrySchema,
+    filters: filterTypeDict.nypuc_docket_industry,
     valueProperty: "label",
     elseValue: "",
     setValueFunc: setIndustry,
@@ -256,6 +271,12 @@ const generateFileFiltersFromFilterList = (
       targetPath: ["filters", "match_author"],
       valueProperty: "label",
       elseValue: new_file_filters_metadata.match_author,
+    },
+    {
+      filterKey: "extension",
+      targetPath: ["filters", "match_extension"],
+      valueProperty: "label",
+      elseValue: "",
     },
     {
       filterKey: "file_class",
@@ -497,7 +518,7 @@ const SearchBox = ({
                         }`}
                     >
                       <span className={`text-sm font-medium text-secondary`}>
-                        {suggestion.type}:
+                        {getDisplayType(suggestion.type)}:
                       </span>{" "}
                       <span className="text-base-content">
                         {suggestion.label}

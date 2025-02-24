@@ -6,7 +6,6 @@ import LoadingSpinner from "../styled-components/LoadingSpinner";
 import ErrorMessage from "../ErrorMessage";
 
 const InfiniteScrollPlus = ({
-  id,
   children,
   loadInitial,
   hasMore,
@@ -14,11 +13,10 @@ const InfiniteScrollPlus = ({
   reloadOnChangeObj,
   dataLength,
 }: {
-  id?: string;
   children: React.ReactNode;
   loadInitial: () => Promise<void>;
   getMore: () => Promise<void>;
-  hasMore?: any;
+  hasMore: boolean;
   reloadOnChangeObj?: any;
   dataLength: number;
 }) => {
@@ -52,7 +50,7 @@ const InfiniteScrollPlus = ({
   return (
     <InfiniteScroll
       dataLength={dataLength}
-      hasMore={true}
+      hasMore={hasMore}
       next={getMore}
       loader={
         <LoadingSpinnerTimeout timeoutSeconds={10} loadingText="Loading..." />

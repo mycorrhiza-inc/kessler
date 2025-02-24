@@ -6,8 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"kessler/objects/files"
-	"kessler/objects/timestamp"
+	"kessler/common/objects/files"
+	"kessler/common/objects/timestamp"
 	"net/http"
 	"os"
 	"strings"
@@ -21,10 +21,10 @@ var quickwitEndpoint = os.Getenv("QUICKWIT_ENDPOINT")
 func printResponse(resp *http.Response) {
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Printf("Error reading response body: %v", err)
+		log.Info(fmt.Sprintf("Error reading response body: %v", err))
 		return
 	}
-	log.Printf("quickwit_api_call:\nstatus: %d\nresponse:\n%s", resp.StatusCode, string(body))
+	log.Info(fmt.Sprintf("quickwit_api_call:\nstatus: %d\nresponse:\n%s", resp.StatusCode, string(body)))
 }
 
 func CreateIndex(index QuickwitIndex) error {
@@ -168,7 +168,7 @@ func ResolveFileSchemaForDocketIngest(complete_files []files.CompleteFileSchema)
 		return nil, errors.New("ASSERTION ERROR: len(data) is not equal to len(complete_files), dispite no logical way for that to happen!")
 	}
 
-	// log.Printf("reformatted data:\n\n%+v\n\n", data)
+	// log.Info(fmt.Sprintf("reformatted data:\n\n%+v\n\n", data))
 	return data, nil
 }
 

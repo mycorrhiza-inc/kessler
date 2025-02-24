@@ -3,8 +3,8 @@ package jobs
 import (
 	"context"
 	"fmt"
+	"kessler/db"
 	"kessler/quickwit"
-	"kessler/util"
 	"net/http"
 
 	"github.com/charmbracelet/log"
@@ -44,27 +44,6 @@ func DefineJobRoutes(parent_router *mux.Router) {
 		"/index/repopulate/files/test",
 		HandleQuickwitFileIngestFromPostgresFactory(true),
 	).Methods(http.MethodGet)
-
-	// 	job_subrouter.HandleFunc(
-	// 		"/new",
-	// 	)
-
-	// 	job_subrouter.HandleFunc(
-	// 		"/{job_id}",
-	// 	)
-	// }
-
-	// func DefineIndexJobs(parentRouter *mux.Router) {
-	// 	job_subrouter := parentRouter.PathPrefix("/index").Subrouter()
-
-	// 	job_subrouter.HandleFunc(
-	// 		"/create",
-	// 	)
-
-	// job_subrouter.HandleFunc(
-	// 	"/status/{job_id}",
-	// 	indexJobStatusHandler,
-	// )
 }
 
 func CreateConversationIndexJobHandler(w http.ResponseWriter, r *http.Request) {
@@ -117,8 +96,8 @@ func IndexAllDocketsHandler(w http.ResponseWriter, r *http.Request) {
 	// ctx := r.Context()
 	ctx := context.Background()
 	// q := *util.DBQueriesFromContext(ctx)
-	q := *util.DBQueriesFromRequest(r)
-	err := quickwit.IndexAllConversations(q, ctx, "")
+	q := db.GetTx()
+	err := quickwit.IndexAllConversations(*q, ctx, "")
 	if err != nil {
 		errorstring := fmt.Sprintf("Error ingesting dockets index: %v", err)
 		log.Info(errorstring)
@@ -133,8 +112,8 @@ func IndexAllOrganizationsHandler(w http.ResponseWriter, r *http.Request) {
 	// ctx := r.Context()
 	ctx := context.Background()
 	// q := *util.DBQueriesFromContext(ctx)
-	q := *util.DBQueriesFromRequest(r)
-	err := quickwit.ReindexAllOrganizations(ctx, q, "")
+	q := db.GetTx()
+	err := quickwit.ReindexAllOrganizations(ctx, *q, "")
 	if err != nil {
 		errorstring := fmt.Sprintf("Error ingesting orgs index: %v", err)
 		log.Info(errorstring)
@@ -144,29 +123,3 @@ func IndexAllOrganizationsHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Write([]byte("Dockets being indexed"))
 }
-
-// Create a new index job
-// job := jobManager.NewJob(IndexcollectionJob, nil)
-// err := job.Start(indexCollection, nil)
-// if err != nil {
-// 	http.Error(w, "Error starting job", http.StatusInternalServerError)
-// 	return
-// }
-
-// // Save the job state
-// err = job.SaveState()
-// if err != nil {
-// 	http.Error(w, "Error saving job state", http.StatusInternalServerError)
-// 	return
-// }
-// func indexJobStatusHandler(w http.ResponseWriter, r *http.Request) {
-// 	job_id := mux.Vars(r)["job_id"]
-// 	job := jobManager.GetJob(job_id)
-// 	if job == nil {
-// 		http.Error(w, "Job not found", http.StatusNotFound)
-// 		return
-// 	}
-
-// 	status := job.GetStatus()
-// 	w.Write([]byte(status))
-// }

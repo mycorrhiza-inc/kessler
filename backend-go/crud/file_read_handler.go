@@ -5,11 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"kessler/common/hashes"
+	"kessler/common/objects/authors"
+	"kessler/common/objects/conversations"
+	"kessler/common/objects/files"
+	"kessler/common/s3utils"
+	"kessler/db"
 	"kessler/gen/dbstore"
-	"kessler/objects/authors"
-	"kessler/objects/conversations"
-	"kessler/objects/files"
-	"kessler/util"
 	"net/http"
 	"os"
 
@@ -19,7 +21,7 @@ import (
 )
 
 func FileWithMetaGetHandler(w http.ResponseWriter, r *http.Request) {
-	q := *util.DBQueriesFromRequest(r)
+	q := db.GetTx()
 	params := mux.Vars(r)
 	fileID := params["uuid"]
 	parsedUUID, err := uuid.Parse(fileID)
@@ -62,7 +64,7 @@ func FileWithMetaGetHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func FileSemiCompleteGet(w http.ResponseWriter, r *http.Request) {
-	q := *util.DBQueriesFromRequest(r)
+	q := *db.GetTx()
 
 	params := mux.Vars(r)
 	fileID := params["uuid"]
@@ -192,7 +194,7 @@ func ReadFileHandler(config FileHandlerConfig) http.HandlerFunc {
 	return_type := config.return_type
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		q := *util.DBQueriesFromRequest(r)
+		q := *db.GetTx()
 
 		// token := r.Header.Get("Authorization")
 		params := mux.Vars(r)
@@ -231,9 +233,15 @@ func ReadFileHandler(config FileHandlerConfig) http.HandlerFunc {
 				http.Error(w, error_string, http.StatusNotFound)
 				return
 			}
-			filehash := file.Hash
-			kefiles := NewKeFileManager()
-			file_path, err := kefiles.downloadFileFromS3(filehash)
+			filehash, err := hashes.HashFromString(file.Hash)
+			if err != nil {
+				error_string := fmt.Sprintf("ASSERTION ERROR: File hash could not be decoded: %v", err)
+				log.Error(error_string)
+				http.Error(w, error_string, http.StatusInternalServerError)
+				return
+			}
+			kefiles := s3utils.NewKeFileManager()
+			file_path, err := kefiles.DownloadFileFromS3(filehash)
 			if err != nil {
 				http.Error(w, fmt.Sprintf("Error encountered when getting file with hash %v from s3:%v", filehash, err), http.StatusInternalServerError)
 				return

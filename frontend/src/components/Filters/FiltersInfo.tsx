@@ -61,7 +61,7 @@ export const queryFiltersInformation: QueryFiltersInformation = {
       { label: "National", value: "usa-national" },
     ],
   },
-  match_doctype: {
+  match_extension: {
     type: InputType.Select,
     index: 5,
     displayName: "Document File Type",

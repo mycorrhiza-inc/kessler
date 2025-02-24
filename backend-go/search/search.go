@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"kessler/objects/authors"
-	"kessler/objects/conversations"
-	"kessler/objects/files"
-	"kessler/objects/networking"
-	"kessler/objects/timestamp"
+	"kessler/common/objects/authors"
+	"kessler/common/objects/conversations"
+	"kessler/common/objects/files"
+	"kessler/common/objects/networking"
+	"kessler/common/objects/timestamp"
 	"kessler/quickwit"
 	"reflect"
 
@@ -19,7 +19,7 @@ import (
 
 type Hit struct {
 	CreatedAt     string              `json:"created_at"`
-	Doctype       string              `json:"doctype"`
+	Extension     string              `json:"extension"`
 	Hash          string              `json:"hash"`
 	Lang          string              `json:"lang"`
 	DateFiled     string              `json:"updated_at"`
@@ -82,21 +82,24 @@ func SearchQuickwit(r SearchRequest) ([]SearchDataHydrated, error) {
 	var queryFilters networking.FilterFields = r.SearchFilters
 	var metadataFilters networking.MetadataFilterFields = queryFilters.MetadataFilters
 	var uuidFilters networking.UUIDFilterFields = queryFilters.UUIDFilters
-	log.Printf("zzxxcc: %v\n", uuidFilters)
+	log.Info(fmt.Sprintf("zzxxcc: %v\n", uuidFilters))
 	dateQueryString := quickwit.ConstructDateTextQuery(metadataFilters.DateFrom, metadataFilters.DateTo, query)
 
 	filtersString := constructQuickwitMetadataQueryString(metadataFilters.SearchMetadata)
 	uuidFilterString := constructQuickwitUUIDMetadataQueryString(uuidFilters)
 
-	log.Printf(
+	log.Info(
 		"!!!!!!!!!!\nquery: %s\nfilters: %s\nuuid filters: %s\n!!!!!!!!!!\n",
+		"dateQueryString",
 		dateQueryString,
+		"filtersString",
 		filtersString,
+		"uuidFilterString",
 		uuidFilterString,
 	)
 	// queryString = queryString + filtersString
 	queryString := dateQueryString + filtersString + uuidFilterString
-	log.Printf("full query string: %s\n", queryString)
+	log.Info(fmt.Sprintf("full query string: %s\n", queryString))
 
 	// construct sortby string
 	sortbyStr := "date_filed"
@@ -126,7 +129,7 @@ func SearchQuickwit(r SearchRequest) ([]SearchDataHydrated, error) {
 	}
 	return_bytes, err := quickwit.PerformGenericQuickwitRequest(request, search_index)
 	if err != nil {
-		log.Printf("Error with Quickwit Request: %v", err)
+		log.Info(fmt.Sprintf("Error with Quickwit Request: %v", err))
 		return []SearchDataHydrated{}, err
 	}
 	var searchResponse quickwitSearchResponse
@@ -139,7 +142,7 @@ func SearchQuickwit(r SearchRequest) ([]SearchDataHydrated, error) {
 
 	data, err := ExtractSearchData(searchResponse)
 	if err != nil {
-		log.Printf("Error creating response data: %s", err)
+		log.Info(fmt.Sprintf("Error creating response data: %s", err))
 		return []SearchDataHydrated{}, err
 	}
 

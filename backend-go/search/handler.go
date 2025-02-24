@@ -3,7 +3,7 @@ package search
 import (
 	"encoding/json"
 	"fmt"
-	"kessler/objects/networking"
+	"kessler/common/objects/networking"
 	"kessler/quickwit"
 	"net/http"
 	"strings"
@@ -71,7 +71,7 @@ func HandleSearchRequest(w http.ResponseWriter, r *http.Request) {
 		// Decode the JSON body into the struct
 		err := json.NewDecoder(r.Body).Decode(&RequestData)
 		if err != nil {
-			log.Printf("Error decoding JSON: %v\n", err)
+			log.Info(fmt.Sprintf("Error decoding JSON: %v\n", err))
 			http.Error(w, "Error decoding JSON", http.StatusBadRequest)
 			return
 		}
@@ -83,10 +83,10 @@ func HandleSearchRequest(w http.ResponseWriter, r *http.Request) {
 
 		hydrated_data, err := SearchQuickwit(RequestData)
 		if err != nil {
-			log.Printf("Error searching quickwit: %s", err)
+			log.Info(fmt.Sprintf("Error searching quickwit: %s", err))
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		// q := *util.DBQueriesFromRequest(r)
+		// q := db.GetTx()
 		// ctx := r.Context()
 		// hydrated_data, err := HydrateSearchResults(data, ctx, q)
 		// if err != nil {
@@ -135,7 +135,7 @@ func HandleRecentUpdatesRequest(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		// q := *util.DBQueriesFromRequest(r)
+		// q := db.GetTx()
 		// ctx := r.Context()
 		// hydrated_data, err := HydrateSearchResults(data, ctx, q)
 		// if err != nil {

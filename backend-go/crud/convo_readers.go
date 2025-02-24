@@ -4,26 +4,27 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/charmbracelet/log"
+	"kessler/db"
 	"kessler/gen/dbstore"
-	"kessler/util"
 	"net/http"
+
+	"github.com/charmbracelet/log"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
 func ConversationGetByUnknownHandler(w http.ResponseWriter, r *http.Request) {
-	log.Printf("Getting file with metadata")
-	q := *util.DBQueriesFromRequest(r)
+	log.Info(fmt.Sprintf("Getting file with metadata"))
+	q := db.GetTx()
 
 	params := mux.Vars(r)
 	docketIdStr := params["name"]
 	ctx := r.Context()
 
-	conv_info, err := ConversationGetByUnknown(ctx, &q, docketIdStr)
+	conv_info, err := ConversationGetByUnknown(ctx, q, docketIdStr)
 	if err != nil {
-		log.Printf("Error reading organization: %v", err)
+		log.Info(fmt.Sprintf("Error reading organization: %v", err))
 		if err.Error() == "no rows in result set" {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return

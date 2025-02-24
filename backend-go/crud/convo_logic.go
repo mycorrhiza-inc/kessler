@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"kessler/common/objects/conversations"
+	"kessler/db"
 	"kessler/gen/dbstore"
-	"kessler/objects/conversations"
-	"kessler/util"
 	"net/http"
 	"time"
 
@@ -38,7 +38,7 @@ func ConversationVerifyHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	// ctx := context.Background()
 
-	q := *util.DBQueriesFromRequest(r)
+	q := *db.GetTx()
 
 	// log.Info(fmt.Sprintf("Calling verifyConversationUUID with req: %+v\n", req))
 	conversation_info, err := verifyConversationUUID(ctx, q, &req, true)

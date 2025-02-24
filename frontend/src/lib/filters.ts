@@ -1,7 +1,7 @@
 export enum FilterField {
   MatchName = "match_name",
   MatchSource = "match_source",
-  MatchDoctype = "match_doctype",
+  MatchExtension = "match_extension",
   MatchDocketId = "match_docket_id",
   MatchDocumentClass = "match_file_class",
   MatchAuthor = "match_author",
@@ -40,7 +40,7 @@ export const CaseFilterFields: FilterField[] = [
 // This seems redundant with the list of case filter fields only being referenced in the codebace, going ahead and commenting out for now.
 // export enum CaseFilterField {
 //   MatchName = "match_name",
-//   MatchDoctype = "match_doctype",
+//   MatchExtension = "match_extension",
 //   MatchDocketId = "match_docket_id",
 //   MatchDocumentClass = "match_file_class",
 //   MatchAuthor = "match_author",
@@ -50,7 +50,7 @@ export const CaseFilterFields: FilterField[] = [
 export const emptyQueryOptions: QueryFileFilterFields = {
   [FilterField.MatchName]: "",
   [FilterField.MatchSource]: "",
-  [FilterField.MatchDoctype]: "",
+  [FilterField.MatchExtension]: "",
   [FilterField.MatchDocketId]: "",
   [FilterField.MatchDocumentClass]: "",
   [FilterField.MatchAuthor]: "",
@@ -101,7 +101,7 @@ export interface BackendFilterObject {
     author: string;
     docket_id: string;
     file_class: string;
-    doctype: string;
+    extension: string;
     source: string;
     date_from: string;
     date_to: string;
@@ -128,7 +128,7 @@ export const backendFilterGenerate = (
     author: filters.match_author,
     docket_id: filters.match_docket_id,
     file_class: filters.match_file_class,
-    doctype: filters.match_doctype,
+    extension: filters.match_extension,
     source: filters.match_source,
     date_from: from,
     date_to: to,
@@ -155,7 +155,7 @@ export const backendFilterGenerate = (
     metadataFilters.author = "";
     metadataFilters.docket_id = "";
     metadataFilters.file_class = "";
-    metadataFilters.doctype = "";
+    metadataFilters.extension = "";
     metadataFilters.source = "";
     metadataFilters.date_from = "";
     metadataFilters.date_to = "";

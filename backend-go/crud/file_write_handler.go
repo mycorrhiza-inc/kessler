@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"kessler/common/objects/files"
 	"kessler/gen/dbstore"
-	"kessler/objects/files"
 	"kessler/util"
 	"net/http"
 

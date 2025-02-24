@@ -119,16 +119,12 @@ const ConversationTable = ({
               <td className="w-[10%] px-4 py-3">{hackMatterType}</td>
               {state && <td className="w-[10%] px-4 py-3">{convo.state}</td>}
               <td className="w-[10%] px-4 py-3">
-                {convo.industry_type && (
-                  <TextPill text={convo.industry_type} />
-                )}
+                {convo.industry_type && <TextPill text={convo.industry_type} />}
               </td>
               {!truncate && (
                 <>
                   <td className="w-[10%] px-4 py-3">{convo.description}</td>
-                  <td className="w-[10%] px-4 py-3">
-                    {convo.documents_count}
-                  </td>
+                  <td className="w-[10%] px-4 py-3">{convo.documents_count}</td>
                 </>
               )}
             </tr>
@@ -149,6 +145,7 @@ const ConversationTableInfiniteScroll = ({
   const [tableData, setTableData] = useState<ConversationTableSchema[]>([]);
   const defaultPageSize = 40;
   const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
 
   const getPageResults = async (page: number, limit: number) => {
     const offset = page * limit;
@@ -156,21 +153,26 @@ const ConversationTableInfiniteScroll = ({
     const searchData = InstanitateConversationSearchSchema(lookup_data);
     const url = `${runtimeConfig.public_api_url}/v2/search/conversation?offset=${offset}&limit=${limit}`;
     const result = await conversationSearchGet(searchData, url);
+    setTableData((prev) => [...prev, ...result]);
+    if (result.length < limit) {
+      setHasMore(false);
+    }
     return result;
   };
   const getMore = async () => {
-    const result = await getPageResults(page, defaultPageSize);
-    setTableData((prev) => [...prev, ...result]);
+    await getPageResults(page, defaultPageSize);
     setPage((prev) => prev + 1);
   };
   const getInitialData = async () => {
+    setHasMore(true);
+    setTableData([]);
     const numPageFetch = 3;
-    const result = await getPageResults(0, defaultPageSize * numPageFetch);
-    setTableData(result);
+    await getPageResults(0, defaultPageSize * numPageFetch);
     setPage(numPageFetch);
   };
   return (
     <InfiniteScrollPlus
+      hasMore={hasMore}
       dataLength={tableData.length}
       getMore={getMore}
       loadInitial={getInitialData}

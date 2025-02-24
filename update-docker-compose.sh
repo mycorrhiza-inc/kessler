@@ -69,24 +69,45 @@ function process_branch() {
         sudo docker push "fractalhuman1/kessler-backend-go:${current_hash}"
 
         # Update docker-compose.yml on the server
-        ssh root@kessler.xyz "sed -i \"s|image: fractalhuman1/kessler-frontend:.*|image: fractalhuman1/kessler-frontend:${current_hash}|\" /mycorrhiza/kessler/docker-compose.deploy.yaml && \
-        sed -i \"s|image: fractalhuman1/kessler-backend-go:.*|image: fractalhuman1/kessler-backend-go:${current_hash}|\" /mycorrhiza/kessler/docker-compose.deploy.yaml && \
-        sed -i \"s|VERSION_HASH:.*|VERSION_HASH: ${current_hash}|\" /mycorrhiza/kessler/docker-compose.deploy.yaml && \
-        cd /mycorrhiza/kessler && git clean -fd && git pull && docker compose -f docker-compose.deploy.yaml down && docker compose -f docker-compose.deploy.yaml up -d"
+        # Set deployment variables based on environment
+        local deploy_host=""
+        local compose_file=""
+        if [ "$is_prod" = true ]; then
+            deploy_host="kessler.xyz"
+            compose_file="docker-compose.deploy-prod.yaml"
+        else
+            deploy_host="nightly.kessler.xyz"
+            compose_file="docker-compose.deploy-nightly.yaml"
+        fi
+
+        ssh "root@${deploy_host}" "cd /mycorrhiza/kessler && \
+        git reset --hard HEAD && \
+        git clean -fd && \
+        git pull && \
+        sed -i \"s|image: fractalhuman1/kessler-frontend:.*|image: fractalhuman1/kessler-frontend:${current_hash}|\" \"/mycorrhiza/kessler/${compose_file}\" && \
+        sed -i \"s|image: fractalhuman1/kessler-backend-go:.*|image: fractalhuman1/kessler-backend-go:${current_hash}|\" \"/mycorrhiza/kessler/${compose_file}\" && \
+        sed -i \"s|VERSION_HASH:.*|VERSION_HASH: ${current_hash}|\" \"/mycorrhiza/kessler/${compose_file}\" && \
+        podman-compose -f \"${compose_file}\" down && \
+        podman-compose -f \"${compose_file}\" up -d"
     else
         echo "No changes detected, deployemnt already on provided hash, skipping deployment: ${current_hash}"
     fi
 }
 
 # Parse command line arguments
+is_prod=false
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --prod-commit)
+        --commit)
             commit="$2"
             shift 2
             ;;
-        --prod-commit=*)
+        --commit=*)
             commit="${1#*=}"
+            shift
+            ;;
+        --prod)
+            is_prod=true
             shift
             ;;
         *)
@@ -96,10 +117,8 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-if [[ -n "$prod_commit" || -n "$nightly_commit" ]]; then
-    if [[ -n "$prod_commit" ]]; then
-        process_branch "main" "$prod_commit"
-    fi
+if [[  -n "$commit" ]]; then
+    process_branch "main" "$commit"
 else
     process_branch "main"
     # process_branch "release"

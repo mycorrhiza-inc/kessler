@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"kessler/common/llm_utils"
+	"kessler/common/objects/files"
 	"kessler/crud"
 	"kessler/gen/dbstore"
-	"kessler/objects/files"
-	"kessler/rag"
 	"kessler/util"
 	"net/http"
 	"regexp"
@@ -32,7 +32,8 @@ func ExtractRelaventEmailsFromOrgUUIDHandler(w http.ResponseWriter, r *http.Requ
 		http.Error(w, errorstring, http.StatusBadRequest)
 		return
 	}
-	return_obj, err := ExtractRelaventEmailsFromOrgUUID(ctx, rag.DefaultBigLLMModel, org_uuid)
+	big_llm := llm_utils.DefaultBigLLMModel
+	return_obj, err := ExtractRelaventEmailsFromOrgUUID(ctx, big_llm, org_uuid)
 	if err != nil {
 		errorstring := fmt.Sprintf("Error extracting emails from org uuid: %v", err)
 		log.Info(errorstring)
@@ -59,7 +60,7 @@ func extractEmails(text string) []string {
 	return matches
 }
 
-func extractRelaventEmails(llm rag.LLM, text string, organization_name string) ([]string, error) {
+func extractRelaventEmails(ctx context.Context, llm llm_utils.LLM, text string, organization_name string) ([]string, error) {
 	emails := extractEmails(text)
 	prompt := `Given the following list of email addresses and an organization name, identify which emails likely belong to members of the organization.
 Consider email patterns, domains, and professional email formats.
@@ -69,7 +70,7 @@ Email addresses: ` + strings.Join(emails, ", ") + `
 
 Return only the email addresses that are likely associated with the organization, one per line.`
 
-	response, err := rag.SimpleInstruct(llm, prompt)
+	response, err := llm_utils.SimpleInstruct(ctx, llm, prompt)
 	if err != nil {
 		return emails, err
 	}
@@ -85,7 +86,7 @@ Return only the email addresses that are likely associated with the organization
 	return relavent_emails, nil
 }
 
-func ExtractRelaventEmailsFromFileUUID(ctx context.Context, q dbstore.Queries, llm rag.LLM, file_id uuid.UUID) ([]string, error) {
+func ExtractRelaventEmailsFromFileUUID(ctx context.Context, q dbstore.Queries, llm llm_utils.LLM, file_id uuid.UUID) ([]string, error) {
 	file_object, err := crud.CompleteFileSchemaGetFromUUID(ctx, q, file_id)
 	if err != nil {
 		return []string{}, err
@@ -97,7 +98,7 @@ func ExtractRelaventEmailsFromFileUUID(ctx context.Context, q dbstore.Queries, l
 		author_list_string += author.AuthorName + "\n"
 	}
 
-	emails, err := extractRelaventEmails(llm, file_text, author_list_string)
+	emails, err := extractRelaventEmails(ctx, llm, file_text, author_list_string)
 	if err != nil {
 		return emails, err
 	}
@@ -116,7 +117,7 @@ type EmailInfo struct {
 	AssociatedFiles []uuid.UUID `json:"associated_files"`
 }
 
-func ExtractRelaventEmailsFromOrgUUID(ctx context.Context, llm rag.LLM, org_id uuid.UUID) (EmailOrgExtraction, error) {
+func ExtractRelaventEmailsFromOrgUUID(ctx context.Context, llm llm_utils.LLM, org_id uuid.UUID) (EmailOrgExtraction, error) {
 	q := *util.DBQueriesFromContext(ctx)
 	information_map := map[string][]uuid.UUID{}
 	org_obj, err := crud.OrgWithFilesGetByID(ctx, &q, org_id)
