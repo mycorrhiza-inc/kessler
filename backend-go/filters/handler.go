@@ -2,24 +2,39 @@ package filters
 
 import (
 	"encoding/json"
+	"kessler/cache"
 	"kessler/common/objects/networking"
+	"kessler/database"
 	"kessler/gen/dbstore"
 	"net/http"
 
 	"github.com/charmbracelet/log"
+	"github.com/gorilla/mux"
 )
 
-type FilterHandler struct {
+type FilterServiceHandler struct {
 	service *FilterService
 }
 
-func NewFilterHandler(service *FilterService) *FilterHandler {
-	return &FilterHandler{
+func NewFilterHandler(service *FilterService) *FilterServiceHandler {
+	return &FilterServiceHandler{
 		service: service,
 	}
 }
 
-func (h *FilterHandler) GetFilters(w http.ResponseWriter, r *http.Request) {
+func DefineFilterRoutes(r *mux.Router) {
+	service := NewFilterService(database.ConnPool, cache.MemcachedClient)
+	fsh := &FilterServiceHandler{
+		service: service,
+	}
+	filtersRoute := r.PathPrefix("/filters").Subrouter()
+	filtersRoute.HandleFunc(
+		"/get",
+		fsh.GetFilters,
+	).Methods(http.MethodGet)
+}
+
+func (h *FilterServiceHandler) GetFilters(w http.ResponseWriter, r *http.Request) {
 	state := r.URL.Query().Get("state")
 	pagination := networking.PaginationFromUrlParams(r)
 
