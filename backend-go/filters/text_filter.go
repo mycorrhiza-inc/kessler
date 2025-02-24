@@ -1,8 +1,9 @@
 package filters
 
 import (
+	"context"
 	"fmt"
-	"regexp"
+	"kessler/quickwit"
 	"strings"
 	"unicode/utf8"
 
@@ -16,19 +17,17 @@ const (
 )
 
 type TextFilter struct {
-	fieldNameRegex *regexp.Regexp
-	logger         *zap.Logger
+	logger *zap.Logger
 }
 
 func NewTextFilter(logger *zap.Logger) FilterFunc {
 	tf := &TextFilter{
-		fieldNameRegex: regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9_\.]*$`),
-		logger:         logger.Named("text_filter"),
+		logger: logger.Named("text_filter"),
 	}
 	return tf.Apply
 }
 
-func (tf *TextFilter) Apply(input interface{}) (interface{}, error) {
+func (tf *TextFilter) Apply(input QueryFilter) (interface{}, error) {
 	query, ok := input.(string)
 	if !ok {
 		tf.logger.Error("invalid input type", zap.Any("input", input))
@@ -117,7 +116,8 @@ func (tf *TextFilter) processQuery(query string) (string, error) {
 	return result.String(), nil
 }
 
-func (tf *TextFilter) validateFieldName(field string) bool {
-	// TODO: be able to validate field names against the fields of a given dataset
-	return tf.fieldNameRegex.MatchString(field)
+func (tf *TextFilter) validateFieldName(field string) error {
+	client := quickwit.NewClient(quickwit.QuickwitURL, context.Background())
+	client.ValidateFieldName(tf.indexName)
+	return nil
 }
