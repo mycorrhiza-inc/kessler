@@ -16,7 +16,7 @@ const InfiniteScrollPlus = ({
   children: React.ReactNode;
   loadInitial: () => Promise<void>;
   getMore: () => Promise<void>;
-  hasMore?: any;
+  hasMore: boolean;
   reloadOnChangeObj?: any;
   dataLength: number;
 }) => {
@@ -50,7 +50,7 @@ const InfiniteScrollPlus = ({
   return (
     <InfiniteScroll
       dataLength={dataLength}
-      hasMore={true}
+      hasMore={hasMore}
       next={getMore}
       loader={
         <LoadingSpinnerTimeout timeoutSeconds={10} loadingText="Loading..." />
