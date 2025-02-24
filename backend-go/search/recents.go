@@ -7,12 +7,12 @@ import (
 	"kessler/quickwit"
 	"net/http"
 
-	"github.com/charmbracelet/log"
+	"go.uber.org/zap"
 )
 
 func GetRecentCaseData(maxHits int, offset int) ([]SearchDataHydrated, error) {
 	// get all documents with a metadata.date_filed since (x)
-	log.Info(fmt.Sprintf("gettings ssssssflkjadflhdsfuhlifadlhf"))
+	log.Info("getting recent case data", zap.Int("maxHits", maxHits), zap.Int("offset", offset))
 	request := SearchRequest{
 		Index:       "NY_PUC",
 		Query:       "",
@@ -24,7 +24,7 @@ func GetRecentCaseData(maxHits int, offset int) ([]SearchDataHydrated, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Info(fmt.Sprintf("data: \n%v", data))
+	log.Info("received search data", zap.Any("data", data))
 	if data == nil {
 		empty := []SearchDataHydrated{}
 		return empty, nil
@@ -53,16 +53,15 @@ func GetCaseDataSince(date string, page int) ([]Hit, error) {
 
 	jsonData, err := json.Marshal(request)
 	// ===== submit request to quickwit =====
-	// log.Info(fmt.Sprintf("jsondata: \n%s", jsonData))
 	if err != nil {
-		log.Info(fmt.Sprintf("Error Marshalling quickwit request: %s", err))
+		log.Error("error marshalling quickwit request", zap.Error(err))
 		return nil, err
 	}
 
 	offset := page * maxHits
 	// get all documents with a metadata.date_filed since (x)
 	request_url := fmt.Sprintf("%s/api/v1/dockets/search?sort_by=date_filed?max_hits=20?start_offset=%d", quickwit.QuickwitURL, offset)
-	log.Info(fmt.Sprintf("request_url: \n%s", request_url))
+	log.Info("making quickwit request", zap.String("url", request_url))
 	resp, err := http.Post(
 		request_url,
 		"application/json",
@@ -71,7 +70,7 @@ func GetCaseDataSince(date string, page int) ([]Hit, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Info(fmt.Sprintf("response: \n%v", resp))
+	log.Info("received quickwit response", zap.Any("response", resp))
 
 	defer resp.Body.Close()
 	cases := []Hit{}

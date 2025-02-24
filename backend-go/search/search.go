@@ -9,13 +9,15 @@ import (
 	"kessler/common/objects/files"
 	"kessler/common/objects/networking"
 	"kessler/common/objects/timestamp"
+	"kessler/logger"
 	"kessler/quickwit"
 	"reflect"
 
-	"github.com/charmbracelet/log"
-
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
+
+var log = logger.GetLogger("search")
 
 type Hit struct {
 	CreatedAt     string              `json:"created_at"`
@@ -49,7 +51,7 @@ func (s quickwitSearchResponse) String() string {
 	// Marshal the struct to JSON format
 	jsonData, err := json.MarshalIndent(s, "", "  ")
 	if err != nil {
-		log.Info("Error marshalling JSON:", err)
+		log.Error("Error marshalling JSON", zap.Error(err))
 	}
 	// Print the formatted JSON string
 	return string(jsonData)
@@ -66,14 +68,14 @@ func (s SearchData) String() string {
 	// Marshal the struct to JSON format
 	jsonData, err := json.MarshalIndent(s, "", "  ")
 	if err != nil {
-		log.Info("Error marshalling JSON:", err)
+		log.Error("Error marshalling JSON", zap.Error(err))
 	}
 	// Print the formatted JSON string
 	return string(jsonData)
 }
 
 func SearchQuickwit(r SearchRequest) ([]SearchDataHydrated, error) {
-	log.Info(fmt.Sprintf("searching quickwit:\n%s", r))
+	log.Info("searching quickwit", zap.Any("request", r))
 	r.Index = "NY_PUC"
 	search_index := r.Index
 	// ===== construct search request =====
@@ -82,24 +84,20 @@ func SearchQuickwit(r SearchRequest) ([]SearchDataHydrated, error) {
 	var queryFilters networking.FilterFields = r.SearchFilters
 	var metadataFilters networking.MetadataFilterFields = queryFilters.MetadataFilters
 	var uuidFilters networking.UUIDFilterFields = queryFilters.UUIDFilters
-	log.Info(fmt.Sprintf("zzxxcc: %v\n", uuidFilters))
+	log.Info("uuid filters", zap.Any("filters", uuidFilters))
 	dateQueryString := quickwit.ConstructDateTextQuery(metadataFilters.DateFrom, metadataFilters.DateTo, query)
 
 	filtersString := constructQuickwitMetadataQueryString(metadataFilters.SearchMetadata)
 	uuidFilterString := constructQuickwitUUIDMetadataQueryString(uuidFilters)
 
-	log.Info(
-		"!!!!!!!!!!\nquery: %s\nfilters: %s\nuuid filters: %s\n!!!!!!!!!!\n",
-		"dateQueryString",
-		dateQueryString,
-		"filtersString",
-		filtersString,
-		"uuidFilterString",
-		uuidFilterString,
-	)
+	log.Info("query details",
+		zap.String("date_query", dateQueryString),
+		zap.String("filters", filtersString),
+		zap.String("uuid_filters", uuidFilterString))
+
 	// queryString = queryString + filtersString
 	queryString := dateQueryString + filtersString + uuidFilterString
-	log.Info(fmt.Sprintf("full query string: %s\n", queryString))
+	log.Info("full query string", zap.String("query", queryString))
 
 	// construct sortby string
 	sortbyStr := "date_filed"
@@ -129,20 +127,22 @@ func SearchQuickwit(r SearchRequest) ([]SearchDataHydrated, error) {
 	}
 	return_bytes, err := quickwit.PerformGenericQuickwitRequest(request, search_index)
 	if err != nil {
-		log.Info(fmt.Sprintf("Error with Quickwit Request: %v", err))
+		log.Error("Error with Quickwit Request", zap.Error(err))
 		return []SearchDataHydrated{}, err
 	}
 	var searchResponse quickwitSearchResponse
 	err = json.NewDecoder(bytes.NewReader(return_bytes)).Decode(&searchResponse)
 	if err != nil {
-		log.Info(fmt.Sprintf("quickwit response: %v\n", return_bytes))
+		log.Error("Error decoding JSON response",
+			zap.Error(err),
+			zap.String("response", string(return_bytes)))
 		errorstring := fmt.Sprintf("Error decoding JSON: %v\n Offending json looked like: %v", err, string(return_bytes))
 		return []SearchDataHydrated{}, fmt.Errorf(errorstring)
 	}
 
 	data, err := ExtractSearchData(searchResponse)
 	if err != nil {
-		log.Info(fmt.Sprintf("Error creating response data: %s", err))
+		log.Error("Error creating response data", zap.Error(err))
 		return []SearchDataHydrated{}, err
 	}
 

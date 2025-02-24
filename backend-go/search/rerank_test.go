@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/charmbracelet/log"
+	"go.uber.org/zap"
 )
 
 func Test_reranker(t *testing.T) {
@@ -25,18 +25,18 @@ func Test_reranker(t *testing.T) {
 	if err != nil {
 		t.Fatal("Error:", err)
 	}
-	log.Info("Permutation:")
+	log.Info("Permutation")
 	for _, docperm := range rerankedDocPermutation {
-		log.Info(docperm)
+		log.Info("document permutation", zap.Int("index", docperm))
 	}
 	rerankedDocs := make([]string, len(rerankedDocPermutation))
 	for i, permutation := range rerankedDocPermutation {
 		rerankedDocs[i] = documents[permutation]
 	}
 
-	log.Info("Query:", query)
-	log.Info("Reranked Documents:")
-	for _, doc := range rerankedDocs {
-		log.Info(doc)
+	log.Info("query and results", zap.String("query", query))
+	log.Info("reranked documents")
+	for i, doc := range rerankedDocs {
+		log.Info("document", zap.Int("rank", i), zap.String("text", doc))
 	}
 }

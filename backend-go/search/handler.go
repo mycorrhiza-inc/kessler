@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/charmbracelet/log"
-
 	"github.com/gorilla/mux"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 type SearchRequest struct {
@@ -33,17 +33,15 @@ var ExampleSearchRequest = SearchRequest{
 	GetText:       true,
 }
 
-func (s SearchRequest) String() string {
-	return fmt.Sprintf(
-		"SearchRequest: {\n\tIndex: %s\n\tQuery: %s\n\tFilters: %s\n\tSortBy: %s\n\tMaxHits: %d\n\tStartOffset: %d\nGetText: %t\n}\n",
-		s.Index,
-		s.Query,
-		s.SearchFilters,
-		strings.Join(s.SortBy, ", "),
-		s.MaxHits,
-		s.StartOffset,
-		s.GetText,
-	)
+func (s SearchRequest) MarshalLogObject(enc zapcore.ObjectEncoder) error {
+	enc.AddString("index", s.Index)
+	enc.AddString("query", s.Query)
+	enc.AddString("filters", s.SearchFilters.String())
+	enc.AddString("sort_by", strings.Join(s.SortBy, ", "))
+	enc.AddInt("max_hits", s.MaxHits)
+	enc.AddInt("start_offset", s.StartOffset)
+	enc.AddBool("get_text", s.GetText)
+	return nil
 }
 
 type RecentUpdatesRequest struct {
@@ -71,7 +69,7 @@ func HandleSearchRequest(w http.ResponseWriter, r *http.Request) {
 		// Decode the JSON body into the struct
 		err := json.NewDecoder(r.Body).Decode(&RequestData)
 		if err != nil {
-			log.Info(fmt.Sprintf("Error decoding JSON: %v\n", err))
+			log.Error("Error decoding JSON", zap.Error(err))
 			http.Error(w, "Error decoding JSON", http.StatusBadRequest)
 			return
 		}
@@ -83,7 +81,7 @@ func HandleSearchRequest(w http.ResponseWriter, r *http.Request) {
 
 		hydrated_data, err := SearchQuickwit(RequestData)
 		if err != nil {
-			log.Info(fmt.Sprintf("Error searching quickwit: %s", err))
+			log.Error("Error searching quickwit", zap.Error(err))
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		// q := database.GetTx()
@@ -98,15 +96,14 @@ func HandleSearchRequest(w http.ResponseWriter, r *http.Request) {
 		// TODO : Reneable validation once other stuff is certainly working.
 		_, err = ValidateHydratedAgainstFilters(hydrated_data, RequestData.SearchFilters)
 		if err != nil {
-			errorstring := fmt.Sprintf("Returned results did not match filters: %v\n", err)
-			log.Info(errorstring)
-			http.Error(w, errorstring, http.StatusInternalServerError)
+			log.Error("Returned results did not match filters", zap.Error(err))
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		respString, err := json.Marshal(hydrated_data)
 		if err != nil {
-			log.Info("Error marshalling response data")
+			log.Error("Error marshalling response data", zap.Error(err))
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -132,6 +129,7 @@ func HandleRecentUpdatesRequest(w http.ResponseWriter, r *http.Request) {
 
 		hydrated_data, err := GetRecentCaseData(maxHits, offset)
 		if err != nil {
+			log.Error("Error getting recent case data", zap.Error(err))
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -146,6 +144,7 @@ func HandleRecentUpdatesRequest(w http.ResponseWriter, r *http.Request) {
 		// }
 		respString, err := json.Marshal(hydrated_data)
 		if err != nil {
+			log.Error("Error marshalling response data", zap.Error(err))
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}

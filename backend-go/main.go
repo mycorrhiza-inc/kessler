@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"kessler/admin"
 	"kessler/autocomplete"
-	"kessler/cache"
 	"kessler/crud"
 	"kessler/database"
 	"kessler/health"
@@ -101,11 +100,11 @@ func main() {
 	log.Info("database connection successiful")
 
 	defer database.ConnPool.Close()
-	log.Info("initializing memecached")
-	if err := cache.InitMemcached(); err != nil {
-		log.Fatal("unable to connect to memcached", zap.Error(err))
-	}
-	log.Info("cache initialized")
+	// log.Info("initializing memecached")
+	// if err := cache.InitMemcached(); err != nil {
+	// 	log.Fatal("unable to connect to memcached", zap.Error(err))
+	// }
+	// log.Info("cache initialized")
 
 	log.Info("registering api routes")
 	r := mux.NewRouter()
