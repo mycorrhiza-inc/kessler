@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"kessler/common/objects/authors"
+	"kessler/database"
 	"kessler/gen/dbstore"
 	"net/http"
 

@@ -3,7 +3,9 @@ package jobs
 import (
 	"context"
 	"fmt"
+	"kessler/database"
 	"kessler/quickwit"
+
 	"net/http"
 
 	"github.com/charmbracelet/log"
