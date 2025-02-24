@@ -7,6 +7,7 @@ export enum FilterField {
   MatchAuthor = "match_author",
   MatchBeforeDate = "match_before_date",
   MatchAfterDate = "match_after_date",
+  MatchDateRange = "match_date_range",
   MatchAuthorUUID = "match_author_uuids",
   MatchConversationUUID = "match_conversation_uuid",
   MatchFileUUID = "match_file_uuid",
@@ -14,7 +15,7 @@ export enum FilterField {
 
 export type InheritedFilterValues = Array<{
   filter: FilterField;
-  value: string;
+  value: any;
 }>;
 
 export type QueryFileFilterFields = {
@@ -55,13 +56,14 @@ export const emptyQueryOptions: QueryFileFilterFields = {
   [FilterField.MatchAuthor]: "",
   [FilterField.MatchBeforeDate]: "",
   [FilterField.MatchAfterDate]: "",
+  [FilterField.MatchDateRange]: "",
   [FilterField.MatchAuthorUUID]: "",
   [FilterField.MatchConversationUUID]: "",
   [FilterField.MatchFileUUID]: "",
 };
 
 export const disableListFromInherited = (
-  inheritedFilters: InheritedFilterValues,
+  inheritedFilters: InheritedFilterValues
 ): FilterField[] => {
   return inheritedFilters.map((val) => {
     return val.filter;
@@ -69,7 +71,7 @@ export const disableListFromInherited = (
 };
 
 export const initialFiltersFromInherited = (
-  inheritedFilters: InheritedFilterValues,
+  inheritedFilters: InheritedFilterValues
 ): QueryFileFilterFields => {
   var initialFilters = emptyQueryOptions;
   inheritedFilters.map((val) => {
@@ -79,7 +81,7 @@ export const initialFiltersFromInherited = (
 };
 
 export const inheritedFiltersFromValues = (
-  filters: QueryFileFilterFields,
+  filters: QueryFileFilterFields
 ): InheritedFilterValues => {
   if (filters == null) {
     return [];
@@ -103,6 +105,7 @@ export interface BackendFilterObject {
     source: string;
     date_from: string;
     date_to: string;
+    date_range?: string;
   };
   uuid_filters: {
     author_uuids: string;
@@ -112,8 +115,14 @@ export interface BackendFilterObject {
 }
 
 export const backendFilterGenerate = (
-  filters: QueryFileFilterFields,
+  filters: QueryFileFilterFields
 ): BackendFilterObject => {
+  let from = filters.match_after_date;
+  let to = filters.match_before_date;
+  if (filters.match_date_range !== undefined) {
+    
+  }
+
   const metadataFilters: BackendFilterObject["metadata_filters"] = {
     name: filters.match_name,
     author: filters.match_author,
@@ -121,21 +130,25 @@ export const backendFilterGenerate = (
     file_class: filters.match_file_class,
     extension: filters.match_extension,
     source: filters.match_source,
-    date_from: filters.match_after_date,
-    date_to: filters.match_before_date,
+    date_from: from,
+    date_to: to,
   };
+
   const uuidFilters: BackendFilterObject["uuid_filters"] = {
     author_uuids: filters.match_author_uuids,
     conversation_uuid: filters.match_conversation_uuid,
     file_uuid: filters.match_file_uuid,
   };
+
   if (filters.match_author_uuids !== "") {
     // If filtering by author uuid, remove author name
     metadataFilters.author = "";
   }
+  
   if (filters.match_conversation_uuid !== "") {
     metadataFilters.docket_id = "";
   }
+
   if (filters.match_file_uuid !== "") {
     // Since the filters only match files and not text, then set all the other filter values to "" and return only the file uuid
     metadataFilters.name = "";

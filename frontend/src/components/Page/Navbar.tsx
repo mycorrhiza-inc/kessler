@@ -1,5 +1,5 @@
 "use client";
-import { AngleDownIcon, HamburgerIcon, UserIcon } from "@/components/Icons";
+import { ChevronDownIcon, HamburgerIcon, UserIcon } from "@/components/Icons";
 import { useState } from "react";
 import Modal from "@/components/styled-components/Modal";
 import SettingsContent from "@/components/SettingsContent";
