@@ -34,6 +34,7 @@ func corsDomainMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		domain := os.Getenv("DOMAIN")
 		if domain != "" {
+			domain = "https://" + domain
 			// Set CORS headers
 			w.Header().Set("Access-Control-Allow-Origin", domain) // or specify allowed origin
 		} else {
@@ -43,7 +44,12 @@ func corsDomainMiddleware(next http.Handler) http.Handler {
 		// timeouts inside multiple routers broke mux's traditonal cors method handling.
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, Origin")
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
 
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
 		// Call the next handler
 		next.ServeHTTP(w, r)
 	})
