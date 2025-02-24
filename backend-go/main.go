@@ -6,7 +6,7 @@ import (
 	"kessler/admin"
 	"kessler/autocomplete"
 	"kessler/crud"
-	"kessler/db"
+	"kessler/database"
 	"kessler/health"
 	"kessler/jobs"
 	"kessler/rag"
@@ -82,8 +82,8 @@ func timeoutMiddleware(timeout time.Duration) mux.MiddlewareFunc {
 
 func main() {
 	// initialize the database connection pool
-	db.Init(30)
-	defer db.ConnPool.Close()
+	database.Init(30)
+	defer database.ConnPool.Close()
 
 	r := mux.NewRouter()
 	rootRoute := r.PathPrefix("/v2").Subrouter()
