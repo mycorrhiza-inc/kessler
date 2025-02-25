@@ -30,10 +30,9 @@ import (
 // @host		petstore.swagger.io
 // @BasePath	/v2
 
-const (
-	redisAddr   = "127.0.0.1:6379"
-	concurrency = 30 // Max concurrent tasks
-)
+const concurrency = 30 // Max concurrent tasks
+
+var redisAddr = os.Getenv("INTERNAL_REDIS_ADDRESS")
 
 // In main.go add this middleware
 func clientMiddleware(client *asynq.Client) mux.MiddlewareFunc {
