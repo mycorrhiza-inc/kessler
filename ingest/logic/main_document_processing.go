@@ -11,6 +11,7 @@ import (
 	"thaumaturgy/common/hashes"
 	"thaumaturgy/common/objects/files"
 	"thaumaturgy/common/s3utils"
+	"thaumaturgy/external"
 	"thaumaturgy/validators"
 
 	"github.com/google/uuid"
@@ -174,28 +175,31 @@ func processStageHandleExtension(ctx context.Context, obj *CompleteFileSchema) (
 }
 
 func processStageOne(ctx context.Context, obj *CompleteFileSchema, extractor *MarkdownExtractor, texts map[string]string) (DocumentStatus, error) {
-	return DocumentStatusStage1, errors.New("not implemented")
-	// processedText, err := extractor.ProcessRawDocument(obj.Hash, obj.Lang, obj.Extension)
-	// if err != nil {
-	// 	if _, ok := err.(*common.FormatError); ok {
-	// 		obj.Stage.SkipProcessing = true
-	// 	}
-	// 	return DocumentStatusStage1, err
-	// }
-	//
-	// obj.DocTexts = append(obj.DocTexts, FileTextSchema{
-	// 	IsOriginalText: true,
-	// 	Language:       obj.Lang,
-	// 	Text:           processedText,
-	// })
-	//
-	// if obj.Lang == "en" {
-	// 	texts["englishText"] = processedText
-	// 	return DocumentStatusStage3, nil
-	// }
-	//
-	// texts["originalText"] = processedText
-	// return DocumentStatusStage2, nil
+	validated_hash, err := hashes.HashFromString(obj.Hash)
+	if err != nil {
+		return DocumentStatusStage1, fmt.Errorf("invalid hash: %w", err)
+	}
+	processedText, err := external.TranscribePDFFromHash(validated_hash)
+	if err != nil {
+		// if _, ok := err.(*common.FormatError); ok {
+		// 	obj.Stage.SkipProcessing = true
+		// }
+		return DocumentStatusStage1, err
+	}
+
+	obj.DocTexts = append(obj.DocTexts, FileTextSchema{
+		IsOriginalText: true,
+		Language:       obj.Lang,
+		Text:           processedText,
+	})
+
+	if obj.Lang == "en" {
+		texts["englishText"] = processedText
+		return DocumentStatusStage3, nil
+	}
+
+	texts["originalText"] = processedText
+	return DocumentStatusStage2, nil
 }
 
 func processStageTwo(ctx context.Context, obj *CompleteFileSchema, extractor *MarkdownExtractor, texts map[string]string) (DocumentStatus, error) {

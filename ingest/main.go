@@ -30,10 +30,9 @@ import (
 // @host		petstore.swagger.io
 // @BasePath	/v2
 
-const (
-	redisAddr   = "127.0.0.1:6379"
-	concurrency = 30 // Max concurrent tasks
-)
+const concurrency = 30 // Max concurrent tasks
+
+var redisAddr = os.Getenv("INTERNAL_REDIS_ADDRESS")
 
 // In main.go add this middleware
 func clientMiddleware(client *asynq.Client) mux.MiddlewareFunc {
@@ -80,14 +79,14 @@ func main() {
 	)
 
 	// Create mux and register handlers
-	mux := asynq.NewServeMux()
-	mux.Use(tasksMiddleware(client))
-	mux.HandleFunc(tasks.TypeAddFileScraper, tasks.HandleAddFileScraperTask)
-	mux.HandleFunc(tasks.TypeProcessExistingFile, tasks.HandleProcessFileTask)
+	asyncq_client := asynq.NewServeMux()
+	// mux.Use(tasksMiddleware(client))
+	// mux.HandleFunc(tasks.TypeAddFileScraper, tasks.HandleAddFileScraperTask)
+	// mux.HandleFunc(tasks.TypeProcessExistingFile, tasks.HandleProcessFileTask)
 
 	// Run worker in separate goroutine
 	go func() {
-		if err := worker.Run(mux); err != nil {
+		if err := worker.Run(asyncq_client); err != nil {
 			log.Fatalf("Failed to start worker: %v", err)
 		}
 	}()

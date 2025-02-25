@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"thaumaturgy/common/hashes"
 	"time"
 
@@ -77,7 +78,20 @@ func NewKeFileManager() *KesslerFileManager {
 	}
 }
 
+func (manager *KesslerFileManager) GetURIFromHash(hash hashes.KesslerHash) (string, error) {
+	// Add validation logic to check if the file exists before sending it.
+	return manager.getURIFromHashUnsafe(hash), nil
+}
+
+func (manager *KesslerFileManager) getURIFromHashUnsafe(hash hashes.KesslerHash) string {
+	return manager.getURIFromS3Key(manager.getS3KeyFromHash(hash))
+}
+
 // Hash computation
+func (manager *KesslerFileManager) getURIFromS3Key(key string) string {
+	endpoint := strings.TrimPrefix(manager.S3Client.Endpoint, "https://")
+	return fmt.Sprintf("https://%s.%s/%s", manager.S3Bucket, endpoint, key)
+}
 
 func (manager *KesslerFileManager) getS3KeyFromHash(hash hashes.KesslerHash) string {
 	return filepath.Join(manager.S3RawDir, hash.String())
