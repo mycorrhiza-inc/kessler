@@ -5,6 +5,7 @@ x-common-env: &common-env
   DOMAIN: "localhost"
   PUBLIC_KESSLER_API_URL: "http://localhost"
   INTERNAL_KESSLER_API_URL: "http://backend-go:4041"
+  INTERNAL_REDIS_ADDRESS: "valkey:6379"
 services:
   reverse-proxy:
     image: traefik:v3.1.2
