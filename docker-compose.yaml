@@ -80,6 +80,20 @@ services:
       - "traefik.enable=true"
       - "traefik.namespace=kessler"
       - "traefik.http.routers.ingest.rule=PathPrefix(`/ingest_v1`)"
+  valkey:
+    hostname: valkey
+    image: valkey/valkey:7.2.5
+    volumes:
+      - ./volumes/valkey.conf:/etc/valkey/valkey.conf
+      - ./volumes/valkey-data:/data
+    command: valkey-server /etc/valkey/valkey.conf
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 1s
+      timeout: 3s
+      retries: 5
+    expose:
+      - 6379
   # vector:
   #   image: timberio/vector:latest-alpine
   #   volumes:
