@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"thaumaturgy/common/hashes"
+	"thaumaturgy/common/s3utils"
 	"time"
 
 	"github.com/charmbracelet/log"
@@ -75,7 +77,7 @@ func PollMarkerEndpointForResponse(requestCheckURL string, maxPolls int, pollWai
 	return "", fmt.Errorf("polling for marker API result timed out")
 }
 
-func transcribePdfS3URI(s3URI string, externalProcess bool, priority bool) (string, error) {
+func TranscribePdfS3URI(s3URI string, externalProcess bool, priority bool) (string, error) {
 	baseURL := markerServerURL
 	var queryStr string
 	if priority {
@@ -121,4 +123,14 @@ func transcribePdfS3URI(s3URI string, externalProcess bool, priority bool) (stri
 		pollWaitAdj = 3
 	}
 	return PollMarkerEndpointForResponse(requestCheckURL, maxPolls, pollWaitAdj)
+}
+
+func TranscribePDFFromHash(hash hashes.KesslerHash) (string, error) {
+	s3_client := s3utils.NewKeFileManager()
+
+	s3_uri, err := s3_client.GetURIFromHash(hash)
+	if err != nil {
+		return "", err
+	}
+	return TranscribePdfS3URI(s3_uri, true, true)
 }
