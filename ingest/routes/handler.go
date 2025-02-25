@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"thaumaturgy/tasks"
 
 	"github.com/charmbracelet/log"
@@ -12,6 +13,7 @@ import (
 )
 
 func DefineGlobalRouter(global_subrouter *mux.Router) {
+	global_subrouter.HandleFunc("/version_hash", HandleVersionHash).Methods(http.MethodGet)
 	global_subrouter.HandleFunc(
 		"/add-task/ingest",
 		HandleGenericIngestAddTask,
@@ -34,6 +36,12 @@ func GenerateTaskInfoFromInfo(info asynq.TaskInfo) KesslerTaskInfo {
 		TaskID: info.ID,
 		Queue:  info.Queue,
 	}
+}
+
+func HandleVersionHash(w http.ResponseWriter, r *http.Request) {
+	// Get the version hash from the environment variable
+	versionHash := os.Getenv("VERSION_HASH")
+	w.Write([]byte(versionHash))
 }
 
 func HandleGetTaskInfo(w http.ResponseWriter, r *http.Request) {
