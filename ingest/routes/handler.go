@@ -15,7 +15,11 @@ func DefineGlobalRouter(global_subrouter *mux.Router) {
 	global_subrouter.HandleFunc("/version_hash", HandleVersionHash).Methods(http.MethodGet)
 	global_subrouter.HandleFunc(
 		"/add-task/ingest",
-		HandleGenericIngestAddTask,
+		HandleDefaultIngestAddTask,
+	).Methods(http.MethodPost)
+	global_subrouter.HandleFunc(
+		"/add-task/ingest/nypuc",
+		HandleNYPUCIngestAddTask,
 	).Methods(http.MethodPost)
 	global_subrouter.HandleFunc(
 		"/task/{id}",
@@ -51,8 +55,8 @@ func HandleGetTaskInfo(w http.ResponseWriter, r *http.Request) {
 	// json.NewEncoder(w).Encode(kessler_info)
 }
 
-func HandleGenericIngestAddTask(w http.ResponseWriter, r *http.Request) {
-	var scraper_info tasks.ScraperInfoPayload
+func HandleIngestAddTaskGeneric[T tasks.CastableIntoScraperInfo](w http.ResponseWriter, r *http.Request) {
+	var scraper_info T
 	if err := json.NewDecoder(r.Body).Decode(&scraper_info); err != nil {
 		errorString := fmt.Sprintf("Error decoding request body: %v", err)
 		log.Error(errorString)
@@ -73,24 +77,10 @@ func HandleGenericIngestAddTask(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(kessler_info)
 }
 
+func HandleDefaultIngestAddTask(w http.ResponseWriter, r *http.Request) {
+	HandleIngestAddTaskGeneric[tasks.ScraperInfoPayload](w, r)
+}
+
 func HandleNYPUCIngestAddTask(w http.ResponseWriter, r *http.Request) {
-	var scraper_info tasks.NYPUCDocInfo
-	if err := json.NewDecoder(r.Body).Decode(&scraper_info); err != nil {
-		errorString := fmt.Sprintf("Error decoding request body: %v", err)
-		log.Error(errorString)
-		http.Error(w, errorString, http.StatusBadRequest)
-		return
-	}
-
-	ctx := r.Context()
-	kessler_info, err := tasks.AddScraperTaskCastable(ctx, scraper_info)
-	if err != nil {
-		errorString := fmt.Sprintf("Error enqueueing task: %v", err)
-		log.Error(errorString)
-		http.Error(w, errorString, http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(kessler_info)
+	HandleIngestAddTaskGeneric[tasks.NYPUCDocInfo](w, r)
 }
