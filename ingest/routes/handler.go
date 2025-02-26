@@ -9,7 +9,6 @@ import (
 
 	"github.com/charmbracelet/log"
 	"github.com/gorilla/mux"
-	"github.com/hibiken/asynq"
 )
 
 func DefineGlobalRouter(global_subrouter *mux.Router) {
@@ -22,20 +21,6 @@ func DefineGlobalRouter(global_subrouter *mux.Router) {
 		"/task/{id}",
 		HandleGetTaskInfo,
 	).Methods(http.MethodGet)
-}
-
-type KesslerTaskInfo struct {
-	TaskID string `json:"task_id"`
-	Queue  string `json:"queue"`
-	State  string `json:"state"`
-	Status string `json:"status"`
-}
-
-func GenerateTaskInfoFromInfo(info asynq.TaskInfo) KesslerTaskInfo {
-	return KesslerTaskInfo{
-		TaskID: info.ID,
-		Queue:  info.Queue,
-	}
 }
 
 func HandleVersionHash(w http.ResponseWriter, r *http.Request) {
@@ -75,17 +60,8 @@ func HandleGenericIngestAddTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task, err := tasks.NewAddFileScraperTask(scraper_info)
-	if err != nil {
-		errorString := fmt.Sprintf("Error creating task: %v", err)
-		log.Error(errorString)
-		http.Error(w, errorString, http.StatusInternalServerError)
-		return
-	}
-
-	// Get client from context
-	client := tasks.GetClient(r.Context())
-	info, err := client.Enqueue(task)
+	ctx := r.Context()
+	kessler_info, err := tasks.AddScraperTaskCastable(ctx, scraper_info)
 	if err != nil {
 		errorString := fmt.Sprintf("Error enqueueing task: %v", err)
 		log.Error(errorString)
@@ -93,7 +69,28 @@ func HandleGenericIngestAddTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	kessler_info := GenerateTaskInfoFromInfo(*info)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(kessler_info)
+}
+
+func HandleNYPUCIngestAddTask(w http.ResponseWriter, r *http.Request) {
+	var scraper_info tasks.NYPUCDocInfo
+	if err := json.NewDecoder(r.Body).Decode(&scraper_info); err != nil {
+		errorString := fmt.Sprintf("Error decoding request body: %v", err)
+		log.Error(errorString)
+		http.Error(w, errorString, http.StatusBadRequest)
+		return
+	}
+
+	ctx := r.Context()
+	kessler_info, err := tasks.AddScraperTaskCastable(ctx, scraper_info)
+	if err != nil {
+		errorString := fmt.Sprintf("Error enqueueing task: %v", err)
+		log.Error(errorString)
+		http.Error(w, errorString, http.StatusInternalServerError)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(kessler_info)
 }

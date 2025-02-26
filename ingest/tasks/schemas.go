@@ -1,13 +1,31 @@
 package tasks
 
 import (
+	"context"
+	"fmt"
 	"strings"
 	"thaumaturgy/common/objects/conversations"
 	"thaumaturgy/common/objects/files"
 	"thaumaturgy/common/objects/timestamp"
+	"time"
 
 	"github.com/google/uuid"
+	"github.com/hibiken/asynq"
 )
+
+type KesslerTaskInfo struct {
+	TaskID string `json:"task_id"`
+	Queue  string `json:"queue"`
+	State  string `json:"state"`
+	Status string `json:"status"`
+}
+
+func GenerateTaskInfoFromInfo(info asynq.TaskInfo) KesslerTaskInfo {
+	return KesslerTaskInfo{
+		TaskID: info.ID,
+		Queue:  info.Queue,
+	}
+}
 
 type ScraperInfoPayload struct {
 	FileURL               string                `json:"file_url"`
@@ -50,4 +68,66 @@ func CastScraperInfoToNewFile(info ScraperInfoPayload) files.CompleteFileSchema 
 		Conversation: docket_info,
 		Mdata:        metadata,
 	}
+}
+
+type CastableIntoScraperInfo interface {
+	IntoScraperInfo() (ScraperInfoPayload, error)
+}
+
+func (s ScraperInfoPayload) IntoScraperInfo() (ScraperInfoPayload, error) {
+	return s, nil
+}
+
+func AddScraperTaskCastable(ctx context.Context, castable CastableIntoScraperInfo) (KesslerTaskInfo, error) {
+	scraper_info, err := castable.IntoScraperInfo()
+	if err != nil {
+		return KesslerTaskInfo{}, fmt.Errorf("Error Casting to Scraper Info: %v", err)
+	}
+	task, err := NewAddFileScraperTask(scraper_info)
+	if err != nil {
+		return KesslerTaskInfo{}, fmt.Errorf("Error creating task: %v", err)
+	}
+
+	// Get client from context
+	client := GetClient(ctx)
+	info, err := client.Enqueue(task)
+	if err != nil {
+		return KesslerTaskInfo{}, fmt.Errorf("Error enqueueing task: %v", err)
+	}
+
+	kessler_info := GenerateTaskInfoFromInfo(*info)
+
+	return kessler_info, nil
+}
+
+type NYPUCDocInfo struct {
+	Serial       string `json:"serial"`
+	DateFiled    string `json:"date_filed"`
+	NYPUCDocType string `json:"nypuc_doctype"`
+	Name         string `json:"name"`
+	URL          string `json:"url"`
+	Organization string `json:"organization"`
+	ItemNo       string `json:"item_no"`
+	FileName     string `json:"file_name"`
+	DocketID     string `json:"docket_id"`
+}
+
+func (n NYPUCDocInfo) IntoScraperInfo() (ScraperInfoPayload, error) {
+	regular_time, err := time.Parse("01/02/2006", n.DateFiled)
+	if err != nil {
+		return ScraperInfoPayload{}, nil
+	}
+
+	return ScraperInfoPayload{
+		FileURL:            n.URL,
+		Name:               n.Name,
+		FileType:           "",
+		DocketID:           n.DocketID,
+		PublishedDate:      timestamp.KesslerTime(regular_time),
+		InternalSourceName: "NYPUC",
+		State:              "NY",
+		AuthorOrganisation: n.Organization,
+		FileClass:          n.NYPUCDocType,
+		ItemNumber:         n.ItemNo,
+	}, nil
 }
