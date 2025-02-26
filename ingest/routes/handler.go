@@ -58,8 +58,8 @@ func HandleGetTaskInfo(w http.ResponseWriter, r *http.Request) {
 func HandleIngestAddTaskGeneric[T tasks.CastableIntoScraperInfo](w http.ResponseWriter, r *http.Request) {
 	var scraper_info T
 	if err := json.NewDecoder(r.Body).Decode(&scraper_info); err != nil {
+		log.Info("User Gave Bad Request", "err", err)
 		errorString := fmt.Sprintf("Error decoding request body: %v", err)
-		log.Error(errorString)
 		http.Error(w, errorString, http.StatusBadRequest)
 		return
 	}
@@ -67,9 +67,8 @@ func HandleIngestAddTaskGeneric[T tasks.CastableIntoScraperInfo](w http.Response
 	ctx := r.Context()
 	kessler_info, err := tasks.AddScraperTaskCastable(ctx, scraper_info)
 	if err != nil {
-		errorString := fmt.Sprintf("Error enqueueing task: %v", err)
-		log.Error(errorString)
-		http.Error(w, errorString, http.StatusInternalServerError)
+		log.Error("Encountered Error Adding Task", "err", err)
+		http.Error(w, fmt.Sprintf("Error adding task: %v", err), http.StatusInternalServerError)
 		return
 	}
 

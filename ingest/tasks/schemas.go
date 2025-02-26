@@ -115,7 +115,7 @@ type NYPUCDocInfo struct {
 func (n NYPUCDocInfo) IntoScraperInfo() (ScraperInfoPayload, error) {
 	regular_time, err := time.Parse("01/02/2006", n.DateFiled)
 	if err != nil {
-		return ScraperInfoPayload{}, nil
+		return ScraperInfoPayload{}, err
 	}
 
 	return ScraperInfoPayload{
