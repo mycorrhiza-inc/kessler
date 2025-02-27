@@ -3,7 +3,7 @@ package search
 import (
 	"fmt"
 
-	"github.com/charmbracelet/log"
+	"go.uber.org/zap"
 )
 
 type SearchReturn struct {
@@ -30,10 +30,10 @@ func HybridSearch(request SearchRequest) ([]SearchDataHydrated, error) {
 	resultsMilvus := <-chanMilvus
 	resultsQuickwit := <-chanQuickwit
 	if resultsMilvus.Error == nil {
-		log.Info(fmt.Sprintf("Milvus returned error: %s", resultsMilvus.Error))
+		log.Info("Milvus returned error", zap.Error(resultsMilvus.Error))
 	}
 	if resultsQuickwit.Error == nil {
-		log.Info(fmt.Sprintf("Quickwit returned error: %s", resultsQuickwit.Error))
+		log.Info("Quickwit returned error", zap.Error(resultsQuickwit.Error))
 	}
 	if resultsMilvus.Error != nil && resultsQuickwit.Error != nil {
 		return []SearchDataHydrated{}, fmt.Errorf("both Milvus and Quickwit returned errors. milvus error: %s quickwit error: %s", resultsMilvus.Error, resultsQuickwit.Error)
@@ -42,7 +42,7 @@ func HybridSearch(request SearchRequest) ([]SearchDataHydrated, error) {
 	rerankedData, err := rerankSearchResults(unrankedResults, request.Query)
 	// Fail semi silently and returns the regular unranked results
 	if err != nil {
-		log.Info(fmt.Sprintf("Error reranking results: %s", err))
+		log.Info("Error reranking results", zap.Error(err))
 		return unrankedResults, nil
 	}
 

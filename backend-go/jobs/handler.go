@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"kessler/database"
 	"kessler/quickwit"
+
 	"net/http"
 
 	"github.com/charmbracelet/log"
