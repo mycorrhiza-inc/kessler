@@ -80,15 +80,7 @@ function process_branch() {
             compose_file="docker-compose.deploy-nightly.yaml"
         fi
 
-        ssh "root@${deploy_host}" "cd /mycorrhiza/kessler && \
-        git reset --hard HEAD && \
-        git clean -fd && \
-        git pull && \
-        sed -i \"s|image: fractalhuman1/kessler-frontend:.*|image: fractalhuman1/kessler-frontend:${current_hash}|\" \"/mycorrhiza/kessler/${compose_file}\" && \
-        sed -i \"s|image: fractalhuman1/kessler-backend-go:.*|image: fractalhuman1/kessler-backend-go:${current_hash}|\" \"/mycorrhiza/kessler/${compose_file}\" && \
-        sed -i \"s|VERSION_HASH:.*|VERSION_HASH: ${current_hash}|\" \"/mycorrhiza/kessler/${compose_file}\" && \
-        podman-compose -f \"${compose_file}\" down && \
-        podman-compose -f \"${compose_file}\" up -d"
+        ssh "root@${deploy_host}" "cd /mycorrhiza/kessler && python3 execute_production_deploy.py"
     else
         echo "No changes detected, deployemnt already on provided hash, skipping deployment: ${current_hash}"
     fi
