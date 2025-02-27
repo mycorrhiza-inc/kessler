@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"thaumaturgy/common/objects/timestamp"
 	"time"
 
 	"github.com/google/uuid"
@@ -16,16 +15,6 @@ const (
 	TypeAddFileScraper      = "task:add_file_scraper"
 	TypeProcessExistingFile = "task:process_existing_file"
 )
-
-type ScraperInfoPayload struct {
-	FileURL            string                `json:"file_url"`
-	FileType           string                `json:"file_type"`
-	DocketID           string                `json:"docket_id"`
-	PublishedDate      timestamp.KesslerTime `json:"published_date"`
-	Name               string                `json:"name"`
-	InternalSourceName string                `json:"internal_source_name"`
-	FileClass          string                `json:"file_class"`
-}
 
 type ProcessFilePayload struct {
 	FileID         uuid.UUID         `json:"file_id"`

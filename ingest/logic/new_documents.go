@@ -39,12 +39,12 @@ func upsertFullFileToDB(ctx context.Context, obj files.CompleteFileSchema, inter
 
 	switch interact {
 	case Insert:
-		url = fmt.Sprintf("%s/v2/public/files/insert", constants.KESSLER_INTERNAL_API_URL)
+		url = fmt.Sprintf("%s/v2/public/files/insert", constants.INTERNAL_KESSLER_API_URL)
 	case Update:
 		if obj.ID == uuid.Nil {
 			return nil, errors.New("cannot update a file with a null uuid")
 		}
-		url = fmt.Sprintf("%s/v2/public/files/%s/update", constants.KESSLER_INTERNAL_API_URL, obj.ID.String())
+		url = fmt.Sprintf("%s/v2/public/files/%s/update", constants.INTERNAL_KESSLER_API_URL, obj.ID.String())
 	default:
 		return &obj, nil
 	}
@@ -105,7 +105,7 @@ func checkPgForDuplicateMetadata(ctx context.Context, fileObj files.CompleteFile
 	}
 
 	jsonData, _ := json.Marshal(payload)
-	url := fmt.Sprintf("%s/v2/admin/file-metadata-match", constants.KESSLER_INTERNAL_API_URL)
+	url := fmt.Sprintf("%s/v2/admin/file-metadata-match", constants.INTERNAL_KESSLER_API_URL)
 
 	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(jsonData))
 	if err != nil {

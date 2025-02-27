@@ -77,6 +77,9 @@ func (s *FilterService) GetFiltersByState(ctx context.Context, state string) ([]
 
 	filters, err := s.queryEngine.GetFiltersByState(ctx, state)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return []dbstore.Filter{}, nil
+		}
 		s.logger.Error("failed to fetch filters",
 			zap.String("state", state),
 			zap.Error(err))

@@ -1,6 +1,7 @@
 package health
 
 import (
+	"kessler/database"
 	"kessler/search"
 	"net/http"
 
