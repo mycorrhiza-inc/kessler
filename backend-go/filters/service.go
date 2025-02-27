@@ -38,7 +38,7 @@ func NewFilterService(db *pgxpool.Pool, registry *FilterRegistry, logger *zap.Lo
 }
 
 // GetFiltersByState retrieves filters by their state
-func (s *FilterService) GetFiltersByState(ctx context.Context, state string) ([]Filter, error) {
+func (s *FilterService) GetFiltersByState(ctx context.Context, state string) ([]dbstore.Filter, error) {
 	if state == "" {
 		return nil, fmt.Errorf("%w: empty state", ErrInvalidFilterState)
 	}
@@ -49,7 +49,7 @@ func (s *FilterService) GetFiltersByState(ctx context.Context, state string) ([]
 	filters, err := s.queryEngine.GetFiltersByState(ctx, state)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return []Filter{}, nil
+			return []dbstore.Filter{}, nil
 		}
 		s.logger.Error("failed to fetch filters",
 			zap.String("state", state),

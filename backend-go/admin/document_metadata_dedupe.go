@@ -7,6 +7,7 @@ import (
 	"kessler/common/objects/authors"
 	"kessler/common/objects/conversations"
 	"kessler/common/objects/files"
+	"kessler/database"
 	"kessler/gen/dbstore"
 	"net/http"
 
