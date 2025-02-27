@@ -7,7 +7,8 @@ import (
 )
 
 var (
-	KESSLER_INTERNAL_API_URL = "http://backend-go:4041"
+	INTERNAL_KESSLER_API_URL = os.Getenv("INTERNAL_KESSLER_API_URL")
+	PUBLIC_KESSLER_API_URL   = os.Getenv("PUBLIC_KESSLER_API_URL")
 
 	DATALAB_API_KEY         = os.Getenv("DATALAB_API_KEY")
 	FIREWORKS_EMBEDDING_URL = "https://api.fireworks.ai/inference/v1"
