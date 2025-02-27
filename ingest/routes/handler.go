@@ -11,6 +11,58 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// @Summary     Get Version Hash
+// @Description Returns the current version hash of the application
+// @Tags        system
+// @Produce     plain
+// @Success     200 {string} string "Version hash string"
+// @Router      /version_hash [get]
+func HandleVersionHash(w http.ResponseWriter, r *http.Request) {
+	versionHash := os.Getenv("VERSION_HASH")
+	w.Write([]byte(versionHash))
+}
+
+// @Summary     Add Default Ingest Task
+// @Description Creates a new default ingestion task
+// @Tags        tasks
+// @Accept      json
+// @Produce     json
+// @Param       body body tasks.ScraperInfoPayload true "Scraper information"
+// @Success     200 {object} tasks.KesslerTaskInfo
+// @Failure     400 {string} string "Error decoding request body"
+// @Failure     500 {string} string "Error adding task"
+// @Router      /add-task/ingest [post]
+func HandleDefaultIngestAddTask(w http.ResponseWriter, r *http.Request) {
+	HandleIngestAddTaskGeneric[tasks.ScraperInfoPayload](w, r)
+}
+
+// @Summary     Add NYPUC Ingest Task
+// @Description Creates a new NYPUC-specific ingestion task
+// @Tags        tasks
+// @Accept      json
+// @Produce     json
+// @Param       body body tasks.NYPUCDocInfo true "NYPUC document information"
+// @Success     200 {object} tasks.KesslerTaskInfo
+// @Failure     400 {string} string "Error decoding request body"
+// @Failure     500 {string} string "Error adding task"
+// @Router      /add-task/ingest/nypuc [post]
+func HandleNYPUCIngestAddTask(w http.ResponseWriter, r *http.Request) {
+	HandleIngestAddTaskGeneric[tasks.NYPUCDocInfo](w, r)
+}
+
+// @Summary     Get Task Information
+// @Description Retrieves information about a specific task by ID
+// @Tags        tasks
+// @Produce     json
+// @Param       id path string true "Task ID"
+// @Success     200 {object} tasks.KesslerTaskInfo
+// @Failure     404 {string} string "Error retrieving task info"
+// @Failure     501 {string} string "Not implemented"
+// @Router      /task/{id} [get]
+func HandleGetTaskInfo(w http.ResponseWriter, r *http.Request) {
+	http.Error(w, "not implemented", http.StatusNotImplemented)
+}
+
 func DefineGlobalRouter(global_subrouter *mux.Router) {
 	global_subrouter.HandleFunc("/version_hash", HandleVersionHash).Methods(http.MethodGet)
 	global_subrouter.HandleFunc(
@@ -25,34 +77,6 @@ func DefineGlobalRouter(global_subrouter *mux.Router) {
 		"/task/{id}",
 		HandleGetTaskInfo,
 	).Methods(http.MethodGet)
-}
-
-func HandleVersionHash(w http.ResponseWriter, r *http.Request) {
-	// Get the version hash from the environment variable
-	versionHash := os.Getenv("VERSION_HASH")
-	w.Write([]byte(versionHash))
-}
-
-func HandleGetTaskInfo(w http.ResponseWriter, r *http.Request) {
-	// vars := mux.Vars(r)
-	// taskID := vars["id"]
-
-	http.Error(w, "not implemented", http.StatusNotImplemented)
-
-	// Get client from context (or create inspector in main.go)
-	// client := tasks.GetClient(r.Context())
-
-	// taskInfo, err := client.
-	// if err != nil {
-	// 	errorString := fmt.Sprintf("Error retrieving task info: %v", err)
-	// 	log.Error(errorString)
-	// 	http.Error(w, errorString, http.StatusNotFound)
-	// 	return
-	// }
-	//
-	// kessler_info := GenerateTaskInfoFromInfo(*taskInfo)
-	// w.Header().Set("Content-Type", "application/json")
-	// json.NewEncoder(w).Encode(kessler_info)
 }
 
 func HandleIngestAddTaskGeneric[T tasks.CastableIntoScraperInfo](w http.ResponseWriter, r *http.Request) {
@@ -74,12 +98,4 @@ func HandleIngestAddTaskGeneric[T tasks.CastableIntoScraperInfo](w http.Response
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(kessler_info)
-}
-
-func HandleDefaultIngestAddTask(w http.ResponseWriter, r *http.Request) {
-	HandleIngestAddTaskGeneric[tasks.ScraperInfoPayload](w, r)
-}
-
-func HandleNYPUCIngestAddTask(w http.ResponseWriter, r *http.Request) {
-	HandleIngestAddTaskGeneric[tasks.NYPUCDocInfo](w, r)
 }

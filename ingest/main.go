@@ -28,7 +28,7 @@ import (
 //	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html
 
 // @host		petstore.swagger.io
-// @BasePath	/v2
+// @BasePath	/ingest_v1
 
 const concurrency = 30 // Max concurrent tasks
 
