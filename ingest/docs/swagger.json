@@ -259,6 +259,7 @@
                     "type": "string"
                 },
                 "published_date": {
+                    "description": "A RFC3339 DateTime",
                     "type": "string"
                 },
                 "state": {
