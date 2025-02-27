@@ -2,6 +2,7 @@ package quickwit
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -17,6 +18,7 @@ import (
 )
 
 var quickwitEndpoint = os.Getenv("QUICKWIT_ENDPOINT")
+var Client = NewClient(quickwitEndpoint, context.Background())
 
 func printResponse(resp *http.Response) {
 	body, err := io.ReadAll(resp.Body)

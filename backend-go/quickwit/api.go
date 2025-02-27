@@ -12,19 +12,24 @@ import (
 	"time"
 )
 
-// Client represents a Quickwit API client
-type Client struct {
+// QuickwitClient represents a Quickwit APIQuickwitClient
+type QuickwitClient struct {
 	baseURL    string
 	httpClient *http.Client
+	ctx        context.Context
 }
 
-// NewClient creates a new Quickwit client
-func NewClient(baseURL string) *Client {
-	return &Client{
+// NewClient creates a new QuickwitQuickwitClient
+func NewClient(baseURL string, ctx context.Context) QuickwitClient {
+	// TODO: good logging with traces
+	qwCtx := ctx
+
+	return QuickwitClient{
 		baseURL: strings.TrimRight(baseURL, "/"),
 		httpClient: &http.Client{
 			Timeout: time.Second * 30,
 		},
+		ctx: qwCtx,
 	}
 }
 
@@ -50,7 +55,7 @@ type SearchResponse struct {
 }
 
 // Search performs a search request on a single index
-func (c *Client) Search(ctx context.Context, indexID string, params SearchParams) (*SearchResponse, error) {
+func (c QuickwitClient) Search(indexID string, params SearchParams) (*SearchResponse, error) {
 	endpoint := fmt.Sprintf("/api/v1/%s/search", url.PathEscape(indexID))
 
 	body, err := json.Marshal(params)
@@ -58,7 +63,7 @@ func (c *Client) Search(ctx context.Context, indexID string, params SearchParams
 		return nil, fmt.Errorf("marshaling search params: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", c.baseURL+endpoint, bytes.NewReader(body))
+	req, err := http.NewRequestWithContext(c.ctx, "POST", c.baseURL+endpoint, bytes.NewReader(body))
 	if err != nil {
 		return nil, fmt.Errorf("creating request: %w", err)
 	}
@@ -95,7 +100,7 @@ type IndexConfig struct {
 }
 
 // CreateIndex creates a new index with the given configuration
-func (c *Client) CreateIndex(ctx context.Context, config IndexConfig) error {
+func (c QuickwitClient) CreateIndex(config IndexConfig) error {
 	endpoint := "/api/v1/indexes"
 
 	body, err := json.Marshal(config)
@@ -103,7 +108,7 @@ func (c *Client) CreateIndex(ctx context.Context, config IndexConfig) error {
 		return fmt.Errorf("marshaling index config: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", c.baseURL+endpoint, bytes.NewReader(body))
+	req, err := http.NewRequestWithContext(c.ctx, "POST", c.baseURL+endpoint, bytes.NewReader(body))
 	if err != nil {
 		return fmt.Errorf("creating request: %w", err)
 	}
@@ -123,6 +128,74 @@ func (c *Client) CreateIndex(ctx context.Context, config IndexConfig) error {
 	return nil
 }
 
+// IndexMetadata represents the metadata of an index
+type IndexMetadata struct {
+	IndexConfig     IndexConfig                `json:"index_config"`
+	Checkpoint      map[string]json.RawMessage `json:"checkpoint"`
+	CreateTimestamp int64                      `json:"create_timestamp"`
+	Sources         []json.RawMessage          `json:"sources"`
+}
+
+// GetIndexMetadata retrieves metadata for a specific index
+func (c QuickwitClient) GetIndexMetadata(indexID string) (*IndexMetadata, error) {
+	endpoint := fmt.Sprintf("/api/v1/indexes/%s", url.PathEscape(indexID))
+
+	req, err := http.NewRequestWithContext(c.ctx, "GET", c.baseURL+endpoint, nil)
+	if err != nil {
+		return nil, fmt.Errorf("creating request: %w", err)
+	}
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("executing request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("unexpected status code %d: %s", resp.StatusCode, string(body))
+	}
+
+	var metadata IndexMetadata
+	if err := json.NewDecoder(resp.Body).Decode(&metadata); err != nil {
+		return nil, fmt.Errorf("decoding response: %w", err)
+	}
+
+	return &metadata, nil
+}
+
+// ValidateFieldName checks if a field name is valid and exists in the given index
+func (c QuickwitClient) ValidateFieldName(indexID string, fieldName string) error {
+	if fieldName == "" {
+		return fmt.Errorf("field name cannot be empty")
+	}
+
+	metadata, err := c.GetIndexMetadata(indexID)
+	if err != nil {
+		return fmt.Errorf("getting index metadata: %w", err)
+	}
+
+	// Parse the doc_mapping to check field existence
+	var docMapping struct {
+		FieldMappings []struct {
+			Name string `json:"name"`
+		} `json:"field_mappings"`
+	}
+
+	if err := json.Unmarshal(metadata.IndexConfig.DocMapping, &docMapping); err != nil {
+		return fmt.Errorf("parsing doc mapping: %w", err)
+	}
+
+	// Check if the field exists
+	for _, field := range docMapping.FieldMappings {
+		if field.Name == fieldName {
+			return nil // Field found
+		}
+	}
+
+	return fmt.Errorf("field '%s' not found in index '%s'", fieldName, indexID)
+}
+
 // DeleteTask represents a delete task configuration
 type DeleteTask struct {
 	Query          string   `json:"query"`
@@ -132,7 +205,7 @@ type DeleteTask struct {
 }
 
 // CreateDeleteTask creates a new delete task for the specified index
-func (c *Client) CreateDeleteTask(ctx context.Context, indexID string, task DeleteTask) error {
+func (c QuickwitClient) CreateDeleteTask(indexID string, task DeleteTask) error {
 	endpoint := fmt.Sprintf("/api/v1/%s/delete-tasks", url.PathEscape(indexID))
 
 	body, err := json.Marshal(task)
@@ -140,7 +213,7 @@ func (c *Client) CreateDeleteTask(ctx context.Context, indexID string, task Dele
 		return fmt.Errorf("marshaling delete task: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", c.baseURL+endpoint, bytes.NewReader(body))
+	req, err := http.NewRequestWithContext(c.ctx, "POST", c.baseURL+endpoint, bytes.NewReader(body))
 	if err != nil {
 		return fmt.Errorf("creating request: %w", err)
 	}
@@ -161,7 +234,7 @@ func (c *Client) CreateDeleteTask(ctx context.Context, indexID string, task Dele
 }
 
 // IngestDocuments ingests documents into the specified index
-func (c *Client) IngestDocuments(ctx context.Context, indexID string, documents []interface{}, commitBehavior string) error {
+func (c QuickwitClient) IngestDocuments(indexID string, documents []interface{}, commitBehavior string) error {
 	endpoint := fmt.Sprintf("/api/v1/%s/ingest", url.PathEscape(indexID))
 	if commitBehavior != "" {
 		endpoint += "?commit=" + url.QueryEscape(commitBehavior)
@@ -176,7 +249,7 @@ func (c *Client) IngestDocuments(ctx context.Context, indexID string, documents 
 		}
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", c.baseURL+endpoint, &buf)
+	req, err := http.NewRequestWithContext(c.ctx, "POST", c.baseURL+endpoint, &buf)
 	if err != nil {
 		return fmt.Errorf("creating request: %w", err)
 	}
@@ -197,10 +270,10 @@ func (c *Client) IngestDocuments(ctx context.Context, indexID string, documents 
 }
 
 // DeleteIndex deletes an index
-func (c *Client) DeleteIndex(ctx context.Context, indexID string) error {
+func (c QuickwitClient) DeleteIndex(indexID string) error {
 	endpoint := fmt.Sprintf("/api/v1/indexes/%s", url.PathEscape(indexID))
 
-	req, err := http.NewRequestWithContext(ctx, "DELETE", c.baseURL+endpoint, nil)
+	req, err := http.NewRequestWithContext(c.ctx, "DELETE", c.baseURL+endpoint, nil)
 	if err != nil {
 		return fmt.Errorf("creating request: %w", err)
 	}

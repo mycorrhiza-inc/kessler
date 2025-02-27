@@ -5,6 +5,8 @@ import (
 	"kessler/search"
 	"net/http"
 
+	"kessler/database"
+
 	"github.com/gorilla/mux"
 )
 

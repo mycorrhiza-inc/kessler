@@ -8,7 +8,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/charmbracelet/log"
+	"go.uber.org/zap"
 )
 
 func SearchDataPassesFilters(result SearchDataHydrated, filters networking.FilterFields) bool {
@@ -17,7 +17,9 @@ func SearchDataPassesFilters(result SearchDataHydrated, filters networking.Filte
 	if docket_id != "" {
 		result_docket_id := result.File.Mdata["docket_id"]
 		if result_docket_id != docket_id {
-			log.Info(fmt.Sprintf("Docket ID mismatch, wanted: %v \ngot: %v\n", docket_id, result_docket_id))
+			log.Info("Docket ID mismatch",
+				zap.String("wanted", docket_id),
+				zap.Any("got", result_docket_id))
 			return false
 		}
 	}
@@ -25,7 +27,9 @@ func SearchDataPassesFilters(result SearchDataHydrated, filters networking.Filte
 	if file_class != "" {
 		result_file_class := result.File.Mdata["file_class"]
 		if result_file_class != file_class {
-			log.Info(fmt.Sprintf("File Class mismatch, wanted: %v \ngot: %v\n", file_class, result_file_class))
+			log.Info("File Class mismatch",
+				zap.String("wanted", file_class),
+				zap.Any("got", result_file_class))
 			return false
 		}
 	}
@@ -55,7 +59,9 @@ func ValidateHydratedAgainstFilters(results []SearchDataHydrated, filters networ
 		}
 	}
 	if invalid_count > 0 {
-		log.Info(fmt.Sprintf("Filters invalid results: %v out of %v total results", invalid_count, len(results)))
+		log.Info("Filters invalid results",
+			zap.Int("invalid_count", invalid_count),
+			zap.Int("total_results", len(results)))
 		return results, fmt.Errorf("Found %v invalid results out of %v total results", invalid_count, len(results))
 	}
 	return results, nil
@@ -75,7 +81,8 @@ func ValidateSearchRequest(searchRequest SearchRequest, searchResults quickwitSe
 		if searchRequest.Query != "" {
 			if !strings.Contains(strings.ToLower(hit.Text), strings.ToLower(searchRequest.Query)) &&
 				!strings.Contains(strings.ToLower(hit.Name), strings.ToLower(searchRequest.Query)) {
-				log.Info(fmt.Sprintf("❌ WARNING: Hit %d failed query validation", i))
+				log.Info("Hit failed query validation",
+					zap.Int("hit_index", i))
 				isValid = false
 			}
 		}
@@ -92,7 +99,9 @@ func ValidateSearchRequest(searchRequest SearchRequest, searchResults quickwitSe
 			if value.Kind() == reflect.String && value.String() != "" {
 				hitValue := reflect.ValueOf(hit.Metadata).FieldByName(field.Name)
 				if !hitValue.IsValid() || hitValue.String() != value.String() {
-					log.Info(fmt.Sprintf("❌ WARNING: Hit %d failed metadata validation for field %s", i, field.Name))
+					log.Info("Hit failed metadata validation",
+						zap.Int("hit_index", i),
+						zap.String("field", field.Name))
 					isValid = false
 					break
 				}

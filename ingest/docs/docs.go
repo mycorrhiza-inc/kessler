@@ -265,6 +265,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "published_date": {
+                    "description": "A RFC3339 DateTime",
                     "type": "string"
                 },
                 "state": {
@@ -288,6 +289,8 @@ var SwaggerInfo = &swag.Spec{
 	Description:      "Bob loblaws law blog",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
+	LeftDelim:        "{{",
+	RightDelim:       "}}",
 }
 
 func init() {

@@ -20,13 +20,14 @@ func GetTx() *dbstore.Queries {
 }
 
 // Init initialize the connection pool with the given number of maximum connections
-func Init(maxConn int32) {
+func Init(maxConn int32) error {
 	config := pgPoolConfig(maxConn)
 	newPool, err := pgxpool.NewWithConfig(context.Background(), config)
 	if err != nil {
-		log.Fatal("unable to connect to connect to the database ")
+		return err
 	}
 	ConnPool = newPool
+	return nil
 }
 
 func pgPoolConfig(maxConns int32) *pgxpool.Config {
