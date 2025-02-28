@@ -61,27 +61,27 @@ export const getRawSuggestions = (
     return [];
   }
   if (PageContext === PageContextMode.Files) {
-    const file_extensions = [
+    const file_extensions: Suggestion[] = [
       {
         id: "eb096148-7944-4f02-8c7b-16d0d8549e91",
-        type: "extension",
+        type: InputType.FileExtension,
         label: "pdf",
         value: "pdf",
       },
       {
         id: "2e809511-33ac-4a5b-a3bd-14fdaa8694e1",
-        type: "extension",
+        type: InputType.FileExtension,
         label: "xlsx",
         value: "xlsx",
       },
       {
         id: "ec05fe86-4ab6-415f-a3a5-a7c724753a8c",
-        type: "extension",
+        type: InputType.FileExtension,
         label: "docx",
         value: "docx",
       },
     ];
-    const file_types = [
+    const file_types: Suggestion[] = [
       {
         id: "fc001a23-5f7e-4b3c-9d2a-8f6e4c7d9e0b",
         type: InputType.FileClass,
@@ -160,13 +160,6 @@ export const getRawSuggestions = (
         excludable: false,
       },
     ];
-    // I need to compile some backend changes on nightly so I put in
-    // an emergency thing here, this almost certainly needs more debugging though.
-    // Type error: Type '{ id: string; type: string; label: string; value: string; }[]' is not assignable to type 'BasicSuggestion[]'.
-    //   Type '{ id: string; type: string; label: string; value: string; }' is not assignable to type 'BasicSuggestion'.
-    //     Types of property 'type' are incompatible.
-    //       Type 'string' is not assignable to type 'InputType'.
-    // @ts-ignore
     return file_extensions.concat(file_types);
   }
   console.error(
