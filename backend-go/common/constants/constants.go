@@ -20,6 +20,10 @@ var (
 	FIREWORKS_API_KEY = os.Getenv("FIREWORKS_API_KEY")
 	DEEPINFRA_API_KEY = os.Getenv("DEEPINFRA_API_KEY")
 
+	MARKER_SERVER_URL       = os.Getenv("MARKER_SERVER_URL")
+	MARKER_MAX_POLLS        = getEnvDefaultInt("MARKER_MAX_POLLS", 60)
+	MARKER_SECONDS_PER_POLL = getEnvDefaultInt("MARKER_SECONDS_PER_POLL", 10)
+
 	OS_TMPDIR           = filepath.Join(getEnvDefault("TMPDIR", "/tmp/"))
 	OS_GPU_COMPUTE_URL  = os.Getenv("GPU_COMPUTE_URL")
 	OS_FILEDIR          = "/files/"
