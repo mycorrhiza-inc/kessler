@@ -31,7 +31,10 @@ type FilterService struct {
 
 // NewFilterService creates a new instance of FilterService
 func NewFilterService(db *pgxpool.Pool, cache *memcache.Client) *FilterService {
-	registry := NewFilterRegistry(db, cache)
+	registry, err := NewFilterRegistry(cache)
+	if err != nil {
+		// idk what to do here - nic
+	}
 	log := logger.GetLogger("filter_service")
 	qe := database.GetTx()
 	return &FilterService{
