@@ -72,17 +72,15 @@ function process_branch() {
 
         # Update docker-compose.yml on the server
         # Set deployment variables based on environment
-        local deploy_host=""
-        local compose_file=""
+        local deploy_flag=""
         if [ "$is_prod" = true ]; then
-            deploy_host="kessler.xyz"
-            compose_file="docker-compose.deploy-prod.yaml"
+          deploy_flag="production"
         else
-            deploy_host="nightly.kessler.xyz"
-            compose_file="docker-compose.deploy-nightly.yaml"
+          deploy_flag="nightly"
         fi
 
-        ssh "root@${deploy_host}" "cd /mycorrhiza/kessler && python3 execute_production_deploy.py --production --version ${current_hash}"
+
+        ssh "root@${deploy_host}" "cd /mycorrhiza/kessler && python3 execute_production_deploy.py --${deploy_flag} --version ${current_hash}"
     else
         echo "No changes detected, deployemnt already on provided hash, skipping deployment: ${current_hash}"
     fi
