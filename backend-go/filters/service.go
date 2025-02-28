@@ -2,6 +2,7 @@ package filters
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"kessler/database"
@@ -40,6 +41,7 @@ func NewFilterService(db *pgxpool.Pool, cache *memcache.Client) *FilterService {
 		logger:      log,
 	}
 }
+
 func (s *FilterService) RegisterDefaultFilters() error {
 	// daterange filter
 	err := s.registry.Register("daterange", NewDateRangeFilter(s.logger))
