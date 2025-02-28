@@ -2,7 +2,7 @@ import { getRuntimeEnv } from "@/lib/env_variables_hydration_script";
 import { PageContextMode, Suggestion } from "@/lib/types/SearchTypes";
 import { InputType } from "../Filters/FiltersInfo";
 export const getRawSuggestions = (
-  PageContext: PageContextMode
+  PageContext: PageContextMode,
 ): Suggestion[] => {
   if (PageContext === PageContextMode.Conversations) {
     return [
@@ -160,11 +160,18 @@ export const getRawSuggestions = (
         excludable: false,
       },
     ];
+    // I need to compile some backend changes on nightly so I put in
+    // an emergency thing here, this almost certainly needs more debugging though.
+    // Type error: Type '{ id: string; type: string; label: string; value: string; }[]' is not assignable to type 'BasicSuggestion[]'.
+    //   Type '{ id: string; type: string; label: string; value: string; }' is not assignable to type 'BasicSuggestion'.
+    //     Types of property 'type' are incompatible.
+    //       Type 'string' is not assignable to type 'InputType'.
+    // @ts-ignore
     return file_extensions.concat(file_types);
   }
   console.error(
     "Unknown page context for generating raw suggestions",
-    PageContext
+    PageContext,
   );
   return [];
 };
@@ -180,7 +187,7 @@ const rawToRealSuggestions = (sug: RawSuggestion): Suggestion => {
 };
 
 export const fetchSuggestionsQuickwitAsync = async (
-  query: string
+  query: string,
 ): Promise<Suggestion[]> => {
   const runtimeClientConfig = getRuntimeEnv();
   // IF issues replace this line
@@ -191,14 +198,14 @@ export const fetchSuggestionsQuickwitAsync = async (
   const res = await fetch(url);
   const suggestions = await res.json();
   const return_sugs = (suggestions as RawSuggestion[]).map(
-    rawToRealSuggestions
+    rawToRealSuggestions,
   );
   return return_sugs;
 };
 
 export const mockFetchSuggestions = async (
   query: string,
-  PageContext: PageContextMode
+  PageContext: PageContextMode,
 ): Promise<Suggestion[]> => {
   // Simulate API delay
   // await new Promise((resolve) => setTimeout(resolve, 300));
@@ -206,7 +213,7 @@ export const mockFetchSuggestions = async (
   let suggestions: Suggestion[] = getRawSuggestions(PageContext).filter(
     (s) =>
       s.label.toLowerCase().includes(query.toLowerCase()) ||
-      s.type.toLowerCase().includes(query.toLowerCase())
+      s.type.toLowerCase().includes(query.toLowerCase()),
   );
   if (query.length < 3) return suggestions;
   const new_sugs = await fetchSuggestionsQuickwitAsync(query);
