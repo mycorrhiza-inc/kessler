@@ -168,9 +168,10 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.namespace=kessler"
-      - "traefik.http.routers.ingest_v1.rule=Host(`{public_api_url}`) && PathPrefix(`/ingest_v1`)"
-      - "traefik.http.routers.ingest_v1.entrypoints=websecure"
-      - "traefik.http.routers.ingest_v1.tls.certresolver=myresolver"
+      - "traefik.http.routers.ingest.rule=Host(`{public_api_url}`) && PathPrefix(`/ingest_v1`)"
+      - "traefik.http.routers.ingest.entrypoints=websecure"
+      - "traefik.http.routers.ingest.tls.certresolver=myresolver"
+      - "traefik.http.services.ingest.loadbalancer.server.port=4042"
   valkey:
     hostname: valkey
     image: valkey/valkey:7.2.5
