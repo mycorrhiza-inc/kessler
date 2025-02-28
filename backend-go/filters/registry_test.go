@@ -4,11 +4,14 @@ import (
 	"fmt"
 	"sync"
 	"testing"
+
+	"github.com/bradfitz/gomemcache/memcache"
 )
 
 func TestFilterRegistry(t *testing.T) {
 	// Initialize registry with test memcached server
-	registry, err := NewFilterRegistry([]string{"localhost:11211"})
+	client := memcache.New("localhost:11211")
+	registry, err := NewFilterRegistry(client)
 	if err != nil {
 		t.Fatalf("Failed to create registry: %v", err)
 	}
