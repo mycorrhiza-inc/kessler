@@ -289,8 +289,6 @@ var SwaggerInfo = &swag.Spec{
 	Description:      "Bob loblaws law blog",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
-	LeftDelim:        "{{",
-	RightDelim:       "}}",
 }
 
 func init() {
