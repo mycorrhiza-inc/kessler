@@ -88,6 +88,7 @@ x-common-env: &common-env
   DOMAIN: "{domain}"
   PUBLIC_KESSLER_API_URL: "{https_public_api_url}"
   INTERNAL_KESSLER_API_URL: "http://backend-go:4041"
+  INTERNAL_REDIS_ADDRESS: "valkey:6379"
 
 services:
   reverse-proxy:
@@ -151,9 +152,39 @@ services:
       - "traefik.enable=true"
       - "traefik.namespace=kessler"
       - "traefik.http.routers.backend-go.rule=Host(`{public_api_url}`) && PathPrefix(`/v2`)"
-      - "traefik.http.middlewares.test-stripprefix.stripprefix.prefixes=/v2"
       - "traefik.http.routers.backend-go.entrypoints=websecure"
       - "traefik.http.routers.backend-go.tls.certresolver=myresolver"
+
+  ingest:
+    image: fractalhuman1/kessler-ingest:{version_hash}
+    command:
+      - "air"
+    env_file:
+      - config/global.env
+    environment:
+      <<: *common-env
+    expose:
+      - 4042
+    labels:
+      - "traefik.enable=true"
+      - "traefik.namespace=kessler"
+      - "traefik.http.routers.backend-go.rule=Host(`{public_api_url}`) && PathPrefix(`/ingest_v1`)"
+      - "traefik.http.routers.ingest_v1.entrypoints=websecure"
+      - "traefik.http.routers.ingest_v1.tls.certresolver=myresolver"
+  valkey:
+    hostname: valkey
+    image: valkey/valkey:7.2.5
+    volumes:
+      - ./volumes/valkey.conf:/etc/valkey/valkey.conf
+      - ./volumes/valkey-data:/data
+    command: valkey-server /etc/valkey/valkey.conf
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 1s
+      timeout: 3s
+      retries: 5
+    expose:
+      - 6379
 """.strip()
 
 

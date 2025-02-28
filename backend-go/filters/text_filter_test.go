@@ -93,7 +93,7 @@ func TestTextFilter(t *testing.T) {
 
 func TestFieldNameValidation(t *testing.T) {
 	tf := &TextFilter{
-		fieldNameRegex: regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9_\.]*$`),
+		fieldNameRegex: *regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9_\.]*$`),
 	}
 
 	tests := []struct {
@@ -111,8 +111,8 @@ func TestFieldNameValidation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tf.validateFieldName(tt.fieldName); got != tt.valid {
-				t.Errorf("validateFieldName(%q) = %v, want %v", tt.fieldName, got, tt.valid)
+			if err := tf.validateFieldName(tt.fieldName); err != nil {
+				t.Errorf("validateFieldName(%q) = %v, want %v", tt.fieldName, err, tt.valid)
 			}
 		})
 	}

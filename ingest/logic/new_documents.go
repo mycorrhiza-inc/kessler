@@ -135,11 +135,10 @@ func checkPgForDuplicateMetadata(ctx context.Context, fileObj files.CompleteFile
 	return &result, nil
 }
 
-func addURLRaw(ctx context.Context, fileURL string, fileObj files.CompleteFileSchema, disableIngestIfHash bool) (*files.CompleteFileSchema, error) {
-	existingFile, err := checkPgForDuplicateMetadata(ctx, fileObj)
+func AddURLRaw(ctx context.Context, fileURL string, fileObj *files.CompleteFileSchema) (*files.CompleteFileSchema, error) {
+	existingFile, err := checkPgForDuplicateMetadata(ctx, *fileObj)
 	if err == nil && existingFile != nil {
-		fileObj = *existingFile
-		disableIngestIfHash = true
+		fileObj = existingFile
 	}
 
 	downloadDir := filepath.Join(constants.OS_TMPDIR, "downloads")
@@ -159,10 +158,10 @@ func addURLRaw(ctx context.Context, fileURL string, fileObj files.CompleteFileSc
 		}
 	}
 
-	return addFileRaw(ctx, resultPath, fileObj, disableIngestIfHash)
+	return addFileRaw(ctx, resultPath, fileObj)
 }
 
-func addFileRaw(ctx context.Context, tmpFilePath string, fileObj files.CompleteFileSchema, disableIngestIfHash bool) (*files.CompleteFileSchema, error) {
+func addFileRaw(ctx context.Context, tmpFilePath string, fileObj *files.CompleteFileSchema) (*files.CompleteFileSchema, error) {
 	if err := validateMetadata(fileObj.Mdata); err != nil {
 		return nil, err
 	}
@@ -193,7 +192,7 @@ func addFileRaw(ctx context.Context, tmpFilePath string, fileObj files.CompleteF
 	fileObj.Authors = authors
 	fileObj.Mdata["authors"] = getListAuthors(authors)
 
-	return &fileObj, nil
+	return fileObj, nil
 }
 
 // Helper functions and assumed implementations

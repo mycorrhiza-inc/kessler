@@ -11,7 +11,8 @@ export enum InputType {
   Organization = "organization",
   Docket = "docket",
   FileClass = "file_class",
-  NYDocket = "nypuc_docket_industry"
+  FileExtension = "extension",
+  NYDocket = "nypuc_docket_industry",
 }
 export type PropertyInformation = {
   type: InputType;

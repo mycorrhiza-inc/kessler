@@ -64,9 +64,11 @@ function process_branch() {
         # Build and push Docker images
         sudo docker build -t "fractalhuman1/kessler-frontend:${current_hash}" --platform linux/amd64 ./frontend/
         sudo docker build -t "fractalhuman1/kessler-backend-go:${current_hash}" --platform linux/amd64 ./backend-go/
+        sudo docker build -t "fractalhuman1/kessler-ingest:${current_hash}" --platform linux/amd64 ./ingest/
 
         sudo docker push "fractalhuman1/kessler-frontend:${current_hash}"
         sudo docker push "fractalhuman1/kessler-backend-go:${current_hash}"
+        sudo docker push "fractalhuman1/kessler-ingest:${current_hash}"
 
         # Update docker-compose.yml on the server
         # Set deployment variables based on environment
@@ -80,7 +82,7 @@ function process_branch() {
             compose_file="docker-compose.deploy-nightly.yaml"
         fi
 
-        ssh "root@${deploy_host}" "cd /mycorrhiza/kessler && python3 execute_production_deploy.py"
+        ssh "root@${deploy_host}" "cd /mycorrhiza/kessler && python3 execute_production_deploy.py --production --version ${current_hash}"
     else
         echo "No changes detected, deployemnt already on provided hash, skipping deployment: ${current_hash}"
     fi

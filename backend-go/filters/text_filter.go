@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"kessler/quickwit"
+	"regexp"
 	"strings"
 	"unicode/utf8"
 
@@ -17,8 +18,12 @@ const (
 )
 
 type TextFilter struct {
-	logger *zap.Logger
+	logger         *zap.Logger
+	IndexName      string
+	fieldNameRegex regexp.Regexp
 }
+
+type QueryFilter interface{}
 
 func NewTextFilter(logger *zap.Logger) FilterFunc {
 	tf := &TextFilter{
@@ -27,7 +32,8 @@ func NewTextFilter(logger *zap.Logger) FilterFunc {
 	return tf.Apply
 }
 
-func (tf *TextFilter) Apply(input QueryFilter) (interface{}, error) {
+// func (tf *TextFilter) Apply(input QueryFilter) (interface{}, error) {
+func (tf *TextFilter) Apply(input interface{}) (interface{}, error) {
 	query, ok := input.(string)
 	if !ok {
 		tf.logger.Error("invalid input type", zap.Any("input", input))
@@ -118,6 +124,6 @@ func (tf *TextFilter) processQuery(query string) (string, error) {
 
 func (tf *TextFilter) validateFieldName(field string) error {
 	client := quickwit.NewClient(quickwit.QuickwitURL, context.Background())
-	client.ValidateFieldName(tf.indexName)
+	client.ValidateFieldName(tf.IndexName, field)
 	return nil
 }
