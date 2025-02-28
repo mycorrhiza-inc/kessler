@@ -8,8 +8,6 @@ import (
 	"kessler/gen/dbstore"
 	"net/http"
 
-	"kessler/database"
-
 	"github.com/charmbracelet/log"
 
 	"github.com/google/uuid"
