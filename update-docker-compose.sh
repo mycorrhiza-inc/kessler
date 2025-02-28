@@ -80,7 +80,7 @@ function process_branch() {
             compose_file="docker-compose.deploy-nightly.yaml"
         fi
 
-        ssh "root@${deploy_host}" "cd /mycorrhiza/kessler && python3 execute_production_deploy.py"
+        ssh "root@${deploy_host}" "cd /mycorrhiza/kessler && python3 execute_production_deploy.py --production --version ${current_hash}"
     else
         echo "No changes detected, deployemnt already on provided hash, skipping deployment: ${current_hash}"
     fi
