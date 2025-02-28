@@ -158,7 +158,7 @@ services:
   ingest:
     image: fractalhuman1/kessler-ingest:{version_hash}
     command:
-      - "air"
+      - "./kessler-ingest"
     env_file:
       - config/global.env
     environment:
