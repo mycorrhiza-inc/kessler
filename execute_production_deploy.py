@@ -168,7 +168,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.namespace=kessler"
-      - "traefik.http.routers.backend-go.rule=Host(`{public_api_url}`) && PathPrefix(`/ingest_v1`)"
+      - "traefik.http.routers.ingest_v1.rule=Host(`{public_api_url}`) && PathPrefix(`/ingest_v1`)"
       - "traefik.http.routers.ingest_v1.entrypoints=websecure"
       - "traefik.http.routers.ingest_v1.tls.certresolver=myresolver"
   valkey:
