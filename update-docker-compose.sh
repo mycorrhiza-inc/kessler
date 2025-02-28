@@ -73,10 +73,13 @@ function process_branch() {
         # Update docker-compose.yml on the server
         # Set deployment variables based on environment
         local deploy_flag=""
+        local deploy_host=""
         if [ "$is_prod" = true ]; then
           deploy_flag="production"
+          deploy_host="kessler.xyz"
         else
           deploy_flag="nightly"
+          deploy_host="nightly.kessler.xyz"
         fi
 
 
