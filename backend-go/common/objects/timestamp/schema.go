@@ -7,6 +7,9 @@ import (
 	"time"
 )
 
+// KesslerTime represents an RFC3339 DateTime
+// @Description An RFC3339 DateTime
+// @Schema {"type": "string", "example": "2024-02-27T12:34:56Z", "format": "date-time"}
 type KesslerTime time.Time
 
 func (t KesslerTime) MarshalJSON() ([]byte, error) {
