@@ -243,6 +243,10 @@ const docTemplate = `{
                 "docket_id": {
                     "type": "string"
                 },
+                "extra_metadata": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
                 "file_class": {
                     "type": "string"
                 },
@@ -265,8 +269,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "published_date": {
-                    "description": "A RFC3339 DateTime",
-                    "type": "string"
+                    "description": "An RFC3339 DateTime",
+                    "type": "string",
+                    "example": "2024-02-27T12:34:56Z"
                 },
                 "state": {
                     "type": "string"

@@ -3,6 +3,7 @@ package tasks
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strings"
 	"thaumaturgy/common/objects/conversations"
 	"thaumaturgy/common/objects/files"
@@ -32,7 +33,7 @@ type ScraperInfoPayload struct {
 	Text                  string                `json:"text"`
 	FileType              string                `json:"file_type"`
 	DocketID              string                `json:"docket_id"`
-	PublishedDate         timestamp.KesslerTime `json:"published_date"`
+	PublishedDate         timestamp.KesslerTime `json:"published_date" example:"2024-02-27T12:34:56Z"`
 	Name                  string                `json:"name"`
 	InternalSourceName    string                `json:"internal_source_name"`
 	State                 string                `json:"state"`
@@ -42,10 +43,12 @@ type ScraperInfoPayload struct {
 	FileClass             string                `json:"file_class"`
 	Lang                  string                `json:"lang"`
 	ItemNumber            string                `json:"item_number"`
+	ExtraMetadata         map[string]any        `json:"extra_metadata"`
 }
 
 func CastScraperInfoToNewFile(info ScraperInfoPayload) files.CompleteFileSchema {
-	metadata := map[string]any{
+	metadata := info.ExtraMetadata
+	metadata_fields := map[string]any{
 		"url":                 strings.TrimSpace(info.FileURL),
 		"docket_id":           strings.TrimSpace(info.DocketID),
 		"extension":           strings.TrimSpace(info.FileType),
@@ -59,6 +62,12 @@ func CastScraperInfoToNewFile(info ScraperInfoPayload) files.CompleteFileSchema 
 		"author_email":        strings.TrimSpace(info.AuthorIndividualEmail),
 		"item_number":         strings.TrimSpace(info.ItemNumber),
 	}
+	for key, value := range metadata_fields {
+		if !(reflect.ValueOf(value).IsZero()) {
+			metadata[key] = value
+		}
+	}
+
 	docket_info := conversations.ConversationInformation{
 		DocketGovID: strings.TrimSpace(info.DocketID),
 	}
