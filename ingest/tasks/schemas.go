@@ -96,8 +96,10 @@ func AddScraperTaskCastable(ctx context.Context, castable CastableIntoScraperInf
 	if err != nil {
 		return KesslerTaskInfo{}, fmt.Errorf("Error creating task: %v", err)
 	}
+	return EnqueueTaskFromCtx(ctx, task)
+}
 
-	// Get client from context
+func EnqueueTaskFromCtx(ctx context.Context, task *asynq.Task) (KesslerTaskInfo, error) {
 	client := GetClient(ctx)
 	info, err := client.Enqueue(task)
 	if err != nil {
@@ -105,7 +107,6 @@ func AddScraperTaskCastable(ctx context.Context, castable CastableIntoScraperInf
 	}
 
 	kessler_info := GenerateTaskInfoFromInfo(*info)
-
 	return kessler_info, nil
 }
 
