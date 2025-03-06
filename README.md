@@ -8,9 +8,11 @@
 ░▒▓█▓▒░░▒▓█▓▒░▒▓████████▓▒░▒▓███████▓▒░▒▓███████▓▒░░▒▓████████▓▒░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░
 ```
 
-search, sorta
+search, for goverment stuff, but actually good. Check it out at [kessler.xyz](https://kessler.xyz) or our nightly branch [nightly.kessler.xyz](https://nightly.kessler.xyz).
 
-> warning!!: this code is pre-deployment. Use with anything you care about at your own peril
+# Contributions
+
+We are always looking for contributors! If you want to contribute to the project feel free to read CONTRIBUTING.md for more info or just make an issue or pull request!
 
 
 # Usage
@@ -95,9 +97,6 @@ and
 docker compose up -d --no-deps --build backend
 ```
 
-# Contribute
-
-the software is currently under heavy development. No outside contributions will be accepted at this time.
 
 # Volumes and Storage
 
