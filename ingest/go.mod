@@ -10,8 +10,8 @@ require (
 	github.com/hibiken/asynq v0.25.1
 	github.com/jackc/pgx/v5 v5.7.2
 	github.com/sashabaranov/go-openai v1.37.0
-	github.com/swaggo/http-swagger/example/gorilla v0.0.0-20240815064334-3a7ae3083475
-	github.com/swaggo/http-swagger/v2 v2.0.2
+	github.com/swaggo/http-swagger v1.3.4
+	github.com/swaggo/swag v1.8.1
 	golang.org/x/crypto v0.31.0
 )
 
@@ -40,9 +40,6 @@ require (
 	github.com/rogpeppe/go-internal v1.13.1 // indirect
 	github.com/spf13/cast v1.7.0 // indirect
 	github.com/swaggo/files v0.0.0-20220610200504-28940afbdbfe // indirect
-	github.com/swaggo/files/v2 v2.0.0 // indirect
-	github.com/swaggo/http-swagger v1.3.4 // indirect
-	github.com/swaggo/swag v1.8.1 // indirect
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d // indirect
 	golang.org/x/net v0.26.0 // indirect
 	golang.org/x/sys v0.28.0 // indirect

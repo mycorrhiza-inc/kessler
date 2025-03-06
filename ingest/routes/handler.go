@@ -8,6 +8,7 @@ import (
 	"thaumaturgy/tasks"
 
 	"github.com/charmbracelet/log"
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
@@ -72,6 +73,10 @@ func DefineGlobalRouter(global_subrouter *mux.Router) {
 	// },
 	// ).Methods(http.MethodGet)
 	global_subrouter.HandleFunc(
+		"/add-task/process/{uuid}",
+		HandleAddProcessFileTask,
+	).Methods(http.MethodPost)
+	global_subrouter.HandleFunc(
 		"/add-task/ingest",
 		HandleDefaultIngestAddTask,
 	).Methods(http.MethodPost)
@@ -83,6 +88,41 @@ func DefineGlobalRouter(global_subrouter *mux.Router) {
 		"/task/{id}",
 		HandleGetTaskInfo,
 	).Methods(http.MethodGet)
+}
+
+// @Summary		Add Process File Task
+// @Description	Creates a new task to process a file with the given UUID
+// @Tags			tasks
+// @Produce		json
+// @Param			uuid	path		string	true	"File UUID"
+// @Success		200	{object}	tasks.KesslerTaskInfo
+// @Failure		400	{string}	string	"Error parsing uuid"
+// @Failure		500	{string}	string	"Error adding task"
+// @Router			/add-task/process/{uuid} [post]
+func HandleAddProcessFileTask(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	fileIDstr := params["uuid"]
+	fileID, err := uuid.Parse(fileIDstr)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error parsing uuid: %v", err), http.StatusBadRequest)
+		return
+	}
+	ctx := r.Context()
+	payload := tasks.ProcessFilePayload{FileID: fileID}
+	task, err := tasks.NewProcessFileTask(payload)
+	if err != nil {
+		log.Info("Error Adding Process File Task", "err", err)
+		http.Error(w, fmt.Sprintf("Error adding task: %v", err), http.StatusInternalServerError)
+		return
+	}
+	result_info, err := tasks.EnqueueTaskFromCtx(ctx, task)
+	if err != nil {
+		log.Info("Error Adding Process File Task", "err", err)
+		http.Error(w, fmt.Sprintf("Error adding task: %v", err), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(result_info)
 }
 
 func HandleIngestAddTaskGeneric[T tasks.CastableIntoScraperInfo](w http.ResponseWriter, r *http.Request) {

@@ -6,17 +6,12 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"thaumaturgy/common/constants"
 	"thaumaturgy/common/hashes"
 	"thaumaturgy/common/s3utils"
 	"time"
 
 	"github.com/charmbracelet/log"
-)
-
-var (
-	markerServerURL = os.Getenv("MARKER_SERVER_URL")
-	maxPolls        = getIntEnv("MARKER_MAX_POLLS")
-	pollWait        = getIntEnv("MARKER_SECONDS_PER_POLL")
 )
 
 func getIntEnv(key string) int {
@@ -78,7 +73,7 @@ func PollMarkerEndpointForResponse(requestCheckURL string, maxPolls int, pollWai
 }
 
 func TranscribePdfS3URI(s3URI string, externalProcess bool, priority bool) (string, error) {
-	baseURL := markerServerURL
+	baseURL := constants.MARKER_ENDPOINT_URL
 	var queryStr string
 	if priority {
 		queryStr = "?priority=true"
@@ -117,12 +112,7 @@ func TranscribePdfS3URI(s3URI string, externalProcess bool, priority bool) (stri
 	}
 	requestCheckURL := baseURL + requestCheckURLLeaf
 	log.Info("Got response from marker server, polling to see when file is finished processing", "requestCheckURL", requestCheckURL)
-
-	pollWaitAdj := 60
-	if priority {
-		pollWaitAdj = 3
-	}
-	return PollMarkerEndpointForResponse(requestCheckURL, maxPolls, pollWaitAdj)
+	return PollMarkerEndpointForResponse(requestCheckURL, constants.MARKER_MAX_POLLS, constants.MARKER_SECONDS_PER_POLL)
 }
 
 func TranscribePDFFromHash(hash hashes.KesslerHash) (string, error) {
