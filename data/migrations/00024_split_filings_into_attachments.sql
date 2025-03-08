@@ -25,7 +25,6 @@ CREATE TABLE IF NOT EXISTS public.attachment_text_source (
 
 CREATE TABLE IF NOT EXISTS public.attachment_extras (
     id UUID PRIMARY KEY REFERENCES public.attachment(id),
-    isPrivate BOOLEAN,
     mdata JSONB,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -62,7 +61,7 @@ INSERT INTO public.attachment_text_source (
 )
 SELECT 
     a.id,
-    TRUE,  -- assuming all existing texts are original
+    fts.is_original_text,  -- assuming all existing texts are original
     fts.language,
     fts.text,
     fts.created_at,
@@ -70,22 +69,6 @@ SELECT
 FROM public.file_text_source fts
 JOIN public.attachment a ON fts.file_id = a.file_id;
 
--- Migrate extras
-INSERT INTO public.attachment_extras (
-    id,
-    isPrivate,
-    mdata,
-    created_at,
-    updated_at
-)
-SELECT 
-    a.id,
-    fe.isPrivate,
-    fe.mdata,
-    fe.created_at,
-    fe.updated_at
-FROM public.file_extras fe
-JOIN public.attachment a ON fe.id = a.file_id;
 
 -- +goose Down
 -- Add rollback SQL here if needed
