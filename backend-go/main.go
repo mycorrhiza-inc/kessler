@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"kessler/admin"
 	"kessler/autocomplete"
+	"kessler/cache"
 	"kessler/crud"
 	"kessler/database"
+	"kessler/filters"
 	"kessler/health"
 	"kessler/jobs"
 	"kessler/logger"
@@ -100,13 +102,16 @@ func main() {
 	log.Info("database connection successiful")
 
 	defer database.ConnPool.Close()
-	// log.Info("initializing memecached")
-	// if err := cache.InitMemcached(); err != nil {
-	// 	log.Fatal("unable to connect to memcached", zap.Error(err))
-	// }
-	// log.Info("cache initialized")
 
-	log.Info("registering api routes")
+	// setting up the cache
+	log.Info("initializing memecached")
+	if err := cache.InitMemcached("localhost:11211"); err != nil {
+		log.Fatal("unable to connect to memcached", zap.Error(err))
+	}
+	log.Info("cache initialized")
+
+	log.Info("---\tregistering api routes\t---")
+
 	r := mux.NewRouter()
 	rootRoute := r.PathPrefix("/v2").Subrouter()
 
@@ -126,6 +131,12 @@ func main() {
 	// search endpoints
 	searchSubroute := standardRoute.PathPrefix("/search").Subrouter()
 	search.DefineSearchRoutes(searchSubroute)
+
+	err := filters.RegisterFilterRoutes(searchSubroute)
+	if err != nil {
+		log.Fatal("error registering filter routes", zap.Error(err))
+	}
+	log.Info("registered filters route")
 
 	// search autocomplete sugggestions endpoints
 	autocompleteSubroute := standardRoute.PathPrefix("/autocomplete").Subrouter()

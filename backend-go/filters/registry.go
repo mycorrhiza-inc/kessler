@@ -48,7 +48,7 @@ func (r *FilterRegistry) Register(name string, implementation FilterFunc) error 
 }
 
 // Get retrieves a filter implementation by name
-func (r *FilterRegistry) Get(name string) (FilterFunc, error) {
+func (r *FilterRegistry) GetFilter(name string) (FilterFunc, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -59,6 +59,10 @@ func (r *FilterRegistry) Get(name string) (FilterFunc, error) {
 
 	return filter, nil
 }
+
+func (r FilterRegistry) ApplyFilter(name string, query  ) error {}
+
+func (r *FilterRegistry) SetFilter()
 
 // Execute runs a named filter with caching
 func (r *FilterRegistry) Execute(name string, input interface{}) (interface{}, error) {
