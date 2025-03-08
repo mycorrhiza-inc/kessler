@@ -30,45 +30,51 @@ CREATE TABLE IF NOT EXISTS public.attachment_extras (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Then migrate the data
+--  Then migrate the data
+-- For this query get each value from file_metadata,  then get the attachemnt_id then copy over the mdata field into the attachment field.
 INSERT INTO public.attachment (
     file_id,
     lang,
     name,
     extension,
     hash,
-    created_at,
-    updated_at
+    mdata
 )
 SELECT 
-    id,
-    lang,
-    name,
-    extension,
-    hash,
-    created_at,
-    updated_at
-FROM public.file;
+    f.id,
+    f.lang,
+    f.name,
+    f.extension,
+    f.hash,
+    fm.mdata
+FROM public.file f
+LEFT JOIN public.file_metadata fm ON f.id = fm.id;
 
 -- Migrate text sources
 INSERT INTO public.attachment_text_source (
     attachment_id,
     is_original_text,
     language,
-    text,
-    created_at,
-    updated_at
+    text
 )
 SELECT 
     a.id,
-    fts.is_original_text,  -- assuming all existing texts are original
+    fts.is_original_text,  
     fts.language,
-    fts.text,
-    fts.created_at,
-    fts.updated_at
+    fts.text
 FROM public.file_text_source fts
 JOIN public.attachment a ON fts.file_id = a.file_id;
 
+
+INSERT INTO public.attachment_extras (
+    attachment_id,
+    mdata
+  )
+SELECT 
+    a.id,
+    fextra.mdata
+FROM public.file_extras fextra
+JOIN public.attachment a ON fts.file_id = a.file_id;
 
 -- +goose Down
 -- Add rollback SQL here if needed
