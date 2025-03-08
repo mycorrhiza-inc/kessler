@@ -14,26 +14,31 @@ var MemcachedClient *memcache.Client
 // It expects MEMCACHED_SERVERS to be a comma-separated list of host:port pairs.
 // Example: "localhost:11211,otherhost:11211"
 // If MEMCACHED_SERVERS is not set, it defaults to "localhost:11211"
-func InitMemcached() error {
-	servers := os.Getenv("MEMCACHED_SERVERS")
-	if servers == "" {
-		servers = "localhost:11211" // Default server
+func InitMemcached(servers ...string) error {
+	// check for environment servers
+	serverList := servers
+	env_servers := os.Getenv("MEMCACHED_SERVERS")
+
+	if env_servers == "" && len(servers) == 0 {
+		env_servers = "localhost:11211" // Default server
 	}
 
 	// Split the servers string into individual server addresses
-	serverList := strings.Split(servers, ",")
+	envlist := strings.Split(env_servers, ",")
 
 	// Trim any whitespace from server addresses
-	for i, server := range serverList {
-		serverList[i] = strings.TrimSpace(server)
+	for _, server := range envlist {
+		serverList = append(serverList, strings.TrimSpace(server))
 	}
 
-	if len(serverList) == 0 {
+	if len(servers) == 0 {
 		return fmt.Errorf("no memcached servers specified")
 	}
 
+	serverListString := strings.Join(serverList, ",")
+
 	// Initialize the global client
-	MemcachedClient = memcache.New(serverList...)
+	MemcachedClient = memcache.New(serverListString)
 
 	// Test the connection
 	err := MemcachedClient.Ping()

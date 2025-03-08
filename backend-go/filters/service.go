@@ -8,6 +8,7 @@ import (
 	"kessler/database"
 	"kessler/gen/dbstore"
 	"kessler/logger"
+	"strings"
 
 	"github.com/bradfitz/gomemcache/memcache"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -29,20 +30,28 @@ type FilterService struct {
 	logger      *zap.Logger
 }
 
+var log = logger.GetLogger("main")
+
 // NewFilterService creates a new instance of FilterService
 func NewFilterService(db *pgxpool.Pool, cache *memcache.Client) *FilterService {
 	registry, err := NewFilterRegistry(cache)
 	if err != nil {
-		// idk what to do here - nic
+		log.Fatal("unable to load filter field", zap.Error(err))
 	}
-	log := logger.GetLogger("filter_service")
+	filter_log := logger.GetLogger("filter_service")
 	qe := database.GetTx()
+
 	return &FilterService{
 		db:          db,
 		registry:    registry,
 		queryEngine: qe,
-		logger:      log,
+		logger:      filter_log,
 	}
+}
+
+func (s *FilterService) TempInitializeFilters() error {
+	s.logger.Info("initializing dummy filter data")
+	return nil
 }
 
 func (s *FilterService) RegisterDefaultFilters() error {
@@ -64,11 +73,21 @@ func (s *FilterService) RegisterDefaultFilters() error {
 	return nil
 }
 
+func (s *FilterService) AddFilterToState(ctx context.Context, stateAbbrev string) error {
+	state := strings.ToUpper(stateAbbrev)
+	cacheKey := fmt.Sprintf("filters:state:%s", state)
+
+	s.registry.mcClient.Set()
+
+	return nil
+}
+
 // GetFiltersByState retrieves filters by their state
-func (s *FilterService) GetFiltersByState(ctx context.Context, state string) ([]dbstore.Filter, error) {
-	if state == "" {
+func (s *FilterService) GetFiltersByState(ctx context.Context, stateAbbrev string) ([]dbstore.Filter, error) {
+	if stateAbbrev == "" {
 		return nil, fmt.Errorf("%w: empty state", ErrInvalidFilterState)
 	}
+	state := strings.ToUpper(stateAbbrev)
 
 	// Try cache first
 	cacheKey := fmt.Sprintf("filters:state:%s", state)
@@ -80,6 +99,7 @@ func (s *FilterService) GetFiltersByState(ctx context.Context, state string) ([]
 		}
 	}
 
+	// If cache-miss, preform the query
 	filters, err := s.queryEngine.GetFiltersByState(ctx, state)
 	if err != nil {
 		if err == sql.ErrNoRows {
