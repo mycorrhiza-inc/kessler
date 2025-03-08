@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS public.attachment_text_source (
 
 CREATE TABLE IF NOT EXISTS public.attachment_extras (
     id UUID PRIMARY KEY REFERENCES public.attachment(id),
-    mdata JSONB,
+    extra_obj JSONB,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -67,14 +67,14 @@ JOIN public.attachment a ON fts.file_id = a.file_id;
 
 
 INSERT INTO public.attachment_extras (
-    attachment_id,
-    mdata
+    id,
+    extra_obj
   )
 SELECT 
     a.id,
-    fextra.mdata
+    fextra.extra_obj
 FROM public.file_extras fextra
-JOIN public.attachment a ON fts.file_id = a.file_id;
+JOIN public.attachment a ON fextra.id = a.file_id;
 
 -- +goose Down
 -- Add rollback SQL here if needed
