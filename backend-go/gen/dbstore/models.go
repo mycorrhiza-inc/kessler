@@ -56,6 +56,35 @@ func (ns NullStageState) Value() (driver.Value, error) {
 	return string(ns.StageState), nil
 }
 
+type Attachment struct {
+	ID        uuid.UUID
+	FileID    pgtype.UUID
+	Lang      string
+	Name      string
+	Extension string
+	Hash      string
+	Mdata     []byte
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
+}
+
+type AttachmentExtra struct {
+	ID        uuid.UUID
+	ExtraObj  []byte
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
+}
+
+type AttachmentTextSource struct {
+	ID             uuid.UUID
+	AttachmentID   uuid.UUID
+	IsOriginalText bool
+	Language       string
+	Text           string
+	CreatedAt      pgtype.Timestamptz
+	UpdatedAt      pgtype.Timestamptz
+}
+
 type DocketConversation struct {
 	ID            uuid.UUID
 	DocketGovID   string
@@ -146,6 +175,7 @@ type Filter struct {
 	ID          uuid.UUID
 	Name        string
 	State       string
+	FilterType  string
 	Description pgtype.Text
 	IsActive    pgtype.Bool
 	CreatedAt   pgtype.Timestamptz
@@ -189,6 +219,14 @@ type JuristictionInformation struct {
 	Extra          []byte
 	CreatedAt      pgtype.Timestamptz
 	UpdatedAt      pgtype.Timestamptz
+}
+
+type MultiselectValue struct {
+	ID        uuid.UUID
+	FilterID  uuid.UUID
+	Value     string
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
 }
 
 type Organization struct {
