@@ -31,13 +31,18 @@ func (child_source FileChildTextSource) ChildTextSouceToRealTextSource(id uuid.U
 	}
 }
 
+type AttachmentSchema struct {
+	ID   uuid.UUID `json:"id"`
+	Lang string    `json:"lang"`
+	Name string    `json:"name"`
+	Hash string    `json:"hash"`
+}
+
 type FileSchema struct {
 	ID            uuid.UUID             `json:"id"`
 	Verified      bool                  `json:"verified"`
-	Extension     string                `json:"extension"`
 	Lang          string                `json:"lang"`
 	Name          string                `json:"name"`
-	Hash          string                `json:"hash"`
 	IsPrivate     bool                  `json:"is_private"`
 	DatePublished timestamp.KesslerTime `json:"date_published"`
 }
@@ -59,6 +64,7 @@ type CompleteFileSchema struct {
 	Name          string                                `json:"name"`
 	Hash          string                                `json:"hash"`
 	IsPrivate     bool                                  `json:"is_private"`
+	Attachments   []AttachmentSchema                    `json:"attachments"`
 	DatePublished timestamp.KesslerTime                 `json:"date_published"`
 	Mdata         FileMetadataSchema                    `json:"mdata"`
 	Stage         DocProcStage                          `json:"stage"`
@@ -72,10 +78,8 @@ func (input CompleteFileSchema) CompleteFileSchemaPrune() FileSchema {
 	return FileSchema{
 		ID:            input.ID,
 		Verified:      input.Verified,
-		Extension:     input.Extension,
 		Lang:          input.Lang,
 		Name:          input.Name,
-		Hash:          input.Hash,
 		IsPrivate:     input.IsPrivate,
 		DatePublished: input.DatePublished,
 	}
@@ -85,10 +89,8 @@ func (input FileSchema) CompleteFileSchemaInflateFromPartialSchema() CompleteFil
 	return_schema := CompleteFileSchema{
 		ID:            input.ID,
 		Verified:      input.Verified,
-		Extension:     input.Extension,
 		Lang:          input.Lang,
 		Name:          input.Name,
-		Hash:          input.Hash,
 		IsPrivate:     input.IsPrivate,
 		DatePublished: input.DatePublished,
 	}
