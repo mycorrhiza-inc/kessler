@@ -39,6 +39,8 @@ func NewFilterService(db *pgxpool.Pool, cache *memcache.Client) *FilterService {
 		log.Fatal("unable to load filter field", zap.Error(err))
 	}
 	filter_log := logger.GetLogger("filter_service")
+
+
 	qe := database.GetTx()
 
 	return &FilterService{
@@ -48,6 +50,7 @@ func NewFilterService(db *pgxpool.Pool, cache *memcache.Client) *FilterService {
 		logger:      filter_log,
 	}
 }
+
 
 func (s *FilterService) TempInitializeFilters() error {
 	s.logger.Info("initializing dummy filter data")
