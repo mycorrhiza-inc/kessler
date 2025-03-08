@@ -1,65 +1,38 @@
--- name: AttachmentTextCreate :one
-INSERT INTO
-    public.attachment_text_source (
-        attachment_id,
-        is_original_text,
-        language,
-        text,
-        created_at,
-        updated_at
-    )
-VALUES
-    ($1, $2, $3, $4, NOW(), NOW())
-RETURNING
-    id;
+-- name: AttachmentCreate :one
+INSERT INTO public.attachment (
+    file_id,
+    lang,
+    name,
+    extension,
+    hash,
+    mdata
+)
+VALUES (
+    $1, $2, $3, $4, $5, $6
+)
+RETURNING *;
 
--- name: AttachmentTextList :many
-SELECT
-    *
-FROM
-    public.attachment_text_source
+-- name: AttachmentUpdate :one
+UPDATE public.attachment
+SET
+    lang = COALESCE($2, lang),
+    name = COALESCE($3, name),
+    extension = COALESCE($4, extension),
+    hash = COALESCE($5, hash),
+    mdata = COALESCE($6, mdata),
+    updated_at = NOW()
 WHERE
-    attachment_id = $1;
+    id = $1
+RETURNING *;
 
--- name: AttachmentTextListByLanguage :many
-SELECT
-    *
-FROM
-    public.attachment_text_source
-WHERE
-    attachment_id = $1
-    AND language = $2;
+-- name: AttachmentGetById :one
+SELECT *
+FROM public.attachment
+WHERE id = $1;
 
--- name: AttachmentTextListOriginal :many
-SELECT
-    *
-FROM
-    public.attachment_text_source
-WHERE
-    attachment_id = $1
-    AND is_original_text = TRUE;
+-- name: AttachmentListByFileId :many
+SELECT *
+FROM public.attachment
+WHERE file_id = $1
+ORDER BY created_at DESC;
 
--- name: AttachmentTextDelete :exec
-DELETE FROM
-    public.attachment_text_source
-WHERE
-    attachment_id = $1;
-
--- name: AttachmentTextListByFileId :many
-SELECT
-    ats.*
-FROM
-    public.attachment_text_source ats
-    JOIN public.attachment a ON a.id = ats.attachment_id
-WHERE
-    a.file_id = $1;
-
--- name: AttachmentTextListByFileIdAndLanguage :many
-SELECT
-    ats.*
-FROM
-    public.attachment_text_source ats
-    JOIN public.attachment a ON a.id = ats.attachment_id
-WHERE
-    a.file_id = $1
-    AND ats.language = $2;
