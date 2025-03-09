@@ -63,6 +63,16 @@ services:
       - "traefik.http.routers.go-backend.rule=PathPrefix(`/v2`)"
       - "traefik.http.middlewares.test-stripprefix.stripprefix.prefixes=/v2"
 
+  cache:
+    image: memcached:1.6.37-alpine
+    command:
+      --conn-limit=1024
+      --memory-limit=64
+      --threads=2
+    restart: always
+    ports:
+      - "11211:12111"
+
   ingest:
     image: cosmtrek/air
     command:

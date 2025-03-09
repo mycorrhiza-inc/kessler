@@ -5,11 +5,10 @@ import (
 	"kessler/cache"
 	"kessler/common/objects/networking"
 	"kessler/database"
-	"kessler/gen/dbstore"
 	"net/http"
 
-	"github.com/charmbracelet/log"
 	"github.com/gorilla/mux"
+	"go.uber.org/zap"
 )
 
 type FilterServiceHandler struct {
@@ -22,24 +21,28 @@ func NewFilterHandler(service *FilterService) *FilterServiceHandler {
 	}
 }
 
-func DefineFilterRoutes(r *mux.Router) {
+func RegisterFilterRoutes(r *mux.Router) error {
 	service := NewFilterService(database.ConnPool, cache.MemcachedClient)
 	fsh := &FilterServiceHandler{
 		service: service,
 	}
 	filtersRoute := r.PathPrefix("/filters").Subrouter()
 	filtersRoute.HandleFunc(
-		"/get",
+		"",
 		fsh.GetFilters,
 	).Methods(http.MethodGet)
+	return nil
 }
 
 func (h *FilterServiceHandler) GetFilters(w http.ResponseWriter, r *http.Request) {
+	log.Info("get filters called")
 	state := r.URL.Query().Get("state")
 	pagination := networking.PaginationFromUrlParams(r)
 
-	filters, err := h.service.GetFiltersByState(r.Context(), state)
+	f, err := h.service.GetFiltersByState(r.Context(), state)
+
 	if err != nil {
+		log.Error("There was an error listing the filters", zap.Error(err))
 		switch err {
 		case ErrInvalidFilterState:
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -48,8 +51,11 @@ func (h *FilterServiceHandler) GetFilters(w http.ResponseWriter, r *http.Request
 		default:
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 		}
-		log.Error("failed to get filters", "error", err)
-		return
+	}
+
+	filters := make([]Filter, len(f))
+	for i, fn := range f {
+		filters[i] = Filter{fn}
 	}
 
 	// Apply pagination
@@ -59,14 +65,14 @@ func (h *FilterServiceHandler) GetFilters(w http.ResponseWriter, r *http.Request
 		end = len(filters)
 	}
 	if start > len(filters) {
-		filters = []dbstore.Filter{}
+		filters = []Filter{}
 	} else {
 		filters = filters[start:end]
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(filters); err != nil {
-		log.Error("failed to encode response", "error", err)
+		log.Error("failed to encode response", zap.Error(err))
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
