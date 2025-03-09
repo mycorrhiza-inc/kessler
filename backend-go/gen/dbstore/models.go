@@ -58,7 +58,7 @@ func (ns NullStageState) Value() (driver.Value, error) {
 
 type Attachment struct {
 	ID        uuid.UUID
-	FileID    pgtype.UUID
+	FileID    uuid.UUID
 	Lang      string
 	Name      string
 	Extension string

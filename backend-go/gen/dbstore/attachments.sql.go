@@ -9,26 +9,26 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const attachmentCreate = `-- name: AttachmentCreate :one
-INSERT INTO public.attachment (
-    file_id,
-    lang,
-    name,
-    extension,
-    hash,
-    mdata
-)
-VALUES (
-    $1, $2, $3, $4, $5, $6
-)
-RETURNING id, file_id, lang, name, extension, hash, mdata, created_at, updated_at
+INSERT INTO
+    public.attachment (
+        file_id,
+        lang,
+        name,
+        extension,
+        hash,
+        mdata
+    )
+VALUES
+    ($1, $2, $3, $4, $5, $6)
+RETURNING
+    id, file_id, lang, name, extension, hash, mdata, created_at, updated_at
 `
 
 type AttachmentCreateParams struct {
-	FileID    pgtype.UUID
+	FileID    uuid.UUID
 	Lang      string
 	Name      string
 	Extension string
@@ -61,9 +61,12 @@ func (q *Queries) AttachmentCreate(ctx context.Context, arg AttachmentCreatePara
 }
 
 const attachmentGetById = `-- name: AttachmentGetById :one
-SELECT id, file_id, lang, name, extension, hash, mdata, created_at, updated_at
-FROM public.attachment
-WHERE id = $1
+SELECT
+    id, file_id, lang, name, extension, hash, mdata, created_at, updated_at
+FROM
+    public.attachment
+WHERE
+    id = $1
 `
 
 func (q *Queries) AttachmentGetById(ctx context.Context, id uuid.UUID) (Attachment, error) {
@@ -84,13 +87,17 @@ func (q *Queries) AttachmentGetById(ctx context.Context, id uuid.UUID) (Attachme
 }
 
 const attachmentListByFileId = `-- name: AttachmentListByFileId :many
-SELECT id, file_id, lang, name, extension, hash, mdata, created_at, updated_at
-FROM public.attachment
-WHERE file_id = $1
-ORDER BY created_at DESC
+SELECT
+    id, file_id, lang, name, extension, hash, mdata, created_at, updated_at
+FROM
+    public.attachment
+WHERE
+    file_id = $1
+ORDER BY
+    created_at DESC
 `
 
-func (q *Queries) AttachmentListByFileId(ctx context.Context, fileID pgtype.UUID) ([]Attachment, error) {
+func (q *Queries) AttachmentListByFileId(ctx context.Context, fileID uuid.UUID) ([]Attachment, error) {
 	rows, err := q.db.Query(ctx, attachmentListByFileId, fileID)
 	if err != nil {
 		return nil, err
@@ -121,7 +128,8 @@ func (q *Queries) AttachmentListByFileId(ctx context.Context, fileID pgtype.UUID
 }
 
 const attachmentUpdate = `-- name: AttachmentUpdate :one
-UPDATE public.attachment
+UPDATE
+    public.attachment
 SET
     lang = COALESCE($2, lang),
     name = COALESCE($3, name),
@@ -131,7 +139,8 @@ SET
     updated_at = NOW()
 WHERE
     id = $1
-RETURNING id, file_id, lang, name, extension, hash, mdata, created_at, updated_at
+RETURNING
+    id, file_id, lang, name, extension, hash, mdata, created_at, updated_at
 `
 
 type AttachmentUpdateParams struct {

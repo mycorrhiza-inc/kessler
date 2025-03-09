@@ -9,7 +9,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type FileChildTextSource struct {
+type AttachmentChildTextSource struct {
 	IsOriginalText bool   `json:"is_original_text"`
 	Text           string `json:"text"`
 	Language       string `json:"language"`
@@ -22,20 +22,19 @@ type FileTextSchema struct {
 	Language       string    `json:"language"`
 }
 
-func (child_source FileChildTextSource) ChildTextSouceToRealTextSource(id uuid.UUID) FileTextSchema {
-	return FileTextSchema{
-		FileID:         id,
-		IsOriginalText: child_source.IsOriginalText,
-		Text:           child_source.Text,
-		Language:       child_source.Language,
-	}
-}
-
-type AttachmentSchema struct {
-	ID   uuid.UUID `json:"id"`
-	Lang string    `json:"lang"`
-	Name string    `json:"name"`
-	Hash string    `json:"hash"`
+//	type AttachmentSchema struct {
+//		ID   uuid.UUID `json:"id"`
+//		Lang string    `json:"lang"`
+//		Name string    `json:"name"`
+//		Hash string    `json:"hash"`
+//	}
+type CompleteAttachmentSchema struct {
+	ID     uuid.UUID                   `json:"id"`
+	FileID uuid.UUID                   `json:"file_id"`
+	Lang   string                      `json:"lang"`
+	Name   string                      `json:"name"`
+	Hash   string                      `json:"hash"`
+	Texts  []AttachmentChildTextSource `json:"texts"`
 }
 
 type FileSchema struct {
@@ -64,14 +63,13 @@ type CompleteFileSchema struct {
 	Name          string                                `json:"name"`
 	Hash          string                                `json:"hash"`
 	IsPrivate     bool                                  `json:"is_private"`
-	Attachments   []AttachmentSchema                    `json:"attachments"`
+	Attachments   []CompleteAttachmentSchema            `json:"attachments"`
 	DatePublished timestamp.KesslerTime                 `json:"date_published"`
 	Mdata         FileMetadataSchema                    `json:"mdata"`
 	Stage         DocProcStage                          `json:"stage"`
 	Extra         FileGeneratedExtras                   `json:"extra"`
 	Authors       []authors.AuthorInformation           `json:"authors"`
 	Conversation  conversations.ConversationInformation `json:"conversation"`
-	DocTexts      []FileChildTextSource                 `json:"doc_texts"`
 }
 
 func (input CompleteFileSchema) CompleteFileSchemaPrune() FileSchema {

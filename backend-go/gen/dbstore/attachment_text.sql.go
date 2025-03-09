@@ -9,7 +9,6 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const attachmentTextCreate = `-- name: AttachmentTextCreate :one
@@ -106,7 +105,7 @@ WHERE
     a.file_id = $1
 `
 
-func (q *Queries) AttachmentTextListByFileId(ctx context.Context, fileID pgtype.UUID) ([]AttachmentTextSource, error) {
+func (q *Queries) AttachmentTextListByFileId(ctx context.Context, fileID uuid.UUID) ([]AttachmentTextSource, error) {
 	rows, err := q.db.Query(ctx, attachmentTextListByFileId, fileID)
 	if err != nil {
 		return nil, err
@@ -146,7 +145,7 @@ WHERE
 `
 
 type AttachmentTextListByFileIdAndLanguageParams struct {
-	FileID   pgtype.UUID
+	FileID   uuid.UUID
 	Language string
 }
 

@@ -2,7 +2,7 @@
 -- First create the new tables
 CREATE TABLE IF NOT EXISTS public.attachment (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    file_id UUID REFERENCES public.file(id),  -- Changed from PRIMARY KEY to UNIQUE
+    file_id UUID NOT NULL REFERENCES public.file(id),  -- Changed from PRIMARY KEY to UNIQUE
     lang VARCHAR NOT NULL,
     name VARCHAR NOT NULL,
     extension VARCHAR NOT NULL,
