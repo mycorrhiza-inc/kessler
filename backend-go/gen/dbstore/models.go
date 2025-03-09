@@ -56,6 +56,35 @@ func (ns NullStageState) Value() (driver.Value, error) {
 	return string(ns.StageState), nil
 }
 
+type Attachment struct {
+	ID        uuid.UUID
+	FileID    uuid.UUID
+	Lang      string
+	Name      string
+	Extension string
+	Hash      string
+	Mdata     []byte
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
+}
+
+type AttachmentExtra struct {
+	ID        uuid.UUID
+	ExtraObj  []byte
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
+}
+
+type AttachmentTextSource struct {
+	ID             uuid.UUID
+	AttachmentID   uuid.UUID
+	IsOriginalText bool
+	Language       string
+	Text           string
+	CreatedAt      pgtype.Timestamptz
+	UpdatedAt      pgtype.Timestamptz
+}
+
 type DocketConversation struct {
 	ID            uuid.UUID
 	DocketGovID   string

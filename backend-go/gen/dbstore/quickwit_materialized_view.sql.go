@@ -11,9 +11,9 @@ import (
 
 const filePrecomputedQuickwitListGetPaginated = `-- name: FilePrecomputedQuickwitListGetPaginated :many
 SELECT
-  id, name, extension, lang, verified, hash, created_at, updated_at, date_published, mdata, extra_obj, conversation_uuid, docket_gov_id, file_text, organizations
+    id, name, extension, lang, verified, hash, created_at, updated_at, date_published, mdata, extra_obj, conversation_uuid, docket_gov_id, file_text, organizations
 FROM
-  public.testmat
+    public.testmat
 LIMIT
     $1 OFFSET $2
 `

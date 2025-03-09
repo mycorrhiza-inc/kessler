@@ -2,11 +2,15 @@ package hashes_test
 
 import (
 	"crypto/rand"
-	"kessler/common/hashes"
 	"testing"
+	"kessler/common/hashes"
 )
 
 func TestKesslerHashRoundTrip(t *testing.T) {
+	_, err := hashes.HashFromString("_EYNhTcsAPjIT3iNNvTnY5KFC1wm61Mki_uBcb3yKv2zDncVYfdI6c_7tH_PAAS8IlhNaapBg21fwT4Z7Ttxig==")
+	if err != nil {
+		t.Errorf("Error decoding hash: %v", err)
+	}
 	for i := 0; i < 1000; i++ {
 		// Generate random 32-byte KesslerHash
 		// Or better, fill with random bytes:

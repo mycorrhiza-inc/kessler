@@ -158,17 +158,6 @@ func UpdatePubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreatio
 	return PublicFileToSchema(resultFile), nil
 }
 
-func InsertPriPubFileText(q dbstore.Queries, ctx context.Context, text files.FileTextSchema, private bool) error {
-	args := dbstore.CreateFileTextSourceParams{
-		FileID:         text.FileID,
-		IsOriginalText: text.IsOriginalText,
-		Text:           text.Text,
-		Language:       text.Language,
-	}
-	_, err := q.CreateFileTextSource(ctx, args)
-	return err
-}
-
 func HashGetUUIDsFile(q dbstore.Queries, ctx context.Context, hash string) ([]uuid.UUID, error) {
 	filePGUUIDs, err := q.HashGetFileID(ctx, hash)
 	if err != nil {
