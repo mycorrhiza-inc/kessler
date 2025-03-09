@@ -29,12 +29,13 @@ type FileTextSchema struct {
 //		Hash string    `json:"hash"`
 //	}
 type CompleteAttachmentSchema struct {
-	ID     uuid.UUID                   `json:"id"`
-	FileID uuid.UUID                   `json:"file_id"`
-	Lang   string                      `json:"lang"`
-	Name   string                      `json:"name"`
-	Hash   string                      `json:"hash"`
-	Texts  []AttachmentChildTextSource `json:"texts"`
+	ID        uuid.UUID                   `json:"id"`
+	FileID    uuid.UUID                   `json:"file_id"`
+	Lang      string                      `json:"lang"`
+	Name      string                      `json:"name"`
+	Hash      string                      `json:"hash"`
+	Extension string                      `json:"extension"`
+	Texts     []AttachmentChildTextSource `json:"texts"`
 }
 
 type FileSchema struct {
@@ -42,6 +43,7 @@ type FileSchema struct {
 	Verified      bool                  `json:"verified"`
 	Lang          string                `json:"lang"`
 	Name          string                `json:"name"`
+	Hash          string                `json:"hash"`
 	IsPrivate     bool                  `json:"is_private"`
 	DatePublished timestamp.KesslerTime `json:"date_published"`
 }
@@ -58,10 +60,8 @@ type FileGeneratedExtras struct {
 type CompleteFileSchema struct {
 	ID            uuid.UUID                             `json:"id"`
 	Verified      bool                                  `json:"verified"`
-	Extension     string                                `json:"extension"`
 	Lang          string                                `json:"lang"`
 	Name          string                                `json:"name"`
-	Hash          string                                `json:"hash"`
 	IsPrivate     bool                                  `json:"is_private"`
 	Attachments   []CompleteAttachmentSchema            `json:"attachments"`
 	DatePublished timestamp.KesslerTime                 `json:"date_published"`
@@ -70,6 +70,10 @@ type CompleteFileSchema struct {
 	Extra         FileGeneratedExtras                   `json:"extra"`
 	Authors       []authors.AuthorInformation           `json:"authors"`
 	Conversation  conversations.ConversationInformation `json:"conversation"`
+	// In here temporarially remove once the attachment implementation is completely finished
+	Hash      string                      `json:"hash"`
+	Extension string                      `json:"extension"`
+	Texts     []AttachmentChildTextSource `json:"texts"`
 }
 
 func (input CompleteFileSchema) CompleteFileSchemaPrune() FileSchema {

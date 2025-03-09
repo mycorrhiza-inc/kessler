@@ -4,30 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"kessler/gen/dbstore"
 	"kessler/common/objects/files"
+	"kessler/gen/dbstore"
 
 	"github.com/charmbracelet/log"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func upsertFileTexts(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, texts []files.FileChildTextSource, insert bool) error {
-	// Sometimes this is getting called with an insert when the metadata already exists in the table, this causes a PGERROR, since it violates uniqueness. However, setting it up so it tries to update will fall back to insert if the file doesnt exist. Its probably a good idea to remove this and debug what is causing the new file thing at some point.
-	// I think I might have solved the error, it was only happenining in the other ones so its added here for an abundance of safety and only degrades perf slightly
-	insert = false
-	if len(texts) == 0 {
-		return nil
-	}
-	if !insert {
-		// TODO: Implement this func to Nuke all the previous texts
-		// err := NukePriPubFileTexts(q, ctx, doc_pgUUID)
-		// if err != nil {
-		// 	fmt.Print("Error deleting old texts, proceeding with new editions")
-		// 	return err
-		// }
-	}
-	// TODO : Make Async at some point in future
+func upsertFileAttachmentTexts(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, texts []files.AttachmentChildTextSource, insert bool) error {
 	error_list := []error{}
 	for _, text := range texts {
 		textRaw := files.FileTextSchema{
@@ -45,6 +30,24 @@ func upsertFileTexts(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID,
 	if len(error_list) > 0 {
 		return error_list[0]
 	}
+}
+
+func upsertFileAttachments(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, texts []files.CompleteAttachmentSchema, insert bool) error {
+	// Sometimes this is getting called with an insert when the metadata already exists in the table, this causes a PGERROR, since it violates uniqueness. However, setting it up so it tries to update will fall back to insert if the file doesnt exist. Its probably a good idea to remove this and debug what is causing the new file thing at some point.
+	// I think I might have solved the error, it was only happenining in the other ones so its added here for an abundance of safety and only degrades perf slightly
+	insert = false
+	if len(texts) == 0 {
+		return nil
+	}
+	if !insert {
+		// TODO: Implement this func to Nuke all the previous texts
+		// err := NukePriPubFileTexts(q, ctx, doc_pgUUID)
+		// if err != nil {
+		// 	fmt.Print("Error deleting old texts, proceeding with new editions")
+		// 	return err
+		// }
+	}
+	// TODO : Make Async at some point in future
 	return nil
 }
 

@@ -140,22 +140,6 @@ func SemiCompleteFileGetFromUUID(ctx context.Context, q dbstore.Queries, uuid uu
 	return file, nil
 }
 
-func AttachmentTextsGetAll(ctx context.Context, q dbstore.Queries, attachmentUUID uuid.UUID) ([]files.FileChildTextSource, error) {
-	texts, err := q.AttachmentTextList(ctx, attachmentUUID)
-	if err != nil {
-		return make([]files.FileChildTextSource, 0), err
-	}
-	return_texts := make([]files.FileChildTextSource, len(texts))
-	for i, text := range texts {
-		return_texts[i] = files.FileChildTextSource{
-			IsOriginalText: text.IsOriginalText,
-			Text:           text.Text,
-			Language:       text.Language,
-		}
-	}
-	return return_texts, nil
-}
-
 func FileStageGet(ctx context.Context, q dbstore.Queries, uuid uuid.UUID) (files.DocProcStage, error) {
 	stage_str, err := q.StageLogFileGetLatest(ctx, uuid)
 	if err != nil {
@@ -169,8 +153,31 @@ func FileStageGet(ctx context.Context, q dbstore.Queries, uuid uuid.UUID) (files
 	return stage, nil
 }
 
-func AttachmentSchemaCompleteGet(ctx context.Context, q dbstore.Queries, attachmentUUID uuid.UUID) (files.CompleteAttachmentSchema, error) {
-	return files.CompleteAttachmentSchema{}, nil
+func AttachmentSchemaCompleteFill(ctx context.Context, q dbstore.Queries, attachment *files.CompleteAttachmentSchema) (files.CompleteAttachmentSchema, error) {
+	texts, err := q.AttachmentTextList(ctx, attachment.ID)
+	if err != nil {
+		return *attachment, err
+	}
+	return_texts := make([]files.AttachmentChildTextSource, len(texts))
+	for i, text := range texts {
+		return_texts[i] = files.AttachmentChildTextSource{
+			IsOriginalText: text.IsOriginalText,
+			Text:           text.Text,
+			Language:       text.Language,
+		}
+	}
+	attachment.Texts = return_texts
+
+	return *attachment, nil
+}
+
+func AttachmentFromDBStore(attach dbstore.Attachment) files.CompleteAttachmentSchema {
+	return files.CompleteAttachmentSchema{
+		ID:        attach.ID,
+		Name:      attach.Name,
+		Extension: attach.Extension,
+		Hash:      attach.Hash,
+	}
 }
 
 func AttachmentsCompleteGet(ctx context.Context, q dbstore.Queries, fileUUID uuid.UUID) ([]files.CompleteAttachmentSchema, error) {
@@ -180,12 +187,14 @@ func AttachmentsCompleteGet(ctx context.Context, q dbstore.Queries, fileUUID uui
 	}
 	complete_attachments := make([]files.CompleteAttachmentSchema, len(raw_attachments))
 	for i, raw_attachment := range raw_attachments {
-		attachment, err := AttachmentSchemaCompleteGet(ctx, q, raw_attachment.ID)
+		kinda_raw_attachment := AttachmentFromDBStore(raw_attachment)
+		attachment, err := AttachmentSchemaCompleteFill(ctx, q, &kinda_raw_attachment)
 		if err != nil {
-			return []files.CompleteAttachmentSchema, err
+			return []files.CompleteAttachmentSchema{}, err
 		}
 		complete_attachments[i] = attachment
 	}
+	return complete_attachments, nil
 }
 
 func CompleteFileSchemaGetFromUUID(ctx context.Context, q dbstore.Queries, uuid uuid.UUID) (files.CompleteFileSchema, error) {
@@ -194,11 +203,6 @@ func CompleteFileSchemaGetFromUUID(ctx context.Context, q dbstore.Queries, uuid 
 	if err != nil {
 		return nilSchema, err
 	}
-	texts, err := FileTextsGetAll(ctx, q, uuid)
-	if err != nil {
-		return nilSchema, err
-	}
-	file.DocTexts = texts
 	stage, err := FileStageGet(ctx, q, uuid)
 	if err != nil {
 		return nilSchema, err
