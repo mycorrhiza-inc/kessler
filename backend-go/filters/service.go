@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"kessler/database"
 	"kessler/gen/dbstore"
-	"kessler/logger"
+	"kessler/common/logger"
 	"strings"
 
 	"github.com/bradfitz/gomemcache/memcache"

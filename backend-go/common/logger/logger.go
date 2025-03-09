@@ -1,5 +1,8 @@
 package logger
 
+// Question I think this should probably go in the common library just because
+// 1. Its probably good to standardize logs across all our go stuff
+// 2. Its required by a couple of the filter objects in common, and thus cant really be ported to other libraries?
 import (
 	"os"
 	"sync"

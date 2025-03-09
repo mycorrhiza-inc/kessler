@@ -9,7 +9,7 @@ import (
 	"kessler/common/objects/files"
 	"kessler/common/objects/networking"
 	"kessler/common/objects/timestamp"
-	"kessler/logger"
+	"kessler/common/logger"
 	"kessler/quickwit"
 	"reflect"
 
