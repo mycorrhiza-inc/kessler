@@ -12,16 +12,16 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func upsertFileAttachmentTexts(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, texts []files.AttachmentChildTextSource, insert bool) error {
+func upsertFileAttachmentTexts(ctx context.Context, q dbstore.Queries, attachment_uuid uuid.UUID, texts []files.AttachmentChildTextSource, insert bool) error {
 	error_list := []error{}
 	for _, text := range texts {
-		textRaw := files.FileTextSchema{
-			FileID:         doc_uuid,
-			IsOriginalText: text.IsOriginalText,
+		textRaw := dbstore.AttachmentTextCreateParams{
+			AttachmentID:   attachment_uuid,
 			Language:       text.Language,
+			IsOriginalText: text.IsOriginalText,
 			Text:           text.Text,
 		}
-		err := InsertPriPubFileText(q, ctx, textRaw, false)
+		_, err := q.AttachmentTextCreate(ctx, textRaw)
 		if err != nil {
 			fmt.Print("Error adding a text value, not doing anything and procceeding since error handling is hard.")
 			error_list = append(error_list, err)
@@ -30,24 +30,31 @@ func upsertFileAttachmentTexts(ctx context.Context, q dbstore.Queries, doc_uuid 
 	if len(error_list) > 0 {
 		return error_list[0]
 	}
+	return nil
 }
 
-func upsertFileAttachments(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, texts []files.CompleteAttachmentSchema, insert bool) error {
-	// Sometimes this is getting called with an insert when the metadata already exists in the table, this causes a PGERROR, since it violates uniqueness. However, setting it up so it tries to update will fall back to insert if the file doesnt exist. Its probably a good idea to remove this and debug what is causing the new file thing at some point.
-	// I think I might have solved the error, it was only happenining in the other ones so its added here for an abundance of safety and only degrades perf slightly
-	insert = false
-	if len(texts) == 0 {
-		return nil
-	}
+func upsertFileAttachments(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, attachments []files.CompleteAttachmentSchema, insert bool) error {
 	if !insert {
-		// TODO: Implement this func to Nuke all the previous texts
-		// err := NukePriPubFileTexts(q, ctx, doc_pgUUID)
-		// if err != nil {
-		// 	fmt.Print("Error deleting old texts, proceeding with new editions")
-		// 	return err
-		// }
+		// Delete previous file attachments
 	}
-	// TODO : Make Async at some point in future
+	for _, attachment := range attachments {
+		attachment_insert_args := dbstore.AttachmentCreateParams{
+			FileID:    doc_uuid,
+			Name:      attachment.Name,
+			Extension: attachment.Extension,
+			Hash:      attachment.Hash,
+			Lang:      attachment.Lang,
+			Mdata:     []byte{},
+		}
+		pg_attachment, err := q.AttachmentCreate(ctx, attachment_insert_args)
+		if err != nil {
+			return err
+		}
+		err = upsertFileAttachmentTexts(ctx, q, pg_attachment.ID, attachment.Texts, insert)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

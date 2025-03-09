@@ -41,6 +41,7 @@ type CompleteAttachmentSchema struct {
 type FileSchema struct {
 	ID            uuid.UUID             `json:"id"`
 	Verified      bool                  `json:"verified"`
+	Extension     string                `json:"extension"`
 	Lang          string                `json:"lang"`
 	Name          string                `json:"name"`
 	Hash          string                `json:"hash"`

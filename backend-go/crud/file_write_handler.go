@@ -144,14 +144,14 @@ func makeFileUpsertHandler(config FileUpsertHandlerConfig) func(w http.ResponseW
 
 		// TODO : For print debugging only, might be a good idea to put these in a deubug logger with lowest priority??
 		log.Info(fmt.Sprintf("Attempting to insert all file extras, texts, metadata for uuid: %s\n", doc_uuid))
-		// if err := upsertFileTexts(ctx, q, doc_uuid, newDocInfo.DocTexts, insert); err != nil {
-		// 	errorstring := fmt.Sprintf("Error in upsertFileTexts: %v", err)
-		// 	log.Info(errorstring)
-		// 	has_db_errored = true
-		// 	db_error_string = db_error_string + errorstring + "\n"
-		// }
+		if err := upsertFileAttachments(ctx, q, doc_uuid, newDocInfo.Attachments, insert); err != nil {
+			errorstring := fmt.Sprintf("Error in upsertFileAttachments: %v", err)
+			log.Info(errorstring)
+			has_db_errored = true
+			db_error_string = db_error_string + errorstring + "\n"
+		}
 
-		// log.Info(fmt.Sprintf("Starting upsertFileMetadata for uuid: %s\n", doc_uuid))
+		log.Info(fmt.Sprintf("Starting upsertFileMetadata for uuid: %s\n", doc_uuid))
 		if err := upsertFileMetadata(ctx, q, doc_uuid, newDocInfo.Mdata, insert); err != nil {
 			log.Info(fmt.Sprintf("Is it getting past the if block?"))
 			errorstring := fmt.Sprintf("Error in upsertFileMetadata: %v", err)
