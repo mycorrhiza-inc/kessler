@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"kessler/gen/dbstore"
 	"kessler/common/objects/authors"
 	"kessler/common/objects/conversations"
 	"kessler/common/objects/files"
 	"kessler/common/objects/timestamp"
+	"kessler/gen/dbstore"
 	"kessler/quickwit"
 	"kessler/util"
 	"net/http"
@@ -84,7 +84,7 @@ func ParseQuickwitFileIntoCompleteSchema(file_raw dbstore.Testmat) (files.Comple
 		log.Info("encountered error decoding author list for file", "file_id", file_raw.ID)
 		// return files.CompleteFileSchema{}, err
 	}
-	text_list := []files.FileChildTextSource{
+	text_list := []files.AttachmentChildTextSource{
 		{
 			IsOriginalText: false,
 			Text:           file_raw.FileText,
