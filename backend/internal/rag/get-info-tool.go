@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"kessler/crud"
+	"kessler/internal/crud"
 	"kessler/internal/dbstore"
 	"kessler/internal/llm_utils"
-	"kessler/util"
+	"kessler/internal/util"
 
 	"github.com/google/uuid"
 	openai "github.com/sashabaranov/go-openai"

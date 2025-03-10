@@ -3,7 +3,7 @@ package crud
 import (
 	"context"
 	"kessler/common/objects/files"
-	"kessler/gen/dbstore"
+	"kessler/internal/dbstore"
 	"net/http"
 
 	"github.com/gorilla/mux"

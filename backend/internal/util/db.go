@@ -2,7 +2,7 @@ package util
 
 import (
 	"context"
-	"kessler/gen/dbstore"
+	"kessler/internal/dbstore"
 	"net/http"
 	"os"
 	"time"

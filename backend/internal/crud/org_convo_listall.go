@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"kessler/common/objects/networking"
-	"kessler/gen/dbstore"
 	"kessler/internal/database"
-	"kessler/util"
+	"kessler/internal/dbstore"
+	"kessler/internal/util"
 	"net/http"
 	"time"
 

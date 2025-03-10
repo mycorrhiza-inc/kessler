@@ -10,8 +10,8 @@ import (
 	"kessler/common/objects/conversations"
 	"kessler/common/objects/files"
 	"kessler/common/s3utils"
-	"kessler/gen/dbstore"
 	"kessler/internal/database"
+	"kessler/internal/dbstore"
 	"net/http"
 	"os"
 

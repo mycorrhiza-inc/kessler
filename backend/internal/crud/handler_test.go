@@ -3,7 +3,7 @@ package crud
 import (
 	"context"
 	"fmt"
-	"kessler/gen/dbstore"
+	"kessler/internal/dbstore"
 	"os"
 
 	"github.com/charmbracelet/log"

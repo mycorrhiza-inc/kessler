@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"kessler/common/objects/files"
 	"kessler/common/objects/timestamp"
-	"kessler/gen/dbstore"
+	"kessler/internal/dbstore"
 	"time"
 
 	"github.com/charmbracelet/log"

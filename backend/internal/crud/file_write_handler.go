@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"io"
 	"kessler/common/objects/files"
-	"kessler/gen/dbstore"
-	"kessler/util"
+	"kessler/internal/dbstore"
+	"kessler/internal/util"
 	"net/http"
 
 	"github.com/charmbracelet/log"

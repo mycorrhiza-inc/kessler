@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"kessler/internal/objects/conversations"
 	"kessler/internal/objects/organizations"
-	"kessler/util"
+	"kessler/internal/util"
 	"net/http"
 	"strings"
 	"time"

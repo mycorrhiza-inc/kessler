@@ -2,7 +2,7 @@ package filters
 
 import (
 	"encoding/json"
-	"kessler/cache"
+	"kessler/internal/cache"
 	"kessler/internal/database"
 	"kessler/internal/objects/networking"
 	"net/http"
