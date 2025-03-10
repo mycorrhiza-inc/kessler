@@ -3,7 +3,7 @@ package search
 import (
 	"encoding/json"
 	"fmt"
-	"kessler/common/objects/networking"
+	"kessler/internal/objects/networking"
 	"kessler/quickwit"
 	"net/http"
 	"strings"

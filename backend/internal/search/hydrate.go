@@ -2,8 +2,8 @@ package search
 
 import (
 	"context"
-	"kessler/common/objects/files"
 	"kessler/internal/dbstore"
+	"kessler/internal/objects/files"
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"

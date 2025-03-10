@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"kessler/common/objects/timestamp"
+	"kessler/internal/objects/timestamp"
 	"net/http"
 	"os"
 	"reflect"

@@ -3,7 +3,7 @@ package rag
 import (
 	"context"
 	"kessler/common/llm_utils"
-	"kessler/common/objects/networking"
+	"kessler/internal/objects/networking"
 	"testing"
 
 	"github.com/charmbracelet/log"

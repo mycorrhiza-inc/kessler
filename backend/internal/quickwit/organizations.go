@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"kessler/internal/dbstore"
-	"kessler/common/objects/networking"
-	"kessler/common/objects/organizations"
+	"kessler/internal/objects/networking"
+	"kessler/internal/objects/organizations"
 	"net/http"
 
 	"github.com/charmbracelet/log"

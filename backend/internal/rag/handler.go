@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"kessler/common/llm_utils"
-	"kessler/common/objects/networking"
+	"kessler/internal/objects/networking"
 	"net/http"
 	"strings"
 

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"kessler/common/llm_utils"
-	"kessler/common/objects/networking"
+	"kessler/internal/objects/networking"
 	"kessler/search"
 
 	openai "github.com/sashabaranov/go-openai"

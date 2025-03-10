@@ -3,8 +3,8 @@ package quickwit
 import (
 	"encoding/json"
 	"fmt"
-	"kessler/common/objects/conversations"
-	"kessler/common/objects/organizations"
+	"kessler/internal/objects/conversations"
+	"kessler/internal/objects/organizations"
 	"kessler/util"
 	"net/http"
 	"strings"

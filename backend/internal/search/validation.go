@@ -3,7 +3,7 @@ package search
 import (
 	"context"
 	"fmt"
-	"kessler/common/objects/networking"
+	"kessler/internal/objects/networking"
 	"kessler/util"
 	"reflect"
 	"strings"

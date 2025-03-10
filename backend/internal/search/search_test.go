@@ -2,7 +2,7 @@ package search
 
 import (
 	"fmt"
-	"kessler/common/objects/networking"
+	"kessler/internal/objects/networking"
 	"testing"
 
 	"go.uber.org/zap"
