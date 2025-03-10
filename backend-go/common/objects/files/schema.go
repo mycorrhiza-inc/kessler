@@ -35,6 +35,7 @@ type CompleteAttachmentSchema struct {
 	Name      string                      `json:"name"`
 	Hash      string                      `json:"hash"`
 	Extension string                      `json:"extension"`
+	Mdata     map[string]any              `json:"mdata"`
 	Texts     []AttachmentChildTextSource `json:"texts"`
 }
 
@@ -74,7 +75,7 @@ type CompleteFileSchema struct {
 	// In here temporarially remove once the attachment implementation is completely finished
 	Hash      string                      `json:"hash"`
 	Extension string                      `json:"extension"`
-	Texts     []AttachmentChildTextSource `json:"texts"`
+	DocTexts  []AttachmentChildTextSource `json:"texts"`
 }
 
 func (input CompleteFileSchema) CompleteFileSchemaPrune() FileSchema {

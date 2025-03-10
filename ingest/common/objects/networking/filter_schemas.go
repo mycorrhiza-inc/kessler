@@ -3,10 +3,13 @@ package networking
 import (
 	"encoding/json"
 	"thaumaturgy/common/objects/timestamp"
+	"thaumaturgy/common/logger"
 
-	"github.com/charmbracelet/log"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
+
+var log = logger.GetLogger("util")
 
 type Metadata struct {
 	ItemNumber       string      `json:"item_number"`
@@ -37,22 +40,20 @@ type SearchMetadata struct {
 }
 
 func (m Metadata) String() string {
-	// Marshal the struct to JSON format
-	jsonData, err := json.MarshalIndent(m, "", "  ")
+	jsonData, err := json.Marshal(m)
 	if err != nil {
-		log.Info("Error marshalling JSON:", err)
+		log.Error("failed to marshal Metadata", zap.Error(err))
+		return ""
 	}
-	// Print the formatted JSON string
 	return string(jsonData)
 }
 
 func (m SearchMetadata) String() string {
-	// Marshal the struct to JSON format
-	jsonData, err := json.MarshalIndent(m, "", "  ")
+	jsonData, err := json.Marshal(m)
 	if err != nil {
-		log.Info("Error marshalling JSON:", err)
+		log.Error("failed to marshal SearchMetadata", zap.Error(err))
+		return ""
 	}
-	// Print the formatted JSON string
 	return string(jsonData)
 }
 
@@ -62,11 +63,11 @@ type MetadataFilterFields struct {
 	DateTo   timestamp.KesslerTime `json:"date_to"`
 }
 
-// String method for FilterFields struct
 func (f MetadataFilterFields) String() string {
-	jsonData, err := json.MarshalIndent(f, "", "  ")
+	jsonData, err := json.Marshal(f)
 	if err != nil {
-		log.Info("Error marshalling JSON:", err)
+		log.Error("failed to marshal MetadataFilterFields", zap.Error(err))
+		return ""
 	}
 	return string(jsonData)
 }
@@ -78,9 +79,10 @@ type UUIDFilterFields struct {
 }
 
 func (f UUIDFilterFields) String() string {
-	jsonData, err := json.MarshalIndent(f, "", "  ")
+	jsonData, err := json.Marshal(f)
 	if err != nil {
-		log.Info("Error marshalling JSON:", err)
+		log.Error("failed to marshal UUIDFilterFields", zap.Error(err))
+		return ""
 	}
 	return string(jsonData)
 }
@@ -124,4 +126,13 @@ func (u *UUIDFilterFields) UnmarshalJSON(data []byte) error {
 type FilterFields struct {
 	MetadataFilters MetadataFilterFields `json:"metadata_filters"`
 	UUIDFilters     UUIDFilterFields     `json:"uuid_filters"`
+}
+
+func (f FilterFields) String() string {
+	jsonData, err := json.Marshal(f)
+	if err != nil {
+		log.Error("failed to marshal FilterFields", zap.Error(err))
+		return ""
+	}
+	return string(jsonData)
 }

@@ -9,7 +9,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type FileChildTextSource struct {
+type AttachmentChildTextSource struct {
 	IsOriginalText bool   `json:"is_original_text"`
 	Text           string `json:"text"`
 	Language       string `json:"language"`
@@ -22,13 +22,21 @@ type FileTextSchema struct {
 	Language       string    `json:"language"`
 }
 
-func (child_source FileChildTextSource) ChildTextSouceToRealTextSource(id uuid.UUID) FileTextSchema {
-	return FileTextSchema{
-		FileID:         id,
-		IsOriginalText: child_source.IsOriginalText,
-		Text:           child_source.Text,
-		Language:       child_source.Language,
-	}
+//	type AttachmentSchema struct {
+//		ID   uuid.UUID `json:"id"`
+//		Lang string    `json:"lang"`
+//		Name string    `json:"name"`
+//		Hash string    `json:"hash"`
+//	}
+type CompleteAttachmentSchema struct {
+	ID        uuid.UUID                   `json:"id"`
+	FileID    uuid.UUID                   `json:"file_id"`
+	Lang      string                      `json:"lang"`
+	Name      string                      `json:"name"`
+	Hash      string                      `json:"hash"`
+	Extension string                      `json:"extension"`
+	Mdata     map[string]any              `json:"mdata"`
+	Texts     []AttachmentChildTextSource `json:"texts"`
 }
 
 type FileSchema struct {
@@ -54,28 +62,28 @@ type FileGeneratedExtras struct {
 type CompleteFileSchema struct {
 	ID            uuid.UUID                             `json:"id"`
 	Verified      bool                                  `json:"verified"`
-	Extension     string                                `json:"extension"`
 	Lang          string                                `json:"lang"`
 	Name          string                                `json:"name"`
-	Hash          string                                `json:"hash"`
 	IsPrivate     bool                                  `json:"is_private"`
+	Attachments   []CompleteAttachmentSchema            `json:"attachments"`
 	DatePublished timestamp.KesslerTime                 `json:"date_published"`
 	Mdata         FileMetadataSchema                    `json:"mdata"`
 	Stage         DocProcStage                          `json:"stage"`
 	Extra         FileGeneratedExtras                   `json:"extra"`
 	Authors       []authors.AuthorInformation           `json:"authors"`
 	Conversation  conversations.ConversationInformation `json:"conversation"`
-	DocTexts      []FileChildTextSource                 `json:"doc_texts"`
+	// In here temporarially remove once the attachment implementation is completely finished
+	Hash      string                      `json:"hash"`
+	Extension string                      `json:"extension"`
+	Texts     []AttachmentChildTextSource `json:"texts"`
 }
 
 func (input CompleteFileSchema) CompleteFileSchemaPrune() FileSchema {
 	return FileSchema{
 		ID:            input.ID,
 		Verified:      input.Verified,
-		Extension:     input.Extension,
 		Lang:          input.Lang,
 		Name:          input.Name,
-		Hash:          input.Hash,
 		IsPrivate:     input.IsPrivate,
 		DatePublished: input.DatePublished,
 	}
@@ -85,10 +93,8 @@ func (input FileSchema) CompleteFileSchemaInflateFromPartialSchema() CompleteFil
 	return_schema := CompleteFileSchema{
 		ID:            input.ID,
 		Verified:      input.Verified,
-		Extension:     input.Extension,
 		Lang:          input.Lang,
 		Name:          input.Name,
-		Hash:          input.Hash,
 		IsPrivate:     input.IsPrivate,
 		DatePublished: input.DatePublished,
 	}

@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"kessler/common/logger"
 	"kessler/common/objects/authors"
 	"kessler/common/objects/conversations"
 	"kessler/common/objects/files"
 	"kessler/common/objects/networking"
 	"kessler/common/objects/timestamp"
-	"kessler/logger"
 	"kessler/quickwit"
 	"reflect"
 
@@ -196,7 +196,7 @@ func ExtractSearchData(data quickwitSearchResponse) ([]SearchDataHydrated, error
 			IsPrivate:     false,
 			DatePublished: file_timestamp,
 			Authors:       author_infos,
-			DocTexts:      []files.FileChildTextSource{},
+			DocTexts:      []files.AttachmentChildTextSource{},
 			Stage:         files.DocProcStage{},
 			Extra:         files.FileGeneratedExtras{},
 		}

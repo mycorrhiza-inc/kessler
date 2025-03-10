@@ -11,7 +11,7 @@ import (
 	"kessler/filters"
 	"kessler/health"
 	"kessler/jobs"
-	"kessler/logger"
+	"kessler/common/logger"
 	"kessler/rag"
 	"kessler/search"
 	"net/http"
