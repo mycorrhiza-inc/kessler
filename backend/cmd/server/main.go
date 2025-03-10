@@ -3,17 +3,17 @@ package main
 import (
 	"context"
 	"fmt"
-	"kessler/admin"
-	"kessler/autocomplete"
-	"kessler/cache"
-	"kessler/crud"
-	"kessler/database"
-	"kessler/filters"
-	"kessler/health"
-	"kessler/jobs"
-	"kessler/common/logger"
-	"kessler/rag"
-	"kessler/search"
+	"kessler/internal/admin"
+	"kessler/internal/autocomplete"
+	"kessler/internal/cache"
+	"kessler/internal/crud"
+	"kessler/internal/database"
+	"kessler/internal/filters"
+	"kessler/internal/health"
+	"kessler/internal/jobs"
+	"kessler/internal/logger"
+	"kessler/internal/rag"
+	"kessler/internal/search"
 	"net/http"
 	"os"
 	"time"
@@ -21,6 +21,8 @@ import (
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 )
+
+var SupabaseSecret = os.Getenv("SUPABASE_ANON_KEY")
 
 type AccessTokenData struct {
 	AccessToken string `json:"access_token"`
