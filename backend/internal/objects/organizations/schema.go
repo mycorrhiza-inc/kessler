@@ -1,7 +1,7 @@
 package organizations
 
 import (
-	"kessler/common/objects/files"
+	"kessler/internal/objects/files"
 
 	"github.com/google/uuid"
 )

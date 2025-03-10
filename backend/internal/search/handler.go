@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"kessler/internal/objects/networking"
-	"kessler/quickwit"
+	"kessler/internal/quickwit"
 	"net/http"
 	"strings"
 

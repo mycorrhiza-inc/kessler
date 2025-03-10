@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"kessler/common/llm_utils"
 	"kessler/crud"
 	"kessler/internal/dbstore"
+	"kessler/internal/llm_utils"
 	"kessler/util"
 
 	"github.com/google/uuid"

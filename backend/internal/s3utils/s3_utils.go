@@ -4,11 +4,11 @@ import (
 	"crypto/md5"
 	"fmt"
 	"io"
+	"kessler/internal/hashes"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
-	"kessler/common/hashes"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"

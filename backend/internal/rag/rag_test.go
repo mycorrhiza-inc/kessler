@@ -2,7 +2,7 @@ package rag
 
 import (
 	"context"
-	"kessler/common/llm_utils"
+	"kessler/internal/llm_utils"
 	"kessler/internal/objects/networking"
 	"testing"
 

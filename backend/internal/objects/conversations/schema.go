@@ -1,7 +1,7 @@
 package conversations
 
 import (
-	"kessler/common/objects/timestamp"
+	"kessler/internal/objects/timestamp"
 
 	"github.com/google/uuid"
 )

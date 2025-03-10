@@ -1,7 +1,7 @@
 package files
 
 import (
-	"kessler/common/objects/timestamp"
+	"kessler/internal/objects/timestamp"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )

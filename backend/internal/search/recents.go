@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"kessler/quickwit"
+	"kessler/internal/quickwit"
 	"net/http"
 
 	"go.uber.org/zap"

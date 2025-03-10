@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"kessler/internal/database"
-	"kessler/quickwit"
+	"kessler/internal/quickwit"
 
 	"net/http"
 

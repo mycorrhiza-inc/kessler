@@ -2,7 +2,7 @@ package database
 
 import (
 	"context"
-	"kessler/gen/dbstore"
+	"kessler/internal/dbstore"
 	"os"
 	"time"
 

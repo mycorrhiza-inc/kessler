@@ -2,8 +2,8 @@ package networking
 
 import (
 	"encoding/json"
-	"kessler/common/objects/timestamp"
-	"kessler/common/logger"
+	"kessler/internal/logger"
+	"kessler/internal/objects/timestamp"
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"

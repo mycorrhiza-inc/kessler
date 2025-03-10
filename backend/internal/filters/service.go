@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"kessler/common/logger"
 	"kessler/internal/database"
 	"kessler/internal/dbstore"
+	"kessler/internal/logger"
 	"strings"
 
 	"github.com/bradfitz/gomemcache/memcache"

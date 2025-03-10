@@ -9,7 +9,7 @@ import (
 	"kessler/internal/objects/conversations"
 	"kessler/internal/objects/files"
 	"kessler/internal/objects/timestamp"
-	"kessler/quickwit"
+	"kessler/internal/quickwit"
 	"kessler/util"
 	"net/http"
 	"time"

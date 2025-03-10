@@ -2,8 +2,8 @@ package hashes_test
 
 import (
 	"crypto/rand"
+	"kessler/internal/hashes"
 	"testing"
-	"kessler/common/hashes"
 )
 
 func TestKesslerHashRoundTrip(t *testing.T) {

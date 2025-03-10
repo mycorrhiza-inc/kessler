@@ -3,7 +3,7 @@ package filters
 import (
 	"context"
 	"fmt"
-	"kessler/quickwit"
+	"kessler/internal/quickwit"
 	"regexp"
 	"strings"
 	"unicode/utf8"
