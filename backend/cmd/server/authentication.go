@@ -1,11 +1,9 @@
-package main
 
 import (
 	"os"
 )
 
 // FIXME : HIGHLY INSECURE, GET THE HMAC SECRET FROM SUPABASE AND THROW IT IN HERE AS AN NEV VARAIBLE.
-var SupabaseSecret = os.Getenv("SUPABASE_ANON_KEY")
 
 // func makeTokenValidator(dbtx_val dbstore.DBTX) func(r *http.Request) UserValidation {
 // 	return_func := func(r *http.Request) UserValidation {
