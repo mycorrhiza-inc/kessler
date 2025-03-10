@@ -31,7 +31,6 @@ func GenerateTaskInfoFromInfo(info asynq.TaskInfo) KesslerTaskInfo {
 type AttachmentChildPayload struct {
 	Lang      string         `json:"lang"`
 	Name      string         `json:"name"`
-	Hash      string         `json:"hash"`
 	Extension string         `json:"extension"`
 	URL       string         `json:"url"`
 	Mdata     map[string]any `json:"mdata"`
@@ -56,6 +55,17 @@ type ScraperInfoPayload struct {
 }
 
 func CastScraperInfoToNewFile(info ScraperInfoPayload) files.CompleteFileSchema {
+	new_attachments := make([]files.CompleteAttachmentSchema, len(info.Attachments))
+	for i, attachment := range info.Attachments {
+		metadata := attachment.Mdata
+		metadata["url"] = attachment.URL
+		new_attachments[i] = files.CompleteAttachmentSchema{
+			Name:      attachment.Name,
+			Lang:      attachment.Lang,
+			Extension: attachment.Extension,
+			Mdata:     metadata,
+		}
+	}
 	metadata := info.ExtraMetadata
 	metadata_fields := map[string]any{
 		// "url":                 strings.TrimSpace(info.FileURL),
