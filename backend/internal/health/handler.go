@@ -2,7 +2,7 @@ package health
 
 import (
 	"kessler/internal/database"
-	"kessler/search"
+	"kessler/internal/search"
 	"net/http"
 
 	"github.com/gorilla/mux"

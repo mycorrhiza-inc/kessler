@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"kessler/internal/llm_utils"
 	"kessler/internal/objects/networking"
-	"kessler/search"
+	"kessler/internal/search"
 
 	openai "github.com/sashabaranov/go-openai"
 	"github.com/sashabaranov/go-openai/jsonschema"

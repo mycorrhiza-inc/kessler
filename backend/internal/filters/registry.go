@@ -60,13 +60,17 @@ func (r *FilterRegistry) GetFilter(name string) (FilterFunc, error) {
 	return filter, nil
 }
 
-func (r FilterRegistry) ApplyFilter(name string, query  ) error {}
+func (r *FilterRegistry) ApplyFilter(name string, query string) error {
+	return nil
+}
 
-func (r *FilterRegistry) SetFilter()
+func (r *FilterRegistry) SetFilter() error {
+	return nil
+}
 
 // Execute runs a named filter with caching
 func (r *FilterRegistry) Execute(name string, input interface{}) (interface{}, error) {
-	filter, err := r.Get(name)
+	filter, err := r.GetFilter(name)
 	if err != nil {
 		return nil, err
 	}

@@ -5,10 +5,11 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"strings"
+
 	"kessler/internal/database"
 	"kessler/internal/dbstore"
 	"kessler/internal/logger"
-	"strings"
 
 	"github.com/bradfitz/gomemcache/memcache"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -77,8 +78,12 @@ func (s *FilterService) RegisterDefaultFilters() error {
 func (s *FilterService) AddFilterToState(ctx context.Context, stateAbbrev string) error {
 	state := strings.ToUpper(stateAbbrev)
 	cacheKey := fmt.Sprintf("filters:state:%s", state)
+	log.Debug(fmt.Sprintf("adding filter to %s", stateAbbrev), zap.String("filter key", cacheKey))
 
-	s.registry.mcClient.Set()
+	s.registry.mcClient.Set(&memcache.Item{
+		Key:   cacheKey,
+		Value: []byte{},
+	})
 
 	return nil
 }

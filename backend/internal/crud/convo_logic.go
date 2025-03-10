@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"kessler/common/objects/conversations"
+	"kessler/internal/objects/conversations"
 	"kessler/internal/database"
 	"kessler/internal/dbstore"
 	"net/http"

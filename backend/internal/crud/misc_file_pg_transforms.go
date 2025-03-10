@@ -3,8 +3,8 @@ package crud
 import (
 	"context"
 	"fmt"
-	"kessler/common/objects/files"
-	"kessler/common/objects/timestamp"
+	"kessler/internal/objects/files"
+	"kessler/internal/objects/timestamp"
 	"kessler/internal/dbstore"
 	"time"
 

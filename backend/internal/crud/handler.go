@@ -2,7 +2,7 @@ package crud
 
 import (
 	"context"
-	"kessler/common/objects/files"
+	"kessler/internal/objects/files"
 	"kessler/internal/dbstore"
 	"net/http"
 

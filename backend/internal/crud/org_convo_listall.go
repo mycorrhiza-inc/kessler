@@ -3,7 +3,7 @@ package crud
 import (
 	"encoding/json"
 	"fmt"
-	"kessler/common/objects/networking"
+	"kessler/internal/objects/networking"
 	"kessler/internal/database"
 	"kessler/internal/dbstore"
 	"kessler/internal/util"

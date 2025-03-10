@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"kessler/common/objects/files"
+	"kessler/internal/objects/files"
 	"kessler/internal/dbstore"
 
 	"github.com/charmbracelet/log"
