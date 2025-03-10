@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"io"
 	"kessler/common/objects/conversations"
-	"kessler/database"
 	"kessler/gen/dbstore"
+	"kessler/internal/database"
 	"net/http"
 	"time"
 

@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"kessler/database"
 	"kessler/gen/dbstore"
+	"kessler/internal/database"
 	"net/http"
 
 	"github.com/charmbracelet/log"

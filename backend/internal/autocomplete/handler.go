@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"kessler/quickwit"
+	"kessler/internal/quickwit"
 	"net/http"
 
 	"github.com/charmbracelet/log"
