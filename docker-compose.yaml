@@ -43,7 +43,7 @@ services:
       - "run"
       - "dev"
 
-  backend-go:
+  backend:
     image: cosmtrek/air
     command:
       - "air"

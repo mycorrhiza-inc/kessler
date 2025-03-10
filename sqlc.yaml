@@ -5,7 +5,7 @@ sql:
     engine: "postgresql"
     gen:
       go:
-        out: "backend-go/gen/dbstore"
+        out: "backend/internal/dbstore"
         sql_package: "pgx/v5"
         overrides:
           - db_type: "uuid"
