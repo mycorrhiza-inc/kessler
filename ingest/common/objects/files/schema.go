@@ -35,6 +35,7 @@ type CompleteAttachmentSchema struct {
 	Name      string                      `json:"name"`
 	Hash      string                      `json:"hash"`
 	Extension string                      `json:"extension"`
+	Mdata     map[string]any              `json:"mdata"`
 	Texts     []AttachmentChildTextSource `json:"texts"`
 }
 

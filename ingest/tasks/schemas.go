@@ -28,28 +28,37 @@ func GenerateTaskInfoFromInfo(info asynq.TaskInfo) KesslerTaskInfo {
 	}
 }
 
+type AttachmentChildPayload struct {
+	Lang      string         `json:"lang"`
+	Name      string         `json:"name"`
+	Hash      string         `json:"hash"`
+	Extension string         `json:"extension"`
+	URL       string         `json:"url"`
+	Mdata     map[string]any `json:"mdata"`
+}
+
 type ScraperInfoPayload struct {
-	FileURL               string                `json:"file_url"`
-	Text                  string                `json:"text"`
-	FileType              string                `json:"file_type"`
-	DocketID              string                `json:"docket_id"`
-	PublishedDate         timestamp.KesslerTime `json:"published_date" example:"2024-02-27T12:34:56Z"`
-	Name                  string                `json:"name"`
-	InternalSourceName    string                `json:"internal_source_name"`
-	State                 string                `json:"state"`
-	AuthorIndividual      string                `json:"author_individual"`
-	AuthorIndividualEmail string                `json:"author_individual_email"`
-	AuthorOrganisation    string                `json:"author_organisation"`
-	FileClass             string                `json:"file_class"`
-	Lang                  string                `json:"lang"`
-	ItemNumber            string                `json:"item_number"`
-	ExtraMetadata         map[string]any        `json:"extra_metadata"`
+	Text                  string                   `json:"text"`
+	FileType              string                   `json:"file_type"`
+	DocketID              string                   `json:"docket_id"`
+	PublishedDate         timestamp.KesslerTime    `json:"published_date" example:"2024-02-27T12:34:56Z"`
+	Name                  string                   `json:"name"`
+	InternalSourceName    string                   `json:"internal_source_name"`
+	State                 string                   `json:"state"`
+	AuthorIndividual      string                   `json:"author_individual"`
+	AuthorIndividualEmail string                   `json:"author_individual_email"`
+	AuthorOrganisation    string                   `json:"author_organisation"`
+	FileClass             string                   `json:"file_class"`
+	Lang                  string                   `json:"lang"`
+	ItemNumber            string                   `json:"item_number"`
+	ExtraMetadata         map[string]any           `json:"extra_metadata"`
+	Attachments           []AttachmentChildPayload `json:"attachments"`
 }
 
 func CastScraperInfoToNewFile(info ScraperInfoPayload) files.CompleteFileSchema {
 	metadata := info.ExtraMetadata
 	metadata_fields := map[string]any{
-		"url":                 strings.TrimSpace(info.FileURL),
+		// "url":                 strings.TrimSpace(info.FileURL),
 		"docket_id":           strings.TrimSpace(info.DocketID),
 		"extension":           strings.TrimSpace(info.FileType),
 		"lang":                strings.TrimSpace(info.Lang),
@@ -128,10 +137,18 @@ func (n NYPUCDocInfo) IntoScraperInfo() (ScraperInfoPayload, error) {
 		return ScraperInfoPayload{}, err
 	}
 
+	attachments := []AttachmentChildPayload{
+		{
+			Lang:  "en",
+			Name:  n.FileName,
+			URL:   n.URL,
+			Mdata: map[string]any{},
+		},
+	}
+
 	return ScraperInfoPayload{
-		FileURL:            n.URL,
-		Name:               n.Name,
-		FileType:           "",
+		// FileURL:            n.URL,
+		Attachments:        attachments,
 		DocketID:           n.DocketID,
 		PublishedDate:      timestamp.KesslerTime(regular_time),
 		InternalSourceName: "NYPUC",
