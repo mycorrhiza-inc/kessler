@@ -1,9 +1,9 @@
 package validators
 
 import (
-	"thaumaturgy/common/hashes"
-	"thaumaturgy/common/objects/files"
-	"thaumaturgy/common/s3utils"
+	"kessler/internal/hashes"
+	"kessler/internal/objects/files"
+	"kessler/internal/s3utils"
 )
 
 func ValidateExtensionFromHash(fileManager s3utils.KesslerFileManager, hash hashes.KesslerHash, extension files.KnownFileExtension) error {

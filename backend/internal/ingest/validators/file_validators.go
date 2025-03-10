@@ -2,9 +2,9 @@ package validators
 
 import (
 	"fmt"
+	"kessler/internal/objects/files"
 	"net/http"
 	"os"
-	"thaumaturgy/common/objects/files"
 )
 
 func ValidateExtensionFromFilepath(filepath string, extension files.KnownFileExtension) error {

@@ -3,11 +3,11 @@ package tasks
 import (
 	"context"
 	"fmt"
+	"kessler/internal/objects/conversations"
+	"kessler/internal/objects/files"
+	"kessler/internal/objects/timestamp"
 	"reflect"
 	"strings"
-	"thaumaturgy/common/objects/conversations"
-	"thaumaturgy/common/objects/files"
-	"thaumaturgy/common/objects/timestamp"
 	"time"
 
 	"github.com/google/uuid"

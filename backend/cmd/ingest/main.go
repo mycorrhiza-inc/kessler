@@ -1,12 +1,12 @@
 package main
 
 import (
+	"kessler/internal/constants"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
-	"thaumaturgy/common/constants"
 	"thaumaturgy/routes"
 	"thaumaturgy/tasks"
 

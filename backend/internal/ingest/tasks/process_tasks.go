@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"thaumaturgy/common/objects/files"
+	"kessler/internal/objects/files"
 	"thaumaturgy/logic"
 
 	"github.com/charmbracelet/log"
