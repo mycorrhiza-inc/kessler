@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"kessler/cache"
 	"kessler/common/objects/networking"
-	"kessler/database"
+	"kessler/internal/database"
 	"net/http"
 
 	"github.com/gorilla/mux"

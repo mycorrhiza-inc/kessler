@@ -3,7 +3,7 @@ package jobs
 import (
 	"context"
 	"fmt"
-	"kessler/database"
+	"kessler/internal/database"
 	"kessler/quickwit"
 
 	"net/http"

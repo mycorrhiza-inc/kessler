@@ -7,8 +7,8 @@ import (
 	"kessler/common/objects/authors"
 	"kessler/common/objects/conversations"
 	"kessler/common/objects/files"
-	"kessler/database"
-	"kessler/gen/dbstore"
+	"kessler/internal/database"
+	"kessler/internal/dbstore"
 	"net/http"
 
 	"github.com/charmbracelet/log"

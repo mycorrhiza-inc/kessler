@@ -8,7 +8,7 @@ import (
 	"kessler/common/objects/conversations"
 	"kessler/common/objects/files"
 	"kessler/common/objects/timestamp"
-	"kessler/gen/dbstore"
+	"kessler/internal/dbstore"
 	"kessler/quickwit"
 	"kessler/util"
 	"net/http"

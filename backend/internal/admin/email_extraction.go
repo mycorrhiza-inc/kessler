@@ -7,7 +7,7 @@ import (
 	"kessler/common/llm_utils"
 	"kessler/common/objects/files"
 	"kessler/crud"
-	"kessler/gen/dbstore"
+	"kessler/internal/dbstore"
 	"kessler/util"
 	"net/http"
 	"regexp"

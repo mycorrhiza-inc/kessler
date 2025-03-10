@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"kessler/database"
-	"kessler/gen/dbstore"
 	"kessler/common/logger"
+	"kessler/internal/database"
+	"kessler/internal/dbstore"
 	"strings"
 
 	"github.com/bradfitz/gomemcache/memcache"
@@ -40,7 +40,6 @@ func NewFilterService(db *pgxpool.Pool, cache *memcache.Client) *FilterService {
 	}
 	filter_log := logger.GetLogger("filter_service")
 
-
 	qe := database.GetTx()
 
 	return &FilterService{
@@ -50,7 +49,6 @@ func NewFilterService(db *pgxpool.Pool, cache *memcache.Client) *FilterService {
 		logger:      filter_log,
 	}
 }
-
 
 func (s *FilterService) TempInitializeFilters() error {
 	s.logger.Info("initializing dummy filter data")

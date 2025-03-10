@@ -3,7 +3,7 @@ package search
 import (
 	"context"
 	"kessler/common/objects/files"
-	"kessler/gen/dbstore"
+	"kessler/internal/dbstore"
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"

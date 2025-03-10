@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"kessler/common/llm_utils"
 	"kessler/crud"
-	"kessler/gen/dbstore"
+	"kessler/internal/dbstore"
 	"kessler/util"
 
 	"github.com/google/uuid"

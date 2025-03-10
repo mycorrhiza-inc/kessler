@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"kessler/crud"
-	"kessler/gen/dbstore"
+	"kessler/internal/dbstore"
 	"kessler/common/objects/files"
 	"kessler/util"
 	"math/rand"

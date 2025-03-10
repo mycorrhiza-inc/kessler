@@ -2,7 +2,7 @@ package filters
 
 import (
 	"fmt"
-	"kessler/gen/dbstore"
+	"kessler/internal/dbstore"
 
 	"go.uber.org/zap/zapcore"
 )
