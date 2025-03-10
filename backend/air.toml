@@ -1,0 +1,14 @@
+[build]
+cmd = "go run /app/cmd/server/main.go"
+bin = "app"
+full_bin = "./tmp/full_app"
+# Define the necessary extensions and directories
+include_ext = ["go", "tpl", "tmpl", "html"]
+exclude_dir = ["vendor"]
+
+[log]
+level = "debug"
+color = "true"
+
+[misc]
+clean_on_update = true
