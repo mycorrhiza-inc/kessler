@@ -1,9 +1,9 @@
 package main
 
 import (
+	"kessler/cmd/ingest/routes"
+	"kessler/cmd/ingest/tasks"
 	"kessler/internal/constants"
-	"kessler/internal/ingest/routes"
-	"kessler/internal/ingest/tasks"
 	"log"
 	"net/http"
 	"os"

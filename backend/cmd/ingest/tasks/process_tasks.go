@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"kessler/cmd/ingest/logic"
 	"kessler/internal/objects/files"
-	"thaumaturgy/logic"
 
 	"github.com/charmbracelet/log"
 	"github.com/hibiken/asynq"
