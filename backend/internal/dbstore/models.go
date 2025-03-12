@@ -174,7 +174,7 @@ type FileTextSource struct {
 type Filter struct {
 	ID          uuid.UUID
 	Name        string
-	State       string
+	Dataset     string
 	FilterType  string
 	Description pgtype.Text
 	IsActive    pgtype.Bool
