@@ -125,6 +125,9 @@ func SearchQuickwit(r SearchRequest) ([]SearchDataHydrated, error) {
 		StartOffset:   r.StartOffset,
 		SortBy:        sortbyStr,
 	}
+
+	requestkey := request.CacheKey()
+
 	return_bytes, err := quickwit.PerformGenericQuickwitRequest(request, search_index)
 	if err != nil {
 		log.Error("Error with Quickwit Request", zap.Error(err))
