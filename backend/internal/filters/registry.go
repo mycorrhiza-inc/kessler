@@ -89,10 +89,15 @@ func (r *FilterRegistry) Execute(name string, input interface{}) (interface{}, e
 
 	// Store in cache
 	if resultBytes, ok := result.([]byte); ok {
-		r.mcClient.Set(&memcache.Item{
+		err := r.mcClient.Set(&memcache.Item{
 			Key:   cacheKey,
 			Value: resultBytes,
 		})
+		if err != nil {
+			r.logger.Error("error executing query", zap.Any(
+				"err", zap.Error(err),
+			))
+		}
 	}
 
 	return result, nil

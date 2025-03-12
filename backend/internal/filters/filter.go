@@ -25,11 +25,15 @@ type Filter struct {
 	dbstore.Filter
 }
 
+func (f Filter) CacheKey() string {
+	return fmt.Sprintf("public:filter:%s:%s", f.Dataset, f.ID)
+}
+
 func (f Filter) String() string {
 	return fmt.Sprintf("%s,%s,%s,%s,%s,%v,%s,%s",
 		f.ID,
 		f.Name,
-		f.State,
+		f.Dataset,
 		f.FilterType,
 		f.Description.String,
 		f.IsActive.Bool,

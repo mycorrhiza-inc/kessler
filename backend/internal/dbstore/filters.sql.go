@@ -9,20 +9,20 @@ import (
 	"context"
 )
 
-const getFiltersByState = `-- name: GetFiltersByState :many
+const getFiltersByDataset = `-- name: GetFiltersByDataset :many
 SELECT
-    id, name, state, filter_type, description, is_active, created_at, updated_at
+    id, name, dataset, filter_type, description, is_active, created_at, updated_at
 FROM
     filters
 WHERE
-    state = $1
+    dataset = $1
     AND is_active = TRUE
 ORDER BY
     created_at DESC
 `
 
-func (q *Queries) GetFiltersByState(ctx context.Context, state string) ([]Filter, error) {
-	rows, err := q.db.Query(ctx, getFiltersByState, state)
+func (q *Queries) GetFiltersByDataset(ctx context.Context, dataset string) ([]Filter, error) {
+	rows, err := q.db.Query(ctx, getFiltersByDataset, dataset)
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +33,7 @@ func (q *Queries) GetFiltersByState(ctx context.Context, state string) ([]Filter
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
-			&i.State,
+			&i.Dataset,
 			&i.FilterType,
 			&i.Description,
 			&i.IsActive,

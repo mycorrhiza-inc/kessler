@@ -1,10 +1,10 @@
--- name: GetFiltersByState :many
+-- name: GetFiltersByDataset :many
 SELECT
     *
 FROM
     filters
 WHERE
-    state = $1
+    dataset = $1
     AND is_active = TRUE
 ORDER BY
     created_at DESC;
