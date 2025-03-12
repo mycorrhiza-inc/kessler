@@ -28,13 +28,15 @@ func CachedFileText(fileID uuid.UUID, language string) (FileTextSchema, error) {
 	if cache.MemecachedIsConnected() != nil {
 		log.Error("Memcached was not connected checking the file text cache")
 	}
-	item, err := client.Get(cache.PrepareKey(
+	key := cache.PrepareKey(
 		CacheKeyRoot,
 		CacheKeyFileText,
 		fileID.String(),
 		language,
-	))
+	)
+	item, err := client.Get(key)
 	if err != nil {
+		log.Info("cache miss", zap.String("key", key))
 		return FileTextSchema{}, err
 	}
 	var fileText FileTextSchema
@@ -42,6 +44,7 @@ func CachedFileText(fileID uuid.UUID, language string) (FileTextSchema, error) {
 		return FileTextSchema{}, err
 	}
 
+	log.Info("cache hit", zap.String("key", key))
 	return fileText, nil
 }
 
@@ -59,6 +62,7 @@ func AddFileTextToCache(fileText FileTextSchema) error {
 	}
 
 	key := cache.PrepareKey(CacheKeyRoot, CacheKeyFileText, fileText.FileID.String(), fileText.Language)
+	log.Info("adding file text to cache", zap.String("key", key))
 	err = client.Set(&memcache.Item{
 		Key:   key,
 		Value: value,
@@ -76,8 +80,10 @@ func CachedAttachment(id uuid.UUID) (CompleteAttachmentSchema, error) {
 	if cache.MemecachedIsConnected() != nil {
 		log.Error("Memcached was not connected checking the attachment cache")
 	}
-	item, err := client.Get(cache.PrepareKey(CacheKeyRoot, CacheKeyFileAttachment, id.String()))
+	key := cache.PrepareKey(CacheKeyRoot, CacheKeyFileAttachment, id.String())
+	item, err := client.Get(key)
 	if err != nil {
+		log.Info("cache miss", zap.String("key", key))
 		return CompleteAttachmentSchema{}, err
 	}
 	var attachment CompleteAttachmentSchema
@@ -85,6 +91,7 @@ func CachedAttachment(id uuid.UUID) (CompleteAttachmentSchema, error) {
 		return CompleteAttachmentSchema{}, err
 	}
 
+	log.Info("cache hit", zap.String("key", key))
 	return attachment, nil
 }
 
@@ -102,6 +109,7 @@ func AddAttachmentToCache(attachment CompleteAttachmentSchema) error {
 	}
 
 	key := cache.PrepareKey(CacheKeyRoot, CacheKeyFileAttachment, attachment.ID.String())
+	log.Info("adding attachment to cache", zap.String("key", key))
 	err = client.Set(&memcache.Item{
 		Key:        key,
 		Value:      value,
@@ -120,8 +128,10 @@ func CachedFile(id uuid.UUID) (FileSchema, error) {
 	if cache.MemecachedIsConnected() != nil {
 		log.Error("Memcached was not connected checking the file cache")
 	}
-	item, err := client.Get(cache.PrepareKey(CacheKeyRoot, id.String()))
+	key := cache.PrepareKey(CacheKeyRoot, id.String())
+	item, err := client.Get(key)
 	if err != nil {
+		log.Info("cache miss", zap.String("key", key))
 		return FileSchema{}, err
 	}
 	var file FileSchema
@@ -129,6 +139,7 @@ func CachedFile(id uuid.UUID) (FileSchema, error) {
 		return FileSchema{}, err
 	}
 
+	log.Info("cache hit", zap.String("key", key))
 	return file, nil
 }
 
@@ -138,8 +149,10 @@ func CachedCompleteFile(id uuid.UUID) (CompleteFileSchema, error) {
 	if cache.MemecachedIsConnected() != nil {
 		log.Error("Memcached was not connected checking the complete file cache")
 	}
-	item, err := client.Get(cache.PrepareKey(CacheKeyRoot, CacheKeyCompleteFile, id.String()))
+	key := cache.PrepareKey(CacheKeyRoot, CacheKeyCompleteFile, id.String())
+	item, err := client.Get(key)
 	if err != nil {
+		log.Info("cache miss", zap.String("key", key))
 		return CompleteFileSchema{}, err
 	}
 	var file CompleteFileSchema
@@ -147,6 +160,7 @@ func CachedCompleteFile(id uuid.UUID) (CompleteFileSchema, error) {
 		return CompleteFileSchema{}, err
 	}
 
+	log.Info("cache hit", zap.String("key", key))
 	return file, nil
 }
 
@@ -164,6 +178,7 @@ func AddFileToCache(file FileSchema) error {
 	}
 
 	key := cache.PrepareKey(CacheKeyRoot, file.ID.String())
+	log.Info("adding file to cache", zap.String("key", key))
 	err = client.Set(&memcache.Item{
 		Key:   key,
 		Value: value,
@@ -189,6 +204,7 @@ func AddCompleteFileToCache(file CompleteFileSchema) error {
 	}
 
 	key := cache.PrepareKey(CacheKeyRoot, CacheKeyCompleteFile, file.ID.String())
+	log.Info("adding complete file to cache", zap.String("key", key))
 	err = client.Set(&memcache.Item{
 		Key:   key,
 		Value: value,
