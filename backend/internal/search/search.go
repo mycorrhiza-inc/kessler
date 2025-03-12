@@ -20,22 +20,22 @@ import (
 var log = logger.GetLogger("search")
 
 type Hit struct {
-	CreatedAt     string              `json:"created_at"`
-	Extension     string              `json:"extension"`
-	Hash          string              `json:"hash"`
-	Lang          string              `json:"lang"`
-	DateFiled     string              `json:"updated_at"`
-	Metadata      networking.Metadata `json:"metadata"`
-	Name          string              `json:"name"`
-	SaOrmSentinel *string             `json:"sa_orm_sentinel"`
-	ShortSummary  *string             `json:"short_summary"`
-	Source        string              `json:"source"`
-	SourceID      string              `json:"source_id"`
-	Stage         string              `json:"stage"`
-	Summary       *string             `json:"summary"`
-	Text          string              `json:"text"`
-	Timestamp     string              `json:"timestamp"`
-	URL           string              `json:"url"`
+	CreatedAt     string         `json:"created_at"`
+	Extension     string         `json:"extension"`
+	Hash          string         `json:"hash"`
+	Lang          string         `json:"lang"`
+	DateFiled     string         `json:"updated_at"`
+	Metadata      files.Metadata `json:"metadata"`
+	Name          string         `json:"name"`
+	SaOrmSentinel *string        `json:"sa_orm_sentinel"`
+	ShortSummary  *string        `json:"short_summary"`
+	Source        string         `json:"source"`
+	SourceID      string         `json:"source_id"`
+	Stage         string         `json:"stage"`
+	Summary       *string        `json:"summary"`
+	Text          string         `json:"text"`
+	Timestamp     string         `json:"timestamp"`
+	URL           string         `json:"url"`
 }
 
 type Snippet struct {

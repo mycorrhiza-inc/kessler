@@ -48,15 +48,6 @@ func (m Metadata) String() string {
 	return string(jsonData)
 }
 
-func (m SearchMetadata) String() string {
-	jsonData, err := json.Marshal(m)
-	if err != nil {
-		log.Error("failed to marshal SearchMetadata", zap.Error(err))
-		return ""
-	}
-	return string(jsonData)
-}
-
 type MetadataFilterFields struct {
 	SearchMetadata
 	DateFrom timestamp.KesslerTime `json:"date_from"`
