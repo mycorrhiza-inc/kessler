@@ -39,7 +39,7 @@ func (h *FilterServiceHandler) GetFilters(w http.ResponseWriter, r *http.Request
 	state := r.URL.Query().Get("state")
 	pagination := networking.PaginationFromUrlParams(r)
 
-	f, err := h.service.GetFiltersByState(r.Context(), state)
+	f, err := h.service.GetFiltersByDataset(r.Context(), state)
 
 	if err != nil {
 		log.Error("There was an error listing the filters", zap.Error(err))
