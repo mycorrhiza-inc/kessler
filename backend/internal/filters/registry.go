@@ -94,7 +94,9 @@ func (r *FilterRegistry) Execute(name string, input interface{}) (interface{}, e
 			Value: resultBytes,
 		})
 		if err != nil {
-
+			r.logger.Error("error executing query", zap.Any(
+				"err", zap.Error(err),
+			))
 		}
 	}
 
