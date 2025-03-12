@@ -11,20 +11,20 @@ import (
 	"go.uber.org/zap"
 )
 
-const RootCacheKey = "public:author"
+const CacheKeyRoot = "public:author"
 const LoggerName = "cache:author"
 
-func GetLogger() *zap.Logger {
+func getLogger() *zap.Logger {
 	return logger.GetLogger(LoggerName)
 }
 
 func Cached(id uuid.UUID) (AuthorInformation, error) {
-	log := GetLogger()
+	log := getLogger()
 	client := cache.MemcachedClient
 	if cache.MemecachedIsConnected() != nil {
 		log.Error("Memcached was not connected checking the author cache")
 	}
-	item, err := client.Get(fmt.Sprintf("%s:%s", RootCacheKey, id.String()))
+	item, err := client.Get(cache.PrepareKey(CacheKeyRoot, id.String()))
 	if err != nil {
 		return AuthorInformation{}, err
 	}
@@ -37,7 +37,7 @@ func Cached(id uuid.UUID) (AuthorInformation, error) {
 }
 
 func AddAuthorToCache(author AuthorInformation) error {
-	log := GetLogger()
+	log := getLogger()
 	client := cache.MemcachedClient
 	if cache.MemecachedIsConnected() != nil {
 		log.Error("Memcached was not connected adding author to cache")
@@ -49,7 +49,7 @@ func AddAuthorToCache(author AuthorInformation) error {
 		return fmt.Errorf("failed to marshal author: %v", err)
 	}
 
-	key := fmt.Sprintf("%s:%s", RootCacheKey, author.AuthorID.String())
+	key := cache.PrepareKey(CacheKeyRoot, author.AuthorID.String())
 	err = client.Set(&memcache.Item{
 		Key:   key,
 		Value: value,

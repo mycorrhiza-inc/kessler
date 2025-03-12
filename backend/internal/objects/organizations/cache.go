@@ -10,20 +10,20 @@ import (
 	"go.uber.org/zap"
 )
 
-const RootCacheKey = "public:organization"
+const CacheKeyRoot = "public:organization"
 const LoggerName = "cache:organization"
 
-func GetLogger() *zap.Logger {
+func getLogger() *zap.Logger {
 	return logger.GetLogger(LoggerName)
 }
 
 func Cached(id string) (OrganizationSchemaComplete, error) {
-	log := GetLogger()
+	log := getLogger()
 	client := cache.MemcachedClient
 	if cache.MemecachedIsConnected() != nil {
 		log.Error(" Memcached was not connected checking the org cache")
 	}
-	item, err := client.Get(fmt.Sprintf("%s:%s", RootCacheKey, id))
+	item, err := client.Get(cache.PrepareKey(CacheKeyRoot, id))
 	if err != nil {
 		return OrganizationSchemaComplete{}, err
 	}
@@ -36,7 +36,7 @@ func Cached(id string) (OrganizationSchemaComplete, error) {
 }
 
 func AddOrgToCache(org OrganizationSchemaComplete) error {
-	log := GetLogger()
+	log := getLogger()
 	client := cache.MemcachedClient
 	if cache.MemecachedIsConnected() != nil {
 		log.Error(" Memcached was not connected adding org to cache")
@@ -48,7 +48,7 @@ func AddOrgToCache(org OrganizationSchemaComplete) error {
 		return fmt.Errorf("failed to marshal organization: %v", err)
 	}
 
-	key := fmt.Sprintf("%s:%s", RootCacheKey, org.ID.String())
+	key := cache.PrepareKey(CacheKeyRoot, org.ID.String())
 	err = client.Set(&memcache.Item{
 		Key:   key,
 		Value: value,

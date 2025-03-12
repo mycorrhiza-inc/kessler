@@ -2,14 +2,23 @@ package networking
 
 import (
 	"encoding/json"
+	"fmt"
+	"kessler/internal/cache"
 	"kessler/internal/logger"
 	"kessler/internal/objects/timestamp"
 
+	"github.com/bradfitz/gomemcache/memcache"
+	"github.com/charmbracelet/log"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
-var log = logger.GetLogger("util")
+const RootCacheKey = "public:metadata"
+const LoggerName = "cache:networking"
+
+func getLogger() *zap.Logger {
+	return logger.GetLogger(LoggerName)
+}
 
 type Metadata struct {
 	ItemNumber       string      `json:"item_number"`
@@ -46,6 +55,49 @@ func (m Metadata) String() string {
 		return ""
 	}
 	return string(jsonData)
+}
+
+func AddMetadataToCache(metadata Metadata, key string) error {
+	log := getLogger()
+	client := cache.MemcachedClient
+	if cache.MemecachedIsConnected() != nil {
+		log.Error("Memcached was not connected adding metadata to cache")
+		return fmt.Errorf("memcached not connected")
+	}
+
+	value, err := json.Marshal(metadata)
+	if err != nil {
+		return fmt.Errorf("failed to marshal metadata: %v", err)
+	}
+
+	cacheKey := fmt.Sprintf("%s:metadata:%s", RootCacheKey, key)
+	err = client.Set(&memcache.Item{
+		Key:   cacheKey,
+		Value: value,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to set cache: %v", err)
+	}
+
+	return nil
+}
+
+func CachedMetadata(key string) (Metadata, error) {
+	log := getLogger()
+	client := cache.MemcachedClient
+	if cache.MemecachedIsConnected() != nil {
+		log.Error("Memcached was not connected checking the metadata cache")
+	}
+	item, err := client.Get(fmt.Sprintf("%s:metadata:%s", RootCacheKey, key))
+	if err != nil {
+		return Metadata{}, err
+	}
+	var metadata Metadata
+	if err := json.Unmarshal(item.Value, &metadata); err != nil {
+		return Metadata{}, err
+	}
+
+	return metadata, nil
 }
 
 type MetadataFilterFields struct {
@@ -126,4 +178,48 @@ func (f FilterFields) String() string {
 		return ""
 	}
 	return string(jsonData)
+}
+
+// TODO: still need to figure out key structure
+func CachedFilterFields(key string) (FilterFields, error) {
+	log := getLogger()
+	client := cache.MemcachedClient
+	if cache.MemecachedIsConnected() != nil {
+		log.Error("Memcached was not connected checking the filter fields cache")
+	}
+	item, err := client.Get(fmt.Sprintf("%s:filter:%s", RootCacheKey, key))
+	if err != nil {
+		return FilterFields{}, err
+	}
+	var filterFields FilterFields
+	if err := json.Unmarshal(item.Value, &filterFields); err != nil {
+		return FilterFields{}, err
+	}
+
+	return filterFields, nil
+}
+
+func AddFilterFieldsToCache(filterFields FilterFields, key string) error {
+	log := getLogger()
+	client := cache.MemcachedClient
+	if cache.MemecachedIsConnected() != nil {
+		log.Error("Memcached was not connected adding filter fields to cache")
+		return fmt.Errorf("memcached not connected")
+	}
+
+	value, err := json.Marshal(filterFields)
+	if err != nil {
+		return fmt.Errorf("failed to marshal filter fields: %v", err)
+	}
+
+	cacheKey := fmt.Sprintf("%s:filter:%s", RootCacheKey, key)
+	err = client.Set(&memcache.Item{
+		Key:   cacheKey,
+		Value: value,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to set cache: %v", err)
+	}
+
+	return nil
 }
