@@ -88,8 +88,8 @@ func (s *FilterService) AddFilterToState(ctx context.Context, stateAbbrev string
 	return nil
 }
 
-// GetFiltersByState retrieves filters by their state
-func (s *FilterService) GetFiltersByState(ctx context.Context, stateAbbrev string) ([]dbstore.Filter, error) {
+// GetFiltersByDataset retrieves filters by their state
+func (s *FilterService) GetFiltersByDataset(ctx context.Context, stateAbbrev string) ([]dbstore.Filter, error) {
 	if stateAbbrev == "" {
 		return nil, fmt.Errorf("%w: empty state", ErrInvalidFilterState)
 	}
@@ -106,7 +106,7 @@ func (s *FilterService) GetFiltersByState(ctx context.Context, stateAbbrev strin
 	}
 
 	// If cache-miss, preform the query
-	filters, err := s.queryEngine.GetFiltersByState(ctx, state)
+	filters, err := s.queryEngine.GetFiltersByDataset(ctx, state)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return []dbstore.Filter{}, nil

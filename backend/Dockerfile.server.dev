@@ -1,0 +1,7 @@
+FROM cosmtrek/air
+WORKDIR /app
+COPY . /app
+COPY .air.toml /app
+COPY ./cmd/server/main.go /app
+EXPOSE 4041
+CMD ["air"]

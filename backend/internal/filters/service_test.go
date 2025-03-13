@@ -17,7 +17,7 @@ package filters
 // return service, mock, cleanup
 // }
 
-// func TestGetFiltersByState(t *testing.T) {
+// func TestGetFiltersByDataset(t *testing.T) {
 // 	tests := []struct {
 // 		name          string
 // 		state         string
@@ -79,7 +79,7 @@ package filters
 //
 // 			tt.mockSetup(mock)
 //
-// 			filters, err := service.GetFiltersByState(context.Background(), tt.state)
+// 			filters, err := service.GetFiltersByDataset(context.Background(), tt.state)
 //
 // 			if tt.expectedError != nil {
 // 				assert.ErrorIs(t, err, tt.expectedError)

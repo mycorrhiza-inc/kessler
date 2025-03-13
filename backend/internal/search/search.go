@@ -20,22 +20,22 @@ import (
 var log = logger.GetLogger("search")
 
 type Hit struct {
-	CreatedAt     string              `json:"created_at"`
-	Extension     string              `json:"extension"`
-	Hash          string              `json:"hash"`
-	Lang          string              `json:"lang"`
-	DateFiled     string              `json:"updated_at"`
-	Metadata      networking.Metadata `json:"metadata"`
-	Name          string              `json:"name"`
-	SaOrmSentinel *string             `json:"sa_orm_sentinel"`
-	ShortSummary  *string             `json:"short_summary"`
-	Source        string              `json:"source"`
-	SourceID      string              `json:"source_id"`
-	Stage         string              `json:"stage"`
-	Summary       *string             `json:"summary"`
-	Text          string              `json:"text"`
-	Timestamp     string              `json:"timestamp"`
-	URL           string              `json:"url"`
+	CreatedAt     string         `json:"created_at"`
+	Extension     string         `json:"extension"`
+	Hash          string         `json:"hash"`
+	Lang          string         `json:"lang"`
+	DateFiled     string         `json:"updated_at"`
+	Metadata      files.Metadata `json:"metadata"`
+	Name          string         `json:"name"`
+	SaOrmSentinel *string        `json:"sa_orm_sentinel"`
+	ShortSummary  *string        `json:"short_summary"`
+	Source        string         `json:"source"`
+	SourceID      string         `json:"source_id"`
+	Stage         string         `json:"stage"`
+	Summary       *string        `json:"summary"`
+	Text          string         `json:"text"`
+	Timestamp     string         `json:"timestamp"`
+	URL           string         `json:"url"`
 }
 
 type Snippet struct {
@@ -125,6 +125,15 @@ func SearchQuickwit(r SearchRequest) ([]SearchDataHydrated, error) {
 		StartOffset:   r.StartOffset,
 		SortBy:        sortbyStr,
 	}
+
+	requestkey := request.CacheKey()
+
+	// Check if we have cached results for this request
+	cachedResult, err := CacheSearch(requestkey)
+	if err == nil {
+		log.Info("returning cached search results", zap.String("request_key", requestkey))
+		return cachedResult, nil
+	}
 	return_bytes, err := quickwit.PerformGenericQuickwitRequest(request, search_index)
 	if err != nil {
 		log.Error("Error with Quickwit Request", zap.Error(err))
@@ -136,14 +145,18 @@ func SearchQuickwit(r SearchRequest) ([]SearchDataHydrated, error) {
 		log.Error("Error decoding JSON response",
 			zap.Error(err),
 			zap.String("response", string(return_bytes)))
-		errorstring := fmt.Sprintf("Error decoding JSON: %v\n Offending json looked like: %v", err, string(return_bytes))
-		return []SearchDataHydrated{}, fmt.Errorf(errorstring)
+		return []SearchDataHydrated{}, fmt.Errorf("error decoding JSON: %v\n offending json looked like: %v", err, string(return_bytes))
 	}
 
 	data, err := ExtractSearchData(searchResponse)
 	if err != nil {
 		log.Error("Error creating response data", zap.Error(err))
 		return []SearchDataHydrated{}, err
+	}
+	//
+	// Cache the search results
+	if err := AddSearchToCache(data, requestkey); err != nil {
+		log.Error("Failed to cache search results", zap.Error(err))
 	}
 
 	return data, nil

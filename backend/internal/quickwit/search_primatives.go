@@ -2,6 +2,7 @@ package quickwit
 
 import (
 	"bytes"
+	"crypto/md5"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -23,6 +24,21 @@ type QuickwitSearchRequest struct {
 	MaxHits       int    `json:"max_hits"`
 	StartOffset   int    `json:"start_offset"`
 	SortBy        string `json:"sort_by,omitempty"`
+}
+
+func (q QuickwitSearchRequest) CacheKey() string {
+	// Create a unique string combining all fields
+	key := fmt.Sprintf("%s-%s-%d-%d-%s",
+		q.Query,
+		q.SnippetFields,
+		q.MaxHits,
+		q.StartOffset,
+		q.SortBy)
+
+	// Hash the key using MD5 for a consistent length cache key
+	hasher := md5.New()
+	hasher.Write([]byte(key))
+	return fmt.Sprintf("qw:%x", hasher.Sum(nil))
 }
 
 func ConstructDateQuery(DateFrom timestamp.KesslerTime, DateTo timestamp.KesslerTime) string {

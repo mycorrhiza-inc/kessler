@@ -76,6 +76,12 @@ type CacheController struct {
 	Client *memcache.Client
 }
 
+func PrepareKey(root string, args ...string) string {
+	// TODO: Add key validation to ensure no invalid characters in keys
+	parts := append([]string{root}, args...)
+	return strings.Join(parts, ":")
+}
+
 func NewCacheController() (CacheController, error) {
 	err := MemecachedIsConnected()
 	if err != nil {
