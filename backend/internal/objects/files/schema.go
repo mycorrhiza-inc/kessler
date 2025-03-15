@@ -1,6 +1,7 @@
 package files
 
 import (
+	"kessler/internal/hashes"
 	"kessler/internal/objects/authors"
 	"kessler/internal/objects/conversations"
 	"kessler/internal/objects/timestamp"
@@ -33,7 +34,7 @@ type CompleteAttachmentSchema struct {
 	FileID    uuid.UUID                   `json:"file_id"`
 	Lang      string                      `json:"lang"`
 	Name      string                      `json:"name"`
-	Hash      string                      `json:"hash"`
+	Hash      hashes.KesslerHash          `json:"hash"`
 	URL       string                      `json:"url"`
 	Extension string                      `json:"extension"`
 	Mdata     map[string]any              `json:"mdata"`

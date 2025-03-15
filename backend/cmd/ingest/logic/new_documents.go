@@ -135,7 +135,7 @@ func checkPgForDuplicateMetadata(ctx context.Context, fileObj files.CompleteFile
 	return &result, nil
 }
 
-func FetchAttachmentsFromUrls(ctx context.Context, fileObj *files.CompleteFileSchema) (*files.CompleteFileSchema, error) {
+func CompleteIngestFileFromAttachmentUrls(ctx context.Context, fileObj *files.CompleteFileSchema) (*files.CompleteFileSchema, error) {
 	existingFile, err := checkPgForDuplicateMetadata(ctx, *fileObj)
 	if err == nil && existingFile != nil {
 		fileObj = existingFile
@@ -191,7 +191,7 @@ func fetchAttachmentFromUrl(ctx context.Context, attachment files.CompleteAttach
 		return files.CompleteAttachmentSchema{}, err
 	}
 
-	new_attachment.Hash = hashResult.String()
+	new_attachment.Hash = hashResult
 	os.Remove(tmpFilePath)
 
 	return new_attachment, nil

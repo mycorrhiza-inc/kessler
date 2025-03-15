@@ -5,13 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"kessler/internal/database"
+	"kessler/internal/dbstore"
 	"kessler/internal/hashes"
 	"kessler/internal/objects/authors"
 	"kessler/internal/objects/conversations"
 	"kessler/internal/objects/files"
 	"kessler/internal/s3utils"
-	"kessler/internal/database"
-	"kessler/internal/dbstore"
 	"net/http"
 	"os"
 
@@ -171,13 +171,18 @@ func AttachmentSchemaCompleteFill(ctx context.Context, q dbstore.Queries, attach
 	return *attachment, nil
 }
 
-func AttachmentFromDBStore(attach dbstore.Attachment) files.CompleteAttachmentSchema {
+func AttachmentFromDBStore(attach dbstore.Attachment) (files.CompleteAttachmentSchema, error) {
+	valid_hash, err := hashes.HashFromString(attach.Hash)
+	if err != nil {
+		return files.CompleteAttachmentSchema{}, err
+	}
+
 	return files.CompleteAttachmentSchema{
 		ID:        attach.ID,
 		Name:      attach.Name,
 		Extension: attach.Extension,
-		Hash:      attach.Hash,
-	}
+		Hash:      valid_hash,
+	}, nil
 }
 
 func AttachmentsCompleteGet(ctx context.Context, q dbstore.Queries, fileUUID uuid.UUID) ([]files.CompleteAttachmentSchema, error) {
@@ -187,7 +192,10 @@ func AttachmentsCompleteGet(ctx context.Context, q dbstore.Queries, fileUUID uui
 	}
 	complete_attachments := make([]files.CompleteAttachmentSchema, len(raw_attachments))
 	for i, raw_attachment := range raw_attachments {
-		kinda_raw_attachment := AttachmentFromDBStore(raw_attachment)
+		kinda_raw_attachment, err := AttachmentFromDBStore(raw_attachment)
+		if err != nil {
+			return []files.CompleteAttachmentSchema{}, err
+		}
 		attachment, err := AttachmentSchemaCompleteFill(ctx, q, &kinda_raw_attachment)
 		if err != nil {
 			return []files.CompleteAttachmentSchema{}, err
