@@ -90,15 +90,17 @@ type IngestDocParams struct {
 
 func ingestFile(ctx context.Context, q *dbstore.Queries, params IngestDocParams) (files.CompleteFileSchema, error) {
 	var err error
+	docInfo := params.DocInfo
+	docUUID := docInfo.ID
 
 	// Deduplication logic
-	if config.IsInsert && config.Deduplicate {
+	if params.Insert && params.Deduplicate {
 		existingUUID, err := DeduplicateFile(ctx, q, docInfo.Hash)
 		if err != nil {
 			return docInfo, fmt.Errorf("deduplication error: %w", err)
 		}
 		if existingUUID != uuid.Nil {
-			config.IsInsert = false
+			params.Insert = false
 			docUUID = existingUUID
 			docInfo.ID = existingUUID
 		}
@@ -109,7 +111,7 @@ func ingestFile(ctx context.Context, q *dbstore.Queries, params IngestDocParams)
 	creationData.Verified = pgtype.Bool{Bool: false, Valid: true}
 
 	// Insert or update main file record
-	fileSchema, err := upsertFileRecord(ctx, q, creationData, docUUID, config)
+	fileSchema, err := upsertFileRecord(ctx, q, creationData, docUUID, params)
 	if err != nil {
 		return docInfo, fmt.Errorf("file upsert error: %w", err)
 	}
@@ -130,15 +132,41 @@ func ingestFile(ctx context.Context, q *dbstore.Queries, params IngestDocParams)
 
 // dedupe.go - Deduplication logic
 
-func DeduplicateFile(ctx context.Context, q *dbstore.Queries, hash string) (uuid.UUID, error) {
-	ids, err := q.HashGetUUIDsFile(ctx, hash)
-	if err != nil {
-		return uuid.Nil, fmt.Errorf("database error: %w", err)
+func StandardizeAttachmentUUIDsHelper(file *files.CompleteFileSchema) *files.CompleteFileSchema {
+	for index, attachment := range file.Attachments {
+		if attachment.FileID != file.ID {
+			file.Attachments[index].FileID = file.ID
+		}
 	}
-	if len(ids) > 0 {
-		return ids[0], nil
+	return file
+}
+
+func DeduplicateFileAttachments(ctx context.Context, q *dbstore.Queries, file *files.CompleteFileSchema) (*files.CompleteFileSchema, error) {
+	attachments := file.Attachments
+	for index, attachment := range attachments {
+		new_attachment, err := DeduplicateSingularAttachment(ctx, q, &attachment)
+		if err != nil {
+			return file, fmt.Errorf("deduplication error: %w", err)
+		}
+		attachments[index] = *new_attachment
 	}
-	return uuid.Nil, nil
+	file.Attachments = attachments
+	return file, nil
+}
+
+func DeduplicateSingularAttachment(ctx context.Context, q *dbstore.Queries, attachment *files.CompleteAttachmentSchema) (*files.CompleteAttachmentSchema, error) {
+	if attachment.ID == uuid.Nil {
+		results, err := q.AttachmentListByHash(ctx, attachment.Hash.String())
+		if err != nil {
+			return &files.CompleteAttachmentSchema{}, fmt.Errorf("database error: %w", err)
+		}
+		if len(results) > 0 {
+			// Idk if this is a good idea or not, but fuck it ship it
+			attachment.ID = results[0].ID
+		}
+		return attachment, nil
+	}
+	return attachment, nil
 }
 
 func parseDocumentUUID(r *http.Request, isInsert bool) (uuid.UUID, error) {
@@ -164,14 +192,15 @@ func parseRequestBody(r *http.Request) (files.CompleteFileSchema, error) {
 	return docInfo, nil
 }
 
-func upsertFileRecord(ctx context.Context, q *dbstore.Queries, data dbstore.FileCreationData, docUUID uuid.UUID, config IngestConfig) (files.FileSchema, error) {
-	if config.IsInsert {
-		return InsertPubPrivateFileObj(q, ctx, data, config.Private)
+func upsertFileRecord(ctx context.Context, q *dbstore.Queries, data files.FileCreationDataRaw, docUUID uuid.UUID, insert bool) (files.FileSchema, error) {
+	private := false
+	if insert {
+		return InsertPubPrivateFileObj(*q, ctx, data, private)
 	}
-	return UpdatePubPrivateFileObj(q, ctx, data, config.Private, docUUID)
+	return UpdatePubPrivateFileObj(*q, ctx, data, private, docUUID)
 }
 
-func processAssociations(ctx context.Context, q *dbstore.Queries, docInfo files.CompleteFileSchema) ([]string, bool) {
+func processAssociations(ctx context.Context, q dbstore.Queries, docInfo files.CompleteFileSchema, insert bool) ([]string, bool) {
 	var errors []string
 	addError := func(err error, context string) {
 		if err != nil {
@@ -179,11 +208,11 @@ func processAssociations(ctx context.Context, q *dbstore.Queries, docInfo files.
 		}
 	}
 
-	addError(upsertFileAttachments(ctx, q, docInfo.ID, docInfo.Attachments, docInfo.IsInsert), "attachments")
-	addError(upsertFileMetadata(ctx, q, docInfo.ID, docInfo.Mdata, docInfo.IsInsert), "metadata")
-	addError(upsertFileExtras(ctx, q, docInfo.ID, docInfo.Extra, docInfo.IsInsert), "extras")
-	addError(fileAuthorsUpsert(ctx, q, docInfo.ID, docInfo.Authors, docInfo.IsInsert), "authors")
-	addError(fileConversationUpsert(ctx, q, docInfo.ID, docInfo.Conversation, docInfo.IsInsert), "conversation")
+	addError(upsertFileAttachments(ctx, q, docInfo.ID, docInfo.Attachments, insert), "attachments")
+	addError(upsertFileMetadata(ctx, q, docInfo.ID, docInfo.Mdata, insert), "metadata")
+	addError(upsertFileExtras(ctx, q, docInfo.ID, docInfo.Extra, insert), "extras")
+	addError(fileAuthorsUpsert(ctx, q, docInfo.ID, docInfo.Authors, insert), "authors")
+	addError(fileConversationUpsert(ctx, q, docInfo.ID, docInfo.Conversation, insert), "conversation")
 
 	return errors, len(errors) > 0
 }
