@@ -1,13 +1,14 @@
 package crud
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
-	"kessler/internal/objects/files"
 	"kessler/internal/dbstore"
-	"kessler/internal/util"
+	"kessler/internal/objects/files"
 	"net/http"
+	"strings"
 
 	"github.com/charmbracelet/log"
 	"github.com/google/uuid"
@@ -16,216 +17,217 @@ import (
 )
 
 type FileUpsertHandlerConfig struct {
-	private bool
-	insert  bool
+	Private      bool
+	Insert       bool
+	Deduplicate  bool
+	IsAuthorized func(*http.Request) bool
+	GetDBQueries func(*http.Request) *dbstore.Queries
 }
 
-func makeFileUpsertHandler(config FileUpsertHandlerConfig) func(w http.ResponseWriter, r *http.Request) {
-	private := config.private
-	insert_parent := config.insert
-	deduplicate_with_respect_to_hash := true
-	empty_uuid, _ := uuid.Parse("00000000-0000-0000-0000-000000000000")
+// Chatgt came up with these, and I actually kind of like them
+func respondError(w http.ResponseWriter, message string, statusCode int) {
+	log.Info(message)
+	http.Error(w, message, statusCode)
+}
+
+func makeFileUpsertHandler(config FileUpsertHandlerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Maybe mutating the underlying parent value is a bit of a problem when it comes to unreachable control code pathways
-		insert := insert_parent && true
-		var doc_uuid uuid.UUID
-		var err error
-		if !insert && r.URL.Path == "/v2/public/files/insert" {
-			errorstring := "UNREACHABLE CODE: Using insert endpoint with update configuration"
-			log.Info(errorstring)
-			http.Error(w, errorstring, http.StatusInternalServerError)
-			return
-		}
-		if !insert {
-
-			params := mux.Vars(r)
-			fileIDString := params["uuid"]
-
-			doc_uuid, err = uuid.Parse(fileIDString)
-			if err != nil {
-				http.Error(w, fmt.Sprintf("Error parsing uuid: %s\n", fileIDString), http.StatusBadRequest)
-				return
-			}
-		}
-		q := *util.DBQueriesFromRequest(r)
+		q := config.GetDBQueries(r)
 		ctx := r.Context()
-		// TODO!!!!!: Enable insert auth at some point
-		// token := r.Header.Get("Authorization")
-		isAuthorizedFunc := func() bool {
-			return true
-		}
-		isAuthorized := isAuthorizedFunc()
 
-		// Usage:
-		if !isAuthorized {
-			http.Error(w, "Forbidden", http.StatusForbidden)
+		// Validate HTTP method and path
+		if !config.Insert && r.URL.Path == "/v2/public/files/insert" {
+			respondError(w, "UNREACHABLE CODE: Using insert endpoint with update configuration", http.StatusInternalServerError)
 			return
 		}
-		// Proceed with the write operation
-		defer r.Body.Close()
-		var newDocInfo files.CompleteFileSchema
-		bodyBytes, err := io.ReadAll(r.Body)
+
+		// Parse document UUID for updates
+		docUUID, err := parseDocumentUUID(r, config.Insert)
 		if err != nil {
-			errorstring := fmt.Sprintf("Error reading request body: %v\n", err)
-			log.Info(errorstring)
-			http.Error(w, errorstring, http.StatusBadRequest)
+			respondError(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		err = json.Unmarshal(bodyBytes, &newDocInfo)
+
+		// Parse request body
+		newDocInfo, err := parseRequestBody(r)
 		if err != nil {
-			errorstring := fmt.Sprintf("Error reading request body json: %v\n", err)
-			log.Info(errorstring)
-			http.Error(w, errorstring, http.StatusBadRequest)
+			respondError(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		// Deduplicate with respect to hash
-		hash := newDocInfo.Hash
-		if hash == "" { // Maybe replace with a comprehensive check to see if the hash is a valid 256 bit base 64 hash
-			err := fmt.Errorf("hash is empty, cannot insert document without hash")
-			log.Info(err)
-			http.Error(w, fmt.Sprintf("Error inserting/updating document: %v\n", err), http.StatusBadRequest)
-			return
+		if newDocInfo.ID != uuid.Nil {
+			newDocInfo.ID = docUUID
 		}
-		if insert && deduplicate_with_respect_to_hash {
-			ids, err := HashGetUUIDsFile(q, ctx, hash)
-			if err != nil {
-				errorstring := fmt.Sprintf("Error getting document ids from hash for deduplication: %v\n", err)
-				log.Info(errorstring)
-				http.Error(w, errorstring, http.StatusInternalServerError)
-				return
-			}
-			if len(ids) > 0 {
-				id := ids[0]
-				if len(ids) > 1 {
-					log.Info(fmt.Sprintf("More than one document with this hash, this shouldnt happen, continuing deduplication with id: %s\n", id))
-				}
-				insert = false
-				doc_uuid = id
-				newDocInfo.ID = id
-			}
+		args := IngestDocParams{
+			DocInfo:     newDocInfo,
+			Insert:      config.Insert,
+			Deduplicate: config.Deduplicate,
 		}
-		rawFileCreationData := newDocInfo.ConvertToCreationData()
-		// If we complete all other parts of the file upload process we can set this to true
-		// but assuming some parts fail we want the process to fail safe.
-		newDocInfo.Verified = false
-		rawFileCreationData.Verified = pgtype.Bool{Bool: false, Valid: true}
-		var fileSchema files.FileSchema
-		// TODO : For print debugging only, might be a good idea to put these in a deubug logger with lowest priority??
-		log.Info(fmt.Sprintf("Inserting document with uuid: %s\n", doc_uuid))
-		if insert {
-			fileSchema, err = InsertPubPrivateFileObj(q, ctx, rawFileCreationData, private)
-		} else {
-			if doc_uuid == empty_uuid {
-				err := fmt.Errorf("ASSERT FAILURE: docUUID should never have a null uuid, when updating document.")
-				errorstring := fmt.Sprint(err)
-				log.Info(errorstring)
-				http.Error(w, errorstring, http.StatusInternalServerError)
-				return
-			}
-			fileSchema, err = UpdatePubPrivateFileObj(q, ctx, rawFileCreationData, private, doc_uuid)
-		}
+
+		// Process file ingestion
+		result, err := ingestFile(ctx, q, args)
 		if err != nil {
-			errorstring := fmt.Sprintf("Error inserting/updating document: %v\n", err)
-			fmt.Print(errorstring)
-			http.Error(w, errorstring, http.StatusInternalServerError)
+			respondError(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		doc_uuid = fileSchema.ID // Ensure UUID is same as one returned from database
-		newDocInfo.ID = doc_uuid
-		if newDocInfo.ID == empty_uuid {
-			err := fmt.Errorf("ASSERT FAILURE: docUUID should never have a null uuid.")
-			errorstring := fmt.Sprint(err)
-			log.Info(errorstring)
-			http.Error(w, errorstring, http.StatusInternalServerError)
-			return
-		}
-		has_db_errored := false
-		db_error_string := ""
 
-		// TODO : For print debugging only, might be a good idea to put these in a deubug logger with lowest priority??
-		log.Info(fmt.Sprintf("Attempting to insert all file extras, texts, metadata for uuid: %s\n", doc_uuid))
-		if err := upsertFileAttachments(ctx, q, doc_uuid, newDocInfo.Attachments, insert); err != nil {
-			errorstring := fmt.Sprintf("Error in upsertFileAttachments: %v", err)
-			log.Info(errorstring)
-			has_db_errored = true
-			db_error_string = db_error_string + errorstring + "\n"
-		}
-
-		log.Info(fmt.Sprintf("Starting upsertFileMetadata for uuid: %s\n", doc_uuid))
-		if err := upsertFileMetadata(ctx, q, doc_uuid, newDocInfo.Mdata, insert); err != nil {
-			log.Info(fmt.Sprintf("Is it getting past the if block?"))
-			errorstring := fmt.Sprintf("Error in upsertFileMetadata: %v", err)
-			log.Info(errorstring)
-			has_db_errored = true
-			db_error_string = db_error_string + errorstring + "\n"
-		}
-
-		if err := upsertFileExtras(ctx, q, doc_uuid, newDocInfo.Extra, insert); err != nil {
-			errorstring := fmt.Sprintf("Error in upsertFileExtras: %v", err)
-			log.Info(errorstring)
-			has_db_errored = true
-			db_error_string = db_error_string + errorstring + "\n"
-		}
-
-		// log.Info(fmt.Sprintf("Starting fileAuthorsUpsert for uuid: %s\n", doc_uuid))
-		if err := fileAuthorsUpsert(ctx, q, doc_uuid, newDocInfo.Authors, insert); err != nil {
-			errorstring := fmt.Sprintf("Error in fileAuthorsUpsert: %v", err)
-			log.Info(errorstring)
-			has_db_errored = true
-			db_error_string = db_error_string + errorstring + "\n"
-		}
-		if err := fileConversationUpsert(ctx, q, doc_uuid, newDocInfo.Conversation, insert); err != nil {
-			errorstring := fmt.Sprintf("Error in fileConversationUpsert: %v", err)
-			log.Info(errorstring)
-			has_db_errored = true
-			db_error_string = db_error_string + errorstring + "\n"
-		}
-
-		// log.Info(fmt.Sprintf("Starting juristictionFileUpsert for uuid: %s\n", doc_uuid))
-		// This doesnt do anything for the time being, so its better to exclude imho
-		// if err := juristictionFileUpsert(ctx, q, doc_uuid, newDocInfo.Juristiction, insert); err != nil {
-		// 	errorstring := fmt.Sprintf("Error in juristictionFileUpsert: %v", err)
-		// 	log.Info(errorstring)
-		// 	has_db_errored = true
-		// 	db_error_string = db_error_string + errorstring + "\n"
-		// }
-		// Incorperate DB errors into filestatus
-		newDocInfo.Stage.IsErrored = newDocInfo.Stage.IsErrored || has_db_errored
-		newDocInfo.Stage.DatabaseErrorMsg = db_error_string
-
-		if err := fileStatusInsert(ctx, q, doc_uuid, newDocInfo.Stage); err != nil {
-			errorstring := fmt.Sprintf("Error in fileStatusInsert: %v", err)
-			log.Info(errorstring)
-			has_db_errored = true
-			// db_error_string = db_error_string + errorstring + "\n"
-		}
-		encountered_error := newDocInfo.Stage.IsErrored || has_db_errored
-		completed_successfully := !encountered_error && newDocInfo.Stage.IsCompleted
-		if completed_successfully {
-			newDocInfo.Verified = true
-			params := dbstore.FileVerifiedUpdateParams{
-				Verified: pgtype.Bool{Bool: true, Valid: true},
-				ID:       doc_uuid,
-			}
-			_, err := q.FileVerifiedUpdate(ctx, params)
-			if err != nil {
-				errorstring := fmt.Sprintf("Error in FileVerifiedUpdate, this shouldnt effect anything, but might mean something weird is going on, since this code is only called if every other DB operation succeeded: %v", err)
-				log.Info(errorstring)
-			}
-		}
-
-		// TODO : For print debugging only, might be a good idea to put these in a deubug logger with lowest priority??
-		log.Info(fmt.Sprintf("Completed all DB Operations for uuid, returning schema: %s\n", doc_uuid))
-
-		response, err := json.Marshal(newDocInfo)
+		// Send response
+		response, err := json.Marshal(result)
 		if err != nil {
-			errorstring := fmt.Sprintf("Error marshalling response: %v", err)
-			log.Info(errorstring)
-			// http.Error(w, errorstring, http.StatusInternalServerError)
-			// return
+			respondError(w, fmt.Sprintf("Error marshalling response: %v", err), http.StatusInternalServerError)
+			return
 		}
 
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(response)
 	}
 }
+
+type IngestDocParams struct {
+	DocInfo     files.CompleteFileSchema
+	Insert      bool
+	Deduplicate bool
+}
+
+func ingestFile(ctx context.Context, q *dbstore.Queries, params IngestDocParams) (files.CompleteFileSchema, error) {
+	var err error
+	docInfo := params.DocInfo
+	docUUID := docInfo.ID
+
+	// Deduplication logic
+	if params.Insert && params.Deduplicate {
+		existingUUID, err := DeduplicateFile(ctx, q, docInfo.Hash)
+		if err != nil {
+			return docInfo, fmt.Errorf("deduplication error: %w", err)
+		}
+		if existingUUID != uuid.Nil {
+			params.Insert = false
+			docUUID = existingUUID
+			docInfo.ID = existingUUID
+		}
+	}
+
+	// Convert to creation data
+	creationData := docInfo.ConvertToCreationData()
+	creationData.Verified = pgtype.Bool{Bool: false, Valid: true}
+
+	// Insert or update main file record
+	fileSchema, err := upsertFileRecord(ctx, q, creationData, docUUID, params)
+	if err != nil {
+		return docInfo, fmt.Errorf("file upsert error: %w", err)
+	}
+	docInfo.ID = fileSchema.ID
+
+	// Process associations
+	associationErrors, hasErrored := processAssociations(ctx, q, docInfo)
+	docInfo.Stage.IsErrored = docInfo.Stage.IsErrored || hasErrored
+	docInfo.Stage.DatabaseErrorMsg += strings.Join(associationErrors, "\n")
+
+	// Update verification status
+	if err := updateVerificationStatus(ctx, q, docInfo); err != nil {
+		return docInfo, fmt.Errorf("verification update error: %w", err)
+	}
+
+	return docInfo, nil
+}
+
+// dedupe.go - Deduplication logic
+
+func StandardizeAttachmentUUIDsHelper(file *files.CompleteFileSchema) *files.CompleteFileSchema {
+	for index, attachment := range file.Attachments {
+		if attachment.FileID != file.ID {
+			file.Attachments[index].FileID = file.ID
+		}
+	}
+	return file
+}
+
+func DeduplicateFileAttachments(ctx context.Context, q *dbstore.Queries, file *files.CompleteFileSchema) (*files.CompleteFileSchema, error) {
+	attachments := file.Attachments
+	for index, attachment := range attachments {
+		new_attachment, err := DeduplicateSingularAttachment(ctx, q, &attachment)
+		if err != nil {
+			return file, fmt.Errorf("deduplication error: %w", err)
+		}
+		attachments[index] = *new_attachment
+	}
+	file.Attachments = attachments
+	return file, nil
+}
+
+func DeduplicateSingularAttachment(ctx context.Context, q *dbstore.Queries, attachment *files.CompleteAttachmentSchema) (*files.CompleteAttachmentSchema, error) {
+	if attachment.ID == uuid.Nil {
+		results, err := q.AttachmentListByHash(ctx, attachment.Hash.String())
+		if err != nil {
+			return &files.CompleteAttachmentSchema{}, fmt.Errorf("database error: %w", err)
+		}
+		if len(results) > 0 {
+			// Idk if this is a good idea or not, but fuck it ship it
+			attachment.ID = results[0].ID
+		}
+		return attachment, nil
+	}
+	return attachment, nil
+}
+
+func parseDocumentUUID(r *http.Request, isInsert bool) (uuid.UUID, error) {
+	if isInsert {
+		return uuid.Nil, nil
+	}
+
+	params := mux.Vars(r)
+	fileIDString := params["uuid"]
+	return uuid.Parse(fileIDString)
+}
+
+func parseRequestBody(r *http.Request) (files.CompleteFileSchema, error) {
+	var docInfo files.CompleteFileSchema
+	bodyBytes, err := io.ReadAll(r.Body)
+	if err != nil {
+		return docInfo, fmt.Errorf("error reading request body: %w", err)
+	}
+
+	if err := json.Unmarshal(bodyBytes, &docInfo); err != nil {
+		return docInfo, fmt.Errorf("error parsing request body: %w", err)
+	}
+	return docInfo, nil
+}
+
+func upsertFileRecord(ctx context.Context, q *dbstore.Queries, data files.FileCreationDataRaw, docUUID uuid.UUID, insert bool) (files.FileSchema, error) {
+	private := false
+	if insert {
+		return InsertPubPrivateFileObj(*q, ctx, data, private)
+	}
+	return UpdatePubPrivateFileObj(*q, ctx, data, private, docUUID)
+}
+
+func processAssociations(ctx context.Context, q dbstore.Queries, docInfo files.CompleteFileSchema, insert bool) ([]string, bool) {
+	var errors []string
+	addError := func(err error, context string) {
+		if err != nil {
+			errors = append(errors, fmt.Sprintf("%s: %v", context, err))
+		}
+	}
+
+	addError(upsertFileAttachments(ctx, q, docInfo.ID, docInfo.Attachments, insert), "attachments")
+	addError(upsertFileMetadata(ctx, q, docInfo.ID, docInfo.Mdata, insert), "metadata")
+	addError(upsertFileExtras(ctx, q, docInfo.ID, docInfo.Extra, insert), "extras")
+	addError(fileAuthorsUpsert(ctx, q, docInfo.ID, docInfo.Authors, insert), "authors")
+	addError(fileConversationUpsert(ctx, q, docInfo.ID, docInfo.Conversation, insert), "conversation")
+
+	return errors, len(errors) > 0
+}
+
+func updateVerificationStatus(ctx context.Context, q *dbstore.Queries, docInfo files.CompleteFileSchema) error {
+	if !docInfo.Stage.IsErrored && docInfo.Stage.IsCompleted {
+		params := dbstore.FileVerifiedUpdateParams{
+			Verified: pgtype.Bool{Bool: true, Valid: true},
+			ID:       docInfo.ID,
+		}
+		if _, err := q.FileVerifiedUpdate(ctx, params); err != nil {
+			return fmt.Errorf("failed to update verification status: %w", err)
+		}
+	}
+	return nil
+}
+
+// response.go - HTTP response helpers

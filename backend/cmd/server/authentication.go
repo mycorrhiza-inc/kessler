@@ -1,7 +1,4 @@
-
-import (
-	"os"
-)
+package main
 
 // FIXME : HIGHLY INSECURE, GET THE HMAC SECRET FROM SUPABASE AND THROW IT IN HERE AS AN NEV VARAIBLE.
 
@@ -53,7 +50,7 @@ import (
 // 		}
 // 		// Validation four our scrapers to add data to the system
 // 		if strings.HasPrefix(token, "Bearer thaum_") {
-// 			return UserValidation{userID: "thaumaturgy", validated: true}
+// 			return UserValidation{userID: "kessler/cmd/ingest", validated: true}
 // 			// TODO: Add a check so that authentication only succeeds if it comes from a tailscale IP.
 // 			// 		q := database.GetTx()
 
@@ -65,7 +62,7 @@ import (
 // 			// ctx := r.Context()
 // 			// result, err := q.CheckIfThaumaturgyAPIKeyExists(ctx, encodedHash)
 // 			// if result.KeyBlake3Hash == encodedHash && err != nil {
-// 			// 	return UserValidation{userID: "thaumaturgy", validated: true}
+// 			// 	return UserValidation{userID: "kessler/cmd/ingest", validated: true}
 // 			// }
 // 			// return UserValidation{validated: false}
 // 		}

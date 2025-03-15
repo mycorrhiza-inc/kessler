@@ -5,7 +5,7 @@ COPY go.mod /app
 COPY go.sum /app
 RUN go mod download
 COPY . /app
-RUN go build -o kessler-backend-go
+RUN go build ./cmd/server/main.go -o kessler-backend-go
 
 # Step 2: Export the build result to a plain Alpine image
 FROM alpine:3.20

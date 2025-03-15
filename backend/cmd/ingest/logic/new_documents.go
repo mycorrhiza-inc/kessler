@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"kessler/cmd/ingest/validators"
 	"kessler/internal/constants"
 	"kessler/internal/objects/authors"
 	"kessler/internal/objects/files"
@@ -15,7 +16,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"thaumaturgy/validators"
 	"time"
 
 	"github.com/charmbracelet/log"
@@ -135,54 +135,69 @@ func checkPgForDuplicateMetadata(ctx context.Context, fileObj files.CompleteFile
 	return &result, nil
 }
 
-func AddURLRaw(ctx context.Context, fileURL string, fileObj *files.CompleteFileSchema) (*files.CompleteFileSchema, error) {
+func CompleteIngestFileFromAttachmentUrls(ctx context.Context, fileObj *files.CompleteFileSchema) (*files.CompleteFileSchema, error) {
 	existingFile, err := checkPgForDuplicateMetadata(ctx, *fileObj)
 	if err == nil && existingFile != nil {
 		fileObj = existingFile
 	}
 
-	downloadDir := filepath.Join(constants.OS_TMPDIR, "downloads")
-	if err := os.MkdirAll(downloadDir, 0755); err != nil {
-		return nil, err
-	}
-
-	resultPath, err := s3utils.DownloadFile(fileURL, downloadDir)
-	if err != nil {
-		return nil, err
-	}
-
-	if fileObj.Extension == "" {
-		ext := filepath.Ext(resultPath)
-		if ext != "" {
-			fileObj.Extension = ext[1:]
-		}
-	}
-
-	return addFileRaw(ctx, resultPath, fileObj)
-}
-
-func addFileRaw(ctx context.Context, tmpFilePath string, fileObj *files.CompleteFileSchema) (*files.CompleteFileSchema, error) {
 	if err := validateMetadata(fileObj.Mdata); err != nil {
 		return nil, err
 	}
-	extension, err := files.FileExtensionFromString(fileObj.Extension)
+	for index, attachment := range fileObj.Attachments {
+		if attachment.URL == "" {
+			return nil, errors.New("no URL in attachment")
+		}
+		new_attachment, err := fetchAttachmentFromUrl(ctx, attachment)
+		if err != nil {
+			return nil, err
+		}
+		fileObj.Attachments[index] = new_attachment
+	}
+
+	return fileObj, nil
+}
+
+func fetchAttachmentFromUrl(ctx context.Context, attachment files.CompleteAttachmentSchema) (files.CompleteAttachmentSchema, error) {
+	new_attachment := attachment
+	downloadDir := filepath.Join(constants.OS_TMPDIR, "downloads")
+	if err := os.MkdirAll(downloadDir, 0755); err != nil {
+		return files.CompleteAttachmentSchema{}, err
+	}
+
+	tmpFilePath, err := s3utils.DownloadFile(attachment.URL, downloadDir)
 	if err != nil {
-		return nil, err
+		return files.CompleteAttachmentSchema{}, err
+	}
+
+	if attachment.Extension == "" {
+		ext := filepath.Ext(tmpFilePath)
+		if ext != "" {
+			new_attachment.Extension = ext[1:]
+		}
+	}
+	extension, err := files.FileExtensionFromString(new_attachment.Extension)
+	if err != nil {
+		return files.CompleteAttachmentSchema{}, err
 	}
 	err = validators.ValidateExtensionFromFilepath(tmpFilePath, extension)
 	if err != nil {
-		return nil, err
+		return files.CompleteAttachmentSchema{}, err
 	}
 
 	fileManager := s3utils.NewKeFileManager()
 	hashResult, err := fileManager.UploadFileToS3(tmpFilePath)
 	if err != nil {
-		return nil, err
+		return files.CompleteAttachmentSchema{}, err
 	}
 
-	fileObj.Hash = hashResult.String()
+	new_attachment.Hash = hashResult
 	os.Remove(tmpFilePath)
 
+	return new_attachment, nil
+}
+
+func validateAuthorNames(fileObj *files.CompleteFileSchema) error {
 	authorNames, _ := fileObj.Mdata["author"].(string)
 	authors, err := splitAuthorField(authorNames)
 	if err != nil {
@@ -191,8 +206,7 @@ func addFileRaw(ctx context.Context, tmpFilePath string, fileObj *files.Complete
 
 	fileObj.Authors = authors
 	fileObj.Mdata["authors"] = getListAuthors(authors)
-
-	return fileObj, nil
+	return nil
 }
 
 // Helper functions and assumed implementations

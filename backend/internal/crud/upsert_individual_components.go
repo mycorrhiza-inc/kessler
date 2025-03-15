@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"kessler/internal/objects/files"
 	"kessler/internal/dbstore"
+	"kessler/internal/objects/files"
 
 	"github.com/charmbracelet/log"
 	"github.com/google/uuid"
@@ -42,7 +42,7 @@ func upsertFileAttachments(ctx context.Context, q dbstore.Queries, doc_uuid uuid
 			FileID:    doc_uuid,
 			Name:      attachment.Name,
 			Extension: attachment.Extension,
-			Hash:      attachment.Hash,
+			Hash:      attachment.Hash.String(),
 			Lang:      attachment.Lang,
 			Mdata:     []byte{},
 		}
