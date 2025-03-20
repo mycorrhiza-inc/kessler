@@ -94,6 +94,8 @@ func DefineGlobalRouter(global_subrouter *mux.Router) {
 	).Methods(http.MethodGet)
 }
 
+// This is a test
+
 // @Summary		Add Process File Task
 // @Description	Creates a new task to process a file with the given UUID
 // @Tags			tasks
