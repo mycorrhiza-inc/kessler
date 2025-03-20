@@ -111,14 +111,14 @@ func ingestFile(ctx context.Context, q *dbstore.Queries, params IngestDocParams)
 	creationData.Verified = pgtype.Bool{Bool: false, Valid: true}
 
 	// Insert or update main file record
-	fileSchema, err := upsertFileRecord(ctx, q, creationData, docUUID, params)
+	fileSchema, err := upsertFileRecord(ctx, q, creationData, docUUID, params.Insert)
 	if err != nil {
 		return docInfo, fmt.Errorf("file upsert error: %w", err)
 	}
 	docInfo.ID = fileSchema.ID
 
 	// Process associations
-	associationErrors, hasErrored := processAssociations(ctx, q, docInfo)
+	associationErrors, hasErrored := processAssociations(ctx, *q, docInfo, params.Insert)
 	docInfo.Stage.IsErrored = docInfo.Stage.IsErrored || hasErrored
 	docInfo.Stage.DatabaseErrorMsg += strings.Join(associationErrors, "\n")
 
@@ -129,8 +129,6 @@ func ingestFile(ctx context.Context, q *dbstore.Queries, params IngestDocParams)
 
 	return docInfo, nil
 }
-
-// dedupe.go - Deduplication logic
 
 func StandardizeAttachmentUUIDsHelper(file *files.CompleteFileSchema) *files.CompleteFileSchema {
 	for index, attachment := range file.Attachments {
@@ -229,5 +227,3 @@ func updateVerificationStatus(ctx context.Context, q *dbstore.Queries, docInfo f
 	}
 	return nil
 }
-
-// response.go - HTTP response helpers
