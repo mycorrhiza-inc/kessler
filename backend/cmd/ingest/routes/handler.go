@@ -85,6 +85,10 @@ func DefineGlobalRouter(global_subrouter *mux.Router) {
 		HandleNYPUCIngestAddTask,
 	).Methods(http.MethodPost)
 	global_subrouter.HandleFunc(
+		"/add-task/ingest/openscrapers",
+		HandleOpenScraperIngestAddTask,
+	).Methods(http.MethodPost)
+	global_subrouter.HandleFunc(
 		"/task/{id}",
 		HandleGetTaskInfo,
 	).Methods(http.MethodGet)
