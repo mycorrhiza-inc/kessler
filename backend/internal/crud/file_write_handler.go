@@ -93,18 +93,18 @@ func ingestFile(ctx context.Context, q *dbstore.Queries, params IngestDocParams)
 	docInfo := params.DocInfo
 	docUUID := docInfo.ID
 
-	// Deduplication logic
-	if params.Insert && params.Deduplicate {
-		existingUUID, err := DeduplicateFile(ctx, q, docInfo.Hash)
-		if err != nil {
-			return docInfo, fmt.Errorf("deduplication error: %w", err)
-		}
-		if existingUUID != uuid.Nil {
-			params.Insert = false
-			docUUID = existingUUID
-			docInfo.ID = existingUUID
-		}
-	}
+	// // Deduplication logic
+	// if params.Insert && params.Deduplicate {
+	// 	existingUUID, err := DeduplicateFile(ctx, q, docInfo.Hash)
+	// 	if err != nil {
+	// 		return docInfo, fmt.Errorf("deduplication error: %w", err)
+	// 	}
+	// 	if existingUUID != uuid.Nil {
+	// 		params.Insert = false
+	// 		docUUID = existingUUID
+	// 		docInfo.ID = existingUUID
+	// 	}
+	// }
 
 	// Convert to creation data
 	creationData := docInfo.ConvertToCreationData()
