@@ -24,6 +24,8 @@ const removeBackslash = (val: string | undefined): string => {
   return val;
 };
 
+export const ssr_public_api_url = process.env.PUBLIC_KESSLER_API_URL;
+
 export const runtimeConfig: RuntimeEnvConfig = {
   public_api_url: removeBackslash(process.env.PUBLIC_KESSLER_API_URL),
   internal_api_url: removeBackslash(process.env.INTERNAL_KESSLER_API_URL),
