@@ -2,8 +2,8 @@ package crud
 
 import (
 	"context"
-	"kessler/internal/objects/files"
 	"kessler/internal/dbstore"
+	"kessler/internal/objects/files"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -15,8 +15,8 @@ func DefineCrudRoutes(r *mux.Router) {
 		"/insert",
 		makeFileUpsertHandler(
 			FileUpsertHandlerConfig{
-				private: false,
-				insert:  true,
+				Private: false,
+				Insert:  true,
 			},
 		)).Methods(http.MethodPost)
 
@@ -24,8 +24,8 @@ func DefineCrudRoutes(r *mux.Router) {
 		"/{uuid}/update",
 		makeFileUpsertHandler(
 			FileUpsertHandlerConfig{
-				private: false,
-				insert:  false,
+				Private: false,
+				Insert:  false,
 			},
 		)).Methods(http.MethodPost)
 	filesRoute.HandleFunc(

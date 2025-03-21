@@ -131,20 +131,24 @@ func main() {
 	// standard rest
 	publicSubroute := standardRoute.PathPrefix("/public").Subrouter()
 	crud.DefineCrudRoutes(publicSubroute)
+	log.Info("CRUD registered")
 
 	// heathcheck
 	healthSubroute := standardRoute.PathPrefix("/health").Subrouter()
 	health.DefineHealthRoutes(healthSubroute)
+	log.Info("heath registered")
 
 	// search endpoints
 	searchSubroute := standardRoute.PathPrefix("/search").Subrouter()
 	search.DefineSearchRoutes(searchSubroute)
+	log.Info("search registered")
 
-	err = filters.RegisterFilterRoutes(searchSubroute)
+	err := filters.RegisterFilterRoutes(searchSubroute)
 	if err != nil {
 		log.Fatal("error registering filter routes", zap.Error(err))
 	}
 	log.Info("registered filters route")
+	log.Info("---\t🎉 api routes have been registed 🎉\t---")
 
 	// search autocomplete sugggestions endpoints
 	autocompleteSubroute := standardRoute.PathPrefix("/autocomplete").Subrouter()
