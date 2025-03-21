@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"kessler/internal/constants"
+	"kessler/internal/ingest/validators"
 	"kessler/internal/objects/authors"
 	"kessler/internal/objects/files"
 	"kessler/internal/s3utils"
@@ -15,7 +16,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"thaumaturgy/validators"
 	"time"
 
 	"github.com/charmbracelet/log"

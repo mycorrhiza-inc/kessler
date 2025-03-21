@@ -1,0 +1,10 @@
+[build]
+cmd = "go run ./cmd/server/main.go"
+# Define the necessary extensions and directories
+
+[log]
+level = "debug"
+color = "true"
+
+[misc]
+clean_on_update = true

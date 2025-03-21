@@ -44,9 +44,9 @@ services:
       - "dev"
 
   backend:
-    image: cosmtrek/air
-    command:
-      - "air"
+    build:
+      context: ./backend
+      dockerfile: ./Dockerfile.server.dev
     env_file:
       - config/global.env
     environment:
@@ -74,9 +74,9 @@ services:
       - "11211:12111"
 
   ingest:
-    image: cosmtrek/air
-    command:
-      - "air"
+    build:
+      context: ./backend
+      dockerfile: ./Dockerfile.ingest.dev
     env_file:
       - config/global.env
     environment:

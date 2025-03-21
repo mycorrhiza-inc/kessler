@@ -7,12 +7,12 @@ import (
 	"fmt"
 	"kessler/internal/constants"
 	"kessler/internal/hashes"
+	"kessler/internal/ingest/external"
+	"kessler/internal/ingest/validators"
 	"kessler/internal/objects/files"
 	"kessler/internal/s3utils"
 	"log/slog"
 	"os"
-	"thaumaturgy/external"
-	"thaumaturgy/validators"
 
 	"github.com/google/uuid"
 	// Assume these are implemented in other packages

@@ -93,9 +93,15 @@ func main() {
 
 	log := logger.GetLogger("main")
 
+	// port_str := os.Getenv("PORT")
+	// log.Debug("env string")
+	// port, err := strconv.Atoi()
+	// if err != nil {
+	// 	log.Fatal("no port set")
+	// }
 	log.Debug("starting application",
 		zap.String("env", os.Getenv("GO_ENV")),
-		zap.Int("port", 4041))
+		zap.Int("port", 7001))
 
 	log.Info("connecting to database")
 	if err := database.Init(30); err != nil {
@@ -134,7 +140,7 @@ func main() {
 	searchSubroute := standardRoute.PathPrefix("/search").Subrouter()
 	search.DefineSearchRoutes(searchSubroute)
 
-	err := filters.RegisterFilterRoutes(searchSubroute)
+	err = filters.RegisterFilterRoutes(searchSubroute)
 	if err != nil {
 		log.Fatal("error registering filter routes", zap.Error(err))
 	}
