@@ -44,14 +44,8 @@ services:
       - "dev"
 
   backend:
-<<<<<<< HEAD
-    build:
-      context: ./backend
-      dockerfile: ./Dockerfile.server.dev
-=======
     image: cosmtrek/air
     command: 'air --build.cmd "go build cmd/server/main.go"'
->>>>>>> main
     env_file:
       - config/global.env
     environment:
@@ -69,14 +63,8 @@ services:
       - "traefik.http.routers.go-backend.rule=PathPrefix(`/v2`)"
       - "traefik.http.middlewares.test-stripprefix.stripprefix.prefixes=/v2"
   ingest:
-<<<<<<< HEAD
-    build:
-      context: ./backend
-      dockerfile: ./Dockerfile.ingest.dev
-=======
     image: cosmtrek/air
     command: 'air --build.cmd "go build cmd/ingest/main.go"'
->>>>>>> main
     env_file:
       - config/global.env
     environment:
