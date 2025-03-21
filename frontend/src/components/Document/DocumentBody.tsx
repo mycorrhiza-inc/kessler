@@ -20,7 +20,7 @@ import { getRuntimeEnv } from "@/lib/env_variables_hydration_script";
 import { FileExtension, fileExtensionFromText } from "../Tables/FileExtension";
 import XlsxViewer from "./XlsxViewer";
 import ErrorMessage from "../ErrorMessage";
-import { runtimeConfig } from "@/lib/env_variables";
+import { runtimeConfig, ssr_public_api_url } from "@/lib/env_variables";
 
 // import { ErrorBoundary } from "react-error-boundary";
 //
@@ -122,7 +122,11 @@ const DocumentHeader = ({
   const summary = documentObject.extra.summary;
   const underscoredTitle = title ? title.replace(/ /g, "_") : "Unkown_Document";
   const runtimeConfig = getRuntimeEnv();
-  const fileUrlNamedDownload = `${runtimeConfig.public_api_url}/v2/public/files/${objectId}/raw/${underscoredTitle}.${extension}`;
+  const runtimeConfigUrlSafe =
+    runtimeConfig.public_api_url ||
+    ssr_public_api_url ||
+    "https://api.kessler.xyz";
+  const fileUrlNamedDownload = `${runtimeConfigUrlSafe}/v2/public/files/${objectId}/raw/${underscoredTitle}.${extension}`;
   const kesslerFileUrl = `/files/${objectId}`;
   const authors_unpluralized =
     documentObject.authors?.length == 1 ? "Author" : "Authors";

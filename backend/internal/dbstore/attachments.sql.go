@@ -127,6 +127,47 @@ func (q *Queries) AttachmentListByFileId(ctx context.Context, fileID uuid.UUID) 
 	return items, nil
 }
 
+const attachmentListByHash = `-- name: AttachmentListByHash :many
+SELECT
+    id, file_id, lang, name, extension, hash, mdata, created_at, updated_at
+FROM
+    public.attachment
+WHERE
+    hash = $1
+ORDER BY
+    created_at DESC
+`
+
+func (q *Queries) AttachmentListByHash(ctx context.Context, hash string) ([]Attachment, error) {
+	rows, err := q.db.Query(ctx, attachmentListByHash, hash)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Attachment
+	for rows.Next() {
+		var i Attachment
+		if err := rows.Scan(
+			&i.ID,
+			&i.FileID,
+			&i.Lang,
+			&i.Name,
+			&i.Extension,
+			&i.Hash,
+			&i.Mdata,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const attachmentUpdate = `-- name: AttachmentUpdate :one
 UPDATE
     public.attachment

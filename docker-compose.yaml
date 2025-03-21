@@ -44,16 +44,22 @@ services:
       - "dev"
 
   backend:
+<<<<<<< HEAD
     build:
       context: ./backend
       dockerfile: ./Dockerfile.server.dev
+=======
+    image: cosmtrek/air
+    command: 'air --build.cmd "go build cmd/server/main.go"'
+>>>>>>> main
     env_file:
       - config/global.env
     environment:
       <<: *common-env
-      air_wd: "/app"
+      # air_wd: "/app"
     volumes:
       - ./backend:/app
+      - /tmp/kessler/air-server:/app/tmp/
     working_dir: /app
     expose:
       - 4041
@@ -62,28 +68,23 @@ services:
       - "traefik.namespace=kessler"
       - "traefik.http.routers.go-backend.rule=PathPrefix(`/v2`)"
       - "traefik.http.middlewares.test-stripprefix.stripprefix.prefixes=/v2"
-
-  cache:
-    image: memcached:1.6.37-alpine
-    command:
-      --conn-limit=1024
-      --memory-limit=64
-      --threads=2
-    restart: always
-    ports:
-      - "11211:12111"
-
   ingest:
+<<<<<<< HEAD
     build:
       context: ./backend
       dockerfile: ./Dockerfile.ingest.dev
+=======
+    image: cosmtrek/air
+    command: 'air --build.cmd "go build cmd/ingest/main.go"'
+>>>>>>> main
     env_file:
       - config/global.env
     environment:
       <<: *common-env
-      air_wd: "/app"
+      # air_wd: "/app"
     volumes:
-      - ./ingest:/app
+      - ./backend:/app
+      - /tmp/kessler/air-ingest:/app/tmp/
     working_dir: /app
     expose:
       - 4042
@@ -91,6 +92,14 @@ services:
       - "traefik.enable=true"
       - "traefik.namespace=kessler"
       - "traefik.http.routers.ingest.rule=PathPrefix(`/ingest_v1`)"
+  cache:
+    image: memcached:1.6.37-alpine
+    command: --conn-limit=1024
+      --memory-limit=64
+      --threads=2
+    restart: always
+    ports:
+      - "11211:12111"
   valkey:
     hostname: valkey
     image: valkey/valkey:7.2.5

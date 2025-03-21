@@ -45,3 +45,13 @@ WHERE
     file_id = $1
 ORDER BY
     created_at DESC;
+
+-- name: AttachmentListByHash :many
+SELECT
+    *
+FROM
+    public.attachment
+WHERE
+    hash = $1
+ORDER BY
+    created_at DESC;

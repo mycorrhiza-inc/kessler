@@ -3,8 +3,12 @@ package tasks
 import (
 	"context"
 	"encoding/json"
+<<<<<<< HEAD:backend/internal/ingest/tasks/process_tasks.go
 	"fmt"
 	"kessler/internal/ingest/logic"
+=======
+	"kessler/cmd/ingest/logic"
+>>>>>>> main:backend/cmd/ingest/tasks/process_tasks.go
 	"kessler/internal/objects/files"
 
 	"github.com/charmbracelet/log"
@@ -20,11 +24,7 @@ func HandleIngestNewFileTask(ctx context.Context, task *asynq.Task) error {
 	if err := json.Unmarshal(task.Payload(), &fileObj); err != nil {
 		return err
 	}
-	file_URL, ok := fileObj.Mdata["url"].(string)
-	if !ok {
-		return fmt.Errorf("url field missing or not a string in file metadata")
-	}
-	file, err := logic.AddURLRaw(ctx, file_URL, &fileObj)
+	file, err := logic.CompleteIngestFileFromAttachmentUrls(ctx, &fileObj)
 	if err != nil {
 		return err
 	}

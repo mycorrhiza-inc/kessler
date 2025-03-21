@@ -3,7 +3,11 @@ package routes
 import (
 	"encoding/json"
 	"fmt"
+<<<<<<< HEAD:backend/internal/ingest/routes/handler.go
 	"kessler/internal/ingest/tasks"
+=======
+	"kessler/cmd/ingest/tasks"
+>>>>>>> main:backend/cmd/ingest/routes/handler.go
 	"net/http"
 	"os"
 
@@ -85,10 +89,16 @@ func DefineGlobalRouter(global_subrouter *mux.Router) {
 		HandleNYPUCIngestAddTask,
 	).Methods(http.MethodPost)
 	global_subrouter.HandleFunc(
+		"/add-task/ingest/openscrapers",
+		HandleOpenScraperIngestAddTask,
+	).Methods(http.MethodPost)
+	global_subrouter.HandleFunc(
 		"/task/{id}",
 		HandleGetTaskInfo,
 	).Methods(http.MethodGet)
 }
+
+// This is a test
 
 // @Summary		Add Process File Task
 // @Description	Creates a new task to process a file with the given UUID
