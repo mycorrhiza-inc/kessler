@@ -9,6 +9,7 @@ import (
 	"io"
 	"kessler/cmd/ingest/validators"
 	"kessler/internal/constants"
+	"kessler/internal/ingest/validators"
 	"kessler/internal/objects/authors"
 	"kessler/internal/objects/files"
 	"kessler/internal/s3utils"

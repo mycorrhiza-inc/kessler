@@ -43,6 +43,6 @@ func (f Filter) String() string {
 
 func (f Filter) MarshalLogObject(enc zapcore.ObjectEncoder) error {
 	enc.AddString("name", f.Name)
-	enc.AddString("state", f.State)
+	enc.AddString("Dataset", f.Dataset)
 	return nil
 }
