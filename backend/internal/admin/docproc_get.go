@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"kessler/internal/crud"
 	"kessler/internal/dbstore"
 	"kessler/internal/objects/files"
+	FileHandler "kessler/internal/objects/files/handler"
 	"kessler/internal/util"
 	"math/rand"
 	"net/http"
@@ -89,7 +89,7 @@ func CompleteFileSchemasFromUUIDs(ctx context.Context, uuids []uuid.UUID) ([]fil
 			defer wg.Done()
 			q := *dbstore.New(dbtx_val)
 			// start := time.Now()
-			complete_file, err := crud.CompleteFileSchemaGetFromUUID(ctx, q, file_uuid)
+			complete_file, err := FileHandler.CompleteFileSchemaGetFromUUID(ctx, q, file_uuid)
 			// elapsed := time.Since(start)
 			// TODO: Debug why these loading times are so fucking slow.
 			// if elapsed > 10*time.Second {

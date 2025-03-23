@@ -4,9 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"kessler/internal/crud"
 	"kessler/internal/dbstore"
 	"kessler/internal/llm_utils"
+	ConversationHandler "kessler/internal/objects/conversations/handler"
+	FileHandler "kessler/internal/objects/files/handler"
+	OrganizationHandler "kessler/internal/objects/organizations/handler"
 	"kessler/internal/util"
 
 	"github.com/google/uuid"
@@ -97,7 +99,7 @@ func getFileInformationUnknown(file_query_string string, q dbstore.Queries, ctx 
 }
 
 func getFileInformationUUID(file_uuid uuid.UUID, q dbstore.Queries, ctx context.Context) (ObjectInfo, error) {
-	file, err := crud.SemiCompleteFileGetFromUUID(ctx, q, file_uuid)
+	file, err := FileHandler.SemiCompleteFileGetFromUUID(ctx, q, file_uuid)
 	if err != nil {
 		return ObjectInfo{}, err
 	}
@@ -117,7 +119,7 @@ func getFileInformationUUID(file_uuid uuid.UUID, q dbstore.Queries, ctx context.
 }
 
 func getDocketInformationUnkown(docket_query_string string, q dbstore.Queries, ctx context.Context) (ObjectInfo, error) {
-	return_obj, err := crud.ConversationGetByUnknown(ctx, &q, docket_query_string)
+	return_obj, err := ConversationHandler.ConversationGetByUnknown(ctx, &q, docket_query_string)
 	if err != nil {
 		return ObjectInfo{}, err
 	}
@@ -132,7 +134,7 @@ func getDocketInformationUnkown(docket_query_string string, q dbstore.Queries, c
 }
 
 func getOrgInformationUnknown(org_query_string string, q dbstore.Queries, ctx context.Context) (ObjectInfo, error) {
-	return_obj, err := crud.OrgWithFilesGetByUnknown(ctx, &q, org_query_string)
+	return_obj, err := OrganizationHandler.OrgWithFilesGetByUnknown(ctx, &q, org_query_string)
 	if err != nil {
 		return ObjectInfo{}, err
 	}

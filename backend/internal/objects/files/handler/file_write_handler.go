@@ -1,4 +1,4 @@
-package crud
+package handler
 
 import (
 	"context"
@@ -6,7 +6,10 @@ import (
 	"fmt"
 	"io"
 	"kessler/internal/dbstore"
+	ConvoHandler "kessler/internal/objects/conversations/handler"
 	"kessler/internal/objects/files"
+	"kessler/internal/objects/files/crud"
+
 	"net/http"
 	"strings"
 
@@ -193,9 +196,9 @@ func parseRequestBody(r *http.Request) (files.CompleteFileSchema, error) {
 func upsertFileRecord(ctx context.Context, q *dbstore.Queries, data files.FileCreationDataRaw, docUUID uuid.UUID, insert bool) (files.FileSchema, error) {
 	private := false
 	if insert {
-		return InsertPubPrivateFileObj(*q, ctx, data, private)
+		return files.InsertPubPrivateFileObj(*q, ctx, data, private)
 	}
-	return UpdatePubPrivateFileObj(*q, ctx, data, private, docUUID)
+	return files.UpdatePubPrivateFileObj(*q, ctx, data, private, docUUID)
 }
 
 func processAssociations(ctx context.Context, q dbstore.Queries, docInfo files.CompleteFileSchema, insert bool) ([]string, bool) {
@@ -206,11 +209,11 @@ func processAssociations(ctx context.Context, q dbstore.Queries, docInfo files.C
 		}
 	}
 
-	addError(upsertFileAttachments(ctx, q, docInfo.ID, docInfo.Attachments, insert), "attachments")
-	addError(upsertFileMetadata(ctx, q, docInfo.ID, docInfo.Mdata, insert), "metadata")
-	addError(upsertFileExtras(ctx, q, docInfo.ID, docInfo.Extra, insert), "extras")
-	addError(fileAuthorsUpsert(ctx, q, docInfo.ID, docInfo.Authors, insert), "authors")
-	addError(fileConversationUpsert(ctx, q, docInfo.ID, docInfo.Conversation, insert), "conversation")
+	addError(crud.UpsertFileAttachments(ctx, q, docInfo.ID, docInfo.Attachments, insert), "attachments")
+	addError(crud.UpsertFileMetadata(ctx, q, docInfo.ID, docInfo.Mdata, insert), "metadata")
+	addError(crud.UpsertFileExtras(ctx, q, docInfo.ID, docInfo.Extra, insert), "extras")
+	addError(crud.FileAuthorsUpsert(ctx, q, docInfo.ID, docInfo.Authors, insert), "authors")
+	addError(ConvoHandler.FileConversationUpsert(ctx, q, docInfo.ID, docInfo.Conversation, insert), "conversation")
 
 	return errors, len(errors) > 0
 }

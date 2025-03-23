@@ -6,12 +6,14 @@ import (
 	"kessler/internal/admin"
 	"kessler/internal/autocomplete"
 	"kessler/internal/cache"
-	"kessler/internal/crud"
 	"kessler/internal/database"
 	"kessler/internal/filters"
 	"kessler/internal/health"
 	"kessler/internal/jobs"
 	"kessler/internal/logger"
+	ConversationsHandler "kessler/internal/objects/conversations/handler"
+	FilesHandler "kessler/internal/objects/files/handler"
+	OrganizationsHandler "kessler/internal/objects/organizations/handler"
 	"kessler/internal/rag"
 	"kessler/internal/search"
 	"net/http"
@@ -128,9 +130,11 @@ func main() {
 	standardRoute := rootRoute.PathPrefix("").Subrouter()
 	standardRoute.Use(timeoutMiddleware(standardTimeout))
 
-	// standard rest
+	// standard rest for conversations, files, and organizations
 	publicSubroute := standardRoute.PathPrefix("/public").Subrouter()
-	crud.DefineCrudRoutes(publicSubroute)
+	FilesHandler.DefineFileRoutes(publicSubroute)
+	OrganizationsHandler.DefineOrganizationRoutes(publicSubroute)
+	ConversationsHandler.DefineConversationsRoutes(publicSubroute)
 	log.Info("CRUD registered")
 
 	// heathcheck

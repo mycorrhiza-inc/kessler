@@ -1,4 +1,4 @@
-package crud
+package handler
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func DefineCrudRoutes(r *mux.Router) {
+func DefineFileRoutes(r *mux.Router) {
 	filesRoute := r.PathPrefix("/files").Subrouter()
 	filesRoute.HandleFunc(
 		"/insert",
@@ -75,47 +75,6 @@ func DefineCrudRoutes(r *mux.Router) {
 		FileWithMetaGetHandler,
 	).Methods(http.MethodGet)
 
-	// ------- organizations subroute -------
-	organizationsRouter := r.PathPrefix("/organizations").Subrouter()
-
-	organizationsRouter.HandleFunc(
-		"/organizations/list",
-		OrgSemiCompletePaginated,
-	).Methods(http.MethodGet)
-
-	organizationsRouter.HandleFunc(
-		"/organizations/{uuid}",
-		OrgGetWithFilesHandler,
-	).Methods(http.MethodGet)
-
-	organizationsRouter.HandleFunc(
-		"/organizations/verify",
-		OrganizationVerifyHandler,
-	).Methods(http.MethodPost)
-
-	// ------- conversations subroute -------
-	conversationsRouter := r.PathPrefix("/conversations").Subrouter()
-
-	conversationsRouter.HandleFunc(
-		"/conversations/list",
-		ConversationSemiCompletePaginatedList,
-	).Methods(http.MethodGet)
-
-	conversationsRouter.HandleFunc(
-		"/conversations/named-lookup/{name}",
-		ConversationGetByUnknownHandler,
-	).Methods(http.MethodGet)
-
-	conversationsRouter.HandleFunc(
-		"/conversations/verify",
-		ConversationVerifyHandler,
-	).Methods(http.MethodPost)
-
-	conversationsRouter.HandleFunc(
-		"/conversations/list/semi-complete",
-		ConversationSemiCompleteListAll,
-	).Methods(http.MethodGet)
-
 }
 
 // CONVERT TO UPPER CASE IF YOU EVER WANT TO USE IT OUTSIDE OF THIS CONTEXT
@@ -135,7 +94,7 @@ func GetListAllRawFiles(ctx context.Context, q dbstore.Queries) ([]files.FileSch
 	}
 	var fileSchemas []files.FileSchema
 	for _, fileRaw := range db_files {
-		rawSchema := PublicFileToSchema(fileRaw)
+		rawSchema := files.PublicFileToSchema(fileRaw)
 		fileSchemas = append(fileSchemas, rawSchema)
 	}
 	return fileSchemas, nil
