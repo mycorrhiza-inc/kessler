@@ -9,7 +9,7 @@ import (
 	"kessler/internal/dbstore"
 	"kessler/internal/objects/conversations"
 	"kessler/internal/objects/networking"
-	"kessler/internal/util"
+	"kessler/pkg/util"
 	"net/http"
 	"time"
 

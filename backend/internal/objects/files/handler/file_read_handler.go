@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"kessler/internal/database"
 	"kessler/internal/dbstore"
-	"kessler/internal/hashes"
+	"kessler/pkg/hashes"
 	"kessler/internal/objects/authors"
 	"kessler/internal/objects/conversations"
 	"kessler/internal/objects/files"
-	"kessler/internal/s3utils"
+	"kessler/pkg/s3utils"
 	"net/http"
 	"os"
 

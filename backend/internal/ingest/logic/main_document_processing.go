@@ -6,11 +6,11 @@ import (
 	"errors"
 	"fmt"
 	"kessler/internal/constants"
-	"kessler/internal/hashes"
+	"kessler/pkg/hashes"
 	"kessler/internal/ingest/external"
 	"kessler/internal/ingest/validators"
 	"kessler/internal/objects/files"
-	"kessler/internal/s3utils"
+	"kessler/pkg/s3utils"
 	"log/slog"
 	"os"
 

@@ -11,7 +11,7 @@ import (
 	"kessler/internal/ingest/validators"
 	"kessler/internal/objects/authors"
 	"kessler/internal/objects/files"
-	"kessler/internal/s3utils"
+	"kessler/pkg/s3utils"
 	"net/http"
 	"os"
 	"path/filepath"

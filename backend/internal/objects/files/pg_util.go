@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"kessler/internal/dbstore"
-	"kessler/internal/logger"
+	"kessler/pkg/logger"
 	"kessler/internal/objects/timestamp"
 	"time"
 

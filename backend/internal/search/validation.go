@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"kessler/internal/objects/networking"
-	"kessler/internal/util"
+	"kessler/pkg/util"
 	"reflect"
 	"strings"
 

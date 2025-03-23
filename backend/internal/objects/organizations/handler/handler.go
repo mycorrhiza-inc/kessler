@@ -11,7 +11,7 @@ import (
 	"kessler/internal/objects/files"
 	"kessler/internal/objects/networking"
 	"kessler/internal/objects/organizations"
-	"kessler/internal/util"
+	"kessler/pkg/util"
 	"net/http"
 
 	"github.com/charmbracelet/log"

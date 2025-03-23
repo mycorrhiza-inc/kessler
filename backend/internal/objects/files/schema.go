@@ -1,7 +1,7 @@
 package files
 
 import (
-	"kessler/internal/hashes"
+	"kessler/pkg/hashes"
 	"kessler/internal/objects/authors"
 	"kessler/internal/objects/conversations"
 	"kessler/internal/objects/timestamp"

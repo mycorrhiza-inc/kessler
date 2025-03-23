@@ -10,7 +10,7 @@ import (
 	"kessler/internal/filters"
 	"kessler/internal/health"
 	"kessler/internal/jobs"
-	"kessler/internal/logger"
+	"kessler/pkg/logger"
 	ConversationsHandler "kessler/internal/objects/conversations/handler"
 	FilesHandler "kessler/internal/objects/files/handler"
 	OrganizationsHandler "kessler/internal/objects/organizations/handler"

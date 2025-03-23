@@ -1,9 +1,9 @@
 package validators
 
 import (
-	"kessler/internal/hashes"
+	"kessler/pkg/hashes"
 	"kessler/internal/objects/files"
-	"kessler/internal/s3utils"
+	"kessler/pkg/s3utils"
 )
 
 func ValidateExtensionFromHash(fileManager s3utils.KesslerFileManager, hash hashes.KesslerHash, extension files.KnownFileExtension) error {
