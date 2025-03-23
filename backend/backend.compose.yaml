@@ -1,0 +1,49 @@
+services:
+  ingest:
+    build:
+      dockerfile: dev.ingest.Dockerfile
+    command: go run /app/cmd/ingest/main.go
+    develop:
+      watch:
+        - action: rebuild
+          path: ./cmd/ingest
+          target: .
+        - action: rebuild
+          path: ./internal
+          target: /app/internal
+    env_file:
+      - ../config/global.env
+    volumes:
+      - ./backend:/app
+      - /tmp/kessler/air-ingest:/app/tmp/
+    working_dir: /app
+    expose:
+      - 4042
+    labels:
+      - "traefik.enable=true"
+      - "traefik.namespace=kessler"
+      - "traefik.http.routers.ingest.rule=PathPrefix(`/ingest_v1`)"
+
+  backend:
+    build:
+      dockerfile: dev.server.Dockerfile
+    command: go run /app/cmd/server/main.go
+    develop:
+      watch:
+        - action: rebuild
+          path: ./cmd/server
+          target: .
+        - action: rebuild
+          path: ./internal
+          target: /app/internal
+          ignore:
+            - ingest/
+    env_file:
+      - ../config/global.env
+    expose:
+      - 4041
+    labels:
+      - "traefik.enable=true"
+      - "traefik.namespace=kessler"
+      - "traefik.http.routers.go-backend.rule=PathPrefix(`/v2`)"
+      - "traefik.http.middlewares.test-stripprefix.stripprefix.prefixes=/v2"

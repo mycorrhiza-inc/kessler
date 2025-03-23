@@ -1,4 +1,4 @@
-FROM node:23.6.1-alpine3.20 as frontend-builder
+FROM node:23.6.1-alpine3.20 AS frontend-builder
 RUN useradd -ms /bin/sh -u 1001 app
 USER app
 WORKDIR /app

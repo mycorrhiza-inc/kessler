@@ -1,14 +1,13 @@
-# Step 1: Build the Go app
-FROM golang:1-alpine3.20 AS builder
+# dev dockerfile for ingest pipeline
+FROM golang:1.24 AS go-mods
+# run as a nonpriveledged user
+RUN useradd -ms /bin/sh -u 1001 app
+USER app
 WORKDIR /app
-COPY go.mod /app
-COPY go.sum /app
+COPY go.mod go.sum ./
 RUN go mod download
 
-FROM cosmtrek/air
+FROM go-mods AS go-ingest-builds
 WORKDIR /app
-COPY --from=builder /app/ /app/
-COPY ./ingest.air.toml /app/.air.toml
-COPY ./cmd/ingest/main.go /app
-EXPOSE 4041
-CMD ["air"]
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go install -ldflags="-w -s" ./cmd/ingest
