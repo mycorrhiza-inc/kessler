@@ -57,6 +57,9 @@ func corsDomainMiddleware(next http.Handler) http.Handler {
 func HandleVersionHash(w http.ResponseWriter, r *http.Request) {
 	// Get the version hash from the environment variable
 	versionHash := os.Getenv("VERSION_HASH")
+	if versionHash == "" {
+		versionHash = "unknown"
+	}
 	w.Write([]byte(versionHash))
 }
 
