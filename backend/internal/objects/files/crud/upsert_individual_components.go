@@ -5,14 +5,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"kessler/internal/dbstore"
+	"kessler/internal/objects/authors"
 	"kessler/internal/objects/files"
+	OrganizationHandler "kessler/internal/objects/organizations/handler"
 
 	"github.com/charmbracelet/log"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func upsertFileAttachmentTexts(ctx context.Context, q dbstore.Queries, attachment_uuid uuid.UUID, texts []files.AttachmentChildTextSource, insert bool) error {
+func UpsertFileAttachmentTexts(ctx context.Context, q dbstore.Queries, attachment_uuid uuid.UUID, texts []files.AttachmentChildTextSource, insert bool) error {
 	error_list := []error{}
 	for _, text := range texts {
 		textRaw := dbstore.AttachmentTextCreateParams{
@@ -33,7 +35,7 @@ func upsertFileAttachmentTexts(ctx context.Context, q dbstore.Queries, attachmen
 	return nil
 }
 
-func upsertFileAttachments(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, attachments []files.CompleteAttachmentSchema, insert bool) error {
+func UpsertFileAttachments(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, attachments []files.CompleteAttachmentSchema, insert bool) error {
 	if !insert {
 		// Delete previous file attachments
 	}
@@ -50,7 +52,7 @@ func upsertFileAttachments(ctx context.Context, q dbstore.Queries, doc_uuid uuid
 		if err != nil {
 			return err
 		}
-		err = upsertFileAttachmentTexts(ctx, q, pg_attachment.ID, attachment.Texts, insert)
+		err = UpsertFileAttachmentTexts(ctx, q, pg_attachment.ID, attachment.Texts, insert)
 		if err != nil {
 			return err
 		}
@@ -58,7 +60,7 @@ func upsertFileAttachments(ctx context.Context, q dbstore.Queries, doc_uuid uuid
 	return nil
 }
 
-func upsertFileMetadata(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, metadata files.FileMetadataSchema, insert bool) error {
+func UpsertFileMetadata(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, metadata files.FileMetadataSchema, insert bool) error {
 	// Sometimes this is getting called with an insert when the metadata already exists in the table, this causes a PGERROR, since it violates uniqueness. However, setting it up so it tries to update will fall back to insert if the file doesnt exist. Its probably a good idea to remove this and debug what is causing the new file thing at some point.
 	// UPDATE: I am pretty sure I solved it this should be safe to take out soon - nic
 	insert = false
@@ -94,7 +96,7 @@ func upsertFileMetadata(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UU
 	return err
 }
 
-func upsertFileExtras(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, extras files.FileGeneratedExtras, insert bool) error {
+func UpsertFileExtras(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, extras files.FileGeneratedExtras, insert bool) error {
 	// Sometimes this is getting called with an insert when the metadata already exists in the table, this causes a PGERROR, since it violates uniqueness. However, setting it up so it tries to update will fall back to insert if the file doesnt exist. Its probably a good idea to remove this and debug what is causing the new file thing at some point.
 	// UPDATE: I am pretty sure I solved it this should be safe to take out soon - nic
 	insert = false
@@ -126,7 +128,7 @@ func upsertFileExtras(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID
 	return err
 }
 
-func fileStatusInsert(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, stage files.DocProcStage) error {
+func FileStatusInsert(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, stage files.DocProcStage) error {
 	stage_json, err := json.Marshal(stage)
 	if err != nil {
 		return err
@@ -140,7 +142,7 @@ func fileStatusInsert(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID
 	return err
 }
 
-func fileStatusGetLatestStage(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID) (files.DocProcStage, error) {
+func FileStatusGetLatestStage(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID) (files.DocProcStage, error) {
 	result_pgschema, err := q.StageLogFileGetLatest(ctx, doc_uuid)
 	return_obj := files.DocProcStage{}
 	if err != nil {
@@ -152,4 +154,42 @@ func fileStatusGetLatestStage(ctx context.Context, q dbstore.Queries, doc_uuid u
 		return files.DocProcStage{}, err
 	}
 	return return_obj, nil
+}
+
+func FileAuthorsUpsert(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID, authors_info []authors.AuthorInformation, insert bool) error {
+	if !insert {
+		err := q.AuthorshipDocumentDeleteAll(ctx, doc_uuid)
+		if err != nil {
+			return err
+		}
+	}
+	fileAuthorInsert := func(author_info authors.AuthorInformation) error {
+		new_author_info, err := OrganizationHandler.VerifyAuthorOrganizationUUID(ctx, q, &author_info)
+		if err != nil {
+			return err
+		}
+		if new_author_info.AuthorID == uuid.Nil {
+			return fmt.Errorf("ASSERT FAILURE: verifyAuthorOrganizationUUID should never return a null uuid.")
+		}
+
+		author_params := dbstore.AuthorshipDocumentOrganizationInsertParams{
+			DocumentID:      doc_uuid,
+			OrganizationID:  new_author_info.AuthorID,
+			IsPrimaryAuthor: pgtype.Bool{Bool: new_author_info.IsPrimaryAuthor, Valid: true},
+		}
+		_, err = q.AuthorshipDocumentOrganizationInsert(ctx, author_params)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+	// Maybe m,ake async at some point, low priority since it isnt latency sensitive.
+	for _, author_info := range authors_info {
+		err := fileAuthorInsert(author_info)
+		if err != nil {
+			log.Info(fmt.Sprintf("Encountered error while inserting author for document %s, ignoring and continuing: %v", doc_uuid, err))
+		}
+	}
+
+	return nil
 }
