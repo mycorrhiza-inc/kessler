@@ -57,7 +57,9 @@ func InitMemcached(servers ...string) error {
 
 	// Test the connection
 	err := MemecachedIsConnected()
-
+	if err != nil {
+		fmt.Println("MEMEMEMMEMEMEMMEM")
+	}
 	return err
 }
 

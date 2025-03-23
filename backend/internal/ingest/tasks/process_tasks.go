@@ -3,12 +3,7 @@ package tasks
 import (
 	"context"
 	"encoding/json"
-<<<<<<< HEAD:backend/internal/ingest/tasks/process_tasks.go
-	"fmt"
 	"kessler/internal/ingest/logic"
-=======
-	"kessler/cmd/ingest/logic"
->>>>>>> main:backend/cmd/ingest/tasks/process_tasks.go
 	"kessler/internal/objects/files"
 
 	"github.com/charmbracelet/log"
