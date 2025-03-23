@@ -6,12 +6,12 @@ import (
 	"kessler/internal/admin"
 	"kessler/internal/autocomplete"
 	"kessler/internal/cache"
-	"kessler/internal/crud"
 	"kessler/internal/database"
 	"kessler/internal/filters"
 	"kessler/internal/health"
 	"kessler/internal/jobs"
 	"kessler/internal/logger"
+	"kessler/internal/objects/files"
 	"kessler/internal/rag"
 	"kessler/internal/search"
 	"net/http"
@@ -130,7 +130,7 @@ func main() {
 
 	// standard rest
 	publicSubroute := standardRoute.PathPrefix("/public").Subrouter()
-	crud.DefineCrudRoutes(publicSubroute)
+	files.DefineFileRoutes(publicSubroute)
 	log.Info("CRUD registered")
 
 	// heathcheck
