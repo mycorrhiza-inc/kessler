@@ -19,7 +19,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func DefineFileRoutes(r *mux.Router) {
+func DefineConversationsRoutes(r *mux.Router) {
 	// ------- conversations subroute -------
 	conversationsRouter := r.PathPrefix("/conversations").Subrouter()
 

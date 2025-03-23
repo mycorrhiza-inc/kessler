@@ -7,7 +7,7 @@ import (
 	"kessler/internal/dbstore"
 	"kessler/internal/objects/authors"
 	"kessler/internal/objects/files"
-	"kessler/internal/objects/organizations"
+	OrganizationHandler "kessler/internal/objects/organizations/handler"
 
 	"github.com/charmbracelet/log"
 	"github.com/google/uuid"
@@ -164,7 +164,7 @@ func FileAuthorsUpsert(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUI
 		}
 	}
 	fileAuthorInsert := func(author_info authors.AuthorInformation) error {
-		new_author_info, err := organizations.VerifyAuthorOrganizationUUID(ctx, q, &author_info)
+		new_author_info, err := OrganizationHandler.VerifyAuthorOrganizationUUID(ctx, q, &author_info)
 		if err != nil {
 			return err
 		}

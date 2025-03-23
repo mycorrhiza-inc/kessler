@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"kessler/internal/crud"
 	"kessler/internal/dbstore"
 	"kessler/internal/llm_utils"
 	"kessler/internal/objects/files"
+	FileHandler "kessler/internal/objects/files/handler"
+	OrganizationHandler "kessler/internal/objects/organizations/handler"
 	"kessler/internal/util"
 	"net/http"
 	"regexp"
@@ -87,7 +88,7 @@ Return only the email addresses that are likely associated with the organization
 }
 
 func ExtractRelaventEmailsFromFileUUID(ctx context.Context, q dbstore.Queries, llm llm_utils.LLM, file_id uuid.UUID) ([]string, error) {
-	file_object, err := crud.CompleteFileSchemaGetFromUUID(ctx, q, file_id)
+	file_object, err := FileHandler.CompleteFileSchemaGetFromUUID(ctx, q, file_id)
 	if err != nil {
 		return []string{}, err
 	}
@@ -120,7 +121,7 @@ type EmailInfo struct {
 func ExtractRelaventEmailsFromOrgUUID(ctx context.Context, llm llm_utils.LLM, org_id uuid.UUID) (EmailOrgExtraction, error) {
 	q := *util.DBQueriesFromContext(ctx)
 	information_map := map[string][]uuid.UUID{}
-	org_obj, err := crud.OrgWithFilesGetByID(ctx, &q, org_id)
+	org_obj, err := OrganizationHandler.OrgWithFilesGetByID(ctx, &q, org_id)
 	if err != nil {
 		return EmailOrgExtraction{}, err
 	}
