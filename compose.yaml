@@ -1,11 +1,11 @@
 # local development docker compose
-x-common-env: &common-env
-  OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector:4317
-  VERSION_HASH: dev
-  DOMAIN: "localhost"
-  PUBLIC_KESSLER_API_URL: "http://localhost"
-  INTERNAL_KESSLER_API_URL: "http://backend-go:4041"
-  INTERNAL_REDIS_ADDRESS: "valkey:6379"
+# x-common-env: &common-env
+#   OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector:4317
+#   VERSION_HASH: dev
+#   DOMAIN: "localhost"
+#   PUBLIC_KESSLER_API_URL: "http://localhost"
+#   INTERNAL_KESSLER_API_URL: "http://backend-go:4041"
+#   INTERNAL_REDIS_ADDRESS: "valkey:6379"
 services:
   reverse-proxy:
     image: traefik:v3.1.2
@@ -25,9 +25,7 @@ services:
     hostname: "kessler.xyz"
     build:
       context: ./frontend
-      dockerfile: ./Dockerfile-dev
-    environment:
-      <<: *common-env
+      dockerfile: ./dev.Dockerfile
     env_file:
       - config/global.env
     volumes:
@@ -43,43 +41,6 @@ services:
       - "run"
       - "dev"
 
-  backend:
-    image: cosmtrek/air
-    command: 'air --build.cmd "go build cmd/server/main.go"'
-    env_file:
-      - config/global.env
-    environment:
-      <<: *common-env
-      # air_wd: "/app"
-    volumes:
-      - ./backend:/app
-      - /tmp/kessler/air-server:/app/tmp/
-    working_dir: /app
-    expose:
-      - 4041
-    labels:
-      - "traefik.enable=true"
-      - "traefik.namespace=kessler"
-      - "traefik.http.routers.go-backend.rule=PathPrefix(`/v2`)"
-      - "traefik.http.middlewares.test-stripprefix.stripprefix.prefixes=/v2"
-  ingest:
-    image: cosmtrek/air
-    command: 'air --build.cmd "go build cmd/ingest/main.go"'
-    env_file:
-      - config/global.env
-    environment:
-      <<: *common-env
-      # air_wd: "/app"
-    volumes:
-      - ./backend:/app
-      - /tmp/kessler/air-ingest:/app/tmp/
-    working_dir: /app
-    expose:
-      - 4042
-    labels:
-      - "traefik.enable=true"
-      - "traefik.namespace=kessler"
-      - "traefik.http.routers.ingest.rule=PathPrefix(`/ingest_v1`)"
   cache:
     image: memcached:1.6.37-alpine
     command: --conn-limit=1024
@@ -109,3 +70,5 @@ services:
   #     - /var/run/docker.sock:/var/run/docker.sock
   #   command: --config /etc/vector/vector.yaml
   #   restart: unless-stopped
+include:
+  - ./backend/backend.compose.yaml

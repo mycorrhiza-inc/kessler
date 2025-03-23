@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"kessler/cmd/ingest/tasks"
+	"kessler/internal/ingest/tasks"
 	"kessler/internal/objects/timestamp"
 	"net/http"
 	"time"

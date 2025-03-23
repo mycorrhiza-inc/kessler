@@ -1,8 +1,8 @@
-FROM node:23.6.1-alpine3.20 as BUILD_IMAGE
+FROM node:23.6.1-alpine3.20 AS frontend-builder
+RUN useradd -ms /bin/sh -u 1001 app
+USER app
 WORKDIR /app
-COPY ./package.json ./   
-COPY ./package-lock.json ./     
-# install dependencies
+COPY package.json package-lock.json ./   
 RUN npm install --force
 COPY ./tsconfig.json ./
 COPY ./build_time_variables.env ./.env

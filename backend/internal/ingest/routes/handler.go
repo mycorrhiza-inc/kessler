@@ -3,11 +3,7 @@ package routes
 import (
 	"encoding/json"
 	"fmt"
-<<<<<<< HEAD:backend/internal/ingest/routes/handler.go
 	"kessler/internal/ingest/tasks"
-=======
-	"kessler/cmd/ingest/tasks"
->>>>>>> main:backend/cmd/ingest/routes/handler.go
 	"net/http"
 	"os"
 
