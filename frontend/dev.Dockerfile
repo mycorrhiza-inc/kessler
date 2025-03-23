@@ -1,5 +1,5 @@
 # BIG UPDATE: Changed the root image and source of the configuration files for deployment
-FROM node:22.4.1-alpine3.20 as build_image
+FROM node:22.4.1-alpine3.20 AS build_image
 WORKDIR /app
 COPY ./package.json ./  
 COPY ./package-lock.json ./    
