@@ -44,8 +44,18 @@ services:
       - "dev"
 
   backend:
-    image: cosmtrek/air
-    command: 'air --build.cmd "go build cmd/server/main.go"'
+    build:
+      dockerfile: ./backend/Dockerfile.server.dev
+    command: air
+    develop:
+      watch:
+        - action: sync
+          path: ./backend/
+          target: /
+          ignore:
+            - cmd/ingest/
+            - internal/ingest
+
     env_file:
       - config/global.env
     environment:
