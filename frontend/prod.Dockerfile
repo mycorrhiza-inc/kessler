@@ -1,6 +1,7 @@
 FROM node:23.6.1-alpine3.20 AS frontend-builder
-RUN useradd -ms /bin/sh -u 1001 app
-USER app
+# Not sure why this is here, but I dont think useradd is a cmd availible on alpine
+# RUN useradd -ms /bin/sh -u 1001 app
+# USER app
 WORKDIR /app
 COPY package.json package-lock.json ./   
 RUN npm install --force
