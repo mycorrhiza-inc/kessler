@@ -131,11 +131,11 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.namespace=kessler"
-      - "traefik.http.routers.backend-go.rule=Host(`{public_api_url}`) && PathPrefix(`/v2`)"
-      - "traefik.http.routers.backend-go.entrypoints=websecure"
-      - "traefik.http.routers.backend-go.tls.certresolver=myresolver"
+      - "traefik.http.routers.backend-server.rule=Host(`{public_api_url}`) && PathPrefix(`/v2`)"
+      - "traefik.http.routers.backend-server.entrypoints=websecure"
+      - "traefik.http.routers.backend-server.tls.certresolver=myresolver"
 
-  bacckend-ingest:
+  backend-ingest:
     image: fractalhuman1/kessler-backend-ingest:{version_hash}
     command:
       - "./kessler-ingest"
@@ -148,10 +148,10 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.namespace=kessler"
-      - "traefik.http.routers.ingest.rule=Host(`{public_api_url}`) && PathPrefix(`/ingest_v1`)"
-      - "traefik.http.routers.ingest.entrypoints=websecure"
-      - "traefik.http.routers.ingest.tls.certresolver=myresolver"
-      - "traefik.http.services.ingest.loadbalancer.server.port=4042"
+      - "traefik.http.routers.backend-ingest.rule=Host(`{public_api_url}`) && PathPrefix(`/ingest_v1`)"
+      - "traefik.http.routers.backend-ingest.entrypoints=websecure"
+      - "traefik.http.routers.backend-ingest.tls.certresolver=myresolver"
+      - "traefik.http.services.backend-ingest.loadbalancer.server.port=4042"
 
   reverse-proxy:
     image: traefik:v3.0

@@ -83,7 +83,7 @@ function process_branch() {
         fi
 
 
-        ssh "root@${deploy_host}" "cd /mycorrhiza/kessler && python3 execute_production_deploy.py --${deploy_flag} --version ${current_hash}"
+        ssh "root@${deploy_host}" "cd /mycorrhiza/kessler && git reset --hard HEAD && git clean -fd && git switch main && git pull && python3 execute_production_deploy.py --${deploy_flag} --version ${current_hash}"
     else
         echo "No changes detected, deployemnt already on provided hash, skipping deployment: ${current_hash}"
     fi
