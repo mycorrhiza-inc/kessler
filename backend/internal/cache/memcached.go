@@ -2,7 +2,6 @@ package cache
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/bradfitz/gomemcache/memcache"
@@ -30,30 +29,30 @@ var MemcachedClient *memcache.Client
 // Example: "localhost:11211,otherhost:11211"
 // If MEMCACHED_SERVERS is not set, it defaults to "localhost:11211"
 func InitMemcached(servers ...string) error {
-	// check for environment servers
-	serverList := servers
-	env_servers := os.Getenv("MEMCACHED_SERVERS")
+	// // check for environment servers
+	// serverList := servers
+	// env_servers := os.Getenv("MEMCACHED_SERVERS")
 
-	if env_servers == "" && len(servers) == 0 {
-		env_servers = "localhost:11211" // Default server
-	}
+	// if env_servers == "" && len(servers) == 0 {
+	// 	env_servers = "localhost:11211" // Default server
+	// }
 
-	// Split the servers string into individual server addresses
-	envlist := strings.Split(env_servers, ",")
+	// // Split the servers string into individual server addresses
+	// envlist := strings.Split(env_servers, ",")
 
-	// Trim any whitespace from server addresses
-	for _, server := range envlist {
-		serverList = append(serverList, strings.TrimSpace(server))
-	}
+	// // Trim any whitespace from server addresses
+	// for _, server := range envlist {
+	// 	serverList = append(serverList, strings.TrimSpace(server))
+	// }
 
-	if len(servers) == 0 {
-		return fmt.Errorf("no memcached servers specified")
-	}
+	// if len(servers) == 0 {
+	// 	return fmt.Errorf("no memcached servers specified")
+	// }
 
-	serverListString := strings.Join(serverList, ",")
+	// serverListString := strings.Join(serverList, ",")
 
 	// Initialize the global client
-	MemcachedClient = memcache.New(serverListString)
+	MemcachedClient = memcache.New("cache:11211")
 
 	// Test the connection
 	err := MemecachedIsConnected()

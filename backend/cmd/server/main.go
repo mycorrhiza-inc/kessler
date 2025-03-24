@@ -10,12 +10,12 @@ import (
 	"kessler/internal/filters"
 	"kessler/internal/health"
 	"kessler/internal/jobs"
-	"kessler/pkg/logger"
 	ConversationsHandler "kessler/internal/objects/conversations/handler"
 	FilesHandler "kessler/internal/objects/files/handler"
 	OrganizationsHandler "kessler/internal/objects/organizations/handler"
 	"kessler/internal/rag"
 	"kessler/internal/search"
+	"kessler/pkg/logger"
 	"net/http"
 	"os"
 	"time"
@@ -122,6 +122,12 @@ func main() {
 		log.Fatal("unable to connect to memcached", zap.Error(err))
 	}
 	log.Info("cache initialized")
+	log.Info("---\ttesting cache\t---")
+	err := cache.MemcachedClient.Ping()
+	if err != nil {
+		log.Error("failed to ping cache")
+	}
+	log.Info("---\tcache successfully working\t---")
 
 	log.Info("---\tregistering api routes\t---")
 
@@ -150,7 +156,7 @@ func main() {
 	search.DefineSearchRoutes(searchSubroute)
 	log.Info("search registered")
 
-	err := filters.RegisterFilterRoutes(searchSubroute)
+	err = filters.RegisterFilterRoutes(searchSubroute)
 	if err != nil {
 		log.Fatal("error registering filter routes", zap.Error(err))
 	}
