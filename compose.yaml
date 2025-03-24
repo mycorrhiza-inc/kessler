@@ -112,7 +112,9 @@ services:
       --threads=2
     restart: always
     ports:
-      - "12111:12111"
+      - "11211:11211"
+    expose:
+      - 11211
   valkey:
     hostname: valkey
     image: valkey/valkey:7.2.5

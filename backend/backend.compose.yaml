@@ -5,10 +5,10 @@ services:
     command: go run /app/cmd/ingest/main.go
     develop:
       watch:
-        - action: rebuild
+        - action: restart 
           path: ./cmd/ingest
           target: .
-        - action: rebuild
+        - action: restart
           path: ./internal
           target: /app/internal
     env_file:
@@ -30,10 +30,10 @@ services:
     command: go run /app/cmd/server/main.go
     develop:
       watch:
-        - action: rebuild
+        - action: restart 
           path: ./cmd/server
           target: .
-        - action: rebuild
+        - action: restart
           path: ./internal
           target: /app/internal
           ignore:
