@@ -4,7 +4,7 @@ x-common-env: &common-env
   VERSION_HASH: dev
   DOMAIN: "localhost"
   PUBLIC_KESSLER_API_URL: "http://localhost"
-  INTERNAL_KESSLER_API_URL: "http://backend-go:4041"
+  INTERNAL_KESSLER_API_URL: "http://backend-server:4041"
   INTERNAL_REDIS_ADDRESS: "valkey:6379"
 services:
   # Main Services
@@ -112,7 +112,7 @@ services:
       --threads=2
     restart: always
     ports:
-      - "11211:12111"
+      - "12111:12111"
   valkey:
     hostname: valkey
     image: valkey/valkey:7.2.5
