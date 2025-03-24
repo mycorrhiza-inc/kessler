@@ -62,7 +62,7 @@ function process_branch() {
         echo "Rebuilding and deploying images..."
         
         # Build and push Docker images
-        sudo docker build -t "fractalhuman1/kessler-frontend:${current_hash}" --platform linux/amd64 ./frontend/
+        sudo docker build -t "fractalhuman1/kessler-frontend:${current_hash}" --platform linux/amd64 --file ./frontend/prod.Dockerfile ./frontend/
         sudo docker build -t "fractalhuman1/kessler-backend-server:${current_hash}" --platform linux/amd64 --file ./backend/prod.server.Dockerfile ./backend
         sudo docker build -t "fractalhuman1/kessler-backend-ingest:${current_hash}" --platform linux/amd64 --file ./backend/prod.ingest.Dockerfile ./backend
 
