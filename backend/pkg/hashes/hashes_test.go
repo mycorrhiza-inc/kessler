@@ -2,7 +2,7 @@ package hashes_test
 
 import (
 	"crypto/rand"
-	"kessler/internal/hashes"
+	"kessler/pkg/hashes"
 	"testing"
 )
 

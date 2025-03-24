@@ -5,12 +5,12 @@ COPY go.mod /app
 COPY go.sum /app
 RUN go mod download
 COPY . /app
-RUN go build ./cmd/ingest/main.go -o kessler-ingest
+RUN go build -o /app/kessler-ingest ./cmd/ingest/main.go 
 
 # Step 2: Export the build result to a plain Alpine image
 FROM alpine:3.20
 WORKDIR /app
 COPY --from=builder /app/kessler-ingest /app/
-COPY . /app
+# COPY . /app
 EXPOSE 4041
 CMD ["./kessler-ingest"]

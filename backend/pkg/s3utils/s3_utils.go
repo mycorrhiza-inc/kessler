@@ -4,7 +4,7 @@ import (
 	"crypto/md5"
 	"fmt"
 	"io"
-	"kessler/internal/hashes"
+	"kessler/pkg/hashes"
 	"net/http"
 	"os"
 	"path/filepath"

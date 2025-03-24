@@ -1,0 +1,21 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Bob loblaws law blog",
+        "title": "Kessler Ingest API",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "Support",
+            "url": "https://kessler.xyz",
+            "email": "support@kessler.xyz"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0"
+    },
+    "host": "api.kessler.xyz",
+    "basePath": "/ingest_v1",
+    "paths": {}
+}

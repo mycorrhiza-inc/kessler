@@ -10,7 +10,7 @@ import (
 	"kessler/internal/objects/files"
 	"kessler/internal/objects/timestamp"
 	"kessler/internal/quickwit"
-	"kessler/internal/util"
+	"kessler/pkg/util"
 	"net/http"
 	"time"
 

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	cache "kessler/internal/cache"
-	"kessler/internal/logger"
+	"kessler/pkg/logger"
 
 	"github.com/bradfitz/gomemcache/memcache"
 	"go.uber.org/zap"

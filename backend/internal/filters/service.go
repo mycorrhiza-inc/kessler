@@ -9,7 +9,7 @@ import (
 
 	"kessler/internal/database"
 	"kessler/internal/dbstore"
-	"kessler/internal/logger"
+	"kessler/pkg/logger"
 
 	"github.com/bradfitz/gomemcache/memcache"
 	"github.com/jackc/pgx/v5/pgxpool"

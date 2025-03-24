@@ -9,7 +9,7 @@ import (
 	ConversationHandler "kessler/internal/objects/conversations/handler"
 	FileHandler "kessler/internal/objects/files/handler"
 	OrganizationHandler "kessler/internal/objects/organizations/handler"
-	"kessler/internal/util"
+	"kessler/pkg/util"
 
 	"github.com/google/uuid"
 	openai "github.com/sashabaranov/go-openai"

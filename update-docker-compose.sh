@@ -62,13 +62,13 @@ function process_branch() {
         echo "Rebuilding and deploying images..."
         
         # Build and push Docker images
-        sudo docker build -t "fractalhuman1/kessler-frontend:${current_hash}" --platform linux/amd64 ./frontend/
-        sudo docker build -t "fractalhuman1/kessler-backend-go:${current_hash}" --platform linux/amd64 ./backend-go/
-        sudo docker build -t "fractalhuman1/kessler-ingest:${current_hash}" --platform linux/amd64 ./ingest/
+        sudo docker build -t "fractalhuman1/kessler-frontend:${current_hash}" --platform linux/amd64 --file ./frontend/prod.Dockerfile ./frontend/
+        sudo docker build -t "fractalhuman1/kessler-backend-server:${current_hash}" --platform linux/amd64 --file ./backend/prod.server.Dockerfile ./backend
+        sudo docker build -t "fractalhuman1/kessler-backend-ingest:${current_hash}" --platform linux/amd64 --file ./backend/prod.ingest.Dockerfile ./backend
 
         sudo docker push "fractalhuman1/kessler-frontend:${current_hash}"
-        sudo docker push "fractalhuman1/kessler-backend-go:${current_hash}"
-        sudo docker push "fractalhuman1/kessler-ingest:${current_hash}"
+        sudo docker push "fractalhuman1/kessler-backend-server:${current_hash}"
+        sudo docker push "fractalhuman1/kessler-backend-ingest:${current_hash}"
 
         # Update docker-compose.yml on the server
         # Set deployment variables based on environment

@@ -91,26 +91,6 @@ x-common-env: &common-env
   INTERNAL_REDIS_ADDRESS: "valkey:6379"
 
 services:
-  reverse-proxy:
-    image: traefik:v3.0
-    command:
-      - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--providers.docker.constraints=Label(`traefik.namespace`,`kessler`)"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entryPoints.websecure.address=:443"
-      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
-      - "--certificatesresolvers.myresolver.acme.email=mbright@kessler.xyz"
-      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
-      - "--providers.file.filename=/etc/traefik/traefik_dynamic.yaml"
-    ports:
-      - "80:80"
-      - "443:443"
-      - "8083:8080"
-    volumes:
-      - "./volumes/letsencrypt:/letsencrypt"
-      - "/run/podman/podman.sock:/var/run/docker.sock:ro"
-      - "./traefik_dynamic.yaml:/etc/traefik/traefik_dynamic.yaml:ro"
 
   frontend:
     image: fractalhuman1/kessler-frontend:{version_hash}
@@ -138,10 +118,10 @@ services:
       - "run"
       - "start"
 
-  backend-go:
-    image: fractalhuman1/kessler-backend-go:{version_hash}
+  backend-server:
+    image: fractalhuman1/kessler-backend-server:{version_hash}
     command:
-      - "./kessler-backend-go"
+      - "./kessler-server"
     env_file:
       - config/global.env
     environment:
@@ -155,8 +135,8 @@ services:
       - "traefik.http.routers.backend-go.entrypoints=websecure"
       - "traefik.http.routers.backend-go.tls.certresolver=myresolver"
 
-  ingest:
-    image: fractalhuman1/kessler-ingest:{version_hash}
+  bacckend-ingest:
+    image: fractalhuman1/kessler-backend-ingest:{version_hash}
     command:
       - "./kessler-ingest"
     env_file:
@@ -172,6 +152,27 @@ services:
       - "traefik.http.routers.ingest.entrypoints=websecure"
       - "traefik.http.routers.ingest.tls.certresolver=myresolver"
       - "traefik.http.services.ingest.loadbalancer.server.port=4042"
+
+  reverse-proxy:
+    image: traefik:v3.0
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.constraints=Label(`traefik.namespace`,`kessler`)"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entryPoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.email=mbright@kessler.xyz"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      - "--providers.file.filename=/etc/traefik/traefik_dynamic.yaml"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8083:8080"
+    volumes:
+      - "./volumes/letsencrypt:/letsencrypt"
+      - "/run/podman/podman.sock:/var/run/docker.sock:ro"
+      - "./traefik_dynamic.yaml:/etc/traefik/traefik_dynamic.yaml:ro"
   valkey:
     hostname: valkey
     image: valkey/valkey:7.2.5
@@ -186,6 +187,14 @@ services:
       retries: 5
     expose:
       - 6379
+  cache:
+    image: memcached:1.6.37-alpine
+    command: --conn-limit=1024
+      --memory-limit=64
+      --threads=2
+    restart: always
+    ports:
+      - "11211:12111"
 """.strip()
 
 

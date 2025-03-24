@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"kessler/internal/cache"
-	"kessler/internal/logger"
+	"kessler/pkg/logger"
 	"kessler/internal/objects/timestamp"
 
 	"github.com/bradfitz/gomemcache/memcache"

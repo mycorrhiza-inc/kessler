@@ -9,7 +9,7 @@ import (
 	"kessler/internal/objects/files"
 	FileHandler "kessler/internal/objects/files/handler"
 	OrganizationHandler "kessler/internal/objects/organizations/handler"
-	"kessler/internal/util"
+	"kessler/pkg/util"
 	"net/http"
 	"regexp"
 	"slices"
