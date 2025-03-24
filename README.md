@@ -43,6 +43,12 @@ If you want to specify a certain commit you can run
 
 `./update-docker-compose.sh --commit <commit-hash>`
 
+or to push whatever commit your dev environment is on run
+
+```bash
+./update-docker-compose.sh --commit $(git rev-parse HEAD)
+```
+
 To update prod instead of nightly run 
 `./update-docker-compose.sh --prod`
 or

@@ -30,7 +30,7 @@ services:
       - "run"
       - "dev"
 
-  ingest:
+  backend-ingest:
     build:
       dockerfile: dev.ingest.Dockerfile
       context: ./backend
@@ -61,7 +61,7 @@ services:
       - "traefik.namespace=kessler"
       - "traefik.http.routers.ingest.rule=PathPrefix(`/ingest_v1`)"
 
-  backend:
+  backend-server:
     build:
       context: ./backend
       dockerfile: dev.server.Dockerfile

@@ -1,13 +1,16 @@
-# run as a nonpriveledged user
-FROM golang:1.24 AS go-mods
-RUN useradd -ms /bin/sh -u 1001 app
-USER app
+# Step 1: Build the Go app
+FROM golang:1-alpine3.20 AS builder
 WORKDIR /app
-COPY go.mod go.sum ./
+COPY go.mod /app
+COPY go.sum /app
 RUN go mod download
+COPY . /app
+RUN go build ./cmd/server/main.go -o kessler-server
 
-from go-mods AS go-builds
+# Step 2: Export the build result to a plain Alpine image
+FROM alpine:3.20
 WORKDIR /app
-COPY ./internal ./internal
-COPY ./cmd/server/ ./cmd/
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" ./cmd/
+COPY --from=builder /app/kessler-ingest /app/
+COPY . /app
+EXPOSE 4041
+CMD ["./kessler-server"]
