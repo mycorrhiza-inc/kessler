@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"kessler/internal/constants"
+	"kessler/pkg/constants"
 	"kessler/pkg/hashes"
 	"kessler/internal/ingest/external"
 	"kessler/internal/ingest/validators"

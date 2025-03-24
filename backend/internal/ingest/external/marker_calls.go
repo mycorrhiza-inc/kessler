@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"kessler/internal/constants"
+	"kessler/pkg/constants"
 	"kessler/pkg/hashes"
 	"kessler/pkg/s3utils"
 	"net/http"

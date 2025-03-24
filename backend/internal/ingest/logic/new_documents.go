@@ -7,7 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"kessler/internal/constants"
+	"kessler/pkg/constants"
 	"kessler/internal/ingest/validators"
 	"kessler/internal/objects/authors"
 	"kessler/internal/objects/files"

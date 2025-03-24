@@ -43,6 +43,9 @@ services:
         - action: rebuild
           path: ./backend/internal
           target: /app/internal
+        - action: rebuild
+          path: ./backend/pkg
+          target: /app/pkg
     environment:
       <<: *common-env
     env_file:
@@ -72,6 +75,9 @@ services:
           path: ./backend/internal
           target: /app/internal
             - ingest/
+        - action: rebuild
+          path: ./backend/pkg
+          target: /app/pkg
     env_file:
       - ./config/global.env
     environment:
