@@ -28,7 +28,7 @@ def parse_arguments():
 
 def get_config_settings(args):
     """Determine configuration settings based on arguments."""
-    template = COMPOSE_TEMPLATE
+    template = ENV_FILE_TEMPLATE
     if args.production:
         domain = "kessler.xyz"
         public_api_url = "api.kessler.xyz"
@@ -57,15 +57,13 @@ def deploy_configuration(template_content):
     subprocess.run(["git", "clean", "-fd"], check=True)
     subprocess.run(["git", "pull"], check=True)
     # Write template content to file
-    with open("docker-compose.deploy.yaml", "w") as f:
+    with open("deploy.env", "w") as f:
         f.write(template_content)
 
     # Stop and start services
     subprocess.run(
-        ["podman-compose", "-f", "docker-compose.deploy.yaml", "down"], check=True
-    )
-    subprocess.run(
-        ["podman-compose", "-f", "docker-compose.deploy.yaml", "up"], check=True
+        ["podman-compose", "--env-file", "deploy.env", "-f", "prod.deploy.yaml", "up"],
+        check=True,
     )
 
 
@@ -81,120 +79,10 @@ def main():
     deploy_configuration(docker_compose_content)
 
 
-COMPOSE_TEMPLATE = """
-x-common-env: &common-env
-  OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector:4317
-  VERSION_HASH: {version_hash}
-  DOMAIN: "{domain}"
-  PUBLIC_KESSLER_API_URL: "{https_public_api_url}"
-  INTERNAL_KESSLER_API_URL: "http://backend-go:4041"
-  INTERNAL_REDIS_ADDRESS: "valkey:6379"
-
-services:
-
-  frontend:
-    image: fractalhuman1/kessler-frontend:{version_hash}
-    env_file:
-      - config/global.env
-    environment:
-      <<: *common-env
-    volumes:
-      - ./config/frontend.env.local:/app.env.local
-      - ./config/global.env:/app/.env
-    labels:
-      - "traefik.enable=true"
-      - "traefik.namespace=kessler"
-      - "traefik.http.routers.frontend.rule=Host(`{domain}`) && PathPrefix(`/`)"
-      - "traefik.http.routers.blog.tls.domains[0].main={domain}"
-      - "traefik.http.routers.frontend.entrypoints=websecure"
-      - "traefik.http.routers.frontend.tls.certresolver=myresolver"
-      - "traefik.http.routers.whoami.rule=Host(`{domain}`)"
-      - "traefik.http.routers.whoami.entrypoints=websecure"
-      - "traefik.http.routers.whoami.tls.certresolver=myresolver"
-    expose:
-      - 3000
-    command:
-      - "npm"
-      - "run"
-      - "start"
-
-  backend-server:
-    image: fractalhuman1/kessler-backend-server:{version_hash}
-    command:
-      - "./kessler-server"
-    env_file:
-      - config/global.env
-    environment:
-      <<: *common-env
-    expose:
-      - 4041
-    labels:
-      - "traefik.enable=true"
-      - "traefik.namespace=kessler"
-      - "traefik.http.routers.backend-server.rule=Host(`{public_api_url}`) && PathPrefix(`/v2`)"
-      - "traefik.http.routers.backend-server.entrypoints=websecure"
-      - "traefik.http.routers.backend-server.tls.certresolver=myresolver"
-
-  backend-ingest:
-    image: fractalhuman1/kessler-backend-ingest:{version_hash}
-    command:
-      - "./kessler-ingest"
-    env_file:
-      - config/global.env
-    environment:
-      <<: *common-env
-    expose:
-      - 4042
-    labels:
-      - "traefik.enable=true"
-      - "traefik.namespace=kessler"
-      - "traefik.http.routers.backend-ingest.rule=Host(`{public_api_url}`) && PathPrefix(`/ingest_v1`)"
-      - "traefik.http.routers.backend-ingest.entrypoints=websecure"
-      - "traefik.http.routers.backend-ingest.tls.certresolver=myresolver"
-      - "traefik.http.services.backend-ingest.loadbalancer.server.port=4042"
-
-  reverse-proxy:
-    image: traefik:v3.0
-    command:
-      - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--providers.docker.constraints=Label(`traefik.namespace`,`kessler`)"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entryPoints.websecure.address=:443"
-      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
-      - "--certificatesresolvers.myresolver.acme.email=mbright@kessler.xyz"
-      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
-      - "--providers.file.filename=/etc/traefik/traefik_dynamic.yaml"
-    ports:
-      - "80:80"
-      - "443:443"
-      - "8083:8080"
-    volumes:
-      - "./volumes/letsencrypt:/letsencrypt"
-      - "/run/podman/podman.sock:/var/run/docker.sock:ro"
-      - "./traefik_dynamic.yaml:/etc/traefik/traefik_dynamic.yaml:ro"
-  valkey:
-    hostname: valkey
-    image: valkey/valkey:7.2.5
-    volumes:
-      - ./volumes/valkey.conf:/etc/valkey/valkey.conf
-      - ./volumes/valkey-data:/data
-    command: valkey-server /etc/valkey/valkey.conf
-    healthcheck:
-      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
-      interval: 1s
-      timeout: 3s
-      retries: 5
-    expose:
-      - 6379
-  cache:
-    image: memcached:1.6.37-alpine
-    command: --conn-limit=1024
-      --memory-limit=64
-      --threads=2
-    restart: always
-    ports:
-      - "11211:12111"
+ENV_FILE_TEMPLATE = """
+DOMAIN={domain}
+PUBLIC_KESSLER_API_URL={https_public_api_url}
+VERSION_HASH={version_hash}
 """.strip()
 
 
