@@ -73,6 +73,7 @@ def deploy_configuration(template_content):
         check=True,
     )
     subprocess.run(
+        # podman-compose --env-file deploy.env -f prod.compose.yaml up
         ["podman-compose", "--env-file", "deploy.env", "-f", "prod.compose.yaml", "up"],
         check=True,
     )
@@ -92,7 +93,7 @@ def main():
 
 ENV_FILE_TEMPLATE = """
 DOMAIN={domain}
-PUBLIC_KESSLER_API_URL={https_public_api_url}
+PUBLIC_KESSLER_API_URL={public_api_url}
 VERSION_HASH={version_hash}
 """.strip()
 
