@@ -35,6 +35,9 @@ services:
 
   backend-server:
     image: fractalhuman1/kessler-backend-server:${VERSION_HASH}
+    depends_on:
+      cache:
+        condition: service_started
     command:
       - "./kessler-server"
     env_file:
