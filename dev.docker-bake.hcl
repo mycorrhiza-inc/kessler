@@ -15,7 +15,7 @@ target "backend" {
   context = "./backend"
   dockerfile = "dev.server.Dockerfile"
   args = {
-    GO_VERSION = current_go_version
+    GO_VERSION = "1.24"
   }
   tags = ["kessler/backend:latest"]
 }
@@ -24,7 +24,7 @@ target "ingest" {
   context = "./backend"
   dockerfile = "dev.ingest.Dockerfile"
   args = {
-    GO_VERSION = current_go_version
+    GO_VERSION = "1.24"
   }
   tags = ["kessler/ingest:latest"]
 }

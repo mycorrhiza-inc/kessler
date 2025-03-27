@@ -1,3 +1,11 @@
+x-common-env: &common-env
+  OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT}
+  VERSION_HASH: ${VERSION_HASH}
+  DOMAIN: ${DOMAIN}
+  PUBLIC_KESSLER_API_URL: ${PUBLIC_KESSLER_API_URL}
+  INTERNAL_KESSLER_API_URL: ${INTERNAL_KESSLER_API_URL}
+  INTERNAL_REDIS_ADDRESS: ${INTERNAL_REDIS_ADDRESS}
+
 services:
   ingest:
     build:
@@ -13,9 +21,10 @@ services:
           target: /app/internal
     env_file:
       - ../config/global.env
+    environment:
+      <<: *common-env
     volumes:
       - ./backend:/app
-      - /tmp/kessler/air-ingest:/app/tmp/
     working_dir: /app
     expose:
       - 4042
@@ -30,14 +39,14 @@ services:
     command: go run /app/cmd/server/main.go
     develop:
       watch:
-        - action: restart 
-          path: ./cmd/server
-          target: .
-        - action: restart
-          path: ./internal
-          target: /app/internal
-          ignore:
-            - ingest/
+        - action: sync+restart 
+          path: ./cmd/server/
+          target: /app/cmd/server/
+        - action: sync+restart 
+          path: ./internal/
+          target: /app/internal/
+    environment:
+      <<: *common-env
     env_file:
       - ../config/global.env
     expose:
