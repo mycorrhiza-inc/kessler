@@ -1,11 +1,12 @@
 # local development docker compose
 x-common-env: &common-env
-  OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector:4317
-  VERSION_HASH: dev
-  DOMAIN: "localhost"
-  PUBLIC_KESSLER_API_URL: "http://localhost"
-  INTERNAL_KESSLER_API_URL: "http://backend-go:4041"
-  INTERNAL_REDIS_ADDRESS: "valkey:6379"
+  OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT}
+  VERSION_HASH: ${VERSION_HASH}
+  DOMAIN: ${DOMAIN}
+  PUBLIC_KESSLER_API_URL: ${PUBLIC_KESSLER_API_URL}
+  INTERNAL_KESSLER_API_URL: ${INTERNAL_KESSLER_API_URL}
+  INTERNAL_REDIS_ADDRESS: ${INTERNAL_REDIS_ADDRESS}
+
 services:
   # Main Services
   frontend:
@@ -30,65 +31,64 @@ services:
       - "run"
       - "dev"
 
-  backend-ingest:
-    build:
-      dockerfile: dev.ingest.Dockerfile
-      context: ./backend
-    command: go run /app/cmd/ingest/main.go
-    develop:
-      watch:
-        - action: rebuild
-          path: ./backend/cmd/ingest
-          target: .
-        - action: rebuild
-          path: ./backend/internal
-          target: /app/internal
-        - action: rebuild
-          path: ./backend/pkg
-          target: /app/pkg
-    environment:
-      <<: *common-env
-    env_file:
-      - ./config/global.env
-    volumes:
-      - ./backend:/app
-      - /tmp/kessler/air-ingest:/app/tmp/
-    working_dir: /app
-    expose:
-      - 4042
-    labels:
-      - "traefik.enable=true"
-      - "traefik.namespace=kessler"
-      - "traefik.http.routers.ingest.rule=PathPrefix(`/ingest_v1`)"
+  # backend-ingest:
+  #   build:
+  #     dockerfile: dev.ingest.Dockerfile
+  #     context: ./backend
+  #   command: go run /app/cmd/ingest/main.go
+  #   develop:
+  #     watch:
+  #       - action: rebuild
+  #         path: ./backend/cmd/ingest
+  #         target: .
+  #       - action: rebuild
+  #         path: ./backend/internal
+  #         target: /app/internal
+  #       - action: rebuild
+  #         path: ./backend/pkg
+  #         target: /app/pkg
+  #   environment:
+  #     <<: *common-env
+  #   env_file:
+  #     - ./config/global.env
+  #   volumes:
+  #     - ./backend:/app
+  #   working_dir: /app
+  #   expose:
+  #     - 4042
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.namespace=kessler"
+  #     - "traefik.http.routers.ingest.rule=PathPrefix(`/ingest_v1`)"
 
-  backend-server:
-    build:
-      context: ./backend
-      dockerfile: dev.server.Dockerfile
-    command: go run /app/cmd/server/main.go
-    develop:
-      watch:
-        - action: rebuild
-          path: ./backend/cmd/server
-          target: .
-        - action: rebuild
-          path: ./backend/internal
-          target: /app/internal
-            - ingest/
-        - action: rebuild
-          path: ./backend/pkg
-          target: /app/pkg
-    env_file:
-      - ./config/global.env
-    environment:
-      <<: *common-env
-    expose:
-      - 4041
-    labels:
-      - "traefik.enable=true"
-      - "traefik.namespace=kessler"
-      - "traefik.http.routers.go-backend.rule=PathPrefix(`/v2`)"
-      - "traefik.http.middlewares.test-stripprefix.stripprefix.prefixes=/v2"
+  # backend-server:
+  #   build:
+  #     context: ./backend
+  #     dockerfile: dev.server.Dockerfile
+  #   command: go run /app/cmd/server/main.go
+  #   develop:
+  #     watch:
+  #       - action: rebuild
+  #         path: ./backend/cmd/server
+  #         target: .
+  #       - action: rebuild
+  #         path: ./backend/internal
+  #         target: /app/internal
+  #           - ingest/
+  #       - action: rebuild
+  #         path: ./backend/pkg
+  #         target: /app/pkg
+  #   env_file:
+  #     - ./config/global.env
+  #   environment:
+  #     <<: *common-env
+  #   expose:
+  #     - 4041
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.namespace=kessler"
+  #     - "traefik.http.routers.go-backend.rule=PathPrefix(`/v2`)"
+  #     - "traefik.http.middlewares.test-stripprefix.stripprefix.prefixes=/v2"
 
   # Misc Services
   reverse-proxy:
@@ -129,3 +129,5 @@ services:
       retries: 5
     expose:
       - 6379
+include:
+  - ./backend/backend.compose.yaml
