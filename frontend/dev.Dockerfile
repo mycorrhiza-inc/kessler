@@ -1,5 +1,5 @@
 # BIG UPDATE: Changed the root image and source of the configuration files for deployment
-FROM node:22.4.1-alpine3.20 AS build_image
+FROM node:22.14-alpine3.20 AS build_image
 WORKDIR /app
 COPY ./package.json ./  
 COPY ./package-lock.json ./    
@@ -8,7 +8,7 @@ RUN npm install --force
 COPY . .
 # build
 # RUN npm run build
-FROM node:22.4.1-alpine3.20
+FROM node:22.14-alpine3.20
 WORKDIR /app
 # copy from build image
 COPY --from=build_image /app/package.json ./package.json
