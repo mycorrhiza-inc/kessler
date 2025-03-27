@@ -11,11 +11,9 @@ backend/.env
 **/pnpm-lock.yaml
 
 **/tmp
-ingest/tmp
-
-backend-go/tmp
-backend-go/static/assets
-/.env 
+backend/tmp
+backend/static/assets
+**/.env
 **/.env.local
 server.htpasswd
 # Pycache and .pyc files 
