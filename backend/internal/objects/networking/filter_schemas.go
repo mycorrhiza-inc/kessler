@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"kessler/internal/cache"
 	"kessler/pkg/logger"
-	"kessler/internal/objects/timestamp"
+	"kessler/pkg/timestamp"
 
 	"github.com/bradfitz/gomemcache/memcache"
 	"github.com/charmbracelet/log"

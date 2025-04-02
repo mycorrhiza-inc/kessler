@@ -7,7 +7,7 @@ import (
 	"kessler/internal/dbstore"
 	"kessler/internal/objects/conversations"
 	"kessler/internal/objects/networking"
-	"kessler/internal/objects/timestamp"
+	"kessler/pkg/timestamp"
 	"net/http"
 	"strings"
 	"time"

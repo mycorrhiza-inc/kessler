@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"kessler/internal/objects/conversations"
 	"kessler/internal/objects/files"
-	"kessler/internal/objects/timestamp"
+	"kessler/pkg/timestamp"
 	"reflect"
 	"strings"
 	"time"

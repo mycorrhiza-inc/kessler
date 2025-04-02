@@ -8,7 +8,7 @@ import (
 	"kessler/internal/objects/authors"
 	"kessler/internal/objects/conversations"
 	"kessler/internal/objects/files"
-	"kessler/internal/objects/timestamp"
+	"kessler/pkg/timestamp"
 	"kessler/internal/quickwit"
 	"kessler/pkg/util"
 	"net/http"
