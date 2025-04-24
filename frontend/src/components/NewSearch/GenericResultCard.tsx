@@ -59,11 +59,47 @@ const getIcon = (type: CardType) => {
   switch (type) {
     case CardType.Author:
       return (
-        <div className={clsx(getTypeColor(type), "w-4 h-4 rounded-full")}></div>
+        <div
+          className={clsx(
+            getTypeColor(type),
+            "w-4 h-4 rounded flex justify-center items-center",
+          )}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-3 w-3 text-white"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fillRule="evenodd"
+              d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+              clipRule="evenodd"
+            />
+          </svg>
+        </div>
       );
     case CardType.Docket:
       return (
-        <div className={clsx(getTypeColor(type), "w-4 h-4 rounded-full")}></div>
+        <div
+          className={clsx(
+            getTypeColor(type),
+            "w-4 h-4 rounded flex justify-center items-center",
+          )}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-3 w-3 text-white"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fillRule="evenodd"
+              d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4z"
+              clipRule="evenodd"
+            />
+          </svg>
+        </div>
       );
     case CardType.Document:
       return (
@@ -94,14 +130,14 @@ const getIcon = (type: CardType) => {
 
 const Card: React.FC<{ data: CardData }> = ({ data }) => {
   return (
-    <div className="card bg-base-200 shadow-md p-4 mb-4">
+    <div className="card bg-base-200 shadow-xl p-4 mb-4">
       <div className="flex justify-between items-center mb-2">
         <div className="flex items-center">
           {getIcon(data.type)}
           <h2 className="card-title ml-2">{data.name}</h2>
         </div>
         <div
-          className={`${getTypeColor(data.type)} text-white px-2 py-1 rounded text-sm capitalize`}
+          className={`${getTypeColor(data.type)} text-white px-2 py-1 rounded text-xs capitalize`}
         >
           {data.type}
         </div>
