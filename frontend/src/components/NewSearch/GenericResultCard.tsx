@@ -6,6 +6,8 @@ interface BaseCardData {
   name: string;
   description: string;
   timestamp: string;
+  authors?: Array<string>;
+  extraInfo?: string;
 }
 
 interface AuthorCardData extends BaseCardData {
@@ -14,20 +16,28 @@ interface AuthorCardData extends BaseCardData {
 
 interface DocketCardData extends BaseCardData {
   type: "docket";
-  extraInfo: string;
 }
 
 interface DocumentCardData extends BaseCardData {
   type: "document";
-  extraInfo: string;
-  authors: string[];
 }
 
 type CardData = AuthorCardData | DocketCardData | DocumentCardData;
 
-const Card: React.FC<{ data: CardData }> = ({ data }) => {
-  const { name, description, timestamp, type } = data;
+const getTimestampLabel = (type: string): string => {
+  switch (type) {
+    case "author":
+      return "last active";
+    case "docket":
+      return "last update";
+    case "document":
+      return "filing date";
+    default:
+      return "";
+  }
+};
 
+const Card: React.FC<{ data: CardData }> = ({ data }) => {
   const getIcon = (type: string) => {
     switch (type) {
       case "author":
@@ -56,38 +66,29 @@ const Card: React.FC<{ data: CardData }> = ({ data }) => {
     }
   };
 
-  const getTimestampLabel = () => {
-    switch (type) {
-      case "author":
-        return "last active";
-      case "docket":
-        return "last update";
-      case "document":
-        return "filing date";
-      default:
-        return "";
-    }
-  };
-
   return (
     <div className="card bg-base-100 shadow-md p-4 mb-4">
       <div className="flex items-center mb-2">
-        {getIcon(type)}
-        <h2 className="card-title ml-2">{name}</h2>
+        {getIcon(data.type)}
+        <h2 className="card-title ml-2">{data.name}</h2>
       </div>
       <div className="mb-4">
-        <p className="text-sm">{description}</p>
-        {extraInfo && <p className="text-xs text-gray-500">{extraInfo}</p>}
+        <p className="text-sm">{data.description}</p>
+        {data.extraInfo && (
+          <p className="text-xs text-gray-500">{data.extraInfo}</p>
+        )}
       </div>
       <div className="flex justify-between items-center">
-        <span className="text-xs text-gray-500">{getTimestampLabel()}</span>
-        <span className="text-xs">{timestamp}</span>
+        <span className="text-xs text-gray-500">
+          {getTimestampLabel(data.type)}
+        </span>
+        <span className="text-xs">{data.timestamp}</span>
       </div>
-      {authors && (
+      {data.authors && (
         <div className="mt-4">
           <h3 className="text-sm font-bold mb-2">Authors</h3>
           <div className="bg-pink-100 p-2 rounded">
-            {authors.map((author, index) => (
+            {data.authors.map((author, index) => (
               <span key={index} className="text-sm">
                 {author}
               </span>
