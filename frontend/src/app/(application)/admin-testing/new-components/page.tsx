@@ -1,5 +1,6 @@
 "use client";
 import Card from "@/components/NewSearch/GenericResultCard";
+import SideFilters from "@/components/NewSearch/SideFilters";
 
 const exampleData = [
   {
@@ -38,12 +39,37 @@ const exampleData = [
   },
 ];
 
+const exampleFilters = {
+  states: [
+    { label: "New York", value: "NY" },
+    { label: "California", value: "CA" },
+    // ... more states
+  ],
+  authors: [
+    { label: "New York State Department of Public Service", value: "NY_DPS" },
+    { label: "Edison Water Co", value: "EDISON_WATER" },
+    // ... more authors
+  ],
+  dockets: [
+    { label: "18-M-0084", value: "18-M-0084" },
+    // ... more dockets
+  ],
+};
+
 export default function Page() {
   return (
-    <div className="grid grid-cols-1 gap-4 p-8">
-      {exampleData.map((data, index) => (
-        <Card key={index} data={data} />
-      ))}
+    <div className="flex">
+      <SideFilters
+        states={exampleFilters.states}
+        authors={exampleFilters.authors}
+        dockets={exampleFilters.dockets}
+      />
+      {/* Main search results content */}
+      <div className="grid grid-cols-1 gap-4 p-8">
+        {exampleData.map((data, index) => (
+          <Card key={index} data={data} />
+        ))}
+      </div>
     </div>
   );
 }
