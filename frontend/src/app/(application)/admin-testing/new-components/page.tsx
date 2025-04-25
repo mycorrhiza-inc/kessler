@@ -58,18 +58,18 @@ const exampleFilters = {
 
 export default function Page() {
   return (
-    <div className="flex">
+    <div className="flex w-full">
+      {/* Main search results content */}
+      <div className="grid grid-cols-1 gap-4 p-8 w-full">
+        {exampleData.map((data, index) => (
+          <Card key={index} data={data} />
+        ))}
+      </div>
       <SideFilters
         states={exampleFilters.states}
         authors={exampleFilters.authors}
         dockets={exampleFilters.dockets}
       />
-      {/* Main search results content */}
-      <div className="grid grid-cols-1 gap-4 p-8">
-        {exampleData.map((data, index) => (
-          <Card key={index} data={data} />
-        ))}
-      </div>
     </div>
   );
 }

@@ -68,8 +68,7 @@ const SideFilters: React.FC<FiltersProps> = ({ states, authors, dockets }) => {
   };
 
   return (
-    <div className="side-filters space-y-4 p-4 bg-white shadow-md rounded-lg">
-      {/* Date Range Filter */}
+    <div className="side-filters space-y-4 p-4 bg-base-100 shadow-2xl rounded-lg">
       <DateRangeFilter
         dateFrom={dateFrom}
         dateTo={dateTo}
@@ -77,7 +76,6 @@ const SideFilters: React.FC<FiltersProps> = ({ states, authors, dockets }) => {
         onDateToChange={setDateTo}
       />
 
-      {/* States Filter */}
       <FilterDropdown
         title="States"
         options={states}
@@ -85,7 +83,6 @@ const SideFilters: React.FC<FiltersProps> = ({ states, authors, dockets }) => {
         onSelectOption={(value) => addFilter("states", value)}
       />
 
-      {/* Authors Filter */}
       <FilterDropdown
         title="Authors"
         options={authors}
@@ -93,7 +90,6 @@ const SideFilters: React.FC<FiltersProps> = ({ states, authors, dockets }) => {
         onSelectOption={(value) => addFilter("authors", value)}
       />
 
-      {/* Dockets Filter */}
       <FilterDropdown
         title="Dockets"
         options={dockets}
@@ -101,7 +97,6 @@ const SideFilters: React.FC<FiltersProps> = ({ states, authors, dockets }) => {
         onSelectOption={(value) => addFilter("dockets", value)}
       />
 
-      {/* Selected Filters Display */}
       <SelectedFilters
         states={selectedStates}
         authors={selectedAuthors}

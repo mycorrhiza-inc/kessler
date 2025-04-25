@@ -1,5 +1,5 @@
 import React from "react";
-import { XMarkIcon } from "@heroicons/react/24/solid";
+import { MdClose } from "react-icons/md";
 
 interface SelectedFiltersProps {
   states: string[];
@@ -55,7 +55,7 @@ const SelectedFilters: React.FC<SelectedFiltersProps> = ({
               onClick={() => onRemoveFilter(type, value)}
               className="ml-2 hover:bg-opacity-75 rounded-full"
             >
-              <XMarkIcon className="h-4 w-4" />
+              <MdClose className="h-4 w-4" />
             </button>
           </div>
         ))}

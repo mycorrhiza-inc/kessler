@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ChevronDownIcon } from "@heroicons/react/24/solid";
+import { MdKeyboardArrowDown } from "react-icons/md";
 
 interface FilterOption {
   label: string;
@@ -25,10 +25,10 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex justify-between items-center px-4 py-2 bg-gray-100 rounded-md"
+        className="w-full flex justify-between items-center px-4 py-2 bg-base-300 rounded-md"
       >
         {title}
-        <ChevronDownIcon
+        <MdKeyboardArrowDown
           className={`h-5 w-5 transition-transform ${isOpen ? "rotate-180" : ""}`}
         />
       </button>
