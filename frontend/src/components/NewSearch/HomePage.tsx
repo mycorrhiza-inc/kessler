@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import { GiMushroomsCluster } from "react-icons/gi";
 import { MdKeyboardArrowDown } from "react-icons/md";
+import StateSelector from "./StateSelector";
+import SearchBox from "./SearchBox";
 
 const states = [
   "New York",
@@ -38,61 +40,17 @@ export default function HomeSearchBar() {
           </p>
         </div>
 
-        {/* Search Container */}
-        <div className="w-full space-y-4">
-          {/* Search Input */}
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Grid of the Future"
-              className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 text-gray-400 absolute right-3 top-1/2 transform -translate-y-1/2"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-          </div>
+        <SearchBox
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Grid of the Future"
+        />
 
-          {/* State Dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => setIsStateDropdownOpen(!isStateDropdownOpen)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg flex items-center justify-between"
-            >
-              <span>{selectedState}</span>
-              <MdKeyboardArrowDown className="text-xl" />
-            </button>
-
-            {isStateDropdownOpen && (
-              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                {states.map((state) => (
-                  <div
-                    key={state}
-                    onClick={() => {
-                      setSelectedState(state);
-                      setIsStateDropdownOpen(false);
-                    }}
-                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                  >
-                    {state}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+        <StateSelector
+          states={states}
+          selectedState={selectedState}
+          onSelect={setSelectedState}
+        />
       </div>
     </div>
   );
