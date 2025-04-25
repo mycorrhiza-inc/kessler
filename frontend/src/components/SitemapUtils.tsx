@@ -42,7 +42,7 @@ export const HeaderBreadcrumbs = ({
           if (b.url) {
             return (
               <li key={b.title}>
-                <Link className="font-bold text-lg" href={b.url}>
+                <Link className="font-bold text-lg font-serif" href={b.url}>
                   {b.title}
                 </Link>
               </li>
