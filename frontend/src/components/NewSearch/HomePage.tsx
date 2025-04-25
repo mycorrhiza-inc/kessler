@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { GiMushroomsCluster } from "react-icons/gi";
-import { MdKeyboardArrowDown } from "react-icons/md";
 import StateSelector from "./StateSelector";
 import SearchBox from "./SearchBox";
 
@@ -30,12 +29,12 @@ export default function HomeSearchBar() {
         {/* Logo and Title */}
         <div className="flex flex-col items-center space-y-2">
           <div className="flex flex-row items-center space-x-9">
-            <GiMushroomsCluster className="text-8xl text-base-content" />
-            <h1 className="text-7xl font-bold font-serif tracking-tight">
+            <GiMushroomsCluster className="text-6xl md:text-7xl lg:text-9xl text-base-content" />
+            <h1 className="text-5xl md:text-6xl lg:text-8xl font-bold font-serif tracking-tight">
               KESSLER
             </h1>
           </div>
-          <p className="text-lg text-gray-600 text-center font-serif">
+          <p className="text-lg lg:text-xl text-gray-600 text-center font-serif">
             Public Utility Commissions, Simplified.
           </p>
         </div>
