@@ -4,7 +4,7 @@ import (
 	"kessler/pkg/hashes"
 	"kessler/internal/objects/authors"
 	"kessler/internal/objects/conversations"
-	"kessler/internal/objects/timestamp"
+	"kessler/pkg/timestamp"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"

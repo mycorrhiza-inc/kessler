@@ -9,7 +9,7 @@ import (
 	"kessler/internal/objects/conversations"
 	"kessler/internal/objects/files"
 	"kessler/internal/objects/networking"
-	"kessler/internal/objects/timestamp"
+	"kessler/pkg/timestamp"
 	"kessler/internal/quickwit"
 	"reflect"
 

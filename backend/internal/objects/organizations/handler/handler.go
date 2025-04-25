@@ -24,20 +24,19 @@ func DefineOrganizationRoutes(r *mux.Router) {
 	organizationsRouter := r.PathPrefix("/organizations").Subrouter()
 
 	organizationsRouter.HandleFunc(
-		"/organizations/list",
+		"/list",
 		OrgSemiCompletePaginated,
 	).Methods(http.MethodGet)
 
 	organizationsRouter.HandleFunc(
-		"/organizations/{uuid}",
+		"/{uuid}",
 		OrgGetWithFilesHandler,
 	).Methods(http.MethodGet)
 
 	organizationsRouter.HandleFunc(
-		"/organizations/verify",
+		"/verify",
 		OrganizationVerifyHandler,
 	).Methods(http.MethodPost)
-
 }
 
 type OrganizationRequest struct {
@@ -105,6 +104,7 @@ func VerifyAuthorOrganizationUUID(ctx context.Context, q dbstore.Queries, author
 	author_info.AuthorID = org_uuid
 	return *author_info, nil
 }
+
 func OrgGetWithFilesHandler(w http.ResponseWriter, r *http.Request) {
 	log.Info(fmt.Sprintf("Getting file with metadata"))
 	q := database.GetTx()

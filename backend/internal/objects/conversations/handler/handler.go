@@ -24,25 +24,26 @@ func DefineConversationsRoutes(r *mux.Router) {
 	conversationsRouter := r.PathPrefix("/conversations").Subrouter()
 
 	conversationsRouter.HandleFunc(
-		"/conversations/list",
+		"/list",
 		ConversationSemiCompletePaginatedList,
 	).Methods(http.MethodGet)
 
 	conversationsRouter.HandleFunc(
-		"/conversations/named-lookup/{name}",
+		"/named-lookup/{name}",
 		ConversationGetByUnknownHandler,
 	).Methods(http.MethodGet)
 
 	conversationsRouter.HandleFunc(
-		"/conversations/verify",
+		"/verify",
 		ConversationVerifyHandler,
 	).Methods(http.MethodPost)
 
 	conversationsRouter.HandleFunc(
-		"/conversations/list/semi-complete",
+		"/list/semi-complete",
 		ConversationSemiCompleteListAll,
 	).Methods(http.MethodGet)
 }
+
 func ConversationGetByUnknownHandler(w http.ResponseWriter, r *http.Request) {
 	log.Info(fmt.Sprintf("Getting file with metadata"))
 	q := database.GetTx()

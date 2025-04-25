@@ -9,7 +9,9 @@ import HeaderCard from "./HeaderCard";
 const getConversationData = async (url: string) => {
   const response = await axios.get(url);
   if (response.status !== 200) {
-    throw new Error("Error fetching data with status " + response.status);
+    throw new Error(
+      "Error fetching data at " + url + " with status " + response.status,
+    );
   }
   console.log("organization data", response.data);
   const json_convo = response.data.Metadata;

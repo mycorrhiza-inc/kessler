@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"kessler/internal/dbstore"
 	"kessler/pkg/logger"
-	"kessler/internal/objects/timestamp"
+	"kessler/pkg/timestamp"
 	"time"
 
 	"github.com/google/uuid"
