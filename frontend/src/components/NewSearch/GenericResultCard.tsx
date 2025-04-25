@@ -137,7 +137,6 @@ enum CardSize {
 // For medium keep everything the same.
 // For small collapse it so that all the card info can be displayed on a single line of text. Designed for instances where you need to display hundreds of results in a compact list.
 // For large design try to render it instead like its the main header on the page, make everything as big as possible and label each section with what it means. For example a page for a docket might have a large card at the top of the page, with a search interface for its documents below it.
-//
 const Card: React.FC<{ data: CardData; size?: CardSize }> = ({
   data,
   size,
@@ -145,135 +144,50 @@ const Card: React.FC<{ data: CardData; size?: CardSize }> = ({
   if (!size) {
     size = CardSize.Medium;
   }
+  if (size == CardSize.Medium) {
+    return <MediumCard data={data} />;
+  }
+  if (size == CardSize.Small) {
+    return <SmallCard data={data} />;
+  }
+  if (size == CardSize.Large) {
+    return <LargeCard data={data} />;
+  }
+};
+
+const MediumCard: React.FC<{ data: CardData }> = ({ data }) => {
   return (
-    <div
-      className={clsx("card shadow-xl mb-4", {
-        "bg-base-200 p-4": size === CardSize.Medium,
-        "bg-base-100 p-2 text-sm": size === CardSize.Small,
-        "bg-base-100 p-6 rounded-lg": size === CardSize.Large,
-      })}
-    >
-      <div
-        className={clsx("flex justify-between items-center", {
-          "mb-2": size !== CardSize.Small,
-          "gap-2": size === CardSize.Small,
-        })}
-      >
-        <div className="flex items-center gap-2">
-          {size !== CardSize.Small && getIcon(data.type)}
-          <h2
-            className={clsx({
-              "card-title": true,
-              "text-lg": size === CardSize.Large,
-              "text-base": size === CardSize.Medium,
-              "text-sm": size === CardSize.Small,
-            })}
-          >
-            {size === CardSize.Large && (
-              <span className="text-gray-500 mr-2">Name:</span>
-            )}
-            {data.name}
-          </h2>
+    <div className="card bg-base-200 shadow-xl p-4 mb-4">
+      <div className="flex justify-between items-center mb-2">
+        <div className="flex items-center">
+          {getIcon(data.type)}
+          <h2 className="card-title ml-2">{data.name}</h2>
         </div>
         <div
-          className={clsx(
-            `${getTypeColor(data.type)} text-white px-2 py-1 rounded capitalize`,
-            {
-              "text-xs": size !== CardSize.Large,
-              "text-sm": size === CardSize.Large,
-            },
-          )}
+          className={`${getTypeColor(data.type)} text-white px-2 py-1 rounded text-xs capitalize`}
         >
           {data.type}
         </div>
       </div>
-
-      {size !== CardSize.Small && (
-        <div
-          className={clsx({
-            "mb-4": size === CardSize.Medium,
-            "mb-6": size === CardSize.Large,
-          })}
-        >
-          <p
-            className={clsx({
-              "text-sm": size === CardSize.Medium,
-              "text-base": size === CardSize.Large,
-              "text-gray-600": size === CardSize.Large,
-            })}
-          >
-            {size === CardSize.Large && (
-              <span className="text-gray-500 mr-2">Description:</span>
-            )}
-            {data.description}
-          </p>
-          {data.extraInfo && (
-            <p
-              className={clsx({
-                "text-xs text-gray-500": size === CardSize.Medium,
-                "text-sm text-gray-600": size === CardSize.Large,
-              })}
-            >
-              {size === CardSize.Large && (
-                <span className="text-gray-500 mr-2">Details:</span>
-              )}
-              {data.extraInfo}
-            </p>
-          )}
-        </div>
-      )}
-
-      <div
-        className={clsx("flex justify-between items-center", {
-          "text-xs": size !== CardSize.Large,
-          "text-sm": size === CardSize.Large,
-        })}
-      >
-        <span className="text-gray-500">
-          {size === CardSize.Large && (
-            <span className="mr-2">Timestamp Type:</span>
-          )}
+      <div className="mb-4">
+        <p className="text-sm">{data.description}</p>
+        {data.extraInfo && (
+          <p className="text-xs text-gray-500">{data.extraInfo}</p>
+        )}
+      </div>
+      <div className="flex justify-between items-center">
+        <span className="text-xs text-gray-500">
           {getTimestampLabel(data.type)}
         </span>
-        <span>
-          {size === CardSize.Large && (
-            <span className="text-gray-500 mr-2">Date:</span>
-          )}
-          {data.timestamp}
-        </span>
+        <span className="text-xs">{data.timestamp}</span>
       </div>
-
-      {data.authors && size !== CardSize.Small && (
-        <div
-          className={clsx({
-            "mt-4": size === CardSize.Medium,
-            "mt-6": size === CardSize.Large,
-          })}
-        >
-          <h3
-            className={clsx("font-bold", {
-              "text-sm mb-2": size === CardSize.Medium,
-              "text-base mb-4": size === CardSize.Large,
-            })}
-          >
-            Authors
-          </h3>
-          <div
-            className={clsx("bg-pink-100 rounded", {
-              "p-2": size === CardSize.Medium,
-              "p-4": size === CardSize.Large,
-            })}
-          >
+      {data.authors && (
+        <div className="mt-4">
+          <h3 className="text-sm font-bold mb-2">Authors</h3>
+          <div className="bg-pink-100 p-2 rounded">
             {data.authors.map((author, index) => (
-              <span
-                key={index}
-                className={clsx({
-                  "text-sm": size === CardSize.Medium,
-                  "text-base": size === CardSize.Large,
-                })}
-              >
+              <span key={index} className="text-sm">
                 {author}
-                {index !== data.authors!.length - 1 && ", "}
               </span>
             ))}
           </div>
@@ -282,5 +196,4 @@ const Card: React.FC<{ data: CardData; size?: CardSize }> = ({
     </div>
   );
 };
-
 export default Card;
