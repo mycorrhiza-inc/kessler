@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useState } from "react";
 import { GiMushroomsCluster } from "react-icons/gi";
 import StateSelector from "./StateSelector";
@@ -21,8 +19,12 @@ const states = [
 
 interface Props {
   initialState?: string;
+  onSubmit: (query: string) => void;
 }
-export default function HomeSearchBar({ initialState = "New York" }: Props) {
+export default function HomeSearchBar({
+  initialState = "New York",
+  onSubmit,
+}: Props) {
   const [searchQuery, setSearchQuery] = useState("");
   const globalStore = useKesslerStore();
   const selectedState = globalStore.defaultState || initialState;
@@ -30,8 +32,8 @@ export default function HomeSearchBar({ initialState = "New York" }: Props) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchQuery.trim() && "onSubmit" in this) {
-      (this as any).onSubmit(searchQuery);
+    if (searchQuery.trim()) {
+      onSubmit(searchQuery.trim());
     }
   };
 
