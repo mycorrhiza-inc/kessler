@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { GiMushroomsCluster } from "react-icons/gi";
 import StateSelector from "./StateSelector";
 import SearchBox from "./SearchBox";
+import { useKesslerStore } from "@/lib/store";
 
 const states = [
   "New York",
@@ -23,11 +24,13 @@ interface Props {
 }
 
 export default function HomeSearchBar({ initialState = "New York" }: Props) {
-  const [selectedState, setSelectedState] = useState(initialState);
   const [searchQuery, setSearchQuery] = useState("");
+  const globalStore = useKesslerStore();
+  const selectedState = globalStore.defaultState || initialState;
+  const setSelectedState = globalStore.setDefaultState;
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-base-100 p-4">
+    <div className="flex flex-col items-center justify-center min-h-[70vh] bg-base-100 p-4">
       <div className="flex flex-col items-center space-y-6 w-full max-w-md">
         {/* Logo and Title */}
         <div className="flex flex-col items-center space-y-2">
