@@ -1,5 +1,3 @@
-"use client";
-
 import { FaSearch } from "react-icons/fa";
 import React from "react";
 

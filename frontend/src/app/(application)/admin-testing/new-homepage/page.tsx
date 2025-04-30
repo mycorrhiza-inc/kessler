@@ -1,4 +1,4 @@
-import HomeSearchBar from "@/components/NewSearch/HomePage";
+import HomeSearchBar from "@/components/NewSearch/HomeSearch";
 
 export default function Page() {
   return <HomeSearchBar />;

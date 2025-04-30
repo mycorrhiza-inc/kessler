@@ -62,7 +62,7 @@ export default function Page() {
       {/* Main search results content */}
       <div className="grid grid-cols-1 gap-4 p-8 w-full">
         {exampleData.map((data, index) => (
-          <Card key={index} data={data} />
+          <Card key={index} data={data} size="medium" />
         ))}
       </div>
       <SideFilters

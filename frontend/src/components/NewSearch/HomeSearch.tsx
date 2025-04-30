@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { GiMushroomsCluster } from "react-icons/gi";
-import { MdKeyboardArrowDown } from "react-icons/md";
 import StateSelector from "./StateSelector";
 import SearchBox from "./SearchBox";
 
@@ -19,8 +18,12 @@ const states = [
   "Michigan",
 ];
 
-export default function HomeSearchBar() {
-  const [selectedState, setSelectedState] = useState("New York");
+interface Props {
+  initialState?: string;
+}
+
+export default function HomeSearchBar({ initialState = "New York" }: Props) {
+  const [selectedState, setSelectedState] = useState(initialState);
   const [searchQuery, setSearchQuery] = useState("");
 
   return (

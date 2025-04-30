@@ -3,11 +3,13 @@ import ConversationTableInfiniteScroll from "../LookupPages/ConvoLookup/Conversa
 import { ExperimentalChatModalClickDiv } from "../Chat/ChatModal";
 import OrganizationTableInfiniteScroll from "../LookupPages/OrgLookup/OrganizationTable";
 import FileSearchView from "../Search/FileSearch/FileSearchView";
+import HomeSearchBar from "../NewSearch/HomeSearch";
 
 export default function HomePage() {
   return (
     <>
       <div>
+        <HomeSearchBar />
         <div className="grid grid-cols-2 w-full z-1">
           <div>
             <Link
