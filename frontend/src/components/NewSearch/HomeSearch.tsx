@@ -22,12 +22,18 @@ const states = [
 interface Props {
   initialState?: string;
 }
-
 export default function HomeSearchBar({ initialState = "New York" }: Props) {
   const [searchQuery, setSearchQuery] = useState("");
   const globalStore = useKesslerStore();
   const selectedState = globalStore.defaultState || initialState;
   const setSelectedState = globalStore.setDefaultState;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim() && "onSubmit" in this) {
+      (this as any).onSubmit(searchQuery);
+    }
+  };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[70vh] bg-base-100 p-4">
@@ -45,11 +51,13 @@ export default function HomeSearchBar({ initialState = "New York" }: Props) {
           </p>
         </div>
 
-        <SearchBox
-          value={searchQuery}
-          onChange={setSearchQuery}
-          placeholder="Grid of the Future"
-        />
+        <form onSubmit={handleSubmit} className="w-full">
+          <SearchBox
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Grid of the Future"
+          />
+        </form>
 
         <StateSelector
           states={states}
