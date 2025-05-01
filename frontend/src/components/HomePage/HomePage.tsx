@@ -11,14 +11,12 @@ import DummyResults from "../NewSearch/DummySearchResults";
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
-  const [animationState, setAnimationState] = useState("idle"); // idle, entering, leaving
 
   // Handle search submission
   const handleSearch = (query: string) => {
     if (query.trim()) {
       setSearchQuery(query);
       setIsSearching(true);
-      setAnimationState("entering");
 
       // Update URL without navigation
       window.history.pushState(
@@ -33,7 +31,6 @@ export default function HomePage() {
   useEffect(() => {
     const handlePopState = () => {
       setIsSearching(false);
-      setAnimationState("leaving");
     };
 
     window.addEventListener("popstate", handlePopState);
