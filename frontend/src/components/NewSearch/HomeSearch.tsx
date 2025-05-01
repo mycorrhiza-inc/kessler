@@ -1,3 +1,4 @@
+"use client";
 import React, { useState } from "react";
 import { GiMushroomsCluster } from "react-icons/gi";
 import StateSelector from "./StateSelector";
@@ -19,7 +20,7 @@ const states = [
 
 interface Props {
   initialState?: string;
-  onSubmit: (query: string) => void;
+  onSubmit?: (query: string) => void;
 }
 export default function HomeSearchBar({
   initialState = "New York",
@@ -33,7 +34,7 @@ export default function HomeSearchBar({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      onSubmit(searchQuery.trim());
+      onSubmit && onSubmit(searchQuery.trim());
     }
   };
 
