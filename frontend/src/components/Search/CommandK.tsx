@@ -1,7 +1,9 @@
 import { useSearchState } from "@/lib/hooks/useSearchState";
-import { SearchResults } from "./SearchResults";
+import { SearchResultsWrapper } from "./SearchResults";
 
-export function SearchCommand() {
+function CommandKSearch() {}
+
+function SearchCommand() {
   const { searchQuery, isSearching, handleSearch, ...searchState } =
     useSearchState();
 
@@ -14,7 +16,10 @@ export function SearchCommand() {
         className="input input-bordered w-full mb-4"
       />
 
-      <SearchResults isSearching={isSearching} {...searchState}></SearchResults>
+      <SearchResultsWrapper
+        isSearching={isSearching}
+        {...searchState}
+      ></SearchResultsWrapper>
     </div>
   );
 }
