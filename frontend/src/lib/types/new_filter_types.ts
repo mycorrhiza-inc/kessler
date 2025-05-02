@@ -1,5 +1,97 @@
-export type Filter = any;
+export interface Filter<T = unknown> {
+  key: string;
+  value: T;
+  label?: string;
+}
 
 export type FilterKey = string;
-// I have a couple of requirements for this type. Namely it should be serializable to a list of all filters can be sent over the internet along with a search query. However it should also support efficent operations such as setting the filter value with a FilterKey. Or deleting a filter corresponding with a resulting FilterKey. I might want to change the data type in the future, so for now just go ahead and implement functions that will do all these primative operations, in such a way that I could change the datastructure in this file to something like a self balancing binary tree and I wouldnt have to adjust anything in the rest of the project.
-export type Filters = Filter[];
+
+export type Filters = {
+  // Private implementation detail - could be Map, Record, or custom structure
+  _store: Record<FilterKey, Filter>;
+  _version: number; // For change tracking
+};
+
+// Implementation-agnostic interface
+export interface FiltersManager {
+  getFilter: (key: FilterKey) => Filter | undefined;
+  setFilter: <T>(key: FilterKey, value: T, label?: string) => void;
+  deleteFilter: (key: FilterKey) => boolean;
+  getAllFilters: () => Filter[];
+  toArray: () => Filter[];
+  serialize: () => string;
+}
+
+// Concrete implementation using Record as backing store
+export const createFilters = (initialFilters: Filter[] = []): Filters => {
+  const store = initialFilters.reduce(
+    (acc, filter) => {
+      acc[filter.key] = filter;
+      return acc;
+    },
+    {} as Record<FilterKey, Filter>,
+  );
+
+  return {
+    _store: store,
+    _version: 0,
+  };
+};
+
+// Operation implementations
+export const filtersManager: FiltersManager = {
+  getFilter: (key) => {
+    return globalFilters._store[key];
+  },
+
+  setFilter: (key, value, label) => {
+    const newFilter: Filter = {
+      key,
+      value,
+      label: label || key,
+    };
+
+    globalFilters._store[key] = newFilter;
+    globalFilters._version++;
+  },
+
+  deleteFilter: (key) => {
+    if (globalFilters._store[key]) {
+      delete globalFilters._store[key];
+      globalFilters._version++;
+      return true;
+    }
+    return false;
+  },
+
+  getAllFilters: () => {
+    return Object.values(globalFilters._store);
+  },
+
+  toArray: () => {
+    return Object.values(globalFilters._store);
+  },
+
+  serialize: () => {
+    return JSON.stringify(globalFilters._store);
+  },
+};
+
+// Singleton instance (could make this configurable)
+let globalFilters: Filters = createFilters();
+
+// For testing/dev - reset filters
+export const resetFilters = () => {
+  globalFilters = createFilters();
+};
+
+// Reconstruction from serialized data
+export const deserializeFilters = (serialized: string): Filters => {
+  try {
+    const parsed = JSON.parse(serialized);
+    return createFilters(Object.values(parsed));
+  } catch (e) {
+    console.error("Failed to deserialize filters:", e);
+    return createFilters();
+  }
+};
