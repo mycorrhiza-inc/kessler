@@ -21,13 +21,8 @@ import { useSearchState } from "@/lib/hooks/useSearchState";
 import { SearchResultsComponent } from "@/components/Search/SearchResults";
 
 export default function HomePage() {
-  const {
-    searchQuery,
-    isSearching,
-    handleSearch,
-    searchResults,
-    ...searchState
-  } = useSearchState();
+  const { searchQuery, isSearching, handleSearch, ...searchState } =
+    useSearchState();
 
   return (
     <>

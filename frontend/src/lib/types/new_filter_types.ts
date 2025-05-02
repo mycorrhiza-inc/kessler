@@ -94,16 +94,17 @@ export const deserializeFilters = (serialized: string): Filters => {
   }
 };
 
-export const useFilterState = (initialFilters: Filter[] = []) => {
-  const [filters, setFilters] = useState<Filters>(
-    createFilters(initialFilters),
+export const useFilterState = (initialFilters: Filter[] | Filters = []) => {
+  const [filters, setFilters] = useState<Filters>(() =>
+    Array.isArray(initialFilters)
+      ? createFilters(initialFilters)
+      : initialFilters,
   );
-
   // Memoized filter operations
   const setFilter = useCallback(
     (key: FilterKey, value: FilterData, label?: string) => {
       setFilters((current: Filters) => {
-        // Create new frozen copy for immutability
+        // this might be an unecessary clone, in here for an abundance of caution, feel free to remove anytime
         const nextFilters = structuredClone(current);
         filtersSetFilter(nextFilters, key, value, label);
         return nextFilters;
@@ -121,7 +122,7 @@ export const useFilterState = (initialFilters: Filter[] = []) => {
   }, []);
 
   const clearFilters = useCallback(() => {
-    setFilters(createFilters());
+    setFilters(createFilters([]));
   }, []);
 
   return {
