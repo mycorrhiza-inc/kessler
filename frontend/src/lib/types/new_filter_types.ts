@@ -1,11 +1,12 @@
-export interface Filter<T = unknown> {
-  key: string;
-  value: T;
-  label?: string;
-}
+export type FilterData = any;
 
 export type FilterKey = string;
 
+export interface Filter<T = unknown> {
+  key: FilterKey;
+  value: FilterData;
+  label?: string;
+}
 export type Filters = {
   // Private implementation detail - could be Map, Record, or custom structure
   _store: Record<FilterKey, Filter>;
@@ -15,7 +16,7 @@ export type Filters = {
 // Implementation-agnostic interface
 export interface FiltersManager {
   getFilter: (key: FilterKey) => Filter | undefined;
-  setFilter: <T>(key: FilterKey, value: T, label?: string) => void;
+  setFilter: (key: FilterKey, value: FilterData, label?: string) => void;
   deleteFilter: (key: FilterKey) => boolean;
   getAllFilters: () => Filter[];
   toArray: () => Filter[];
@@ -39,50 +40,45 @@ export const createFilters = (initialFilters: Filter[] = []): Filters => {
 };
 
 // Operation implementations
-export const filtersManager: FiltersManager = {
-  getFilter: (key) => {
-    return globalFilters._store[key];
-  },
-
-  setFilter: (key, value, label) => {
-    const newFilter: Filter = {
-      key,
-      value,
-      label: label || key,
-    };
-
-    globalFilters._store[key] = newFilter;
-    globalFilters._version++;
-  },
-
-  deleteFilter: (key) => {
-    if (globalFilters._store[key]) {
-      delete globalFilters._store[key];
-      globalFilters._version++;
-      return true;
-    }
-    return false;
-  },
-
-  getAllFilters: () => {
-    return Object.values(globalFilters._store);
-  },
-
-  toArray: () => {
-    return Object.values(globalFilters._store);
-  },
-
-  serialize: () => {
-    return JSON.stringify(globalFilters._store);
-  },
+export const filtersGetFilter = (filters: Filters, key: FilterKey) => {
+  return filters._store[key];
 };
 
-// Singleton instance (could make this configurable)
-let globalFilters: Filters = createFilters();
+export const filtersSetFilter = (
+  filters: Filters,
+  key: FilterKey,
+  value: FilterData,
+  label?: string,
+) => {
+  const newFilter: Filter = {
+    key,
+    value,
+    label: label || key,
+  };
 
-// For testing/dev - reset filters
-export const resetFilters = () => {
-  globalFilters = createFilters();
+  filters._store[key] = newFilter;
+  filters._version++;
+};
+
+export const filtersDeleteFilter = (filters: Filters, key: FilterKey) => {
+  if (filters._store[key]) {
+    delete filters._store[key];
+    filters._version++;
+    return true;
+  }
+  return false;
+};
+
+export const filtersGetAllFilters = (filters: Filters) => {
+  return Object.values(filters._store);
+};
+
+export const filtersToArray = (filters: Filters) => {
+  return Object.values(filters._store);
+};
+
+export const filtersSerialize = (filters: Filters) => {
+  return JSON.stringify(filters._store);
 };
 
 // Reconstruction from serialized data
