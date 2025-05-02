@@ -1,8 +1,10 @@
+import { useCallback, useState } from "react";
+
 export type FilterData = any;
 
 export type FilterKey = string;
 
-export interface Filter<T = unknown> {
+export interface Filter {
   key: FilterKey;
   value: FilterData;
   label?: string;
@@ -90,4 +92,42 @@ export const deserializeFilters = (serialized: string): Filters => {
     console.error("Failed to deserialize filters:", e);
     return createFilters();
   }
+};
+
+export const useFilterState = (initialFilters: Filter[] = []) => {
+  const [filters, setFilters] = useState<Filters>(
+    createFilters(initialFilters),
+  );
+
+  // Memoized filter operations
+  const setFilter = useCallback(
+    (key: FilterKey, value: FilterData, label?: string) => {
+      setFilters((current: Filters) => {
+        // Create new frozen copy for immutability
+        const nextFilters = structuredClone(current);
+        filtersSetFilter(nextFilters, key, value, label);
+        return nextFilters;
+      });
+    },
+    [],
+  );
+
+  const deleteFilter = useCallback((key: FilterKey) => {
+    setFilters((current: Filters) => {
+      const nextFilters = structuredClone(current);
+      filtersDeleteFilter(nextFilters, key);
+      return nextFilters;
+    });
+  }, []);
+
+  const clearFilters = useCallback(() => {
+    setFilters(createFilters());
+  }, []);
+
+  return {
+    filters,
+    setFilter,
+    deleteFilter,
+    clearFilters,
+  };
 };

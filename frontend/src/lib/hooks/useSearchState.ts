@@ -4,11 +4,12 @@ import {
   nilSearchResultsGetter,
 } from "../types/new_search_types";
 import { generateFakeResults } from "../search/search_utils";
+import { Filters } from "../types/new_filter_types";
 
 interface SearchStateExport {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
-  filters;
+  filters: Filters;
   isSearching: boolean;
   handleSearch: (query: string) => void;
   resetToInitial: () => void;
