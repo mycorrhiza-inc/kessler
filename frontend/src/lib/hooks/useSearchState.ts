@@ -25,12 +25,10 @@ export const useSearchState = ({}: {}): SearchStateExport => {
   const { filters, setFilter, deleteFilter } = useFilterState([]);
   const [isSearching, setIsSearching] = useState(false);
   const trimmedQuery = useMemo(() => searchQuery.trim(), [searchQuery]);
-  const getResultsCallback = useMemo(() => {
-    return async (pagination: PaginationData) => {
-      const results = await generateFakeResults(pagination);
-      return results;
-    };
-  }, [trimmedQuery, filters]);
+  const getResultsCallback = useMemo(
+    () => generateSearchFunctions({ query: trimmedQuery, filters: filters }),
+    [trimmedQuery, filters],
+  );
 
   // Handle search submission
   const initializeSearch = (query: string, filters: Filters) => {
