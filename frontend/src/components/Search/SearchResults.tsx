@@ -1,7 +1,14 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import InfiniteScrollPlus from "../InfiniteScroll/InfiniteScroll";
-import DummyResults from "../NewSearch/DummySearchResults";
+import Card, { CardSize } from "../NewSearch/GenericResultCard";
+import { generateFakeResults } from "../NewSearch/DummySearchResults";
+import { sleep } from "@/utils/utils";
+import {
+  PaginationData,
+  SearchResult,
+  SearchResultsGetter,
+} from "@/lib/types/NewSearchTypes";
 
 interface SearchResultsProps {
   isSearching: boolean;
@@ -11,22 +18,26 @@ interface SearchResultsProps {
   children: React.ReactNode;
 }
 
-type SearchResult = any;
-
 function RawSearchResults({
   searchResults,
 }: {
   searchResults: SearchResult[];
 }) {
-  return <DummyResults />;
+  return (
+    <div className="flex w-full">
+      <div className="grid grid-cols-1 gap-4 p-8 w-full">
+        {searchResults.map((data, index) => (
+          <Card key={index} data={data} size={CardSize.Medium} />
+        ))}
+      </div>
+    </div>
+  );
 }
 
-interface PaginationData {
-  page: Number;
-  limit: Number;
-}
-
-type SearchResultsGetter = (data: PaginationData) => Promise<SearchResult[]>;
+const dummyGetter = async ({ page, limit }: PaginationData) => {
+  await sleep(1000);
+  return generateFakeResults(limit);
+};
 
 interface GeneralInfiniteSearchParams {
   searchGetter: SearchResultsGetter;
@@ -90,12 +101,7 @@ function SearchResultsInfiniteScroll({
   );
 }
 
-export function SearchResultsComponent({
-  isSearching,
-  isLoading,
-  error,
-  searchResults,
-}: SearchResultsProps) {
+export function SearchResultsComponent({ isSearching }: SearchResultsProps) {
   return (
     <AnimatePresence mode="wait">
       {isSearching && (
@@ -107,24 +113,10 @@ export function SearchResultsComponent({
           transition={{ duration: 0.3 }}
           className="w-full"
         >
-          {isLoading ? (
-            <div className="flex justify-center p-8">
-              <span className="loading loading-spinner loading-lg"></span>
-            </div>
-          ) : error ? (
-            <div className="alert alert-error my-4">
-              <span>{error}</span>
-            </div>
-          ) : searchResults.length > 0 ? (
-            children
-          ) : (
-            <div className="text-center p-8">
-              <h3 className="text-lg font-medium">No results found</h3>
-              <p className="text-sm opacity-70 mt-1">
-                Try adjusting your search terms
-              </p>
-            </div>
-          )}
+          <SearchResultsInfiniteScroll
+            searchGetter={dummyGetter}
+            reloadOnChangeObj={[]}
+          />
         </motion.div>
       )}
     </AnimatePresence>

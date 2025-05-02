@@ -7,7 +7,6 @@ import { ExperimentalChatModalClickDiv } from "../Chat/ChatModal";
 import OrganizationTableInfiniteScroll from "../LookupPages/OrgLookup/OrganizationTable";
 import FileSearchView from "../Search/FileSearch/FileSearchView";
 import HomeSearchBar from "../NewSearch/HomeSearch";
-import DummyResults from "../NewSearch/DummySearchResults";
 
 // So I have this problem, where lots of pages are going to want to have this search bar be present on the page, as well as in other stuff like command-k popups
 //
@@ -19,7 +18,7 @@ import DummyResults from "../NewSearch/DummySearchResults";
 
 // src/components/HomePage/HomePage.tsx
 import { useSearchState } from "@/lib/hooks/useSearchState";
-import { SearchResultsWrapper } from "@/components/Search/SearchResults";
+import { SearchResultsComponent } from "@/components/Search/SearchResults";
 
 export default function HomePage() {
   const {
@@ -91,9 +90,9 @@ export default function HomePage() {
         )}
       </AnimatePresence>
 
-      <SearchResultsWrapper {...searchState}>
-        <DummyResults />
-      </SearchResultsWrapper>
+      <SearchResultsComponent
+        isSearching={isSearching}
+      ></SearchResultsComponent>
     </>
   );
 }

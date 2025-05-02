@@ -1,16 +1,22 @@
-import { Card } from "@mui/joy";
-import { CardSize } from "./GenericResultCard";
-
 import { faker } from "@faker-js/faker";
-
-// Helper function for random date in last 6 months
+import {
+  PaginationData,
+  SearchResult,
+  SearchResultsGetter,
+} from "../types/new_search_types";
+import { sleep } from "@/utils/utils";
 const randomRecentDate = () => {
   const date = new Date();
   date.setMonth(date.getMonth() - Math.floor(Math.random() * 6));
   return date.toISOString().split("T")[0];
 };
 
-export const generateFakeResults = (count: number) => {
+export const generateFakeResults = async ({ page, limit }: PaginationData) => {
+  await sleep(1000);
+  return generateFakeResultsRaw(limit);
+};
+
+export const generateFakeResultsRaw = (count: number): SearchResult[] => {
   const resultTypes = ["author", "docket", "document"];
   const agencies = ["EPA", "DOT", "FDA", "USDA", "DOE"];
   const documentFormats = ["PDF", "DOCX", "HTML", "Markdown"];

@@ -1,11 +1,29 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import {
+  SearchResultsGetter,
+  nilSearchResultsGetter,
+} from "../types/new_search_types";
+import { generateFakeResults } from "../search/search_utils";
 
-export function useSearchState() {
+interface SearchStateExport {
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  filters;
+  isSearching: boolean;
+  handleSearch: (query: string) => void;
+  resetToInitial: () => void;
+  triggerSearch: () => void;
+}
+
+export const useSearchState = ({
+  executeSearchOnObjectUpdate,
+}: {
+  executeSearchOnObjectUpdate: any;
+}): SearchStateExport => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [filters, setFilters] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const trimmedQuery = useMemo(() => searchQuery.trim(), [searchQuery]);
 
   // Handle search submission
   const handleSearch = (query: string) => {
@@ -36,22 +54,28 @@ export function useSearchState() {
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
+  const resetSearch = () => {
+    setSearchQuery("");
+    setIsSearching(false);
+    window.history.pushState(null, "", window.location.pathname);
+  };
+
   return {
     searchQuery,
+    setSearchQuery,
     isSearching,
-    searchResults,
-    isLoading,
-    error,
     handleSearch,
-    setSearchResults,
-    setIsLoading,
-    setError,
-    resetSearch: () => {
-      setSearchQuery("");
-      setIsSearching(false);
-      setSearchResults([]);
-      setError(null);
-      window.history.pushState(null, "", window.location.pathname);
-    },
+    resetSearch,
   };
-}
+};
+
+const generateSearchFunctions = ({
+  query,
+}: {
+  query: string;
+}): SearchResultsGetter => {
+  if (query == "") {
+    return nilSearchResultsGetter;
+  }
+  return generateFakeResults;
+};

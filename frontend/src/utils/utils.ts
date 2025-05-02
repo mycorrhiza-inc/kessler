@@ -14,3 +14,7 @@ export function encodedRedirect(
 ) {
   return redirect(`${path}?${type}=${encodeURIComponent(message)}`);
 }
+
+export async function sleep(ms: number) {
+  await new Promise((resolve) => setTimeout(resolve, ms));
+}
