@@ -1,38 +1,62 @@
-import Card, { CardSize } from "./GenericResultCard";
+import { Card } from "@mui/joy";
+import { CardSize } from "./GenericResultCard";
 
-const exampleData = [
-  {
-    type: "author",
-    name: "Dr. Sarah Johnson",
-    description: "Lead researcher on climate policy",
-    timestamp: "2024-03-15",
-  },
-  {
-    type: "docket",
-    name: "EPA-HQ-OAR-2023-1234",
-    description: "Clean Air Act Section 111(d) Emissions Guidelines",
-    timestamp: "2024-04-01",
-    extraInfo: "Comment period closes June 30",
-  },
-  {
-    type: "document",
-    name: "2023 Annual Emissions Report",
-    description: "National greenhouse gas inventory update",
-    timestamp: "2024-01-15",
-    extraInfo: "PDF, 1.2MB",
-    authors: ["EPA Office of Air and Radiation", "Climate Analysis Team"],
-  },
-];
+import { faker } from "@faker-js/faker";
 
-export default function DummyResults() {
-  return (
-    <div className="flex w-full">
-      {/* Main search results content */}
-      <div className="grid grid-cols-1 gap-4 p-8 w-full">
-        {exampleData.map((data, index) => (
-          <Card key={index} data={data} size={CardSize.Medium} />
-        ))}
-      </div>
-    </div>
-  );
-}
+// Helper function for random date in last 6 months
+const randomRecentDate = () => {
+  const date = new Date();
+  date.setMonth(date.getMonth() - Math.floor(Math.random() * 6));
+  return date.toISOString().split("T")[0];
+};
+
+export const generateFakeResults = (count: number) => {
+  const resultTypes = ["author", "docket", "document"];
+  const agencies = ["EPA", "DOT", "FDA", "USDA", "DOE"];
+  const documentFormats = ["PDF", "DOCX", "HTML", "Markdown"];
+
+  return Array.from({ length: count }, (_, i) => {
+    const type = resultTypes[i % resultTypes.length];
+    const base = {
+      id: `fake-result-${i + 1}`,
+      timestamp: randomRecentDate(),
+    };
+
+    switch (type) {
+      case "author":
+        return {
+          ...base,
+          type: "author",
+          name: faker.person.fullName(),
+          description: faker.person.jobTitle(),
+          affiliation: faker.company.name(),
+        };
+
+      case "docket":
+        const agency = agencies[Math.floor(Math.random() * agencies.length)];
+        return {
+          ...base,
+          type: "docket",
+          name: `${agency}-${faker.string.alpha({ length: 3, casing: "upper" })}-${faker.date.recent().getFullYear()}-${faker.string.numeric(4)}`,
+          description: `${agency} ${fmerce.productmerce.productAdjective()} ${faker.commerce.product()} Regulations`,
+          extraInfo: `Comment period closes ${faker.date.soon({ days: 30 }).toLocaleDateString()}`,
+        };
+
+      case "document":
+        return {
+          ...base,
+          type: "document",
+          name: `${faker.date.recent().getFullYear()} ${faker.commerce.department()} Report`,
+          description: faker.lorem.sentence(),
+          extraInfo: `${documentFormats[Math.floor(Math.random() * documentFormats.length)]}, ${faker.number.float({ min: 0.1, max: 5.0 }).toFixed(1)}MB`,
+          authors: Array.from(
+            { length: faker.number.int({ min: 1, max: 3 }) },
+            () => faker.person.fullName(),
+          ),
+        };
+
+      default:
+        return base;
+    }
+  });
+};
