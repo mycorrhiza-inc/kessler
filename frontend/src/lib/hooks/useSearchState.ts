@@ -16,7 +16,7 @@ interface SearchStateExport {
   getResultsCallback: SearchResultsGetter;
   resetToInitial: () => void;
   triggerSearch: () => void;
-  reloadOnChange: number;
+  searchTriggerIndicator: number;
 }
 
 export const useSearchState = (): SearchStateExport => {
@@ -24,11 +24,17 @@ export const useSearchState = (): SearchStateExport => {
   const { filters, setFilter, deleteFilter } = useFilterState([]);
   const [isSearching, setIsSearching] = useState(false);
   const trimmedQuery = useMemo(() => searchQuery.trim(), [searchQuery]);
+  const [searchTriggerIndicator, setSearchTriggerIndicator] = useState(0);
+
+  const triggerSearch = () => {
+    setSearchTriggerIndicator((prev) => (prev + 1) % 1024);
+    setSearchUrl(trimmedQuery, filters);
+    setIsSearching(true);
+  };
   const getResultsCallback = useMemo(
     () => generateSearchFunctions({ query: trimmedQuery, filters: filters }),
-    [trimmedQuery, filters],
+    [searchTriggerIndicator],
   );
-  const [reloadOnChange, setReloadOnChange] = useState(0);
 
   // Handle search submission
   const setSearchUrl = (trimmedQuery: string, filters: Filters) => {
@@ -38,11 +44,6 @@ export const useSearchState = (): SearchStateExport => {
       `/search?text=${encodeURIComponent(trimmedQuery)}`,
     );
   };
-  // UseEffect that Executes a Search and Updates all the associated state
-  useEffect(() => {
-    setSearchUrl(trimmedQuery, filters);
-    setReloadOnChange((prev) => (prev + 1) % 1024);
-  }, [trimmedQuery, filters]); // Dont use a dependancy for filters since they arent encoded yet.
 
   // Handle browser navigation
   useEffect(() => {
@@ -65,7 +66,6 @@ export const useSearchState = (): SearchStateExport => {
     setIsSearching(false);
     window.history.pushState(null, "", window.location.pathname);
   };
-  const triggerSearch = () => {};
 
   return {
     searchQuery,
@@ -78,7 +78,7 @@ export const useSearchState = (): SearchStateExport => {
     getResultsCallback,
     resetToInitial: resetSearch,
     triggerSearch,
-    reloadOnChange,
+    searchTriggerIndicator,
   };
 };
 

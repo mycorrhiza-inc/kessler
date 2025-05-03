@@ -25,6 +25,13 @@ export default function HomePage() {
 
   const isSearching = searchState.isSearching;
 
+  const setTriggeredQuery = (query: string) => {
+    if (query.trim() != searchState.searchQuery) {
+      searchState.setSearchQuery(query.trim());
+      searchState.triggerSearch();
+    }
+  };
+
   return (
     <>
       <motion.div
@@ -34,7 +41,7 @@ export default function HomePage() {
         className="flex flex-col items-center justify-center bg-base-100 p-4"
         style={{ overflow: "hidden" }}
       >
-        <HomeSearchBar onSubmit={handleSearch} />
+        <HomeSearchBar setTriggeredQuery={setTriggeredQuery} />
       </motion.div>
 
       <AnimatePresence mode="wait">
@@ -88,6 +95,8 @@ export default function HomePage() {
 
       <SearchResultsComponent
         isSearching={isSearching}
+        searchGetter={searchState.getResultsCallback}
+        reloadOnChange={searchState.reloadOnChange}
       ></SearchResultsComponent>
     </>
   );
