@@ -6,6 +6,8 @@ import {
 import { generateFakeResults } from "../search/search_utils";
 import { Filters, useFilterState } from "../types/new_filter_types";
 
+import { usePathname } from "next/navigation";
+
 interface SearchStateExport {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
@@ -47,10 +49,20 @@ export const useSearchState = (): SearchStateExport => {
     );
   };
 
-  // Handle browser navigation
+  const pathname = usePathname();
+  useEffect(() => {
+    // Reset search when leaving search page
+    if (pathname !== "/search") {
+      resetSearchNoNav();
+    }
+  }, [pathname]);
+
+  // Update the popstate handler to handle home navigation
   useEffect(() => {
     const handlePopState = (e: PopStateEvent) => {
-      if (e.state?.search) {
+      const isSearchPage = window.location.pathname === "/search";
+
+      if (isSearchPage && e.state?.search) {
         setSearchQuery(e.state.search);
         triggerSearch();
       } else {
