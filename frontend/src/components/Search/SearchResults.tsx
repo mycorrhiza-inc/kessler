@@ -8,15 +8,7 @@ import {
   PaginationData,
   SearchResult,
   SearchResultsGetter,
-} from "@/lib/types/NewSearchTypes";
-
-interface SearchResultsProps {
-  isSearching: boolean;
-  isLoading: boolean;
-  error: string | null;
-  searchResults: SearchResult[];
-  children: React.ReactNode;
-}
+} from "@/lib/types/new_search_types";
 
 function RawSearchResults({
   searchResults,
@@ -34,19 +26,14 @@ function RawSearchResults({
   );
 }
 
-const dummyGetter = async ({ page, limit }: PaginationData) => {
-  await sleep(1000);
-  return generateFakeResults(limit);
-};
-
 interface GeneralInfiniteSearchParams {
   searchGetter: SearchResultsGetter;
-  reloadOnChangeObj: any;
+  reloadOnChange: number;
 }
 
 function SearchResultsInfiniteScroll({
   searchGetter,
-  reloadOnChangeObj,
+  reloadOnChange,
 }: GeneralInfiniteSearchParams) {
   const [hasMore, setHasMore] = useState(true);
   const [searchData, setSearchData] = useState<SearchResult[]>([]);
@@ -92,7 +79,7 @@ function SearchResultsInfiniteScroll({
     <InfiniteScrollPlus
       loadInitial={getInitialUpdates}
       getMore={getMore}
-      reloadOnChangeObj={reloadOnChangeObj}
+      reloadOnChange={reloadOnChange}
       dataLength={searchData.length}
       hasMore={hasMore}
     >
@@ -101,7 +88,15 @@ function SearchResultsInfiniteScroll({
   );
 }
 
-export function SearchResultsComponent({ isSearching }: SearchResultsProps) {
+export function SearchResultsComponent({
+  searchGetter,
+  reloadOnChange,
+  isSearching,
+}: {
+  isSearching: boolean;
+  searchGetter: SearchResultsGetter;
+  reloadOnChange: number;
+}) {
   return (
     <AnimatePresence mode="wait">
       {isSearching && (
@@ -114,8 +109,8 @@ export function SearchResultsComponent({ isSearching }: SearchResultsProps) {
           className="w-full"
         >
           <SearchResultsInfiniteScroll
-            searchGetter={dummyGetter}
-            reloadOnChangeObj={[]}
+            searchGetter={searchGetter}
+            reloadOnChange={reloadOnChange}
           />
         </motion.div>
       )}

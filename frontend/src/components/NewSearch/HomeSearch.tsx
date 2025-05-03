@@ -1,9 +1,9 @@
-"use client";
 import React, { useState } from "react";
 import { GiMushroomsCluster } from "react-icons/gi";
 import StateSelector from "./StateSelector";
 import SearchBox from "./SearchBox";
 import { useKesslerStore } from "@/lib/store";
+import { Filters } from "@/lib/types/new_filter_types";
 
 const states = [
   "New York",
@@ -18,23 +18,22 @@ const states = [
   "Michigan",
 ];
 
-interface Props {
-  initialState?: string;
-  onSubmit?: (query: string) => void;
-}
 export default function HomeSearchBar({
-  initialState = "New York",
-  onSubmit,
-}: Props) {
+  setTriggeredQuery,
+  initialState,
+}: {
+  setTriggeredQuery: (query: string) => void;
+  initialState?: string;
+}) {
   const [searchQuery, setSearchQuery] = useState("");
   const globalStore = useKesslerStore();
-  const selectedState = globalStore.defaultState || initialState;
+  const selectedState = globalStore.defaultState || initialState || "New York";
   const setSelectedState = globalStore.setDefaultState;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      onSubmit && onSubmit(searchQuery.trim());
+      setTriggeredQuery(searchQuery.trim());
     }
   };
 

@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
 import {
-  PaginationData,
   SearchResultsGetter,
   nilSearchResultsGetter,
 } from "../types/new_search_types";
@@ -15,12 +14,12 @@ interface SearchStateExport {
   deleteFilter: any;
   isSearching: boolean;
   getResultsCallback: SearchResultsGetter;
-  handleSearch: (query: string) => void;
   resetToInitial: () => void;
   triggerSearch: () => void;
+  reloadOnChange: number;
 }
 
-export const useSearchState = ({}: {}): SearchStateExport => {
+export const useSearchState = (): SearchStateExport => {
   const [searchQuery, setSearchQuery] = useState("");
   const { filters, setFilter, deleteFilter } = useFilterState([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -29,19 +28,21 @@ export const useSearchState = ({}: {}): SearchStateExport => {
     () => generateSearchFunctions({ query: trimmedQuery, filters: filters }),
     [trimmedQuery, filters],
   );
+  const [reloadOnChange, setReloadOnChange] = useState(0);
 
   // Handle search submission
-  const initializeSearch = (query: string, filters: Filters) => {
-    if (query.trim()) {
-      setSearchQuery(query);
-      setIsSearching(true);
-      window.history.pushState(
-        { search: query },
-        "",
-        `/search?text=${encodeURIComponent(query)}`,
-      );
-    }
+  const setSearchUrl = (trimmedQuery: string, filters: Filters) => {
+    window.history.pushState(
+      { search: trimmedQuery },
+      "",
+      `/search?text=${encodeURIComponent(trimmedQuery)}`,
+    );
   };
+  // UseEffect that Executes a Search and Updates all the associated state
+  useEffect(() => {
+    setSearchUrl(trimmedQuery, filters);
+    setReloadOnChange((prev) => (prev + 1) % 1024);
+  }, [trimmedQuery, filters]); // Dont use a dependancy for filters since they arent encoded yet.
 
   // Handle browser navigation
   useEffect(() => {
@@ -73,10 +74,11 @@ export const useSearchState = ({}: {}): SearchStateExport => {
     setFilter,
     deleteFilter,
     isSearching,
-    handleSearch,
+    // handleSearch,
     getResultsCallback,
     resetToInitial: resetSearch,
     triggerSearch,
+    reloadOnChange,
   };
 };
 
