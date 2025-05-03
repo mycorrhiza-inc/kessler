@@ -79,10 +79,13 @@ export const useSearchState = (): SearchStateExport => {
     clearFilters();
     setIsSearching(false);
   };
+  const originalPathname = useMemo(() => {
+    return window.location.pathname;
+  }, []);
   const resetSearch = () => {
     resetSearchNoNav();
     console.log("Resetting Search to None.");
-    window.history.pushState(null, "", window.location.pathname);
+    window.history.pushState(null, "", originalPathname);
   };
 
   return {
