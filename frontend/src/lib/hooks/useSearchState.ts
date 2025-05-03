@@ -81,6 +81,7 @@ export const useSearchState = (): SearchStateExport => {
   };
   const resetSearch = () => {
     resetSearchNoNav();
+    console.log("Resetting Search to None.");
     window.history.pushState(null, "", window.location.pathname);
   };
 

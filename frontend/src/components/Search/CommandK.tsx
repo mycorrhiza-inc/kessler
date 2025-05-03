@@ -1,10 +1,10 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchState } from "@/lib/hooks/useSearchState";
 import { SearchResultsComponent } from "./SearchResults";
 
 export function CommandKSearch() {
   const { resetToInitial } = useSearchState();
-  const modalRef = useRef<HTMLInputElement>(null);
+  const modalRef = useRef<HTMLDialogElement>(null);
 
   // Handle keyboard shortcut
   useEffect(() => {
@@ -16,41 +16,45 @@ export function CommandKSearch() {
 
       if (cmdK) {
         e.preventDefault();
-        console.log("Entered command k modal");
-        // modalRef.current?.click(); // Toggle DaisyUI modal
-        document.getElementById("command-k-modal-default").showModal();
+        modalRef.current?.showModal();
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
-    // Not sure what this does
-    // return () => window.removeEventListener("keydown", keydownHandler);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
+
+  // Handle modal close events
+  useEffect(() => {
+    const dialog = modalRef.current;
+    const handleClose = () => resetToInitial();
+
+    dialog?.addEventListener("close", handleClose);
+    return () => dialog?.removeEventListener("close", handleClose);
+  }, [resetToInitial]);
 
   return (
     <>
-      <dialog id="command-k-modal-default" className="modal">
+      <dialog ref={modalRef} id="command-k-modal-default" className="modal">
         <div className="modal-box">
-          <SearchCommand
-            onClose={() => {
-              resetToInitial();
-              modalRef.current?.click(); // Close modal
-            }}
-          />
+          <SearchCommand />
         </div>
+        {/* DaisyUI modal backdrop click handler */}
+        <form method="dialog" className="modal-backdrop">
+          <button>close</button>
+        </form>
       </dialog>
     </>
   );
 }
 
-function SearchCommand({ onClose }: { onClose: () => void }) {
+function SearchCommand() {
   const {
     searchQuery,
     setSearchQuery,
     triggerSearch,
     getResultsCallback,
     searchTriggerIndicator,
-    resetToInitial,
     ...searchState
   } = useSearchState();
 
@@ -72,7 +76,6 @@ function SearchCommand({ onClose }: { onClose: () => void }) {
 
         <div className="modal-action">
           <form method="dialog">
-            {/* if there is a button in form, it will close the modal */}
             <button className="btn">Close</button>
           </form>
         </div>
