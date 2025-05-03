@@ -16,6 +16,14 @@ export default function Page() {
       searchState.triggerSearch();
     }
   };
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialQuery = urlParams.get("q");
+    if (initialQuery) {
+      searchState.setSearchQuery(initialQuery);
+      searchState.triggerSearch();
+    }
+  }, []);
 
   // Reset search state when URL changes (back/forward navigation)
   return (

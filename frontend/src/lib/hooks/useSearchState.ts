@@ -45,7 +45,7 @@ export const useSearchState = (): SearchStateExport => {
     window.history[method](
       { search: trimmedQuery },
       "",
-      `/search?text=${encodeURIComponent(trimmedQuery)}`,
+      `/search?query=${encodeURIComponent(trimmedQuery)}`,
     );
   };
 
