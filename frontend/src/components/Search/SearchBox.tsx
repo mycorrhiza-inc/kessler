@@ -492,7 +492,7 @@ const SearchBox = ({
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               placeholder="Search anything..."
-              className="w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none bg-base-100"
+              className="w-full p-3 border rounded-lg shadow-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-hidden bg-base-100"
             />
 
             {isLoading && (
@@ -505,7 +505,7 @@ const SearchBox = ({
 
           {/* Suggestions dropdown - positioned relative to search container */}
           {suggestions.length > 0 && (
-            <div className="absolute left-0 right-0 top-full mt-1 z-[999999] h-auto bg-base-100 border rounded-lg shadow-lg">
+            <div className="absolute left-0 right-0 top-full mt-1 z-999999 h-auto bg-base-100 border rounded-lg shadow-lg">
               <ul className=" max-h-60 overflow-auto">
                 {suggestions.map((suggestion, index) => (
                   <li key={suggestion.id}>

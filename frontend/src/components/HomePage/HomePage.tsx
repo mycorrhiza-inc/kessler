@@ -68,7 +68,7 @@ export default function HomePage() {
                   />
                 </div>
               </div>
-              <div className="z-[1]">
+              <div className="z-1">
                 <Link
                   className="text-3xl font-bold hover:underline mb-5 p-10"
                   href="/orgs"

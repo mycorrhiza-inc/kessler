@@ -76,7 +76,7 @@ function SearchCommand({ onClose }: { onClose: () => void }) {
           value={searchQuery}
           onChange={(e) => handleSearch(e.target.value)}
           placeholder="Search..."
-          className="input input-bordered flex-grow"
+          className="input input-bordered grow"
           autoFocus
         />
         <button
@@ -88,7 +88,7 @@ function SearchCommand({ onClose }: { onClose: () => void }) {
         </button>
       </div>
 
-      <div className="flex-grow overflow-auto">
+      <div className="grow overflow-auto">
         <SearchResultsComponent
           isSearching={searchState.isSearching}
           reloadOnChange={searchTriggerIndicator}
