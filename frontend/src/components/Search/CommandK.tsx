@@ -59,8 +59,7 @@ function SearchCommand() {
   } = useSearchState();
 
   const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    triggerSearch();
+    triggerSearch({ query: query });
   };
 
   return (

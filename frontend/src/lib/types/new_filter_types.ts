@@ -121,6 +121,9 @@ export const useFilterState = (initialFilters: Filter[] | Filters = []) => {
     });
   }, []);
 
+  const replaceFilters = useCallback((newFilters: Filters) => {
+    setFilters(newFilters);
+  }, []);
   const clearFilters = useCallback(() => {
     setFilters(createFilters([]));
   }, []);
@@ -130,5 +133,6 @@ export const useFilterState = (initialFilters: Filter[] | Filters = []) => {
     setFilter,
     deleteFilter,
     clearFilters,
+    replaceFilters,
   };
 };

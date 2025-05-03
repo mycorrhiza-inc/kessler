@@ -17,21 +17,35 @@ interface SearchStateExport {
   isSearching: boolean;
   getResultsCallback: SearchResultsGetter;
   resetToInitial: () => void;
-  triggerSearch: () => void;
+  triggerSearch: (trigger?: TriggerSearchObject) => void;
   searchTriggerIndicator: number;
+}
+
+export interface TriggerSearchObject {
+  query?: string;
+  filters?: Filters;
 }
 
 export const useSearchState = (): SearchStateExport => {
   const [searchQuery, setSearchQuery] = useState("");
-  const { filters, setFilter, deleteFilter, clearFilters } = useFilterState([]);
+  const { filters, setFilter, deleteFilter, clearFilters, replaceFilters } =
+    useFilterState([]);
   const [isSearching, setIsSearching] = useState(false);
   const trimmedQuery = useMemo(() => searchQuery.trim(), [searchQuery]);
   const [searchTriggerIndicator, setSearchTriggerIndicator] = useState(0);
 
-  const triggerSearch = () => {
+  const triggerSearch = (trigger?: TriggerSearchObject) => {
+    const exec_query = trigger?.query || searchQuery;
+    const exec_filters = trigger?.filters || filters;
     setSearchTriggerIndicator((prev) => (prev + 1) % 1024);
-    setSearchUrl(trimmedQuery, filters);
+    setSearchUrl(exec_query, exec_filters);
     setIsSearching(true);
+    if (trigger?.query) {
+      setSearchQuery(trigger.query);
+    }
+    if (trigger?.filters) {
+      replaceFilters(trigger.filters);
+    }
   };
   const getResultsCallback = useMemo(
     () => generateSearchFunctions({ query: trimmedQuery, filters: filters }),
@@ -63,7 +77,6 @@ export const useSearchState = (): SearchStateExport => {
       const isSearchPage = window.location.pathname === "/search";
 
       if (isSearchPage && e.state?.search) {
-        setSearchQuery(e.state.search);
         triggerSearch();
       } else {
         resetSearchNoNav();

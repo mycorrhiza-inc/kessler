@@ -27,8 +27,7 @@ export default function HomePage() {
 
   const setTriggeredQuery = (query: string) => {
     if (query.trim() != searchState.searchQuery) {
-      searchState.setSearchQuery(query.trim());
-      searchState.triggerSearch();
+      searchState.triggerSearch({ query: query.trim() });
     }
   };
 

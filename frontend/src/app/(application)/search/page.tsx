@@ -12,16 +12,14 @@ export default function Page() {
 
   const setTriggeredQuery = (query: string) => {
     if (query.trim() != searchState.searchQuery) {
-      searchState.setSearchQuery(query.trim());
-      searchState.triggerSearch();
+      searchState.triggerSearch({ query: query.trim() });
     }
   };
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const initialQuery = urlParams.get("q");
     if (initialQuery) {
-      searchState.setSearchQuery(initialQuery);
-      searchState.triggerSearch();
+      searchState.triggerSearch({ query: initialQuery.trim() });
     }
   }, []);
 
