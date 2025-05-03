@@ -1,4 +1,4 @@
-const svgToDataUri = require("mini-svg-data-uri");
+// const svgToDataUri = require("mini-svg-data-uri");
 const {
   default: flattenColorPalette,
 } = require("tailwindcss/lib/util/flattenColorPalette");
@@ -56,9 +56,9 @@ const config = {
       );
     },
     addVariablesForColors,
-    require("@tailwindcss/typography"),
-    require("tailwindcss-animate"),
-    require("daisyui"),
+    // require("@tailwindcss/typography"),
+    // require("tailwindcss-animate"),
+    // require("daisyui"),
   ],
 } satisfies Config;
 
