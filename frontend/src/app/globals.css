@@ -1,5 +1,31 @@
 @import "tailwindcss";
 @plugin "daisyui";
+@plugin "daisyui/theme" {
+  name: "kessler";
+  default: true;
+  prefersdark: false;
+  color-scheme: light;
+
+  --color-primary: oklch(87% 0.1003 102.63);
+  --color-secondary: oklch(29% 0 0);
+  --color-accent: oklch(79% 0.1254 141.86);
+  --color-neutral: oklch(42% 0 0);
+  --color-base-100: oklch(93% 0.01 91.49);
+  --color-base-200: oklch(90% 0.01 91.49);
+  --color-base-300: oklch(85% 0.01 91.49);
+  --color-base-content: #2b2b2b;
+
+  --color-info: oklch(29% 0 0);
+  --color-success: oklch(90.79% 0.1866 141.82);
+  --color-success-content: oklch(29.12% 0.0802 141.82);
+  --color-warning: oklch(95% 0.1293 102.86);
+  --color-error: oklch(76% 0.146 21.1);
+
+  --radius-box: 20px;
+  --radius-btn: 8px;
+  --radius-badge: 32px;
+  --border-btn: 1px;
+}
 /* -  daisyui: { */
 /* -    themes: [ */
 /* -      { */
