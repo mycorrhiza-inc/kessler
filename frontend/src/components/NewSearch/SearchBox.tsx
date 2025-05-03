@@ -15,7 +15,7 @@ export default function SearchBox({
       <input
         type="text"
         placeholder={placeholder}
-        className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+        className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-primary focus:border-transparent"
         value={value}
         onChange={(e) => onChange(e.target.value)}
       />

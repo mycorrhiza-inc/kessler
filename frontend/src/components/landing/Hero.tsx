@@ -38,8 +38,8 @@ export default function Hero() {
           <Compare
             firstImage="/ny-puc-ui.png"
             secondImage="/kessler-light-rag-search.png"
-            firstImageClassName="object-cover object-left-top"
-            secondImageClassname="object-cover object-left-top"
+            firstImageClassName="object-cover object-top-left"
+            secondImageClassname="object-cover object-top-left"
             className="h-[280px] w-[500px] md:h-[400px] md:w-[700px] lg:h-[650px] lg:w-[1000px]"
             slideMode="hover"
           />

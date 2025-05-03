@@ -103,7 +103,7 @@ const CodeBlock = ({ node, inline, className, children, ...props }: any) => {
     navigator.clipboard.writeText(codeContent);
   };
 
-  return !inline && match ? (
+  return inline! && match ? (
     <div style={{ position: "relative" }}>
       <div>
         <SyntaxHighlighter

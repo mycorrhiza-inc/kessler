@@ -62,7 +62,7 @@ const getIcon = (type: CardType) => {
         <div
           className={clsx(
             getTypeColor(type),
-            "w-4 h-4 rounded flex justify-center items-center",
+            "w-4 h-4 rounded-sm flex justify-center items-center",
           )}
         >
           <svg
@@ -84,7 +84,7 @@ const getIcon = (type: CardType) => {
         <div
           className={clsx(
             getTypeColor(type),
-            "w-4 h-4 rounded flex justify-center items-center",
+            "w-4 h-4 rounded-sm flex justify-center items-center",
           )}
         >
           <svg
@@ -106,7 +106,7 @@ const getIcon = (type: CardType) => {
         <div
           className={clsx(
             getTypeColor(type),
-            "w-4 h-4 rounded flex justify-center items-center",
+            "w-4 h-4 rounded-sm flex justify-center items-center",
           )}
         >
           <svg
@@ -164,7 +164,7 @@ const MediumCard: React.FC<{ data: CardData }> = ({ data }) => {
           <h2 className="card-title ml-2">{data.name}</h2>
         </div>
         <div
-          className={`${getTypeColor(data.type)} text-white px-2 py-1 rounded text-xs capitalize`}
+          className={`${getTypeColor(data.type)} text-white px-2 py-1 rounded-sm text-xs capitalize`}
         >
           {data.type}
         </div>
@@ -184,7 +184,7 @@ const MediumCard: React.FC<{ data: CardData }> = ({ data }) => {
       {data.authors && (
         <div className="mt-4">
           <h3 className="text-sm font-bold mb-2">Authors</h3>
-          <div className="bg-pink-100 p-2 rounded">
+          <div className="bg-pink-100 p-2 rounded-sm">
             {data.authors.map((author, index) => (
               <span key={index} className="text-sm">
                 {author}
@@ -211,7 +211,7 @@ const SmallCard: React.FC<{ data: CardData }> = ({ data }) => {
         </div>
         <div className="flex items-center gap-2 shrink-0">
           {/* <div */}
-          {/*   className={`${getTypeColor(data.type)} text-white px-2 py-1 rounded text-xs capitalize`} */}
+          {/*   className={`${getTypeColor(data.type)} text-white px-2 py-1 rounded-sm text-xs capitalize`} */}
           {/* > */}
           {/*   {data.type} */}
           {/* </div> */}

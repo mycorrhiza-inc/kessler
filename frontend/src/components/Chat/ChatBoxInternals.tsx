@@ -72,9 +72,9 @@ export const ChatMessages = ({
       {loading && (
         <div className="w-11/12 bg-base-300 rounded-lg min-h-[100px] p-5">
           <div className="animate-pulse">
-            <div className="h-2 bg-accent my-4 rounded"></div>
-            <div className="h-2 bg-accent my-4 rounded"></div>
-            <div className="h-2 bg-accent my-4 rounded"></div>
+            <div className="h-2 bg-accent my-4 rounded-sm"></div>
+            <div className="h-2 bg-accent my-4 rounded-sm"></div>
+            <div className="h-2 bg-accent my-4 rounded-sm"></div>
           </div>
         </div>
       )}
@@ -227,7 +227,7 @@ export const ChatBoxInternalsStateless = ({
           </div>
           <ul
             tabIndex={0}
-            className="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow"
+            className="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm"
           >
             {model_list.map((model) => (
               <li key={model}>

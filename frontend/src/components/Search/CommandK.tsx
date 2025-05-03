@@ -1,25 +1,92 @@
+import { useEffect, useRef, useState } from "react";
 import { useSearchState } from "@/lib/hooks/useSearchState";
-import { SearchResultsWrapper } from "./SearchResults";
+import { SearchResultsComponent } from "./SearchResults";
 
-function CommandKSearch() {}
+export function CommandKSearch() {
+  const { resetToInitial } = useSearchState();
+  const modalRef = useRef<HTMLDialogElement>(null);
 
-function SearchCommand() {
-  const { searchQuery, isSearching, handleSearch, ...searchState } =
-    useSearchState();
+  // Handle keyboard shortcut
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isMac = navigator.userAgent.includes("Mac");
+      const cmdK =
+        (isMac && e.metaKey && e.key === "k") ||
+        (!isMac && e.ctrlKey && e.key === "k");
+
+      if (cmdK) {
+        e.preventDefault();
+        modalRef.current?.showModal();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  // Handle modal close events
+  useEffect(() => {
+    const dialog = modalRef.current;
+    const handleClose = () => resetToInitial();
+
+    dialog?.addEventListener("close", handleClose);
+    return () => dialog?.removeEventListener("close", handleClose);
+  }, [resetToInitial]);
 
   return (
-    <div className="p-4">
-      <input
-        value={searchQuery}
-        onChange={(e) => handleSearch(e.target.value)}
-        placeholder="Search..."
-        className="input input-bordered w-full mb-4"
-      />
+    <>
+      <dialog ref={modalRef} id="command-k-modal-default" className="modal">
+        <div className="modal-box">
+          <SearchCommand />
+        </div>
+        {/* DaisyUI modal backdrop click handler */}
+        <form method="dialog" className="modal-backdrop">
+          <button>close</button>
+        </form>
+      </dialog>
+    </>
+  );
+}
 
-      <SearchResultsWrapper
-        isSearching={isSearching}
-        {...searchState}
-      ></SearchResultsWrapper>
+function SearchCommand() {
+  const {
+    searchQuery,
+    setSearchQuery,
+    triggerSearch,
+    getResultsCallback,
+    searchTriggerIndicator,
+    ...searchState
+  } = useSearchState();
+
+  const handleSearch = (query: string) => {
+    triggerSearch({ query: query });
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="flex-row gap-2 mb-4">
+        <input
+          value={searchQuery}
+          onChange={(e) => handleSearch(e.target.value)}
+          placeholder="Search..."
+          className="input input-bordered grow"
+          autoFocus
+        />
+
+        <div className="modal-action">
+          <form method="dialog">
+            <button className="btn">Close</button>
+          </form>
+        </div>
+      </div>
+
+      <div className="grow overflow-auto">
+        <SearchResultsComponent
+          isSearching={searchState.isSearching}
+          reloadOnChange={searchTriggerIndicator}
+          searchGetter={getResultsCallback}
+        />
+      </div>
     </div>
   );
 }

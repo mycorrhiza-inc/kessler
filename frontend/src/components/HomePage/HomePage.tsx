@@ -27,8 +27,7 @@ export default function HomePage() {
 
   const setTriggeredQuery = (query: string) => {
     if (query.trim() != searchState.searchQuery) {
-      searchState.setSearchQuery(query.trim());
-      searchState.triggerSearch();
+      searchState.triggerSearch({ query: query.trim() });
     }
   };
 
@@ -68,7 +67,7 @@ export default function HomePage() {
                   />
                 </div>
               </div>
-              <div className="z-[1]">
+              <div className="z-1">
                 <Link
                   className="text-3xl font-bold hover:underline mb-5 p-10"
                   href="/orgs"
@@ -96,7 +95,7 @@ export default function HomePage() {
       <SearchResultsComponent
         isSearching={isSearching}
         searchGetter={searchState.getResultsCallback}
-        reloadOnChange={searchState.reloadOnChange}
+        reloadOnChange={searchState.searchTriggerIndicator}
       ></SearchResultsComponent>
     </>
   );

@@ -35,7 +35,7 @@ export const RangePicker = ({ baseRange, updateRange }: DateRangePickerProps) =>
 					Date from <u>{baseRange.startDate !== undefined ? baseRange.startDate.toLocaleDateString("en-US") : "?"}</u> to
 					<u>{baseRange.endDate !== undefined ? baseRange.endDate.toLocaleDateString("en-US") : "?"}</u>
 				</summary>
-				<div className='dropdown-content  z-[9910]'>
+				<div className='dropdown-content  z-9910'>
 					<div className=" bg-base-100 rounded-lg">
 					<DateRangePicker
 						ranges={[selectionRange]}

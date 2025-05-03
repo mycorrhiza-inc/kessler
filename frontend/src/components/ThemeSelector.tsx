@@ -92,18 +92,18 @@ const ThemeBigButton = ({
             </svg>
             <div className="font-bold">{themeData.name}</div>
             <div className="flex flex-wrap gap-1">
-              <div className="bg-primary flex aspect-square w-5 items-center justify-center rounded lg:w-6">
+              <div className="bg-primary flex aspect-square w-5 items-center justify-center rounded-sm lg:w-6">
                 <div className="text-primary-content text-sm font-bold">A</div>
               </div>
-              <div className="bg-secondary flex aspect-square w-5 items-center justify-center rounded lg:w-6">
+              <div className="bg-secondary flex aspect-square w-5 items-center justify-center rounded-sm lg:w-6">
                 <div className="text-secondary-content text-sm font-bold">
                   A
                 </div>
               </div>
-              <div className="bg-accent flex aspect-square w-5 items-center justify-center rounded lg:w-6">
+              <div className="bg-accent flex aspect-square w-5 items-center justify-center rounded-sm lg:w-6">
                 <div className="text-accent-content text-sm font-bold">A</div>
               </div>
-              <div className="bg-neutral flex aspect-square w-5 items-center justify-center rounded lg:w-6">
+              <div className="bg-neutral flex aspect-square w-5 items-center justify-center rounded-sm lg:w-6">
                 <div className="text-neutral-content text-sm font-bold">A</div>
               </div>
             </div>
@@ -143,7 +143,7 @@ const ThemeSmallButton = ({
         >
           <path d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z"></path>
         </svg>
-        <span className="flex-grow text-sm">{themeData.name}</span>{" "}
+        <span className="grow text-sm">{themeData.name}</span>{" "}
         <span className="flex h-full shrink-0 flex-wrap gap-1">
           <span className="bg-primary rounded-badge w-2"></span>{" "}
           <span className="bg-secondary rounded-badge w-2"></span>
