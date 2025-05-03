@@ -16,7 +16,9 @@ export function CommandKSearch() {
 
       if (cmdK) {
         e.preventDefault();
-        modalRef.current?.click(); // Toggle DaisyUI modal
+        console.log("Entered command k modal");
+        // modalRef.current?.click(); // Toggle DaisyUI modal
+        document.getElementById("command-k-modal-default").showModal();
       }
     };
 
@@ -27,17 +29,8 @@ export function CommandKSearch() {
 
   return (
     <>
-      {/* DaisyUI modal toggle */}
-      <input
-        ref={modalRef}
-        type="checkbox"
-        id="command-k-modal"
-        className="modal-toggle"
-      />
-
-      {/* DaisyUI modal */}
-      <div className="modal" role="dialog">
-        <div className="modal-box w-11/12 max-w-5xl h-[80vh]">
+      <dialog id="command-k-modal-default" className="modal">
+        <div className="modal-box">
           <SearchCommand
             onClose={() => {
               resetToInitial();
@@ -45,10 +38,7 @@ export function CommandKSearch() {
             }}
           />
         </div>
-
-        {/* Click outside to close */}
-        <label className="modal-backdrop" htmlFor="command-k-modal" />
-      </div>
+      </dialog>
     </>
   );
 }
@@ -71,7 +61,7 @@ function SearchCommand({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex gap-2 mb-4">
+      <div className="flex-row gap-2 mb-4">
         <input
           value={searchQuery}
           onChange={(e) => handleSearch(e.target.value)}
@@ -79,13 +69,13 @@ function SearchCommand({ onClose }: { onClose: () => void }) {
           className="input input-bordered grow"
           autoFocus
         />
-        <button
-          className="btn btn-ghost"
-          onClick={onClose}
-          aria-label="Close search"
-        >
-          ✕
-        </button>
+
+        <div className="modal-action">
+          <form method="dialog">
+            {/* if there is a button in form, it will close the modal */}
+            <button className="btn">Close</button>
+          </form>
+        </div>
       </div>
 
       <div className="grow overflow-auto">
