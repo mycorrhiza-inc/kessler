@@ -1,4 +1,36 @@
-@import 'tailwindcss';
+@import "tailwindcss";
+@plugin "daisyui";
+/* -  daisyui: { */
+/* -    themes: [ */
+/* -      { */
+/* -        kessler: { */
+/* -          primary: "oklch(87% 0.1003 102.63)", // Yellow accent color */
+/* -          secondary: "oklch(29% 0 0)", // Dark gray */
+/* -          accent: "oklch(79% 0.1254 141.86)", // Green accent from design */
+/* -          neutral: "oklch(42% 0 0)", // Medium gray */
+/* -          "base-100": "oklch(93% 0.01 91.49)", // Main background color */
+/* -          "base-200": "oklch(90% 0.01 91.49)", // Secondary background color */
+/* -          "base-300": "oklch(85% 0.01 91.49)", // Darker background variant */
+/* -          "base-content": "#2B2B2B", // Main text color */
+/* - */
+/* -          // Component specific colors */
+/* -          info: "oklch(29% 0 0)", */
+/* -          success: "oklch(90.79% 0.1866 141.82)", */
+/* -          "success-content": "oklch(29.12% 0.0802 141.82)", */
+/* -          warning: "oklch(95% 0.1293 102.86)", */
+/* -          error: "oklch(76% 0.146 21.1)", */
+/* - */
+/* -          // Border radius */
+/* -          "--rounded-box": "20px", */
+/* -          "--rounded-btn": "8px", */
+/* -          "--rounded-badge": "32px", */
+/* - */
+/* -          // Border width */
+/* -          "--border-btn": "1px", */
+/* -        }, */
+/* -      }, */
+/* -    ], */
+/* -  }, */
 /* @plugin "daisyui"; */
 
 @custom-variant dark (&:is(.dark *));
