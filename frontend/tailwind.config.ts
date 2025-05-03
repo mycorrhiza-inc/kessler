@@ -60,37 +60,6 @@ const config = {
     require("tailwindcss-animate"),
     require("daisyui"),
   ],
-  daisyui: {
-    themes: [
-      {
-        kessler: {
-          primary: "#E1D889", // Yellow accent color
-          secondary: "#2B2B2B", // Dark gray
-          accent: "#8BCF83", // Green accent from design
-          neutral: "#4E4E4E", // Medium gray
-          "base-100": "#EBE9E3", // Main background color
-          "base-200": "#E0DDD4", // Secondary background color
-          "base-300": "#D6D3CA", // Darker background variant
-          "base-content": "#2B2B2B", // Main text color
-
-          // Component specific colors
-          info: "#2B2B2B",
-          success: "oklch(90.79% 0.1866 141.82)",
-          "success-content": "oklch(29.12% 0.0802 141.82)",
-          warning: "#FFF388",
-          error: "#FF8787",
-
-          // Border radius
-          "--rounded-box": "20px",
-          "--rounded-btn": "8px",
-          "--rounded-badge": "32px",
-
-          // Border width
-          "--border-btn": "1px",
-        },
-      },
-    ],
-  },
 } satisfies Config;
 
 export default config;
