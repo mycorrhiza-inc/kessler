@@ -3,35 +3,21 @@ import HomeSearchBar from "@/components/NewSearch/HomeSearch";
 import React, { useEffect, useState } from "react";
 
 import { motion, AnimatePresence } from "framer-motion";
-import DummyResults from "@/components/NewSearch/DummySearchResults";
+import { useSearchState } from "@/lib/hooks/useSearchState";
+import { SearchResultsComponent } from "@/components/Search/SearchResults";
 export default function Page() {
-  const [query, setSearchQuery] = useState("");
-  const [isSearching, setIsSearching] = useState(false);
+  const searchState = useSearchState();
 
-  // Handle search submission
-  const handleSearch = (query: string) => {
-    if (query.trim()) {
-      setSearchQuery(query);
-      setIsSearching(true);
+  const isSearching = searchState.isSearching;
 
-      // Update URL without navigation
-      window.history.pushState(
-        null,
-        "",
-        `/search?text=${encodeURIComponent(query)}`,
-      );
+  const setTriggeredQuery = (query: string) => {
+    if (query.trim() != searchState.searchQuery) {
+      searchState.setSearchQuery(query.trim());
+      searchState.triggerSearch();
     }
   };
 
   // Reset search state when URL changes (back/forward navigation)
-  useEffect(() => {
-    const handlePopState = () => {
-      setIsSearching(false);
-    };
-
-    window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
-  }, []);
   return (
     <>
       <motion.div
@@ -41,7 +27,7 @@ export default function Page() {
         className="flex flex-col items-center justify-center bg-base-100 p-4"
         style={{ overflow: "hidden" }}
       >
-        <HomeSearchBar onSubmit={handleSearch} />
+        <HomeSearchBar setTriggeredQuery={setTriggeredQuery} />
       </motion.div>
 
       <div
@@ -49,7 +35,11 @@ export default function Page() {
           isSearching ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"
         }`}
       >
-        <DummyResults />
+        <SearchResultsComponent
+          isSearching={isSearching}
+          searchGetter={searchState.getResultsCallback}
+          reloadOnChange={searchState.searchTriggerIndicator}
+        ></SearchResultsComponent>
       </div>
     </>
   );

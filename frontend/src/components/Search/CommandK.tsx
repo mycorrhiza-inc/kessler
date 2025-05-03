@@ -21,6 +21,7 @@ export function CommandKSearch() {
     };
 
     window.addEventListener("keydown", handleKeyDown);
+    // Not sure what this does
     // return () => window.removeEventListener("keydown", keydownHandler);
   }, []);
 
