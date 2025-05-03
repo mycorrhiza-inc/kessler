@@ -11,7 +11,7 @@ export default function Header({
   breadcrumbs: BreadcrumbValues;
 }) {
   return (
-    <div className="fixed top-0 left-0 flex flex-row  justify-start h-15 pt-5 w-full bg-base-100 z-50 p-2">
+    <div className="fixed top-0 left-0 flex flex-row justify-start h-15 pt-5 w-full bg-base-100 z-1000 p-2">
       <div className="z-50" style={{ width: `200px` }}>
         <Link href="/">
           <div className="flex flex-row items-center z-80 w-auto pl-5">

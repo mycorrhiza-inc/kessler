@@ -26,7 +26,7 @@ export default function Layout({ children }: LayoutProps) {
         onResize={setSidebarWidth}
       />
       <div
-        className={`flex-1 p-6 transition-all duration-200 ease-in-out w-full`}
+        className={`flex-1 p-6 transition-all bg-base-100 duration-200 ease-in-out w-full`}
         style={{
           marginLeft:
             isSidebarVisible || isSidebarPinned ? `${sidebarWidth}px` : "0",
@@ -36,7 +36,7 @@ export default function Layout({ children }: LayoutProps) {
               : "100%",
         }}
       >
-        <div className="flex flex-row items-center h-15 pb-20" />
+        <div className="flex flex-row bg-base-100 items-center h-15 pb-20" />
         {children}
       </div>
     </>
