@@ -21,7 +21,7 @@ interface SearchStateExport {
 
 export const useSearchState = (): SearchStateExport => {
   const [searchQuery, setSearchQuery] = useState("");
-  const { filters, setFilter, deleteFilter } = useFilterState([]);
+  const { filters, setFilter, deleteFilter, clearFilters } = useFilterState([]);
   const [isSearching, setIsSearching] = useState(false);
   const trimmedQuery = useMemo(() => searchQuery.trim(), [searchQuery]);
   const [searchTriggerIndicator, setSearchTriggerIndicator] = useState(0);
@@ -63,6 +63,7 @@ export const useSearchState = (): SearchStateExport => {
 
   const resetSearch = () => {
     setSearchQuery("");
+    clearFilters();
     setIsSearching(false);
     window.history.pushState(null, "", window.location.pathname);
   };

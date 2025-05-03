@@ -1,11 +1,24 @@
 import { useSearchState } from "@/lib/hooks/useSearchState";
-import { SearchResultsWrapper } from "./SearchResults";
+import { SearchResultsComponent } from "./SearchResults";
 
 function CommandKSearch() {}
 
 function SearchCommand() {
-  const { searchQuery, isSearching, handleSearch, ...searchState } =
-    useSearchState();
+  const {
+    searchQuery,
+    isSearching,
+    filters,
+    setSearchQuery,
+    triggerSearch,
+    getResultsCallback,
+    searchTriggerIndicator,
+    ...searchState
+  } = useSearchState();
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    triggerSearch();
+  };
 
   return (
     <div className="p-4">
@@ -16,10 +29,11 @@ function SearchCommand() {
         className="input input-bordered w-full mb-4"
       />
 
-      <SearchResultsWrapper
+      <SearchResultsComponent
         isSearching={isSearching}
-        {...searchState}
-      ></SearchResultsWrapper>
+        reloadOnChange={searchTriggerIndicator}
+        searchGetter={getResultsCallback}
+      ></SearchResultsComponent>
     </div>
   );
 }

@@ -96,7 +96,7 @@ export default function HomePage() {
       <SearchResultsComponent
         isSearching={isSearching}
         searchGetter={searchState.getResultsCallback}
-        reloadOnChange={searchState.reloadOnChange}
+        reloadOnChange={searchState.searchTriggerIndicator}
       ></SearchResultsComponent>
     </>
   );
