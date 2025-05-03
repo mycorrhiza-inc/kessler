@@ -38,7 +38,9 @@ export const useSearchState = (): SearchStateExport => {
 
   // Handle search submission
   const setSearchUrl = (trimmedQuery: string, filters: Filters) => {
-    window.history.pushState(
+    const method =
+      window.location.pathname === "/search" ? "replaceState" : "pushState";
+    window.history[method](
       { search: trimmedQuery },
       "",
       `/search?text=${encodeURIComponent(trimmedQuery)}`,
@@ -50,10 +52,9 @@ export const useSearchState = (): SearchStateExport => {
     const handlePopState = (e: PopStateEvent) => {
       if (e.state?.search) {
         setSearchQuery(e.state.search);
-        setIsSearching(true);
+        triggerSearch();
       } else {
-        setSearchQuery("");
-        setIsSearching(false);
+        resetSearchNoNav();
       }
     };
 
@@ -61,10 +62,13 @@ export const useSearchState = (): SearchStateExport => {
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
-  const resetSearch = () => {
+  const resetSearchNoNav = () => {
     setSearchQuery("");
     clearFilters();
     setIsSearching(false);
+  };
+  const resetSearch = () => {
+    resetSearchNoNav();
     window.history.pushState(null, "", window.location.pathname);
   };
 
