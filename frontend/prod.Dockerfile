@@ -19,7 +19,7 @@ COPY --from=frontend-builder /app/package.json ./package.json
 COPY --from=frontend-builder /app/node_modules ./node_modules
 COPY --from=frontend-builder /app/.next ./.next
 COPY --from=frontend-builder /app/public ./public
-COPY --from=frontend-builder /app/tsconfig.json ./
+# COPY --from=frontend-builder /app/tsconfig.json ./
 COPY ./tailwind.config.ts ./
 COPY ./postcss.config.js ./
 
