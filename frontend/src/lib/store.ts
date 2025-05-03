@@ -5,6 +5,8 @@ interface KesslerState {
   experimentalFeaturesEnabled: boolean;
   setIsLoggedIn: (isLoggedIn: boolean) => void;
   setExperimentalFeaturesEnabled: (enableExperimentalFeatures: boolean) => void;
+  defaultState: string;
+  setDefaultState: (defaultState: string) => void;
 }
 
 export const useKesslerStore = create<KesslerState>()((set) => ({
@@ -13,4 +15,6 @@ export const useKesslerStore = create<KesslerState>()((set) => ({
   setIsLoggedIn: (isLoggedIn: boolean) => set({ isLoggedIn }),
   setExperimentalFeaturesEnabled: (experimentalFeaturesEnabled: boolean) =>
     set({ experimentalFeaturesEnabled }),
+  defaultState: "",
+  setDefaultState: (defaultState: string) => set({ defaultState }),
 }));

@@ -10,14 +10,14 @@ const InfiniteScrollPlus = ({
   loadInitial,
   hasMore,
   getMore,
-  reloadOnChangeObj,
+  reloadOnChange,
   dataLength,
 }: {
   children: React.ReactNode;
   loadInitial: () => Promise<void>;
   getMore: () => Promise<void>;
   hasMore: boolean;
-  reloadOnChangeObj?: any;
+  reloadOnChange?: number;
   dataLength: number;
 }) => {
   const [isTableReloading, setIsTableReloading] = useState(true);
@@ -33,7 +33,7 @@ const InfiniteScrollPlus = ({
   };
   useEffect(() => {
     wrappedLoadInitial();
-  }, [reloadOnChangeObj]);
+  }, [reloadOnChange]);
   if (err != "") {
     return (
       <ErrorMessage

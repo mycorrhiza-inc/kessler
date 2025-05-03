@@ -128,7 +128,7 @@ const getIcon = (type: CardType) => {
   }
 };
 
-enum CardSize {
+export enum CardSize {
   Medium = "medium",
   Large = "large",
   Small = "small",
