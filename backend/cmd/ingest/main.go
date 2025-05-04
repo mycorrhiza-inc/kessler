@@ -19,7 +19,7 @@ import (
 
 //	@title			Kessler Ingest API
 //	@version		1.0
-//	@description	Bob loblaws law blog
+//	@description	Document Ingest Service of Dubious Quality
 //	@termsOfService	http://swagger.io/terms/
 
 //	@contact.name	Support

@@ -122,7 +122,7 @@ info:
     email: support@kessler.xyz
     name: Support
     url: https://kessler.xyz
-  description: Bob loblaws law blog
+  description: Document Ingest Service of Dubious Quality
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html

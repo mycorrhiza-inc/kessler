@@ -450,7 +450,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/ingest_v1",
 	Schemes:          []string{},
 	Title:            "Kessler Ingest API",
-	Description:      "Bob loblaws law blog",
+	Description:      "Document Ingest Service of Dubious Quality",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

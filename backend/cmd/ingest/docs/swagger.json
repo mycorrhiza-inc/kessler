@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "Bob loblaws law blog",
+        "description": "Document Ingest Service of Dubious Quality",
         "title": "Kessler Ingest API",
         "termsOfService": "http://swagger.io/terms/",
         "contact": {
