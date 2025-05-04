@@ -1,4 +1,121 @@
 basePath: /ingest_v1
+definitions:
+  routes.OpenScraperAttachment:
+    properties:
+      document_type:
+        type: string
+      extra_metadata:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+      url:
+        type: string
+    type: object
+  routes.OpenScraperFiling:
+    properties:
+      attachments:
+        items:
+          $ref: '#/definitions/routes.OpenScraperAttachment'
+        type: array
+      case_number:
+        type: string
+      description:
+        type: string
+      extra_metadata:
+        additionalProperties: true
+        type: object
+      filed_date:
+        type: string
+      filing_type:
+        type: string
+      party_name:
+        type: string
+    type: object
+  tasks.AttachmentChildPayload:
+    properties:
+      extension:
+        type: string
+      lang:
+        type: string
+      mdata:
+        additionalProperties: {}
+        type: object
+      name:
+        type: string
+      url:
+        type: string
+    type: object
+  tasks.KesslerTaskInfo:
+    properties:
+      queue:
+        type: string
+      state:
+        type: string
+      status:
+        type: string
+      task_id:
+        type: string
+    type: object
+  tasks.NYPUCDocInfo:
+    properties:
+      date_filed:
+        type: string
+      docket_id:
+        type: string
+      file_name:
+        type: string
+      item_no:
+        type: string
+      name:
+        type: string
+      nypuc_doctype:
+        type: string
+      organization:
+        type: string
+      serial:
+        type: string
+      url:
+        type: string
+    type: object
+  tasks.ScraperInfoPayload:
+    properties:
+      attachments:
+        items:
+          $ref: '#/definitions/tasks.AttachmentChildPayload'
+        type: array
+      author_individual:
+        type: string
+      author_individual_email:
+        type: string
+      author_organisation:
+        type: string
+      docket_id:
+        type: string
+      extra_metadata:
+        additionalProperties: {}
+        type: object
+      file_class:
+        type: string
+      file_type:
+        type: string
+      internal_source_name:
+        type: string
+      item_number:
+        type: string
+      lang:
+        type: string
+      name:
+        type: string
+      published_date:
+        description: An RFC3339 DateTime
+        example: "2024-02-27T12:34:56Z"
+        type: string
+      state:
+        type: string
+      text:
+        type: string
+    type: object
 host: api.kessler.xyz
 info:
   contact:
@@ -12,5 +129,162 @@ info:
   termsOfService: http://swagger.io/terms/
   title: Kessler Ingest API
   version: "1.0"
-paths: {}
+paths:
+  /add-task/ingest:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new default ingestion task
+      parameters:
+      - description: Scraper information
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/tasks.ScraperInfoPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/tasks.KesslerTaskInfo'
+        "400":
+          description: Error decoding request body
+          schema:
+            type: string
+        "500":
+          description: Error adding task
+          schema:
+            type: string
+      summary: Add Default Ingest Task
+      tags:
+      - tasks
+  /add-task/ingest/nypuc:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new NYPUC-specific ingestion task
+      parameters:
+      - description: NYPUC document information
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/tasks.NYPUCDocInfo'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/tasks.KesslerTaskInfo'
+        "400":
+          description: Error decoding request body
+          schema:
+            type: string
+        "500":
+          description: Error adding task
+          schema:
+            type: string
+      summary: Add NYPUC Ingest Task
+      tags:
+      - tasks
+  /add-task/ingest/openscraper:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new OpenScraper-specific ingestion task
+      parameters:
+      - description: OpenScraper filing information
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/routes.OpenScraperFiling'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/tasks.KesslerTaskInfo'
+        "400":
+          description: Error decoding request body
+          schema:
+            type: string
+        "500":
+          description: Error adding task
+          schema:
+            type: string
+      summary: Add OpenScraper Ingest Task
+      tags:
+      - tasks
+  /add-task/process/{uuid}:
+    post:
+      description: Creates a new task to process a file with the given UUID
+      parameters:
+      - description: File UUID
+        in: path
+        name: uuid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/tasks.KesslerTaskInfo'
+        "400":
+          description: Error parsing uuid
+          schema:
+            type: string
+        "500":
+          description: Error adding task
+          schema:
+            type: string
+      summary: Add Process File Task
+      tags:
+      - tasks
+  /task/{id}:
+    get:
+      description: Retrieves information about a specific task by ID
+      parameters:
+      - description: Task ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/tasks.KesslerTaskInfo'
+        "404":
+          description: Error retrieving task info
+          schema:
+            type: string
+        "501":
+          description: Not implemented
+          schema:
+            type: string
+      summary: Get Task Information
+      tags:
+      - tasks
+  /version_hash:
+    get:
+      description: Returns the current version hash of the application
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: Version hash string
+          schema:
+            type: string
+      summary: Get Version Hash
+      tags:
+      - system
 swagger: "2.0"
