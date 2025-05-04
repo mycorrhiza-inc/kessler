@@ -117,7 +117,7 @@ services:
       - 11211
   valkey:
     hostname: valkey
-    image: valkey/valkey:7.2.5
+    image: valkey/valkey:8-alpine
     volumes:
       - ./volumes/valkey.conf:/etc/valkey/valkey.conf
       - ./volumes/valkey-data:/data
