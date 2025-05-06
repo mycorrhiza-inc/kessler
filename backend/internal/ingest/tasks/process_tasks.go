@@ -3,6 +3,7 @@ package tasks
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"kessler/internal/ingest/logic"
 	"kessler/internal/objects/files"
 
@@ -11,7 +12,10 @@ import (
 )
 
 func AsynqHandler(mux *asynq.ServeMux) {
+	// existing file ingestion
 	mux.HandleFunc("ingest:file", HandleIngestNewFileTask)
+	// new case ingestion
+	mux.HandleFunc(TypeIngestCase, HandleIngestCaseTask)
 }
 
 func HandleIngestNewFileTask(ctx context.Context, task *asynq.Task) error {
@@ -24,5 +28,20 @@ func HandleIngestNewFileTask(ctx context.Context, task *asynq.Task) error {
 		return err
 	}
 	log.Info("File added to DB", "file", file)
+	return nil
+}
+
+// HandleIngestCaseTask processes a case ingestion task
+func HandleIngestCaseTask(ctx context.Context, task *asynq.Task) error {
+	var caseInfo CaseInfoPayload
+	if err := json.Unmarshal(task.Payload(), &caseInfo); err != nil {
+		return fmt.Errorf("failed to unmarshal case payload: %w", err)
+	}
+	// invoke business logic to persist case and filings
+	err := IngestCase(ctx, &caseInfo)
+	if err != nil {
+		return fmt.Errorf("error ingesting case: %w", err)
+	}
+	log.Info("Case ingested successfully", "case_number", caseInfo.CaseNumber)
 	return nil
 }

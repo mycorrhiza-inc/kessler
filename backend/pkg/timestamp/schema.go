@@ -7,54 +7,54 @@ import (
 	"time"
 )
 
-// KesslerTime represents an RFC3339 DateTime
+// RFC3339Time represents an RFC3339 DateTime
 // @Description An RFC3339 DateTime
 // @Schema {"type": "string", "example": "2024-02-27T12:34:56Z", "format": "date-time"}
-type KesslerTime time.Time
+type RFC3339Time time.Time
 
-func (t KesslerTime) MarshalJSON() ([]byte, error) {
+func (t RFC3339Time) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf("\"%s\"", time.Time(t).Format(time.RFC3339))), nil
 }
 
-func (t *KesslerTime) UnmarshalJSON(data []byte) error {
+func (t *RFC3339Time) UnmarshalJSON(data []byte) error {
 	str := string(data)
 	str = strings.Trim(str, "\"")
 	if str == "" {
-		*t = KesslerTime{}
+		*t = RFC3339Time{}
 		return nil
 	}
 	parsed, err := time.Parse(time.RFC3339, str)
 	if err != nil {
 		return err
 	}
-	*t = KesslerTime(parsed)
+	*t = RFC3339Time(parsed)
 	return nil
 }
 
-func (t KesslerTime) IsZero() bool {
+func (t RFC3339Time) IsZero() bool {
 	return time.Time(t).IsZero()
 }
 
-func (t KesslerTime) String() string {
+func (t RFC3339Time) String() string {
 	return time.Time(t).Format(time.RFC3339)
 }
 
-func KessTimeFromString(str string) (KesslerTime, error) {
-	kt := &KesslerTime{}
+func KessTimeFromString(str string) (RFC3339Time, error) {
+	kt := &RFC3339Time{}
 	err := kt.UnmarshalJSON([]byte(fmt.Sprintf("\"%s\"", str)))
 	if err != nil {
-		return KesslerTime{}, err
+		return RFC3339Time{}, err
 	}
 	return *kt, nil
 }
 
-func KesslerTimeFromMMDDYYYY(dateStr string) (KesslerTime, error) {
+func KesslerTimeFromMMDDYYYY(dateStr string) (RFC3339Time, error) {
 	if dateStr == "" {
-		return KesslerTime{}, errors.New("empty date string")
+		return RFC3339Time{}, errors.New("empty date string")
 	}
 	dateParts := strings.Split(dateStr, "/")
 	if len(dateParts) != 3 {
-		return KesslerTime{}, errors.New("date string must be in the format MM/DD/YYYY")
+		return RFC3339Time{}, errors.New("date string must be in the format MM/DD/YYYY")
 	}
 	month := dateParts[0]
 	day := dateParts[1]
@@ -62,9 +62,9 @@ func KesslerTimeFromMMDDYYYY(dateStr string) (KesslerTime, error) {
 
 	parsedDate, err := time.Parse("01/02/2006", fmt.Sprintf("%s/%s/%s", month, day, year))
 	if err != nil {
-		return KesslerTime{}, err
+		return RFC3339Time{}, err
 	}
-	return KesslerTime(parsedDate), nil
+	return RFC3339Time(parsedDate), nil
 }
 
 func CreateRFC3339FromString(dateStr string) (string, error) {

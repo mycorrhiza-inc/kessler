@@ -26,8 +26,8 @@ type ConvoSearchRequestData struct {
 type ConversationSearchSchema struct {
 	Query        string                `json:"query"`
 	IndustryType string                `json:"industry_type"`
-	DateFrom     timestamp.KesslerTime `json:"date_from"`
-	DateTo       timestamp.KesslerTime `json:"date_to"`
+	DateFrom     timestamp.RFC3339Time `json:"date_from"`
+	DateTo       timestamp.RFC3339Time `json:"date_to"`
 }
 
 func HandleConvoSearch(w http.ResponseWriter, r *http.Request) {
@@ -123,7 +123,7 @@ func IndexConversations(convos []dbstore.ConversationCompleteQuickwitListGetRow,
 			IndustryType:   convo.IndustryType,
 			Metadata:       convo.Metadata,
 			Extra:          convo.Extra,
-			DatePublished:  timestamp.KesslerTime(convo.DatePublished.Time),
+			DatePublished:  timestamp.RFC3339Time(convo.DatePublished.Time),
 			ID:             convo.ID,
 			DocumentsCount: int(convo.TotalDocuments),
 		}

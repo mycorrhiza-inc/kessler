@@ -8,8 +8,8 @@ import (
 	"kessler/internal/objects/authors"
 	"kessler/internal/objects/conversations"
 	"kessler/internal/objects/files"
-	"kessler/pkg/timestamp"
 	"kessler/internal/quickwit"
+	"kessler/pkg/timestamp"
 	"kessler/pkg/util"
 	"net/http"
 	"time"
@@ -100,7 +100,7 @@ func ParseQuickwitFileIntoCompleteSchema(file_raw dbstore.Testmat) (files.Comple
 		Name:          file_raw.Name,
 		Hash:          file_raw.Hash,
 		IsPrivate:     false,
-		DatePublished: timestamp.KesslerTime(file_raw.DatePublished.Time),
+		DatePublished: timestamp.RFC3339Time(file_raw.DatePublished.Time),
 		Mdata:         mdata_obj,
 		Stage:         files.DocProcStage{},
 		Extra:         extra_obj,

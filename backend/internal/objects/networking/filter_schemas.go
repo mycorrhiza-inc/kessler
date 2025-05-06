@@ -13,8 +13,10 @@ import (
 	"go.uber.org/zap"
 )
 
-const RootCacheKey = "public:metadata"
-const LoggerName = "cache:networking"
+const (
+	RootCacheKey = "public:metadata"
+	LoggerName   = "cache:networking"
+)
 
 func getLogger() *zap.Logger {
 	return logger.GetLogger(LoggerName)
@@ -102,8 +104,8 @@ func CachedMetadata(key string) (Metadata, error) {
 
 type MetadataFilterFields struct {
 	SearchMetadata
-	DateFrom timestamp.KesslerTime `json:"date_from"`
-	DateTo   timestamp.KesslerTime `json:"date_to"`
+	DateFrom timestamp.RFC3339Time `json:"date_from"`
+	DateTo   timestamp.RFC3339Time `json:"date_to"`
 }
 
 func (f MetadataFilterFields) String() string {

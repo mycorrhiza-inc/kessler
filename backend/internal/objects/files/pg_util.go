@@ -20,7 +20,7 @@ type FileCreationDataRaw struct {
 	Hash          string
 	IsPrivate     pgtype.Bool
 	Verified      pgtype.Bool
-	DatePublished timestamp.KesslerTime
+	DatePublished timestamp.RFC3339Time
 }
 
 func PublicTextToSchema(file dbstore.FileTextSource) FileTextSchema {
@@ -200,6 +200,6 @@ func PublicFileToSchema(file dbstore.File) FileSchema {
 		Name:          file.Name,
 		Hash:          file.Hash,
 		IsPrivate:     file.Isprivate.Bool,
-		DatePublished: timestamp.KesslerTime(file.DatePublished.Time),
+		DatePublished: timestamp.RFC3339Time(file.DatePublished.Time),
 	}
 }

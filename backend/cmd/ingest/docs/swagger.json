@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "Bob loblaws law blog",
+        "description": "Document Ingest Service of Dubious Quality",
         "title": "Kessler Ingest API",
         "termsOfService": "http://swagger.io/terms/",
         "contact": {
@@ -17,5 +17,422 @@
     },
     "host": "api.kessler.xyz",
     "basePath": "/ingest_v1",
-    "paths": {}
+    "paths": {
+        "/add-task/ingest": {
+            "post": {
+                "description": "Creates a new default ingestion task",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tasks"
+                ],
+                "summary": "Add Default Ingest Task",
+                "parameters": [
+                    {
+                        "description": "Scraper information",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/tasks.ScraperInfoPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/tasks.KesslerTaskInfo"
+                        }
+                    },
+                    "400": {
+                        "description": "Error decoding request body",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Error adding task",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/add-task/ingest/nypuc": {
+            "post": {
+                "description": "Creates a new NYPUC-specific ingestion task",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tasks"
+                ],
+                "summary": "Add NYPUC Ingest Task",
+                "parameters": [
+                    {
+                        "description": "NYPUC document information",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/tasks.NYPUCDocInfo"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/tasks.KesslerTaskInfo"
+                        }
+                    },
+                    "400": {
+                        "description": "Error decoding request body",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Error adding task",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/add-task/ingest/openscraper": {
+            "post": {
+                "description": "Creates a new OpenScraper-specific ingestion task",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tasks"
+                ],
+                "summary": "Add OpenScraper Ingest Task",
+                "parameters": [
+                    {
+                        "description": "OpenScraper filing information",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/routes.OpenScraperFiling"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/tasks.KesslerTaskInfo"
+                        }
+                    },
+                    "400": {
+                        "description": "Error decoding request body",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Error adding task",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/add-task/process/{uuid}": {
+            "post": {
+                "description": "Creates a new task to process a file with the given UUID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tasks"
+                ],
+                "summary": "Add Process File Task",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "File UUID",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/tasks.KesslerTaskInfo"
+                        }
+                    },
+                    "400": {
+                        "description": "Error parsing uuid",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Error adding task",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/task/{id}": {
+            "get": {
+                "description": "Retrieves information about a specific task by ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tasks"
+                ],
+                "summary": "Get Task Information",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Task ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/tasks.KesslerTaskInfo"
+                        }
+                    },
+                    "404": {
+                        "description": "Error retrieving task info",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "501": {
+                        "description": "Not implemented",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/version_hash": {
+            "get": {
+                "description": "Returns the current version hash of the application",
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "system"
+                ],
+                "summary": "Get Version Hash",
+                "responses": {
+                    "200": {
+                        "description": "Version hash string",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "routes.OpenScraperAttachment": {
+            "type": "object",
+            "properties": {
+                "document_type": {
+                    "type": "string"
+                },
+                "extra_metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "name": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "routes.OpenScraperFiling": {
+            "type": "object",
+            "properties": {
+                "attachments": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/routes.OpenScraperAttachment"
+                    }
+                },
+                "case_number": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "extra_metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "filed_date": {
+                    "type": "string"
+                },
+                "filing_type": {
+                    "type": "string"
+                },
+                "party_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "tasks.AttachmentChildPayload": {
+            "type": "object",
+            "properties": {
+                "extension": {
+                    "type": "string"
+                },
+                "lang": {
+                    "type": "string"
+                },
+                "mdata": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "name": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "tasks.KesslerTaskInfo": {
+            "type": "object",
+            "properties": {
+                "queue": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "task_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "tasks.NYPUCDocInfo": {
+            "type": "object",
+            "properties": {
+                "date_filed": {
+                    "type": "string"
+                },
+                "docket_id": {
+                    "type": "string"
+                },
+                "file_name": {
+                    "type": "string"
+                },
+                "item_no": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "nypuc_doctype": {
+                    "type": "string"
+                },
+                "organization": {
+                    "type": "string"
+                },
+                "serial": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "tasks.ScraperInfoPayload": {
+            "type": "object",
+            "properties": {
+                "attachments": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/tasks.AttachmentChildPayload"
+                    }
+                },
+                "author_individual": {
+                    "type": "string"
+                },
+                "author_individual_email": {
+                    "type": "string"
+                },
+                "author_organisation": {
+                    "type": "string"
+                },
+                "docket_id": {
+                    "type": "string"
+                },
+                "extra_metadata": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "file_class": {
+                    "type": "string"
+                },
+                "file_type": {
+                    "type": "string"
+                },
+                "internal_source_name": {
+                    "type": "string"
+                },
+                "item_number": {
+                    "type": "string"
+                },
+                "lang": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "published_date": {
+                    "description": "An RFC3339 DateTime",
+                    "type": "string",
+                    "example": "2024-02-27T12:34:56Z"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "text": {
+                    "type": "string"
+                }
+            }
+        }
+    }
 }
