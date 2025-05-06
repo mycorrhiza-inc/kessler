@@ -26,7 +26,7 @@ type DocumentStatus struct {
 	SkipProcessing bool `json:"skip_processing"`
 }
 
-func NewAddFileScraperTask(payload FillingInfoPayload) (*asynq.Task, error) {
+func NewAddFileScraperTask(payload FilingInfoPayload) (*asynq.Task, error) {
 	p, err := json.Marshal(payload)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal payload: %v", err)

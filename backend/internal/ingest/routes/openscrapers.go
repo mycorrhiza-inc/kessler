@@ -1,24 +1,26 @@
 package routes
 
 import (
+	"encoding/json"
+	"fmt"
 	"kessler/internal/ingest/tasks"
 	"kessler/pkg/timestamp"
 	"net/http"
 	"time"
 )
 
-// @Summary		Add OpenScraper Ingest Task
+// @Summary	Add OpenScraper Ingest Task
 // @Description	Creates a new OpenScraper-specific ingestion task
-// @Tags			tasks
-// @Accept			json
-// @Produce		json
-// @Param			body	body		OpenScraperFiling	true	"OpenScraper filing information"
-// @Success		200		{object}	tasks.KesslerTaskInfo
-// @Failure		400		{string}	string	"Error decoding request body"
-// @Failure		500		{string}	string	"Error adding task"
-// @Router			/add-task/ingest/openscraper [post]
+// @Tags		tasks
+// @Accept	json
+// @Produce	json
+// @Param		body	body	OpenScraperFiling	true	"OpenScraper filing information"
+// @Success	200	{object}	asks.KesslerTaskInfo
+// @Failure	400	{string}	string	"Error decoding request body"
+// @Failure	500	{string}	string	"Error adding task"
+// @Router	/add-task/ingest/openscraper [post]
 func HandleOpenScraperIngestAddTask(w http.ResponseWriter, r *http.Request) {
-	HandleIngestAddTaskGeneric[OpenScraperFiling](w, r)
+	HandleIngestAddTaskGeneric[tasks.OpenScraperFiling](w, r)
 }
 
 type OpenScraperFiling struct {
@@ -38,26 +40,23 @@ type OpenScraperAttachment struct {
 	ExtraMetadata map[string]interface{} `json:"extra_metadata,omitempty"`
 }
 
-func (o OpenScraperFiling) IntoScraperInfo() (tasks.FillingInfoPayload, error) {
+// IntoScraperInfo converts OpenScraperFiling into the new FilingInfoPayload.
+func (o OpenScraperFiling) IntoScraperInfo() (tasks.FilingInfoPayload, error) {
 	filedTime, err := time.Parse("2006-01-02", o.FiledDate) // Adjust date format as needed
 	if err != nil {
-		return tasks.FillingInfoPayload{}, err
+		return tasks.FilingInfoPayload{}, err
 	}
-
+	// Build attachments
 	attachments := make([]tasks.AttachmentChildInfo, len(o.Attachments))
 	for i, attach := range o.Attachments {
-		mdata := make(map[string]interface{})
-
-		// Add standard fields
+		mdata := make(map[string]any)
+		// standard
 		if attach.DocumentType != "" {
 			mdata["document_type"] = attach.DocumentType
 		}
-
-		// Merge with extra metadata
 		for k, v := range attach.ExtraMetadata {
 			mdata[k] = v
 		}
-
 		attachments[i] = tasks.AttachmentChildInfo{
 			Lang:  "en",
 			Name:  attach.Name,
@@ -65,14 +64,17 @@ func (o OpenScraperFiling) IntoScraperInfo() (tasks.FillingInfoPayload, error) {
 			Mdata: mdata,
 		}
 	}
-
-	return tasks.FillingInfoPayload{
-		Attachments:        attachments,
-		DocketID:           o.CaseNumber,
-		PublishedDate:      timestamp.RFC3339Time(filedTime),
-		InternalSourceName: "OpenScraper",
-		AuthorOrganisation: o.PartyName,
-		FileClass:          o.FilingType,
-		// Add additional fields as required by your ScraperInfoPayload
-	}, nil
+	// Build FilingChildInfo
+	filing := tasks.FilingChildInfo{
+		Name:          o.PartyName,
+		FiledDate:     timestamp.RFC3339Time(filedTime),
+		PartyName:     o.PartyName,
+		FilingType:    o.FilingType,
+		Description:   o.Description,
+		Attachments:   attachments,
+		ExtraMetadata: o.ExtraMetadata,
+	}
+	// Minimal case info
+	caseInfo := tasks.CaseInfoMinimal{CaseNumber: o.CaseNumber}
+	return tasks.FilingInfoPayload{Filing: filing, CaseInfo: caseInfo}, nil
 }

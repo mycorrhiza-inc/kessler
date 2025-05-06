@@ -3,115 +3,109 @@ package tasks
 import (
 	"context"
 	"fmt"
-	"kessler/internal/objects/conversations"
-	"kessler/internal/objects/files"
-	"kessler/pkg/timestamp"
 	"reflect"
 	"strings"
 	"time"
+
+	"kessler/internal/objects/conversations"
+	"kessler/internal/objects/files"
+	"kessler/pkg/timestamp"
 
 	"github.com/google/uuid"
 	"github.com/hibiken/asynq"
 )
 
-type FillingInfoPayload struct {
-	Text                  string                `json:"text"`
-	FileType              string                `json:"file_type"`
-	DocketID              string                `json:"docket_id"`
-	PublishedDate         timestamp.RFC3339Time `json:"published_date" example:"2024-02-27T12:34:56Z"`
-	Name                  string                `json:"name"`
-	InternalSourceName    string                `json:"internal_source_name"`
-	State                 string                `json:"state"`
-	AuthorIndividual      string                `json:"author_individual"`
-	AuthorIndividualEmail string                `json:"author_individual_email"`
-	AuthorOrganisation    string                `json:"author_organisation"`
-	FileClass             string                `json:"file_class"`
-	Lang                  string                `json:"lang"`
-	ItemNumber            string                `json:"item_number"`
-	ExtraMetadata         map[string]any        `json:"extra_metadata"`
-	Attachments           []AttachmentChildInfo `json:"attachments"`
-}
-
-type NewFillingInfoPayload struct {
-	Filing   FilingChildInfo `json:"filling"`
+// FilingInfoPayload is the payload for adding a filing to a case ingestion task.
+type FilingInfoPayload struct {
+	Filing   FilingChildInfo `json:"filing"`
 	CaseInfo CaseInfoMinimal `json:"case_info"`
 }
 
-func CastScraperInfoToNewFile(info FillingInfoPayload) files.CompleteFileSchema {
-	new_attachments := make([]files.CompleteAttachmentSchema, len(info.Attachments))
-	for i, attachment := range info.Attachments {
-		metadata := attachment.Mdata
-		metadata["url"] = attachment.URL
-		new_attachments[i] = files.CompleteAttachmentSchema{
-			Name:      attachment.Name,
-			Lang:      attachment.Lang,
-			Extension: attachment.Extension,
-			Mdata:     metadata,
-		}
-	}
-	metadata := info.ExtraMetadata
-	metadata_fields := map[string]any{
-		// "url":                 strings.TrimSpace(info.FileURL),
-		"docket_id":           strings.TrimSpace(info.DocketID),
-		"extension":           strings.TrimSpace(info.FileType),
-		"lang":                strings.TrimSpace(info.Lang),
-		"title":               strings.TrimSpace(info.Name),
-		"source":              strings.TrimSpace(info.InternalSourceName),
-		"date":                info.PublishedDate,
-		"file_class":          strings.TrimSpace(info.FileClass),
-		"author_organisation": strings.TrimSpace(info.AuthorOrganisation),
-		"author":              strings.TrimSpace(info.AuthorIndividual),
-		"author_email":        strings.TrimSpace(info.AuthorIndividualEmail),
-		"item_number":         strings.TrimSpace(info.ItemNumber),
-	}
-	for key, value := range metadata_fields {
-		if !(reflect.ValueOf(value).IsZero()) {
-			metadata[key] = value
+// CastScraperInfoToNewFile converts a FilingInfoPayload into the internal CompleteFileSchema.
+func CastScraperInfoToNewFile(info FilingInfoPayload) files.CompleteFileSchema {
+	// Attachments
+	newAttachments := make([]files.CompleteAttachmentSchema, len(info.Filing.Attachments))
+	for i, at := range info.Filing.Attachments {
+		md := at.Mdata
+		md["url"] = at.URL
+		newAttachments[i] = files.CompleteAttachmentSchema{
+			Name:      at.Name,
+			Lang:      at.Lang,
+			Extension: at.Extension,
+			Mdata:     md,
 		}
 	}
 
-	docket_info := conversations.ConversationInformation{
-		DocketGovID: strings.TrimSpace(info.DocketID),
+	// Merge metadata
+	metadata := map[string]any{}
+	// start from filing extra metadata
+	for k, v := range info.Filing.ExtraMetadata {
+		metadata[k] = v
 	}
+	// incorporate case-level metadata
+	for k, v := range info.CaseInfo.ExtraMetadata {
+		metadata[k] = v
+	}
+
+	// core fields
+	fields := map[string]any{
+		"case_number": info.CaseInfo.CaseNumber,
+		"case_url":    info.CaseInfo.CaseURL,
+		"filed_date":  info.Filing.FiledDate,
+		"party_name":  info.Filing.PartyName,
+		"filing_type": info.Filing.FilingType,
+		"description": info.Filing.Description,
+	}
+	for k, v := range fields {
+		if !reflect.ValueOf(v).IsZero() {
+			metadata[k] = v
+		}
+	}
+
+	conv := conversations.ConversationInformation{DocketGovID: info.CaseInfo.CaseNumber}
 	return files.CompleteFileSchema{
 		ID:           uuid.Nil,
-		Name:         strings.TrimSpace(info.Name),
-		Conversation: docket_info,
+		Name:         info.Filing.Name,
+		Conversation: conv,
 		Mdata:        metadata,
+		Attachments:  newAttachments,
 	}
 }
 
-type CastableIntoFillingInfo interface {
-	IntoScraperInfo() (FillingInfoPayload, error)
+// CastableIntoFilingInfo is implemented by types that can be converted to FilingInfoPayload.
+type CastableIntoFilingInfo interface {
+	IntoScraperInfo() (FilingInfoPayload, error)
 }
 
-func (s FillingInfoPayload) IntoScraperInfo() (FillingInfoPayload, error) {
+// IntoScraperInfo allows FilingInfoPayload to satisfy CastableIntoFilingInfo.
+func (s FilingInfoPayload) IntoScraperInfo() (FilingInfoPayload, error) {
 	return s, nil
 }
 
-func AddScraperTaskCastable(ctx context.Context, castable CastableIntoFillingInfo) (KesslerTaskInfo, error) {
-	scraper_info, err := castable.IntoScraperInfo()
+// AddScraperTaskCastable enqueues a filing ingestion task from any CastableIntoFilingInfo.
+func AddScraperTaskCastable(ctx context.Context, castable CastableIntoFilingInfo) (KesslerTaskInfo, error) {
+	payload, err := castable.IntoScraperInfo()
 	if err != nil {
-		return KesslerTaskInfo{}, fmt.Errorf("Error Casting to Scraper Info: %v", err)
+		return KesslerTaskInfo{}, fmt.Errorf("error casting to FilingInfoPayload: %w", err)
 	}
-	task, err := NewAddFileScraperTask(scraper_info)
+	task, err := NewAddFileScraperTask(payload)
 	if err != nil {
-		return KesslerTaskInfo{}, fmt.Errorf("Error creating task: %v", err)
+		return KesslerTaskInfo{}, fmt.Errorf("error creating add-file task: %w", err)
 	}
 	return EnqueueTaskFromCtx(ctx, task)
 }
 
+// EnqueueTaskFromCtx pushes an Asynq task and returns its metadata.
 func EnqueueTaskFromCtx(ctx context.Context, task *asynq.Task) (KesslerTaskInfo, error) {
 	client := GetClient(ctx)
 	info, err := client.Enqueue(task)
 	if err != nil {
-		return KesslerTaskInfo{}, fmt.Errorf("Error enqueueing task: %v", err)
+		return KesslerTaskInfo{}, fmt.Errorf("error enqueueing task: %w", err)
 	}
-
-	kessler_info := GenerateTaskInfoFromInfo(*info)
-	return kessler_info, nil
+	return GenerateTaskInfoFromInfo(*info), nil
 }
 
+// NYPUCDocInfo maps a NYPUC-specific listing to FilingInfoPayload.
 type NYPUCDocInfo struct {
 	Serial       string `json:"serial"`
 	DateFiled    string `json:"date_filed"`
@@ -124,30 +118,27 @@ type NYPUCDocInfo struct {
 	DocketID     string `json:"docket_id"`
 }
 
-func (n NYPUCDocInfo) IntoScraperInfo() (FillingInfoPayload, error) {
-	regular_time, err := time.Parse("01/02/2006", n.DateFiled)
+// IntoScraperInfo converts NYPUCDocInfo into the new FilingInfoPayload.
+func (n NYPUCDocInfo) IntoScraperInfo() (FilingInfoPayload, error) {
+	t, err := time.Parse("01/02/2006", n.DateFiled)
 	if err != nil {
-		return FillingInfoPayload{}, err
+		return FilingInfoPayload{}, err
 	}
-
-	attachments := []AttachmentChildInfo{
-		{
-			Lang:  "en",
-			Name:  n.FileName,
-			URL:   n.URL,
-			Mdata: map[string]any{},
-		},
+	filing := FilingChildInfo{
+		Name:        n.FileName,
+		FiledDate:   timestamp.RFC3339Time(t),
+		PartyName:   n.Organization,
+		FilingType:  n.NYPUCDocType,
+		Description: n.Name,
+		Attachments: []AttachmentChildInfo{{
+			Lang:      "en",
+			Name:      n.FileName,
+			Extension: strings.ToLower(strings.TrimPrefix(strings.ToLower(n.FileName[strings.LastIndex(n.FileName, "."):]), ".")),
+			URL:       n.URL,
+			Mdata:     map[string]any{},
+		}},
+		ExtraMetadata: map[string]any{},
 	}
-
-	return FillingInfoPayload{
-		// FileURL:            n.URL,
-		Attachments:        attachments,
-		DocketID:           n.DocketID,
-		PublishedDate:      timestamp.RFC3339Time(regular_time),
-		InternalSourceName: "NYPUC",
-		State:              "NY",
-		AuthorOrganisation: n.Organization,
-		FileClass:          n.NYPUCDocType,
-		ItemNumber:         n.ItemNo,
-	}, nil
+	caseInfo := CaseInfoMinimal{CaseNumber: n.DocketID}
+	return FilingInfoPayload{Filing: filing, CaseInfo: caseInfo}, nil
 }
