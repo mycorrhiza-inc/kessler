@@ -1,8 +1,6 @@
 package routes
 
 import (
-	"encoding/json"
-	"fmt"
 	"kessler/internal/ingest/tasks"
 	"kessler/pkg/timestamp"
 	"net/http"
@@ -20,7 +18,7 @@ import (
 // @Failure	500	{string}	string	"Error adding task"
 // @Router	/add-task/ingest/openscraper [post]
 func HandleOpenScraperIngestAddTask(w http.ResponseWriter, r *http.Request) {
-	HandleIngestAddTaskGeneric[tasks.OpenScraperFiling](w, r)
+	HandleIngestAddTaskGeneric[OpenScraperFiling](w, r)
 }
 
 type OpenScraperFiling struct {
@@ -78,3 +76,4 @@ func (o OpenScraperFiling) IntoScraperInfo() (tasks.FilingInfoPayload, error) {
 	caseInfo := tasks.CaseInfoMinimal{CaseNumber: o.CaseNumber}
 	return tasks.FilingInfoPayload{Filing: filing, CaseInfo: caseInfo}, nil
 }
+

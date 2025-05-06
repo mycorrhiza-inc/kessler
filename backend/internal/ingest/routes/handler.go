@@ -8,8 +8,6 @@ import (
 	"os"
 
 	"github.com/charmbracelet/log"
-	"github.com/google/uuid"
-	"github.com/gorilla/mux"
 )
 
 // @Summary	Get Version Hash
@@ -24,7 +22,7 @@ func HandleVersionHash(w http.ResponseWriter, r *http.Request) {
 }
 
 // @Summary	Add Default Ingest Task
-// @Description	Creates a new default ingestion task
+// @Description	Creates a new default ingestion task. This should use the default openscrapers schema.
 // @Tags		tasks
 // @Accept	json
 // @Produce	json
@@ -49,20 +47,6 @@ func HandleDefaultIngestAddTask(w http.ResponseWriter, r *http.Request) {
 // @Router	/add-task/ingest/nypuc [post]
 func HandleNYPUCIngestAddTask(w http.ResponseWriter, r *http.Request) {
 	HandleIngestAddTaskGeneric[tasks.NYPUCDocInfo](w, r)
-}
-
-// @Summary	Add OpenScraper Ingest Task
-// @Description	Creates a new OpenScraper-specific ingestion task
-// @Tags		tasks
-// @Accept	json
-// @Produce	json
-// @Param	body	body		tasks.OpenScraperFiling	true	"OpenScraper filing information"
-// @Success	200	{object}	tasks.KesslerTaskInfo
-// @Failure	400	{string}	string	"Error decoding request body"
-// @Failure	500	{string}	string	"Error adding task"
-// @Router	/add-task/ingest/openscrapers [post]
-func HandleOpenScraperIngestAddTask(w http.ResponseWriter, r *http.Request) {
-	HandleIngestAddTaskGeneric[tasks.OpenScraperFiling](w, r)
 }
 
 // @Summary	Add Case Ingest Task
@@ -134,3 +118,4 @@ func HandleIngestAddTaskGeneric[T tasks.CastableIntoFilingInfo](w http.ResponseW
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(kesslerInfo)
 }
+
