@@ -1,9 +1,9 @@
 package files
 
 import (
-	"kessler/pkg/hashes"
 	"kessler/internal/objects/authors"
 	"kessler/internal/objects/conversations"
+	"kessler/pkg/hashes"
 	"kessler/pkg/timestamp"
 
 	"github.com/google/uuid"
@@ -49,7 +49,7 @@ type FileSchema struct {
 	Name          string                `json:"name"`
 	Hash          string                `json:"hash"`
 	IsPrivate     bool                  `json:"is_private"`
-	DatePublished timestamp.KesslerTime `json:"date_published"`
+	DatePublished timestamp.RFC3339Time `json:"date_published"`
 }
 type FileMetadataSchema map[string]interface{}
 
@@ -68,7 +68,7 @@ type CompleteFileSchema struct {
 	Name          string                                `json:"name"`
 	IsPrivate     bool                                  `json:"is_private"`
 	Attachments   []CompleteAttachmentSchema            `json:"attachments"`
-	DatePublished timestamp.KesslerTime                 `json:"date_published"`
+	DatePublished timestamp.RFC3339Time                 `json:"date_published"`
 	Mdata         FileMetadataSchema                    `json:"mdata"`
 	Stage         DocProcStage                          `json:"stage"`
 	Extra         FileGeneratedExtras                   `json:"extra"`

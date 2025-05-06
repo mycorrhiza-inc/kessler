@@ -41,7 +41,7 @@ func (q QuickwitSearchRequest) CacheKey() string {
 	return fmt.Sprintf("qw:%x", hasher.Sum(nil))
 }
 
-func ConstructDateQuery(DateFrom timestamp.KesslerTime, DateTo timestamp.KesslerTime) string {
+func ConstructDateQuery(DateFrom timestamp.RFC3339Time, DateTo timestamp.RFC3339Time) string {
 	// construct date query
 	fromDate := "*"
 	toDate := "*"
@@ -58,7 +58,7 @@ func ConstructDateQuery(DateFrom timestamp.KesslerTime, DateTo timestamp.Kessler
 	return dateQuery
 }
 
-func ConstructDateTextQuery(DateFrom timestamp.KesslerTime, DateTo timestamp.KesslerTime, query string) string {
+func ConstructDateTextQuery(DateFrom timestamp.RFC3339Time, DateTo timestamp.RFC3339Time, query string) string {
 	if DateFrom.IsZero() && DateTo.IsZero() {
 		dateQueryString := fmt.Sprintf("(text:(%s) OR name:(%s))", query, query)
 		return dateQueryString

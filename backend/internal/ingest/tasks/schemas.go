@@ -103,7 +103,7 @@ type ScraperInfoPayload struct {
 	Text                  string                   `json:"text"`
 	FileType              string                   `json:"file_type"`
 	DocketID              string                   `json:"docket_id"`
-	PublishedDate         timestamp.KesslerTime    `json:"published_date" example:"2024-02-27T12:34:56Z"`
+	PublishedDate         timestamp.RFC3339Time    `json:"published_date" example:"2024-02-27T12:34:56Z"`
 	Name                  string                   `json:"name"`
 	InternalSourceName    string                   `json:"internal_source_name"`
 	State                 string                   `json:"state"`
@@ -223,7 +223,7 @@ func (n NYPUCDocInfo) IntoScraperInfo() (ScraperInfoPayload, error) {
 		// FileURL:            n.URL,
 		Attachments:        attachments,
 		DocketID:           n.DocketID,
-		PublishedDate:      timestamp.KesslerTime(regular_time),
+		PublishedDate:      timestamp.RFC3339Time(regular_time),
 		InternalSourceName: "NYPUC",
 		State:              "NY",
 		AuthorOrganisation: n.Organization,

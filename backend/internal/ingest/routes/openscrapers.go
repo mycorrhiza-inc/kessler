@@ -69,7 +69,7 @@ func (o OpenScraperFiling) IntoScraperInfo() (tasks.ScraperInfoPayload, error) {
 	return tasks.ScraperInfoPayload{
 		Attachments:        attachments,
 		DocketID:           o.CaseNumber,
-		PublishedDate:      timestamp.KesslerTime(filedTime),
+		PublishedDate:      timestamp.RFC3339Time(filedTime),
 		InternalSourceName: "OpenScraper",
 		AuthorOrganisation: o.PartyName,
 		FileClass:          o.FilingType,
