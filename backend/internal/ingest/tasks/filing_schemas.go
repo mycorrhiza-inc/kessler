@@ -14,7 +14,7 @@ import (
 	"github.com/hibiken/asynq"
 )
 
-type FilingInfoPayload struct {
+type FillingInfoPayload struct {
 	Text                  string                `json:"text"`
 	FileType              string                `json:"file_type"`
 	DocketID              string                `json:"docket_id"`
@@ -32,7 +32,12 @@ type FilingInfoPayload struct {
 	Attachments           []AttachmentChildInfo `json:"attachments"`
 }
 
-func CastScraperInfoToNewFile(info FilingInfoPayload) files.CompleteFileSchema {
+type NewFillingInfoPayload struct {
+	Filing   FilingChildInfo `json:"filling"`
+	CaseInfo CaseInfoMinimal `json:"case_info"`
+}
+
+func CastScraperInfoToNewFile(info FillingInfoPayload) files.CompleteFileSchema {
 	new_attachments := make([]files.CompleteAttachmentSchema, len(info.Attachments))
 	for i, attachment := range info.Attachments {
 		metadata := attachment.Mdata
@@ -77,10 +82,10 @@ func CastScraperInfoToNewFile(info FilingInfoPayload) files.CompleteFileSchema {
 }
 
 type CastableIntoFillingInfo interface {
-	IntoScraperInfo() (FilingInfoPayload, error)
+	IntoScraperInfo() (FillingInfoPayload, error)
 }
 
-func (s FilingInfoPayload) IntoScraperInfo() (FilingInfoPayload, error) {
+func (s FillingInfoPayload) IntoScraperInfo() (FillingInfoPayload, error) {
 	return s, nil
 }
 
@@ -119,10 +124,10 @@ type NYPUCDocInfo struct {
 	DocketID     string `json:"docket_id"`
 }
 
-func (n NYPUCDocInfo) IntoScraperInfo() (FilingInfoPayload, error) {
+func (n NYPUCDocInfo) IntoScraperInfo() (FillingInfoPayload, error) {
 	regular_time, err := time.Parse("01/02/2006", n.DateFiled)
 	if err != nil {
-		return FilingInfoPayload{}, err
+		return FillingInfoPayload{}, err
 	}
 
 	attachments := []AttachmentChildInfo{
@@ -134,7 +139,7 @@ func (n NYPUCDocInfo) IntoScraperInfo() (FilingInfoPayload, error) {
 		},
 	}
 
-	return FilingInfoPayload{
+	return FillingInfoPayload{
 		// FileURL:            n.URL,
 		Attachments:        attachments,
 		DocketID:           n.DocketID,

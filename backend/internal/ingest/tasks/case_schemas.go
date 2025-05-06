@@ -41,9 +41,41 @@ type CaseInfoPayload struct {
 	HearingOfficer *string                `json:"hearing_officer,omitempty"`
 	OpenedDate     *timestamp.RFC3339Time `json:"opened_date,omitempty"`
 	ClosedDate     *timestamp.RFC3339Time `json:"closed_date,omitempty"`
-	Filings        []FilingChildInfo      `json:"filings,omitempty"`
 	ExtraMetadata  map[string]interface{} `json:"extra_metadata,omitempty"`
 	IndexedAt      *timestamp.RFC3339Time `json:"indexed_at,omitempty"`
+	Filings        []FilingChildInfo      `json:"filings,omitempty"`
+}
+
+type CaseInfoMinimal struct {
+	CaseNumber     string                 `json:"case_number"`
+	CaseName       string                 `json:"case_name,omitempty"`
+	CaseURL        string                 `json:"case_url,omitempty"`
+	CaseType       *string                `json:"case_type,omitempty"`
+	Description    *string                `json:"description,omitempty"`
+	Industry       *string                `json:"industry,omitempty"`
+	Petitioner     *string                `json:"petitioner,omitempty"`
+	HearingOfficer *string                `json:"hearing_officer,omitempty"`
+	OpenedDate     *timestamp.RFC3339Time `json:"opened_date,omitempty"`
+	ClosedDate     *timestamp.RFC3339Time `json:"closed_date,omitempty"`
+	ExtraMetadata  map[string]interface{} `json:"extra_metadata,omitempty"`
+	IndexedAt      *timestamp.RFC3339Time `json:"indexed_at,omitempty"`
+}
+
+func (c CaseInfoPayload) IntoCaseInfoMinimal() CaseInfoMinimal {
+	return CaseInfoMinimal{
+		CaseNumber:     c.CaseNumber,
+		CaseName:       c.CaseName,
+		CaseURL:        c.CaseURL,
+		CaseType:       c.CaseType,
+		Description:    c.Description,
+		Industry:       c.Industry,
+		Petitioner:     c.Petitioner,
+		HearingOfficer: c.HearingOfficer,
+		OpenedDate:     c.OpenedDate,
+		ClosedDate:     c.ClosedDate,
+		ExtraMetadata:  c.ExtraMetadata,
+		IndexedAt:      c.IndexedAt,
+	}
 }
 
 // FilingChildInfo represents a filing in a case.
