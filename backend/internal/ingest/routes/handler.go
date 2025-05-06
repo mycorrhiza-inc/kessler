@@ -34,7 +34,7 @@ func HandleVersionHash(w http.ResponseWriter, r *http.Request) {
 // @Failure	500	{string}	string	"Error adding task"
 // @Router	/add-task/ingest [post]
 func HandleDefaultIngestAddTask(w http.ResponseWriter, r *http.Request) {
-	HandleIngestAddTaskGeneric[tasks.ScraperInfoPayload](w, r)
+	HandleIngestAddTaskGeneric[tasks.FillingInfoPayload](w, r)
 }
 
 // @Summary	Add NYPUC Ingest Task
@@ -166,7 +166,7 @@ func HandleAddProcessFileTask(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(result_info)
 }
 
-func HandleIngestAddTaskGeneric[T tasks.CastableIntoScraperInfo](w http.ResponseWriter, r *http.Request) {
+func HandleIngestAddTaskGeneric[T tasks.CastableIntoFillingInfo](w http.ResponseWriter, r *http.Request) {
 	var scraper_info T
 	if err := json.NewDecoder(r.Body).Decode(&scraper_info); err != nil {
 		log.Info("User Gave Bad Request", "err", err)

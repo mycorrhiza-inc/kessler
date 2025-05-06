@@ -14,47 +14,25 @@ import (
 	"github.com/hibiken/asynq"
 )
 
-type KesslerTaskInfo struct {
-	TaskID string `json:"task_id"`
-	Queue  string `json:"queue"`
-	State  string `json:"state"`
-	Status string `json:"status"`
+type FilingInfoPayload struct {
+	Text                  string                `json:"text"`
+	FileType              string                `json:"file_type"`
+	DocketID              string                `json:"docket_id"`
+	PublishedDate         timestamp.RFC3339Time `json:"published_date" example:"2024-02-27T12:34:56Z"`
+	Name                  string                `json:"name"`
+	InternalSourceName    string                `json:"internal_source_name"`
+	State                 string                `json:"state"`
+	AuthorIndividual      string                `json:"author_individual"`
+	AuthorIndividualEmail string                `json:"author_individual_email"`
+	AuthorOrganisation    string                `json:"author_organisation"`
+	FileClass             string                `json:"file_class"`
+	Lang                  string                `json:"lang"`
+	ItemNumber            string                `json:"item_number"`
+	ExtraMetadata         map[string]any        `json:"extra_metadata"`
+	Attachments           []AttachmentChildInfo `json:"attachments"`
 }
 
-func GenerateTaskInfoFromInfo(info asynq.TaskInfo) KesslerTaskInfo {
-	return KesslerTaskInfo{
-		TaskID: info.ID,
-		Queue:  info.Queue,
-	}
-}
-
-type AttachmentChildPayload struct {
-	Lang      string         `json:"lang"`
-	Name      string         `json:"name"`
-	Extension string         `json:"extension"`
-	URL       string         `json:"url"`
-	Mdata     map[string]any `json:"mdata"`
-}
-
-type ScraperInfoPayload struct {
-	Text                  string                   `json:"text"`
-	FileType              string                   `json:"file_type"`
-	DocketID              string                   `json:"docket_id"`
-	PublishedDate         timestamp.RFC3339Time    `json:"published_date" example:"2024-02-27T12:34:56Z"`
-	Name                  string                   `json:"name"`
-	InternalSourceName    string                   `json:"internal_source_name"`
-	State                 string                   `json:"state"`
-	AuthorIndividual      string                   `json:"author_individual"`
-	AuthorIndividualEmail string                   `json:"author_individual_email"`
-	AuthorOrganisation    string                   `json:"author_organisation"`
-	FileClass             string                   `json:"file_class"`
-	Lang                  string                   `json:"lang"`
-	ItemNumber            string                   `json:"item_number"`
-	ExtraMetadata         map[string]any           `json:"extra_metadata"`
-	Attachments           []AttachmentChildPayload `json:"attachments"`
-}
-
-func CastScraperInfoToNewFile(info ScraperInfoPayload) files.CompleteFileSchema {
+func CastScraperInfoToNewFile(info FilingInfoPayload) files.CompleteFileSchema {
 	new_attachments := make([]files.CompleteAttachmentSchema, len(info.Attachments))
 	for i, attachment := range info.Attachments {
 		metadata := attachment.Mdata
@@ -98,15 +76,15 @@ func CastScraperInfoToNewFile(info ScraperInfoPayload) files.CompleteFileSchema 
 	}
 }
 
-type CastableIntoScraperInfo interface {
-	IntoScraperInfo() (ScraperInfoPayload, error)
+type CastableIntoFillingInfo interface {
+	IntoScraperInfo() (FilingInfoPayload, error)
 }
 
-func (s ScraperInfoPayload) IntoScraperInfo() (ScraperInfoPayload, error) {
+func (s FilingInfoPayload) IntoScraperInfo() (FilingInfoPayload, error) {
 	return s, nil
 }
 
-func AddScraperTaskCastable(ctx context.Context, castable CastableIntoScraperInfo) (KesslerTaskInfo, error) {
+func AddScraperTaskCastable(ctx context.Context, castable CastableIntoFillingInfo) (KesslerTaskInfo, error) {
 	scraper_info, err := castable.IntoScraperInfo()
 	if err != nil {
 		return KesslerTaskInfo{}, fmt.Errorf("Error Casting to Scraper Info: %v", err)
@@ -141,13 +119,13 @@ type NYPUCDocInfo struct {
 	DocketID     string `json:"docket_id"`
 }
 
-func (n NYPUCDocInfo) IntoScraperInfo() (ScraperInfoPayload, error) {
+func (n NYPUCDocInfo) IntoScraperInfo() (FilingInfoPayload, error) {
 	regular_time, err := time.Parse("01/02/2006", n.DateFiled)
 	if err != nil {
-		return ScraperInfoPayload{}, err
+		return FilingInfoPayload{}, err
 	}
 
-	attachments := []AttachmentChildPayload{
+	attachments := []AttachmentChildInfo{
 		{
 			Lang:  "en",
 			Name:  n.FileName,
@@ -156,7 +134,7 @@ func (n NYPUCDocInfo) IntoScraperInfo() (ScraperInfoPayload, error) {
 		},
 	}
 
-	return ScraperInfoPayload{
+	return FilingInfoPayload{
 		// FileURL:            n.URL,
 		Attachments:        attachments,
 		DocketID:           n.DocketID,

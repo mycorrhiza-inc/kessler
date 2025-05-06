@@ -38,13 +38,13 @@ type OpenScraperAttachment struct {
 	ExtraMetadata map[string]interface{} `json:"extra_metadata,omitempty"`
 }
 
-func (o OpenScraperFiling) IntoScraperInfo() (tasks.ScraperInfoPayload, error) {
+func (o OpenScraperFiling) IntoScraperInfo() (tasks.FillingInfoPayload, error) {
 	filedTime, err := time.Parse("2006-01-02", o.FiledDate) // Adjust date format as needed
 	if err != nil {
-		return tasks.ScraperInfoPayload{}, err
+		return tasks.FillingInfoPayload{}, err
 	}
 
-	attachments := make([]tasks.AttachmentChildPayload, len(o.Attachments))
+	attachments := make([]tasks.AttachmentChildInfo, len(o.Attachments))
 	for i, attach := range o.Attachments {
 		mdata := make(map[string]interface{})
 
@@ -58,7 +58,7 @@ func (o OpenScraperFiling) IntoScraperInfo() (tasks.ScraperInfoPayload, error) {
 			mdata[k] = v
 		}
 
-		attachments[i] = tasks.AttachmentChildPayload{
+		attachments[i] = tasks.AttachmentChildInfo{
 			Lang:  "en",
 			Name:  attach.Name,
 			URL:   attach.URL,
@@ -66,7 +66,7 @@ func (o OpenScraperFiling) IntoScraperInfo() (tasks.ScraperInfoPayload, error) {
 		}
 	}
 
-	return tasks.ScraperInfoPayload{
+	return tasks.FillingInfoPayload{
 		Attachments:        attachments,
 		DocketID:           o.CaseNumber,
 		PublishedDate:      timestamp.RFC3339Time(filedTime),
