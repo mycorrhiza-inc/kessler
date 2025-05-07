@@ -18,7 +18,7 @@ import HomeSearchBar from "../NewSearch/HomeSearch";
 
 // src/components/HomePage/HomePage.tsx
 import { useSearchState } from "@/lib/hooks/useSearchState";
-import { SearchResultsClientComponent } from "@/components/Search/SearchResultsClient";
+import { SearchResultsComponent } from "@/components/Search/SearchResults";
 
 export default function HomePage() {
   const searchState = useSearchState();
@@ -92,11 +92,11 @@ export default function HomePage() {
         )}
       </AnimatePresence>
 
-      <SearchResultsClientComponent
+      <SearchResultsComponent
         isSearching={isSearching}
         searchGetter={searchState.getResultsCallback}
         reloadOnChange={searchState.searchTriggerIndicator}
-      ></SearchResultsClientComponent>
+      ></SearchResultsComponent>
     </>
   );
 }

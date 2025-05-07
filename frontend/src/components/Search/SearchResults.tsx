@@ -29,13 +29,11 @@ function RawSearchResults({
 interface GeneralInfiniteSearchParams {
   searchGetter: SearchResultsGetter;
   reloadOnChange: number;
-  offset: number;
 }
 
 function SearchResultsInfiniteScroll({
   searchGetter,
   reloadOnChange,
-  offset,
 }: GeneralInfiniteSearchParams) {
   const [hasMore, setHasMore] = useState(true);
   const [searchData, setSearchData] = useState<SearchResult[]>([]);
@@ -90,7 +88,7 @@ function SearchResultsInfiniteScroll({
   );
 }
 
-export function SearchResultsClientComponent({
+export function SearchResultsComponent({
   searchGetter,
   reloadOnChange,
   isSearching,
