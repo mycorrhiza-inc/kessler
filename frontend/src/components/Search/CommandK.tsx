@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchState } from "@/lib/hooks/useSearchState";
-import { SearchResultsComponent } from "./SearchResults";
+import { SearchResultsClientComponent } from "./SearchResultsClient";
 
 export function CommandKSearch() {
   const { resetToInitial } = useSearchState();
@@ -81,7 +81,7 @@ function SearchCommand() {
       </div>
 
       <div className="grow overflow-auto">
-        <SearchResultsComponent
+        <SearchResultsClientComponent
           isSearching={searchState.isSearching}
           reloadOnChange={searchTriggerIndicator}
           searchGetter={getResultsCallback}
