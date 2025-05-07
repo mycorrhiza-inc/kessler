@@ -1,52 +1,29 @@
-"use client";
-import HomeSearchBar from "@/components/NewSearch/HomeSearch";
-import React, { useEffect, useState } from "react";
+import React from 'react'
+import { Suspense } from 'react'
+import HomeSearchBar from '@/components/NewSearch/HomeSearch'
+import SearchResultsWrapper from '@/components/Search/SearchResultsWrapper'
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useSearchState } from "@/lib/hooks/useSearchState";
-import { SearchResultsComponent } from "@/components/Search/SearchResults";
-export default function Page() {
-  const searchState = useSearchState();
+interface SearchPageProps {
+  searchParams: {
+    q?: string
+  }
+}
 
-  const isSearching = searchState.isSearching;
+export default function Page({ searchParams }: SearchPageProps) {
+  const initialQuery = searchParams.q ?? ''
 
-  const setTriggeredQuery = (query: string) => {
-    if (query.trim() != searchState.searchQuery) {
-      searchState.triggerSearch({ query: query.trim() });
-    }
-  };
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const initialQuery = urlParams.get("q");
-    if (initialQuery) {
-      searchState.triggerSearch({ query: initialQuery.trim() });
-    }
-  }, []);
-
-  // Reset search state when URL changes (back/forward navigation)
   return (
-    <>
-      <motion.div
-        initial={{ height: "70vh" }}
-        animate={{ height: isSearching ? "30vh" : "70vh" }}
-        transition={{ duration: 0.5, ease: "easeInOut" }}
-        className="flex flex-col items-center justify-center bg-base-100 p-4"
-        style={{ overflow: "hidden" }}
-      >
-        <HomeSearchBar setTriggeredQuery={setTriggeredQuery} />
-      </motion.div>
+    <main className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Search</h1>
 
-      <div
-        className={`transition-all duration-500 ease-in-out ${
-          isSearching ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"
-        }`}
-      >
-        <SearchResultsComponent
-          isSearching={isSearching}
-          searchGetter={searchState.getResultsCallback}
-          reloadOnChange={searchState.searchTriggerIndicator}
-        ></SearchResultsComponent>
-      </div>
-    </>
-  );
+      {/* Search input / filters */}
+      <HomeSearchBar defaultValue={initialQuery} />
+
+      {/* Server-side results streaming + client hydration */}
+      <Suspense fallback={<div className="py-8 text-center">Loading results…</div>}>
+        {/* @ts-expect-error Async Server Component */}
+        <SearchResultsWrapper initialQuery={initialQuery} />
+      </Suspense>
+    </main>
+  )
 }
