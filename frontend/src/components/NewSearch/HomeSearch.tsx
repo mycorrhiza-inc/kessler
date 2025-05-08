@@ -1,3 +1,4 @@
+"use client";
 import React, { useState } from "react";
 import { GiMushroomsCluster } from "react-icons/gi";
 import StateSelector from "./StateSelector";
