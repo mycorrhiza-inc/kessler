@@ -1,17 +1,18 @@
-import {
-  CardData,
-  AuthorCardData,
-  DocketCardData,
-  DocumentCardData,
-} from "@/components/NewSearch/GenericResultCard";
+import { CardData } from "@/components/NewSearch/GenericResultCard";
 import type { Filing } from "@/lib/types/FilingTypes";
 import type { OrganizationInfo } from "@/lib/requests/organizations";
 import type { Conversation } from "@/lib/conversations";
+import {
+  AuthorCardData,
+  CardType,
+  DocketCardData,
+  DocumentCardData,
+} from "../types/generic_card_types";
 
 /**
  * Helper: Format ISO date string to human-readable date.
  */
-function formatDate(isoString: string): string {
+function formatDate(isoString: string | undefined): string {
   if (!isoString) return "";
   try {
     return new Date(isoString).toLocaleDateString();
@@ -25,7 +26,7 @@ function formatDate(isoString: string): string {
  */
 export function adaptFilingToCard(filing: Filing): DocumentCardData {
   return {
-    type: "document",
+    type: CardType.Document,
     name: filing.title,
     description: filing.file_class || "",
     timestamp: formatDate(filing.date),
@@ -46,7 +47,7 @@ export function adaptFilingToCard(filing: Filing): DocumentCardData {
  */
 export function adaptOrganizationToCard(org: OrganizationInfo): DocketCardData {
   return {
-    type: "docket",
+    type: CardType.Docket,
     name: org.name || org.title || "",
     description: org.description || "",
     timestamp: formatDate(org.updated_at || org.created_at || org.createdAt),
@@ -62,7 +63,7 @@ export function adaptOrganizationToCard(org: OrganizationInfo): DocketCardData {
  */
 export function adaptConversationToCard(convo: Conversation): AuthorCardData {
   return {
-    type: "author",
+    type: CardType.Author,
     name: convo.name || convo.id,
     description: convo.description || "",
     timestamp: formatDate(convo.updated_at || (convo as any).last_active_at),
@@ -74,16 +75,13 @@ export function adaptConversationToCard(convo: Conversation): AuthorCardData {
 /**
  * Unified adapter for mixed result arrays
  */
-export function adaptResult(
-  item: any,
-  type: "filing" | "organization" | "conversation",
-): CardData {
+export function adaptResult(item: any, type: CardType): CardData {
   switch (type) {
-    case "filing":
+    case CardType.Document:
       return adaptFilingToCard(item as Filing);
-    case "organization":
+    case CardType.Author:
       return adaptOrganizationToCard(item as OrganizationInfo);
-    case "conversation":
+    case CardType.Docket:
       return adaptConversationToCard(item as Conversation);
     default:
       throw new Error(`Unsupported result type: ${type}`);
