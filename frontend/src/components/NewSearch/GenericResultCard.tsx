@@ -1,34 +1,6 @@
 import { clsx } from "clsx";
 import React from "react";
 
-enum CardType {
-  Author = "author",
-  Docket = "docket",
-  Document = "document",
-}
-
-interface BaseCardData {
-  name: string;
-  description: string;
-  timestamp: string;
-  authors?: Array<string>;
-  extraInfo?: string;
-}
-
-interface AuthorCardData extends BaseCardData {
-  type: CardType.Author;
-}
-
-interface DocketCardData extends BaseCardData {
-  type: CardType.Docket;
-}
-
-interface DocumentCardData extends BaseCardData {
-  type: CardType.Document;
-}
-
-type CardData = AuthorCardData | DocketCardData | DocumentCardData;
-
 const getTimestampLabel = (type: CardType): string => {
   switch (type) {
     case CardType.Author:
@@ -288,4 +260,10 @@ const LargeCard: React.FC<{ data: CardData }> = ({ data }) => {
 export default Card;
 
 // Export types for adapter layer
-export type { CardData, CardSize, AuthorCardData, DocketCardData, DocumentCardData };
+export type {
+  CardData,
+  CardSize,
+  AuthorCardData,
+  DocketCardData,
+  DocumentCardData,
+};
