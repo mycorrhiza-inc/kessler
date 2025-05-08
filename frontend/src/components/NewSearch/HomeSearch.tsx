@@ -19,6 +19,25 @@ const states = [
   "Michigan",
 ];
 
+export const HomeSearchBarClientBaseUrl = ({
+  baseUrl,
+  initialState,
+}: {
+  baseUrl: string;
+  initialState?: string;
+}) => {
+  const handleSearch = (query: string) => {
+    const q = query.trim();
+    if (q) window.location.href = `${baseUrl}?q=${encodeURIComponent(q)}`;
+  };
+  return (
+    <HomeSearchBar
+      setTriggeredQuery={handleSearch}
+      initialState={initialState}
+    />
+  );
+};
+
 export default function HomeSearchBar({
   setTriggeredQuery,
   initialState,
