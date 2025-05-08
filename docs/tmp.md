@@ -1,28 +1,17 @@
-There are two documents currently describing the search architecture.
+There is currently a bunch of documentation for the newer search architecture in 
 
-One describing my vision for the search libraries in the project
-/docs/frontend_search_design.md
+/home/nicole/Documents/mycorrhizae/kessler/docs/frontend_search_current_design.md
 
+The legacy search system is kinda sprawling throughout the codebase at the moment. But starts at the root of the project with these files that describe how the search requests hit various endpoints.
 
-And one describing the current state of all the search components.
-/docs/frontend_search_current_design.md
+In the beginning could you just search the project and try to document the bottom part of the search architecture in an attempt to try and move everything into the new format.
 
-For this part of the project I want you to brainstorm out how to add server side rendering to this by utilizing server components. While still retaining functionality with infinite scroll. 
+/frontend/src/lib/requests/conversations.ts
+/frontend/src/lib/requests/organizations.ts
+/frontend/src/lib/requests/search.ts
 
-If you need to look up documentation on Server Components or Suspense you can always use context7. For this you might find it very useful to know that if you have a parent server component in react, and create a sub component that is also a server component, you can pass it as a child or a  prop to a client, and it will still render properly
+One big part of this is the necessary conversion of the backend schemas in all these different files into a unified format that could get used by 
 
-```tsx 
+/home/nicole/Documents/mycorrhizae/kessler/frontend/src/components/NewSearch/GenericResultCard.tsx
 
-const SomeServerComponent = () => {
-  const server_subcomponent = (<SomeServerSubComponent/>)
-  // both of these work
-  return <>
-  <ClientComponent prop={server_subcomponent}/>
-  <ClientComponent>{server_subcomponent}<ClientComponent/>
-  </>
-}
-```
-
-Specifically try to think about the overall architecture and how to handle and abstract the flow of all these components so it doesnt increase or decreases complexity from the existing implementation. 
-
-Keep a running thought of your architecture ideas in docs/llm_ideas.md , and once you have finalized everything write up your proposal in docs/srr_search_design.md
+Could you go ahead and throw all this documentation and throw it into docs/legacy_api_doc.md?
