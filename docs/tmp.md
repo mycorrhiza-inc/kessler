@@ -2,18 +2,31 @@ There is currently a bunch of documentation for the older search architecture in
 
 kessler/docs/frontend_search_legacy_design_doc.md
 
-for this part I want you to architect out how you would write addapters to convert the data from the following api endpoints
+with the addition of adapters to use the new card components like so:
 
-kessler/frontend/src/lib/requests/conversations.ts
-kessler/frontend/src/lib/requests/organizations.ts
-kessler/frontend/src/lib/requests/search.ts
+kessler/frontend/src/lib/adapters/genericCardAdapters.ts
 
-And figure out how you would write adapters to convert them into data that could be used by the generic cards at 
+And I am wanting to transfer all the components, like
 
-kessler/frontend/src/components/NewSearch/GenericResultCard.tsx
 
-For some broader context, we are wanting to convert the entire architecture into a new format 
+File Search View (`frontend/src/components/Search/FileSearch/FileSearchView.tsx`)
+Conversation Lookup Table (`frontend/src/components/LookupPages/ConvoLookup/ConversationTable.tsx`)
+and 
+Organization Lookup Table (`frontend/src/components/LookupPages/OrgLookup/OrganizationTable.tsx`)
+
+to use the new search architecture described in:
 
 kessler/docs/frontend_search_current_design.md
+
+For now I dont want you to actually write any code, instead think about the architecture for how all of this would work, and write your thoughts to docs/table_rearchitect.md 
+
+To do this you should use the existing fetchers, and combine them with a genericCardAdapters to create the lookup search functionality needed to create the callbacks for each method.
+
+Also all of these pages will absolutely require the SSR functionality, this is already implemented for 
+kessler/frontend/src/app/(application)/search/page.tsx
+if you need a reference for how its implemented. But it just uses traditional React Server Components and doesnt need anything nextjs specific. But the functionality for this component is still a bit specific, so if you can think of any simplifications or generalizations please include them.
+
+
+so if you can think of any simplifications to that please include in your thoughts on the architecture.
 
 but for now just ignore that and architect out how you would write the adapters, and throw your final architecture plan in docs/generic_card_architecture.md
