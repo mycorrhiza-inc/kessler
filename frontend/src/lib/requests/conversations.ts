@@ -1,7 +1,11 @@
 import axios from "axios";
 import { getRuntimeEnv } from "../env_variables_hydration_script";
 
-export const GetConversationInformation = async (conversation_id: string) => {
+import type { Conversation } from "@/lib/conversations";
+
+export const GetConversationInformation = async (
+  conversation_id: string,
+): Promise<Conversation> => {
   // get the conversation information from the database
   const runtimeConfig = getRuntimeEnv();
   const conversation = await axios.get(

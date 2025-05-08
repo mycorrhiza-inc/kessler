@@ -286,3 +286,6 @@ const LargeCard: React.FC<{ data: CardData }> = ({ data }) => {
 };
 
 export default Card;
+
+// Export types for adapter layer
+export type { CardData, CardSize, AuthorCardData, DocketCardData, DocumentCardData };
