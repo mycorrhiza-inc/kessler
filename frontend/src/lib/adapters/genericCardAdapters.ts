@@ -1,4 +1,20 @@
 import { CardData } from "@/components/NewSearch/GenericResultCard";
+import React from "react";
+
+/**
+ * Adapter interface for mapping search hits to card data and handling query params.
+ */
+export interface SearchAdapter<Hit> {
+  /** Map a hit to card props */
+  mapHitToCard(hit: Hit): CardData;
+
+  /** Optional: Transform raw query params from URL to fetcher params */
+  transformQueryParams?(raw: Record<string, any>): Record<string, any>;
+
+  /** Optional: Provide empty state when no hits are returned */
+  getEmptyState?(): React.ReactNode;
+}
+
 import type { Filing } from "@/lib/types/FilingTypes";
 import type { OrganizationInfo } from "@/lib/requests/organizations";
 import type { Conversation } from "@/lib/conversations";

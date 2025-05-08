@@ -11,6 +11,15 @@ implement your previous plan that you wrote down at
 
 /home/nicole/Documents/mycorrhizae/kessler/docs/table_migration_architecture.md
 
+To limit scope creep, only implement this plan for the FileSearchView at 
+
+kessler/frontend/src/components/Search/FileSearch/FileSearchView.tsx
+
+What you should do is make a new file called FileSearchViewNew.tsx that has the same interface in order to avoid messing up the depenandices of the existing project.
+
+
+
+
 --- 
 There is currently a bunch of documentation for the older search architecture in 
 
