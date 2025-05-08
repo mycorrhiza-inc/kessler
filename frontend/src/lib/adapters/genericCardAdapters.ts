@@ -30,7 +30,12 @@ export function adaptFilingToCard(filing: Filing): DocumentCardData {
     description: filing.file_class || "",
     timestamp: formatDate(filing.date),
     authors: filing.authors_information
-      ? [filing.author, ...filing.authors_information.map((a) => (typeof a === 'string' ? a : a.username || String(a)))]
+      ? [
+          filing.author,
+          ...filing.authors_information.map((a) =>
+            typeof a === "string" ? a : a.username || String(a),
+          ),
+        ]
       : [filing.author],
     extraInfo: filing.docket_id ? `Docket: ${filing.docket_id}` : undefined,
   };
@@ -71,7 +76,7 @@ export function adaptConversationToCard(convo: Conversation): AuthorCardData {
  */
 export function adaptResult(
   item: any,
-  type: "filing" | "organization" | "conversation"
+  type: "filing" | "organization" | "conversation",
 ): CardData {
   switch (type) {
     case "filing":
