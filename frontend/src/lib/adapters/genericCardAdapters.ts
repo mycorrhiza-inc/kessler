@@ -1,86 +1,67 @@
-import { CardData } from "@/components/NewSearch/GenericResultCard";
-import type { Filing } from "@/lib/types/FilingTypes";
-import type { OrganizationInfo } from "@/lib/requests/organizations";
-import type { Conversation } from "@/lib/conversations";
-import {
-  AuthorCardData,
-  CardType,
-  DocketCardData,
-  DocumentCardData,
-} from "../types/generic_card_types";
+import React from "react";
+import { Filing } from "@/lib/types/FilingTypes";
+import { ConversationTableSchema } from "@/components/LookupPages/ConvoLookup/ConversationTable";
+import { OrganizationTableSchema } from "@/components/LookupPages/OrgLookup/OrganizationTable";
+import { CardProps } from "@/components/Search/CardGrid";
+import { SearchParams } from "@/lib/searchFetchers";
 
-/**
- * Helper: Format ISO date string to human-readable date.
- */
-function formatDate(isoString: string | undefined): string {
-  if (!isoString) return "";
-  try {
-    return new Date(isoString).toLocaleDateString();
-  } catch {
-    return isoString;
-  }
+export interface SearchAdapter<Hit> {
+  /** Map a single hit into card props for rendering */
+  mapHitToCard: (hit: Hit) => CardProps;
+
+  /** Optional: Provide an empty state when no hits are returned */
+  getEmptyState?: () => React.ReactNode;
+
+  /** Optional: Transform raw query params to fetcher-compatible shape */
+  transformQueryParams?: (rawParams: Record<string, any>) => SearchParams;
 }
 
-/**
- * Adapter: Filing → DocumentCardData
- */
-export function adaptFilingToCard(filing: Filing): DocumentCardData {
-  const author_strs =
-    filing.authors_information?.map((a) =>
-      typeof a === "string" ? a : a.author_name || String(a),
-    ) || [];
-  return {
-    type: CardType.Document,
-    name: filing.title,
-    description: filing.file_class || "",
-    timestamp: formatDate(filing.date),
-    authors: author_strs,
-    extraInfo: filing.docket_id ? `Docket: ${filing.docket_id}` : undefined,
-  };
-}
+/** File search adapter */
+export const fileSearchAdapter: SearchAdapter<Filing> = {
+  mapHitToCard: (hit) => ({
+    title: hit.title,
+    subtitle: hit.author,
+    link: `/files/${hit.id}`,
+    details: hit.date,
+  }),
+  transformQueryParams: (raw) => ({
+    q: raw.q as string,
+    filters: raw.filters,
+    page: Number(raw.page) || 1,
+    size: Number(raw.size) || 20,
+  }),
+  getEmptyState: () => <div>No files found.</div>,
+};
 
-/**
- * Adapter: OrganizationInfo → DocketCardData
- */
-export function adaptOrganizationToCard(org: OrganizationInfo): DocketCardData {
-  return {
-    type: CardType.Docket,
-    name: org.name || org.title || "",
-    description: org.description || "",
-    timestamp: formatDate(org.updated_at || org.created_at || org.createdAt),
-    authors: Array.isArray(org.admins)
-      ? org.admins.map((u: any) => u.username || u.id || String(u))
-      : undefined,
-    extraInfo: org.location || org.address,
-  };
-}
+/** Conversation lookup adapter */
+export const conversationLookupAdapter: SearchAdapter<ConversationTableSchema> = {
+  mapHitToCard: (hit) => ({
+    title: hit.name,
+    subtitle: `ID: ${hit.docket_gov_id}`,
+    link: `/dockets/${hit.docket_gov_id}`,
+    details: JSON.parse(hit.metadata).date_filed,
+  }),
+  transformQueryParams: (raw) => ({
+    page: Number(raw.page) || 1,
+    size: Number(raw.size) || 20,
+    filters: raw,
+  }),
+  getEmptyState: () => <div>No dockets found.</div>,
+};
 
-/**
- * Adapter: Conversation → AuthorCardData
- */
-export function adaptConversationToCard(convo: Conversation): AuthorCardData {
-  return {
-    type: CardType.Author,
-    name: convo.name || convo.id,
-    description: convo.description || "",
-    timestamp: formatDate(convo.updated_at || (convo as any).last_active_at),
-    authors: (convo as any).participants || undefined,
-    extraInfo: convo.docket_id ? `Docket: ${convo.docket_id}` : undefined,
-  };
-}
-
-/**
- * Unified adapter for mixed result arrays
- */
-export function adaptResult(item: any, type: CardType): CardData {
-  switch (type) {
-    case CardType.Document:
-      return adaptFilingToCard(item as Filing);
-    case CardType.Author:
-      return adaptOrganizationToCard(item as OrganizationInfo);
-    case CardType.Docket:
-      return adaptConversationToCard(item as Conversation);
-    default:
-      throw new Error(`Unsupported result type: ${type}`);
-  }
-}
+/** Organization lookup adapter */
+export const organizationLookupAdapter: SearchAdapter<OrganizationTableSchema> = {
+  mapHitToCard: (hit) => ({
+    title: hit.name,
+    subtitle: `Aliases: ${hit.aliases.join(", ")}`,
+    link: `/orgs/${hit.id}`,
+    details: `Documents: ${hit.files_authored_count}`,
+  }),
+  transformQueryParams: (raw) => ({
+    q: raw.q as string,
+    page: Number(raw.page) || 1,
+    size: Number(raw.size) || 20,
+    filters: raw,
+  }),
+  getEmptyState: () => <div>No organizations found.</div>,
+};
