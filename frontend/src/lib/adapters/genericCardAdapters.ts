@@ -25,19 +25,16 @@ function formatDate(isoString: string | undefined): string {
  * Adapter: Filing → DocumentCardData
  */
 export function adaptFilingToCard(filing: Filing): DocumentCardData {
+  const author_strs =
+    filing.authors_information?.map((a) =>
+      typeof a === "string" ? a : a.author_name || String(a),
+    ) || [];
   return {
     type: CardType.Document,
     name: filing.title,
     description: filing.file_class || "",
     timestamp: formatDate(filing.date),
-    authors: filing.authors_information
-      ? [
-          filing.author,
-          ...filing.authors_information.map((a) =>
-            typeof a === "string" ? a : a.username || String(a),
-          ),
-        ]
-      : [filing.author],
+    authors: author_strs,
     extraInfo: filing.docket_id ? `Docket: ${filing.docket_id}` : undefined,
   };
 }
