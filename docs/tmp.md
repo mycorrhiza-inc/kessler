@@ -1,3 +1,17 @@
+Last time you generated an architecture for taking the old search 
+
+kessler/docs/frontend_search_legacy_design_doc.md
+
+and migrating it to use the new format at 
+
+kessler/docs/frontend_search_current_design_doc.md
+
+
+implement your previous plan that you wrote down at 
+
+/home/nicole/Documents/mycorrhizae/kessler/docs/table_migration_architecture.md
+
+--- 
 There is currently a bunch of documentation for the older search architecture in 
 
 kessler/docs/frontend_search_legacy_design_doc.md
