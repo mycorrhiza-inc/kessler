@@ -10,15 +10,13 @@ import {
 import {
   RuntimeEnvConfig,
   emptyRuntimeConfig,
-  runtimeConfig,
+  getUniversalEnvConfig,
 } from "./env_variables";
-import { env } from "process";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 
-const defaultEnvVariables = {};
-
+// Initialize context with an empty validated config
 const EnvVariablesClientContext =
-  createContext<RuntimeEnvConfig>(defaultEnvVariables);
+  createContext<RuntimeEnvConfig>(emptyRuntimeConfig);
 
 type EnvClientProviderProps = {
   children: ReactNode;
@@ -27,10 +25,10 @@ type EnvClientProviderProps = {
 export const EnvVariablesClientProvider: React.FC<EnvClientProviderProps> = ({
   children,
 }) => {
-  const [envs, setEnvs] = useState<RuntimeEnvConfig>(defaultEnvVariables);
+  const [envs, setEnvs] = useState<RuntimeEnvConfig>(emptyRuntimeConfig);
 
   useEffect(() => {
-    const runtimeEnvs = getRuntimeEnv();
+    const runtimeEnvs = getUniversalEnvConfig();
     setEnvs(runtimeEnvs);
   }, []);
 
@@ -42,31 +40,14 @@ export const EnvVariablesClientProvider: React.FC<EnvClientProviderProps> = ({
 };
 
 export const useEnvVariablesClientConfig = (): RuntimeEnvConfig => {
-  if (EnvVariablesClientContext === undefined) {
+  const context = useContext(EnvVariablesClientContext);
+  if (context === undefined) {
     throw new Error(
       "useEnvVariablesClientConfig must be used within an EnvVariablesClientProvider",
     );
   }
 
-  return useContext(EnvVariablesClientContext);
-};
-
-export const envScriptId = "env-config";
-
-const isSSR = typeof window === "undefined";
-
-export const getRuntimeEnv = (): RuntimeEnvConfig => {
-  if (isSSR) {
-    throw new Error(
-      "You must call this function in a client component, for a server component just import runtimeConfig from ./env_variables.ts",
-    );
-    return runtimeConfig;
-  }
-  const script = window.document.getElementById(
-    envScriptId,
-  ) as HTMLScriptElement;
-
-  return script ? JSON.parse(script.innerText) : emptyRuntimeConfig;
+  return context;
 };
 
 export const EnvironmentVariableTestMarkdown = () => {
