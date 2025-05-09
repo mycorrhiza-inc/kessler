@@ -9,9 +9,9 @@ import { generateFakeResults } from "../search/search_utils";
 import axios from "axios";
 import { Filing } from "../types/FilingTypes";
 import { hydratedSearchResultsToFilings } from "../requests/search";
-import { getClientRuntimeEnv } from "../env_variables/env_variables_hydration_script";
 import { adaptFilingToCard } from "./genericCardAdapters";
 import { DocumentCardData } from "../types/generic_card_types";
+import { getUniversalEnvConfig } from "../env_variables/env_variables";
 
 export enum GenericSearchType {
   Filling = "filing",
@@ -37,7 +37,7 @@ export const searchInvoke = async (
 export const createGenericSearchCallback = (
   info: GenericSearchInfo,
 ): SearchResultsGetter => {
-  const runtimeConfig = getClientRuntimeEnv();
+  const runtimeConfig = getUniversalEnvConfig();
   const api_url = runtimeConfig.public_api_url;
   switch (info.search_type) {
     case GenericSearchType.Dummy:

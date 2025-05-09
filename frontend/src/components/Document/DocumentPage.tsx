@@ -1,11 +1,11 @@
 import { BreadcrumbValues } from "../SitemapUtils";
 import { completeFileSchemaGet } from "@/lib/requests/search";
 import { DocumentMainTabs } from "./DocumentBody";
-import { internalAPIURL } from "@/lib/env_variables/env_variables";
+import { getUniversalEnvConfig } from "@/lib/env_variables/env_variables";
 import { CompleteFileSchema } from "@/lib/types/backend_schemas";
 
 export const generateDocumentPageData = async (objectId: string) => {
-  const semiCompleteFileUrl = `${internalAPIURL}/v2/public/files/${objectId}`;
+  const semiCompleteFileUrl = `${getUniversalEnvConfig().internal_api_url}/v2/public/files/${objectId}`;
   const fileObj = await completeFileSchemaGet(semiCompleteFileUrl);
   const breadcrumbs: BreadcrumbValues = {
     breadcrumbs: [

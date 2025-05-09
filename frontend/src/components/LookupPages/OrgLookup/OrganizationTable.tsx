@@ -6,8 +6,6 @@ import { useEffect, useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { queryStringFromPageMaxHits } from "@/lib/pagination";
 import { getClientRuntimeEnv } from "@/lib/env_variables/env_variables_hydration_script";
-import LoadingSpinnerTimeout from "@/components/styled-components/LoadingSpinnerTimeout";
-import { data } from "autoprefixer";
 import { TableStyle } from "@/components/styles/Table";
 import InfiniteScrollPlus from "@/components/InfiniteScroll/InfiniteScroll";
 

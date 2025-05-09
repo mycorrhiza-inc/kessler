@@ -33,38 +33,6 @@ export const hydratedSearchResultsToFilings = (
   return filings;
 };
 
-export const getRecentFilings = async (
-  page?: number,
-  page_size?: number,
-): Promise<Filing[]> => {
-  if (!page) {
-    page = 0;
-  }
-  const default_page_size = 40;
-  const queryString = queryStringFromPageMaxHits(
-    page,
-    page_size || default_page_size,
-  );
-  // Incorrect Code:
-  // const default_page_size = 40;
-  // const limit = page_size || default_page_size;
-  // const queryString = queryStringFromPageMaxHits(limit, page_size);
-  const runtimeConfig = getClientRuntimeEnv();
-  const response = await axios.get(
-    `${runtimeConfig.public_api_url}/v2/search/file/recent_updates${queryString}`,
-  );
-  if (response.status >= 400) {
-    throw new Error(`Request failed with status code ${response.status}`);
-  }
-  // console.log("recent data", response.data);
-  if (response.data.length > 0) {
-    return hydratedSearchResultsToFilings(response.data);
-  }
-  throw new Error(
-    "No recent filings found, their should absolutely be some files in the DB to show.",
-  );
-};
-
 export const completeFileSchemaGet = async (
   url: string,
 ): Promise<CompleteFileSchema> => {
