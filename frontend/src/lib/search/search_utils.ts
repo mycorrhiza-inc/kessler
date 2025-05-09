@@ -12,7 +12,7 @@ const randomRecentDate = () => {
 };
 
 export const generateFakeResults = async ({ page, limit }: PaginationData) => {
-  await sleep(1000);
+  await sleep(5000);
   return generateFakeResultsRaw(limit);
 };
 

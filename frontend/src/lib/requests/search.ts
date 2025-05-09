@@ -1,58 +1,10 @@
-import {
-  BackendFilterObject,
-  QueryDataFile,
-  backendFilterGenerate,
-} from "@/lib/filters";
 import { Filing } from "@/lib/types/FilingTypes";
 import axios from "axios";
 import {
   CompleteFileSchema,
   CompleteFileSchemaValidator,
 } from "../types/backend_schemas";
-import { queryStringFromPageMaxHits } from "../pagination";
-import { getRuntimeEnv } from "../env_variables_hydration_script";
-
-export const getSearchResults = async (
-  queryData: QueryDataFile,
-  page: number,
-  maxHits: number,
-): Promise<Filing[]> => {
-  const searchQuery = queryData.query;
-  console.log("query data", queryData);
-  const searchFilters = queryData.filters;
-  console.log("searchhing for", searchFilters);
-  const filterObj: BackendFilterObject = backendFilterGenerate(searchFilters);
-  const runtimeConfig = getRuntimeEnv();
-  try {
-    const paginationQueryString = queryStringFromPageMaxHits(page, maxHits);
-    const searchResults: Filing[] = await axios
-      .post(
-        `${runtimeConfig.public_api_url}/v2/search/file${paginationQueryString}`,
-        {
-          query: searchQuery,
-          filters: filterObj,
-        },
-      )
-      // check error conditions
-      .then((response) => {
-        if (response.status >= 400) {
-          throw new Error(`Request failed with status code ${response.status}`);
-        }
-        if (response.data?.length === 0 || typeof response.data === "string") {
-          return [];
-        }
-
-        const filings = hydratedSearchResultsToFilings(response.data);
-        return filings;
-      });
-    console.log("getting data");
-    // console.log(searchResults);
-    return searchResults;
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
-};
+import { getClientRuntimeEnv } from "../env_variables/env_variables_hydration_script";
 
 export const hydratedSearchResultsToFilings = (
   hydratedSearchResults: any | null,
@@ -79,38 +31,6 @@ export const hydratedSearchResultsToFilings = (
     (file: CompleteFileSchema): Filing => generateFilingFromFileSchema(file),
   );
   return filings;
-};
-
-export const getRecentFilings = async (
-  page?: number,
-  page_size?: number,
-): Promise<Filing[]> => {
-  if (!page) {
-    page = 0;
-  }
-  const default_page_size = 40;
-  const queryString = queryStringFromPageMaxHits(
-    page,
-    page_size || default_page_size,
-  );
-  // Incorrect Code:
-  // const default_page_size = 40;
-  // const limit = page_size || default_page_size;
-  // const queryString = queryStringFromPageMaxHits(limit, page_size);
-  const runtimeConfig = getRuntimeEnv();
-  const response = await axios.get(
-    `${runtimeConfig.public_api_url}/v2/search/file/recent_updates${queryString}`,
-  );
-  if (response.status >= 400) {
-    throw new Error(`Request failed with status code ${response.status}`);
-  }
-  // console.log("recent data", response.data);
-  if (response.data.length > 0) {
-    return hydratedSearchResultsToFilings(response.data);
-  }
-  throw new Error(
-    "No recent filings found, their should absolutely be some files in the DB to show.",
-  );
 };
 
 export const completeFileSchemaGet = async (
@@ -162,5 +82,3 @@ export const generateFilingFromFileSchema = (
     extension: file_schema.extension,
   };
 };
-
-export default getSearchResults;

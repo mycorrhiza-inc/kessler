@@ -3,7 +3,7 @@ import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import { PHProvider } from "./providers";
 import dynamic from "next/dynamic";
-import EnvVariablesScript from "@/lib/env_variables_root_script";
+import EnvVariablesScript from "@/lib/env_variables/env_variables_root_script";
 import {
   ClerkProvider,
   SignedIn,
@@ -12,7 +12,6 @@ import {
 } from "@clerk/nextjs";
 import Header from "@/components/Layout/Header";
 import Link from "next/link";
-
 
 const PostHogPageView = dynamic(() => import("./PostHogPageView"), {
   ssr: false,

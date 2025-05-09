@@ -19,9 +19,18 @@ import HomeSearchBar from "../NewSearch/HomeSearch";
 // src/components/HomePage/HomePage.tsx
 import { useSearchState } from "@/lib/hooks/useSearchState";
 import { SearchResultsComponent } from "@/components/Search/SearchResults";
+import {
+  GenericSearchInfo,
+  GenericSearchType,
+} from "@/lib/adapters/genericSearchCallback";
 
 export default function HomePage() {
   const searchState = useSearchState();
+  const searchInfo: GenericSearchInfo = {
+    search_type: GenericSearchType.Filling,
+    query: searchState.searchQuery,
+    filters: searchState.filters,
+  };
 
   const isSearching = searchState.isSearching;
 
@@ -94,7 +103,7 @@ export default function HomePage() {
 
       <SearchResultsComponent
         isSearching={isSearching}
-        searchGetter={searchState.getResultsCallback}
+        searchInfo={searchInfo}
         reloadOnChange={searchState.searchTriggerIndicator}
       ></SearchResultsComponent>
     </>

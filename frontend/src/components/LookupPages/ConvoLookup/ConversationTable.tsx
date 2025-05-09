@@ -4,7 +4,7 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import { useEffect, useState } from "react";
 import LoadingSpinnerTimeout from "../../styled-components/LoadingSpinnerTimeout";
 import { useRouter } from "next/navigation";
-import { getRuntimeEnv } from "@/lib/env_variables_hydration_script";
+import { getClientRuntimeEnv } from "@/lib/env_variables/env_variables_hydration_script";
 import { TextPill } from "@/components/Tables/TextPills";
 import clsx from "clsx";
 import { TableStyle } from "@/components/styles/Table";
@@ -149,7 +149,7 @@ const ConversationTableInfiniteScroll = ({
 
   const getPageResults = async (page: number, limit: number) => {
     const offset = page * limit;
-    const runtimeConfig = getRuntimeEnv();
+    const runtimeConfig = getClientRuntimeEnv();
     const searchData = InstanitateConversationSearchSchema(lookup_data);
     const url = `${runtimeConfig.public_api_url}/v2/search/conversation?offset=${offset}&limit=${limit}`;
     const result = await conversationSearchGet(searchData, url);
