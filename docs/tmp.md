@@ -1,13 +1,120 @@
+Could you redo all the code in these files to use this library instead of the existing implementation. All variables in the system are safe to expose publicly
 
-I have a kinda hackish method for getting the server runtime enviornment variables on the client, that are in both of these files.
+kessler/frontend/src/lib/env_variables
+   │ │ │ │ 󰛦 env_variables.ts          
+   │ │ │ │  env_variables_hydration_scr
+   │ │ │ └  env_variables_root_script.t
 
-kessler/frontend/src/lib/env_variables_hydration_script.tsx
-kessler/frontend/src/lib/env_variables_root_script.tsx
+Could you use the same API for exposing them on the frontend that was previously used to minimize complexity
 
-it does work, but I am needing to refactor this a bit to better support functions that need access to these variables on both the client and the server and I need good interfaces to support that, and thought it would be a good time to improve the architecture.
+# Making env public 🛠
 
-Throw any ideas for improvement in kessler/docs/frontend_env_refactor.md
+In some cases you might have control over the naming of the environment variables. (Or you simply don't want to prefix them with `NEXT_PUBLIC_`.) In this case you can use the `makeEnvPublic` utility function to make them public.
 
+## Example
+
+```ts
+// next.config.js
+
+const { makeEnvPublic } = require('next-runtime-env');
+
+// Given that `FOO` is declared as a regular env var, not a public one. This
+// will make it public and available as `NEXT_PUBLIC_FOO`.
+makeEnvPublic('FOO');
+
+// Or you can make multiple env vars public at once.
+makeEnvPublic(['BAR', 'BAZ']);
+```
+
+> You can also use the experimental instrumentation hook introduced in Next.js 13. See the `with-app-router` example for more details.
+
+
+# Exposing custom environment variables 🛠
+
+- [Exposing custom environment variables 🛠](#exposing-custom-environment-variables-)
+  - [Using the script approach (recommend)](#using-the-script-approach-recommend)
+    - [Example](#example)
+  - [Using the context approach](#using-the-context-approach)
+    - [Example](#example-1)
+
+## Using the script approach (recommend)
+
+You might not only want to expose environment variables that are prefixed with `NEXT_PUBLIC_`. In this case you can use the `EnvScript` to expose custom environment variables to the browser.
+
+### Example
+
+```tsx
+// app/layout.tsx
+// This is as of Next.js 14, but you could also use other dynamic functions
+import { unstable_noStore as noStore } from 'next/cache';
+import { EnvScript } from 'next-runtime-env';
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  noStore(); // Opt into dynamic rendering
+
+  // This value will be evaluated at runtime
+  return (
+    <html lang="en">
+      <head>
+        <EnvScript
+          env={{
+            NEXT_PUBLIC_: process.env.NEXT_PUBLIC_FOO,
+            BAR: process.env.BAR,
+            BAZ: process.env.BAZ,
+            notAnEnvVar: 'not-an-env-var',
+          }}
+        />
+      </head>
+      <body>
+        {children}
+      </body>
+    </html>
+  );
+}
+```
+
+## Using the context approach
+
+You might not only want to expose environment variables that are prefixed with `NEXT_PUBLIC_`. In this case you can use the `EnvProvider` to expose custom environment variables to the context.
+
+### Example
+
+```tsx
+// app/layout.tsx
+// This is as of Next.js 14, but you could also use other dynamic functions
+import { unstable_noStore as noStore } from 'next/cache';
+import { EnvProvider } from 'next-runtime-env';
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  noStore(); // Opt into dynamic rendering
+
+  // This value will be evaluated at runtime
+  return (
+    <html lang="en">
+      <body>
+        <EnvProvider
+          env={{
+            NEXT_PUBLIC_: process.env.NEXT_PUBLIC_FOO,
+            BAR: process.env.BAR,
+            BAZ: process.env.BAZ,
+            notAnEnvVar: 'not-an-env-var',
+          }}
+        >
+          {children}
+        </EnvProvider>
+      </body>
+    </html>
+  );
+}
+```
 
 ## Libary Docs
 # 🌐 Next.js Runtime Environment Configuration
