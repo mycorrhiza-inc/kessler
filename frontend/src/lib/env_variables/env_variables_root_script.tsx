@@ -1,6 +1,6 @@
 import { unstable_noStore as noStore } from "next/cache";
-import { runtimeConfig } from "./env_variables";
 import { headers } from "next/headers";
+import { getUniversalEnvConfig } from "./env_variables";
 
 export default function EnvVariablesScript() {
   noStore();
@@ -12,7 +12,7 @@ export default function EnvVariablesScript() {
       id="env-config"
       nonce={nonce || ""}
       dangerouslySetInnerHTML={{
-        __html: JSON.stringify(runtimeConfig),
+        __html: JSON.stringify(getUniversalEnvConfig()),
       }}
     />
   );

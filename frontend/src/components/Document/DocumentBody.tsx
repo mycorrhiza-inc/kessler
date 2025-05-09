@@ -20,23 +20,12 @@ import { getClientRuntimeEnv } from "@/lib/env_variables/env_variables_hydration
 import { FileExtension, fileExtensionFromText } from "../Tables/FileExtension";
 import XlsxViewer from "./XlsxViewer";
 import ErrorMessage from "../ErrorMessage";
-import {
-  runtimeConfig,
-  ssr_public_api_url,
-} from "@/lib/env_variables/env_variables";
 
 // import { ErrorBoundary } from "react-error-boundary";
 //
 const getSafePublicAPIUrl = () => {
   const runtimeConfigClient = getClientRuntimeEnv();
-  try {
-    const rawPublicUrl = runtimeConfigClient?.public_api_url;
-    return (
-      rawPublicUrl || runtimeConfig?.public_api_url || "https://api.kessler.xyz"
-    );
-  } catch {
-    return "https://api.kessler.xyz";
-  }
+  return runtimeConfigClient.public_api_url;
 };
 
 const MarkdownContent = memo(({ docUUID }: { docUUID: string }) => {

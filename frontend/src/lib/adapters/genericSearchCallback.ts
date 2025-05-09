@@ -11,7 +11,8 @@ import { Filing } from "../types/FilingTypes";
 import { hydratedSearchResultsToFilings } from "../requests/search";
 import { adaptFilingToCard } from "./genericCardAdapters";
 import { DocumentCardData } from "../types/generic_card_types";
-import { getUniversalEnvConfig } from "../env_variables/env_variables";
+import { getContextualAPIURL } from "../env_variables/env_variables";
+import assert from "assert";
 
 export enum GenericSearchType {
   Filling = "filing",
@@ -37,8 +38,7 @@ export const searchInvoke = async (
 export const createGenericSearchCallback = (
   info: GenericSearchInfo,
 ): SearchResultsGetter => {
-  const runtimeConfig = getUniversalEnvConfig();
-  const api_url = runtimeConfig.public_api_url;
+  const api_url = getContextualAPIURL();
   switch (info.search_type) {
     case GenericSearchType.Dummy:
       return generateFakeResults;
@@ -49,6 +49,8 @@ export const createGenericSearchCallback = (
         console.log("query data", searchQuery);
         const searchFilters = info.filters;
         console.log("SEARCH FILTERS DISABLED UNTIL MIRRI UPDATES THE DB");
+        console.log("API URL:  ", api_url);
+        assert(api_url, "Api url cannot be undefined");
         try {
           const filingResults: Filing[] = await axios
             .post(`${api_url}/v2/search/file${paginationQueryString}`, {

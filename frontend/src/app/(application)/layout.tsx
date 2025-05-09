@@ -3,7 +3,7 @@ import AuthGuard from "@/components/AuthGuard";
 import Header from "@/components/Layout/Header";
 import Layout from "@/components/Layout/Layout";
 import { BreadcrumbValues } from "@/components/SitemapUtils";
-import { runtimeConfig } from "@/lib/env_variables/env_variables";
+import { getUniversalEnvConfig } from "@/lib/env_variables/env_variables";
 
 import { createClient } from "@/utils/supabase/server";
 import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
@@ -24,7 +24,7 @@ export default async function ApplicationLayout({
   const checkLoggedIn = async () => {
     // Make the apps and pages load when you are running it locally even if offline, otherwise it errors out
     // when trying to connect to supabase.
-    if (runtimeConfig.public_api_url == "http://localhost") {
+    if (getUniversalEnvConfig().public_api_url == "http://localhost") {
       return true;
     }
     try {
