@@ -1,12 +1,22 @@
 /** @type {import('next').NextConfig} */
+const { makeEnvPublic } = require('next-runtime-env');
+
+// Make all relevant environment variables public
+makeEnvPublic([
+  'PUBLIC_KESSLER_API_URL',
+  'INTERNAL_KESSLER_API_URL',
+  'PUBLIC_POSTHOG_KEY',
+  'PUBLIC_POSTHOG_HOST',
+  'REACT_APP_ENV',
+  'VERSION_HASH',
+  'ENABLE_ALL_FEATURES',
+]);
+
 const nextConfig = {
-  publicRuntimeConfig: {
-    // Will be available on both server and client
-    KESSLER_API_URL: process.env.KESSLER_API_URL,
-  },
-  serverRuntimeConfig: {
-    // Will only be available on the server side
-    INTERNAL_KESSLER_API_URL: process.env.INTERNAL_KESSLER_API_URL,
+  // No need for publicRuntimeConfig/serverRuntimeConfig anymore
+  // All vars are exposed via next-runtime-env at runtime
+  experimental: {
+    runtime: 'experimental-edge', // or other if using edge functions
   },
 };
 
