@@ -1,4 +1,4 @@
-import { getUniversalRuntimeEnv } from "@/lib/env_variables/env_variables_hydration_script";
+import { getClientRuntimeEnv } from "@/lib/env_variables/env_variables_hydration_script";
 import { PageContextMode, Suggestion } from "@/lib/types/SearchTypes";
 import { InputType } from "../Filters/FiltersInfo";
 export const getRawSuggestions = (
@@ -182,7 +182,7 @@ const rawToRealSuggestions = (sug: RawSuggestion): Suggestion => {
 export const fetchSuggestionsQuickwitAsync = async (
   query: string,
 ): Promise<Suggestion[]> => {
-  const runtimeClientConfig = getUniversalRuntimeEnv();
+  const runtimeClientConfig = getClientRuntimeEnv();
   // IF issues replace this line
   // const apiUrl =
   // runtimeClientConfig?.public_api_url || "https://api.kessler.xyz";

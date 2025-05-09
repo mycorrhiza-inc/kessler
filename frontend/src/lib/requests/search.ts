@@ -4,7 +4,7 @@ import {
   CompleteFileSchema,
   CompleteFileSchemaValidator,
 } from "../types/backend_schemas";
-import { getUniversalRuntimeEnv } from "../env_variables/env_variables_hydration_script";
+import { getClientRuntimeEnv } from "../env_variables/env_variables_hydration_script";
 
 export const hydratedSearchResultsToFilings = (
   hydratedSearchResults: any | null,
@@ -49,7 +49,7 @@ export const getRecentFilings = async (
   // const default_page_size = 40;
   // const limit = page_size || default_page_size;
   // const queryString = queryStringFromPageMaxHits(limit, page_size);
-  const runtimeConfig = getUniversalRuntimeEnv();
+  const runtimeConfig = getClientRuntimeEnv();
   const response = await axios.get(
     `${runtimeConfig.public_api_url}/v2/search/file/recent_updates${queryString}`,
   );

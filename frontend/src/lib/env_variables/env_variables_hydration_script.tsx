@@ -14,7 +14,9 @@ import {
 } from "./env_variables";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 
-export const getUniversalRuntimeEnv = "blah";
+export const getClientRuntimeEnv = (): RuntimeEnvConfig => {
+  return getUniversalEnvConfig();
+};
 // Initialize context with an empty validated config
 const EnvVariablesClientContext =
   createContext<RuntimeEnvConfig>(emptyRuntimeConfig);

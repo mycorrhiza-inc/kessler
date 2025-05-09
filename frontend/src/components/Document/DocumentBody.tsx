@@ -16,7 +16,7 @@ import Link from "next/link";
 import { ExperimentalChatModalClickDiv } from "../Chat/ChatModal";
 import { FilterField } from "@/lib/filters";
 import { AuthorInfoPill, DocketPill } from "../Tables/TextPills";
-import { getUniversalRuntimeEnv } from "@/lib/env_variables/env_variables_hydration_script";
+import { getClientRuntimeEnv } from "@/lib/env_variables/env_variables_hydration_script";
 import { FileExtension, fileExtensionFromText } from "../Tables/FileExtension";
 import XlsxViewer from "./XlsxViewer";
 import ErrorMessage from "../ErrorMessage";
@@ -28,7 +28,7 @@ import {
 // import { ErrorBoundary } from "react-error-boundary";
 //
 const getSafePublicAPIUrl = () => {
-  const runtimeConfigClient = getUniversalRuntimeEnv();
+  const runtimeConfigClient = getClientRuntimeEnv();
   try {
     const rawPublicUrl = runtimeConfigClient?.public_api_url;
     return (
@@ -124,7 +124,7 @@ const DocumentHeader = ({
   const verified = (documentObject.verified || false) as boolean;
   const summary = documentObject.extra.summary;
   const underscoredTitle = title ? title.replace(/ /g, "_") : "Unkown_Document";
-  const runtimeConfig = getUniversalRuntimeEnv();
+  const runtimeConfig = getClientRuntimeEnv();
   const runtimeConfigUrlSafe =
     runtimeConfig.public_api_url ||
     ssr_public_api_url ||

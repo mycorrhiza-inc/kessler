@@ -1,10 +1,10 @@
 "use client";
-import { getUniversalRuntimeEnv } from "@/lib/env_variables/env_variables_hydration_script";
+import { getClientRuntimeEnv } from "@/lib/env_variables/env_variables_hydration_script";
 import posthog from "posthog-js";
 import { PostHogProvider } from "posthog-js/react";
 
 if (typeof window !== "undefined") {
-  const runtimeConfig = getUniversalRuntimeEnv();
+  const runtimeConfig = getClientRuntimeEnv();
   if (!runtimeConfig.public_posthog_key && !runtimeConfig.public_posthog_host) {
     posthog.init(runtimeConfig.public_posthog_key!, {
       api_host: runtimeConfig.public_posthog_host,

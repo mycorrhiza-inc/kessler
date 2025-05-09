@@ -5,7 +5,7 @@ import MarkdownRenderer from "../MarkdownRenderer";
 import { QueryFileFilterFields } from "@/lib/filters";
 import { getUpdatedChatHistory, Message } from "@/lib/chat";
 import clsx from "clsx";
-import { getUniversalRuntimeEnv } from "@/lib/env_variables/env_variables_hydration_script";
+import { getClientRuntimeEnv } from "@/lib/env_variables/env_variables_hydration_script";
 export const ChatMessages = ({
   messages,
   loading,
@@ -146,7 +146,7 @@ export const ChatBoxInternalsStateless = ({
     setChatState((prev) => ({ ...prev, ragMode: value }));
   const setDraftText = (value: string) =>
     setChatState((prev) => ({ ...prev, draftText: value }));
-  const runtimeConfig = getUniversalRuntimeEnv();
+  const runtimeConfig = getClientRuntimeEnv();
   const chatUrl = ragMode
     ? `${runtimeConfig.public_api_url}/v2/rag/chat`
     : `${runtimeConfig.public_api_url}/v2/rag/basic_chat`;
