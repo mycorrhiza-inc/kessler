@@ -3,7 +3,7 @@ import AuthGuard from "@/components/AuthGuard";
 import Header from "@/components/Layout/Header";
 import Layout from "@/components/Layout/Layout";
 import { BreadcrumbValues } from "@/components/SitemapUtils";
-import { runtimeConfig } from "@/lib/env_variables";
+import { runtimeConfig } from "@/lib/env_variables/env_variables";
 
 import { createClient } from "@/utils/supabase/server";
 import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";

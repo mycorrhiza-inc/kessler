@@ -3,7 +3,7 @@ import { FilterField, InheritedFilterValues } from "@/lib/filters";
 import axios from "axios";
 import { BreadcrumbValues } from "../SitemapUtils";
 import MarkdownRenderer from "../MarkdownRenderer";
-import { internalAPIURL } from "@/lib/env_variables";
+import { internalAPIURL } from "@/lib/env_variables/env_variables";
 import HeaderCard from "./HeaderCard";
 
 const getConversationData = async (url: string) => {
