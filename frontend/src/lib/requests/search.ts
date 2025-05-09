@@ -4,7 +4,7 @@ import {
   CompleteFileSchema,
   CompleteFileSchemaValidator,
 } from "../types/backend_schemas";
-import { getRuntimeEnv } from "../env_variables/env_variables_hydration_script";
+import { getRuntimeEnv } from "../env_variables_hydration_script";
 
 export const hydratedSearchResultsToFilings = (
   hydratedSearchResults: any | null,

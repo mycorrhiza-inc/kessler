@@ -9,7 +9,7 @@ import { generateFakeResults } from "../search/search_utils";
 import axios from "axios";
 import { Filing } from "../types/FilingTypes";
 import { hydratedSearchResultsToFilings } from "../requests/search";
-import { getRuntimeEnv } from "../env_variables/env_variables_hydration_script";
+import { getRuntimeEnv } from "../env_variables_hydration_script";
 import { adaptFilingToCard } from "./genericCardAdapters";
 import { DocumentCardData } from "../types/generic_card_types";
 

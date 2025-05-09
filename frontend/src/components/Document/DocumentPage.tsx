@@ -1,7 +1,7 @@
 import { BreadcrumbValues } from "../SitemapUtils";
 import { completeFileSchemaGet } from "@/lib/requests/search";
 import { DocumentMainTabs } from "./DocumentBody";
-import { internalAPIURL } from "@/lib/env_variables/env_variables";
+import { internalAPIURL } from "@/lib/env_variables";
 import { CompleteFileSchema } from "@/lib/types/backend_schemas";
 
 export const generateDocumentPageData = async (objectId: string) => {
@@ -25,6 +25,8 @@ const DocumentPage = ({
 }) => {
   // PROD API URL, since substituting in localhost doesnt work if you try to fetch from within a docker container
   // TODO: zustand set breadcrumbs
-  return <DocumentMainTabs documentObject={fileObj} isPage={true} />;
+  return (
+    <DocumentMainTabs documentObject={fileObj} isPage={true} />
+  );
 };
 export default DocumentPage;

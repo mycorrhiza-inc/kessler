@@ -1,5 +1,5 @@
 import axios from "axios";
-import { getRuntimeEnv } from "../env_variables/env_variables_hydration_script";
+import { getRuntimeEnv } from "../env_variables_hydration_script";
 
 import type { Conversation } from "@/lib/conversations";
 
