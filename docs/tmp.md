@@ -3,9 +3,9 @@ Could you redo all the code in these files to use this library instead of the ex
 kessler/frontend/src/lib/env_variables
    │ │ │ │ 󰛦 env_variables.ts          
    │ │ │ │  env_variables_hydration_scr
-   │ │ │ └  env_variables_root_script.t
+   │ │ │ └  env_variables_root_script.ts
 
-Could you use the same API for exposing them on the frontend that was previously used to minimize complexity
+Could you use the same API for exposing them on the frontend that was previously used to minimize complexity. Please keep the same existing apis and functionality like getClientRuntimeEnv and getUniversalEnvConfig. And also keep zod around to help debug issues around enviornment variables not being properly set.
 
 # Making env public 🛠
 
