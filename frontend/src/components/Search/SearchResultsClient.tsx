@@ -1,5 +1,5 @@
 "use client";
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import InfiniteScrollPlus from "../InfiniteScroll/InfiniteScroll";
 import RawSearchResults from "./RawSearchResults";
 import { useInfiniteSearch } from "@/lib/hooks/useInfiniteSearch";
@@ -39,6 +39,13 @@ export default function SearchResultsClient({
 
   const displayInitalChildren =
     children && !hasReset && data.length === initialData.length;
+
+  const [firstLoad, setFirstLoad] = useState(true);
+  if (firstLoad && initialData.length == 0) {
+    // Async call but it should still run anyway
+    loadInitial();
+    setFirstLoad(false);
+  }
 
   return (
     <InfiniteScrollPlus

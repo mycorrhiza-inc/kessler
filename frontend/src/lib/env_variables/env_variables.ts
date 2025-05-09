@@ -47,16 +47,15 @@ const rawRuntimeConfig = {
 // export const internalAPIURL = runtimeConfig.internal_api_url;
 // export const ssr_public_api_url = runtimeConfig.public_api_url;
 // Empty default config for client fallback
-export const emptyRuntimeConfig: RuntimeEnvConfig =
-  RuntimeEnvConfigSchema.parse({
-    public_api_url: "",
-    internal_api_url: "",
-    public_posthog_key: "",
-    public_posthog_host: "",
-    deployment_env: "",
-    version_hash: "",
-    flags: { enable_all_features: true },
-  });
+export const emptyRuntimeConfig: RuntimeEnvConfig = {
+  public_api_url: "",
+  internal_api_url: "",
+  public_posthog_key: "",
+  public_posthog_host: "",
+  deployment_env: "",
+  version_hash: "",
+  flags: { enable_all_features: true },
+};
 
 export function getContextualAPIURL(): string {
   if (typeof window === "undefined") {
@@ -86,5 +85,8 @@ export function getUniversalEnvConfig(): RuntimeEnvConfig {
     envScriptId,
   ) as HTMLScriptElement;
   const raw = script ? JSON.parse(script.innerText) : {};
-  return RuntimeEnvConfigSchema.parse(raw);
+  try {
+    return RuntimeEnvConfigSchema.parse(raw);
+  } catch {}
+  return emptyRuntimeConfig;
 }

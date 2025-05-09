@@ -94,7 +94,7 @@ export const useSearchState = (): SearchStateExport => {
     setIsSearching(false);
   };
   const originalPathname = useMemo(() => {
-    return window.location.pathname;
+    return window?.location?.pathname || "";
   }, []);
   const resetSearch = () => {
     resetSearchNoNav();
