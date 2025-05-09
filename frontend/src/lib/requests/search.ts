@@ -1,15 +1,9 @@
-import {
-  BackendFilterObject,
-  QueryDataFile,
-  backendFilterGenerate,
-} from "@/lib/filters";
 import { Filing } from "@/lib/types/FilingTypes";
 import axios from "axios";
 import {
   CompleteFileSchema,
   CompleteFileSchemaValidator,
 } from "../types/backend_schemas";
-import { queryStringFromPageMaxHits } from "../pagination";
 import { getRuntimeEnv } from "../env_variables_hydration_script";
 
 export const hydratedSearchResultsToFilings = (
@@ -120,5 +114,3 @@ export const generateFilingFromFileSchema = (
     extension: file_schema.extension,
   };
 };
-
-export default getSearchResults;

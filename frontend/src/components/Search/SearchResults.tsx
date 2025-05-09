@@ -1,10 +1,4 @@
 import { motion, AnimatePresence } from "framer-motion";
-import Card, { CardSize } from "../NewSearch/GenericResultCard";
-import {
-  PaginationData,
-  SearchResult,
-  SearchResultsGetter,
-} from "@/lib/types/new_search_types";
 import SearchResultsClient from "./SearchResultsClient";
 import { GenericSearchInfo } from "@/lib/adapters/genericSearchCallback";
 
