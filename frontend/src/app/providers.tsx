@@ -1,5 +1,5 @@
 "use client";
-import { getRuntimeEnv } from "@/lib/env_variables_hydration_script";
+import { getRuntimeEnv } from "@/lib/env_variables/env_variables_hydration_script";
 import posthog from "posthog-js";
 import { PostHogProvider } from "posthog-js/react";
 

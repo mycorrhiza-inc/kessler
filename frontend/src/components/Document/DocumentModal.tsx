@@ -7,7 +7,7 @@ import { CompleteFileSchema } from "@/lib/types/backend_schemas";
 import Modal from "../styled-components/Modal";
 
 import { useState } from "react";
-import { getRuntimeEnv } from "@/lib/env_variables_hydration_script";
+import { getRuntimeEnv } from "@/lib/env_variables/env_variables_hydration_script";
 type ModalProps = {
   objectId: string;
   children?: React.ReactNode;

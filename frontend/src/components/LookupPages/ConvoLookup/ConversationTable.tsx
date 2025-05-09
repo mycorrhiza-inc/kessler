@@ -4,7 +4,7 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import { useEffect, useState } from "react";
 import LoadingSpinnerTimeout from "../../styled-components/LoadingSpinnerTimeout";
 import { useRouter } from "next/navigation";
-import { getRuntimeEnv } from "@/lib/env_variables_hydration_script";
+import { getRuntimeEnv } from "@/lib/env_variables/env_variables_hydration_script";
 import { TextPill } from "@/components/Tables/TextPills";
 import clsx from "clsx";
 import { TableStyle } from "@/components/styles/Table";

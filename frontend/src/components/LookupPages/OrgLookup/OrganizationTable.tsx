@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { queryStringFromPageMaxHits } from "@/lib/pagination";
-import { getRuntimeEnv } from "@/lib/env_variables_hydration_script";
+import { getRuntimeEnv } from "@/lib/env_variables/env_variables_hydration_script";
 import LoadingSpinnerTimeout from "@/components/styled-components/LoadingSpinnerTimeout";
 import { data } from "autoprefixer";
 import { TableStyle } from "@/components/styles/Table";

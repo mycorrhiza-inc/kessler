@@ -3,7 +3,7 @@ import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import { PHProvider } from "./providers";
 import dynamic from "next/dynamic";
-import EnvVariablesScript from "@/lib/env_variables_root_script";
+import EnvVariablesScript from "@/lib/env_variables/env_variables_root_script";
 import {
   ClerkProvider,
   SignedIn,

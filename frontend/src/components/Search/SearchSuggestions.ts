@@ -1,4 +1,4 @@
-import { getRuntimeEnv } from "@/lib/env_variables_hydration_script";
+import { getRuntimeEnv } from "@/lib/env_variables/env_variables_hydration_script";
 import { PageContextMode, Suggestion } from "@/lib/types/SearchTypes";
 import { InputType } from "../Filters/FiltersInfo";
 export const getRawSuggestions = (

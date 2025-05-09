@@ -5,7 +5,7 @@ import MarkdownRenderer from "../MarkdownRenderer";
 import { QueryFileFilterFields } from "@/lib/filters";
 import { getUpdatedChatHistory, Message } from "@/lib/chat";
 import clsx from "clsx";
-import { getRuntimeEnv } from "@/lib/env_variables_hydration_script";
+import { getRuntimeEnv } from "@/lib/env_variables/env_variables_hydration_script";
 export const ChatMessages = ({
   messages,
   loading,

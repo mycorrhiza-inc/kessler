@@ -16,11 +16,14 @@ import Link from "next/link";
 import { ExperimentalChatModalClickDiv } from "../Chat/ChatModal";
 import { FilterField } from "@/lib/filters";
 import { AuthorInfoPill, DocketPill } from "../Tables/TextPills";
-import { getRuntimeEnv } from "@/lib/env_variables_hydration_script";
+import { getRuntimeEnv } from "@/lib/env_variables/env_variables_hydration_script";
 import { FileExtension, fileExtensionFromText } from "../Tables/FileExtension";
 import XlsxViewer from "./XlsxViewer";
 import ErrorMessage from "../ErrorMessage";
-import { runtimeConfig, ssr_public_api_url } from "@/lib/env_variables";
+import {
+  runtimeConfig,
+  ssr_public_api_url,
+} from "@/lib/env_variables/env_variables";
 
 // import { ErrorBoundary } from "react-error-boundary";
 //

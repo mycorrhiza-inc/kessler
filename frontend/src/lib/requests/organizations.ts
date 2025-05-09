@@ -1,5 +1,5 @@
 import axios from "axios";
-import { internalAPIURL } from "../env_variables";
+import { internalAPIURL } from "../env_variables/env_variables";
 
 export type OrganizationInfo = any;
 
