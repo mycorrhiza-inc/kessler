@@ -9,7 +9,7 @@ import { generateFakeResults } from "../search/search_utils";
 import axios from "axios";
 import { Filing } from "../types/FilingTypes";
 import { hydratedSearchResultsToFilings } from "../requests/search";
-import { getRuntimeEnv } from "../env_variables/env_variables_hydration_script";
+import { getUniversalRuntimeEnv } from "../env_variables/env_variables_hydration_script";
 import { adaptFilingToCard } from "./genericCardAdapters";
 import { DocumentCardData } from "../types/generic_card_types";
 
@@ -37,7 +37,7 @@ export const searchInvoke = async (
 export const createGenericSearchCallback = (
   info: GenericSearchInfo,
 ): SearchResultsGetter => {
-  const runtimeConfig = getRuntimeEnv();
+  const runtimeConfig = getUniversalRuntimeEnv();
   const api_url = runtimeConfig.public_api_url;
   switch (info.search_type) {
     case GenericSearchType.Dummy:
