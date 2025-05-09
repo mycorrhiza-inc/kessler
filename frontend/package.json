@@ -1,8 +1,6 @@
 {
   "private": true,
   "scripts": {
-    "prebuild": "node scripts/gen-env-json.js",
-    
     "dev": "next dev",
     "build": "next build",
     "start": "next start"

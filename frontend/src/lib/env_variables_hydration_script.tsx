@@ -53,19 +53,14 @@ export const useEnvVariablesClientConfig = (): RuntimeEnvConfig => {
 
 export const envScriptId = "env-config";
 
+const isSSR = typeof window === "undefined";
+
 export const getRuntimeEnv = (): RuntimeEnvConfig => {
-  const isSSR = typeof window === "undefined";
-  if (isSSR) {
-    return runtimeConfig;
-  }
-  return getRuntimeEnvClient();
-};
-export const getRuntimeEnvClient = (): RuntimeEnvConfig => {
-  const isSSR = typeof window === "undefined";
   if (isSSR) {
     throw new Error(
       "You must call this function in a client component, for a server component just import runtimeConfig from ./env_variables.ts",
     );
+    return runtimeConfig;
   }
   const script = window.document.getElementById(
     envScriptId,
