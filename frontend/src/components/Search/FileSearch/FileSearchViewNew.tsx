@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { getSearchResults } from "@/lib/requests/search";
 import InfiniteScrollPlus from "@/components/InfiniteScroll/InfiniteScroll";
 import SearchBox from "@/components/Search/SearchBox";
@@ -14,11 +14,17 @@ import {
 import { Filing } from "@/lib/types/FilingTypes";
 
 interface FileSearchViewNewProps {
+  /** Initial results for SSR */
+  initialData?: Filing[];
+  /** Initial page index for SSR */
+  initialPage?: number;
   inheritedFilters: InheritedFilterValues;
   DocketColumn?: boolean;
 }
 
 const FileSearchViewNew: React.FC<FileSearchViewNewProps> = ({
+  initialData = [],
+  initialPage = 2,
   inheritedFilters,
 }) => {
   // Initialize filters from inherited values
@@ -33,11 +39,21 @@ const FileSearchViewNew: React.FC<FileSearchViewNewProps> = ({
     query: "",
   });
 
-  // Search results state
-  const [filings, setFilings] = useState<Filing[]>([]);
-  const [page, setPage] = useState<number>(0);
-  const [hasMore, setHasMore] = useState<boolean>(true);
+  // Search results state, seeded from SSR
   const pageSize = 40;
+  const [searchData, setSearchData] = useState<Filing[]>(initialData);
+  const [page, setPage] = useState<number>(initialPage);
+  const [hasMore, setHasMore] = useState<boolean>(
+    initialData.length === pageSize * initialPage,
+  );
+
+  const [oldQueryData, setOldQueryData] = useState<QueryDataFile>(queryData);
+  if (oldQueryData != queryData) {
+    setSearchData(initialData);
+    setPage(initialPage);
+    setHasMore(initialData.length === pageSize * initialPage);
+    setOldQueryData(queryData);
+  }
 
   // Fetch a page of results
   const getPageResults = async (
@@ -52,14 +68,8 @@ const FileSearchViewNew: React.FC<FileSearchViewNewProps> = ({
     return newFilings;
   };
 
-  // Load initial pages
-  const loadInitial = async (): Promise<void> => {
-    setHasMore(true);
-    setFilings([]);
-    // Preload two pages of data
-    await getPageResults(0, pageSize * 2);
-    setPage(2);
-  };
+  // Load initial on client is no-op; SSR seeded data covers initial load
+  const loadInitial = async (): Promise<void> => {};
 
   // Load more on scroll
   const loadMore = async (): Promise<void> => {
@@ -82,11 +92,10 @@ const FileSearchViewNew: React.FC<FileSearchViewNewProps> = ({
         hasMore={hasMore}
         loadInitial={loadInitial}
         getMore={loadMore}
-        reloadOnChangeObj={queryData}
+        reloadOnChangeObj={0}
       >
         <div className="grid grid-cols-1 gap-4 p-4">
           {filings.map((filing, index) => {
-            const cardData = adaptFilingToCard(filing);
             return <Card key={index} data={cardData} size={CardSize.Medium} />;
           })}
         </div>

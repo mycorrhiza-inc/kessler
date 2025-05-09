@@ -3,8 +3,11 @@ import SearchResultsClient from "./SearchResultsClient";
 import RawSearchResults from "./RawSearchResults";
 import { generateFakeResults } from "@/lib/search/search_utils";
 import { SearchResult } from "@/lib/types/new_search_types";
-
-const PAGE_SIZE = 40;
+import {
+  GenericSearchInfo,
+  GenericSearchType,
+  searchInvoke,
+} from "@/lib/adapters/genericSearchCallback";
 
 interface SearchResultsServerProps {
   q: string;
@@ -19,11 +22,19 @@ export default async function SearchResultsServer({
   filters,
 }: SearchResultsServerProps) {
   // Fetch two pages worth of data server-side
-  const initialLimit = PAGE_SIZE * 2;
-  const initialResults: SearchResult[] = await generateFakeResults({
-    page: 0,
-    limit: initialLimit,
-  });
+  const initialPages = 2;
+  const PAGE_SIZE = 40;
+  const intiialPagination = { limit: PAGE_SIZE * initialPages, page: 0 };
+  const searchCallbackInfo: GenericSearchInfo = {
+    search_type: GenericSearchType.Filling,
+    query: q,
+    filters: filters,
+  };
+
+  const initialResults: SearchResult[] = await searchInvoke(
+    searchCallbackInfo,
+    intiialPagination,
+  );
 
   return (
     <SearchResultsClient
