@@ -28,7 +28,7 @@ export function useInfiniteSearch({
   const [page, setPage] = useState<number>(initialPage);
   const actualPageSize = pageSize || DEFAULT_PAGE_SIZE;
   const hasMore = initialData.length === actualPageSize * page;
-  const [hasReset, setHasReset] = useState(false);
+  const [hasReset, setHasReset] = useState(initialData.length == 0);
 
   const loadMore = async () => {
     const newResults = await searchCallback({

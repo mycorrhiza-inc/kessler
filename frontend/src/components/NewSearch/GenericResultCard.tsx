@@ -1,3 +1,4 @@
+import { CardData, CardType } from "@/lib/types/generic_card_types";
 import { clsx } from "clsx";
 import React from "react";
 
@@ -260,10 +261,4 @@ const LargeCard: React.FC<{ data: CardData }> = ({ data }) => {
 export default Card;
 
 // Export types for adapter layer
-export type {
-  CardData,
-  CardSize,
-  AuthorCardData,
-  DocketCardData,
-  DocumentCardData,
-};
+export type { CardData };

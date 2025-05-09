@@ -17,7 +17,7 @@ interface SearchResultsClientProps {
   reloadOnChange: number;
   initialData: SearchResult[];
   initialPage: number;
-  children: React.ReactNode; // SSR seed
+  children?: React.ReactNode; // SSR seed
 }
 
 export default function SearchResultsClient({
@@ -37,7 +37,8 @@ export default function SearchResultsClient({
     initialPage,
   });
 
-  const displayInitalChildren = !hasReset && data.length === initialData.length;
+  const displayInitalChildren =
+    children && !hasReset && data.length === initialData.length;
 
   return (
     <InfiniteScrollPlus

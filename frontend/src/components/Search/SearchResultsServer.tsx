@@ -35,11 +35,12 @@ export default async function SearchResultsServer({
     searchCallbackInfo,
     intiialPagination,
   );
+  const reloadOnChange = 0;
 
   return (
     <SearchResultsClient
-      q={q}
-      filters={filters}
+      reloadOnChange={reloadOnChange}
+      genericSearchInfo={searchCallbackInfo}
       initialData={initialResults}
       initialPage={2}
     >
