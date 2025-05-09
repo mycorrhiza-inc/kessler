@@ -1,36 +1,57 @@
 import { useState, useCallback } from "react";
 import { generateFakeResults } from "@/lib/search/search_utils";
-import { PaginationData, SearchResult } from "@/lib/types/new_search_types";
-
-const PAGE_SIZE = 40;
+import {
+  PaginationData,
+  SearchResult,
+  SearchResultsGetter,
+} from "@/lib/types/new_search_types";
+import {
+  GenericSearchInfo,
+  createGenericSearchCallback,
+} from "../adapters/genericSearchCallback";
+import { DEFAULT_PAGE_SIZE } from "../constants";
 
 export interface UseInfiniteSearchParams {
-  q: string;
-  filters?: any;
+  searchCallback: SearchResultsGetter;
   initialData: SearchResult[];
   initialPage: number;
+  pageSize?: number;
 }
 
 export function useInfiniteSearch({
-  q,
-  filters,
+  searchCallback,
   initialData,
   initialPage,
+  pageSize,
 }: UseInfiniteSearchParams) {
   const [data, setData] = useState<SearchResult[]>(initialData);
   const [page, setPage] = useState<number>(initialPage);
-  const [hasMore, setHasMore] = useState<boolean>(
-    initialData.length === PAGE_SIZE * 2,
-  );
+  const actualPageSize = pageSize || DEFAULT_PAGE_SIZE;
+  const hasMore = initialData.length === actualPageSize * page;
+  const [hasReset, setHasReset] = useState(false);
 
-  const reset = useCallback(
-    (newParams: { data: SearchResult[]; page: number }) => {
-      setData(newParams.data);
-      setPage(newParams.page);
-      setHasMore(newParams.data.length === PAGE_SIZE * 2);
-    },
-    [],
-  );
+  const loadMore = async () => {
+    const newResults = await searchCallback({
+      limit: actualPageSize,
+      page: page,
+    });
+    setData((prev) => [...prev, ...newResults]);
+    setPage((prev) => prev + 1);
+  };
 
-  return { data, hasMore, loadMore, reset };
+  const loadInitial = async () => {
+    if (hasReset) {
+      return;
+    }
+    const INITIAL_PAGES = 2;
+    const newResults = await searchCallback({
+      limit: actualPageSize * INITIAL_PAGES,
+      page: 0,
+    });
+    setData(newResults);
+    setPage(INITIAL_PAGES);
+    setHasReset(true);
+  };
+
+  return { data, hasMore, loadMore, hasReset, loadInitial };
 }

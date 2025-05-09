@@ -1,41 +1,53 @@
 "use client";
-import React, { useEffect } from 'react';
-import InfiniteScrollPlus from '../InfiniteScroll/InfiniteScroll';
-import RawSearchResults from './RawSearchResults';
-import { useInfiniteSearch } from '@/lib/hooks/useInfiniteSearch';
-import { SearchResult } from '@/lib/types/new_search_types';
+import React, { useCallback, useEffect } from "react";
+import InfiniteScrollPlus from "../InfiniteScroll/InfiniteScroll";
+import RawSearchResults from "./RawSearchResults";
+import { useInfiniteSearch } from "@/lib/hooks/useInfiniteSearch";
+import {
+  SearchResult,
+  SearchResultsGetter,
+} from "@/lib/types/new_search_types";
+import {
+  GenericSearchInfo,
+  createGenericSearchCallback,
+} from "@/lib/adapters/genericSearchCallback";
 
 interface SearchResultsClientProps {
-  q: string;
-  filters?: any;
+  genericSearchInfo: GenericSearchInfo;
+  reloadOnChange: number;
   initialData: SearchResult[];
   initialPage: number;
   children: React.ReactNode; // SSR seed
 }
 
-const PAGE_SIZE = 40;
+export default function SearchResultsClient({
+  genericSearchInfo,
+  reloadOnChange,
+  initialData,
+  initialPage,
+  children,
+}: SearchResultsClientProps) {
+  const searchCallback: SearchResultsGetter = useCallback(
+    createGenericSearchCallback(genericSearchInfo),
+    [reloadOnChange],
+  );
+  const { data, hasMore, loadMore, hasReset, loadInitial } = useInfiniteSearch({
+    searchCallback,
+    initialData,
+    initialPage,
+  });
 
-export default function SearchResultsClient({ q, filters, initialData, initialPage, children }: SearchResultsClientProps) {
-  const { data, hasMore, loadMore, reset } = useInfiniteSearch({ q, filters, initialData, initialPage });
-
-  // Reset when query or filters change
-  useEffect(() => {
-    reset({ data: initialData, page: initialPage });
-  }, [q, filters, initialData, initialPage, reset]);
+  const displayInitalChildren = !hasReset && data.length === initialData.length;
 
   return (
     <InfiniteScrollPlus
-      loadInitial={() => { /* no-op: SSR seed covers initial */ }}
+      loadInitial={loadInitial}
       getMore={loadMore}
-      reloadOnChange={0}
+      reloadOnChange={reloadOnChange}
       dataLength={data.length}
       hasMore={hasMore}
     >
-      {data.length === initialData.length ? (
-        children
-      ) : (
-        <RawSearchResults data={data} />
-      )}
+      {displayInitalChildren ? children : <RawSearchResults data={data} />}
     </InfiniteScrollPlus>
   );
 }
