@@ -3,13 +3,12 @@ package tasks
 import (
 	"context"
 	"fmt"
-	"reflect"
-	"strings"
-	"time"
-
 	"kessler/internal/objects/conversations"
 	"kessler/internal/objects/files"
 	"kessler/pkg/timestamp"
+	"reflect"
+	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/hibiken/asynq"
@@ -142,3 +141,4 @@ func (n NYPUCDocInfo) IntoScraperInfo() (FilingInfoPayload, error) {
 	caseInfo := CaseInfoMinimal{CaseNumber: n.DocketID}
 	return FilingInfoPayload{Filing: filing, CaseInfo: caseInfo}, nil
 }
+
