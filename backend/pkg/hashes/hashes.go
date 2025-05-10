@@ -2,6 +2,7 @@ package hashes
 
 import (
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"os"
@@ -66,4 +67,20 @@ func HashFromFile(filePath string) (KesslerHash, error) {
 	var result KesslerHash
 	copy(result[:], hash.Sum(nil))
 	return result, nil
+}
+
+func TestExpectedHash(input []byte, expectedHex string) error {
+	expectedBytes, err := hex.DecodeString(expectedHex)
+	if err != nil {
+		return fmt.Errorf("Failed to decode hex string: %v", err)
+	}
+
+	var expectedHash KesslerHash
+	copy(expectedHash[:], expectedBytes)
+
+	computedHash := HashFromBytes(input)
+	if computedHash != expectedHash {
+		return fmt.Errorf("Hash mismatch\nExpected: %x\nGot:      %x", expectedHash, computedHash)
+	}
+	return nil
 }
