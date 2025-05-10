@@ -1,6 +1,6 @@
 import { unstable_noStore as noStore } from "next/cache";
 import { headers } from "next/headers";
-import Script from "next/script"; // Use Next.js Script component for CSP compliance
+import { EnvScript } from "next-runtime-env";
 import { getUniversalEnvConfig } from "./env_variables";
 
 /**
@@ -11,14 +11,9 @@ export default function EnvVariablesScript() {
   noStore();
 
   const nonce = headers().get("x-nonce") || undefined;
-  const envString = JSON.stringify(getUniversalEnvConfig());
 
-  return (
-    <Script
-      id="env-config"
-      nonce={nonce}
-      strategy="beforeInteractive"
-      dangerouslySetInnerHTML={{ __html: envString }}
-    />
-  );
+  const env_obj = getUniversalEnvConfig();
+
+  return <EnvScript nonce={nonce} env={env_obj} />;
 }
+

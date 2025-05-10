@@ -10,7 +10,7 @@ import {
 import {
   RuntimeEnvConfig,
   emptyRuntimeConfig,
-  getClientRuntimeEnv,
+  getUniversalEnvConfig,
 } from "./env_variables";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 
@@ -71,3 +71,8 @@ VERSION_HASH: ${config.version_hash}
 `;
   return <MarkdownRenderer>{markdown_string}</MarkdownRenderer>;
 };
+
+export function getClientRuntimeEnv(): RuntimeEnvConfig {
+  return getUniversalEnvConfig();
+}
+
