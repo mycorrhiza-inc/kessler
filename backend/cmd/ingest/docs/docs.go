@@ -26,7 +26,7 @@ const docTemplate = `{
     "paths": {
         "/add-task/ingest": {
             "post": {
-                "description": "Creates a new default ingestion task",
+                "description": "Creates a new default ingestion task. This should use the default openscrapers schema.",
                 "consumes": [
                     "application/json"
                 ],
@@ -39,12 +39,58 @@ const docTemplate = `{
                 "summary": "Add Default Ingest Task",
                 "parameters": [
                     {
-                        "description": "Scraper information",
+                        "description": "Filing + Case information",
                         "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/tasks.ScraperInfoPayload"
+                            "$ref": "#/definitions/tasks.FilingInfoPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/tasks.KesslerTaskInfo"
+                        }
+                    },
+                    "400": {
+                        "description": "Error decoding request body",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Error adding task",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/add-task/ingest/case": {
+            "post": {
+                "description": "Creates a new Case-specific ingestion task",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tasks"
+                ],
+                "summary": "Add Case Ingest Task",
+                "parameters": [
+                    {
+                        "description": "Case information",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/tasks.CaseInfoPayload"
                         }
                     }
                 ],
@@ -149,47 +195,6 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Error decoding request body",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Error adding task",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/add-task/process/{uuid}": {
-            "post": {
-                "description": "Creates a new task to process a file with the given UUID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "tasks"
-                ],
-                "summary": "Add Process File Task",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "File UUID",
-                        "name": "uuid",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/tasks.KesslerTaskInfo"
-                        }
-                    },
-                    "400": {
-                        "description": "Error parsing uuid",
                         "schema": {
                             "type": "string"
                         }
@@ -314,7 +319,7 @@ const docTemplate = `{
                 }
             }
         },
-        "tasks.AttachmentChildPayload": {
+        "tasks.AttachmentChildInfo": {
             "type": "object",
             "properties": {
                 "extension": {
@@ -332,6 +337,144 @@ const docTemplate = `{
                 },
                 "url": {
                     "type": "string"
+                }
+            }
+        },
+        "tasks.CaseInfoMinimal": {
+            "type": "object",
+            "properties": {
+                "case_name": {
+                    "type": "string"
+                },
+                "case_number": {
+                    "type": "string"
+                },
+                "case_type": {
+                    "type": "string"
+                },
+                "case_url": {
+                    "type": "string"
+                },
+                "closed_date": {
+                    "description": "An RFC3339 DateTime",
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "extra_metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "hearing_officer": {
+                    "type": "string"
+                },
+                "indexed_at": {
+                    "description": "An RFC3339 DateTime",
+                    "type": "string"
+                },
+                "industry": {
+                    "type": "string"
+                },
+                "opened_date": {
+                    "description": "An RFC3339 DateTime",
+                    "type": "string"
+                },
+                "petitioner": {
+                    "type": "string"
+                }
+            }
+        },
+        "tasks.CaseInfoPayload": {
+            "type": "object",
+            "properties": {
+                "case_name": {
+                    "type": "string"
+                },
+                "case_number": {
+                    "type": "string"
+                },
+                "case_type": {
+                    "type": "string"
+                },
+                "case_url": {
+                    "type": "string"
+                },
+                "closed_date": {
+                    "description": "An RFC3339 DateTime",
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "extra_metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "filings": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/tasks.FilingChildInfo"
+                    }
+                },
+                "hearing_officer": {
+                    "type": "string"
+                },
+                "indexed_at": {
+                    "description": "An RFC3339 DateTime",
+                    "type": "string"
+                },
+                "industry": {
+                    "type": "string"
+                },
+                "opened_date": {
+                    "description": "An RFC3339 DateTime",
+                    "type": "string"
+                },
+                "petitioner": {
+                    "type": "string"
+                }
+            }
+        },
+        "tasks.FilingChildInfo": {
+            "type": "object",
+            "properties": {
+                "attachments": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/tasks.AttachmentChildInfo"
+                    }
+                },
+                "description": {
+                    "type": "string"
+                },
+                "extra_metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "filed_date": {
+                    "description": "An RFC3339 DateTime",
+                    "type": "string"
+                },
+                "filing_type": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "party_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "tasks.FilingInfoPayload": {
+            "type": "object",
+            "properties": {
+                "case_info": {
+                    "$ref": "#/definitions/tasks.CaseInfoMinimal"
+                },
+                "filing": {
+                    "$ref": "#/definitions/tasks.FilingChildInfo"
                 }
             }
         },
@@ -380,62 +523,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "url": {
-                    "type": "string"
-                }
-            }
-        },
-        "tasks.ScraperInfoPayload": {
-            "type": "object",
-            "properties": {
-                "attachments": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/tasks.AttachmentChildPayload"
-                    }
-                },
-                "author_individual": {
-                    "type": "string"
-                },
-                "author_individual_email": {
-                    "type": "string"
-                },
-                "author_organisation": {
-                    "type": "string"
-                },
-                "docket_id": {
-                    "type": "string"
-                },
-                "extra_metadata": {
-                    "type": "object",
-                    "additionalProperties": {}
-                },
-                "file_class": {
-                    "type": "string"
-                },
-                "file_type": {
-                    "type": "string"
-                },
-                "internal_source_name": {
-                    "type": "string"
-                },
-                "item_number": {
-                    "type": "string"
-                },
-                "lang": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "published_date": {
-                    "description": "An RFC3339 DateTime",
-                    "type": "string",
-                    "example": "2024-02-27T12:34:56Z"
-                },
-                "state": {
-                    "type": "string"
-                },
-                "text": {
                     "type": "string"
                 }
             }

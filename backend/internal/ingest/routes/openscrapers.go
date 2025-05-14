@@ -13,7 +13,7 @@ import (
 // @Accept	json
 // @Produce	json
 // @Param		body	body	OpenScraperFiling	true	"OpenScraper filing information"
-// @Success	200	{object}	asks.KesslerTaskInfo
+// @Success	200	{object}	tasks.KesslerTaskInfo
 // @Failure	400	{string}	string	"Error decoding request body"
 // @Failure	500	{string}	string	"Error adding task"
 // @Router	/add-task/ingest/openscraper [post]
@@ -76,4 +76,3 @@ func (o OpenScraperFiling) IntoScraperInfo() (tasks.FilingInfoPayload, error) {
 	caseInfo := tasks.CaseInfoMinimal{CaseNumber: o.CaseNumber}
 	return tasks.FilingInfoPayload{Filing: filing, CaseInfo: caseInfo}, nil
 }
-

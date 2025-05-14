@@ -60,6 +60,12 @@ func DefineFileRoutes(r *mux.Router) {
 			},
 		)).Methods(http.MethodGet)
 
+	// Hash-based markdown retrieval by content hash
+	filesRoute.HandleFunc(
+		"/hash/{hash}/markdown",
+		FileMarkdownByHashHandler,
+	).Methods(http.MethodGet)
+
 	// DO NOT TOUCH. this is necessary for well named downloaded files
 	filesRoute.HandleFunc(
 		"/{uuid}/raw/{filename}",
@@ -74,7 +80,6 @@ func DefineFileRoutes(r *mux.Router) {
 		"/{uuid}/metadata",
 		FileWithMetaGetHandler,
 	).Methods(http.MethodGet)
-
 }
 
 // CONVERT TO UPPER CASE IF YOU EVER WANT TO USE IT OUTSIDE OF THIS CONTEXT

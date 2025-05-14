@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"kessler/internal/database"
 	"kessler/internal/dbstore"
-	"kessler/pkg/hashes"
 	"kessler/internal/objects/authors"
 	"kessler/internal/objects/conversations"
 	"kessler/internal/objects/files"
+	"kessler/pkg/hashes"
 	"kessler/pkg/s3utils"
 	"net/http"
 	"os"
@@ -61,6 +61,33 @@ func FileWithMetaGetHandler(w http.ResponseWriter, r *http.Request) {
 	response, _ := json.Marshal(file)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(response)
+}
+
+// FileMarkdownByHashHandler retrieves markdown text for a file by its hash.
+// It selects the first matching file UUID and returns its markdown text.
+func FileMarkdownByHashHandler(w http.ResponseWriter, r *http.Request) {
+	q := *database.GetTx()
+	params := mux.Vars(r)
+	hash := params["hash"]
+	ctx := r.Context()
+	// Map hash to file UUIDs
+	uuids, err := files.HashGetUUIDsFile(q, ctx, hash)
+	if err != nil || len(uuids) == 0 {
+		http.Error(w, fmt.Sprintf("No file found for hash %v", hash), http.StatusNotFound)
+		return
+	}
+	// Use the first matching file
+	fileParams := files.GetFileParam{Queries: q, Context: ctx, PgUUID: uuids[0], Private: false}
+	// Query parameters for language filtering
+	original := r.URL.Query().Get("original_lang") == "true"
+	matchLang := r.URL.Query().Get("match_lang")
+	markdown, err := files.GetSpecificFileText(fileParams, matchLang, original)
+	if err != nil {
+		http.Error(w, "Error retrieving text or no matching text found", http.StatusNotFound)
+		return
+	}
+	w.Header().Set("Content-Type", "text/plain")
+	w.Write([]byte(markdown))
 }
 
 func FileSemiCompleteGet(w http.ResponseWriter, r *http.Request) {

@@ -1,90 +1,72 @@
-import getConfig from "next/config";
+import assert from "assert";
+import { env } from "next-runtime-env";
 import { z } from "zod";
 
 // Zod schema for runtime environment configuration
 export const RuntimeEnvConfigSchema = z.object({
-  public_api_url: z.string(),
-  internal_api_url: z.string(),
-  public_posthog_key: z.string(),
-  public_posthog_host: z.string(),
-  deployment_env: z.string(),
-  version_hash: z.string(),
-  flags: z.object({
-    enable_all_features: z.boolean(),
-  }),
+  public_api_url: z.string().nonempty(),
+  internal_api_url: z.string().nonempty(),
+  public_posthog_key: z.string().nonempty(),
+  public_posthog_host: z.string().nonempty(),
+  deployment_env: z.string().nonempty(),
+  version_hash: z.string().nonempty(),
 });
 
 // Type derived from Zod schema
 export type RuntimeEnvConfig = z.infer<typeof RuntimeEnvConfigSchema>;
 
-// Script element ID for embedding config in HTML
-export const envScriptId = "env-config";
+// Empty default config for client fallback
+export const emptyRuntimeConfig: RuntimeEnvConfig = {
+  public_api_url: "",
+  internal_api_url: "",
+  public_posthog_key: "",
+  public_posthog_host: "",
+  deployment_env: "",
+  version_hash: "",
+};
 
 // Helper to trim trailing slash
 const removeBackslash = (val: string | undefined): string => {
   if (!val) return "";
-  if (val.endsWith("/")) {
-    return val.slice(0, -1);
-  }
-  return val;
+  return val.endsWith("/") ? val.slice(0, -1) : val;
 };
 
-// Raw runtime configuration (may contain undefined values)
-const rawRuntimeConfig = {
-  public_api_url: process.env.PUBLIC_KESSLER_API_URL,
-  internal_api_url: process.env.INTERNAL_KESSLER_API_URL,
-  public_posthog_key: process.env.PUBLIC_POSTHOG_KEY,
-  public_posthog_host: process.env.PUBLIC_POSTHOG_HOST,
-  deployment_env: process.env.REACT_APP_ENV || "production",
-  version_hash: process.env.VERSION_HASH || "unknown",
-  flags: {
-    enable_all_features: true,
-  },
+/**
+ * Universal getter for runtime config, works on server and client.
+ * Uses next-runtime-env under the hood and validates via Zod schema.
+ */
+
+export const getContextualAPIURL = () => {
+  if (window == undefined) {
+    const result = env("INTERNAL_KESSLER_API_URL");
+    assert(result != undefined, "INTERNAL API URL IS UNDEFINED");
+    return result;
+  }
+  const result = env("PUBLIC_KESSLER_API_URL");
+  assert(result != undefined, "PUBLIC API URL IS UNDEFINED");
+  return result;
 };
 
-// Validated runtimeConfig for server usage
+export function getUniversalEnvConfig(): RuntimeEnvConfig {
+  const rawConfig = {
+    public_api_url: removeBackslash(env("PUBLIC_KESSLER_API_URL")),
+    internal_api_url: removeBackslash(env("INTERNAL_KESSLER_API_URL")),
+    public_posthog_key: env("PUBLIC_POSTHOG_KEY"),
+    public_posthog_host: env("PUBLIC_POSTHOG_HOST"),
+    deployment_env: env("REACT_APP_ENV") ?? "production",
+    version_hash: env("VERSION_HASH") ?? "unknown",
+    flags: {
+      // next-runtime-env returns strings for env vars, so compare string
+      enable_all_features: env("ENABLE_ALL_FEATURES") === "true",
+    },
+  };
 
-// export const internalAPIURL = runtimeConfig.internal_api_url;
-// export const ssr_public_api_url = runtimeConfig.public_api_url;
-// Empty default config for client fallback
-export const emptyRuntimeConfig: RuntimeEnvConfig =
-  RuntimeEnvConfigSchema.parse({
-    public_api_url: "",
-    internal_api_url: "",
-    public_posthog_key: "",
-    public_posthog_host: "",
-    deployment_env: "",
-    version_hash: "",
-    flags: { enable_all_features: true },
-  });
-
-export function getContextualAPIURL(): string {
-  if (typeof window === "undefined") {
-    const runtimeConfig: RuntimeEnvConfig =
-      RuntimeEnvConfigSchema.parse(rawRuntimeConfig);
-    // Server-side: return validated config directly
-    return runtimeConfig.internal_api_url;
-  }
-  // Client-side: read from embedded <script> tag
-  const script = window.document.getElementById(
-    envScriptId,
-  ) as HTMLScriptElement;
-  const raw = script ? JSON.parse(script.innerText) : {};
-  return RuntimeEnvConfigSchema.parse(raw).public_api_url;
+  return RuntimeEnvConfigSchema.parse(rawConfig);
 }
 
-// Universal getter for runtime config, works on client and server
-export function getUniversalEnvConfig(): RuntimeEnvConfig {
-  if (typeof window === "undefined") {
-    const runtimeConfig: RuntimeEnvConfig =
-      RuntimeEnvConfigSchema.parse(rawRuntimeConfig);
-    // Server-side: return validated config directly
-    return runtimeConfig;
-  }
-  // Client-side: read from embedded <script> tag
-  const script = window.document.getElementById(
-    envScriptId,
-  ) as HTMLScriptElement;
-  const raw = script ? JSON.parse(script.innerText) : {};
-  return RuntimeEnvConfigSchema.parse(raw);
+/**
+ * Client-specific alias for getting runtime env config.
+ */
+export function getClientRuntimeEnv(): RuntimeEnvConfig {
+  return getUniversalEnvConfig();
 }

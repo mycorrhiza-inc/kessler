@@ -8,7 +8,21 @@ import (
 	"os"
 
 	"github.com/charmbracelet/log"
+	"github.com/gorilla/mux"
 )
+
+func DefineGlobalRouter(router *mux.Router) {
+	// Version endpoint
+	router.HandleFunc("/version_hash", HandleVersionHash).Methods("GET")
+
+	// Task endpoints
+	router.HandleFunc("/add-task/ingest", HandleDefaultIngestAddTask).Methods("POST")
+	router.HandleFunc("/add-task/ingest/nypuc", HandleNYPUCIngestAddTask).Methods("POST")
+	router.HandleFunc("/add-task/ingest/case", HandleCaseIngestAddTask).Methods("POST")
+
+	// Task status endpoint
+	router.HandleFunc("/task/{id}", HandleGetTaskInfo).Methods("GET")
+}
 
 // @Summary	Get Version Hash
 // @Description	Returns the current version hash of the application
@@ -118,4 +132,3 @@ func HandleIngestAddTaskGeneric[T tasks.CastableIntoFilingInfo](w http.ResponseW
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(kesslerInfo)
 }
-

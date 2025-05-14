@@ -32,7 +32,7 @@ definitions:
       party_name:
         type: string
     type: object
-  tasks.AttachmentChildPayload:
+  tasks.AttachmentChildInfo:
     properties:
       extension:
         type: string
@@ -45,6 +45,100 @@ definitions:
         type: string
       url:
         type: string
+    type: object
+  tasks.CaseInfoMinimal:
+    properties:
+      case_name:
+        type: string
+      case_number:
+        type: string
+      case_type:
+        type: string
+      case_url:
+        type: string
+      closed_date:
+        description: An RFC3339 DateTime
+        type: string
+      description:
+        type: string
+      extra_metadata:
+        additionalProperties: true
+        type: object
+      hearing_officer:
+        type: string
+      indexed_at:
+        description: An RFC3339 DateTime
+        type: string
+      industry:
+        type: string
+      opened_date:
+        description: An RFC3339 DateTime
+        type: string
+      petitioner:
+        type: string
+    type: object
+  tasks.CaseInfoPayload:
+    properties:
+      case_name:
+        type: string
+      case_number:
+        type: string
+      case_type:
+        type: string
+      case_url:
+        type: string
+      closed_date:
+        description: An RFC3339 DateTime
+        type: string
+      description:
+        type: string
+      extra_metadata:
+        additionalProperties: true
+        type: object
+      filings:
+        items:
+          $ref: '#/definitions/tasks.FilingChildInfo'
+        type: array
+      hearing_officer:
+        type: string
+      indexed_at:
+        description: An RFC3339 DateTime
+        type: string
+      industry:
+        type: string
+      opened_date:
+        description: An RFC3339 DateTime
+        type: string
+      petitioner:
+        type: string
+    type: object
+  tasks.FilingChildInfo:
+    properties:
+      attachments:
+        items:
+          $ref: '#/definitions/tasks.AttachmentChildInfo'
+        type: array
+      description:
+        type: string
+      extra_metadata:
+        additionalProperties: true
+        type: object
+      filed_date:
+        description: An RFC3339 DateTime
+        type: string
+      filing_type:
+        type: string
+      name:
+        type: string
+      party_name:
+        type: string
+    type: object
+  tasks.FilingInfoPayload:
+    properties:
+      case_info:
+        $ref: '#/definitions/tasks.CaseInfoMinimal'
+      filing:
+        $ref: '#/definitions/tasks.FilingChildInfo'
     type: object
   tasks.KesslerTaskInfo:
     properties:
@@ -78,44 +172,6 @@ definitions:
       url:
         type: string
     type: object
-  tasks.ScraperInfoPayload:
-    properties:
-      attachments:
-        items:
-          $ref: '#/definitions/tasks.AttachmentChildPayload'
-        type: array
-      author_individual:
-        type: string
-      author_individual_email:
-        type: string
-      author_organisation:
-        type: string
-      docket_id:
-        type: string
-      extra_metadata:
-        additionalProperties: {}
-        type: object
-      file_class:
-        type: string
-      file_type:
-        type: string
-      internal_source_name:
-        type: string
-      item_number:
-        type: string
-      lang:
-        type: string
-      name:
-        type: string
-      published_date:
-        description: An RFC3339 DateTime
-        example: "2024-02-27T12:34:56Z"
-        type: string
-      state:
-        type: string
-      text:
-        type: string
-    type: object
 host: api.kessler.xyz
 info:
   contact:
@@ -134,14 +190,15 @@ paths:
     post:
       consumes:
       - application/json
-      description: Creates a new default ingestion task
+      description: Creates a new default ingestion task. This should use the default
+        openscrapers schema.
       parameters:
-      - description: Scraper information
+      - description: Filing + Case information
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/tasks.ScraperInfoPayload'
+          $ref: '#/definitions/tasks.FilingInfoPayload'
       produces:
       - application/json
       responses:
@@ -158,6 +215,36 @@ paths:
           schema:
             type: string
       summary: Add Default Ingest Task
+      tags:
+      - tasks
+  /add-task/ingest/case:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new Case-specific ingestion task
+      parameters:
+      - description: Case information
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/tasks.CaseInfoPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/tasks.KesslerTaskInfo'
+        "400":
+          description: Error decoding request body
+          schema:
+            type: string
+        "500":
+          description: Error adding task
+          schema:
+            type: string
+      summary: Add Case Ingest Task
       tags:
       - tasks
   /add-task/ingest/nypuc:
@@ -218,33 +305,6 @@ paths:
           schema:
             type: string
       summary: Add OpenScraper Ingest Task
-      tags:
-      - tasks
-  /add-task/process/{uuid}:
-    post:
-      description: Creates a new task to process a file with the given UUID
-      parameters:
-      - description: File UUID
-        in: path
-        name: uuid
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/tasks.KesslerTaskInfo'
-        "400":
-          description: Error parsing uuid
-          schema:
-            type: string
-        "500":
-          description: Error adding task
-          schema:
-            type: string
-      summary: Add Process File Task
       tags:
       - tasks
   /task/{id}:

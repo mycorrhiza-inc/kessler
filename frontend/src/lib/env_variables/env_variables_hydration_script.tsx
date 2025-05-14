@@ -14,9 +14,12 @@ import {
 } from "./env_variables";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 
-export const getClientRuntimeEnv = (): RuntimeEnvConfig => {
-  return getUniversalEnvConfig();
-};
+// Client-specific alias for getting runtime env config
+// This is now provided by env_variables.ts
+// export const getClientRuntimeEnv = (): RuntimeEnvConfig => {
+//   return getUniversalEnvConfig();
+// };
+
 // Initialize context with an empty validated config
 const EnvVariablesClientContext =
   createContext<RuntimeEnvConfig>(emptyRuntimeConfig);
@@ -31,7 +34,7 @@ export const EnvVariablesClientProvider: React.FC<EnvClientProviderProps> = ({
   const [envs, setEnvs] = useState<RuntimeEnvConfig>(emptyRuntimeConfig);
 
   useEffect(() => {
-    const runtimeEnvs = getUniversalEnvConfig();
+    const runtimeEnvs = getClientRuntimeEnv();
     setEnvs(runtimeEnvs);
   }, []);
 
@@ -68,3 +71,8 @@ VERSION_HASH: ${config.version_hash}
 `;
   return <MarkdownRenderer>{markdown_string}</MarkdownRenderer>;
 };
+
+export function getClientRuntimeEnv(): RuntimeEnvConfig {
+  return getUniversalEnvConfig();
+}
+
