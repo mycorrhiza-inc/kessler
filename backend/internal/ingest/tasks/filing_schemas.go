@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"kessler/internal/objects/conversations"
 	"kessler/internal/objects/files"
+	"kessler/pkg/hashes"
 	"kessler/pkg/timestamp"
 	"reflect"
 	"strings"
@@ -26,12 +27,30 @@ func (info FilingInfoPayload) IntoCompleteFile() files.CompleteFileSchema {
 	newAttachments := make([]files.CompleteAttachmentSchema, len(info.Filing.Attachments))
 	for i, at := range info.Filing.Attachments {
 		md := at.Mdata
-		md["url"] = at.URL
+		// md["url"] = at.URL
+		raw_att := at.RawAttachment
+		parsed_hash, err := hashes.HashFromString(raw_att.Hash)
+		texts := raw_att.TextObjects
+
+		var childTextSources []files.AttachmentChildTextSource
+
+		for _, text := range texts {
+			childTextSources = append(childTextSources, files.AttachmentChildTextSource{
+				// Translation out of scope for now
+				IsOriginalText: true,
+				Text:           text.Text,
+				// Throwing and assuming the text is always english
+				Language: "en",
+			})
+		}
+
 		newAttachments[i] = files.CompleteAttachmentSchema{
 			Name:      at.Name,
 			Lang:      at.Lang,
 			Extension: at.Extension,
 			Mdata:     md,
+			Hash:      parsed_hash,
+			Texts:     childTextSources,
 		}
 	}
 
