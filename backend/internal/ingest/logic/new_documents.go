@@ -7,10 +7,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"kessler/pkg/constants"
 	"kessler/internal/ingest/validators"
 	"kessler/internal/objects/authors"
 	"kessler/internal/objects/files"
+	"kessler/pkg/constants"
 	"kessler/pkg/s3utils"
 	"net/http"
 	"os"
@@ -100,7 +100,6 @@ func checkPgForDuplicateMetadata(ctx context.Context, fileObj files.CompleteFile
 		"named_docket_id": fileObj.Conversation.DocketGovID,
 		"date_string":     fileObj.Mdata["date"],
 		"name":            fileObj.Name,
-		"extension":       fileObj.Extension,
 		"author_string":   fileObj.Mdata["author"],
 	}
 
@@ -158,16 +157,37 @@ func CompleteIngestFileFromAttachmentUrls(ctx context.Context, fileObj *files.Co
 	return fileObj, nil
 }
 
+func tryFetchAttachmentFromOpenscrapers(ctx context.Context, attachement files.CompleteAttachmentSchema, downloadDir string) (string, error) {
+	if attachement.Hash.IsZero() {
+		return "", fmt.Errorf("cannot download from openscrapers with a nil hash")
+	}
+	hash_string := attachement.Hash.String()
+	fetch_file_url := fmt.Sprintf("%s/api/raw_attachments/%s/raw", constants.OPENSCRAPERS_API_URL, hash_string)
+
+	tmpFilePath, err := s3utils.DownloadFile(fetch_file_url, downloadDir)
+	if err != nil {
+		return "", err
+	}
+	// If the error is a 404 return an error consisting of file not found.
+	return tmpFilePath, nil
+}
+
 func fetchAttachmentFromUrl(ctx context.Context, attachment files.CompleteAttachmentSchema) (files.CompleteAttachmentSchema, error) {
+	var tmpFilePath string
+	var err error
 	new_attachment := attachment
+
 	downloadDir := filepath.Join(constants.OS_TMPDIR, "downloads")
 	if err := os.MkdirAll(downloadDir, 0755); err != nil {
 		return files.CompleteAttachmentSchema{}, err
 	}
-
-	tmpFilePath, err := s3utils.DownloadFile(attachment.URL, downloadDir)
+	tmpFilePath, err = tryFetchAttachmentFromOpenscrapers(ctx, attachment, downloadDir)
 	if err != nil {
-		return files.CompleteAttachmentSchema{}, err
+		log.Warn("Couldnt find file with hash on s3", "hash", new_attachment.Hash.String())
+		tmpFilePath, err = s3utils.DownloadFile(attachment.URL, downloadDir)
+		if err != nil {
+			return files.CompleteAttachmentSchema{}, err
+		}
 	}
 
 	if attachment.Extension == "" {

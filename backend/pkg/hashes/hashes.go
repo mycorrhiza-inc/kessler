@@ -15,6 +15,15 @@ import (
 // @Schema {"type": "string", "example": "_EYNhTcsAPjIT3iNNvTnY5KFC1wm61Mki_uBcb3yKv2zDncVYfdI6c_7tH_PAAS8IlhNaapBg21fwT4Z7Ttxig=="}
 type KesslerHash [32]byte
 
+func (hash KesslerHash) IsZero() bool {
+	for _, b := range hash {
+		if b != 0 {
+			return false
+		}
+	}
+	return true
+}
+
 func (hash KesslerHash) String() string {
 	return base64.URLEncoding.EncodeToString(hash[:])
 }

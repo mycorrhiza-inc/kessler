@@ -110,7 +110,6 @@ func getFileInformationUUID(file_uuid uuid.UUID, q dbstore.Queries, ctx context.
 		Description: file.Extra.Summary,
 	}
 	returnInfo.Extras["date"] = file.Mdata["date"]
-	returnInfo.Extras["file_extension"] = file.Extension
 	returnInfo.Extras["parent_docket_name"] = file.Conversation.Name
 	returnInfo.Extras["parent_docket_goverment_id"] = file.Conversation.DocketGovID
 	returnInfo.Extras["parent_docket_uuid"] = file.Conversation.ID

@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"kessler/pkg/logger"
 	"kessler/internal/objects/authors"
 	"kessler/internal/objects/conversations"
 	"kessler/internal/objects/files"
 	"kessler/internal/objects/networking"
-	"kessler/pkg/timestamp"
 	"kessler/internal/quickwit"
+	"kessler/pkg/logger"
+	"kessler/pkg/timestamp"
 	"reflect"
 
 	"github.com/google/uuid"
@@ -198,7 +198,6 @@ func ExtractSearchData(data quickwitSearchResponse) ([]SearchDataHydrated, error
 		file_schema := files.CompleteFileSchema{
 			ID:           file_id,
 			Name:         hit.Name,
-			Extension:    hit.Metadata.Extension,
 			Conversation: convo_info,
 			Mdata: files.FileMetadataSchema{
 				"docket_id":   hit.Metadata.DocketID,
@@ -209,7 +208,6 @@ func ExtractSearchData(data quickwitSearchResponse) ([]SearchDataHydrated, error
 			IsPrivate:     false,
 			DatePublished: file_timestamp,
 			Authors:       author_infos,
-			DocTexts:      []files.AttachmentChildTextSource{},
 			Stage:         files.DocProcStage{},
 			Extra:         files.FileGeneratedExtras{},
 		}

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"kessler/internal/ingest/logic"
-	"kessler/internal/objects/files"
 
 	"github.com/charmbracelet/log"
 	"github.com/hibiken/asynq"
@@ -19,11 +18,13 @@ func AsynqHandler(mux *asynq.ServeMux) {
 }
 
 func HandleIngestNewFileTask(ctx context.Context, task *asynq.Task) error {
-	var fileObj files.CompleteFileSchema
-	if err := json.Unmarshal(task.Payload(), &fileObj); err != nil {
+	var fileTaskObj FilingInfoPayload
+	if err := json.Unmarshal(task.Payload(), &fileTaskObj); err != nil {
 		return err
 	}
-	file, err := logic.CompleteIngestFileFromAttachmentUrls(ctx, &fileObj)
+	completeFileSchema := fileTaskObj.IntoCompleteFile()
+
+	file, err := logic.CompleteIngestFileFromAttachmentUrls(ctx, &completeFileSchema)
 	if err != nil {
 		return err
 	}

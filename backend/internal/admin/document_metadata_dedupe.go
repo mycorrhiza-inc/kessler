@@ -118,10 +118,8 @@ func CheckDocumentMetadata(args DocumentMetadataCheck, q dbstore.Queries, ctx co
 	file := files.CompleteFileSchema{
 		ID:           matched.row.ID,
 		Verified:     matched.row.Verified.Bool,
-		Extension:    matched.row.Extension,
 		Lang:         matched.row.Lang,
 		Name:         matched.row.Name,
-		Hash:         matched.row.Hash,
 		Mdata:        matched.metadata,
 		Extra:        extra_obj,
 		Conversation: conv_info,

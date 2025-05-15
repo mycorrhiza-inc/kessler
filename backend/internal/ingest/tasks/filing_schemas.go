@@ -21,7 +21,7 @@ type FilingInfoPayload struct {
 }
 
 // CastScraperInfoToNewFile converts a FilingInfoPayload into the internal CompleteFileSchema.
-func CastScraperInfoToNewFile(info FilingInfoPayload) files.CompleteFileSchema {
+func (info FilingInfoPayload) IntoCompleteFile() files.CompleteFileSchema {
 	// Attachments
 	newAttachments := make([]files.CompleteAttachmentSchema, len(info.Filing.Attachments))
 	for i, at := range info.Filing.Attachments {
