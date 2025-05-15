@@ -9,6 +9,7 @@ import (
 	"kessler/internal/objects/conversations"
 	"kessler/pkg/constants"
 	"net/http"
+	"reflect"
 	"time"
 )
 
@@ -28,12 +29,12 @@ func IngestOpenscrapersCase(ctx context.Context, caseInfo *OpenscrapersCaseInfoP
 	// Iterate over filings and persist each.
 	for _, filing := range caseInfo.Filings {
 		for _, attachment := range filing.Attachments {
-			if attachment.RawAttachment == nil {
+			if reflect.ValueOf(attachment.RawAttachment.Hash).IsZero() {
 				raw_att, err := FetchAttachmentDataFromOpenScrapers(attachment)
 				if err != nil {
 					return err
 				}
-				attachment.RawAttachment = &raw_att
+				attachment.RawAttachment = raw_att
 			}
 			inclusive_filing_info := FilingInfoPayload{
 				Filing:   filing,
@@ -47,7 +48,7 @@ func IngestOpenscrapersCase(ctx context.Context, caseInfo *OpenscrapersCaseInfoP
 }
 
 func FetchAttachmentDataFromOpenScrapers(attachment AttachmentChildInfo) (RawAttachmentData, error) {
-	if attachment.Hash == nil {
+	if reflect.ValueOf(attachment.Hash).IsZero() {
 		return RawAttachmentData{}, fmt.Errorf("cannot fetch attachment data without hash")
 	}
 
@@ -89,9 +90,9 @@ func IngestCaseSpecificData(caseInfoMinimal CaseInfoMinimal) error {
 	ke_convo_data := conversations.ConversationInformation{
 		DocketGovID:    caseInfoMinimal.CaseNumber,
 		Name:           caseInfoMinimal.CaseName,
-		Description:    stringPtrToStr(caseInfoMinimal.Description),
-		MatterType:     stringPtrToStr(caseInfoMinimal.CaseType),
-		IndustryType:   stringPtrToStr(caseInfoMinimal.Industry),
+		Description:    caseInfoMinimal.Description,
+		MatterType:     caseInfoMinimal.CaseType,
+		IndustryType:   caseInfoMinimal.Industry,
 		Metadata:       "{}",     // Default empty JSON
 		Extra:          "{}",     // Default empty JSON
 		DocumentsCount: 0,        // Initial value
@@ -122,12 +123,4 @@ func IngestCaseSpecificData(caseInfoMinimal CaseInfoMinimal) error {
 	}
 
 	return nil
-}
-
-// Helper function to handle nullable string pointers
-func stringPtrToStr(s *string) string {
-	if s != nil {
-		return *s
-	}
-	return ""
 }

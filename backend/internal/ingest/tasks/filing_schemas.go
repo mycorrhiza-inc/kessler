@@ -33,18 +33,21 @@ func (info FilingInfoPayload) IntoCompleteFile() files.CompleteFileSchema {
 		if err != nil {
 			parsed_hash = hashes.KesslerHash{}
 		}
-		texts := raw_att.TextObjects
+		texts := raw_att.TextObjects[:1]
 
-		var childTextSources []files.AttachmentChildTextSource
+		var childTextSource files.AttachmentChildTextSource
+		highestQuality := -10000
 
 		for _, text := range texts {
-			childTextSources = append(childTextSources, files.AttachmentChildTextSource{
-				// Translation out of scope for now
-				IsOriginalText: true,
-				Text:           text.Text,
-				// Throwing and assuming the text is always english
-				Language: "en",
-			})
+			if text.Quality > highestQuality {
+				childTextSource = files.AttachmentChildTextSource{
+					// Translation out of scope for now
+					IsOriginalText: true,
+					Text:           text.Text,
+					// Throwing and assuming the text is always english
+					Language: "en",
+				}
+			}
 		}
 
 		newAttachments[i] = files.CompleteAttachmentSchema{
@@ -53,7 +56,7 @@ func (info FilingInfoPayload) IntoCompleteFile() files.CompleteFileSchema {
 			Extension: at.Extension,
 			Mdata:     md,
 			Hash:      parsed_hash,
-			Texts:     childTextSources,
+			Texts:     []files.AttachmentChildTextSource{childTextSource},
 		}
 	}
 

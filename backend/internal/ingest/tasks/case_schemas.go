@@ -35,15 +35,15 @@ type OpenscrapersCaseInfoPayload struct {
 	CaseNumber     string                 `json:"case_number"`
 	CaseName       string                 `json:"case_name,omitempty"`
 	CaseURL        string                 `json:"case_url,omitempty"`
-	CaseType       *string                `json:"case_type,omitempty"`
-	Description    *string                `json:"description,omitempty"`
-	Industry       *string                `json:"industry,omitempty"`
-	Petitioner     *string                `json:"petitioner,omitempty"`
-	HearingOfficer *string                `json:"hearing_officer,omitempty"`
-	OpenedDate     *timestamp.RFC3339Time `json:"opened_date,omitempty"`
-	ClosedDate     *timestamp.RFC3339Time `json:"closed_date,omitempty"`
+	CaseType       string                 `json:"case_type,omitempty"`
+	Description    string                 `json:"description,omitempty"`
+	Industry       string                 `json:"industry,omitempty"`
+	Petitioner     string                 `json:"petitioner,omitempty"`
+	HearingOfficer string                 `json:"hearing_officer,omitempty"`
+	OpenedDate     timestamp.RFC3339Time  `json:"opened_date,omitempty"`
+	ClosedDate     timestamp.RFC3339Time  `json:"closed_date,omitempty"`
 	ExtraMetadata  map[string]interface{} `json:"extra_metadata,omitempty"`
-	IndexedAt      *timestamp.RFC3339Time `json:"indexed_at,omitempty"`
+	IndexedAt      timestamp.RFC3339Time  `json:"indexed_at,omitempty"`
 	Filings        []FilingChildInfo      `json:"filings,omitempty"`
 }
 
@@ -51,15 +51,15 @@ type CaseInfoMinimal struct {
 	CaseNumber     string                 `json:"case_number"`
 	CaseName       string                 `json:"case_name,omitempty"`
 	CaseURL        string                 `json:"case_url,omitempty"`
-	CaseType       *string                `json:"case_type,omitempty"`
-	Description    *string                `json:"description,omitempty"`
-	Industry       *string                `json:"industry,omitempty"`
-	Petitioner     *string                `json:"petitioner,omitempty"`
-	HearingOfficer *string                `json:"hearing_officer,omitempty"`
-	OpenedDate     *timestamp.RFC3339Time `json:"opened_date,omitempty"`
-	ClosedDate     *timestamp.RFC3339Time `json:"closed_date,omitempty"`
+	CaseType       string                 `json:"case_type,omitempty"`
+	Description    string                 `json:"description,omitempty"`
+	Industry       string                 `json:"industry,omitempty"`
+	Petitioner     string                 `json:"petitioner,omitempty"`
+	HearingOfficer string                 `json:"hearing_officer,omitempty"`
+	OpenedDate     timestamp.RFC3339Time  `json:"opened_date,omitempty"`
+	ClosedDate     timestamp.RFC3339Time  `json:"closed_date,omitempty"`
 	ExtraMetadata  map[string]interface{} `json:"extra_metadata,omitempty"`
-	IndexedAt      *timestamp.RFC3339Time `json:"indexed_at,omitempty"`
+	IndexedAt      timestamp.RFC3339Time  `json:"indexed_at,omitempty"`
 }
 
 func (c OpenscrapersCaseInfoPayload) IntoCaseInfoMinimal() CaseInfoMinimal {
@@ -92,13 +92,13 @@ type FilingChildInfo struct {
 }
 
 type AttachmentChildInfo struct {
-	Lang          string              `json:"lang"`
-	Name          string              `json:"name"`
-	Extension     string              `json:"extension"`
-	URL           string              `json:"url"`
-	Hash          *hashes.KesslerHash `json:"hash"`
-	Mdata         map[string]any      `json:"mdata"`
-	RawAttachment *RawAttachmentData  `json:"raw_attachment"`
+	Lang          string             `json:"lang"`
+	Name          string             `json:"name"`
+	Extension     string             `json:"extension"`
+	URL           string             `json:"url"`
+	Hash          hashes.KesslerHash `json:"hash"`
+	Mdata         map[string]any     `json:"mdata"`
+	RawAttachment RawAttachmentData  `json:"raw_attachment"`
 }
 
 type RawAttachmentData struct {
