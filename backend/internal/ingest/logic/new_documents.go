@@ -25,8 +25,8 @@ import (
 type DatabaseInteraction int
 
 const (
-	Insert DatabaseInteraction = iota
-	Update
+	DatabaseInteractionInsert DatabaseInteraction = iota
+	DatabaseInteractionUpdate
 )
 
 func upsertFullFileToDB(ctx context.Context, obj files.CompleteFileSchema, interact DatabaseInteraction) (*files.CompleteFileSchema, error) {
@@ -38,9 +38,9 @@ func upsertFullFileToDB(ctx context.Context, obj files.CompleteFileSchema, inter
 	var url string
 
 	switch interact {
-	case Insert:
+	case DatabaseInteractionInsert:
 		url = fmt.Sprintf("%s/v2/public/files/insert", constants.INTERNAL_KESSLER_API_URL)
-	case Update:
+	case DatabaseInteractionUpdate:
 		if obj.ID == uuid.Nil {
 			return nil, errors.New("cannot update a file with a null uuid")
 		}
@@ -87,7 +87,7 @@ func upsertFullFileToDB(ctx context.Context, obj files.CompleteFileSchema, inter
 		return nil, errors.New("received null UUID from server")
 	}
 
-	if interact == Insert && newUUID == originalID {
+	if interact == DatabaseInteractionInsert && newUUID == originalID {
 		return nil, errors.New("identical ID returned from server during insert")
 	}
 

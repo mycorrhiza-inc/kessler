@@ -8,11 +8,12 @@ import (
 	"io"
 	"kessler/internal/ingest/logic"
 	"kessler/internal/objects/conversations"
-	"kessler/internal/objects/files"
 	"kessler/pkg/constants"
 	"net/http"
 	"reflect"
 	"time"
+
+	"github.com/charmbracelet/log"
 )
 
 // IngestOpenscrapersCase processes a case and its associated filings.
@@ -43,9 +44,9 @@ func IngestOpenscrapersCase(ctx context.Context, caseInfo *OpenscrapersCaseInfoP
 				CaseInfo: minimal_case_info,
 			}
 			complete_filing := inclusive_filing_info.IntoCompleteFile()
-			_, err := logic.ProcessFileRaw(ctx, &complete_filing, files.DocStatusCompleted)
+			err := logic.ProcessFile(ctx, complete_filing)
 			if err != nil {
-				return err
+				log.Error("Encountered error processing file", "error", err)
 			}
 
 		}

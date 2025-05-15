@@ -9,10 +9,24 @@ import (
 	"kessler/pkg/s3utils"
 	"log/slog"
 	"os"
+
+	"github.com/charmbracelet/log"
 	// Assume these are implemented in other packages
 )
 
 var OS_HASH_FILEDIR = os.Getenv("OS_HASH_FILEDIR")
+
+func ProcessFile(ctx context.Context, complete_file files.CompleteFileSchema) error {
+	file, err := ProcessFileRaw(ctx, &complete_file, files.DocStatusCompleted)
+	if err != nil {
+		log.Warn("Encountered error processing file", "name", complete_file.Name)
+	}
+	file, err = upsertFullFileToDB(ctx, *file, DatabaseInteractionInsert)
+	if err != nil {
+		log.Error("Could not upload file to database", "name", file.Name)
+	}
+	return nil
+}
 
 func ProcessFileRaw(ctx context.Context, obj *files.CompleteFileSchema, stopAt files.DocProcStatus) (*files.CompleteFileSchema, error) {
 	logger := slog.Default()
