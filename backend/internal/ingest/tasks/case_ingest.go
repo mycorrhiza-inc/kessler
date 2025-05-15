@@ -6,7 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"kessler/internal/ingest/logic"
 	"kessler/internal/objects/conversations"
+	"kessler/internal/objects/files"
 	"kessler/pkg/constants"
 	"net/http"
 	"reflect"
@@ -41,6 +43,10 @@ func IngestOpenscrapersCase(ctx context.Context, caseInfo *OpenscrapersCaseInfoP
 				CaseInfo: minimal_case_info,
 			}
 			complete_filing := inclusive_filing_info.IntoCompleteFile()
+			_, err := logic.ProcessFileRaw(ctx, &complete_filing, files.DocStatusCompleted)
+			if err != nil {
+				return err
+			}
 
 		}
 	}
