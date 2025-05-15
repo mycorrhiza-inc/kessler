@@ -30,6 +30,9 @@ func (info FilingInfoPayload) IntoCompleteFile() files.CompleteFileSchema {
 		// md["url"] = at.URL
 		raw_att := at.RawAttachment
 		parsed_hash, err := hashes.HashFromString(raw_att.Hash)
+		if err != nil {
+			parsed_hash = hashes.KesslerHash{}
+		}
 		texts := raw_att.TextObjects
 
 		var childTextSources []files.AttachmentChildTextSource
