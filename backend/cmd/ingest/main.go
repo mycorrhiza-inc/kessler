@@ -4,7 +4,7 @@ import (
 	"kessler/internal/ingest/routes"
 	"kessler/internal/ingest/tasks"
 	"kessler/pkg/constants"
-	"log"
+	"kessler/pkg/logger"
 	"net/http"
 	"os"
 	"os/signal"
@@ -15,6 +15,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/hibiken/asynq"
 	httpSwagger "github.com/swaggo/http-swagger"
+	"go.uber.org/zap"
 )
 
 //	@title			Kessler Ingest API
@@ -62,6 +63,7 @@ func main() {
 	// Create asynq client
 	client := asynq.NewClient(asynq.RedisClientOpt{Addr: redisAddr})
 	defer client.Close()
+	log := logger.GetLogger("main_ingest")
 
 	// Create API subrouter with client middleware
 	api := r.PathPrefix(root).Subrouter()
@@ -96,8 +98,9 @@ func main() {
 
 	// Start HTTP server in a goroutine
 	go func() {
+		log.Info("Starting ingest server.........")
 		if err := http.ListenAndServe(":4042", r); err != nil {
-			log.Fatalf("Failed to start HTTP server: %v", err)
+			log.Fatal("Failed to start HTTP server:", zap.Error(err))
 		}
 	}()
 
@@ -105,6 +108,6 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	log.Println("Shutting down...")
-	worker.Shutdown()
+	log.Info("Shutting down...")
+	// worker.Shutdown()
 }

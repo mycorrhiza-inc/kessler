@@ -39,7 +39,7 @@ func HandleIngestCaseTask(ctx context.Context, task *asynq.Task) error {
 		return fmt.Errorf("failed to unmarshal case payload: %w", err)
 	}
 	// invoke business logic to persist case and filings
-	err := IngestOpenscrapersCase(ctx, &caseInfo)
+	err := IngestOpenscrapersCase(ctx, caseInfo)
 	if err != nil {
 		return fmt.Errorf("error ingesting case: %w", err)
 	}

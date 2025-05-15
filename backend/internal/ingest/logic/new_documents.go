@@ -11,6 +11,7 @@ import (
 	"kessler/internal/objects/authors"
 	"kessler/internal/objects/files"
 	"kessler/pkg/constants"
+	"kessler/pkg/logger"
 	"kessler/pkg/s3utils"
 	"net/http"
 	"os"
@@ -20,6 +21,7 @@ import (
 
 	"github.com/charmbracelet/log"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
 
 type DatabaseInteraction int
@@ -29,7 +31,9 @@ const (
 	DatabaseInteractionUpdate
 )
 
-func upsertFullFileToDB(ctx context.Context, obj files.CompleteFileSchema, interact DatabaseInteraction) (*files.CompleteFileSchema, error) {
+func upsertFullFileToDB(ctx context.Context, obj files.CompleteFileSchema, interact DatabaseInteraction) (files.CompleteFileSchema, error) {
+	log := logger.GetLogger("file db ingest")
+	log.Info("Attempting to insert file into database: ", zap.String("name", obj.Name))
 	// if constants.MOCK_DB_CONNECTION {
 	// 	return &obj, nil
 	// }
@@ -42,57 +46,57 @@ func upsertFullFileToDB(ctx context.Context, obj files.CompleteFileSchema, inter
 		url = fmt.Sprintf("%s/v2/public/files/insert", constants.INTERNAL_KESSLER_API_URL)
 	case DatabaseInteractionUpdate:
 		if obj.ID == uuid.Nil {
-			return nil, errors.New("cannot update a file with a null uuid")
+			return files.CompleteFileSchema{}, errors.New("cannot update a file with a null uuid")
 		}
 		url = fmt.Sprintf("%s/v2/public/files/%s/update", constants.INTERNAL_KESSLER_API_URL, obj.ID.String())
 	default:
-		return &obj, nil
+		return obj, nil
 	}
 
 	jsonData, err := json.Marshal(obj)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal object: %w", err)
+		return files.CompleteFileSchema{}, fmt.Errorf("failed to marshal object: %w", err)
 	}
 
 	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(jsonData))
 	if err != nil {
-		return nil, fmt.Errorf("request creation failed: %w", err)
+		return files.CompleteFileSchema{}, fmt.Errorf("request creation failed: %w", err)
 	}
 
 	client := &http.Client{Timeout: 30 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("request failed: %w", err)
+		return files.CompleteFileSchema{}, fmt.Errorf("request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(io.LimitReader(resp.Body, 1024))
-		return nil, fmt.Errorf("server returned status %d: %s", resp.StatusCode, string(body))
+		return files.CompleteFileSchema{}, fmt.Errorf("server returned status %d: %s", resp.StatusCode, string(body))
 	}
 
 	var response struct {
 		ID string `json:"id"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-		return nil, fmt.Errorf("failed to parse response: %w", err)
+		return files.CompleteFileSchema{}, fmt.Errorf("failed to parse response: %w", err)
 	}
 
 	newUUID, err := uuid.Parse(response.ID)
 	if err != nil {
-		return nil, fmt.Errorf("invalid UUID in response: %w", err)
+		return files.CompleteFileSchema{}, fmt.Errorf("invalid UUID in response: %w", err)
 	}
 
 	if newUUID == uuid.Nil {
-		return nil, errors.New("received null UUID from server")
+		return files.CompleteFileSchema{}, errors.New("received null UUID from server")
 	}
 
 	if interact == DatabaseInteractionInsert && newUUID == originalID {
-		return nil, errors.New("identical ID returned from server during insert")
+		return files.CompleteFileSchema{}, errors.New("identical ID returned from server during insert")
 	}
 
 	obj.ID = newUUID
-	return &obj, nil
+	return obj, nil
 }
 
 func checkPgForDuplicateMetadata(ctx context.Context, fileObj files.CompleteFileSchema) (*files.CompleteFileSchema, error) {

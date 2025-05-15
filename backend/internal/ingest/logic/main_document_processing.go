@@ -30,11 +30,14 @@ func ProcessFile(ctx context.Context, complete_file files.CompleteFileSchema) er
 	return nil
 }
 
-func ProcessFileRaw(ctx context.Context, obj *files.CompleteFileSchema, stopAt files.DocProcStatus) (*files.CompleteFileSchema, error) {
+func ProcessFileRaw(ctx context.Context, obj *files.CompleteFileSchema, stopAt files.DocProcStatus) (files.CompleteFileSchema, error) {
+	if obj == nil {
+		return files.CompleteFileSchema{}, nil
+	}
 	logger := slog.Default()
 
 	if obj.Lang == "" {
-		return nil, errors.New("language is required")
+		return *obj, errors.New("language is required")
 	}
 
 	currentStage := obj.Stage.DocProcStatus
@@ -48,7 +51,7 @@ func ProcessFileRaw(ctx context.Context, obj *files.CompleteFileSchema, stopAt f
 				IsCompleted:   true,
 				DocProcStatus: currentStage,
 			}
-			return obj, nil
+			return *obj, nil
 		}
 
 		var nextStage files.DocProcStatus
@@ -81,12 +84,12 @@ func ProcessFileRaw(ctx context.Context, obj *files.CompleteFileSchema, stopAt f
 				IngestErrorMsg:     obj.Stage.IngestErrorMsg,
 				DocProcStatus:      currentStage,
 			}
-			return obj, fmt.Errorf("processing error at stage %d: %w", currentStage, err)
+			return *obj, fmt.Errorf("processing error at stage %d: %w", currentStage, err)
 		}
 		currentStage = nextStage
 	}
 
-	return nil, errors.New("exceeded maximum processing iterations")
+	return files.CompleteFileSchema{}, errors.New("exceeded maximum processing iterations")
 }
 
 func processStageHandleExtension(ctx context.Context, obj *files.CompleteFileSchema) (files.DocProcStatus, error) {
