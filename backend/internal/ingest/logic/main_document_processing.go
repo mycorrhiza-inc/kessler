@@ -6,24 +6,26 @@ import (
 	"fmt"
 	"kessler/internal/ingest/validators"
 	"kessler/internal/objects/files"
+	"kessler/pkg/logger"
 	"kessler/pkg/s3utils"
 	"log/slog"
 	"os"
 
-	"github.com/charmbracelet/log"
+	"go.uber.org/zap"
 	// Assume these are implemented in other packages
 )
 
 var OS_HASH_FILEDIR = os.Getenv("OS_HASH_FILEDIR")
 
 func ProcessFile(ctx context.Context, complete_file files.CompleteFileSchema) error {
+	log := logger.GetLogger("process_file")
 	file, err := ProcessFileRaw(ctx, &complete_file, files.DocStatusCompleted)
 	if err != nil {
-		log.Warn("Encountered error processing file", "name", complete_file.Name)
+		log.Warn("Encountered error processing file", zap.String("name", complete_file.Name), zap.Error(err))
 	}
-	file, err = upsertFullFileToDB(ctx, *file, DatabaseInteractionInsert)
+	file, err = upsertFullFileToDB(ctx, complete_file, DatabaseInteractionInsert)
 	if err != nil {
-		log.Error("Could not upload file to database", "name", file.Name)
+		log.Error("Could not upload file to database", zap.String("name", file.Name), zap.Error(err))
 	}
 	return nil
 }

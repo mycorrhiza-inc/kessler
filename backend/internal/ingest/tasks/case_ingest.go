@@ -45,9 +45,10 @@ func IngestOpenscrapersCase(ctx context.Context, caseInfo *OpenscrapersCaseInfoP
 				raw_att, err := FetchAttachmentDataFromOpenScrapers(attachment)
 				if err != nil {
 					log.Error("Encountered error processing file", zap.Error(err))
-					return err
 				}
-				attachment.RawAttachment = raw_att
+				if err == nil {
+					attachment.RawAttachment = raw_att
+				}
 			}
 		}
 		inclusive_filing_info := FilingInfoPayload{
@@ -88,6 +89,11 @@ func FetchAttachmentDataFromOpenScrapers(attachment AttachmentChildInfo) (RawAtt
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
+
+		resp_body_bytes := []byte{}
+		resp.Body.Read(resp_body_bytes)
+		resp_body_string := string(resp_body_bytes)
+		log.Error("Encountered error fetching file from openscrapers", zap.Int("code", resp.StatusCode), zap.String("body", resp_body_string))
 		return RawAttachmentData{}, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
