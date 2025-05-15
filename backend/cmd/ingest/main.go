@@ -69,30 +69,30 @@ func main() {
 	routes.DefineGlobalRouter(api) // Pass the subrouter to routes package
 	// Create asynq client
 
-	// Create and start worker
-	worker := asynq.NewServer(
-		asynq.RedisClientOpt{Addr: redisAddr},
-		asynq.Config{
-			Concurrency: concurrency,
-			Queues: map[string]int{
-				"default": 1,
-			},
-		},
-	)
-
-	// Create mux and register handlers
-	asyncq_mux := asynq.NewServeMux()
-	tasks.AsynqHandler(asyncq_mux)
+	// // Create and start worker
+	// worker := asynq.NewServer(
+	// 	asynq.RedisClientOpt{Addr: redisAddr},
+	// 	asynq.Config{
+	// 		Concurrency: concurrency,
+	// 		Queues: map[string]int{
+	// 			"default": 1,
+	// 		},
+	// 	},
+	// )
+	//
+	// // Create mux and register handlers
+	// asyncq_mux := asynq.NewServeMux()
+	// tasks.AsynqHandler(asyncq_mux)
 	// mux.Use(tasksMiddleware(client))
 	// mux.HandleFunc(tasks.TypeAddFileScraper, tasks.HandleAddFileScraperTask)
 	// mux.HandleFunc(tasks.TypeProcessExistingFile, tasks.HandleProcessFileTask)
 
-	// Run worker in separate goroutine
-	go func() {
-		if err := worker.Run(asyncq_mux); err != nil {
-			log.Fatalf("Failed to start worker: %v", err)
-		}
-	}()
+	// // Run worker in separate goroutine
+	// go func() {
+	// 	if err := worker.Run(asyncq_mux); err != nil {
+	// 		log.Fatalf("Failed to start worker: %v", err)
+	// 	}
+	// }()
 
 	// Start HTTP server in a goroutine
 	go func() {

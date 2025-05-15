@@ -127,16 +127,22 @@ func AddCaseTaskCastable(ctx context.Context, castable CastableIntoCaseInfo) (Ke
 	if err != nil {
 		return KesslerTaskInfo{}, fmt.Errorf("error casting to CaseInfoPayload: %w", err)
 	}
-	task, err := NewAddCaseTask(caseInfo)
+	err = IngestOpenscrapersCase(ctx, caseInfo)
 	if err != nil {
-		return KesslerTaskInfo{}, fmt.Errorf("error creating case ingest task: %w", err)
+		return KesslerTaskInfo{}, err
 	}
-	client := GetClient(ctx)
-	info, err := client.Enqueue(task)
-	if err != nil {
-		return KesslerTaskInfo{}, fmt.Errorf("error enqueueing case task: %w", err)
-	}
-	return KesslerTaskInfo{TaskID: info.ID, Queue: info.Queue}, nil
+
+	return KesslerTaskInfo{}, nil
+	// task, err := NewAddCaseTask(caseInfo)
+	// if err != nil {
+	// 	return KesslerTaskInfo{}, fmt.Errorf("error creating case ingest task: %w", err)
+	// }
+	// client := GetClient(ctx)
+	// info, err := client.Enqueue(task)
+	// if err != nil {
+	// 	return KesslerTaskInfo{}, fmt.Errorf("error enqueueing case task: %w", err)
+	// }
+	// return KesslerTaskInfo{TaskID: info.ID, Queue: info.Queue}, nil
 }
 
 // NewAddCaseTask creates an asynq task for ingesting a case.

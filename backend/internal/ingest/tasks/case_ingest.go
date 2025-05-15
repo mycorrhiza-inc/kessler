@@ -21,7 +21,7 @@ var log = logger.GetLogger("tasks")
 
 // IngestOpenscrapersCase processes a case and its associated filings.
 // TODO: Implement persistence logic for cases and filings.
-func IngestOpenscrapersCase(ctx context.Context, caseInfo *OpenscrapersCaseInfoPayload) error {
+func IngestOpenscrapersCase(ctx context.Context, caseInfo OpenscrapersCaseInfoPayload) error {
 	// Example: Log the received case info. Replace with real DB/API calls.
 	log.Info("Ingesting case: %s\n", zap.String("case number", caseInfo.CaseNumber))
 	log.Info("Case details: %+v\n", zap.Int("filings length", len(caseInfo.Filings)))
