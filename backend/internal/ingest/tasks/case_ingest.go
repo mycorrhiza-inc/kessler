@@ -22,6 +22,7 @@ var log = logger.GetLogger("tasks")
 // IngestOpenscrapersCase processes a case and its associated filings.
 // TODO: Implement persistence logic for cases and filings.
 func IngestOpenscrapersCase(ctx context.Context, caseInfo OpenscrapersCaseInfoPayload) error {
+	ctx = context.Background()
 	// Example: Log the received case info. Replace with real DB/API calls.
 	log.Info("Ingesting case: %s\n", zap.String("case number", caseInfo.CaseNumber))
 	log.Info("Case details: %+v\n", zap.Int("filings length", len(caseInfo.Filings)))
@@ -56,11 +57,12 @@ func IngestOpenscrapersCase(ctx context.Context, caseInfo OpenscrapersCaseInfoPa
 			CaseInfo: minimal_case_info,
 		}
 		complete_filing := inclusive_filing_info.IntoCompleteFile()
-		logger.Log.Info("Successfully completed conversion into complete file", zap.String("name", complete_filing.Name))
-		err = logic.ProcessFile(ctx, complete_filing)
-		if err != nil {
-			log.Error("Encountered error processing file", zap.Error(err), zap.String("name", complete_filing.Name))
-		}
+		log.Info("Successfully completed conversion into complete file", zap.String("name", complete_filing.Name))
+		logic.ProcessFile(ctx, complete_filing)
+		log.Warn("Made it past the line??")
+		// if err != nil {
+		// 	log.Error("Encountered error processing file", zap.Error(err), zap.String("name", complete_filing.Name))
+		// }
 		logger.Log.Info("Successfully ingested file", zap.String("name", complete_filing.Name))
 	}
 
