@@ -17,7 +17,7 @@ import (
 
 var OS_HASH_FILEDIR = os.Getenv("OS_HASH_FILEDIR")
 
-func ProcessFile(ctx context.Context, complete_file files.CompleteFileSchema) {
+func ProcessFile(ctx context.Context, complete_file files.CompleteFileSchema) error {
 	log := logger.GetLogger("process_file")
 	_, err := ProcessFileRaw(ctx, &complete_file, files.DocStatusCompleted)
 	if err != nil {
@@ -27,11 +27,13 @@ func ProcessFile(ctx context.Context, complete_file files.CompleteFileSchema) {
 	_, err = upsertFullFileToDB(ctx, complete_file, DatabaseInteractionInsert)
 	fmt.Println("thing directly after upsert line")
 	if err != nil {
-		fmt.Println("thing in error block with no return")
+		fmt.Print("thing in error block with no return")
 		// log.Error("Could not upload file to database", zap.String("name", file.Name), zap.Error(err))
 	}
 	fmt.Println("thing after error block with no return")
 	log.Info("Successfully processed file and reached probelmatic return statement.")
+	var err_nil error
+	return err_nil
 }
 
 func ProcessFileRaw(ctx context.Context, obj *files.CompleteFileSchema, stopAt files.DocProcStatus) (files.CompleteFileSchema, error) {

@@ -58,11 +58,11 @@ func IngestOpenscrapersCase(ctx context.Context, caseInfo OpenscrapersCaseInfoPa
 		}
 		complete_filing := inclusive_filing_info.IntoCompleteFile()
 		log.Info("Successfully completed conversion into complete file", zap.String("name", complete_filing.Name))
-		logic.ProcessFile(ctx, complete_filing)
+		err := logic.ProcessFile(ctx, complete_filing)
 		log.Warn("Made it past the line??")
-		// if err != nil {
-		// 	log.Error("Encountered error processing file", zap.Error(err), zap.String("name", complete_filing.Name))
-		// }
+		if err != nil {
+			log.Error("Encountered error processing file", zap.Error(err), zap.String("name", complete_filing.Name))
+		}
 		logger.Log.Info("Successfully ingested file", zap.String("name", complete_filing.Name))
 	}
 
