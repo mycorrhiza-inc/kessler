@@ -9,47 +9,58 @@ import (
 	"kessler/internal/ingest/logic"
 	"kessler/internal/objects/conversations"
 	"kessler/pkg/constants"
+	"kessler/pkg/logger"
 	"net/http"
 	"reflect"
 	"time"
 
-	"github.com/charmbracelet/log"
+	"go.uber.org/zap"
 )
+
+var log = logger.GetLogger("tasks")
 
 // IngestOpenscrapersCase processes a case and its associated filings.
 // TODO: Implement persistence logic for cases and filings.
 func IngestOpenscrapersCase(ctx context.Context, caseInfo *OpenscrapersCaseInfoPayload) error {
 	// Example: Log the received case info. Replace with real DB/API calls.
-	fmt.Printf("Ingesting case: %s\n", caseInfo.CaseNumber)
-	fmt.Printf("Case details: %+v\n", caseInfo)
+	log.Info("Ingesting case: %s\n", zap.String("case number", caseInfo.CaseNumber))
+	log.Info("Case details: %+v\n", zap.Int("filings length", len(caseInfo.Filings)))
 
 	minimal_case_info := caseInfo.IntoCaseInfoMinimal()
+	if caseInfo.CaseName == "" {
+		caseInfo.CaseName = caseInfo.Description
+	}
 	err := IngestCaseSpecificData(minimal_case_info)
 	if err != nil {
 		return err
 	}
 
 	// Iterate over filings and persist each.
-	for _, filing := range caseInfo.Filings {
-		for _, attachment := range filing.Attachments {
+	for filing_index, filing := range caseInfo.Filings {
+		log.Info("Processing nth filing in case", zap.Int("filing_index", filing_index))
+		log.Info("Nth Filing has this many attachments", zap.Int("filing_index", filing_index), zap.Int("number_of_attachments", len(filing.Attachments)))
+		for attachment_index, attachment := range filing.Attachments {
+			log.Info("Processing nth attachment in nth filing in case", zap.Int("filing_index", filing_index), zap.Int("attachment_index", attachment_index))
 			if reflect.ValueOf(attachment.RawAttachment.Hash).IsZero() {
 				raw_att, err := FetchAttachmentDataFromOpenScrapers(attachment)
 				if err != nil {
+					log.Error("Encountered error processing file", zap.Error(err))
 					return err
 				}
 				attachment.RawAttachment = raw_att
 			}
-			inclusive_filing_info := FilingInfoPayload{
-				Filing:   filing,
-				CaseInfo: minimal_case_info,
-			}
-			complete_filing := inclusive_filing_info.IntoCompleteFile()
-			err := logic.ProcessFile(ctx, complete_filing)
-			if err != nil {
-				log.Error("Encountered error processing file", "error", err)
-			}
-
 		}
+		inclusive_filing_info := FilingInfoPayload{
+			Filing:   filing,
+			CaseInfo: minimal_case_info,
+		}
+		complete_filing := inclusive_filing_info.IntoCompleteFile()
+		logger.Log.Info("Successfully completed cconversion into complete file", zap.String("name", complete_filing.Name))
+		err := logic.ProcessFile(ctx, complete_filing)
+		if err != nil {
+			log.Error("Encountered error processing file", zap.Error(err), zap.String("name", complete_filing.Name))
+		}
+		logger.Log.Info("Successfully ingested file", zap.String("name", complete_filing.Name))
 	}
 
 	return nil

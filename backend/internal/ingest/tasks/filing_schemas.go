@@ -33,7 +33,7 @@ func (info FilingInfoPayload) IntoCompleteFile() files.CompleteFileSchema {
 		if err != nil {
 			parsed_hash = hashes.KesslerHash{}
 		}
-		texts := raw_att.TextObjects[:1]
+		texts := raw_att.TextObjects
 
 		var childTextSource files.AttachmentChildTextSource
 		highestQuality := -10000

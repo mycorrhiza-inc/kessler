@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"kessler/internal/ingest/logic"
 
-	"github.com/charmbracelet/log"
 	"github.com/hibiken/asynq"
+	"go.uber.org/zap"
 )
 
 func AsynqHandler(mux *asynq.ServeMux) {
@@ -28,7 +28,7 @@ func HandleIngestNewFileTask(ctx context.Context, task *asynq.Task) error {
 	if err != nil {
 		return err
 	}
-	log.Info("File added to DB", "file", file)
+	log.Info("File added to DB", zap.String("name", file.Name))
 	return nil
 }
 
@@ -43,6 +43,6 @@ func HandleIngestCaseTask(ctx context.Context, task *asynq.Task) error {
 	if err != nil {
 		return fmt.Errorf("error ingesting case: %w", err)
 	}
-	log.Info("Case ingested successfully", "case_number", caseInfo.CaseNumber)
+	log.Info("Case ingested successfully", zap.String("case_number", caseInfo.CaseNumber))
 	return nil
 }
