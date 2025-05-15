@@ -41,7 +41,6 @@ type OpenscrapersCaseInfoPayload struct {
 	Petitioner     string                 `json:"petitioner,omitempty"`
 	HearingOfficer string                 `json:"hearing_officer,omitempty"`
 	OpenedDate     timestamp.RFC3339Time  `json:"opened_date,omitempty"`
-	ClosedDate     timestamp.RFC3339Time  `json:"closed_date,omitempty"`
 	ExtraMetadata  map[string]interface{} `json:"extra_metadata,omitempty"`
 	IndexedAt      timestamp.RFC3339Time  `json:"indexed_at,omitempty"`
 	Filings        []FilingChildInfo      `json:"filings,omitempty"`
@@ -57,7 +56,6 @@ type CaseInfoMinimal struct {
 	Petitioner     string                 `json:"petitioner,omitempty"`
 	HearingOfficer string                 `json:"hearing_officer,omitempty"`
 	OpenedDate     timestamp.RFC3339Time  `json:"opened_date,omitempty"`
-	ClosedDate     timestamp.RFC3339Time  `json:"closed_date,omitempty"`
 	ExtraMetadata  map[string]interface{} `json:"extra_metadata,omitempty"`
 	IndexedAt      timestamp.RFC3339Time  `json:"indexed_at,omitempty"`
 }
@@ -73,7 +71,6 @@ func (c OpenscrapersCaseInfoPayload) IntoCaseInfoMinimal() CaseInfoMinimal {
 		Petitioner:     c.Petitioner,
 		HearingOfficer: c.HearingOfficer,
 		OpenedDate:     c.OpenedDate,
-		ClosedDate:     c.ClosedDate,
 		ExtraMetadata:  c.ExtraMetadata,
 		IndexedAt:      c.IndexedAt,
 	}

@@ -40,7 +40,8 @@ func IngestOpenscrapersCase(ctx context.Context, caseInfo *OpenscrapersCaseInfoP
 				Filing:   filing,
 				CaseInfo: minimal_case_info,
 			}
-			AddScraperFilingTaskCastable(ctx, inclusive_filing_info)
+			complete_filing := inclusive_filing_info.IntoCompleteFile()
+
 		}
 	}
 
