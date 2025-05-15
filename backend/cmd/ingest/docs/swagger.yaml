@@ -221,7 +221,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Creates a new Case-specific ingestion task
+      description: Creates a new Openscrapers Case ingestion task
       parameters:
       - description: Case information
         in: body
@@ -244,7 +244,7 @@ paths:
           description: Error adding task
           schema:
             type: string
-      summary: Add Case Ingest Task
+      summary: Add Openscrapers Case Ingest Task
       tags:
       - tasks
   /add-task/ingest/nypuc:

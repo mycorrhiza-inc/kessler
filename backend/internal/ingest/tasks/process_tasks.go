@@ -33,12 +33,12 @@ func HandleIngestNewFileTask(ctx context.Context, task *asynq.Task) error {
 
 // HandleIngestCaseTask processes a case ingestion task
 func HandleIngestCaseTask(ctx context.Context, task *asynq.Task) error {
-	var caseInfo CaseInfoPayload
+	var caseInfo OpenscrapersCaseInfoPayload
 	if err := json.Unmarshal(task.Payload(), &caseInfo); err != nil {
 		return fmt.Errorf("failed to unmarshal case payload: %w", err)
 	}
 	// invoke business logic to persist case and filings
-	err := IngestCase(ctx, &caseInfo)
+	err := IngestOpenscrapersCase(ctx, &caseInfo)
 	if err != nil {
 		return fmt.Errorf("error ingesting case: %w", err)
 	}

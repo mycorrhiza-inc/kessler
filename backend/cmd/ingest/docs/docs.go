@@ -72,7 +72,7 @@ const docTemplate = `{
         },
         "/add-task/ingest/case": {
             "post": {
-                "description": "Creates a new Case-specific ingestion task",
+                "description": "Creates a new Openscrapers Case ingestion task",
                 "consumes": [
                     "application/json"
                 ],
@@ -82,7 +82,7 @@ const docTemplate = `{
                 "tags": [
                     "tasks"
                 ],
-                "summary": "Add Case Ingest Task",
+                "summary": "Add Openscrapers Case Ingest Task",
                 "parameters": [
                     {
                         "description": "Case information",

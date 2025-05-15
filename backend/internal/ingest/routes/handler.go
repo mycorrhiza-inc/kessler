@@ -18,7 +18,7 @@ func DefineGlobalRouter(router *mux.Router) {
 	// Task endpoints
 	router.HandleFunc("/add-task/ingest", HandleDefaultIngestAddTask).Methods("POST")
 	router.HandleFunc("/add-task/ingest/nypuc", HandleNYPUCIngestAddTask).Methods("POST")
-	router.HandleFunc("/add-task/ingest/case", HandleCaseIngestAddTask).Methods("POST")
+	router.HandleFunc("/add-task/ingest/openscrapers-case", HandleCaseIngestAddTask).Methods("POST")
 
 	// Task status endpoint
 	router.HandleFunc("/task/{id}", HandleGetTaskInfo).Methods("GET")
@@ -63,8 +63,8 @@ func HandleNYPUCIngestAddTask(w http.ResponseWriter, r *http.Request) {
 	HandleIngestAddTaskGeneric[tasks.NYPUCDocInfo](w, r)
 }
 
-// @Summary	Add Case Ingest Task
-// @Description	Creates a new Case-specific ingestion task
+// @Summary	Add Openscrapers Case Ingest Task
+// @Description	Creates a new Openscrapers Case ingestion task
 // @Tags		tasks
 // @Accept	json
 // @Produce	json
@@ -72,9 +72,9 @@ func HandleNYPUCIngestAddTask(w http.ResponseWriter, r *http.Request) {
 // @Success	200	{object}	tasks.KesslerTaskInfo
 // @Failure	400	{string}	string	"Error decoding request body"
 // @Failure	500	{string}	string	"Error adding task"
-// @Router	/add-task/ingest/case [post]
+// @Router	/add-task/ingest/openscrapsers-case [post]
 func HandleCaseIngestAddTask(w http.ResponseWriter, r *http.Request) {
-	var caseInfo tasks.CaseInfoPayload
+	var caseInfo tasks.OpenscrapersCaseInfoPayload
 	if err := json.NewDecoder(r.Body).Decode(&caseInfo); err != nil {
 		log.Info("User Gave Bad Request for CaseIngest", "err", err)
 		errorString := fmt.Sprintf("Error decoding request body: %v", err)
