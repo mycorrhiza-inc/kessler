@@ -26,6 +26,7 @@ func ProcessFile(ctx context.Context, complete_file files.CompleteFileSchema) er
 	file, err = upsertFullFileToDB(ctx, complete_file, DatabaseInteractionInsert)
 	if err != nil {
 		log.Error("Could not upload file to database", zap.String("name", file.Name), zap.Error(err))
+		return fmt.Errorf("Could not upload file to db")
 	}
 	return nil
 }
@@ -36,9 +37,9 @@ func ProcessFileRaw(ctx context.Context, obj *files.CompleteFileSchema, stopAt f
 	}
 	logger := slog.Default()
 
-	if obj.Lang == "" {
-		return *obj, errors.New("language is required")
-	}
+	// if obj.Lang == "" {
+	// 	return *obj, errors.New("language is required")
+	// }
 
 	currentStage := obj.Stage.DocProcStatus
 
