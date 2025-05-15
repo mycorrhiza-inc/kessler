@@ -81,8 +81,8 @@ func (s FilingInfoPayload) IntoScraperInfo() (FilingInfoPayload, error) {
 	return s, nil
 }
 
-// AddScraperTaskCastable enqueues a filing ingestion task from any CastableIntoFilingInfo.
-func AddScraperTaskCastable(ctx context.Context, castable CastableIntoFilingInfo) (KesslerTaskInfo, error) {
+// AddScraperFilingTaskCastable enqueues a filing ingestion task from any CastableIntoFilingInfo.
+func AddScraperFilingTaskCastable(ctx context.Context, castable CastableIntoFilingInfo) (KesslerTaskInfo, error) {
 	payload, err := castable.IntoScraperInfo()
 	if err != nil {
 		return KesslerTaskInfo{}, fmt.Errorf("error casting to FilingInfoPayload: %w", err)
@@ -141,4 +141,3 @@ func (n NYPUCDocInfo) IntoScraperInfo() (FilingInfoPayload, error) {
 	caseInfo := CaseInfoMinimal{CaseNumber: n.DocketID}
 	return FilingInfoPayload{Filing: filing, CaseInfo: caseInfo}, nil
 }
-

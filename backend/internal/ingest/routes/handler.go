@@ -122,7 +122,7 @@ func HandleIngestAddTaskGeneric[T tasks.CastableIntoFilingInfo](w http.ResponseW
 	}
 
 	ctx := r.Context()
-	kesslerInfo, err := tasks.AddScraperTaskCastable(ctx, scraperInfo)
+	kesslerInfo, err := tasks.AddScraperFilingTaskCastable(ctx, scraperInfo)
 	if err != nil {
 		log.Error("Encountered Error Adding Task", "err", err)
 		http.Error(w, fmt.Sprintf("Error adding task: %v", err), http.StatusInternalServerError)

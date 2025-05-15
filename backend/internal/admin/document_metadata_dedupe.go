@@ -12,7 +12,6 @@ import (
 	"net/http"
 
 	"github.com/charmbracelet/log"
-
 	"github.com/google/uuid"
 )
 
@@ -24,21 +23,6 @@ type DocumentMetadataCheck struct {
 	AuthorString  string `json:"author_string"`
 }
 
-//	type FileCheckForDuplicatesRow struct {
-//		ID               uuid.UUID
-//		Name             string
-//		Extension        string
-//		Lang             string
-//		Verified         pgtype.Bool
-//		Hash             string
-//		CreatedAt        pgtype.Timestamptz
-//		UpdatedAt        pgtype.Timestamptz
-//		DatePublished    pgtype.Timestamptz
-//		Mdata            []byte
-//		ExtraObj         []byte
-//		ConversationUuid pgtype.UUID
-//		DocketGovID      pgtype.Text
-//	}
 func HandleCheckDocumentMetadata(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)

@@ -1,9 +1,13 @@
 package tasks
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"kessler/internal/objects/conversations"
+	"kessler/pkg/constants"
 	"net/http"
 	"time"
 )
@@ -15,16 +19,28 @@ func IngestOpenscrapersCase(ctx context.Context, caseInfo *OpenscrapersCaseInfoP
 	fmt.Printf("Ingesting case: %s\n", caseInfo.CaseNumber)
 	fmt.Printf("Case details: %+v\n", caseInfo)
 
-	// Persist the case (conversation) record.
-	// Insert or update conversation based on caseInfo.CaseNumber
+	minimal_case_info := caseInfo.IntoCaseInfoMinimal()
+	err := IngestCaseSpecificData(minimal_case_info)
+	if err != nil {
+		return err
+	}
 
 	// Iterate over filings and persist each.
 	for _, filing := range caseInfo.Filings {
 		for _, attachment := range filing.Attachments {
 			if attachment.RawAttachment == nil {
+				raw_att, err := FetchAttachmentDataFromOpenScrapers(attachment)
+				if err != nil {
+					return err
+				}
+				attachment.RawAttachment = &raw_att
 			}
+			inclusive_filing_info := FilingInfoPayload{
+				Filing:   filing,
+				CaseInfo: minimal_case_info,
+			}
+			AddScraperFilingTaskCastable(ctx, inclusive_filing_info)
 		}
-		// Create a new filing ingest task.
 	}
 
 	return nil
@@ -36,9 +52,9 @@ func FetchAttachmentDataFromOpenScrapers(attachment AttachmentChildInfo) (RawAtt
 	}
 
 	hashString := attachment.Hash.String()
-	url := fmt.Sprintf("https://openscrapers.kessler.xyz/api/raw_attachments/%s/obj", hashString)
+	fetch_obj_url := fmt.Sprintf("%s/api/raw_attachments/%s/obj", constants.OPENSCRAPERS_API_URL, hashString)
 
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest("GET", fetch_obj_url, nil)
 	if err != nil {
 		return RawAttachmentData{}, fmt.Errorf("failed to create request: %w", err)
 	}
@@ -60,5 +76,58 @@ func FetchAttachmentDataFromOpenScrapers(attachment AttachmentChildInfo) (RawAtt
 		return RawAttachmentData{}, fmt.Errorf("failed to decode response: %w", err)
 	}
 
+	fetch_file_url := fmt.Sprintf("%s/api/raw_attachments/%s/raw", constants.OPENSCRAPERS_API_URL, hashString)
+	result.GetAttachmentUrl = fetch_file_url
+
 	return result, nil
+}
+
+func IngestCaseSpecificData(caseInfoMinimal CaseInfoMinimal) error {
+	verify_url := fmt.Sprintf("%s/v2/public/conversations/verify", constants.INTERNAL_KESSLER_API_URL)
+
+	// Transform CaseInfoMinimal to ConversationInformation
+	ke_convo_data := conversations.ConversationInformation{
+		DocketGovID:    caseInfoMinimal.CaseNumber,
+		Name:           caseInfoMinimal.CaseName,
+		Description:    stringPtrToStr(caseInfoMinimal.Description),
+		MatterType:     stringPtrToStr(caseInfoMinimal.CaseType),
+		IndustryType:   stringPtrToStr(caseInfoMinimal.Industry),
+		Metadata:       "{}",     // Default empty JSON
+		Extra:          "{}",     // Default empty JSON
+		DocumentsCount: 0,        // Initial value
+		State:          "active", // Default state
+	}
+
+	payload, err := json.Marshal(ke_convo_data)
+	if err != nil {
+		return fmt.Errorf("failed to marshal conversation data: %w", err)
+	}
+
+	req, err := http.NewRequest("POST", verify_url, bytes.NewBuffer(payload))
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("verification failed: status %d, response: %s", resp.StatusCode, string(body))
+	}
+
+	return nil
+}
+
+// Helper function to handle nullable string pointers
+func stringPtrToStr(s *string) string {
+	if s != nil {
+		return *s
+	}
+	return ""
 }
