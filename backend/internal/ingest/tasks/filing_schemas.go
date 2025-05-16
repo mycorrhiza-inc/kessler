@@ -33,6 +33,9 @@ func (info FilingInfoPayload) IntoCompleteFile() files.CompleteFileSchema {
 		// 	parsed_hash = hashes.KesslerHash{}
 		// }
 		texts := raw_att.TextObjects
+		if len(texts) == 0 {
+			log.Error("Filing has no text objects. Dispite the fact that openscrapers should return some.")
+		}
 
 		childTextsSource := []files.AttachmentChildTextSource{}
 		highestQuality := -10000
