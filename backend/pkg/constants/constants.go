@@ -7,6 +7,12 @@ import (
 )
 
 var (
+	OPENSCRAPERS_API_URL = func() string {
+		if v := os.Getenv("OPENSCRAPERS_API_URL"); v != "" {
+			return v
+		}
+		return "https://openscrapers.kessler.xyz"
+	}()
 	INTERNAL_KESSLER_API_URL = os.Getenv("INTERNAL_KESSLER_API_URL")
 	PUBLIC_KESSLER_API_URL   = os.Getenv("PUBLIC_KESSLER_API_URL")
 

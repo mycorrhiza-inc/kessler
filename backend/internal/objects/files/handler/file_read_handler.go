@@ -50,10 +50,8 @@ func FileWithMetaGetHandler(w http.ResponseWriter, r *http.Request) {
 	file := files.CompleteFileSchema{
 		ID:        file_raw.ID,
 		Verified:  file_raw.Verified.Bool,
-		Extension: file_raw.Extension,
 		Lang:      file_raw.Lang,
 		Name:      file_raw.Name,
-		Hash:      file_raw.Hash,
 		IsPrivate: file_raw.Isprivate.Bool,
 		Mdata:     mdata_obj,
 	}
@@ -155,10 +153,8 @@ func SemiCompleteFileGetFromUUID(ctx context.Context, q dbstore.Queries, uuid uu
 	file := files.CompleteFileSchema{
 		ID:           file_raw.ID,
 		Verified:     file_raw.Verified.Bool,
-		Extension:    file_raw.Extension,
 		Lang:         file_raw.Lang,
 		Name:         file_raw.Name,
-		Hash:         file_raw.Hash,
 		Mdata:        mdata_obj,
 		Extra:        extra_obj,
 		Conversation: conv_info,

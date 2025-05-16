@@ -7,10 +7,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"kessler/pkg/constants"
 	"kessler/internal/ingest/validators"
 	"kessler/internal/objects/authors"
 	"kessler/internal/objects/files"
+	"kessler/pkg/constants"
+	"kessler/pkg/logger"
 	"kessler/pkg/s3utils"
 	"net/http"
 	"os"
@@ -20,16 +21,19 @@ import (
 
 	"github.com/charmbracelet/log"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
 
 type DatabaseInteraction int
 
 const (
-	Insert DatabaseInteraction = iota
-	Update
+	DatabaseInteractionInsert DatabaseInteraction = iota
+	DatabaseInteractionUpdate
 )
 
-func upsertFullFileToDB(ctx context.Context, obj files.CompleteFileSchema, interact DatabaseInteraction) (*files.CompleteFileSchema, error) {
+func upsertFullFileToDB(ctx context.Context, obj files.CompleteFileSchema, interact DatabaseInteraction) (files.CompleteFileSchema, error) {
+	log := logger.GetLogger("file db ingest")
+	log.Info("Attempting to insert file into database: ", zap.String("name", obj.Name))
 	// if constants.MOCK_DB_CONNECTION {
 	// 	return &obj, nil
 	// }
@@ -38,61 +42,61 @@ func upsertFullFileToDB(ctx context.Context, obj files.CompleteFileSchema, inter
 	var url string
 
 	switch interact {
-	case Insert:
+	case DatabaseInteractionInsert:
 		url = fmt.Sprintf("%s/v2/public/files/insert", constants.INTERNAL_KESSLER_API_URL)
-	case Update:
+	case DatabaseInteractionUpdate:
 		if obj.ID == uuid.Nil {
-			return nil, errors.New("cannot update a file with a null uuid")
+			return files.CompleteFileSchema{}, errors.New("cannot update a file with a null uuid")
 		}
 		url = fmt.Sprintf("%s/v2/public/files/%s/update", constants.INTERNAL_KESSLER_API_URL, obj.ID.String())
 	default:
-		return &obj, nil
+		return obj, nil
 	}
 
 	jsonData, err := json.Marshal(obj)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal object: %w", err)
+		return files.CompleteFileSchema{}, fmt.Errorf("failed to marshal object: %w", err)
 	}
 
 	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(jsonData))
 	if err != nil {
-		return nil, fmt.Errorf("request creation failed: %w", err)
+		return files.CompleteFileSchema{}, fmt.Errorf("request creation failed: %w", err)
 	}
 
 	client := &http.Client{Timeout: 30 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("request failed: %w", err)
+		return files.CompleteFileSchema{}, fmt.Errorf("request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(io.LimitReader(resp.Body, 1024))
-		return nil, fmt.Errorf("server returned status %d: %s", resp.StatusCode, string(body))
+		return files.CompleteFileSchema{}, fmt.Errorf("server returned status %d: %s", resp.StatusCode, string(body))
 	}
 
 	var response struct {
 		ID string `json:"id"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-		return nil, fmt.Errorf("failed to parse response: %w", err)
+		return files.CompleteFileSchema{}, fmt.Errorf("failed to parse response: %w", err)
 	}
 
 	newUUID, err := uuid.Parse(response.ID)
 	if err != nil {
-		return nil, fmt.Errorf("invalid UUID in response: %w", err)
+		return files.CompleteFileSchema{}, fmt.Errorf("invalid UUID in response: %w", err)
 	}
 
 	if newUUID == uuid.Nil {
-		return nil, errors.New("received null UUID from server")
+		return files.CompleteFileSchema{}, errors.New("received null UUID from server")
 	}
 
-	if interact == Insert && newUUID == originalID {
-		return nil, errors.New("identical ID returned from server during insert")
+	if interact == DatabaseInteractionInsert && newUUID == originalID {
+		return files.CompleteFileSchema{}, errors.New("identical ID returned from server during insert")
 	}
 
 	obj.ID = newUUID
-	return &obj, nil
+	return obj, nil
 }
 
 func checkPgForDuplicateMetadata(ctx context.Context, fileObj files.CompleteFileSchema) (*files.CompleteFileSchema, error) {
@@ -100,7 +104,6 @@ func checkPgForDuplicateMetadata(ctx context.Context, fileObj files.CompleteFile
 		"named_docket_id": fileObj.Conversation.DocketGovID,
 		"date_string":     fileObj.Mdata["date"],
 		"name":            fileObj.Name,
-		"extension":       fileObj.Extension,
 		"author_string":   fileObj.Mdata["author"],
 	}
 
@@ -158,16 +161,37 @@ func CompleteIngestFileFromAttachmentUrls(ctx context.Context, fileObj *files.Co
 	return fileObj, nil
 }
 
+func tryFetchAttachmentFromOpenscrapers(ctx context.Context, attachement files.CompleteAttachmentSchema, downloadDir string) (string, error) {
+	if attachement.Hash.IsZero() {
+		return "", fmt.Errorf("cannot download from openscrapers with a nil hash")
+	}
+	hash_string := attachement.Hash.String()
+	fetch_file_url := fmt.Sprintf("%s/api/raw_attachments/%s/raw", constants.OPENSCRAPERS_API_URL, hash_string)
+
+	tmpFilePath, err := s3utils.DownloadFile(fetch_file_url, downloadDir)
+	if err != nil {
+		return "", err
+	}
+	// If the error is a 404 return an error consisting of file not found.
+	return tmpFilePath, nil
+}
+
 func fetchAttachmentFromUrl(ctx context.Context, attachment files.CompleteAttachmentSchema) (files.CompleteAttachmentSchema, error) {
+	var tmpFilePath string
+	var err error
 	new_attachment := attachment
+
 	downloadDir := filepath.Join(constants.OS_TMPDIR, "downloads")
 	if err := os.MkdirAll(downloadDir, 0755); err != nil {
 		return files.CompleteAttachmentSchema{}, err
 	}
-
-	tmpFilePath, err := s3utils.DownloadFile(attachment.URL, downloadDir)
+	tmpFilePath, err = tryFetchAttachmentFromOpenscrapers(ctx, attachment, downloadDir)
 	if err != nil {
-		return files.CompleteAttachmentSchema{}, err
+		log.Warn("Couldnt find file with hash on s3", "hash", new_attachment.Hash.String())
+		tmpFilePath, err = s3utils.DownloadFile(attachment.URL, downloadDir)
+		if err != nil {
+			return files.CompleteAttachmentSchema{}, err
+		}
 	}
 
 	if attachment.Extension == "" {

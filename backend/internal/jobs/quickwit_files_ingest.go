@@ -84,21 +84,20 @@ func ParseQuickwitFileIntoCompleteSchema(file_raw dbstore.Testmat) (files.Comple
 		log.Info("encountered error decoding author list for file", "file_id", file_raw.ID)
 		// return files.CompleteFileSchema{}, err
 	}
-	text_list := []files.AttachmentChildTextSource{
-		{
-			IsOriginalText: false,
-			Text:           file_raw.FileText,
-			Language:       "en",
-		},
-	}
+	// FIXME: This needs to be refactored to use attachments.
+	// text_list := []files.AttachmentChildTextSource{
+	// 	{
+	// 		IsOriginalText: false,
+	// 		Text:           file_raw.FileText,
+	// 		Language:       "en",
+	// 	},
+	// }
 
 	file := files.CompleteFileSchema{
 		ID:            file_raw.ID,
 		Verified:      file_raw.Verified.Bool,
-		Extension:     file_raw.Extension,
 		Lang:          "en",
 		Name:          file_raw.Name,
-		Hash:          file_raw.Hash,
 		IsPrivate:     false,
 		DatePublished: timestamp.RFC3339Time(file_raw.DatePublished.Time),
 		Mdata:         mdata_obj,
@@ -109,7 +108,6 @@ func ParseQuickwitFileIntoCompleteSchema(file_raw dbstore.Testmat) (files.Comple
 			DocketGovID: file_raw.DocketGovID.String,
 			ID:          file_raw.ConversationUuid.Bytes,
 		},
-		DocTexts: text_list,
 	}
 	return file, nil
 }

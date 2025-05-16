@@ -5,10 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"kessler/internal/ingest/logic"
-	"kessler/internal/objects/files"
 
-	"github.com/charmbracelet/log"
 	"github.com/hibiken/asynq"
+	"go.uber.org/zap"
 )
 
 func AsynqHandler(mux *asynq.ServeMux) {
@@ -19,29 +18,31 @@ func AsynqHandler(mux *asynq.ServeMux) {
 }
 
 func HandleIngestNewFileTask(ctx context.Context, task *asynq.Task) error {
-	var fileObj files.CompleteFileSchema
-	if err := json.Unmarshal(task.Payload(), &fileObj); err != nil {
+	var fileTaskObj FilingInfoPayload
+	if err := json.Unmarshal(task.Payload(), &fileTaskObj); err != nil {
 		return err
 	}
-	file, err := logic.CompleteIngestFileFromAttachmentUrls(ctx, &fileObj)
+	completeFileSchema := fileTaskObj.IntoCompleteFile()
+
+	file, err := logic.CompleteIngestFileFromAttachmentUrls(ctx, &completeFileSchema)
 	if err != nil {
 		return err
 	}
-	log.Info("File added to DB", "file", file)
+	log.Info("File added to DB", zap.String("name", file.Name))
 	return nil
 }
 
 // HandleIngestCaseTask processes a case ingestion task
 func HandleIngestCaseTask(ctx context.Context, task *asynq.Task) error {
-	var caseInfo CaseInfoPayload
+	var caseInfo OpenscrapersCaseInfoPayload
 	if err := json.Unmarshal(task.Payload(), &caseInfo); err != nil {
 		return fmt.Errorf("failed to unmarshal case payload: %w", err)
 	}
 	// invoke business logic to persist case and filings
-	err := IngestCase(ctx, &caseInfo)
+	err := IngestOpenscrapersCase(ctx, caseInfo)
 	if err != nil {
 		return fmt.Errorf("error ingesting case: %w", err)
 	}
-	log.Info("Case ingested successfully", "case_number", caseInfo.CaseNumber)
+	log.Info("Case ingested successfully", zap.String("case_number", caseInfo.CaseNumber))
 	return nil
 }

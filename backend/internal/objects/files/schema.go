@@ -74,10 +74,6 @@ type CompleteFileSchema struct {
 	Extra         FileGeneratedExtras                   `json:"extra"`
 	Authors       []authors.AuthorInformation           `json:"authors"`
 	Conversation  conversations.ConversationInformation `json:"conversation"`
-	// In here temporarially remove once the attachment implementation is completely finished
-	Hash      string                      `json:"hash"`
-	Extension string                      `json:"extension"`
-	DocTexts  []AttachmentChildTextSource `json:"texts"`
 }
 
 func (input CompleteFileSchema) CompleteFileSchemaPrune() FileSchema {
@@ -106,10 +102,8 @@ func (input FileSchema) CompleteFileSchemaInflateFromPartialSchema() CompleteFil
 
 func (updateInfo CompleteFileSchema) ConvertToCreationData() FileCreationDataRaw {
 	creationData := FileCreationDataRaw{
-		Extension:     updateInfo.Extension,
 		Lang:          updateInfo.Lang,
 		Name:          updateInfo.Name,
-		Hash:          updateInfo.Hash,
 		Verified:      pgtype.Bool{Bool: updateInfo.Verified, Valid: true},
 		DatePublished: updateInfo.DatePublished,
 	}

@@ -4,7 +4,7 @@ import (
 	"kessler/internal/ingest/routes"
 	"kessler/internal/ingest/tasks"
 	"kessler/pkg/constants"
-	"log"
+	"kessler/pkg/logger"
 	"net/http"
 	"os"
 	"os/signal"
@@ -15,6 +15,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/hibiken/asynq"
 	httpSwagger "github.com/swaggo/http-swagger"
+	"go.uber.org/zap"
 )
 
 //	@title			Kessler Ingest API
@@ -62,6 +63,7 @@ func main() {
 	// Create asynq client
 	client := asynq.NewClient(asynq.RedisClientOpt{Addr: redisAddr})
 	defer client.Close()
+	log := logger.GetLogger("main_ingest")
 
 	// Create API subrouter with client middleware
 	api := r.PathPrefix(root).Subrouter()
@@ -69,35 +71,36 @@ func main() {
 	routes.DefineGlobalRouter(api) // Pass the subrouter to routes package
 	// Create asynq client
 
-	// Create and start worker
-	worker := asynq.NewServer(
-		asynq.RedisClientOpt{Addr: redisAddr},
-		asynq.Config{
-			Concurrency: concurrency,
-			Queues: map[string]int{
-				"default": 1,
-			},
-		},
-	)
-
-	// Create mux and register handlers
-	asyncq_mux := asynq.NewServeMux()
-	tasks.AsynqHandler(asyncq_mux)
+	// // Create and start worker
+	// worker := asynq.NewServer(
+	// 	asynq.RedisClientOpt{Addr: redisAddr},
+	// 	asynq.Config{
+	// 		Concurrency: concurrency,
+	// 		Queues: map[string]int{
+	// 			"default": 1,
+	// 		},
+	// 	},
+	// )
+	//
+	// // Create mux and register handlers
+	// asyncq_mux := asynq.NewServeMux()
+	// tasks.AsynqHandler(asyncq_mux)
 	// mux.Use(tasksMiddleware(client))
 	// mux.HandleFunc(tasks.TypeAddFileScraper, tasks.HandleAddFileScraperTask)
 	// mux.HandleFunc(tasks.TypeProcessExistingFile, tasks.HandleProcessFileTask)
 
-	// Run worker in separate goroutine
-	go func() {
-		if err := worker.Run(asyncq_mux); err != nil {
-			log.Fatalf("Failed to start worker: %v", err)
-		}
-	}()
+	// // Run worker in separate goroutine
+	// go func() {
+	// 	if err := worker.Run(asyncq_mux); err != nil {
+	// 		log.Fatalf("Failed to start worker: %v", err)
+	// 	}
+	// }()
 
 	// Start HTTP server in a goroutine
 	go func() {
+		log.Info("Starting ingest server.........")
 		if err := http.ListenAndServe(":4042", r); err != nil {
-			log.Fatalf("Failed to start HTTP server: %v", err)
+			log.Fatal("Failed to start HTTP server:", zap.Error(err))
 		}
 	}()
 
@@ -105,6 +108,6 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	log.Println("Shutting down...")
-	worker.Shutdown()
+	log.Info("Shutting down...")
+	// worker.Shutdown()
 }

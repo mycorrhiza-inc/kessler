@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"kessler/internal/objects/conversations"
 	"kessler/internal/objects/files"
+	"kessler/pkg/hashes"
 	"kessler/pkg/timestamp"
 	"reflect"
 	"strings"
@@ -21,17 +22,41 @@ type FilingInfoPayload struct {
 }
 
 // CastScraperInfoToNewFile converts a FilingInfoPayload into the internal CompleteFileSchema.
-func CastScraperInfoToNewFile(info FilingInfoPayload) files.CompleteFileSchema {
+func (info FilingInfoPayload) IntoCompleteFile() files.CompleteFileSchema {
 	// Attachments
 	newAttachments := make([]files.CompleteAttachmentSchema, len(info.Filing.Attachments))
 	for i, at := range info.Filing.Attachments {
 		md := at.Mdata
-		md["url"] = at.URL
+		// md["url"] = at.URL
+		raw_att := at.RawAttachment
+		parsed_hash, err := hashes.HashFromString(raw_att.Hash)
+		if err != nil {
+			parsed_hash = hashes.KesslerHash{}
+		}
+		texts := raw_att.TextObjects
+
+		var childTextSource files.AttachmentChildTextSource
+		highestQuality := -10000
+
+		for _, text := range texts {
+			if text.Quality > highestQuality {
+				childTextSource = files.AttachmentChildTextSource{
+					// Translation out of scope for now
+					IsOriginalText: true,
+					Text:           text.Text,
+					// Throwing and assuming the text is always english
+					Language: "en",
+				}
+			}
+		}
+
 		newAttachments[i] = files.CompleteAttachmentSchema{
 			Name:      at.Name,
 			Lang:      at.Lang,
 			Extension: at.Extension,
 			Mdata:     md,
+			Hash:      parsed_hash,
+			Texts:     []files.AttachmentChildTextSource{childTextSource},
 		}
 	}
 
@@ -81,8 +106,8 @@ func (s FilingInfoPayload) IntoScraperInfo() (FilingInfoPayload, error) {
 	return s, nil
 }
 
-// AddScraperTaskCastable enqueues a filing ingestion task from any CastableIntoFilingInfo.
-func AddScraperTaskCastable(ctx context.Context, castable CastableIntoFilingInfo) (KesslerTaskInfo, error) {
+// AddScraperFilingTaskCastable enqueues a filing ingestion task from any CastableIntoFilingInfo.
+func AddScraperFilingTaskCastable(ctx context.Context, castable CastableIntoFilingInfo) (KesslerTaskInfo, error) {
 	payload, err := castable.IntoScraperInfo()
 	if err != nil {
 		return KesslerTaskInfo{}, fmt.Errorf("error casting to FilingInfoPayload: %w", err)
@@ -141,4 +166,3 @@ func (n NYPUCDocInfo) IntoScraperInfo() (FilingInfoPayload, error) {
 	caseInfo := CaseInfoMinimal{CaseNumber: n.DocketID}
 	return FilingInfoPayload{Filing: filing, CaseInfo: caseInfo}, nil
 }
-
