@@ -8,12 +8,14 @@ import (
 	"kessler/internal/objects/authors"
 	"kessler/internal/objects/files"
 	OrganizationHandler "kessler/internal/objects/organizations/handler"
+	"kessler/pkg/logger"
 
-	"github.com/charmbracelet/log"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 )
+
+var log = logger.GetLogger("files crud")
 
 func UpsertFileAttachmentTexts(ctx context.Context, q dbstore.Queries, attachment_uuid uuid.UUID, texts []files.AttachmentChildTextSource, insert bool) error {
 	error_list := []error{}
@@ -105,7 +107,7 @@ func UpsertFileExtras(ctx context.Context, q dbstore.Queries, doc_uuid uuid.UUID
 	extras_json_obj, err := json.Marshal(extras)
 	if err != nil {
 		err = fmt.Errorf("error marshalling extras json object, to my understanding this should be absolutely impossible: %v", err)
-		log.Info(err)
+		log.Info("Encountere error marshalling extras", zap.Error(err))
 		panic(err)
 	}
 	pgPrivate := pgtype.Bool{
