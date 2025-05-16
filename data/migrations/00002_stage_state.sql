@@ -17,8 +17,8 @@ ADD
 
 -- +goose Down
 ALTER TABLE
-    public.filestage DROP COLUMN STATUS;
+    public.filestage DROP COLUMN IF EXISTS STATUS;
 
 DROP TYPE IF EXISTS stage_state CASCADE;
 
-DROP TABLE IF EXISTS public.stage_log;
+DROP TABLE IF EXISTS public.stage_log CASCADE;

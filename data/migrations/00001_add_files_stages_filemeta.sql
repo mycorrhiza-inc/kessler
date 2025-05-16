@@ -35,10 +35,16 @@ CREATE TABLE IF NOT EXISTS public.file_text_source (
 );
 
 -- +goose Down
-DROP TABLE IF EXISTS public.file_metadata;
+DROP TABLE IF EXISTS public.file_metadata CASCADE;
 
-DROP TABLE IF EXISTS public.filestage;
+DROP TABLE IF EXISTS public.filestage CASCADE;
 
-DROP TABLE IF EXISTS public.file;
+DROP TABLE IF EXISTS public.file CASCADE;
 
-DROP TABLE IF EXISTS public.file_text_source;
+DROP TABLE IF EXISTS public.file_text_source CASCADE;
+
+DROP TABLE IF EXISTS public.relation_individuals_events CASCADE;
+
+DROP TABLE IF EXISTS public.relation_users_usergroups CASCADE;
+
+DROP TABLE IF EXISTS public.private_access_controls CASCADE;

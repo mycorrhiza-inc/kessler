@@ -17,6 +17,6 @@ CREATE TABLE IF NOT EXISTS public.docket_documents (
 );
 
 -- +goose Down
-DROP TABLE docket_conversations;
+DROP TABLE docket_conversations CASCADE;
 
-DROP TABLE docket_documents;
+DROP TABLE docket_documents CASCADE;
