@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"kessler/internal/objects/conversations"
 	"kessler/internal/objects/files"
-	"kessler/pkg/hashes"
 	"kessler/pkg/timestamp"
 	"reflect"
 	"strings"
@@ -29,23 +28,28 @@ func (info FilingInfoPayload) IntoCompleteFile() files.CompleteFileSchema {
 		md := at.Mdata
 		// md["url"] = at.URL
 		raw_att := at.RawAttachment
-		parsed_hash, err := hashes.HashFromString(raw_att.Hash)
-		if err != nil {
-			parsed_hash = hashes.KesslerHash{}
-		}
+		// parsed_hash, err := hashes.HashFromString(raw_att.Hash)
+		// if err != nil {
+		// 	parsed_hash = hashes.KesslerHash{}
+		// }
 		texts := raw_att.TextObjects
 
-		var childTextSource files.AttachmentChildTextSource
+		childTextsSource := []files.AttachmentChildTextSource{}
 		highestQuality := -10000
 
 		for _, text := range texts {
 			if text.Quality > highestQuality {
-				childTextSource = files.AttachmentChildTextSource{
+				newHighestText := files.AttachmentChildTextSource{
 					// Translation out of scope for now
 					IsOriginalText: true,
 					Text:           text.Text,
 					// Throwing and assuming the text is always english
 					Language: "en",
+				}
+				if len(childTextsSource) == 0 {
+					childTextsSource = append(childTextsSource, newHighestText)
+				} else {
+					childTextsSource[0] = newHighestText
 				}
 			}
 		}
@@ -55,8 +59,8 @@ func (info FilingInfoPayload) IntoCompleteFile() files.CompleteFileSchema {
 			Lang:      at.Lang,
 			Extension: at.Extension,
 			Mdata:     md,
-			Hash:      parsed_hash,
-			Texts:     []files.AttachmentChildTextSource{childTextSource},
+			Hash:      at.Hash,
+			Texts:     childTextsSource,
 		}
 	}
 

@@ -8,6 +8,7 @@ import (
 	"io"
 	"kessler/internal/ingest/logic"
 	"kessler/internal/objects/conversations"
+	"kessler/internal/objects/files/validation"
 	"kessler/pkg/constants"
 	"kessler/pkg/logger"
 	"net/http"
@@ -57,8 +58,13 @@ func IngestOpenscrapersCase(ctx context.Context, caseInfo OpenscrapersCaseInfoPa
 			CaseInfo: minimal_case_info,
 		}
 		complete_filing := inclusive_filing_info.IntoCompleteFile()
+		err := validation.ValidateFile(complete_filing)
+		if err != nil {
+			log.Error("file was not properly formatted", zap.Error(err))
+			return err
+		}
 		log.Info("Successfully completed conversion into complete file", zap.String("name", complete_filing.Name))
-		err := logic.ProcessFile(ctx, complete_filing)
+		err = logic.ProcessFile(ctx, complete_filing)
 		log.Warn("Made it past the line??")
 		if err != nil {
 			log.Error("Encountered error processing file", zap.Error(err), zap.String("name", complete_filing.Name))

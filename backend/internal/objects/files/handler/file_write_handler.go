@@ -10,6 +10,7 @@ import (
 	ConvoHandler "kessler/internal/objects/conversations/handler"
 	"kessler/internal/objects/files"
 	"kessler/internal/objects/files/crud"
+	"kessler/internal/objects/files/validation"
 	"net/http"
 	"strings"
 
@@ -95,6 +96,10 @@ func ingestFile(ctx context.Context, q *dbstore.Queries, params IngestDocParams)
 	var err error
 	docInfo := params.DocInfo
 	docUUID := docInfo.ID
+	err = validation.ValidateFile(docInfo)
+	if err != nil {
+		return docInfo, fmt.Errorf("file was not properly formatted: %s", err)
+	}
 
 	// // Deduplication logic
 	// if params.Insert && params.Deduplicate {
