@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"kessler/internal/database"
 	"kessler/internal/dbstore"
 	ConvoHandler "kessler/internal/objects/conversations/handler"
 	"kessler/internal/objects/files"
 	"kessler/internal/objects/files/crud"
-
 	"net/http"
 	"strings"
 
@@ -35,7 +35,7 @@ func respondError(w http.ResponseWriter, message string, statusCode int) {
 
 func makeFileUpsertHandler(config FileUpsertHandlerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		q := config.GetDBQueries(r)
+		q := database.GetTx()
 		ctx := r.Context()
 
 		// Validate HTTP method and path
