@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"kessler/internal/objects/conversations"
 	"kessler/internal/objects/files"
+	"kessler/internal/objects/files/validation"
 	"kessler/pkg/timestamp"
 	"reflect"
 	"strings"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/hibiken/asynq"
+	"go.uber.org/zap"
 )
 
 // FilingInfoPayload is the payload for adding a filing to a case ingestion task.
@@ -94,13 +96,18 @@ func (info FilingInfoPayload) IntoCompleteFile() files.CompleteFileSchema {
 	}
 
 	conv := conversations.ConversationInformation{DocketGovID: info.CaseInfo.CaseNumber}
-	return files.CompleteFileSchema{
+	return_file := files.CompleteFileSchema{
 		ID:           uuid.Nil,
 		Name:         info.Filing.Name,
 		Conversation: conv,
 		Mdata:        metadata,
 		Attachments:  newAttachments,
 	}
+	err := validation.ValidateFile(return_file)
+	if err != nil {
+		log.Error("Filing transformation produced invalid file", zap.Error(err))
+	}
+	return return_file
 }
 
 // CastableIntoFilingInfo is implemented by types that can be converted to FilingInfoPayload.
