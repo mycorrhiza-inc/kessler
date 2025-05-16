@@ -11,14 +11,17 @@ import (
 	"kessler/internal/objects/conversations"
 	"kessler/internal/objects/files"
 	"kessler/pkg/hashes"
+	"kessler/pkg/logger"
 	"kessler/pkg/s3utils"
 	"net/http"
 	"os"
 
-	"github.com/charmbracelet/log"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+	"go.uber.org/zap"
 )
+
+var log = logger.GetLogger("file read/write handler")
 
 func FileWithMetaGetHandler(w http.ResponseWriter, r *http.Request) {
 	q := database.GetTx()
@@ -103,7 +106,7 @@ func FileSemiCompleteGet(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	file, err := SemiCompleteFileGetFromUUID(ctx, q, parsedUUID)
 	if err != nil {
-		log.Info(err)
+		log.Info("Encountered error getitng file from uuid: ", zap.Error(err))
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

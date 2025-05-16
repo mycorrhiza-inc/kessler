@@ -12,6 +12,7 @@ import (
 	"github.com/charmbracelet/log"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
+	"go.uber.org/zap"
 )
 
 func UpsertFileAttachmentTexts(ctx context.Context, q dbstore.Queries, attachment_uuid uuid.UUID, texts []files.AttachmentChildTextSource, insert bool) error {
@@ -39,6 +40,7 @@ func UpsertFileAttachments(ctx context.Context, q dbstore.Queries, doc_uuid uuid
 	if !insert {
 		// Delete previous file attachments
 	}
+	log.Info("Trying to insert attachments", zap.Int("num_attachments", len(attachments)))
 	for _, attachment := range attachments {
 		attachment_insert_args := dbstore.AttachmentCreateParams{
 			FileID:    doc_uuid,
@@ -46,7 +48,7 @@ func UpsertFileAttachments(ctx context.Context, q dbstore.Queries, doc_uuid uuid
 			Extension: attachment.Extension,
 			Hash:      attachment.Hash.String(),
 			Lang:      attachment.Lang,
-			Mdata:     []byte{},
+			Mdata:     []byte("{}"),
 		}
 		pg_attachment, err := q.AttachmentCreate(ctx, attachment_insert_args)
 		if err != nil {
