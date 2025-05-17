@@ -159,7 +159,7 @@ type castableFiling interface {
 func HandleIngestAddTaskGeneric[T tasks.CastableIntoFilingInfo](w http.ResponseWriter, r *http.Request) {
 	var scraperInfo T
 	if err := json.NewDecoder(r.Body).Decode(&scraperInfo); err != nil {
-		log.Info("User Gave Bad Request", "err", err)
+		log.Info("User Gave Bad Request", zap.Error(err))
 		errorString := fmt.Sprintf("Error decoding request body: %v", err)
 		http.Error(w, errorString, http.StatusBadRequest)
 		return
@@ -168,7 +168,7 @@ func HandleIngestAddTaskGeneric[T tasks.CastableIntoFilingInfo](w http.ResponseW
 	ctx := r.Context()
 	kesslerInfo, err := tasks.AddScraperFilingTaskCastable(ctx, scraperInfo)
 	if err != nil {
-		log.Error("Encountered Error Adding Task", "err", err)
+		log.Error("Encountered Error Adding Task", zap.Error(err))
 		http.Error(w, fmt.Sprintf("Error adding task: %v", err), http.StatusInternalServerError)
 		return
 	}
