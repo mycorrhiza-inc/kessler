@@ -113,8 +113,9 @@ func FetchAttachmentDataFromOpenScrapers(attachment AttachmentChildInfo) (RawAtt
 
 	fetch_file_url := fmt.Sprintf("%s/api/raw_attachments/%s/raw", constants.OPENSCRAPERS_API_URL, hashString)
 	result.GetAttachmentUrl = fetch_file_url
+	var nilerr error
 
-	return result, nil
+	return result, nilerr
 }
 
 func IngestCaseSpecificData(caseInfoMinimal CaseInfoMinimal) error {
