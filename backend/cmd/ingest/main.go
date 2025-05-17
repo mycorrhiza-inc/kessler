@@ -3,7 +3,6 @@ package main
 import (
 	"kessler/internal/ingest/routes"
 	"kessler/internal/ingest/tasks"
-	"kessler/pkg/constants"
 	"kessler/pkg/logger"
 	"net/http"
 	"os"
@@ -53,9 +52,9 @@ func main() {
 	r := mux.NewRouter()
 	root := "/ingest_v1"
 	// Set up Swagger endpoint
-	public_api_url := constants.PUBLIC_KESSLER_API_URL
+	// public_api_url := constants.PUBLIC_KESSLER_API_URL
 	r.PathPrefix(root + "/swagger/").Handler(httpSwagger.Handler(
-		httpSwagger.URL(public_api_url+"/ingest_v1/swagger/doc.json"), httpSwagger.DeepLinking(true),
+		httpSwagger.URL("/ingest_v1/swagger/doc.json"), httpSwagger.DeepLinking(true),
 		httpSwagger.DocExpansion("none"),
 		httpSwagger.DomID("swagger-ui"),
 	)).Methods(http.MethodGet)
@@ -71,30 +70,30 @@ func main() {
 	routes.DefineGlobalRouter(api) // Pass the subrouter to routes package
 	// Create asynq client
 
-	// // Create and start worker
-	// worker := asynq.NewServer(
-	// 	asynq.RedisClientOpt{Addr: redisAddr},
-	// 	asynq.Config{
-	// 		Concurrency: concurrency,
-	// 		Queues: map[string]int{
-	// 			"default": 1,
-	// 		},
-	// 	},
-	// )
-	//
-	// // Create mux and register handlers
-	// asyncq_mux := asynq.NewServeMux()
-	// tasks.AsynqHandler(asyncq_mux)
-	// mux.Use(tasksMiddleware(client))
-	// mux.HandleFunc(tasks.TypeAddFileScraper, tasks.HandleAddFileScraperTask)
-	// mux.HandleFunc(tasks.TypeProcessExistingFile, tasks.HandleProcessFileTask)
+	// Create and start worker
+	worker := asynq.NewServer(
+		asynq.RedisClientOpt{Addr: redisAddr},
+		asynq.Config{
+			Concurrency: concurrency,
+			Queues: map[string]int{
+				"default": 1,
+			},
+		},
+	)
 
-	// // Run worker in separate goroutine
-	// go func() {
-	// 	if err := worker.Run(asyncq_mux); err != nil {
-	// 		log.Fatalf("Failed to start worker: %v", err)
-	// 	}
-	// }()
+	// Create mux and register handlers
+	asyncq_mux := asynq.NewServeMux()
+	tasks.AsynqHandler(asyncq_mux)
+	// asyncq_mux.Use(tasksMiddleware(client))
+	// asyncq_mux.HandleFunc(tasks.TypeAddFileScraper, tasks.HandleAddFileScraperTask)
+	// asyncq_mux.HandleFunc(tasks.TypeProcessExistingFile, tasks.HandleProcessFileTask)
+
+	// Run worker in separate goroutine
+	go func() {
+		if err := worker.Run(asyncq_mux); err != nil {
+			log.Fatal("Failed to start worker: %v", zap.Error(err))
+		}
+	}()
 
 	// Start HTTP server in a goroutine
 	go func() {

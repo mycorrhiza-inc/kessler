@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"kessler/internal/objects/conversations"
+	"kessler/pkg/constants"
 	"kessler/pkg/hashes"
 	"kessler/pkg/timestamp"
+	"net/http"
 
 	"github.com/hibiken/asynq"
 )
@@ -160,4 +162,35 @@ func CastCaseInfoToConversation(info OpenscrapersCaseInfoPayload) (conversations
 		return conversations.ConversationInformation{}, fmt.Errorf("case_number is required")
 	}
 	return conversations.ConversationInformation{DocketGovID: info.CaseNumber}, nil
+}
+
+type OpenscrapersCaseListEntry struct {
+	Country          string                `json:"country"`
+	State            string                `json:"state"`
+	JurisdictionName string                `json:"jurisdiction_name"`
+	IndexedAt        timestamp.RFC3339Time `json:"indexed_at"`
+	CaseID           string                `json:"case_id"`
+}
+
+func (entry OpenscrapersCaseListEntry) FetchInfoCaseInfo() (OpenscrapersCaseInfoPayload, error) {
+	api_endpoint := constants.OPENSCRAPERS_API_URL
+	url := fmt.Sprintf("%s/api/cases/%s/%s/%s", api_endpoint, entry.State, entry.JurisdictionName, entry.CaseID)
+	resp, err := http.Get(url)
+	if err != nil {
+		return OpenscrapersCaseInfoPayload{}, fmt.Errorf("failed to fetch case info: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return OpenscrapersCaseInfoPayload{}, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
+	var payload OpenscrapersCaseInfoPayload
+	if err := json.NewDecoder(resp.Body).Decode(&payload); err != nil {
+		return OpenscrapersCaseInfoPayload{}, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	// Now im super spooked
+	var nilerr error
+	return payload, nilerr
 }
