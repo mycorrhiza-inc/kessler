@@ -73,7 +73,7 @@ func HandleNYPUCIngestAddTask(w http.ResponseWriter, r *http.Request) {
 // @Tags		tasks
 // @Accept	json
 // @Produce	json
-// @Param	body	body		tasks.CaseInfoPayload	true	"Case information"
+// @Param	body	body		tasks.OpenscrapersCaseInfoPayload	true	"Case information"
 // @Success	200	{object}	tasks.KesslerTaskInfo
 // @Failure	400	{string}	string	"Error decoding request body"
 // @Failure	500	{string}	string	"Error adding task"
