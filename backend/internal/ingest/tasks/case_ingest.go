@@ -46,8 +46,8 @@ func IngestOpenscrapersCase(ctx context.Context, caseInfo OpenscrapersCaseInfoPa
 			if reflect.ValueOf(attachment.RawAttachment.Hash).IsZero() {
 				raw_att, err := FetchAttachmentDataFromOpenScrapers(attachment)
 				if err != nil {
-					log.Error("Encountered error processing file", zap.Error(err))
-					return fmt.Errorf("couldnt get attachment info from openscrapers: %s", err)
+					log.Error("Encountered error getting attachment data from openscrapers", zap.Error(err))
+					// return fmt.Errorf("couldnt get attachment info from openscrapers: %s", err)
 				}
 				if err == nil {
 					caseInfo.Filings[filing_index].Attachments[attachment_index].RawAttachment = raw_att
