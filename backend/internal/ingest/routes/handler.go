@@ -127,8 +127,8 @@ func HandleCaseListIngestAddTask(w http.ResponseWriter, r *http.Request) {
 		_, err = tasks.AddCaseTaskCastable(ctx, caseInfo)
 		if err != nil {
 			log.Error("Encountered Error Adding Case Task", zap.Error(err), zap.String("case_id", caseListEntry.CaseID))
-			http.Error(w, fmt.Sprintf("Error adding task: %v", err), http.StatusInternalServerError)
-			return
+			// http.Error(w, fmt.Sprintf("Error adding task: %v", err), http.StatusInternalServerError)
+			// return
 		}
 		log.Info("Successfuly finished ingest task for case", zap.String("case_id", caseListEntry.CaseID))
 
