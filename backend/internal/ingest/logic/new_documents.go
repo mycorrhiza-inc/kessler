@@ -223,7 +223,7 @@ func fetchAttachmentFromUrl(ctx context.Context, attachment files.CompleteAttach
 
 func validateAuthorNames(fileObj *files.CompleteFileSchema) error {
 	authorNames, _ := fileObj.Mdata["author"].(string)
-	authors, err := splitAuthorField(authorNames)
+	authors, err := SplitAuthorField(authorNames)
 	if err != nil {
 		log.Error("Author splitting failed", "err", err)
 	}
@@ -247,7 +247,7 @@ func validateMetadata(metadata map[string]interface{}) error {
 	return nil
 }
 
-func splitAuthorField(authorStr string) ([]authors.AuthorInformation, error) {
+func SplitAuthorField(authorStr string) ([]authors.AuthorInformation, error) {
 	if authorStr == "" {
 		return []authors.AuthorInformation{}, nil
 	}

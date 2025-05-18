@@ -3,6 +3,7 @@ package tasks
 import (
 	"context"
 	"fmt"
+	"kessler/internal/ingest/logic"
 	"kessler/internal/objects/conversations"
 	"kessler/internal/objects/files"
 	"kessler/internal/objects/files/validation"
@@ -96,14 +97,19 @@ func (info FilingInfoPayload) IntoCompleteFile() files.CompleteFileSchema {
 	}
 
 	conv := conversations.ConversationInformation{DocketGovID: info.CaseInfo.CaseNumber}
+	authors, err := logic.SplitAuthorField(info.Filing.PartyName)
+	if err != nil {
+		log.Error("Encountered error generating authors", zap.Error(err))
+	}
 	return_file := files.CompleteFileSchema{
 		ID:           uuid.Nil,
 		Name:         info.Filing.Name,
 		Conversation: conv,
 		Mdata:        metadata,
 		Attachments:  newAttachments,
+		Authors:      authors,
 	}
-	err := validation.ValidateFile(return_file)
+	err = validation.ValidateFile(return_file)
 	if err != nil {
 		log.Error("Filing transformation produced invalid file", zap.Error(err))
 	}
