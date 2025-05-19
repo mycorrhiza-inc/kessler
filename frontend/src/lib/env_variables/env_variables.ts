@@ -36,32 +36,41 @@ const removeBackslash = (val: string | undefined): string => {
  * Uses next-runtime-env under the hood and validates via Zod schema.
  */
 
-export const getContextualAPIURL = () => {
-  if (window == undefined) {
-    const result = env("INTERNAL_KESSLER_API_URL");
-    assert(result != undefined, "INTERNAL API URL IS UNDEFINED");
+export const getContextualAPIURL = (): String => {
+  if (typeof window === "undefined") {
+    const result = getUniversalEnvConfig().internal_api_url;
     return result;
   }
-  const result = env("PUBLIC_KESSLER_API_URL");
-  assert(result != undefined, "PUBLIC API URL IS UNDEFINED");
+  const result = getUniversalEnvConfig().public_api_url;
   return result;
 };
 
 export function getUniversalEnvConfig(): RuntimeEnvConfig {
-  const rawConfig = {
-    public_api_url: removeBackslash(env("PUBLIC_KESSLER_API_URL")),
-    internal_api_url: removeBackslash(env("INTERNAL_KESSLER_API_URL")),
-    public_posthog_key: env("PUBLIC_POSTHOG_KEY"),
-    public_posthog_host: env("PUBLIC_POSTHOG_HOST"),
-    deployment_env: env("REACT_APP_ENV") ?? "production",
-    version_hash: env("VERSION_HASH") ?? "unknown",
-    flags: {
-      // next-runtime-env returns strings for env vars, so compare string
-      enable_all_features: env("ENABLE_ALL_FEATURES") === "true",
-    },
+  const defaultConfig: RuntimeEnvConfig = {
+    public_api_url: "http:localhost",
+    internal_api_url: "http:backend-go:4041",
+    public_posthog_host: "",
+    public_posthog_key: "",
+    deployment_env: "dev",
+    version_hash: "unknown",
   };
-
-  return RuntimeEnvConfigSchema.parse(rawConfig);
+  try {
+    const rawConfig = {
+      public_api_url: removeBackslash(env("PUBLIC_KESSLER_API_URL")),
+      internal_api_url: removeBackslash(env("INTERNAL_KESSLER_API_URL")),
+      public_posthog_key: env("PUBLIC_POSTHOG_KEY"),
+      public_posthog_host: env("PUBLIC_POSTHOG_HOST"),
+      deployment_env: env("REACT_APP_ENV") ?? "production",
+      version_hash: env("VERSION_HASH") ?? "unknown",
+      flags: {
+        // next-runtime-env returns strings for env vars, so compare string
+        enable_all_features: env("ENABLE_ALL_FEATURES") === "true",
+      },
+    };
+    return RuntimeEnvConfigSchema.parse(rawConfig);
+  } catch {
+    return defaultConfig;
+  }
 }
 
 /**

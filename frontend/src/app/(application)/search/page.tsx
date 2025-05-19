@@ -15,7 +15,6 @@ export default function Page({ searchParams }: SearchPageProps) {
   return (
     <>
       <div className="flex flex-col items-center justify-center bg-base-100 p-4">
-        {/* Client-side search bar */}
         <HomeSearchBarClientBaseUrl
           baseUrl="/search"
           initialState={initialQuery}
@@ -31,4 +30,3 @@ export default function Page({ searchParams }: SearchPageProps) {
     </>
   );
 }
-

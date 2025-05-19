@@ -94,6 +94,9 @@ export const useSearchState = (): SearchStateExport => {
     setIsSearching(false);
   };
   const originalPathname = useMemo(() => {
+    if (typeof window == "undefined") {
+      return "";
+    }
     return window?.location?.pathname || "";
   }, []);
   const resetSearch = () => {
