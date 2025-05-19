@@ -3,9 +3,10 @@ package tasks
 import (
 	"context"
 	"fmt"
+	"kessler/internal/ingest/logic"
 	"kessler/internal/objects/conversations"
 	"kessler/internal/objects/files"
-	"kessler/pkg/hashes"
+	"kessler/internal/objects/files/validation"
 	"kessler/pkg/timestamp"
 	"reflect"
 	"strings"
@@ -13,6 +14,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/hibiken/asynq"
+	"go.uber.org/zap"
 )
 
 // FilingInfoPayload is the payload for adding a filing to a case ingestion task.
@@ -29,23 +31,31 @@ func (info FilingInfoPayload) IntoCompleteFile() files.CompleteFileSchema {
 		md := at.Mdata
 		// md["url"] = at.URL
 		raw_att := at.RawAttachment
-		parsed_hash, err := hashes.HashFromString(raw_att.Hash)
-		if err != nil {
-			parsed_hash = hashes.KesslerHash{}
-		}
+		// parsed_hash, err := hashes.HashFromString(raw_att.Hash)
+		// if err != nil {
+		// 	parsed_hash = hashes.KesslerHash{}
+		// }
 		texts := raw_att.TextObjects
+		if len(texts) == 0 {
+			log.Error("Filing has no text objects. Dispite the fact that openscrapers should return some.")
+		}
 
-		var childTextSource files.AttachmentChildTextSource
+		childTextsSource := []files.AttachmentChildTextSource{}
 		highestQuality := -10000
 
 		for _, text := range texts {
 			if text.Quality > highestQuality {
-				childTextSource = files.AttachmentChildTextSource{
+				newHighestText := files.AttachmentChildTextSource{
 					// Translation out of scope for now
 					IsOriginalText: true,
 					Text:           text.Text,
 					// Throwing and assuming the text is always english
 					Language: "en",
+				}
+				if len(childTextsSource) == 0 {
+					childTextsSource = append(childTextsSource, newHighestText)
+				} else {
+					childTextsSource[0] = newHighestText
 				}
 			}
 		}
@@ -55,8 +65,8 @@ func (info FilingInfoPayload) IntoCompleteFile() files.CompleteFileSchema {
 			Lang:      at.Lang,
 			Extension: at.Extension,
 			Mdata:     md,
-			Hash:      parsed_hash,
-			Texts:     []files.AttachmentChildTextSource{childTextSource},
+			Hash:      at.Hash,
+			Texts:     childTextsSource,
 		}
 	}
 
@@ -87,13 +97,23 @@ func (info FilingInfoPayload) IntoCompleteFile() files.CompleteFileSchema {
 	}
 
 	conv := conversations.ConversationInformation{DocketGovID: info.CaseInfo.CaseNumber}
-	return files.CompleteFileSchema{
+	authors, err := logic.SplitAuthorField(info.Filing.PartyName)
+	if err != nil {
+		log.Error("Encountered error generating authors", zap.Error(err))
+	}
+	return_file := files.CompleteFileSchema{
 		ID:           uuid.Nil,
 		Name:         info.Filing.Name,
 		Conversation: conv,
 		Mdata:        metadata,
 		Attachments:  newAttachments,
+		Authors:      authors,
 	}
+	err = validation.ValidateFile(return_file)
+	if err != nil {
+		log.Error("Filing transformation produced invalid file", zap.Error(err))
+	}
+	return return_file
 }
 
 // CastableIntoFilingInfo is implemented by types that can be converted to FilingInfoPayload.

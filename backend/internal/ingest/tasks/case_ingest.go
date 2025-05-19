@@ -8,6 +8,7 @@ import (
 	"io"
 	"kessler/internal/ingest/logic"
 	"kessler/internal/objects/conversations"
+	"kessler/internal/objects/files/validation"
 	"kessler/pkg/constants"
 	"kessler/pkg/logger"
 	"net/http"
@@ -45,10 +46,11 @@ func IngestOpenscrapersCase(ctx context.Context, caseInfo OpenscrapersCaseInfoPa
 			if reflect.ValueOf(attachment.RawAttachment.Hash).IsZero() {
 				raw_att, err := FetchAttachmentDataFromOpenScrapers(attachment)
 				if err != nil {
-					log.Error("Encountered error processing file", zap.Error(err))
+					log.Error("Encountered error getting attachment data from openscrapers", zap.Error(err))
+					// return fmt.Errorf("couldnt get attachment info from openscrapers: %s", err)
 				}
 				if err == nil {
-					attachment.RawAttachment = raw_att
+					caseInfo.Filings[filing_index].Attachments[attachment_index].RawAttachment = raw_att
 				}
 			}
 		}
@@ -57,8 +59,13 @@ func IngestOpenscrapersCase(ctx context.Context, caseInfo OpenscrapersCaseInfoPa
 			CaseInfo: minimal_case_info,
 		}
 		complete_filing := inclusive_filing_info.IntoCompleteFile()
+		err := validation.ValidateFile(complete_filing)
+		if err != nil {
+			log.Error("file was not properly formatted", zap.Error(err))
+			return err
+		}
 		log.Info("Successfully completed conversion into complete file", zap.String("name", complete_filing.Name))
-		err := logic.ProcessFile(ctx, complete_filing)
+		err = logic.ProcessFile(ctx, complete_filing)
 		log.Warn("Made it past the line??")
 		if err != nil {
 			log.Error("Encountered error processing file", zap.Error(err), zap.String("name", complete_filing.Name))
@@ -69,6 +76,7 @@ func IngestOpenscrapersCase(ctx context.Context, caseInfo OpenscrapersCaseInfoPa
 	return nil
 }
 
+// "request failed: Get \"https://openscrapers.kessler.xyz/api/raw_attachments/q24nB9T-EtQ4UAakxSqwVnUl4VNsDZ1FnpgD516x6k8=/obj\": context deadline exceeded (Client.Timeout exceeded while awaiting headers)"
 func FetchAttachmentDataFromOpenScrapers(attachment AttachmentChildInfo) (RawAttachmentData, error) {
 	if reflect.ValueOf(attachment.Hash).IsZero() {
 		return RawAttachmentData{}, fmt.Errorf("cannot fetch attachment data without hash")
@@ -106,8 +114,9 @@ func FetchAttachmentDataFromOpenScrapers(attachment AttachmentChildInfo) (RawAtt
 
 	fetch_file_url := fmt.Sprintf("%s/api/raw_attachments/%s/raw", constants.OPENSCRAPERS_API_URL, hashString)
 	result.GetAttachmentUrl = fetch_file_url
+	var nilerr error
 
-	return result, nil
+	return result, nilerr
 }
 
 func IngestCaseSpecificData(caseInfoMinimal CaseInfoMinimal) error {

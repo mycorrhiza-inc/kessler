@@ -23,6 +23,10 @@ func (t *RFC3339Time) UnmarshalJSON(data []byte) error {
 		*t = RFC3339Time{}
 		return nil
 	}
+	if str == "null" {
+		*t = RFC3339Time{}
+		return nil
+	}
 	parsed, err := time.Parse(time.RFC3339, str)
 	if err != nil {
 		return err

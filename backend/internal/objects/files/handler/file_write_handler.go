@@ -10,13 +10,14 @@ import (
 	ConvoHandler "kessler/internal/objects/conversations/handler"
 	"kessler/internal/objects/files"
 	"kessler/internal/objects/files/crud"
+	"kessler/internal/objects/files/validation"
 	"net/http"
 	"strings"
 
-	"github.com/charmbracelet/log"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgtype"
+	"go.uber.org/zap"
 )
 
 type FileUpsertHandlerConfig struct {
@@ -95,6 +96,10 @@ func ingestFile(ctx context.Context, q *dbstore.Queries, params IngestDocParams)
 	var err error
 	docInfo := params.DocInfo
 	docUUID := docInfo.ID
+	err = validation.ValidateFile(docInfo)
+	if err != nil {
+		return docInfo, fmt.Errorf("file was not properly formatted: %s", err)
+	}
 
 	// // Deduplication logic
 	// if params.Insert && params.Deduplicate {
@@ -142,34 +147,6 @@ func StandardizeAttachmentUUIDsHelper(file *files.CompleteFileSchema) *files.Com
 	return file
 }
 
-func DeduplicateFileAttachments(ctx context.Context, q *dbstore.Queries, file *files.CompleteFileSchema) (*files.CompleteFileSchema, error) {
-	attachments := file.Attachments
-	for index, attachment := range attachments {
-		new_attachment, err := DeduplicateSingularAttachment(ctx, q, &attachment)
-		if err != nil {
-			return file, fmt.Errorf("deduplication error: %w", err)
-		}
-		attachments[index] = *new_attachment
-	}
-	file.Attachments = attachments
-	return file, nil
-}
-
-func DeduplicateSingularAttachment(ctx context.Context, q *dbstore.Queries, attachment *files.CompleteAttachmentSchema) (*files.CompleteAttachmentSchema, error) {
-	if attachment.ID == uuid.Nil {
-		results, err := q.AttachmentListByHash(ctx, attachment.Hash.String())
-		if err != nil {
-			return &files.CompleteAttachmentSchema{}, fmt.Errorf("database error: %w", err)
-		}
-		if len(results) > 0 {
-			// Idk if this is a good idea or not, but fuck it ship it
-			attachment.ID = results[0].ID
-		}
-		return attachment, nil
-	}
-	return attachment, nil
-}
-
 func parseDocumentUUID(r *http.Request, isInsert bool) (uuid.UUID, error) {
 	if isInsert {
 		return uuid.Nil, nil
@@ -205,6 +182,7 @@ func processAssociations(ctx context.Context, q dbstore.Queries, docInfo files.C
 	var errors []string
 	addError := func(err error, context string) {
 		if err != nil {
+			log.Error(context, zap.Error(err))
 			errors = append(errors, fmt.Sprintf("%s: %v", context, err))
 		}
 	}

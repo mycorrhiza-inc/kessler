@@ -70,52 +70,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/add-task/ingest/case": {
-            "post": {
-                "description": "Creates a new Openscrapers Case ingestion task",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "tasks"
-                ],
-                "summary": "Add Openscrapers Case Ingest Task",
-                "parameters": [
-                    {
-                        "description": "Case information",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/tasks.CaseInfoPayload"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/tasks.KesslerTaskInfo"
-                        }
-                    },
-                    "400": {
-                        "description": "Error decoding request body",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Error adding task",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
         "/add-task/ingest/nypuc": {
             "post": {
                 "description": "Creates a new NYPUC-specific ingestion task",
@@ -183,6 +137,101 @@ const docTemplate = `{
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/routes.OpenScraperFiling"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/tasks.KesslerTaskInfo"
+                        }
+                    },
+                    "400": {
+                        "description": "Error decoding request body",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Error adding task",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/add-task/ingest/openscrapers-caselist": {
+            "post": {
+                "description": "Creates a new Openscrapers CaseList ingestion task",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tasks"
+                ],
+                "summary": "Add Openscrapers CaseList Ingest Task",
+                "parameters": [
+                    {
+                        "description": "Case information",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/tasks.OpenscrapersCaseListEntry"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Error decoding request body",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Error adding task",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/add-task/ingest/openscrapsers-case": {
+            "post": {
+                "description": "Creates a new Openscrapers Case ingestion task",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tasks"
+                ],
+                "summary": "Add Openscrapers Case Ingest Task",
+                "parameters": [
+                    {
+                        "description": "Case information",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/tasks.OpenscrapersCaseInfoPayload"
                         }
                     }
                 ],
@@ -325,6 +374,13 @@ const docTemplate = `{
                 "extension": {
                     "type": "string"
                 },
+                "hash": {
+                    "description": "A base64url-encoded BLAKE2b-256 hash",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
                 "lang": {
                     "type": "string"
                 },
@@ -334,6 +390,9 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                },
+                "raw_attachment": {
+                    "$ref": "#/definitions/tasks.RawAttachmentData"
                 },
                 "url": {
                     "type": "string"
@@ -355,67 +414,12 @@ const docTemplate = `{
                 "case_url": {
                     "type": "string"
                 },
-                "closed_date": {
-                    "description": "An RFC3339 DateTime",
-                    "type": "string"
-                },
                 "description": {
                     "type": "string"
                 },
                 "extra_metadata": {
                     "type": "object",
                     "additionalProperties": true
-                },
-                "hearing_officer": {
-                    "type": "string"
-                },
-                "indexed_at": {
-                    "description": "An RFC3339 DateTime",
-                    "type": "string"
-                },
-                "industry": {
-                    "type": "string"
-                },
-                "opened_date": {
-                    "description": "An RFC3339 DateTime",
-                    "type": "string"
-                },
-                "petitioner": {
-                    "type": "string"
-                }
-            }
-        },
-        "tasks.CaseInfoPayload": {
-            "type": "object",
-            "properties": {
-                "case_name": {
-                    "type": "string"
-                },
-                "case_number": {
-                    "type": "string"
-                },
-                "case_type": {
-                    "type": "string"
-                },
-                "case_url": {
-                    "type": "string"
-                },
-                "closed_date": {
-                    "description": "An RFC3339 DateTime",
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "extra_metadata": {
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "filings": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/tasks.FilingChildInfo"
-                    }
                 },
                 "hearing_officer": {
                     "type": "string"
@@ -524,6 +528,111 @@ const docTemplate = `{
                 },
                 "url": {
                     "type": "string"
+                }
+            }
+        },
+        "tasks.OpenscrapersCaseInfoPayload": {
+            "type": "object",
+            "properties": {
+                "case_name": {
+                    "type": "string"
+                },
+                "case_number": {
+                    "type": "string"
+                },
+                "case_type": {
+                    "type": "string"
+                },
+                "case_url": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "extra_metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "filings": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/tasks.FilingChildInfo"
+                    }
+                },
+                "hearing_officer": {
+                    "type": "string"
+                },
+                "indexed_at": {
+                    "description": "An RFC3339 DateTime",
+                    "type": "string"
+                },
+                "industry": {
+                    "type": "string"
+                },
+                "opened_date": {
+                    "description": "An RFC3339 DateTime",
+                    "type": "string"
+                },
+                "petitioner": {
+                    "type": "string"
+                }
+            }
+        },
+        "tasks.OpenscrapersCaseListEntry": {
+            "type": "object",
+            "properties": {
+                "case_id": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "indexed_at": {
+                    "description": "An RFC3339 DateTime",
+                    "type": "string"
+                },
+                "jurisdiction_name": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                }
+            }
+        },
+        "tasks.RawAttachmentData": {
+            "type": "object",
+            "properties": {
+                "extension": {
+                    "type": "string"
+                },
+                "get_attachment_url": {
+                    "type": "string"
+                },
+                "hash": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "text_objects": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "language": {
+                                "type": "string"
+                            },
+                            "quality": {
+                                "type": "integer"
+                            },
+                            "text": {
+                                "type": "string"
+                            },
+                            "timestamp": {
+                                "type": "string"
+                            }
+                        }
+                    }
                 }
             }
         }

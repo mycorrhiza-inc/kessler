@@ -36,6 +36,11 @@ definitions:
     properties:
       extension:
         type: string
+      hash:
+        description: A base64url-encoded BLAKE2b-256 hash
+        items:
+          type: integer
+        type: array
       lang:
         type: string
       mdata:
@@ -43,6 +48,8 @@ definitions:
         type: object
       name:
         type: string
+      raw_attachment:
+        $ref: '#/definitions/tasks.RawAttachmentData'
       url:
         type: string
     type: object
@@ -56,49 +63,11 @@ definitions:
         type: string
       case_url:
         type: string
-      closed_date:
-        description: An RFC3339 DateTime
-        type: string
       description:
         type: string
       extra_metadata:
         additionalProperties: true
         type: object
-      hearing_officer:
-        type: string
-      indexed_at:
-        description: An RFC3339 DateTime
-        type: string
-      industry:
-        type: string
-      opened_date:
-        description: An RFC3339 DateTime
-        type: string
-      petitioner:
-        type: string
-    type: object
-  tasks.CaseInfoPayload:
-    properties:
-      case_name:
-        type: string
-      case_number:
-        type: string
-      case_type:
-        type: string
-      case_url:
-        type: string
-      closed_date:
-        description: An RFC3339 DateTime
-        type: string
-      description:
-        type: string
-      extra_metadata:
-        additionalProperties: true
-        type: object
-      filings:
-        items:
-          $ref: '#/definitions/tasks.FilingChildInfo'
-        type: array
       hearing_officer:
         type: string
       indexed_at:
@@ -172,6 +141,76 @@ definitions:
       url:
         type: string
     type: object
+  tasks.OpenscrapersCaseInfoPayload:
+    properties:
+      case_name:
+        type: string
+      case_number:
+        type: string
+      case_type:
+        type: string
+      case_url:
+        type: string
+      description:
+        type: string
+      extra_metadata:
+        additionalProperties: true
+        type: object
+      filings:
+        items:
+          $ref: '#/definitions/tasks.FilingChildInfo'
+        type: array
+      hearing_officer:
+        type: string
+      indexed_at:
+        description: An RFC3339 DateTime
+        type: string
+      industry:
+        type: string
+      opened_date:
+        description: An RFC3339 DateTime
+        type: string
+      petitioner:
+        type: string
+    type: object
+  tasks.OpenscrapersCaseListEntry:
+    properties:
+      case_id:
+        type: string
+      country:
+        type: string
+      indexed_at:
+        description: An RFC3339 DateTime
+        type: string
+      jurisdiction_name:
+        type: string
+      state:
+        type: string
+    type: object
+  tasks.RawAttachmentData:
+    properties:
+      extension:
+        type: string
+      get_attachment_url:
+        type: string
+      hash:
+        type: string
+      name:
+        type: string
+      text_objects:
+        items:
+          properties:
+            language:
+              type: string
+            quality:
+              type: integer
+            text:
+              type: string
+            timestamp:
+              type: string
+          type: object
+        type: array
+    type: object
 host: api.kessler.xyz
 info:
   contact:
@@ -215,36 +254,6 @@ paths:
           schema:
             type: string
       summary: Add Default Ingest Task
-      tags:
-      - tasks
-  /add-task/ingest/case:
-    post:
-      consumes:
-      - application/json
-      description: Creates a new Openscrapers Case ingestion task
-      parameters:
-      - description: Case information
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/tasks.CaseInfoPayload'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/tasks.KesslerTaskInfo'
-        "400":
-          description: Error decoding request body
-          schema:
-            type: string
-        "500":
-          description: Error adding task
-          schema:
-            type: string
-      summary: Add Openscrapers Case Ingest Task
       tags:
       - tasks
   /add-task/ingest/nypuc:
@@ -305,6 +314,68 @@ paths:
           schema:
             type: string
       summary: Add OpenScraper Ingest Task
+      tags:
+      - tasks
+  /add-task/ingest/openscrapers-caselist:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new Openscrapers CaseList ingestion task
+      parameters:
+      - description: Case information
+        in: body
+        name: body
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/tasks.OpenscrapersCaseListEntry'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Error decoding request body
+          schema:
+            type: string
+        "500":
+          description: Error adding task
+          schema:
+            type: string
+      summary: Add Openscrapers CaseList Ingest Task
+      tags:
+      - tasks
+  /add-task/ingest/openscrapsers-case:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new Openscrapers Case ingestion task
+      parameters:
+      - description: Case information
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/tasks.OpenscrapersCaseInfoPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/tasks.KesslerTaskInfo'
+        "400":
+          description: Error decoding request body
+          schema:
+            type: string
+        "500":
+          description: Error adding task
+          schema:
+            type: string
+      summary: Add Openscrapers Case Ingest Task
       tags:
       - tasks
   /task/{id}:
