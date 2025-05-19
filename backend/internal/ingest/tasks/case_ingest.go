@@ -76,6 +76,7 @@ func IngestOpenscrapersCase(ctx context.Context, caseInfo OpenscrapersCaseInfoPa
 	return nil
 }
 
+// "request failed: Get \"https://openscrapers.kessler.xyz/api/raw_attachments/q24nB9T-EtQ4UAakxSqwVnUl4VNsDZ1FnpgD516x6k8=/obj\": context deadline exceeded (Client.Timeout exceeded while awaiting headers)"
 func FetchAttachmentDataFromOpenScrapers(attachment AttachmentChildInfo) (RawAttachmentData, error) {
 	if reflect.ValueOf(attachment.Hash).IsZero() {
 		return RawAttachmentData{}, fmt.Errorf("cannot fetch attachment data without hash")
