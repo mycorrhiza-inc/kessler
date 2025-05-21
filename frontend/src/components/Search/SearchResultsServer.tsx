@@ -1,7 +1,6 @@
 import React from "react";
 import SearchResultsClient from "./SearchResultsClient";
 import RawSearchResults from "./RawSearchResults";
-import { generateFakeResults } from "@/lib/search/search_utils";
 import { SearchResult } from "@/lib/types/new_search_types";
 import {
   GenericSearchInfo,
