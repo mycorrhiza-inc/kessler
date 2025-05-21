@@ -17,7 +17,7 @@ import HomeSearchBar from "../NewSearch/HomeSearch";
 
 // src/components/HomePage/HomePage.tsx
 import { useSearchState } from "@/lib/hooks/useSearchState";
-import { SearchResultsComponent } from "@/components/Search/SearchResults";
+import { SearchResultsHomepageComponent } from "@/components/Search/SearchResults";
 import {
   GenericSearchInfo,
   GenericSearchType,
@@ -107,11 +107,11 @@ export default function HomePage() {
         )}
       </AnimatePresence>
 
-      <SearchResultsComponent
+      <SearchResultsHomepageComponent
         isSearching={isSearching}
         searchInfo={searchInfo}
         reloadOnChange={searchState.searchTriggerIndicator}
-      ></SearchResultsComponent>
+      ></SearchResultsHomepageComponent>
     </>
   );
 }

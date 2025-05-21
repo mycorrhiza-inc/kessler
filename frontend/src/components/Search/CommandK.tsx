@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchState } from "@/lib/hooks/useSearchState";
-import { SearchResultsComponent } from "./SearchResults";
+import { SearchResultsHomepageComponent } from "./SearchResults";
+import {
+  GenericSearchInfo,
+  GenericSearchType,
+} from "@/lib/adapters/genericSearchCallback";
 
 export function CommandKSearch() {
   const { resetToInitial } = useSearchState();
@@ -61,6 +65,10 @@ function SearchCommand() {
   const handleSearch = (query: string) => {
     triggerSearch({ query: query });
   };
+  const searchInfo: GenericSearchInfo = {
+    query: searchQuery,
+    search_type: GenericSearchType.Filling,
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -81,10 +89,10 @@ function SearchCommand() {
       </div>
 
       <div className="grow overflow-auto">
-        <SearchResultsComponent
+        <SearchResultsHomepageComponent
+          searchInfo={searchInfo}
           isSearching={searchState.isSearching}
           reloadOnChange={searchTriggerIndicator}
-          searchGetter={getResultsCallback}
         />
       </div>
     </div>
