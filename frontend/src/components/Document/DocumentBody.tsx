@@ -18,7 +18,7 @@ import { FilterField } from "@/lib/filters";
 import { AuthorInfoPill, DocketPill } from "../Tables/TextPills";
 import { getClientRuntimeEnv } from "@/lib/env_variables/env_variables_hydration_script";
 import { FileExtension, fileExtensionFromText } from "../Tables/FileExtension";
-import XlsxViewer from "./XlsxViewer";
+import XlsxViewer from "../messages/XlsxCannotBeViewedMessage";
 import ErrorMessage from "../messages/ErrorMessage";
 
 // import { ErrorBoundary } from "react-error-boundary";
