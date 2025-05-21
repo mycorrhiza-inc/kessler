@@ -9,29 +9,22 @@ import {
 } from "@/lib/adapters/genericSearchCallback";
 
 interface SearchResultsServerProps {
-  q: string;
-  filters?: any;
+  searchInfo: GenericSearchInfo;
 }
 
 /**
  * Server Component: Fetches initial results and renders the client component.
  */
 export default async function SearchResultsServer({
-  q,
-  filters,
+  searchInfo,
 }: SearchResultsServerProps) {
   // Fetch two pages worth of data server-side
   const initialPages = 2;
   const PAGE_SIZE = 40;
   const intiialPagination = { limit: PAGE_SIZE * initialPages, page: 0 };
-  const searchCallbackInfo: GenericSearchInfo = {
-    search_type: GenericSearchType.Filling,
-    query: q,
-    filters: filters,
-  };
 
   const initialResults: SearchResult[] = await searchInvoke(
-    searchCallbackInfo,
+    searchInfo,
     intiialPagination,
   );
   const reloadOnChange = 0;
@@ -39,9 +32,8 @@ export default async function SearchResultsServer({
   return (
     <SearchResultsClient
       reloadOnChange={reloadOnChange}
-      genericSearchInfo={searchCallbackInfo}
+      searchInfo={searchInfo}
       initialData={initialResults}
-      initialPage={2}
     >
       <RawSearchResults data={initialResults} />
     </SearchResultsClient>

@@ -11,7 +11,7 @@ import "./PDFViewer.css";
 
 import type { PDFDocumentProxy } from "pdfjs-dist";
 import LoadingSpinner from "../styled-components/LoadingSpinner";
-import ErrorMessage from "../ErrorMessage";
+import ErrorMessage from "../messages/ErrorMessage";
 import { fi } from "date-fns/locale";
 
 // TODO : Inline at some point so we dont get screwed by a malicious cdn.

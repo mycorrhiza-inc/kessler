@@ -19,7 +19,7 @@ import { AuthorInfoPill, DocketPill } from "../Tables/TextPills";
 import { getClientRuntimeEnv } from "@/lib/env_variables/env_variables_hydration_script";
 import { FileExtension, fileExtensionFromText } from "../Tables/FileExtension";
 import XlsxViewer from "./XlsxViewer";
-import ErrorMessage from "../ErrorMessage";
+import ErrorMessage from "../messages/ErrorMessage";
 
 // import { ErrorBoundary } from "react-error-boundary";
 //

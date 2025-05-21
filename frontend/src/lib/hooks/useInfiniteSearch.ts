@@ -13,22 +13,24 @@ import { DEFAULT_PAGE_SIZE } from "../constants";
 
 export interface UseInfiniteSearchParams {
   searchCallback: SearchResultsGetter;
-  initialData: SearchResult[];
-  initialPage: number;
+  initialData?: SearchResult[];
   pageSize?: number;
 }
 
 export function useInfiniteSearch({
   searchCallback,
   initialData,
-  initialPage,
   pageSize,
 }: UseInfiniteSearchParams) {
-  const [data, setData] = useState<SearchResult[]>(initialData);
-  const [page, setPage] = useState<number>(initialPage);
+  const [data, setData] = useState<SearchResult[]>(initialData || []);
   const actualPageSize = pageSize || DEFAULT_PAGE_SIZE;
-  const hasMore = initialData.length === actualPageSize * page;
-  const [hasReset, setHasReset] = useState(initialData.length == 0);
+  const initialPageEstimate = initialData
+    ? initialData.length / actualPageSize
+    : 0;
+  const [page, setPage] = useState<number>(initialPageEstimate);
+  const hasMore = data.length === actualPageSize * page;
+  const isDataDefined = initialData ? initialData.length != 0 : false;
+  const [hasReset, setHasReset] = useState(!isDataDefined);
 
   const loadMore = async () => {
     const newResults = await searchCallback({

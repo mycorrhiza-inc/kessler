@@ -23,9 +23,8 @@ export function SearchResultsComponent({
           className="w-full"
         >
           <SearchResultsClient
-            initialPage={0}
             initialData={[]}
-            genericSearchInfo={searchInfo}
+            searchInfo={searchInfo}
             reloadOnChange={reloadOnChange}
           />
         </motion.div>

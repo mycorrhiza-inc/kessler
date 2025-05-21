@@ -24,7 +24,7 @@ export enum GenericSearchType {
 export interface GenericSearchInfo {
   search_type: GenericSearchType;
   query: string;
-  filters: Filters;
+  filters?: Filters;
 }
 
 export const searchInvoke = async (

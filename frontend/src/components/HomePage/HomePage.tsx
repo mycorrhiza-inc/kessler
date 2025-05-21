@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import ConversationTableInfiniteScroll from "../LookupPages/ConvoLookup/ConversationTable";
 import { ExperimentalChatModalClickDiv } from "../Chat/ChatModal";
 import OrganizationTableInfiniteScroll from "../LookupPages/OrgLookup/OrganizationTable";
-import FileSearchView from "../Search/FileSearch/FileSearchView";
 import HomeSearchBar from "../NewSearch/HomeSearch";
 
 // So I have this problem, where lots of pages are going to want to have this search bar be present on the page, as well as in other stuff like command-k popups
@@ -23,6 +22,7 @@ import {
   GenericSearchInfo,
   GenericSearchType,
 } from "@/lib/adapters/genericSearchCallback";
+import SearchResultsClient from "../Search/SearchResultsClient";
 
 export default function HomePage() {
   const searchState = useSearchState();
@@ -96,7 +96,13 @@ export default function HomePage() {
             </ExperimentalChatModalClickDiv>
 
             <h1 className=" text-2xl font-bold">Newest Docs</h1>
-            <FileSearchView inheritedFilters={[]} />
+            <SearchResultsClient
+              searchInfo={{
+                query: "",
+                search_type: GenericSearchType.Filling,
+              }}
+              reloadOnChange={0}
+            />
           </motion.div>
         )}
       </AnimatePresence>

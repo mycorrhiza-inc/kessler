@@ -24,6 +24,8 @@ services:
       - "traefik.enable=true"
       - "traefik.namespace=kessler"
       - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
+    ports:
+      - 3003:3000
     expose:
       - 3000
     command:

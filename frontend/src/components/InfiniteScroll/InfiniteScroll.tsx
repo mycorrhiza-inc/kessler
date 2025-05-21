@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import LoadingSpinnerTimeout from "../styled-components/LoadingSpinnerTimeout";
 import InfiniteScroll from "react-infinite-scroll-component";
 import LoadingSpinner from "../styled-components/LoadingSpinner";
-import ErrorMessage from "../ErrorMessage";
+import ErrorMessage from "../messages/ErrorMessage";
 
 const InfiniteScrollPlus = ({
   children,
@@ -45,6 +45,10 @@ const InfiniteScrollPlus = ({
   }
 
   if (isTableReloading) {
+    return <LoadingSpinner loadingText="Loading..." />;
+  }
+
+  if (!isTableReloading && dataLength == 0) {
     return <LoadingSpinner loadingText="Loading..." />;
   }
   return (
