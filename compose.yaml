@@ -10,7 +10,6 @@ x-common-env: &common-env
 services:
   # Main Services
   frontend:
-    hostname: "kessler.xyz"
     build:
       context: ./frontend
       dockerfile: ./dev.Dockerfile
@@ -33,64 +32,51 @@ services:
       - "run"
       - "dev"
 
-  backend-ingest:
-    build:
-      dockerfile: dev.ingest.Dockerfile
-      context: ./backend
-    command: go run /app/cmd/ingest/main.go
-    develop:
-      watch:
-        - action: rebuild
-          path: ./backend/cmd/ingest
-          target: .
-        - action: rebuild
-          path: ./backend/internal
-          target: /app/internal
-        - action: rebuild
-          path: ./backend/pkg
-          target: /app/pkg
-    environment:
-      <<: *common-env
-    env_file:
-      - ./config/global.env
-    volumes:
-      - ./backend:/app
-    working_dir: /app
-    expose:
-      - 4042
-    labels:
-      - "traefik.enable=true"
-      - "traefik.namespace=kessler"
-      - "traefik.http.routers.ingest.rule=PathPrefix(`/ingest_v1`)"
-
-  backend-server:
-    build:
-      context: ./backend
-      dockerfile: dev.server.Dockerfile
-    command: go run /app/cmd/server/main.go
-    develop:
-      watch:
-        - action: rebuild
-          path: ./backend/cmd/server
-          target: .
-        - action: rebuild
-          path: ./backend/internal
-          target: /app/internal
-            - ingest/
-        - action: rebuild
-          path: ./backend/pkg
-          target: /app/pkg
-    env_file:
-      - ./config/global.env
-    environment:
-      <<: *common-env
-    expose:
-      - 4041
-    labels:
-      - "traefik.enable=true"
-      - "traefik.namespace=kessler"
-      - "traefik.http.routers.go-backend.rule=PathPrefix(`/v2`)"
-      - "traefik.http.middlewares.test-stripprefix.stripprefix.prefixes=/v2"
+  # backend-ingest:
+  #   build:
+  #     dockerfile: dev.ingest.Dockerfile
+  #     context: ./backend
+  #   command: go run /app/cmd/ingest/main.go
+  #   develop:
+  #     watch:
+  #       - action: rebuild
+  #         path: ./backend/
+  #         target: .
+  #   environment:
+  #     <<: *common-env
+  #   env_file:
+  #     - ./config/global.env
+  #   volumes:
+  #     - ./backend:/app
+  #   working_dir: /app
+  #   expose:
+  #     - 4042
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.namespace=kessler"
+  #     - "traefik.http.routers.ingest.rule=PathPrefix(`/ingest_v1`)"
+  #
+  # backend-server:
+  #   build:
+  #     context: ./backend
+  #     dockerfile: dev.server.Dockerfile
+  #   command: go run /app/cmd/server/main.go
+  #   develop:
+  #     watch:
+  #       - action: rebuild
+  #         path: ./backend/
+  #         target: .
+  #   env_file:
+  #     - ./config/global.env
+  #   environment:
+  #     <<: *common-env
+  #   expose:
+  #     - 4041
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.namespace=kessler"
+  #     - "traefik.http.routers.go-backend.rule=PathPrefix(`/v2`)"
+  #     - "traefik.http.middlewares.test-stripprefix.stripprefix.prefixes=/v2"
 
   # Misc Services
   reverse-proxy:
