@@ -1,6 +1,6 @@
 "use client";
 import React, { useCallback, useEffect, useState } from "react";
-import InfiniteScrollPlus from "../InfiniteScroll/InfiniteScroll";
+import InfiniteScrollPlus from "../InfiniteScroll/InfiniteScrollPlus ";
 import RawSearchResults from "./RawSearchResults";
 import { useInfiniteSearch } from "@/lib/hooks/useInfiniteSearch";
 import {
