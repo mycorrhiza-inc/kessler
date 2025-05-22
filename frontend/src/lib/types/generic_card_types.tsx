@@ -10,6 +10,7 @@ export interface BaseCardData {
   timestamp: string;
   authors?: Array<string>;
   extraInfo?: string;
+  index: number;
 }
 
 export interface AuthorCardData extends BaseCardData {

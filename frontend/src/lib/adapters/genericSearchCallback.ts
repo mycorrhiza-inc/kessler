@@ -13,6 +13,7 @@ import { adaptFilingToCard } from "./genericCardAdapters";
 import { DocumentCardData } from "../types/generic_card_types";
 import { getContextualAPIURL } from "../env_variables/env_variables";
 import assert from "assert";
+import SearchResult from "@/components/SearchResult";
 
 export enum GenericSearchType {
   Filling = "filing",
@@ -35,13 +36,35 @@ export const searchInvoke = async (
   return await callback(pagination);
 };
 
+export const mutateIndexifySearchResults = (
+  results: SearchResult[],
+  pagination: PaginationData,
+) => {
+  const offset = pagination.limit * pagination.page;
+  for (let index = 0; index < results.length; index++) {
+    results[index].index = index + offset;
+  }
+};
+
+export const isSearchOffsetsValid = (results: SearchResult): boolean => {
+  try {
+    for (let index = 0; index < results.length - 1; index++) {
+      if (results[index].index + 1 != results[index + 1].index) {
+        return false;
+      }
+    }
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 export const createGenericSearchCallback = (
   info: GenericSearchInfo,
 ): SearchResultsGetter => {
   const api_url = getContextualAPIURL();
   // set all search invocations to be dummy searches for now.
-  const override_search_type: GenericSearchType = GenericSearchType.Dummy;
-  info.search_type = override_search_type;
+  info.search_type = GenericSearchType.Dummy as GenericSearchType;
   switch (info.search_type) {
     case GenericSearchType.Dummy:
       return async (pagination: PaginationData): Promise<SearchResult> => {
@@ -56,7 +79,9 @@ export const createGenericSearchCallback = (
             `Search Data returned from backend url ${req_url} was undefined.`,
           );
         }
-        return await generateFakeResults(pagination);
+        let results = await generateFakeResults(pagination);
+        mutateIndexifySearchResults(results, pagination);
+        return results;
       };
     case GenericSearchType.Filling:
       return async (pagination: PaginationData): Promise<SearchResult> => {
@@ -102,6 +127,7 @@ export const createGenericSearchCallback = (
           const searchResults: DocumentCardData[] =
             filings.map(adaptFilingToCard);
 
+          mutateIndexifySearchResults(searchResults, pagination);
           return searchResults;
         } catch (error) {
           console.log(error);
@@ -110,9 +136,9 @@ export const createGenericSearchCallback = (
       };
 
     case GenericSearchType.Organization:
-      throw "Not Implemented";
+      throw new Error("Not Implemented");
     case GenericSearchType.Docket:
-      throw "Not Implemented";
+      throw new Error("Not Implemented");
   }
   throw "Error, no type specified for generic search callback";
 };

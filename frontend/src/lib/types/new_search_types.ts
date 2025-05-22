@@ -1,3 +1,5 @@
+import { CardData } from "./generic_card_types";
+
 export type SearchResult = any;
 export interface PaginationData {
   page: number;

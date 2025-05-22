@@ -152,7 +152,7 @@ const MediumCard: React.FC<{ data: CardData }> = ({ data }) => {
         <span className="text-xs text-gray-500">
           {getTimestampLabel(data.type)}
         </span>
-        <span className="text-xs">{data.timestamp}</span>
+        <span className="text-xs">{`${data.timestamp} - index:${data.index}`}</span>
       </div>
       {data.authors && (
         <div className="mt-4">
