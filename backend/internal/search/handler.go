@@ -100,15 +100,21 @@ func HandleSearchRequest(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		if len(hydrated_data) == 0 {
+			log.Error("Quickwit returned 0 search results")
+		}
 
-		respString, err := json.Marshal(hydrated_data)
+		respBytes, err := json.Marshal(hydrated_data)
 		if err != nil {
 			log.Error("Error marshalling response data", zap.Error(err))
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		respString := string(respBytes)
 
 		w.Header().Set("Content-Type", "application/json")
+
+		log.Info("Returning search_response", zap.String("body", respString))
 		fmt.Fprint(w, string(respString))
 
 	case http.MethodPut:

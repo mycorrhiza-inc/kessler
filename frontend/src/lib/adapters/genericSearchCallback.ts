@@ -52,36 +52,39 @@ export const createGenericSearchCallback = (
         console.log("API URL:  ", api_url);
         assert(api_url, "Api url cannot be undefined");
         try {
-          const filingResults: Filing[] = await axios
-            .post(`${api_url}/v2/search/file${paginationQueryString}`, {
-              query: searchQuery,
-            })
-            // check error conditions
-            .then((response): Filing[] => {
-              if (response.status >= 400) {
-                throw new Error(
-                  `Request failed with status code ${response.status}`,
-                );
-              }
-              if (
-                response.data?.length === 0 ||
-                typeof response.data === "string"
-              ) {
-                console.log("RESPONSE LENGTH IS ZERO, THIS SEEMS WEIRD");
-                return [];
-              }
-              // console.log(
-              //   `got ${response.data.length} raw results from server`,
-              // );
+          const req_url = `${api_url}/v2/search/file${paginationQueryString}`;
+          const req_data = {
+            query: searchQuery,
+          };
+          const response: any = await axios.post(req_url, req_data);
+          // check error conditions
+          if (response.status >= 400) {
+            throw new Error(
+              `Request failed with status code ${response.status}`,
+            );
+          }
+          if (!response.data) {
+            throw new Error(
+              `Search Data returned from backend url ${req_url} and data ${JSON.stringify(req_data)} was undefined.`,
+            );
+          }
+          if (
+            response.data?.length === 0 ||
+            typeof response.data === "string"
+          ) {
+            console.log("RESPONSE LENGTH IS ZERO, THIS SEEMS WEIRD");
+            return [];
+          }
+          // console.log(
+          //   `got ${response.data.length} raw results from server`,
+          // );
 
-              const filings = hydratedSearchResultsToFilings(response.data);
-              console.log(`successfully got ${filings.length} search results`);
-              return filings;
-            });
+          const filings = hydratedSearchResultsToFilings(response.data);
+          console.log(`successfully got ${filings.length} search results`);
           console.log("getting data");
           // console.log(searchResults);
           const searchResults: DocumentCardData[] =
-            filingResults.map(adaptFilingToCard);
+            filings.map(adaptFilingToCard);
 
           return searchResults;
         } catch (error) {

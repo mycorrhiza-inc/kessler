@@ -42,7 +42,7 @@ services:
     develop:
       watch:
         - action: rebuild
-          path: ./backend/
+          path: ./backend
           target: .
     environment:
       <<: *common-env
@@ -53,6 +53,8 @@ services:
     working_dir: /app
     expose:
       - 4042
+    ports:
+      - 4042:4042
     labels:
       - "traefik.enable=true"
       - "traefik.namespace=kessler"
@@ -74,6 +76,8 @@ services:
       <<: *common-env
     expose:
       - 4041
+    ports:
+      - 4041:4041
     labels:
       - "traefik.enable=true"
       - "traefik.namespace=kessler"
