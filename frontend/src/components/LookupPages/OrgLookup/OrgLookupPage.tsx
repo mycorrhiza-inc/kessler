@@ -1,6 +1,7 @@
 "use client";
 import SearchBox from "@/components/Search/SearchBox";
 import { PageContextMode } from "@/lib/types/SearchTypes";
+import OrganizationTableInfiniteScroll from "./OrganizationTable";
 import { useState } from "react";
 
 const OrgLookupPage = () => {
@@ -15,7 +16,7 @@ const OrgLookupPage = () => {
             setSearchQuery: setQueryString,
           }}
         />
-        {/* <OrganizationTableInfiniteScroll lookup_data={{ query: queryString }} /> */}
+        <OrganizationTableInfiniteScroll lookup_data={{ query: queryString }} />
       </div>
     </>
   );

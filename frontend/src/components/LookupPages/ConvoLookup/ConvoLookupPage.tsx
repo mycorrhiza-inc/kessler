@@ -1,4 +1,5 @@
 "use client";
+import ConversationTableInfiniteScroll from "@/components/LookupPages/ConvoLookup/ConversationTable";
 import SearchBox from "@/components/Search/SearchBox";
 import { BreadcrumbValues } from "@/components/SitemapUtils";
 import { PageContextMode } from "@/lib/types/SearchTypes";
@@ -19,7 +20,7 @@ const ConvoLookupPage = () => {
             setSearchData: setConvoSearchData,
           }}
         />
-        {/* <ConversationTableInfiniteScroll lookup_data={convoSearchData} /> */}
+        <ConversationTableInfiniteScroll lookup_data={convoSearchData} />
       </div>
     </>
   );
