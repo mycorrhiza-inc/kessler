@@ -4,13 +4,13 @@ import {
   CompleteFileSchema,
   CompleteFileSchemaValidator,
 } from "../types/backend_schemas";
-import { getClientRuntimeEnv } from "../env_variables/env_variables_hydration_script";
 
 export const hydratedSearchResultsToFilings = (
   hydratedSearchResults: any | null,
 ): Filing[] => {
   if (!hydratedSearchResults) {
     console.log("Search results from server was undefined");
+    throw new Error("Got undefined search results from server");
     return [];
   }
   const verifified_nullable_files: Array<CompleteFileSchema | null> =

@@ -7,6 +7,7 @@ import {
   GenericSearchType,
   searchInvoke,
 } from "@/lib/adapters/genericSearchCallback";
+import ErrorMessage from "../messages/ErrorMessage";
 
 interface SearchResultsServerProps {
   searchInfo: GenericSearchInfo;
@@ -23,19 +24,28 @@ export default async function SearchResultsServer({
   const PAGE_SIZE = 40;
   const intiialPagination = { limit: PAGE_SIZE * initialPages, page: 0 };
 
-  const initialResults: SearchResult[] = await searchInvoke(
-    searchInfo,
-    intiialPagination,
-  );
   const reloadOnChange = 0;
+  try {
+    const initialResults: SearchResult[] = await searchInvoke(
+      searchInfo,
+      intiialPagination,
+    );
 
-  return (
-    <SearchResultsClient
-      reloadOnChange={reloadOnChange}
-      searchInfo={searchInfo}
-      initialData={initialResults}
-    >
-      <RawSearchResults data={initialResults} />
-    </SearchResultsClient>
-  );
+    return (
+      <SearchResultsClient
+        reloadOnChange={reloadOnChange}
+        searchInfo={searchInfo}
+        initialData={initialResults}
+      >
+        <RawSearchResults data={initialResults} />
+      </SearchResultsClient>
+    );
+  } catch (error) {
+    return (
+      <ErrorMessage
+        message={`Error getting search results from the server: ${error}`}
+        error={`Error getting search results from the server: ${error}`}
+      />
+    );
+  }
 }
