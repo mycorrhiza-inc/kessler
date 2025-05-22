@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense } from "react";
 import SearchResultsClient from "./SearchResultsClient";
 import RawSearchResults from "./RawSearchResults";
 import { SearchResult } from "@/lib/types/new_search_types";
@@ -8,6 +8,7 @@ import {
   searchInvoke,
 } from "@/lib/adapters/genericSearchCallback";
 import ErrorMessage from "../messages/ErrorMessage";
+import LoadingSpinner from "../styled-components/LoadingSpinner";
 
 interface SearchResultsServerProps {
   searchInfo: GenericSearchInfo;
@@ -16,7 +17,20 @@ interface SearchResultsServerProps {
 /**
  * Server Component: Fetches initial results and renders the client component.
  */
-export default async function SearchResultsServer({
+
+const SearchResultsServer = async ({
+  searchInfo,
+}: SearchResultsServerProps) => {
+  return (
+    <Suspense
+      fallback={<LoadingSpinner loadingText="Getting Results From Server" />}
+    >
+      <SearchResultsServerUnsuspended searchInfo={searchInfo} />
+    </Suspense>
+  );
+};
+export default SearchResultsServer;
+async function SearchResultsServerUnsuspended({
   searchInfo,
 }: SearchResultsServerProps) {
   // Fetch two pages worth of data server-side

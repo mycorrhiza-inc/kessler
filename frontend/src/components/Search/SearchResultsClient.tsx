@@ -38,7 +38,8 @@ export default function SearchResultsClient({
     children && !hasReset && initialData && data.length === initialData.length;
 
   const [firstLoad, setFirstLoad] = useState(true);
-  if (firstLoad && !initialData?.length) {
+  // if (firstLoad && !initialData?.length) {
+  if (firstLoad) {
     // Async call but it should still run anyway
     loadInitial();
     setFirstLoad(false);

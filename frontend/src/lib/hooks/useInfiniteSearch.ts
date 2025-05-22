@@ -37,6 +37,7 @@ export function useInfiniteSearch({
       limit: actualPageSize,
       page: page,
     });
+    console.log(`Got ${newResults.length} more search results`);
     setData((prev) => [...prev, ...newResults]);
     setPage((prev) => prev + 1);
   };
@@ -50,6 +51,8 @@ export function useInfiniteSearch({
       limit: actualPageSize * INITIAL_PAGES,
       page: 0,
     });
+
+    console.log(`Got ${newResults.length} initial search results`);
     setData(newResults);
     setPage(INITIAL_PAGES);
     setHasReset(true);
