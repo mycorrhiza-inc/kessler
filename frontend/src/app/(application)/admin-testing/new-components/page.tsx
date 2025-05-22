@@ -2,6 +2,7 @@
 import Card from "@/components/NewSearch/GenericResultCard";
 import SideFilters from "@/components/NewSearch/SideFilters";
 import { SearchResultsHomepageComponent } from "@/components/Search/SearchResults";
+import { GenericSearchType } from "@/lib/adapters/genericSearchCallback";
 import { generateFakeResults } from "@/lib/search/search_utils";
 
 const exampleFilters = {
@@ -29,7 +30,7 @@ export default function Page() {
         <SearchResultsHomepageComponent
           isSearching={true}
           reloadOnChange={0}
-          searchGetter={generateFakeResults}
+          searchInfo={{ query: "", search_type: GenericSearchType.Filling }}
         />
       </div>
       <SideFilters

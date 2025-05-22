@@ -4,6 +4,10 @@ import HomeSearchBar, {
 } from "@/components/NewSearch/HomeSearch";
 import SearchResultsServer from "@/components/Search/SearchResultsServer";
 import LoadingSpinner from "@/components/styled-components/LoadingSpinner";
+import {
+  GenericSearchInfo,
+  GenericSearchType,
+} from "@/lib/adapters/genericSearchCallback";
 
 interface SearchPageProps {
   searchParams: { q?: string };
@@ -11,6 +15,10 @@ interface SearchPageProps {
 
 export default function Page({ searchParams }: SearchPageProps) {
   const initialQuery = (searchParams.q || "").trim();
+  const searchInfo: GenericSearchInfo = {
+    query: initialQuery,
+    search_type: GenericSearchType.Filling,
+  };
 
   return (
     <>
@@ -25,9 +33,8 @@ export default function Page({ searchParams }: SearchPageProps) {
           <LoadingSpinner loadingText="Fetching results from server." />
         }
       >
-        <SearchResultsServer q={initialQuery} />
+        <SearchResultsServer searchInfo={searchInfo} />
       </Suspense>
     </>
   );
 }
-

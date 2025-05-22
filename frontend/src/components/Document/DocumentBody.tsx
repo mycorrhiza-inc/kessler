@@ -115,9 +115,7 @@ const DocumentHeader = ({
   const underscoredTitle = title ? title.replace(/ /g, "_") : "Unkown_Document";
   const runtimeConfig = getClientRuntimeEnv();
   const runtimeConfigUrlSafe =
-    runtimeConfig.public_api_url ||
-    ssr_public_api_url ||
-    "https://api.kessler.xyz";
+    runtimeConfig.public_api_url || "https://api.kessler.xyz";
   const fileUrlNamedDownload = `${runtimeConfigUrlSafe}/v2/public/files/${objectId}/raw/${underscoredTitle}.${extension}`;
   const kesslerFileUrl = `/files/${objectId}`;
   const authors_unpluralized =

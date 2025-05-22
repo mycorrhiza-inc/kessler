@@ -8,7 +8,6 @@ import {
   GenericSearchInfo,
   GenericSearchType,
 } from "@/lib/adapters/genericSearchCallback";
-import { createFilters } from "@/lib/types/new_filter_types";
 import SearchResultsServer from "../Search/SearchResultsServer";
 
 const getConversationData = async (url: string) => {
