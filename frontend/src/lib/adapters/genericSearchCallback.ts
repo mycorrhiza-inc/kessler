@@ -39,9 +39,25 @@ export const createGenericSearchCallback = (
   info: GenericSearchInfo,
 ): SearchResultsGetter => {
   const api_url = getContextualAPIURL();
+  // set all search invocations to be dummy searches for now.
+  const override_search_type: GenericSearchType = GenericSearchType.Dummy;
+  info.search_type = override_search_type;
   switch (info.search_type) {
     case GenericSearchType.Dummy:
-      return generateFakeResults;
+      return async (pagination: PaginationData): Promise<SearchResult> => {
+        const req_url = `${api_url}/v2/version_hash`;
+        const response: any = await axios.get(req_url);
+        // check error conditions
+        if (response.status >= 400) {
+          throw new Error(`Request failed with status code ${response.status}`);
+        }
+        if (!response.data) {
+          throw new Error(
+            `Search Data returned from backend url ${req_url} was undefined.`,
+          );
+        }
+        return await generateFakeResults(pagination);
+      };
     case GenericSearchType.Filling:
       return async (pagination: PaginationData): Promise<SearchResult> => {
         const paginationQueryString = queryStringFromPagination(pagination);
