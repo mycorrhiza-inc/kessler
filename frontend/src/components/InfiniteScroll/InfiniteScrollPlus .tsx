@@ -1,10 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
 import LoadingSpinnerTimeout from "../styled-components/LoadingSpinnerTimeout";
-import InfiniteScroll from "react-infinite-scroll-component";
 import LoadingSpinner from "../styled-components/LoadingSpinner";
 import ErrorMessage from "../messages/ErrorMessage";
 import NoResultsMessage from "../messages/NoResultsMessage";
+import InfiniteScroll from "./InfiniteScroll";
 
 const InfiniteScrollPlus = ({
   children,
@@ -53,14 +53,7 @@ const InfiniteScrollPlus = ({
     return <NoResultsMessage />;
   }
   return (
-    <InfiniteScroll
-      dataLength={dataLength}
-      hasMore={hasMore}
-      next={getMore}
-      loader={
-        <LoadingSpinnerTimeout timeoutSeconds={10} loadingText="Loading..." />
-      }
-    >
+    <InfiniteScroll dataLength={dataLength} hasMore={hasMore} getMore={getMore}>
       {children}
     </InfiniteScroll>
   );
