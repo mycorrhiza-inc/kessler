@@ -67,10 +67,15 @@ export const createGenericSearchCallback = (
                 response.data?.length === 0 ||
                 typeof response.data === "string"
               ) {
+                console.log("RESPONSE LENGTH IS ZERO, THIS SEEMS WEIRD");
                 return [];
               }
+              // console.log(
+              //   `got ${response.data.length} raw results from server`,
+              // );
 
               const filings = hydratedSearchResultsToFilings(response.data);
+              console.log(`successfully got ${filings.length} search results`);
               return filings;
             });
           console.log("getting data");
