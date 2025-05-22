@@ -10,7 +10,6 @@ x-common-env: &common-env
 services:
   # Main Services
   frontend:
-    hostname: "kessler.xyz"
     build:
       context: ./frontend
       dockerfile: ./dev.Dockerfile
@@ -24,6 +23,10 @@ services:
       - "traefik.enable=true"
       - "traefik.namespace=kessler"
       - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
+      - "traefik.http.services.frontend.loadbalancer.server.port=3000"
+      - "traefik.http.routers.frontend.service=frontend"
+    ports:
+      - 3003:3000
     expose:
       - 3000
     command:
@@ -39,14 +42,8 @@ services:
     develop:
       watch:
         - action: rebuild
-          path: ./backend/cmd/ingest
+          path: ./backend
           target: .
-        - action: rebuild
-          path: ./backend/internal
-          target: /app/internal
-        - action: rebuild
-          path: ./backend/pkg
-          target: /app/pkg
     environment:
       <<: *common-env
     env_file:
@@ -56,6 +53,8 @@ services:
     working_dir: /app
     expose:
       - 4042
+    ports:
+      - 4042:4042
     labels:
       - "traefik.enable=true"
       - "traefik.namespace=kessler"
@@ -69,34 +68,28 @@ services:
     develop:
       watch:
         - action: rebuild
-          path: ./backend/cmd/server
+          path: ./backend/
           target: .
-        - action: rebuild
-          path: ./backend/internal
-          target: /app/internal
-            - ingest/
-        - action: rebuild
-          path: ./backend/pkg
-          target: /app/pkg
     env_file:
       - ./config/global.env
     environment:
       <<: *common-env
     expose:
       - 4041
+    ports:
+      - 4041:4041
     labels:
       - "traefik.enable=true"
       - "traefik.namespace=kessler"
-      - "traefik.http.routers.go-backend.rule=PathPrefix(`/v2`)"
-      - "traefik.http.middlewares.test-stripprefix.stripprefix.prefixes=/v2"
 
   # Misc Services
   reverse-proxy:
-    image: traefik:v3.1.2
+    image: traefik:v3.4.0
     command:
       - "--api.insecure=true"
       - "--providers.docker=true"
       - "--providers.docker.constraints=Label(`traefik.namespace`,`kessler`)"
+      - "--log.level=DEBUG"
     expose:
       - 80
       - 443

@@ -3,11 +3,10 @@ import axios from "axios";
 import Link from "next/link";
 
 import { useEffect, useState } from "react";
-import InfiniteScroll from "react-infinite-scroll-component";
-import { queryStringFromPageMaxHits } from "@/lib/pagination";
 import { getClientRuntimeEnv } from "@/lib/env_variables/env_variables_hydration_script";
 import { TableStyle } from "@/components/styles/Table";
 import InfiniteScrollPlus from "@/components/InfiniteScroll/InfiniteScroll";
+import { queryStringFromPagination } from "@/lib/types/new_search_types";
 
 export interface OrganizationSearchSchema {
   query?: string;
@@ -103,11 +102,10 @@ const OrganizationTableInfiniteScroll = ({
 
   const [tableData, setTableData] = useState<OrganizationTableSchema[]>([]);
   const getPageResults = async (page: number, limit: number) => {
-    const offset = page * limit;
-    const queryString = queryStringFromPageMaxHits(page, limit);
+    const queryString = queryStringFromPagination({ page: page, limit: limit });
     const runtimeConfig = getClientRuntimeEnv();
     const searchData = InstanitateOrganizationSearchSchema(lookup_data);
-    const url = `${runtimeConfig.public_api_url}/v2/search/organization?offset=${offset}&limit=${limit}`;
+    const url = `${runtimeConfig.public_api_url}/v2/search/organization${queryString}`;
     const result = await organizationsListGet(url, searchData);
     setTableData((prev) => [...prev, ...result]);
     if (result.length < limit) {
@@ -133,7 +131,7 @@ const OrganizationTableInfiniteScroll = ({
         hasMore={hasMore}
         getMore={getMore}
         loadInitial={getInitialData}
-        reloadOnChangeObj={lookup_data}
+        reloadOnChange={0}
       >
         <OrganizationTable orgList={tableData} />
       </InfiniteScrollPlus>

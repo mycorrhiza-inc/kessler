@@ -1,7 +1,8 @@
 "use client";
 import Card from "@/components/NewSearch/GenericResultCard";
 import SideFilters from "@/components/NewSearch/SideFilters";
-import { SearchResultsComponent } from "@/components/Search/SearchResults";
+import { SearchResultsHomepageComponent } from "@/components/Search/SearchResults";
+import { GenericSearchType } from "@/lib/adapters/genericSearchCallback";
 import { generateFakeResults } from "@/lib/search/search_utils";
 
 const exampleFilters = {
@@ -26,10 +27,10 @@ export default function Page() {
     <div className="flex w-full">
       {/* Main search results content */}
       <div className="grid grid-cols-1 gap-4 p-8 w-full">
-        <SearchResultsComponent
+        <SearchResultsHomepageComponent
           isSearching={true}
           reloadOnChange={0}
-          searchGetter={generateFakeResults}
+          searchInfo={{ query: "", search_type: GenericSearchType.Filling }}
         />
       </div>
       <SideFilters

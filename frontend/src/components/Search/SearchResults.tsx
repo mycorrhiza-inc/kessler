@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import SearchResultsClient from "./SearchResultsClient";
 import { GenericSearchInfo } from "@/lib/adapters/genericSearchCallback";
 
-export function SearchResultsComponent({
+export function SearchResultsHomepageComponent({
   searchInfo,
   reloadOnChange,
   isSearching,
@@ -23,9 +23,8 @@ export function SearchResultsComponent({
           className="w-full"
         >
           <SearchResultsClient
-            initialPage={0}
             initialData={[]}
-            genericSearchInfo={searchInfo}
+            searchInfo={searchInfo}
             reloadOnChange={reloadOnChange}
           />
         </motion.div>

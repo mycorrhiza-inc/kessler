@@ -1,5 +1,6 @@
-import FileSearchView from "@/components/Search/FileSearch/FileSearchView";
+import SearchResultsServer from "@/components/Search/SearchResultsServer";
 import { BreadcrumbValues } from "@/components/SitemapUtils";
+import { GenericSearchType } from "@/lib/adapters/genericSearchCallback";
 import { stateFromHeaders } from "@/lib/nextjs_misc";
 import { headers } from "next/headers";
 
@@ -19,7 +20,9 @@ export default function Page() {
       <div className="flex">
         <h1 className="text-3xl font-bold">Files Search</h1>
       </div>
-      <FileSearchView inheritedFilters={[]} />
+      <SearchResultsServer
+        searchInfo={{ query: "", search_type: GenericSearchType.Filling }}
+      />
     </>
   );
 }

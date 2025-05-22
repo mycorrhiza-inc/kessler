@@ -176,7 +176,7 @@ const ConversationTableInfiniteScroll = ({
       dataLength={tableData.length}
       getMore={getMore}
       loadInitial={getInitialData}
-      reloadOnChangeObj={lookup_data}
+      reloadOnChange={0}
     >
       <ConversationTable convoList={tableData} truncate={truncate} />
     </InfiniteScrollPlus>

@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import LoadingSpinnerTimeout from "../styled-components/LoadingSpinnerTimeout";
 import InfiniteScroll from "react-infinite-scroll-component";
 import LoadingSpinner from "../styled-components/LoadingSpinner";
-import ErrorMessage from "../ErrorMessage";
+import ErrorMessage from "../messages/ErrorMessage";
+import NoResultsMessage from "../messages/NoResultsMessage";
 
 const InfiniteScrollPlus = ({
   children,
@@ -20,7 +21,7 @@ const InfiniteScrollPlus = ({
   reloadOnChange?: number;
   dataLength: number;
 }) => {
-  const [isTableReloading, setIsTableReloading] = useState(true);
+  const [isTableReloading, setIsTableReloading] = useState(false);
   const [err, setErr] = useState("");
   const wrappedLoadInitial = async () => {
     setIsTableReloading(true);
@@ -46,6 +47,10 @@ const InfiniteScrollPlus = ({
 
   if (isTableReloading) {
     return <LoadingSpinner loadingText="Loading..." />;
+  }
+
+  if (!isTableReloading && dataLength == 0) {
+    return <NoResultsMessage />;
   }
   return (
     <InfiniteScroll

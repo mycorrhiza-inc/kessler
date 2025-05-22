@@ -13,18 +13,16 @@ import {
 } from "@/lib/adapters/genericSearchCallback";
 
 interface SearchResultsClientProps {
-  genericSearchInfo: GenericSearchInfo;
+  searchInfo: GenericSearchInfo;
   reloadOnChange: number;
-  initialData: SearchResult[];
-  initialPage: number;
+  initialData?: SearchResult[];
   children?: React.ReactNode; // SSR seed
 }
 
 export default function SearchResultsClient({
-  genericSearchInfo,
+  searchInfo: genericSearchInfo,
   reloadOnChange,
   initialData,
-  initialPage,
   children,
 }: SearchResultsClientProps) {
   const searchCallback: SearchResultsGetter = useCallback(
@@ -34,14 +32,14 @@ export default function SearchResultsClient({
   const { data, hasMore, loadMore, hasReset, loadInitial } = useInfiniteSearch({
     searchCallback,
     initialData,
-    initialPage,
   });
 
   const displayInitalChildren =
-    children && !hasReset && data.length === initialData.length;
+    children && !hasReset && initialData && data.length === initialData.length;
 
   const [firstLoad, setFirstLoad] = useState(true);
-  if (firstLoad && initialData.length == 0) {
+  // if (firstLoad && !initialData?.length) {
+  if (firstLoad) {
     // Async call but it should still run anyway
     loadInitial();
     setFirstLoad(false);

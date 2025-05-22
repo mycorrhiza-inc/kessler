@@ -18,8 +18,8 @@ import { FilterField } from "@/lib/filters";
 import { AuthorInfoPill, DocketPill } from "../Tables/TextPills";
 import { getClientRuntimeEnv } from "@/lib/env_variables/env_variables_hydration_script";
 import { FileExtension, fileExtensionFromText } from "../Tables/FileExtension";
-import XlsxViewer from "./XlsxViewer";
-import ErrorMessage from "../ErrorMessage";
+import XlsxViewer from "../messages/XlsxCannotBeViewedMessage";
+import ErrorMessage from "../messages/ErrorMessage";
 
 // import { ErrorBoundary } from "react-error-boundary";
 //
@@ -115,9 +115,7 @@ const DocumentHeader = ({
   const underscoredTitle = title ? title.replace(/ /g, "_") : "Unkown_Document";
   const runtimeConfig = getClientRuntimeEnv();
   const runtimeConfigUrlSafe =
-    runtimeConfig.public_api_url ||
-    ssr_public_api_url ||
-    "https://api.kessler.xyz";
+    runtimeConfig.public_api_url || "https://api.kessler.xyz";
   const fileUrlNamedDownload = `${runtimeConfigUrlSafe}/v2/public/files/${objectId}/raw/${underscoredTitle}.${extension}`;
   const kesslerFileUrl = `/files/${objectId}`;
   const authors_unpluralized =

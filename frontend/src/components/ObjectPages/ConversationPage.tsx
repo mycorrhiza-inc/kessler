@@ -1,13 +1,14 @@
-import FileSearchView from "@/components/Search/FileSearch/FileSearchView";
 import { FilterField, InheritedFilterValues } from "@/lib/filters";
 import axios from "axios";
 import { BreadcrumbValues } from "../SitemapUtils";
 import MarkdownRenderer from "../MarkdownRenderer";
-import {
-  getUniversalEnvConfig,
-  internalAPIURL,
-} from "@/lib/env_variables/env_variables";
+import { getUniversalEnvConfig } from "@/lib/env_variables/env_variables";
 import HeaderCard from "./HeaderCard";
+import {
+  GenericSearchInfo,
+  GenericSearchType,
+} from "@/lib/adapters/genericSearchCallback";
+import SearchResultsServer from "../Search/SearchResultsServer";
 
 const getConversationData = async (url: string) => {
   const response = await axios.get(url);
@@ -110,10 +111,14 @@ export const ConversationPage = async ({
   inheritedFilters: InheritedFilterValues;
   breadcrumbs: BreadcrumbValues;
 }) => {
+  const searchInfo: GenericSearchInfo = {
+    search_type: GenericSearchType.Filling,
+    query: "",
+  };
   return (
     <>
       <NYConversationDescription conversation={conversation} />
-      <FileSearchView inheritedFilters={inheritedFilters} />
+      <SearchResultsServer searchInfo={searchInfo} />
     </>
   );
 };
