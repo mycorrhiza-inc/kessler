@@ -33,6 +33,12 @@ const HomeRecentTables = () => {
           <Link className="text-3xl font-bold hover:underline" href="/dockets">
             Dockets
           </Link>
+          <SearchResultsServer
+            searchInfo={{
+              query: "",
+              search_type: GenericSearchType.Docket,
+            }}
+          />
           <div className="max-h-[600px] overflow-x-hidden border-r pr-4"></div>
         </div>
         <div className="z-1">
@@ -42,6 +48,13 @@ const HomeRecentTables = () => {
           >
             Organizations
           </Link>
+
+          <SearchResultsServer
+            searchInfo={{
+              query: "",
+              search_type: GenericSearchType.Organization,
+            }}
+          />
           <div className="max-h-[600px] overflow-x-hidden pl-4"></div>
         </div>
       </div>
