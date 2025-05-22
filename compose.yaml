@@ -89,7 +89,7 @@ services:
       - "--api.insecure=true"
       - "--providers.docker=true"
       - "--providers.docker.constraints=Label(`traefik.namespace`,`kessler`)"
-      - "--log.level=DEBUG"
+      # - "--log.level=DEBUG"
     expose:
       - 80
       - 443

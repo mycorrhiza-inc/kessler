@@ -14,7 +14,7 @@ func DefineHealthRoutes(r *mux.Router) {
 		CompleteHealthCheckHandler,
 	).Methods(http.MethodPost)
 	r.HandleFunc(
-		"/complete-check",
+		"/minimal-check",
 		MinimalHealthCheckHandler,
 	).Methods(http.MethodPost)
 }
