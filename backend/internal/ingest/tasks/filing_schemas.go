@@ -102,12 +102,13 @@ func (info FilingInfoPayload) IntoCompleteFile() files.CompleteFileSchema {
 		log.Error("Encountered error generating authors", zap.Error(err))
 	}
 	return_file := files.CompleteFileSchema{
-		ID:           uuid.Nil,
-		Name:         info.Filing.Name,
-		Conversation: conv,
-		Mdata:        metadata,
-		Attachments:  newAttachments,
-		Authors:      authors,
+		ID:            uuid.Nil,
+		Name:          info.Filing.Name,
+		Conversation:  conv,
+		Mdata:         metadata,
+		Attachments:   newAttachments,
+		Authors:       authors,
+		DatePublished: info.Filing.FiledDate,
 	}
 	err = validation.ValidateFile(return_file)
 	if err != nil {
