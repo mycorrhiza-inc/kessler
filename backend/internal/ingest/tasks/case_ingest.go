@@ -129,6 +129,7 @@ func IngestCaseSpecificData(caseInfoMinimal CaseInfoMinimal) error {
 		Description:    caseInfoMinimal.Description,
 		MatterType:     caseInfoMinimal.CaseType,
 		IndustryType:   caseInfoMinimal.Industry,
+		DatePublished:  caseInfoMinimal.OpenedDate,
 		Metadata:       "{}",     // Default empty JSON
 		Extra:          "{}",     // Default empty JSON
 		DocumentsCount: 0,        // Initial value
