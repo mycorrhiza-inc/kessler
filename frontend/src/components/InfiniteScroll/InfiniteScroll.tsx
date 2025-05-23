@@ -1,9 +1,8 @@
 "use client";
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import LoadingSpinnerTimeout from "../styled-components/LoadingSpinnerTimeout";
-import LoadingSpinner from "../styled-components/LoadingSpinner";
 import ErrorMessage from "../messages/ErrorMessage";
 import NoResultsMessage from "../messages/NoResultsMessage";
+import LoadingSpinner from "../styled-components/LoadingSpinner";
 
 interface InfiniteScrollProps {
   children: React.ReactNode;
@@ -23,7 +22,7 @@ const InfiniteScroll: React.FC<InfiniteScrollProps> = ({
   hasMore,
   dataLength,
   threshold = 100,
-  containerHeight = 400,
+  containerHeight = 800,
 }) => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -58,8 +57,6 @@ const InfiniteScroll: React.FC<InfiniteScrollProps> = ({
     return () => container.removeEventListener("scroll", handleScroll);
   }, [handleScroll]);
 
-  // ... error handling remains the same ...
-
   if (error) {
     return (
       <ErrorMessage
@@ -84,10 +81,7 @@ const InfiniteScroll: React.FC<InfiniteScrollProps> = ({
       {children}
       {loadingMore && (
         <div style={{ padding: "20px 0" }}>
-          <LoadingSpinnerTimeout
-            timeoutSeconds={10}
-            loadingText="Loading more..."
-          />
+          <LoadingSpinner loadingText="Loading more..." />
         </div>
       )}
     </div>
