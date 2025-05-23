@@ -67,8 +67,8 @@ export function getUniversalEnvConfig(): RuntimeEnvConfig {
     const rawConfig = {
       public_api_url: removeBackslash(env("NEXT_PUBLIC_KESSLER_API_URL")),
       internal_api_url: "http://backend-go:4041",
-      public_posthog_key: env("NEXT_PUBLIC_POSTHOG_KEY"),
-      public_posthog_host: env("NEXT_PUBLIC_POSTHOG_HOST"),
+      public_posthog_key: env("NEXT_PUBLIC_POSTHOG_KEY") || "unknown",
+      public_posthog_host: env("NEXT_PUBLIC_POSTHOG_HOST") || "unknown",
       // version_hash: env("VERSION_HASH") ?? "unknown",
     };
     return RuntimeEnvConfigSchema.parse(rawConfig);

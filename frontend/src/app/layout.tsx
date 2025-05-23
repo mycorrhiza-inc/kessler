@@ -6,12 +6,8 @@ import dynamic from "next/dynamic";
 import EnvVariablesScript from "@/lib/env_variables/env_variables_root_script";
 import {
   ClerkProvider,
-  SignedIn,
-  SignedOut,
-  SignInButton,
 } from "@clerk/nextjs";
-import Header from "@/components/Layout/Header";
-import Link from "next/link";
+import { EnvVariablesClientProvider } from "@/lib/env_variables/env_variables_hydration_script";
 
 const PostHogPageView = dynamic(() => import("./PostHogPageView"), {
   ssr: false,
@@ -55,7 +51,9 @@ export default function RootLayout({
               <main className="">
                 <div className="flex-1 w-100vw flex flex-col items-center">
                   {/* <Navbar user={user} /> */}
-                  {children}
+                  <EnvVariablesClientProvider>
+                    {children}
+                  </EnvVariablesClientProvider>
                 </div>
               </main>
             </ThemeProvider>
