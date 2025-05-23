@@ -32,9 +32,11 @@ const InfiniteScrollPlus = ({
     }
     setIsTableReloading(false);
   };
-  useEffect(() => {
+  const [previousReload, setPreviousReload] = useState(reloadOnChange);
+  if (previousReload != reloadOnChange) {
     wrappedLoadInitial();
-  }, [reloadOnChange]);
+    setPreviousReload(reloadOnChange);
+  }
   if (err != "") {
     return (
       <ErrorMessage
