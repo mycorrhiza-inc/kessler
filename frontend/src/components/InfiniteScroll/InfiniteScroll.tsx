@@ -23,14 +23,13 @@ const InfiniteScroll: React.FC<InfiniteScrollProps> = ({
   dataLength,
   threshold = 100,
 }) => {
-  const [initialLoading, setInitialLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const loadingRef = useRef(false);
 
   // Throttled scroll handler
   const handleScroll = useCallback(() => {
-    if (loadingRef.current || initialLoading || loadingMore || !hasMore) {
+    if (loadingRef.current || loadingMore || !hasMore) {
       return;
     }
     const scrollPosition = window.innerHeight + window.scrollY;
@@ -45,7 +44,7 @@ const InfiniteScroll: React.FC<InfiniteScrollProps> = ({
           loadingRef.current = false;
         });
     }
-  }, [getMore, hasMore, initialLoading, loadingMore, threshold]);
+  }, [getMore, hasMore, loadingMore, threshold]);
 
   // Attach and clean up scroll listener
   useEffect(() => {
@@ -60,15 +59,12 @@ const InfiniteScroll: React.FC<InfiniteScrollProps> = ({
     return (
       <ErrorMessage
         reload
-        message="We encountered an error while loading the data. Please try refreshing the page"
+        message={`We encountered an error while loading the data. Please try refreshing the page: ${JSON.stringify(error)}`}
         error={error}
       />
     );
   }
-  if (initialLoading) {
-    return <LoadingSpinner loadingText="Loading..." />;
-  }
-  if (!initialLoading && dataLength === 0) {
+  if (dataLength === 0) {
     return <NoResultsMessage />;
   }
 

@@ -8,7 +8,7 @@ const ErrorMessage = ({
   reload?: boolean;
 }) => {
   if (!message) {
-    message = "We encountered some kind of error. We are really sorry.";
+    message = `We encountered some kind of error. We are really sorry: ${JSON.stringify(error)}`;
   }
   return (
     <div className="flex flex-col items-center justify-center p-8 m-4 rounded-lg bg-error/10 text-error">
