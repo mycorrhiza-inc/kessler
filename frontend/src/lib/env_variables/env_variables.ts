@@ -8,8 +8,8 @@ export const RuntimeEnvConfigSchema = z.object({
   internal_api_url: z.string().nonempty(),
   public_posthog_key: z.string().nonempty(),
   public_posthog_host: z.string().nonempty(),
-  deployment_env: z.string().nonempty(),
-  version_hash: z.string().nonempty(),
+  // deployment_env: z.string().nonempty(),
+  // version_hash: z.string().nonempty(),
 });
 
 // Type derived from Zod schema
@@ -21,8 +21,8 @@ export const emptyRuntimeConfig: RuntimeEnvConfig = {
   internal_api_url: "",
   public_posthog_key: "",
   public_posthog_host: "",
-  deployment_env: "",
-  version_hash: "",
+  // deployment_env: "",
+  // version_hash: "",
 };
 
 // Helper to trim trailing slash
@@ -51,27 +51,22 @@ export function getUniversalEnvConfig(): RuntimeEnvConfig {
     internal_api_url: "http://backend-go:4041",
     public_posthog_host: "",
     public_posthog_key: "",
-    deployment_env: "dev",
-    version_hash: "unknown",
+    // deployment_env: "dev",
   };
   try {
     const rawConfig = {
-      public_api_url: removeBackslash(env("PUBLIC_KESSLER_API_URL")),
-      internal_api_url: removeBackslash(env("INTERNAL_KESSLER_API_URL")),
-      public_posthog_key: env("PUBLIC_POSTHOG_KEY"),
-      public_posthog_host: env("PUBLIC_POSTHOG_HOST"),
-      deployment_env: env("REACT_APP_ENV") ?? "production",
-      version_hash: env("VERSION_HASH") ?? "unknown",
-      flags: {
-        // next-runtime-env returns strings for env vars, so compare string
-        enable_all_features: env("ENABLE_ALL_FEATURES") === "true",
-      },
+      public_api_url: removeBackslash(env("NEXT_PUBLIC_KESSLER_API_URL")),
+      internal_api_url: "http://backend-go:4041",
+      public_posthog_key: env("NEXT_PUBLIC_POSTHOG_KEY"),
+      public_posthog_host: env("NEXT_PUBLIC_POSTHOG_HOST"),
+      // version_hash: env("VERSION_HASH") ?? "unknown",
     };
     return RuntimeEnvConfigSchema.parse(rawConfig);
-  } catch {
+  } catch (error) {
     console.log(
       "FAILED TO GENERATE UNIVERSAL ENVIORNMENT VARIABLES, FALLING BACK TO DEFAULTS.",
     );
+    console.log(error);
     return defaultConfig;
   }
 }

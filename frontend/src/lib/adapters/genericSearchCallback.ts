@@ -7,13 +7,11 @@ import {
 } from "../types/new_search_types";
 import { generateFakeResults } from "../search/search_utils";
 import axios from "axios";
-import { Filing } from "../types/FilingTypes";
 import { hydratedSearchResultsToFilings } from "../requests/search";
 import { adaptFilingToCard } from "./genericCardAdapters";
 import { DocumentCardData } from "../types/generic_card_types";
 import { getContextualAPIURL } from "../env_variables/env_variables";
 import assert from "assert";
-import SearchResult from "@/components/SearchResult";
 
 export enum GenericSearchType {
   Filling = "filing",

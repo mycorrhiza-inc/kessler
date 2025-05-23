@@ -52,7 +52,7 @@ func main() {
 	r := mux.NewRouter()
 	root := "/ingest_v1"
 	// Set up Swagger endpoint
-	// public_api_url := constants.PUBLIC_KESSLER_API_URL
+	// public_api_url := constants.NEXT_PUBLIC_KESSLER_API_URL
 	r.PathPrefix(root + "/swagger/").Handler(httpSwagger.Handler(
 		httpSwagger.URL("/ingest_v1/swagger/doc.json"), httpSwagger.DeepLinking(true),
 		httpSwagger.DocExpansion("none"),

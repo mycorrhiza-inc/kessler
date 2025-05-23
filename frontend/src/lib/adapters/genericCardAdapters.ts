@@ -47,6 +47,7 @@ export function adaptFilingToCard(filing: Filing): DocumentCardData {
     ) || [];
   return {
     type: CardType.Document,
+    index: 0,
     name: filing.title,
     description: filing.file_class || "",
     timestamp: formatDate(filing.date),
@@ -61,6 +62,7 @@ export function adaptFilingToCard(filing: Filing): DocumentCardData {
 export function adaptOrganizationToCard(org: OrganizationInfo): DocketCardData {
   return {
     type: CardType.Docket,
+    index: 0,
     name: org.name || org.title || "",
     description: org.description || "",
     timestamp: formatDate(org.updated_at || org.created_at || org.createdAt),
@@ -77,6 +79,7 @@ export function adaptOrganizationToCard(org: OrganizationInfo): DocketCardData {
 export function adaptConversationToCard(convo: Conversation): AuthorCardData {
   return {
     type: CardType.Author,
+    index: 0,
     name: convo.name || convo.id,
     description: convo.description || "",
     timestamp: formatDate(convo.updated_at || (convo as any).last_active_at),

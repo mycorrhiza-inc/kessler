@@ -2,7 +2,7 @@ x-common-env: &common-env
   OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector:4317
   VERSION_HASH: ${VERSION_HASH}
   DOMAIN: "${DOMAIN}"
-  PUBLIC_KESSLER_API_URL: https://${PUBLIC_KESSLER_API_URL}
+  NEXT_PUBLIC_KESSLER_API_URL: https://${NEXT_PUBLIC_KESSLER_API_URL}
   INTERNAL_KESSLER_API_URL: "http://backend-server:4041"
   INTERNAL_REDIS_ADDRESS: "valkey:6379"
 
@@ -49,7 +49,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.namespace=kessler"
-      - "traefik.http.routers.backend-server.rule=Host(`${PUBLIC_KESSLER_API_URL}`) && PathPrefix(`/v2`)"
+      - "traefik.http.routers.backend-server.rule=Host(`${NEXT_PUBLIC_KESSLER_API_URL}`) && PathPrefix(`/v2`)"
       - "traefik.http.routers.backend-server.entrypoints=websecure"
       - "traefik.http.routers.backend-server.tls.certresolver=myresolver"
 
@@ -66,7 +66,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.namespace=kessler"
-      - "traefik.http.routers.backend-ingest.rule=Host(`${PUBLIC_KESSLER_API_URL}`) && PathPrefix(`/ingest_v1`)"
+      - "traefik.http.routers.backend-ingest.rule=Host(`${NEXT_PUBLIC_KESSLER_API_URL}`) && PathPrefix(`/ingest_v1`)"
       - "traefik.http.routers.backend-ingest.entrypoints=websecure"
       - "traefik.http.routers.backend-ingest.tls.certresolver=myresolver"
       - "traefik.http.services.backend-ingest.loadbalancer.server.port=4042"

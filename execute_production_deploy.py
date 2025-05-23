@@ -93,7 +93,7 @@ def main():
 
 ENV_FILE_TEMPLATE = """
 DOMAIN={domain}
-PUBLIC_KESSLER_API_URL={public_api_url}
+NEXT_PUBLIC_KESSLER_API_URL={public_api_url}
 VERSION_HASH={version_hash}
 """.strip()
 

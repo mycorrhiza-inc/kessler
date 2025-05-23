@@ -3,7 +3,7 @@ x-common-env: &common-env
   # OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT}
   # VERSION_HASH: ${VERSION_HASH}
   # DOMAIN: ${DOMAIN}
-  PUBLIC_KESSLER_API_URL: http://localhost
+  NEXT_PUBLIC_KESSLER_API_URL: http://localhost
   INTERNAL_REDIS_ADDRESS: valkey:6379
   INTERNAL_KESSLER_API_URL: http://backend-server:4041
 
