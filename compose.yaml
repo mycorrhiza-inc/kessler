@@ -1,14 +1,10 @@
 # local development docker compose
 x-common-env: &common-env
-  # OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT}
-  # VERSION_HASH: ${VERSION_HASH}
-  # DOMAIN: ${DOMAIN}
   PUBLIC_KESSLER_API_URL: http://localhost
   INTERNAL_REDIS_ADDRESS: valkey:6379
   INTERNAL_KESSLER_API_URL: http://backend-server:4041
 
 services:
-  # Main Services
   frontend:
     build:
       context: ./frontend
@@ -22,13 +18,14 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.namespace=kessler"
-      - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
-      - "traefik.http.services.frontend.loadbalancer.server.port=3000"
+      - "traefik.http.routers.frontend.rule=Host(`localhost`,`127.0.0.1`) && PathPrefix(`/`)"
+      - "traefik.http.routers.frontend.entrypoints=web"
       - "traefik.http.routers.frontend.service=frontend"
+      - "traefik.http.services.frontend.loadbalancer.server.port=3000"
     ports:
-      - 3003:3000
+      - "3003:3000"
     expose:
-      - 3000
+      - "3000"
     command:
       - "npm"
       - "run"
@@ -39,11 +36,6 @@ services:
       dockerfile: dev.ingest.Dockerfile
       context: ./backend
     command: go run /app/cmd/ingest/main.go
-    develop:
-      watch:
-        - action: rebuild
-          path: ./backend
-          target: .
     environment:
       <<: *common-env
     env_file:
@@ -52,62 +44,67 @@ services:
       - ./backend:/app
     working_dir: /app
     expose:
-      - 4042
+      - "4042"
     ports:
-      - 4042:4042
+      - "4042:4042"
     labels:
       - "traefik.enable=true"
       - "traefik.namespace=kessler"
-      - "traefik.http.routers.ingest.rule=PathPrefix(`/ingest_v1`)"
+      # route /ingest_v1 on both hosts
+      - "traefik.http.routers.ingest.rule=Host(`localhost`,`127.0.0.1`) && PathPrefix(`/ingest_v1`)"
+      - "traefik.http.routers.ingest.entrypoints=web"
+      - "traefik.http.routers.ingest.service=ingest"
+      - "traefik.http.services.ingest.loadbalancer.server.port=4042"
 
   backend-server:
     build:
       context: ./backend
       dockerfile: dev.server.Dockerfile
     command: go run /app/cmd/server/main.go
-    develop:
-      watch:
-        - action: rebuild
-          path: ./backend/
-          target: .
     env_file:
       - ./config/global.env
     environment:
       <<: *common-env
     expose:
-      - 4041
+      - "4041"
     ports:
-      - 4041:4041
+      - "4041:4041"
     labels:
       - "traefik.enable=true"
       - "traefik.namespace=kessler"
+      # route /api on both hosts
+      - "traefik.http.routers.server.rule=Host(`localhost`,`127.0.0.1`) && PathPrefix(`/v2`)"
+      - "traefik.http.routers.server.entrypoints=web"
+      - "traefik.http.routers.server.service=server"
+      - "traefik.http.services.server.loadbalancer.server.port=4041"
 
-  # Misc Services
   reverse-proxy:
     image: traefik:v3.4.0
     command:
       - "--api.insecure=true"
       - "--providers.docker=true"
       - "--providers.docker.constraints=Label(`traefik.namespace`,`kessler`)"
+      - "--entrypoints.web.address=:80"
+      # - "--entrypoints.websecure.address=:443"
       # - "--log.level=DEBUG"
     expose:
-      - 80
-      - 443
+      - "80"
+      - "443"
     ports:
       - "80:80"
       - "${PROXY_UI_PORT:-8083}:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+
   cache:
     image: memcached:1.6.37-alpine
-    command: --conn-limit=1024
-      --memory-limit=64
-      --threads=2
+    command: --conn-limit=1024 --memory-limit=64 --threads=2
     restart: always
     ports:
       - "11211:11211"
     expose:
-      - 11211
+      - "11211"
+
   valkey:
     hostname: valkey
     image: valkey/valkey:8-alpine
@@ -121,6 +118,5 @@ services:
       timeout: 3s
       retries: 5
     expose:
-      - 6379
-# include:
-#   - ./backend/backend.compose.yaml
+      - "6379"
+
