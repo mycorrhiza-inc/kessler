@@ -81,6 +81,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.namespace=kessler"
+      - "traefik.http.routers.backend.rule=PathPrefix(`/v2`)"
 
   # Misc Services
   reverse-proxy:

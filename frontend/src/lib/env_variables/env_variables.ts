@@ -47,8 +47,8 @@ export const getContextualAPIURL = (): String => {
 
 export function getUniversalEnvConfig(): RuntimeEnvConfig {
   const defaultConfig: RuntimeEnvConfig = {
-    public_api_url: "http:localhost",
-    internal_api_url: "http:backend-go:4041",
+    public_api_url: "http://localhost",
+    internal_api_url: "http://backend-go:4041",
     public_posthog_host: "",
     public_posthog_key: "",
     deployment_env: "dev",
@@ -69,6 +69,9 @@ export function getUniversalEnvConfig(): RuntimeEnvConfig {
     };
     return RuntimeEnvConfigSchema.parse(rawConfig);
   } catch {
+    console.log(
+      "FAILED TO GENERATE UNIVERSAL ENVIORNMENT VARIABLES, FALLING BACK TO DEFAULTS.",
+    );
     return defaultConfig;
   }
 }
