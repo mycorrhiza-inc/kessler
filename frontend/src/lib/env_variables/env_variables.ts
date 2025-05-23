@@ -46,11 +46,20 @@ export const getContextualAPIURL = (): String => {
 };
 
 export function getUniversalEnvConfig(): RuntimeEnvConfig {
+  if (typeof window === "undefined") {
+    const serverConfig: RuntimeEnvConfig = {
+      public_api_url: process.env.NEXT_PUBLIC_KESSLER_API_URL || "unknownurl",
+      internal_api_url: "backend-go:4041",
+      public_posthog_host: "REPLACE THIS",
+      public_posthog_key: "REPLACE THIS",
+    };
+    return serverConfig;
+  }
   const defaultConfig: RuntimeEnvConfig = {
     public_api_url: "http://localhost",
-    internal_api_url: "http://backend-go:4041",
-    public_posthog_host: "",
-    public_posthog_key: "",
+    internal_api_url: "backend-go:4041",
+    public_posthog_host: "REPLACE THIS",
+    public_posthog_key: "REPLACE THIS",
     // deployment_env: "dev",
   };
   try {
