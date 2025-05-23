@@ -34,9 +34,17 @@ export default function SearchResultsClient({
     initialData,
   });
 
+  const shouldLoadInitialData = (!initialData) || initialData.length === 0;
+
+  const [initLoad, setInitLoad] = useState(shouldLoadInitialData);
+
+  if (initLoad) {
+    loadInitial()
+    setInitLoad(false)
+  }
+
   const displayInitalChildren =
     children && !hasReset && initialData && data.length === initialData.length;
-
   return (
     <InfiniteScrollPlus
       loadInitial={loadInitial}
