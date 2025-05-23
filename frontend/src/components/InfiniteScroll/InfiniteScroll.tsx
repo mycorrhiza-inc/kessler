@@ -14,6 +14,7 @@ interface InfiniteScrollProps {
    * Distance in pixels from bottom to trigger loading more (default: 100)
    */
   threshold?: number;
+  containerHeight?: number;
 }
 
 const InfiniteScroll: React.FC<InfiniteScrollProps> = ({
@@ -22,18 +23,21 @@ const InfiniteScroll: React.FC<InfiniteScrollProps> = ({
   hasMore,
   dataLength,
   threshold = 100,
+  containerHeight = 400,
 }) => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const loadingRef = useRef(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Throttled scroll handler
   const handleScroll = useCallback(() => {
-    if (loadingRef.current || loadingMore || !hasMore) {
+    if (!containerRef.current || loadingRef.current || loadingMore || !hasMore)
       return;
-    }
-    const scrollPosition = window.innerHeight + window.scrollY;
-    const bottomPosition = document.documentElement.scrollHeight - threshold;
+
+    const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
+    const scrollPosition = scrollTop + clientHeight;
+    const bottomPosition = scrollHeight - threshold;
+
     if (scrollPosition >= bottomPosition) {
       loadingRef.current = true;
       setLoadingMore(true);
@@ -46,15 +50,16 @@ const InfiniteScroll: React.FC<InfiniteScrollProps> = ({
     }
   }, [getMore, hasMore, loadingMore, threshold]);
 
-  // Attach and clean up scroll listener
   useEffect(() => {
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
+    const container = containerRef.current;
+    if (!container) return;
+
+    container.addEventListener("scroll", handleScroll, { passive: true });
+    return () => container.removeEventListener("scroll", handleScroll);
   }, [handleScroll]);
 
-  // Render error or loading or empty states
+  // ... error handling remains the same ...
+
   if (error) {
     return (
       <ErrorMessage
@@ -67,17 +72,25 @@ const InfiniteScroll: React.FC<InfiniteScrollProps> = ({
   if (dataLength === 0) {
     return <NoResultsMessage />;
   }
-
   return (
-    <>
+    <div
+      ref={containerRef}
+      style={{
+        height: `${containerHeight}px`,
+        overflowY: "auto",
+        position: "relative",
+      }}
+    >
       {children}
       {loadingMore && (
-        <LoadingSpinnerTimeout
-          timeoutSeconds={10}
-          loadingText="Loading more..."
-        />
+        <div style={{ padding: "20px 0" }}>
+          <LoadingSpinnerTimeout
+            timeoutSeconds={10}
+            loadingText="Loading more..."
+          />
+        </div>
       )}
-    </>
+    </div>
   );
 };
 
