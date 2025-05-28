@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"kessler/internal/quickwit"
+	"kessler/pkg/logger"
 	"regexp"
 	"strings"
 	"unicode/utf8"
 
+	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.uber.org/zap"
 )
 
@@ -18,16 +20,16 @@ const (
 )
 
 type TextFilter struct {
-	logger         *zap.Logger
+	logger         *otelzap.Logger
 	IndexName      string
 	fieldNameRegex regexp.Regexp
 }
 
 type QueryFilter interface{}
 
-func NewTextFilter(logger *zap.Logger) FilterFunc {
+func NewTextFilter() FilterFunc {
 	tf := &TextFilter{
-		logger: logger.Named("text_filter"),
+		logger: logger.GetLogger("text_filter"),
 	}
 	return tf.Apply
 }

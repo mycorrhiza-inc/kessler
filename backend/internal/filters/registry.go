@@ -15,7 +15,7 @@ type FilterFunc func(input interface{}) (interface{}, error)
 type FilterRegistry struct {
 	mu       sync.RWMutex
 	filters  map[string]FilterFunc
-	logger   *zap.Logger
+	logger   *otelzap.Logger
 	mcClient *memcache.Client
 }
 

@@ -10,6 +10,7 @@ import (
 	"github.com/bradfitz/gomemcache/memcache"
 	"github.com/charmbracelet/log"
 	"github.com/google/uuid"
+	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.uber.org/zap"
 )
 
@@ -18,7 +19,7 @@ const (
 	LoggerName   = "cache:networking"
 )
 
-func getLogger() *zap.Logger {
+func getLogger() *otelzap.Logger {
 	return logger.GetLogger(LoggerName)
 }
 

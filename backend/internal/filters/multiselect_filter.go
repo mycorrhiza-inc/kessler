@@ -20,7 +20,7 @@ type MultiSelectOutput struct {
 }
 
 // NewMultiSelectFilter creates a new multi-select filter implementation
-func NewMultiSelectFilter(logger *zap.Logger) FilterFunc {
+func NewMultiSelectFilter(logger *otelzap.Logger) FilterFunc {
 	logger = logger.Named("multi_select_filter")
 
 	return func(input interface{}) (interface{}, error) {

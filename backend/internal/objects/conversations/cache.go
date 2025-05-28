@@ -8,13 +8,15 @@ import (
 
 	"github.com/bradfitz/gomemcache/memcache"
 	"github.com/google/uuid"
-	"go.uber.org/zap"
+	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 )
 
-const CacheKeyRoot = "public:conversation"
-const LoggerName = "cache:conversation"
+const (
+	CacheKeyRoot = "public:conversation"
+	LoggerName   = "cache:conversation"
+)
 
-func getLogger() *zap.Logger {
+func getLogger() *otelzap.Logger {
 	return logger.GetLogger(LoggerName)
 }
 
