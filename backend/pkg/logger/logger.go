@@ -7,12 +7,14 @@ import (
 	"os"
 	"sync"
 
+	"github.com/uptrace/opentelemetry-go-extra/otelzap"
+	_ "github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
 var (
-	Log  *zap.Logger
+	Log  *otelzap.Logger
 	once sync.Once
 )
 
@@ -30,22 +32,23 @@ func Init(env string) {
 		}
 
 		var err error
-		Log, err = config.Build(
+		bareLog, err := config.Build(
 			zap.AddCallerSkip(1),
 			zap.AddStacktrace(zapcore.ErrorLevel),
 		)
 		if err != nil {
 			panic("failed to initialize logger: " + err.Error())
 		}
+		Log = otelzap.New(bareLog)
 	})
 }
 
 // GetLogger returns a named logger instance
-func GetLogger(name string) *zap.Logger {
+func GetLogger(name string) *otelzap.Logger {
 	if Log == nil {
 		Init(os.Getenv("GO_ENV"))
 	}
-	return Log.Named(name)
+	return otelzap.New(Log.Named(name))
 }
 
 // Sync flushes any buffered log entries
