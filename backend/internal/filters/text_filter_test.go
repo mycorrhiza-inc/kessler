@@ -4,13 +4,11 @@ import (
 	"regexp"
 	"strings"
 	"testing"
-
-	"go.uber.org/zap"
 )
 
 func TestTextFilter(t *testing.T) {
-	logger, _ := zap.NewDevelopment()
-	filter := NewTextFilter(logger)
+	// logger, _ := zap.NewDevelopment()
+	filter := NewTextFilter()
 
 	tests := []struct {
 		name     string

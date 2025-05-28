@@ -2,6 +2,7 @@ package filters
 
 import (
 	"fmt"
+	"kessler/pkg/logger"
 	"strings"
 
 	"go.uber.org/zap"
@@ -20,14 +21,14 @@ type MultiSelectOutput struct {
 }
 
 // NewMultiSelectFilter creates a new multi-select filter implementation
-func NewMultiSelectFilter(logger *otelzap.Logger) FilterFunc {
-	logger = logger.Named("multi_select_filter")
+func NewMultiSelectFilter() FilterFunc {
+	log := logger.GetLogger("multi_select_filter")
 
 	return func(input interface{}) (interface{}, error) {
 		// Type assertion for input
 		multiSelect, ok := input.(MultiSelectInput)
 		if !ok {
-			logger.Error("invalid input type",
+			log.Error("invalid input type",
 				zap.String("expected_type", "MultiSelectInput"),
 				zap.Any("received_input", input))
 			return nil, fmt.Errorf("invalid input type for multi-select filter")
@@ -36,14 +37,14 @@ func NewMultiSelectFilter(logger *otelzap.Logger) FilterFunc {
 		// Validate field name
 
 		if !ValidateMultiselectField(multiSelect.Field) {
-			logger.Error("invalid field name",
+			log.Error("invalid field name",
 				zap.String("field", multiSelect.Field))
 			return nil, fmt.Errorf("invalid field name")
 		}
 
 		// Handle empty values array
 		if len(multiSelect.Values) == 0 {
-			logger.Debug("empty values array received")
+			log.Debug("empty values array received")
 			return MultiSelectOutput{
 				Values:      []string{},
 				QueryString: "*:*", // Match all in Quickwit
@@ -52,7 +53,7 @@ func NewMultiSelectFilter(logger *otelzap.Logger) FilterFunc {
 
 		// Enforce max values limit if specified
 		if multiSelect.MaxValues > 0 && len(multiSelect.Values) > multiSelect.MaxValues {
-			logger.Error("too many values",
+			log.Error("too many values",
 				zap.Int("max_allowed", multiSelect.MaxValues),
 				zap.Int("received", len(multiSelect.Values)))
 			return nil, fmt.Errorf("too many values: maximum allowed is %d", multiSelect.MaxValues)
