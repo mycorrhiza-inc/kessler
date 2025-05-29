@@ -4,6 +4,7 @@ package logger
 // 1. Its probably good to standardize logs across all our go stuff
 // 2. Its required by a couple of the filter objects in common, and thus cant really be ported to other libraries?
 import (
+	"context"
 	"os"
 	"sync"
 
@@ -11,6 +12,10 @@ import (
 	_ "github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	"go.opentelemetry.io/otel/sdk/trace"
 )
 
 var (
@@ -57,4 +62,22 @@ func Sync() error {
 		return Log.Sync()
 	}
 	return nil
+}
+
+func MakeNewOtlpExporter() error {
+	ctx := context.Background()
+	exp, err := otlptracegrpc.New(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	tracerProvider := trace.NewTracerProvider(trace.WithBatcher(exp))
+	defer func() {
+		if err := tracerProvider.Shutdown(ctx); err != nil {
+			panic(err)
+		}
+	}()
+	otel.SetTracerProvider(tracerProvider)
+	var nilerr error
+	return nilerr
 }
