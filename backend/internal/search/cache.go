@@ -7,13 +7,16 @@ import (
 	"kessler/pkg/logger"
 
 	"github.com/bradfitz/gomemcache/memcache"
+	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.uber.org/zap"
 )
 
-const CacheKeyRoot = "public:search"
-const LoggerName = "cache:search"
+const (
+	CacheKeyRoot = "public:search"
+	LoggerName   = "cache:search"
+)
 
-func getLogger() *zap.Logger {
+func getLogger() *otelzap.Logger {
 	return logger.GetLogger(LoggerName)
 }
 

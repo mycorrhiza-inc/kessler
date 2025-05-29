@@ -2,6 +2,7 @@ package filters
 
 import (
 	"fmt"
+	"kessler/pkg/logger"
 	"time"
 
 	"go.uber.org/zap"
@@ -21,14 +22,14 @@ type DateRangeOutput struct {
 }
 
 // NewDateRangeFilter creates a new date range filter implementation
-func NewDateRangeFilter(logger *zap.Logger) FilterFunc {
-	logger = logger.Named("date_range_filter")
+func NewDateRangeFilter() FilterFunc {
+	log = logger.GetLogger("date_range_filter")
 
 	return func(input interface{}) (interface{}, error) {
 		// Type assertion for input
 		dateRange, ok := input.(DateRangeInput)
 		if !ok {
-			logger.Error("invalid input type",
+			log.Error("invalid input type",
 				zap.String("expected_type", "DateRangeInput"),
 				zap.Any("received_input", input))
 			return nil, fmt.Errorf("invalid input type for date range filter")
@@ -37,13 +38,13 @@ func NewDateRangeFilter(logger *zap.Logger) FilterFunc {
 		// Set default timezone if not specified
 		if dateRange.TimeZone == "" {
 			dateRange.TimeZone = "UTC"
-			logger.Debug("using default timezone", zap.String("timezone", "UTC"))
+			log.Debug("using default timezone", zap.String("timezone", "UTC"))
 		}
 
 		// Parse timezone
 		location, err := time.LoadLocation(dateRange.TimeZone)
 		if err != nil {
-			logger.Error("invalid timezone",
+			log.Error("invalid timezone",
 				zap.String("timezone", dateRange.TimeZone),
 				zap.Error(err))
 			return nil, fmt.Errorf("invalid timezone: %w", err)
@@ -52,7 +53,7 @@ func NewDateRangeFilter(logger *zap.Logger) FilterFunc {
 		// Parse and validate dates
 		start, err := time.Parse(time.RFC3339, dateRange.Start)
 		if err != nil {
-			logger.Error("invalid start date format",
+			log.Error("invalid start date format",
 				zap.String("date", dateRange.Start),
 				zap.Error(err))
 			return nil, fmt.Errorf("invalid start date format (RFC3339 required): %w", err)
@@ -60,7 +61,7 @@ func NewDateRangeFilter(logger *zap.Logger) FilterFunc {
 
 		end, err := time.Parse(time.RFC3339, dateRange.End)
 		if err != nil {
-			logger.Error("invalid end date format",
+			log.Error("invalid end date format",
 				zap.String("date", dateRange.End),
 				zap.Error(err))
 			return nil, fmt.Errorf("invalid end date format (RFC3339 required): %w", err)

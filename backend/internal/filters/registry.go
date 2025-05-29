@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/bradfitz/gomemcache/memcache"
+	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.uber.org/zap"
 )
 
@@ -15,7 +16,7 @@ type FilterFunc func(input interface{}) (interface{}, error)
 type FilterRegistry struct {
 	mu       sync.RWMutex
 	filters  map[string]FilterFunc
-	logger   *zap.Logger
+	logger   *otelzap.Logger
 	mcClient *memcache.Client
 }
 

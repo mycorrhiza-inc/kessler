@@ -8,17 +8,20 @@ import (
 
 	"github.com/bradfitz/gomemcache/memcache"
 	"github.com/google/uuid"
+	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.uber.org/zap"
 )
 
 const LoggerName = "cache:file"
 
-const CacheKeyRoot = "public:file"
-const CacheKeyCompleteFile = "complete"
-const CacheKeyFileText = "text"
-const CacheKeyFileAttachment = "attachment"
+const (
+	CacheKeyRoot           = "public:file"
+	CacheKeyCompleteFile   = "complete"
+	CacheKeyFileText       = "text"
+	CacheKeyFileAttachment = "attachment"
+)
 
-func getLogger() *zap.Logger {
+func getLogger() *otelzap.Logger {
 	return logger.GetLogger(LoggerName)
 }
 
