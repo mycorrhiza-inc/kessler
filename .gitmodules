@@ -1,0 +1,3 @@
+[submodule "fugu"]
+	path = fugu
+	url = https://github.com/mycorrhiza-inc/fugu

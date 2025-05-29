@@ -84,3 +84,10 @@ export const generateFilingFromFileSchema = (
     extension: file_schema.extension,
   };
 };
+
+export const getSearchResults = async (
+  query: string, 
+  filters: string[]
+) => {
+  axios.get().await;
+}
