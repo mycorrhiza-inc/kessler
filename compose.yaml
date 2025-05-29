@@ -5,7 +5,8 @@ x-common-env: &common-env
   # DOMAIN: ${DOMAIN}
   NEXT_PUBLIC_KESSLER_API_URL: http://localhost
   INTERNAL_REDIS_ADDRESS: valkey:6379
-  INTERNAL_KESSLER_API_URL: http://backend-server:4041
+  NEXT_PUBLIC_POSTHOG_KEY: phc_cVPgPQClX1eOAqljibZU4udCoBngUHXuS8mUb0UGxyX
+  NEXT_PUBLIC_POSTHOG_HOST: https://us.i.posthog.com
 
 services:
   # Main Services
@@ -33,6 +34,38 @@ services:
       - "npm"
       - "run"
       - "dev"
+
+  fugudb:
+    build:
+      dockerfile: Dockerfile
+      context: ./fugu
+    develop:
+      watch:
+        - action: rebuild
+          path: ./fugu/Cargo.toml
+          target: .
+        - action: rebuild
+          path: ./fugu/src
+          target: .
+    environment:
+      <<: *common-env
+    env_file:
+      - ./config/global.env
+    volumes:
+      - ./data/fugu_db:/app/fugu_db
+    working_dir: /app
+    expose:
+      - 3301
+    ports:
+      - 3301:3301
+    labels:
+      - "traefik.enable=true"
+      - "traefik.namespace=kessler"
+      - "traefik.http.routers.fugu.rule=PathPrefix(`/fugu`)"
+      - "traefik.http.middlewares.fugu-stripprefix.stripprefix.prefixes=/fugu"
+      - "traefik.http.routers.fugu.middlewares=fugu-stripprefix"
+      - "traefik.http.services.fugu.loadbalancer.server.port=3301"
+      - "traefik.http.routers.fugu.service=fugu"
 
   backend-ingest:
     build:
