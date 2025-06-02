@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"kessler/pkg/logger"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -81,7 +82,7 @@ type Client struct {
 // InputSanitizer handles input validation and sanitization
 type InputSanitizer struct {
 	objectIDRegex  *regexp.Regexp
-	namespaceRegex *regexp.Regexp
+	namespaceRegex *regexp.Regex
 	queryRegex     *regexp.Regexp
 }
 
@@ -246,7 +247,12 @@ func WithTracer(tracer trace.Tracer) ClientOption {
 }
 
 // NewClient creates a new hardened FuguDB API client
-func NewClient(baseURL string, options ...ClientOption) (*Client, error) {
+func NewClient(ctx context.Context, baseURL string, options ...ClientOption) (*Client, error) {
+	_, span := tracer.Start(ctx, "add")
+	defer span.End()
+
+	default_tracer := otel.Tracer("fugusdk")
+	trace, err := logger.GetTracer()
 	// Validate base URL
 	if len(baseURL) == 0 {
 		return nil, fmt.Errorf("base URL cannot be empty")
@@ -257,21 +263,23 @@ func NewClient(baseURL string, options ...ClientOption) (*Client, error) {
 		return nil, fmt.Errorf("invalid base URL: %w", err)
 	}
 
-	if parsedURL.Scheme != "https" {
-		return nil, fmt.Errorf("only HTTPS URLs are allowed")
-	}
+	// TODO: enable TSL fully within the network
+	// if parsedURL.Scheme != "https" {
+	// 	return nil, fmt.Errorf("only HTTPS URLs are allowed")
+	// }
 
 	// Create secure HTTP client with sensible defaults
 	transport := &http.Transport{
-		TLSClientConfig: &tls.Config{
-			MinVersion: tls.VersionTLS12,
-			CipherSuites: []uint16{
-				tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
-				tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
-				tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
-				tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
-			},
-		},
+		// TODO: enable TSL fully within the network
+		// TLSClientConfig: &tls.Config{
+		// 	MinVersion: tls.VersionTLS12,
+		// 	CipherSuites: []uint16{
+		// 		tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+		// 		tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
+		// 		tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+		// 		tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
+		// 	},
+		// },
 		DisableKeepAlives:     false,
 		DisableCompression:    false,
 		MaxIdleConns:          100,
@@ -287,7 +295,7 @@ func NewClient(baseURL string, options ...ClientOption) (*Client, error) {
 			Transport: transport,
 		},
 		userAgent:   fmt.Sprintf("fugusdk-go/%s", SDKVersion),
-		tracer:      otel.Tracer("fugusdk"),
+		tracer:      logger.GetTrace(ctx),
 		rateLimiter: rate.NewLimiter(DefaultRateLimit, DefaultBurst),
 		sanitizer:   NewInputSanitizer(),
 		maxRetries:  3,
