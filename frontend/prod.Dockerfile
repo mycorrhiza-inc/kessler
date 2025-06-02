@@ -4,7 +4,7 @@ FROM node:23.6.1-alpine3.20 AS frontend-builder
 # USER app
 WORKDIR /app
 COPY package.json package-lock.json ./   
-RUN npm install --force
+RUN NODE_ENV=development npm install --force
 COPY ./tsconfig.json ./
 COPY ./build_time_variables.env ./.env
 COPY . .
@@ -20,7 +20,7 @@ COPY --from=frontend-builder /app/node_modules ./node_modules
 COPY --from=frontend-builder /app/.next ./.next
 COPY --from=frontend-builder /app/public ./public
 # COPY --from=frontend-builder /app/tsconfig.json ./
-COPY ./tailwind.config.ts ./
+# COPY ./tailwind.config.ts ./
 COPY ./postcss.config.js ./
 
 EXPOSE 3000

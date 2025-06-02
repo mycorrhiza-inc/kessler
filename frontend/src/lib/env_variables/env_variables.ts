@@ -7,10 +7,10 @@ const envSchema = z.object({
   public_posthog_host: z.string().min(1),
 });
 
-type EnvConfig = z.infer<typeof envSchema>;
+export type EnvConfig = z.infer<typeof envSchema>;
 
 const defaults: EnvConfig = {
-  public_api_url: "http://localhost/v2",
+  public_api_url: "http://localhost",
   internal_api_url: "http://backend-server:4041",
   public_posthog_host: "REPLACE THIS",
   public_posthog_key: "REPLACE THIS",

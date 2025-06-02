@@ -57,86 +57,131 @@ export const isSearchOffsetsValid = (results: SearchResult): boolean => {
   }
 };
 
+interface SearchRequest {
+  query: string;
+}
+
+interface SearchResponse {
+  data: any[]; // Replace with actual filing data type
+}
+
+interface VersionHashResponse {
+  // Define version hash response structure
+  hash?: string;
+  version?: string;
+}
+
 export const createGenericSearchCallback = (
   info: GenericSearchInfo,
 ): SearchResultsGetter => {
   const api_url = getEnvConfig().public_api_url;
-  // set all search invocations to be dummy searches for now.
-  info.search_type = GenericSearchType.Dummy as GenericSearchType;
+  
+  console.log("searching with api_url:", api_url);
+  console.log("info:", info);
+  console.log("search type:", info.search_type);
+  
+  if (!api_url) {
+    throw new Error("API URL cannot be undefined");
+  }
+
   switch (info.search_type) {
     case GenericSearchType.Dummy:
       return async (pagination: PaginationData): Promise<SearchResult> => {
-        const req_url = `${api_url}/v2/version_hash`;
-        const response: any = await axios.get(req_url);
-        // check error conditions
-        if (response.status >= 400) {
-          throw new Error(`Request failed with status code ${response.status}`);
+        try {
+          const url = `${api_url}/v2/version_hash`;
+          const response = await axios.get<VersionHashResponse>(url);
+          
+          if (!response.data) {
+            throw new Error(
+              `Search data returned from backend URL ${url} was undefined`
+            );
+          }
+          
+          const results = await generateFakeResults(pagination);
+          mutateIndexifySearchResults(results, pagination);
+          return results;
+          
+        } catch (error) {
+          if (axios.isAxiosError(error)) {
+            console.error("Axios error in dummy search:", error.message);
+            if (error.response) {
+              console.error("Response status:", error.response.status);
+              console.error("Response data:", error.response.data);
+            }
+          } else {
+            console.error("Unexpected error in dummy search:", error);
+          }
+          throw error;
         }
-        if (!response.data) {
-          throw new Error(
-            `Search Data returned from backend url ${req_url} was undefined.`,
-          );
-        }
-        let results = await generateFakeResults(pagination);
-        mutateIndexifySearchResults(results, pagination);
-        return results;
       };
+
     case GenericSearchType.Filling:
       return async (pagination: PaginationData): Promise<SearchResult> => {
         const paginationQueryString = queryStringFromPagination(pagination);
-        const searchQuery = info.query;
-        console.log("query data", searchQuery);
-        const searchFilters = info.filters;
+        const { query: searchQuery, filters: searchFilters } = info;
+        
+        console.log("query data:", searchQuery);
         console.log("SEARCH FILTERS DISABLED UNTIL MIRRI UPDATES THE DB");
-        console.log("API URL:  ", api_url);
-        assert(api_url, "Api url cannot be undefined");
+        console.log("API URL:", api_url);
+        
         try {
-          const req_url = `${api_url}/v2/search/file${paginationQueryString}`;
-          const req_data = {
-            query: searchQuery,
-          };
-          const response: any = await axios.post(req_url, req_data);
-          // check error conditions
-          if (response.status >= 400) {
-            throw new Error(
-              `Request failed with status code ${response.status}`,
-            );
-          }
+          const url = `${api_url}/v2/search/file${paginationQueryString}`;
+          const requestData: SearchRequest = { query: searchQuery };
+          
+          const response = await axios.post<SearchResponse>(url, requestData);
+          
           if (!response.data) {
             throw new Error(
-              `Search Data returned from backend url ${req_url} and data ${JSON.stringify(req_data)} was undefined.`,
+              `Search data returned from backend URL ${url} with data ${JSON.stringify(requestData)} was undefined`
             );
           }
-          if (
-            response.data?.length === 0 ||
-            typeof response.data === "string"
-          ) {
-            console.log("RESPONSE LENGTH IS ZERO, THIS SEEMS WEIRD");
+          
+          if (Array.isArray(response.data) && response.data.length === 0) {
+            console.warn("Response length is zero - no results found");
             return [];
           }
-          // console.log(
-          //   `got ${response.data.length} raw results from server`,
-          // );
-
+          
+          if (typeof response.data === "string") {
+            console.warn("Received string response instead of expected data structure");
+            return [];
+          }
+          
           const filings = hydratedSearchResultsToFilings(response.data);
-          console.log(`successfully got ${filings.length} search results`);
-          console.log("getting data");
-          // console.log(searchResults);
-          const searchResults: DocumentCardData[] =
-            filings.map(adaptFilingToCard);
-
+          console.log(`Successfully got ${filings.length} search results`);
+          console.log("Getting data");
+          
+          const searchResults: DocumentCardData[] = filings.map(adaptFilingToCard);
+          
           mutateIndexifySearchResults(searchResults, pagination);
           return searchResults;
+          
         } catch (error) {
-          console.log(error);
+          if (axios.isAxiosError(error)) {
+            console.error("Axios error in filing search:", error.message);
+            if (error.response) {
+              console.error("Response status:", error.response.status);
+              console.error("Response data:", error.response.data);
+            }
+          } else {
+            console.error("Unexpected error in filing search:", error);
+          }
           throw error;
         }
       };
 
     case GenericSearchType.Organization:
-      throw new Error("Not Implemented");
+      return async (): Promise<SearchResult> => {
+        throw new Error("Organization search not implemented");
+      };
+
     case GenericSearchType.Docket:
-      throw new Error("Not Implemented");
+      return async (): Promise<SearchResult> => {
+        throw new Error("Docket search not implemented");
+      };
+
+    default:
+      // Exhaustive check to ensure all enum values are handled
+      const _exhaustive: never = info.search_type;
+      throw new Error(`Unhandled search type: ${info.search_type}`);
   }
-  throw "Error, no type specified for generic search callback";
 };
