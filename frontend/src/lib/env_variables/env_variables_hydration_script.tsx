@@ -10,14 +10,14 @@ import {
 import {
   RuntimeEnvConfig,
   emptyRuntimeConfig,
-  getUniversalEnvConfig,
+  getEnvConfig,
 } from "./env_variables";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 
 // Client-specific alias for getting runtime env config
 // This is now provided by env_variables.ts
 // export const getClientRuntimeEnv = (): RuntimeEnvConfig => {
-//   return getUniversalEnvConfig();
+//   return getEnvConfig();
 // };
 
 // Initialize context with an empty validated config
@@ -71,6 +71,6 @@ NEXT_PUBLIC_POSTHOG_HOST: ${config.public_posthog_host}
 };
 
 export function getClientRuntimeEnv(): RuntimeEnvConfig {
-  return getUniversalEnvConfig();
+  return getEnvConfig();
 }
 
