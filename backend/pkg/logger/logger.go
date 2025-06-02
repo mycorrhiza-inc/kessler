@@ -12,10 +12,6 @@ import (
 	_ "github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
-	"go.opentelemetry.io/otel/sdk/trace"
 )
 
 var (
@@ -56,28 +52,19 @@ func GetLogger(name string) *otelzap.Logger {
 	return otelzap.New(Log.Named(name))
 }
 
+// GetLogger returns a named logger instance
+func GetLoggerCtx(ctx context.Context, name string) otelzap.LoggerWithCtx {
+	if Log == nil {
+		Init(os.Getenv("GO_ENV"))
+	}
+	tmp_logger := otelzap.New(Log.Named(name))
+	return tmp_logger.Ctx(ctx)
+}
+
 // Sync flushes any buffered log entries
 func Sync() error {
 	if Log != nil {
 		return Log.Sync()
 	}
 	return nil
-}
-
-func MakeNewOtlpExporter() error {
-	ctx := context.Background()
-	exp, err := otlptracegrpc.New(ctx)
-	if err != nil {
-		panic(err)
-	}
-
-	tracerProvider := trace.NewTracerProvider(trace.WithBatcher(exp))
-	defer func() {
-		if err := tracerProvider.Shutdown(ctx); err != nil {
-			panic(err)
-		}
-	}()
-	otel.SetTracerProvider(tracerProvider)
-	var nilerr error
-	return nilerr
 }
