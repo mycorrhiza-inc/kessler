@@ -10,7 +10,7 @@ import axios from "axios";
 import { hydratedSearchResultsToFilings } from "../requests/search";
 import { adaptFilingToCard } from "./genericCardAdapters";
 import { DocumentCardData } from "../types/generic_card_types";
-import { getContextualAPIURL } from "../env_variables/env_variables";
+import { getEnvConfig } from "../env_variables/env_variables";
 import assert from "assert";
 
 export enum GenericSearchType {
@@ -60,7 +60,7 @@ export const isSearchOffsetsValid = (results: SearchResult): boolean => {
 export const createGenericSearchCallback = (
   info: GenericSearchInfo,
 ): SearchResultsGetter => {
-  const api_url = getContextualAPIURL();
+  const api_url = getEnvConfig().public_api_url;
   // set all search invocations to be dummy searches for now.
   info.search_type = GenericSearchType.Dummy as GenericSearchType;
   switch (info.search_type) {
