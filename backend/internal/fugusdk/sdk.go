@@ -8,7 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"kessler/pkg/logger"
+	//"kessler/pkg/logger"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -43,6 +43,8 @@ const (
 	DefaultRateLimit = 100 // requests per second
 	DefaultBurst     = 10
 )
+
+var tracer = otel.Tracer("fugu-sdk")
 
 // SecureToken represents an encrypted authentication token
 type SecureToken struct {
@@ -82,7 +84,7 @@ type Client struct {
 // InputSanitizer handles input validation and sanitization
 type InputSanitizer struct {
 	objectIDRegex  *regexp.Regexp
-	namespaceRegex *regexp.Regex
+	namespaceRegex *regexp.Regexp
 	queryRegex     *regexp.Regexp
 }
 
@@ -246,13 +248,23 @@ func WithTracer(tracer trace.Tracer) ClientOption {
 	}
 }
 
-// NewClient creates a new hardened FuguDB API client
-func NewClient(ctx context.Context, baseURL string, options ...ClientOption) (*Client, error) {
+// NewClient creates a new default FuguDB API client
+func NewClient(ctx context.Context, baseURL string) (*Client, error) {
+	return BuildClient(
+		ctx,
+		baseURL,
+		WithSecureToken("your-token"),
+		// fugusdk.WithCertificatePinning([]string{certPEM}),
+		WithRateLimit(50, 10),
+		WithRetry(3, time.Second),
+	)
+}
+
+// BuildClient creates a new custom FuguDB API client
+func BuildClient(ctx context.Context, baseURL string, options ...ClientOption) (*Client, error) {
 	_, span := tracer.Start(ctx, "add")
 	defer span.End()
 
-	default_tracer := otel.Tracer("fugusdk")
-	trace, err := logger.GetTracer()
 	// Validate base URL
 	if len(baseURL) == 0 {
 		return nil, fmt.Errorf("base URL cannot be empty")
@@ -289,13 +301,13 @@ func NewClient(ctx context.Context, baseURL string, options ...ClientOption) (*C
 	}
 
 	client := &Client{
-		baseURL: strings.TrimSuffix(baseURL, "/"),
+		baseURL: strings.TrimSuffix(parsedURL.String(), "/"),
 		httpClient: &http.Client{
 			Timeout:   DefaultTimeout,
 			Transport: transport,
 		},
 		userAgent:   fmt.Sprintf("fugusdk-go/%s", SDKVersion),
-		tracer:      logger.GetTrace(ctx),
+		tracer:      tracer,
 		rateLimiter: rate.NewLimiter(DefaultRateLimit, DefaultBurst),
 		sanitizer:   NewInputSanitizer(),
 		maxRetries:  3,
