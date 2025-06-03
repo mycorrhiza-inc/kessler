@@ -10,7 +10,17 @@ dev() {
   docker compose up --build --watch --remove-orphans
 }
 prod() {
-  echo "nicole, put something in here"
+
+  local current_hash=$(git rev-parse HEAD)
+  echo "Current commit hash: $current_hash"
+
+  sudo docker build -t "fractalhuman1/kessler-frontend:${current_hash}" --platform linux/amd64 --file ./frontend/prod.Dockerfile ./frontend/
+  sudo docker build -t "fractalhuman1/kessler-backend-server:${current_hash}" --platform linux/amd64 --file ./backend/prod.server.Dockerfile ./backend
+  sudo docker build -t "fractalhuman1/kessler-backend-ingest:${current_hash}" --platform linux/amd64 --file ./backend/prod.ingest.Dockerfile ./backend
+
+  sudo docker push "fractalhuman1/kessler-frontend:${current_hash}"
+  sudo docker push "fractalhuman1/kessler-backend-server:${current_hash}"
+  sudo docker push "fractalhuman1/kessler-backend-ingest:${current_hash}"
 }
 
 # Initialize flags
