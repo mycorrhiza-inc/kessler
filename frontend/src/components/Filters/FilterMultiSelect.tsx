@@ -1,5 +1,6 @@
 "use client"
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import { TextPill } from "@/components/Tables/TextPills"
 
 // Mock FilterFieldDefinition for demo
 interface FilterFieldDefinition {
@@ -51,8 +52,7 @@ export function DynamicMultiSelect({
     handleSelectionChange(newSelection);
   }, [selectedValues, handleSelectionChange]);
 
-  const removeSelectedItem = useCallback((optionValue: string, event: React.MouseEvent) => {
-    event.stopPropagation();
+  const removeSelectedItem = useCallback((optionValue: string) => {
     const newSelection = selectedValues.filter(v => v !== optionValue);
     handleSelectionChange(newSelection);
   }, [selectedValues, handleSelectionChange]);
@@ -113,11 +113,11 @@ export function DynamicMultiSelect({
       <button
         type="button"
         className={`
-          w-full min-h-[3rem] p-3 text-left border-2 rounded-lg transition-all duration-200
-          ${isOpen ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-300'}
-          ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-base-100 hover:border-gray-400 cursor-pointer'}
-          ${selectedValues.length > 0 ? 'bg-blue-50' : ''}
-        `}
+        w-full min-h-[3rem] p-3 text-left border-2 rounded-lg transition-all duration-200
+        ${isOpen ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-300'}
+        ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-base-100 hover:border-gray-400 cursor-pointer'}
+        ${selectedValues.length > 0 ? 'bg-blue-50' : ''}
+      `}
         onClick={handleDropdownToggle}
         disabled={disabled}
         onKeyDown={(e) => {
@@ -138,22 +138,15 @@ export function DynamicMultiSelect({
                 </div>
                 <div className="flex flex-wrap gap-1">
                   {selectedLabels.map((label, index) => (
-                    <span
+                    <TextPill
                       key={selectedValues[index]}
-                      className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs"
-                    >
-                      {label}
-                      <button
-                        type="button"
-                        onClick={(e) => removeSelectedItem(selectedValues[index], e)}
-                        className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
-                        aria-label={`Remove ${label}`}
-                      >
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </span>
+                      text={label}
+                      seed={selectedValues[index]}
+                      removable
+                      onRemove={() => removeSelectedItem(selectedValues[index])}
+                      size="xs"
+                      className="m-0 mt-0 mb-0"
+                    />
                   ))}
                 </div>
               </div>
@@ -195,15 +188,23 @@ export function DynamicMultiSelect({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               {searchTerm && (
-                <button
-                  type="button"
+                <span
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
                   onClick={clearSearch}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      clearSearch();
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  aria-label="Clear search"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
-                </button>
+                </span>
               )}
             </div>
           </div>
@@ -224,10 +225,10 @@ export function DynamicMultiSelect({
                     <div key={option.value}>
                       <label
                         className={`
-                          cursor-pointer flex items-center justify-between p-3 rounded-md transition-colors
-                          ${option.disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'}
-                          ${isSelected ? 'bg-blue-50' : ''}
-                        `}
+                        cursor-pointer flex items-center justify-between p-3 rounded-md transition-colors
+                        ${option.disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'}
+                        ${isSelected ? 'bg-blue-50' : ''}
+                      `}
                       >
                         <div className="flex items-center gap-3 flex-1 min-w-0">
                           <input
@@ -243,22 +244,14 @@ export function DynamicMultiSelect({
 
                         {/* Option Pill */}
                         {isSelected && (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs flex-shrink-0 ml-2">
-                            {optionLabel}
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleOption(option.value);
-                              }}
-                              className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
-                              aria-label={`Remove ${optionLabel}`}
-                            >
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                              </svg>
-                            </button>
-                          </span>
+                          <TextPill
+                            text={optionLabel}
+                            seed={option.value}
+                            removable
+                            onRemove={() => toggleOption(option.value)}
+                            size="xs"
+                            className="m-0 mt-0 mb-0 flex-shrink-0 ml-2"
+                          />
                         )}
                       </label>
                     </div>
@@ -274,13 +267,21 @@ export function DynamicMultiSelect({
               <span>
                 {selectedValues.length} item{selectedValues.length !== 1 ? 's' : ''} selected
               </span>
-              <button
-                type="button"
+              <span
+                className="text-blue-600 hover:text-blue-800 underline font-medium cursor-pointer"
                 onClick={() => handleSelectionChange([])}
-                className="text-blue-600 hover:text-blue-800 underline font-medium"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleSelectionChange([]);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+                aria-label="Clear all selections"
               >
                 Clear all
-              </button>
+              </span>
             </div>
           )}
         </div>
