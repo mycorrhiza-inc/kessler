@@ -21,10 +21,13 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+
+	"go.opentelemetry.io/otel"
 	"go.uber.org/zap"
 )
 
 var SupabaseSecret = os.Getenv("SUPABASE_ANON_KEY")
+var tracer = otel.Tracer("kessler-main")
 
 type AccessTokenData struct {
 	AccessToken string `json:"access_token"`
@@ -93,10 +96,12 @@ func timeoutMiddleware(timeout time.Duration) mux.MiddlewareFunc {
 
 func main() {
 	// initialize the database connection pool
-	logger.Init(os.Getenv("GO_ENV"))
-	defer logger.Sync()
-
+	logger.Init()
 	log := logger.GetLogger("main")
+	tracer := otel.Tracer("my-service")
+	ctx, span := tracer.Start(context.Background(), "my-operation")
+	ctx = logger.WithLogger(ctx)
+	defer span.End()
 
 	// port_str := os.Getenv("PORT")
 	// log.Debug("env string")
@@ -104,15 +109,15 @@ func main() {
 	// if err != nil {
 	// 	log.Fatal("no port set")
 	// }
-	log.Debug("starting application",
-		zap.String("env", os.Getenv("GO_ENV")),
+	logger.Info(ctx, "starting application",
+		// zap.String("env", os.Getenv("GO_ENV")),
 		zap.Int("port", 7001))
 
-	log.Info("connecting to database")
+	logger.Info(ctx, "connecting to database")
 	if err := database.Init(30); err != nil {
 		log.Fatal("unable to connect to connect to the database ", zap.Error(err))
 	}
-	log.Info("database connection successiful")
+	logger.Info(ctx, "database connection successiful")
 
 	defer database.ConnPool.Close()
 
@@ -188,10 +193,12 @@ func main() {
 	// r.Use(mux.CORSMethodMiddleware(r))
 	r.Use(corsDomainMiddleware)
 	log.Info("routes registered")
+	handler := logger.TracingMiddleware()(r)
+	log.Info("set necessary routes")
 
 	server := &http.Server{
 		Addr:    ":4041",
-		Handler: r,
+		Handler: handler,
 		// Set longer timeouts at server level to allow for admin operations
 		ReadTimeout:  adminTimeout,
 		WriteTimeout: adminTimeout,

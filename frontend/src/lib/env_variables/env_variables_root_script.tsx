@@ -1,7 +1,7 @@
 import { unstable_noStore as noStore } from "next/cache";
 import { headers } from "next/headers";
 import { EnvScript } from "next-runtime-env";
-import { getUniversalEnvConfig } from "./env_variables";
+import { getEnvConfig } from "./env_variables";
 
 /**
  * Embeds runtime environment configuration into the HTML.
@@ -12,7 +12,7 @@ export default function EnvVariablesScript() {
 
   const nonce = headers().get("x-nonce") || undefined;
 
-  const env_obj = getUniversalEnvConfig();
+  const env_obj = getEnvConfig();
 
   return <EnvScript nonce={nonce} env={env_obj} />;
 }

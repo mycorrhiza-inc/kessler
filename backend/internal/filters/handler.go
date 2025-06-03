@@ -4,12 +4,20 @@ import (
 	"encoding/json"
 	"kessler/internal/cache"
 	"kessler/internal/database"
+	"kessler/internal/fugusdk"
 	"kessler/internal/objects/networking"
+	"kessler/pkg/logger"
 	"net/http"
+	// "time"
 
 	"github.com/gorilla/mux"
+	"go.opentelemetry.io/otel"
 	"go.uber.org/zap"
 )
+
+var tracer = otel.Tracer("filter-endpoint")
+
+func span(r *http.Request) {}
 
 type FilterServiceHandler struct {
 	service *FilterService
@@ -35,14 +43,30 @@ func RegisterFilterRoutes(r *mux.Router) error {
 }
 
 func (h *FilterServiceHandler) GetFilters(w http.ResponseWriter, r *http.Request) {
-	log.Info("get filters called")
+	ctx := r.Context()
+	ctx, span := tracer.Start(ctx, "filter-api:get-filters")
+	defer span.End()
+	logger.Info(ctx, "get filters called")
 	state := r.URL.Query().Get("state")
 	pagination := networking.PaginationFromUrlParams(r)
+
+	client, err := fugusdk.NewClient(ctx,
+		"http://fugudb",
+	)
+
+	// All operations now include validation
+	objects := []fugusdk.ObjectRecord{{
+		ID:        "doc-1",
+		Text:      "Sample document",
+		Namespace: "docs",
+	}}
+
+	err = client.IngestObjects(ctx, objects)
 
 	f, err := h.service.GetFiltersByDataset(r.Context(), state)
 
 	if err != nil {
-		log.Error("There was an error listing the filters", zap.Error(err))
+		logger.Error(ctx, "There was an error listing the filters", zap.Error(err))
 		switch err {
 		case ErrInvalidFilterState:
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -72,7 +96,7 @@ func (h *FilterServiceHandler) GetFilters(w http.ResponseWriter, r *http.Request
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(filters); err != nil {
-		log.Error("failed to encode response", zap.Error(err))
+		logger.Error(ctx, "failed to encode response", zap.Error(err))
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
