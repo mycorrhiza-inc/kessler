@@ -27,7 +27,7 @@ const SidebarLink: React.FC<SidebarButtonProps> = ({
   href,
 }) => (
   <Link
-    className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-base-700 dark:text-base-300 hover:bg-base-300 dark:hover:bg-base-800 rounded-sm"
+    className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-primary-400-700 dark:text-primary-300 hover:bg-base-300 dark:hover:bg-base-800 rounded-sm"
     href={href ? href : ""}
     onClick={onClick ? onClick : undefined}
   >
@@ -85,7 +85,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       <div
         className="fixed bottom-4 left-4 z-30"
         onMouseEnter={() => onVisibilityChange(true)}
-        onMouseLeave={() =>  !isPinned && onVisibilityChange(false)}
+        onMouseLeave={() => !isPinned && onVisibilityChange(false)}
       >
         {isVisible || isPinned ? (
           <button
@@ -98,12 +98,12 @@ const Sidebar: React.FC<SidebarProps> = ({
             {isPinned ? (
               <BsArrowBarLeft
                 size={20}
-                className="text-base-600 dark:text-base-400 left-4"
+                className="text-base-600 dark:text-primary-400 left-4"
               />
             ) : (
               <BsArrowBarRight
                 size={20}
-                className="text-base-600 dark:text-base-400"
+                className="text-base-600 dark:text-primary-400"
               />
             )}
           </button>
