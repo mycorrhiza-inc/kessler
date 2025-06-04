@@ -6,7 +6,7 @@ import { BreadcrumbValues } from "@/components/SitemapUtils";
 import { getUniversalEnvConfig } from "@/lib/env_variables/env_variables";
 
 import { createClient } from "@/utils/supabase/server";
-import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
+import { SignedIn, SignedOut, SignInButton, SignUp, SignUpButton } from "@clerk/nextjs";
 import Link from "next/link";
 
 const defaultUrl = "https://kessler.xyz";
@@ -27,16 +27,7 @@ export default async function ApplicationLayout({
     if (getUniversalEnvConfig().public_api_url == "http://localhost") {
       return true;
     }
-    try {
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      const userPresent = Boolean(user);
-      return userPresent;
-    } catch {
-      return false;
-    }
+    return true;
   };
 
   const isLoggedIn = await checkLoggedIn();
@@ -55,11 +46,15 @@ export default async function ApplicationLayout({
           </Link>
         </SignedIn>
         <SignedOut>
-          <SignInButton>
-            <button className="px-4 py-2 rounded-full bg-[#131316] text-white text-sm font-semibold">
-              Sign in
-            </button>
-          </SignInButton>
+          <SignUpButton />
+          {/* <button className="px-4 py-2 rounded-full bg-[#131316] text-white text-sm font-semibold"> */}
+          {/*   Sign up */}
+          {/* </button> */}
+          <SignInButton />
+          {/*   <button className="px-4 py-2 rounded-full bg-[#131316] text-white text-sm font-semibold"> */}
+          {/*     Sign in */}
+          {/*   </button> */}
+          {/* </SignInButton> */}
         </SignedOut>
         {/* </div> */}
       </Header>
