@@ -37,7 +37,9 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <PHProvider>
-        <ClerkProvider>
+        <ClerkProvider
+          publishableKey="pk_test_YWNlLXdhbGxhYnktODQuY2xlcmsuYWNjb3VudHMuZGV2JA"
+        >
           <head>
             <meta
               name="viewport"

@@ -16,6 +16,15 @@ const defaults: EnvConfig = {
   public_posthog_key: "REPLACE THIS",
 };
 
+export function contextualApiUrl(envSchema: EnvConfig): string {
+  if (typeof window === "undefined") {
+    return envSchema.internal_api_url
+  }
+  return envSchema.public_api_url
+
+}
+
+
 function getEnvConfig(): EnvConfig {
   // Server-side
   if (typeof window === "undefined") {

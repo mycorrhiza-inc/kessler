@@ -1,6 +1,7 @@
 import { CardData, CardType } from "@/lib/types/generic_card_types";
 import { clsx } from "clsx";
 import React from "react";
+import { AuthorPill } from "../Tables/TextPills";
 
 const getTimestampLabel = (type: CardType): string => {
   switch (type) {
@@ -121,10 +122,10 @@ const Card: React.FC<{ data: CardData; size?: CardSize }> = ({
     return <MediumCard data={data} />;
   }
   if (size == CardSize.Small) {
-    return <SmallCard data={data} />;
+    return <MediumCard data={data} />;
   }
   if (size == CardSize.Large) {
-    return <LargeCard data={data} />;
+    return <MediumCard data={data} />;
   }
 };
 
@@ -159,9 +160,7 @@ const MediumCard: React.FC<{ data: CardData }> = ({ data }) => {
           <h3 className="text-sm font-bold mb-2">Authors</h3>
           <div className="bg-pink-100 p-2 rounded-sm">
             {data.authors.map((author, index) => (
-              <span key={index} className="text-sm">
-                {author}
-              </span>
+              <AuthorPill author={author} />
             ))}
           </div>
         </div>
@@ -170,93 +169,6 @@ const MediumCard: React.FC<{ data: CardData }> = ({ data }) => {
   );
 };
 
-const SmallCard: React.FC<{ data: CardData }> = ({ data }) => {
-  return (
-    <div className="card bg-base-100 shadow-xl p-2 mb-2 text-sm">
-      <div className="flex justify-between items-center gap-2">
-        <div className="flex items-center truncate">
-          {getIcon(data.type)}
-          <h2 className="card-title ml-1 truncate">{data.name}</h2>
-
-          <p className="text-xs text-gray-500 truncate px-5">
-            {data.description}
-          </p>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          {/* <div */}
-          {/*   className={`${getTypeColor(data.type)} text-white px-2 py-1 rounded-sm text-xs capitalize`} */}
-          {/* > */}
-          {/*   {data.type} */}
-          {/* </div> */}
-          <span className="text-gray-500">
-            {getTimestampLabel(data.type)}: {data.timestamp}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const LargeCard: React.FC<{ data: CardData }> = ({ data }) => {
-  return (
-    <div className="bg-base-100 p-6 rounded-lg shadow-xl mb-6">
-      <div className="flex justify-between items-start mb-6">
-        <div className="flex items-center gap-4">
-          {getIcon(data.type)}
-          <div>
-            <h2 className="text-2xl font-bold">
-              <span className="text-gray-500 mr-2">Name:</span>
-              {data.name}
-            </h2>
-            <div
-              className={`${getTypeColor(data.type)} text-white px-3 py-2 rounded-lg text-sm capitalize mt-2`}
-            >
-              {data.type}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="mb-6">
-        <p className="text-lg text-gray-600">
-          <span className="text-gray-500 font-medium">Description:</span>{" "}
-          {data.description}
-        </p>
-        {data.extraInfo && (
-          <p className="text-base text-gray-600 mt-3">
-            <span className="text-gray-500 font-medium">Details:</span>{" "}
-            {data.extraInfo}
-          </p>
-        )}
-      </div>
-
-      <div className="flex justify-between items-center text-base mb-6">
-        <span className="text-gray-500 font-medium">
-          {getTimestampLabel(data.type)}:
-        </span>
-        <span className="text-gray-700">{data.timestamp}</span>
-      </div>
-
-      {data.authors && (
-        <div className="mt-6">
-          <h3 className="text-xl font-bold mb-4">Authors</h3>
-          <div className="bg-pink-100 p-4 rounded-lg">
-            <div className="flex flex-wrap gap-3">
-              {data.authors.map((author, index) => (
-                <span
-                  key={index}
-                  className="text-base bg-white px-3 py-1 rounded-full"
-                >
-                  {author}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
 
 export default Card;
 

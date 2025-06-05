@@ -5,6 +5,7 @@ import {
   SearchResultsGetter,
 } from "../types/new_search_types";
 import { sleep } from "@/utils/utils";
+import { AuthorCardData, CardData, CardType, DocketCardData, DocumentCardData } from "../types/generic_card_types";
 const randomRecentDate = () => {
   const date = new Date();
   date.setMonth(date.getMonth() - Math.floor(Math.random() * 6));
@@ -16,7 +17,7 @@ export const generateFakeResults = async ({ page, limit }: PaginationData) => {
   return generateFakeResultsRaw(limit);
 };
 
-export const generateFakeResultsRaw = (count: number): SearchResult[] => {
+export const generateFakeResultsRaw = (count: number): CardData[] => {
   const resultTypes = ["author", "docket", "document"];
   const agencies = ["EPA", "DOT", "FDA", "USDA", "DOE"];
   const documentFormats = ["PDF", "DOCX", "HTML", "Markdown"];
@@ -26,33 +27,36 @@ export const generateFakeResultsRaw = (count: number): SearchResult[] => {
       resultTypes[Math.floor(Math.random() * 100) % resultTypes.length];
     const base = {
       id: `fake-result-${i + 1}`,
+      index: 0,
       timestamp: randomRecentDate(),
     };
 
     switch (type) {
       case "author":
-        return {
+        const author_data: AuthorCardData = {
           ...base,
-          type: "author",
+          type: CardType.Author,
           name: faker.person.fullName(),
           description: faker.person.jobTitle(),
-          affiliation: faker.company.name(),
+          // affiliation: faker.company.name(),
         };
+        return author_data;
 
       case "docket":
         const agency = agencies[Math.floor(Math.random() * agencies.length)];
-        return {
+        const docket_data: DocketCardData = {
           ...base,
-          type: "docket",
+          type: CardType.Docket,
           name: `${agency}-${faker.string.alpha({ length: 3, casing: "upper" })}-${faker.date.recent().getFullYear()}-${faker.string.numeric(4)}`,
           description: `${agency} ${faker.commerce.product()} Regulations`,
           extraInfo: `Comment period closes ${faker.date.soon({ days: 30 }).toLocaleDateString()}`,
         };
+        return docket_data;
 
       case "document":
-        return {
+        const document_data: DocumentCardData = {
           ...base,
-          type: "document",
+          type: CardType.Document,
           name: `${faker.date.recent().getFullYear()} ${faker.commerce.department()} Report`,
           description: faker.lorem.sentence(),
           extraInfo: `${documentFormats[Math.floor(Math.random() * documentFormats.length)]}, ${faker.number.float({ min: 0.1, max: 5.0 }).toFixed(1)}MB`,
