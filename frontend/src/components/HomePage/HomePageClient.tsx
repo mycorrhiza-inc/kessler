@@ -36,8 +36,8 @@ export default function HomePageClient({
         initial={{ height: "70vh" }}
         animate={{ height: isSearching ? "30vh" : "70vh" }}
         transition={{ duration: 0.5 }}
-        className="flex flex-col items-center justify-center bg-base-100 p-4"
-        style={{ overflow: "hidden" }}
+        className="flex flex-col items-center justify-center  bg-base-100 p-4"
+        style={{ overflow: "visible" }}
       >
         <HomeSearchBar setTriggeredQuery={setTriggeredQuery} />
       </motion.div>
