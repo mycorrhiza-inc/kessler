@@ -3,44 +3,13 @@ import Link from "next/link";
 import { FaFilePdf, FaFileWord, FaFileExcel, FaHtml5 } from "react-icons/fa";
 import { AiOutlineFileUnknown } from "react-icons/ai";
 import { FileExtension } from "./FileExtension";
+import { ReactNode, useState, Dispatch, SetStateAction } from "react";
 
+// Color generation utilities
 const oklchSubdivide = (colorNum: number, divisions?: number) => {
   const defaultDivisions = divisions || 18;
   const hue = (colorNum % defaultDivisions) * (360 / defaultDivisions);
   return `oklch(83% 0.123 ${hue})`;
-};
-
-const subdivide20 = [
-  "oklch(83% 0.123 0)",
-  "oklch(83% 0.123 18)",
-  "oklch(83% 0.123 36)",
-  "oklch(83% 0.123 54)",
-  "oklch(83% 0.123 72)",
-  "oklch(83% 0.123 90)",
-  "oklch(83% 0.123 108)",
-  "oklch(83% 0.123 126)",
-  "oklch(83% 0.123 144)",
-  "oklch(83% 0.123 162)",
-  "oklch(83% 0.123 180)",
-  "oklch(83% 0.123 198)",
-  "oklch(83% 0.123 216)",
-  "oklch(83% 0.123 234)",
-  "oklch(83% 0.123 252)",
-  "oklch(83% 0.123 270)",
-  "oklch(83% 0.123 288)",
-  "oklch(83% 0.123 306)",
-  "oklch(83% 0.123 324)",
-  "oklch(83% 0.123 342)",
-];
-
-type FileColor = {
-  pdf: string;
-  doc: string;
-  xlsx: string;
-};
-
-const IsFiletypeColor = (key: string): key is keyof FileColor => {
-  return key in fileTypeColor;
 };
 
 export const subdividedHueFromSeed = (seed?: string): string => {
@@ -58,59 +27,16 @@ export const subdividedHueFromSeed = (seed?: string): string => {
   return oklchSubdivide(seed_integer, 18);
 };
 
-const PillButtonStyle = "btn btn-xs m-1 h-auto pb-2 pt-2 no-animation text-black mt-2 mb-2 noclick text-pretty"
-const PillLinkStyle = "btn btn-xs m-1 h-auto pb-2 pt-2 text-black noclick text-pretty"
-
-export const TextPill = ({
-  text,
-  href,
-  seed,
-}: {
-  text?: string;
-  href?: string;
-  seed?: string;
-}) => {
-  const textDefined: string = text || "Unknown";
-  const actualSeed = seed || textDefined;
-  const pillColor = subdividedHueFromSeed(actualSeed);
-  // btn-[${pillColor}]
-  return (
-    <RawPill color={pillColor} href={href}>
-      {textDefined}
-    </RawPill>
-  );
+// File type colors
+export const fileTypeColor: Record<FileExtension, string> = {
+  [FileExtension.PDF]: "oklch(57.53% 0.1831 25.02)", // Adobe red
+  [FileExtension.DOCX]: "oklch(70.55% 0.13 240)",
+  [FileExtension.XLSX]: "oklch(75.55% 0.17 140)",
+  [FileExtension.HTML]: "oklch(80.55% 0.08 60)",
+  [FileExtension.UNKNOWN]: "oklch(60% 0.3 0)",
 };
 
-export const RawPill = ({
-  children,
-  color,
-  href,
-}: {
-  children: React.ReactNode;
-  color: string;
-  href?: string;
-}) => {
-  if (href) {
-    return (
-      <Link
-        style={{ backgroundColor: color }}
-        className={PillLinkStyle}
-        href={href}
-      >
-        {children}
-      </Link>
-    );
-  }
-  return (
-    <button
-      style={{ backgroundColor: color }}
-      className={PillButtonStyle}
-    >
-      {children}
-    </button>
-  );
-};
-
+// Icon utilities
 export const getExtensionIcon = (ext: FileExtension) => {
   switch (ext) {
     case FileExtension.PDF:
@@ -126,49 +52,337 @@ export const getExtensionIcon = (ext: FileExtension) => {
       return <AiOutlineFileUnknown />;
   }
 };
-export const fileTypeColor: Record<FileExtension, string> = {
-  [FileExtension.PDF]: "oklch(57.53% 0.1831 25.02)", // Get the exact adobe red off their website
-  [FileExtension.DOCX]: "oklch(70.55% 0.13 240)",
-  [FileExtension.XLSX]: "oklch(75.55% 0.17 140)",
-  [FileExtension.HTML]: "oklch(80.55% 0.08 60)",
-  [FileExtension.UNKNOWN]: "oklch(60% 0.3 0)",
+
+// Style constants
+const PillButtonStyle = "inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs m-1";
+const PillLinkStyle = "inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs m-1";
+
+// Pill variants
+type PillVariant = 'default' | 'file' | 'author' | 'docket' | 'custom';
+
+// Pill size options
+type PillSize = 'xs' | 'sm' | 'md';
+
+const getSizeClasses = (size: PillSize) => {
+  switch (size) {
+    case 'xs':
+      return "px-2 py-1 text-xs";
+    case 'sm':
+      return "px-3 py-1.5 text-sm";
+    case 'md':
+      return "px-4 py-2 text-base";
+    default:
+      return "px-2 py-1 text-xs";
+  }
 };
 
-export const ExtensionPill = ({ ext }: { ext: FileExtension }) => {
-  const colorString = fileTypeColor[ext];
-  const icon = getExtensionIcon(ext);
+// Main Pill Props
+interface BasePillProps {
+  children: ReactNode;
+  href?: string;
+  onClick?: () => void;
+  onRemove?: () => void;
+  color?: string;
+  textColor?: 'black' | 'white' | 'auto';
+  size?: PillSize;
+  className?: string;
+  disabled?: boolean;
+  removable?: boolean;
+  variant?: PillVariant;
+  'aria-label'?: string;
+}
+
+// Text-specific props
+interface TextPillProps extends Omit<BasePillProps, 'children' | 'color'> {
+  text?: string;
+  seed?: string;
+  placeholder?: string;
+}
+
+// File-specific props
+interface FilePillProps extends Omit<BasePillProps, 'children' | 'color'> {
+  extension: FileExtension;
+  showIcon?: boolean;
+}
+
+// Author-specific props
+interface AuthorPillProps extends Omit<BasePillProps, 'children' | 'color' | 'href'> {
+  author: AuthorInformation;
+  baseUrl?: string;
+}
+
+// Docket-specific props
+interface DocketPillProps extends Omit<BasePillProps, 'children' | 'color' | 'href'> {
+  docketId: string;
+  text?: string;
+  baseUrl?: string;
+}
+
+// Utility to determine text color based on background
+const getAutoTextColor = (backgroundColor: string): 'black' | 'white' => {
+  // Extract lightness from oklch color
+  const lightnessMatch = backgroundColor.match(/oklch\((\d+(?:\.\d+)?)%/);
+  if (lightnessMatch) {
+    const lightness = parseFloat(lightnessMatch[1]);
+    return lightness > 60 ? 'black' : 'white';
+  }
+  return 'black'; // Default fallback
+};
+
+// Base Pill Component
+export const BasePill = ({
+  children,
+  href,
+  onClick,
+  onRemove,
+  color = "oklch(83% 0.123 0)",
+  textColor = 'auto',
+  size = 'xs',
+  className = '',
+  disabled = false,
+  removable = false,
+  variant = 'default',
+  'aria-label': ariaLabel,
+  ...props
+}: BasePillProps) => {
+  const actualTextColor = textColor === 'auto' ? getAutoTextColor(color) : textColor;
+  const sizeClasses = getSizeClasses(size);
+  const baseClasses = `inline-flex items-center rounded-full transition-colors ${sizeClasses}`;
+
+  const pillContent = (
+    <span className={`inline-flex items-center ${removable ? 'gap-1' : ''}`}>
+      {children}
+      {removable && onRemove && (
+        <span
+          className="rounded-full p-0.5 transition-colors cursor-pointer hover:opacity-80 ml-1"
+          style={{
+            backgroundColor: 'transparent'
+          }}
+          onMouseEnter={(e) => {
+            // Create slightly more saturated hover color
+            const hueMatch = color.match(/oklch\(83% 0\.123 (\d+)\)/);
+            if (hueMatch) {
+              const hue = hueMatch[1];
+              e.currentTarget.style.backgroundColor = `oklch(75% 0.18 ${hue})`;
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'transparent';
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            onRemove();
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              e.stopPropagation();
+              onRemove();
+            }
+          }}
+          role="button"
+          tabIndex={0}
+          aria-label="Remove"
+        >
+          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </span>
+      )}
+    </span>
+  );
+
+  const commonStyle = {
+    backgroundColor: color,
+    color: actualTextColor
+  };
+
+  const commonClasses = `${baseClasses} ${className} ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:opacity-90'}`;
+
+  if (href && !disabled) {
+    return (
+      <Link
+        href={href}
+        className={commonClasses}
+        style={commonStyle}
+        aria-label={ariaLabel}
+        {...props}
+      >
+        {pillContent}
+      </Link>
+    );
+  }
+
+  if (onClick && !disabled) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className={commonClasses}
+        style={commonStyle}
+        disabled={disabled}
+        aria-label={ariaLabel}
+        {...props}
+      >
+        {pillContent}
+      </button>
+    );
+  }
 
   return (
-    <RawPill color={colorString}>
-      <span className="flex items-center text-white">
-        <span className="mr-2">{icon}</span>
-        <span>{FileExtension[ext].toUpperCase()}</span>
-      </span>
-    </RawPill>
+    <span
+      className={commonClasses}
+      style={commonStyle}
+      aria-label={ariaLabel}
+      {...props}
+    >
+      {pillContent}
+    </span>
   );
 };
 
-export const AuthorInfoPill = ({
-  author_info,
-}: {
-  author_info: AuthorInformation;
-}) => (
-  <TextPill
-    text={author_info.author_name}
-    seed={author_info.author_id}
-    href={`/orgs/${author_info.author_id}`}
-  />
+// Text Pill Component
+export const TextPill = ({
+  text,
+  seed,
+  placeholder = "Unknown",
+  ...props
+}: TextPillProps) => {
+  const textDefined = text || placeholder;
+  const actualSeed = seed || textDefined;
+  const pillColor = subdividedHueFromSeed(actualSeed);
+
+  return (
+    <BasePill color={pillColor} variant="default" {...props}>
+      {textDefined}
+    </BasePill>
+  );
+};
+
+// File Extension Pill Component
+export const FilePill = ({
+  extension,
+  showIcon = true,
+  textColor = 'white',
+  ...props
+}: FilePillProps) => {
+  const color = fileTypeColor[extension];
+  const icon = getExtensionIcon(extension);
+
+  return (
+    <BasePill color={color} textColor={textColor} variant="file" {...props}>
+      <span className="flex items-center">
+        {showIcon && <span className="mr-2">{icon}</span>}
+        <span>{FileExtension[extension].toUpperCase()}</span>
+      </span>
+    </BasePill>
+  );
+};
+
+// Author Pill Component
+export const AuthorPill = ({
+  author,
+  baseUrl = "/orgs",
+  ...props
+}: AuthorPillProps) => {
+  const href = `${baseUrl}/${author.author_id}`;
+
+  return (
+    <TextPill
+      text={author.author_name}
+      seed={author.author_id}
+      href={href}
+      variant="author"
+      aria-label={`View ${author.author_name}'s profile`}
+      {...props}
+    />
+  );
+};
+
+// Docket Pill Component
+export const DocketPill = ({
+  docketId,
+  text,
+  baseUrl = "/dockets",
+  ...props
+}: DocketPillProps) => {
+  const displayText = text || docketId;
+  const href = `${baseUrl}/${docketId}`;
+
+  return (
+    <TextPill
+      text={displayText}
+      seed={docketId}
+      href={href}
+      variant="docket"
+      aria-label={`View docket ${displayText}`}
+      {...props}
+    />
+  );
+};
+
+// Legacy component aliases for backward compatibility
+export const RawPill = BasePill;
+export const ExtensionPill = FilePill;
+export const AuthorInfoPill = ({ author_info, ...props }: { author_info: AuthorInformation } & Omit<AuthorPillProps, 'author'>) => (
+  <AuthorPill author={author_info} {...props} />
 );
 
-export const DocketPill = ({
-  docket_named_id,
-  text,
-}: {
-  docket_named_id: string;
-  text?: string;
-}) => (
-  <TextPill
-    text={text || docket_named_id}
-    href={`/dockets/${docket_named_id}`}
-  />
+// Utility function for creating custom colored pills
+export const createColoredPill = (color: string) => (props: Omit<BasePillProps, 'color'>) => (
+  <BasePill color={color} {...props} />
 );
+
+// Predefined color pills
+export const RedPill = createColoredPill("oklch(70% 0.15 25)");
+export const BluePill = createColoredPill("oklch(70% 0.15 240)");
+export const GreenPill = createColoredPill("oklch(70% 0.15 140)");
+export const YellowPill = createColoredPill("oklch(80% 0.12 85)");
+export const PurplePill = createColoredPill("oklch(70% 0.15 300)");
+
+// Bulk operations for multiple pills
+export const PillGroup = ({
+  children,
+  className = "flex flex-wrap gap-1"
+}: {
+  children: ReactNode;
+  className?: string;
+}) => (
+  <div className={className}>
+    {children}
+  </div>
+);
+
+// Hook for managing removable pills
+export const useRemovablePills = <T extends { id: string | number }>(
+  initialItems: T[]
+): {
+  items: T[];
+  removeItem: (id: string | number) => void;
+  addItem: (item: T) => void;
+  clearAll: () => void;
+  setItems: Dispatch<SetStateAction<T[]>>;
+} => {
+  const [items, setItems] = useState<T[]>(initialItems);
+
+  const removeItem = (id: string | number): void => {
+    setItems(prev => prev.filter(item => item.id !== id));
+  };
+
+  const addItem = (item: T): void => {
+    setItems(prev => [...prev, item]);
+  };
+
+  const clearAll = (): void => {
+    setItems([]);
+  };
+
+  return {
+    items,
+    removeItem,
+    addItem,
+    clearAll,
+    setItems
+  };
+};

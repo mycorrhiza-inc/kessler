@@ -2,7 +2,7 @@ import { FilterField, InheritedFilterValues } from "@/lib/filters";
 import axios from "axios";
 import { BreadcrumbValues } from "../SitemapUtils";
 import MarkdownRenderer from "../MarkdownRenderer";
-import { getUniversalEnvConfig } from "@/lib/env_variables/env_variables";
+import { getEnvConfig } from "@/lib/env_variables/env_variables";
 import HeaderCard from "./HeaderCard";
 import {
   GenericSearchInfo,
@@ -79,7 +79,7 @@ export const generateConversationInfo = async (convoNamedID: string) => {
     ? [{ filter: FilterField.MatchDocketId, value: convoNamedID }]
     : [];
 
-  const url = `${getUniversalEnvConfig().internal_api_url}/v2/public/conversations/named-lookup/${convoNamedID}`;
+  const url = `${getEnvConfig().internal_api_url}/v2/public/conversations/named-lookup/${convoNamedID}`;
   const conversation = await getConversationData(url);
   // The title of the page looks weird with the really long title, either shorten
   const displayTitle =

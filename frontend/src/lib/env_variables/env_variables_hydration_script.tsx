@@ -8,21 +8,20 @@ import {
   useState,
 } from "react";
 import {
-  RuntimeEnvConfig,
-  emptyRuntimeConfig,
-  getUniversalEnvConfig,
+  EnvConfig,
+  getEnvConfig,
 } from "./env_variables";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 
 // Client-specific alias for getting runtime env config
 // This is now provided by env_variables.ts
-// export const getClientRuntimeEnv = (): RuntimeEnvConfig => {
-//   return getUniversalEnvConfig();
+// export const getClientRuntimeEnv = (): EnvConfig => {
+//   return getEnvConfig();
 // };
 
 // Initialize context with an empty validated config
 const EnvVariablesClientContext =
-  createContext<RuntimeEnvConfig>(emptyRuntimeConfig);
+  createContext<EnvConfig>(getEnvConfig());
 
 type EnvClientProviderProps = {
   children: ReactNode;
@@ -31,7 +30,7 @@ type EnvClientProviderProps = {
 export const EnvVariablesClientProvider: React.FC<EnvClientProviderProps> = ({
   children,
 }) => {
-  const [envs, setEnvs] = useState<RuntimeEnvConfig>(emptyRuntimeConfig);
+  const [envs, setEnvs] = useState<EnvConfig>(getEnvConfig);
 
   useEffect(() => {
     const runtimeEnvs = getClientRuntimeEnv();
@@ -45,7 +44,7 @@ export const EnvVariablesClientProvider: React.FC<EnvClientProviderProps> = ({
   );
 };
 
-export const useEnvVariablesClientConfig = (): RuntimeEnvConfig => {
+export const useEnvVariablesClientConfig = (): EnvConfig => {
   const context = useContext(EnvVariablesClientContext);
   if (context === undefined) {
     throw new Error(
@@ -70,7 +69,7 @@ NEXT_PUBLIC_POSTHOG_HOST: ${config.public_posthog_host}
   return <MarkdownRenderer>{markdown_string}</MarkdownRenderer>;
 };
 
-export function getClientRuntimeEnv(): RuntimeEnvConfig {
-  return getUniversalEnvConfig();
+export function getClientRuntimeEnv(): EnvConfig {
+  return getEnvConfig();
 }
 
