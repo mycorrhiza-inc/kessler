@@ -2,12 +2,14 @@ package logger
 
 import (
 	"context"
-	"net/http"
-
 	"log"
+	"net/http"
 
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	_ "github.com/uptrace/opentelemetry-go-extra/otelzap"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
+	"go.opentelemetry.io/otel/sdk/trace"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -93,26 +95,20 @@ func Info(ctx context.Context, msg string, fields ...zapcore.Field) {
 	log := GetLoggerFromContext(ctx)
 	log.InfoContext(ctx, msg, fields...)
 }
+
 func Error(ctx context.Context, msg string, fields ...zapcore.Field) {
 	log := GetLoggerFromContext(ctx)
 	log.ErrorContext(ctx, msg, fields...)
 }
+
 func Debug(ctx context.Context, msg string, fields ...zapcore.Field) {
 	log := GetLoggerFromContext(ctx)
 	log.DebugContext(ctx, msg, fields...)
 }
+
 func Warn(ctx context.Context, msg string, fields ...zapcore.Field) {
 	log := GetLoggerFromContext(ctx)
 	log.WarnContext(ctx, msg, fields...)
-}
-
-// GetLogger returns a named logger instance
-func GetLoggerCtx(ctx context.Context, name string) otelzap.LoggerWithCtx {
-	if Log == nil {
-		Init(os.Getenv("GO_ENV"))
-	}
-	tmp_logger := otelzap.New(Log.Named(name))
-	return tmp_logger.Ctx(ctx)
 }
 
 // Sync flushes any buffered log entries
