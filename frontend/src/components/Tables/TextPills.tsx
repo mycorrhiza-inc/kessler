@@ -3,7 +3,7 @@ import Link from "next/link";
 import { FaFilePdf, FaFileWord, FaFileExcel, FaHtml5 } from "react-icons/fa";
 import { AiOutlineFileUnknown } from "react-icons/ai";
 import { FileExtension } from "./FileExtension";
-import { ReactNode, useState, Dispatch, SetStateAction } from "react";
+import { ReactNode, Dispatch, SetStateAction } from "react";
 
 // Color generation utilities
 const oklchSubdivide = (colorNum: number, divisions?: number) => {
@@ -355,34 +355,35 @@ export const PillGroup = ({
 );
 
 // Hook for managing removable pills
-export const useRemovablePills = <T extends { id: string | number }>(
-  initialItems: T[]
-): {
-  items: T[];
-  removeItem: (id: string | number) => void;
-  addItem: (item: T) => void;
-  clearAll: () => void;
-  setItems: Dispatch<SetStateAction<T[]>>;
-} => {
-  const [items, setItems] = useState<T[]>(initialItems);
-
-  const removeItem = (id: string | number): void => {
-    setItems(prev => prev.filter(item => item.id !== id));
-  };
-
-  const addItem = (item: T): void => {
-    setItems(prev => [...prev, item]);
-  };
-
-  const clearAll = (): void => {
-    setItems([]);
-  };
-
-  return {
-    items,
-    removeItem,
-    addItem,
-    clearAll,
-    setItems
-  };
-};
+// Removing for now, all these pills should be renderable on the server.
+// export const useRemovablePills = <T extends { id: string | number }>(
+//   initialItems: T[]
+// ): {
+//   items: T[];
+//   removeItem: (id: string | number) => void;
+//   addItem: (item: T) => void;
+//   clearAll: () => void;
+//   setItems: Dispatch<SetStateAction<T[]>>;
+// } => {
+//   const [items, setItems] = useState<T[]>(initialItems);
+//
+//   const removeItem = (id: string | number): void => {
+//     setItems(prev => prev.filter(item => item.id !== id));
+//   };
+//
+//   const addItem = (item: T): void => {
+//     setItems(prev => [...prev, item]);
+//   };
+//
+//   const clearAll = (): void => {
+//     setItems([]);
+//   };
+//
+//   return {
+//     items,
+//     removeItem,
+//     addItem,
+//     clearAll,
+//     setItems
+//   };
+// };

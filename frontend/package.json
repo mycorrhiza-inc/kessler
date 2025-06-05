@@ -7,7 +7,7 @@
     "check": "tsc"
   },
   "dependencies": {
-    "@clerk/nextjs": "^6.10.3",
+    "@clerk/nextjs": "^6.20.2",
     "@faker-js/faker": "^9.7.0",
     "@radix-ui/react-tabs": "^1.1.0",
     "@supabase/ssr": "latest",

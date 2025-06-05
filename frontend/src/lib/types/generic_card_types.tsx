@@ -1,3 +1,5 @@
+import { AuthorInformation } from "./backend_schemas";
+
 export enum CardType {
   Author = "author",
   Docket = "docket",
@@ -8,7 +10,7 @@ export interface BaseCardData {
   name: string;
   description: string;
   timestamp: string;
-  authors?: Array<string>;
+  authors?: Array<AuthorInformation>;
   extraInfo?: string;
   index: number;
 }

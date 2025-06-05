@@ -4,6 +4,7 @@ x-common-env: &common-env
   # VERSION_HASH: ${VERSION_HASH}
   # DOMAIN: ${DOMAIN}
   NEXT_PUBLIC_KESSLER_API_URL: http://localhost
+  NEXT_PUBLIC_NIGHTLY_KESSLER_API_URL: http://localhost
   INTERNAL_REDIS_ADDRESS: valkey:6379
   NEXT_PUBLIC_POSTHOG_KEY: phc_cVPgPQClX1eOAqljibZU4udCoBngUHXuS8mUb0UGxyX
   NEXT_PUBLIC_POSTHOG_HOST: https://us.i.posthog.com

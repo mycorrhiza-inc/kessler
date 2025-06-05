@@ -2,18 +2,16 @@ package logger
 
 import (
 	"context"
-	"net/http"
-
 	"log"
+	"net/http"
 
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	_ "github.com/uptrace/opentelemetry-go-extra/otelzap"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
-
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/sdk/trace"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 const LoggerKey = "__internal__logger"
@@ -97,14 +95,17 @@ func Info(ctx context.Context, msg string, fields ...zapcore.Field) {
 	log := GetLoggerFromContext(ctx)
 	log.InfoContext(ctx, msg, fields...)
 }
+
 func Error(ctx context.Context, msg string, fields ...zapcore.Field) {
 	log := GetLoggerFromContext(ctx)
 	log.ErrorContext(ctx, msg, fields...)
 }
+
 func Debug(ctx context.Context, msg string, fields ...zapcore.Field) {
 	log := GetLoggerFromContext(ctx)
 	log.DebugContext(ctx, msg, fields...)
 }
+
 func Warn(ctx context.Context, msg string, fields ...zapcore.Field) {
 	log := GetLoggerFromContext(ctx)
 	log.WarnContext(ctx, msg, fields...)
