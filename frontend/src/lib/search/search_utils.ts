@@ -72,7 +72,7 @@ export const generateFakeResultsRaw = (count: number): CardData[] => {
         return document_data;
 
       default:
-        return base;
+        throw new Error("wrong card type")
     }
   });
 };
