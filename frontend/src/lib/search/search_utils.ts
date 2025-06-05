@@ -6,6 +6,7 @@ import {
 } from "../types/new_search_types";
 import { sleep } from "@/utils/utils";
 import { AuthorCardData, CardData, CardType, DocketCardData, DocumentCardData } from "../types/generic_card_types";
+import { AuthorInformation } from "../types/backend_schemas";
 const randomRecentDate = () => {
   const date = new Date();
   date.setMonth(date.getMonth() - Math.floor(Math.random() * 6));
@@ -62,9 +63,13 @@ export const generateFakeResultsRaw = (count: number): CardData[] => {
           extraInfo: `${documentFormats[Math.floor(Math.random() * documentFormats.length)]}, ${faker.number.float({ min: 0.1, max: 5.0 }).toFixed(1)}MB`,
           authors: Array.from(
             { length: faker.number.int({ min: 1, max: 3 }) },
-            () => faker.person.fullName(),
+            () => {
+              const data: AuthorInformation = { author_name: faker.person.fullName(), is_person: true, is_primary_author: false, author_id: faker.string.uuid() }
+              return data
+            },
           ),
         };
+        return document_data;
 
       default:
         return base;
