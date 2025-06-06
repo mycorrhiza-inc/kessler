@@ -85,9 +85,3 @@ export const generateFilingFromFileSchema = (
   };
 };
 
-export const getSearchResults = async (
-  query: string, 
-  filters: string[]
-) => {
-  axios.get().await;
-}

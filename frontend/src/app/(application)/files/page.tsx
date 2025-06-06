@@ -1,4 +1,4 @@
-import SearchResultsServer from "@/components/Search/SearchResultsServer";
+import AIOServerSearch from "@/components/NewSearch/AIOServerSearch";
 import { BreadcrumbValues } from "@/components/SitemapUtils";
 import { GenericSearchType } from "@/lib/adapters/genericSearchCallback";
 import { stateFromHeaders } from "@/lib/nextjs_misc";
@@ -20,9 +20,7 @@ export default function Page() {
       <div className="flex">
         <h1 className="text-3xl font-bold">Files Search</h1>
       </div>
-      <SearchResultsServer
-        searchInfo={{ query: "", search_type: GenericSearchType.Filling }}
-      />
+      <AIOServerSearch searchType={GenericSearchType.Filling} initialQuery="" initialFilters={[]} />
     </>
   );
 }

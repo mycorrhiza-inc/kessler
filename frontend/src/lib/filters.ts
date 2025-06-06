@@ -4,6 +4,8 @@
  * and their configurations are loaded from a backend endpoint.
  */
 
+import { contextualApiUrl, getEnvConfig } from "./env_variables/env_variables";
+
 // =============================================================================
 // CORE TYPES
 // =============================================================================
@@ -363,7 +365,7 @@ export class FilterConfigurationManager {
       return config;
     } catch (error) {
       console.error('Failed to load filter configuration:', error);
-      throw new Error(`Filter configuration loading failed: ${error.message}`);
+      throw new Error(`Filter configuration loading failed: ${error}`);
     }
   }
 
@@ -536,12 +538,6 @@ export function createFilterManager(endpoints: FilterEndpoints): FilterConfigura
   return FilterConfigurationManager.getInstance(endpoints);
 }
 
-/**
- * Hook-like function to get filter manager (for use in React components)
- */
-export function useFilterManager(endpoints: FilterEndpoints): FilterConfigurationManager {
-  return FilterConfigurationManager.getInstance(endpoints);
-}
 
 /**
  * Extract field IDs from inherited filters for disabling in UI
@@ -616,6 +612,18 @@ export function clearSpecificFilters(
   return newFilters;
 }
 
+
+
+export const makeFilterEndpoints = (): FilterEndpoints => {
+  const contextual_url = contextualApiUrl(getEnvConfig())
+  return {
+    configuration: `${contextual_url}/api/filters/configuration`,
+    convertFilters: `${contextual_url}/api/filters/convert`,
+    validateFilters: `${contextual_url}/api/filters/validate`,
+    getOptions: `${contextual_url}/api/filters/options`
+  }
+};
+
 // =============================================================================
 // LEGACY COMPATIBILITY
 // =============================================================================
@@ -624,3 +632,4 @@ export function clearSpecificFilters(
 export const disableListFromInherited = getDisabledFieldsFromInherited;
 export const initialFiltersFromInherited = createInitialFiltersFromInherited;
 export const inheritedFiltersFromValues = convertFiltersToInherited;
+export type FilterField = string;

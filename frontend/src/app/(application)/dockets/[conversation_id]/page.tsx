@@ -36,7 +36,7 @@ export default async function Page({
     <ConversationPage
       conversation={convoInfo.conversation}
       breadcrumbs={convoInfo.breadcrumbs}
-      inheritedFilters={convoInfo.inheritedFilters}
+    // inheritedFilters={convoInfo.inheritedFilters}
     />
   );
 }

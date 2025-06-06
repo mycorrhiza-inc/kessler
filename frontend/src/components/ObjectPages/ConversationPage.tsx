@@ -1,14 +1,13 @@
-import { FilterField, InheritedFilterValues } from "@/lib/filters";
 import axios from "axios";
 import { BreadcrumbValues } from "../SitemapUtils";
 import MarkdownRenderer from "../MarkdownRenderer";
-import { getEnvConfig } from "@/lib/env_variables/env_variables";
+import { contextualApiUrl, getEnvConfig } from "@/lib/env_variables/env_variables";
 import HeaderCard from "./HeaderCard";
 import {
   GenericSearchInfo,
   GenericSearchType,
 } from "@/lib/adapters/genericSearchCallback";
-import SearchResultsServer from "../Search/SearchResultsServer";
+import SearchResultsServerStandalone from "../Search/SearchResultsServerStandalone";
 
 const getConversationData = async (url: string) => {
   const response = await axios.get(url);
@@ -75,11 +74,8 @@ const NYConversationDescription = ({ conversation }: { conversation: any }) => {
 };
 
 export const generateConversationInfo = async (convoNamedID: string) => {
-  const inheritedFilters: InheritedFilterValues = convoNamedID
-    ? [{ filter: FilterField.MatchDocketId, value: convoNamedID }]
-    : [];
 
-  const url = `${getEnvConfig().internal_api_url}/v2/public/conversations/named-lookup/${convoNamedID}`;
+  const url = `${contextualApiUrl(getEnvConfig())}/v2/public/conversations/named-lookup/${convoNamedID}`;
   const conversation = await getConversationData(url);
   // The title of the page looks weird with the really long title, either shorten
   const displayTitle =
@@ -95,7 +91,7 @@ export const generateConversationInfo = async (convoNamedID: string) => {
     ],
   };
   return {
-    inheritedFilters: inheritedFilters,
+    // inheritedFilters: inheritedFilters,
     conversation: conversation,
     breadcrumbs: breadcrumbs,
     displayTitle: displayTitle,
@@ -104,11 +100,9 @@ export const generateConversationInfo = async (convoNamedID: string) => {
 
 export const ConversationPage = async ({
   conversation,
-  inheritedFilters,
   breadcrumbs,
 }: {
   conversation: any;
-  inheritedFilters: InheritedFilterValues;
   breadcrumbs: BreadcrumbValues;
 }) => {
   const searchInfo: GenericSearchInfo = {
@@ -118,7 +112,7 @@ export const ConversationPage = async ({
   return (
     <>
       <NYConversationDescription conversation={conversation} />
-      <SearchResultsServer searchInfo={searchInfo} />
+      <SearchResultsServerStandalone searchInfo={searchInfo} />
     </>
   );
 };

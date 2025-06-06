@@ -4,14 +4,15 @@ import {
   nilSearchResultsGetter,
 } from "../types/new_search_types";
 import { generateFakeResults } from "../search/search_utils";
-import { Filters, useFilterState } from "../types/new_filter_types";
 
 import { usePathname } from "next/navigation";
+import { BackendFilterObject } from "../filters";
+import { Filters, useFilterState } from "../nics_filters";
 
 interface SearchStateExport {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
-  filters: Filters;
+  filters: BackendFilterObject;
   setFilter: any;
   deleteFilter: any;
   isSearching: boolean;
