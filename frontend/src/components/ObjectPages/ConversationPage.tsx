@@ -7,7 +7,7 @@ import {
   GenericSearchInfo,
   GenericSearchType,
 } from "@/lib/adapters/genericSearchCallback";
-import SearchResultsServerStandalone from "../Search/SearchResultsServer";
+import SearchResultsServerStandalone from "../Search/SearchResultsServerStandalone";
 
 const getConversationData = async (url: string) => {
   const response = await axios.get(url);

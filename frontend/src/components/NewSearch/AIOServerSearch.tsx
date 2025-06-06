@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { HomeSearchBarClientBaseUrl } from "./HomeSearch";
 import LoadingSpinner from "../styled-components/LoadingSpinner";
-import SearchResultsServerStandalone from "../Search/SearchResultsServer";
+import SearchResultsServerStandalone from "../Search/SearchResultsServerStandalone";
 
 
 interface AIOServerProps {

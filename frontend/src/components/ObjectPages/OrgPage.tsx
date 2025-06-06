@@ -5,7 +5,7 @@ import {
 import { BreadcrumbValues } from "../SitemapUtils";
 
 import HeaderCard from "./HeaderCard";
-import SearchResultsServerStandalone from "../Search/SearchResultsServer";
+import SearchResultsServerStandalone from "../Search/SearchResultsServerStandalone";
 import { GenericSearchType } from "@/lib/adapters/genericSearchCallback";
 
 export const generateOrganizationData = async (orgId: string) => {

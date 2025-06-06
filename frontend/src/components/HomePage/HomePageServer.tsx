@@ -6,7 +6,7 @@ import HomeSearchBar from "../NewSearch/HomeSearch";
 import SearchResultsClient from "../Search/SearchResultsClient";
 import { GenericSearchType } from "@/lib/adapters/genericSearchCallback";
 import HomePageClient from "./HomePageClient";
-import SearchResultsServerStandalone from "../Search/SearchResultsServer";
+import SearchResultsServerStandalone from "../Search/SearchResultsServerStandalone";
 import LoadingSpinner from "../styled-components/LoadingSpinner";
 
 export const HomePageServer = () => {
