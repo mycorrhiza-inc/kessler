@@ -1,11 +1,5 @@
-import React, { Suspense } from "react";
-import HomeSearchBar, {
-  HomeSearchBarClientBaseUrl,
-} from "@/components/NewSearch/HomeSearch";
-import SearchResultsServerStandalone from "@/components/Search/SearchResultsServer";
-import LoadingSpinner from "@/components/styled-components/LoadingSpinner";
+import React from "react";
 import {
-  GenericSearchInfo,
   GenericSearchType,
 } from "@/lib/adapters/genericSearchCallback";
 import AIOServerSearch from "@/components/NewSearch/AIOServerSearch";

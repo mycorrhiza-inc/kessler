@@ -365,7 +365,7 @@ export class FilterConfigurationManager {
       return config;
     } catch (error) {
       console.error('Failed to load filter configuration:', error);
-      throw new Error(`Filter configuration loading failed: ${error.message}`);
+      throw new Error(`Filter configuration loading failed: ${error}`);
     }
   }
 

@@ -4,14 +4,12 @@ import { AuthorInformation } from "@/lib/types/backend_schemas";
 import {
   AuthorInfoPill,
   DocketPill,
-  ExtensionPill,
+  FilePill,
   TextPill,
 } from "./TextPills";
 import DocumentModal from '../Document/DocumentModal';
-import clsx from "clsx";
 import { TableStyle } from "../styles/Table";
 import { fileExtensionFromText } from "./FileExtension";
-import { string } from "zod";
 
 const NoclickSpan = ({ children }: { children: React.ReactNode }) => {
   return <span className="noclick">{children}</span>;
@@ -88,14 +86,14 @@ const TableRow = ({
         {DocketColumn && (
           <td>
             {filing.docket_id && (
-              <DocketPill docket_named_id={filing.docket_id} />
+              <DocketPill docketId={filing.docket_id} />
             )}
           </td>
         )}
 
         <td>{filing.item_number}</td>
         <td>
-          <ExtensionPill ext={fileExtensionFromText(filing.extension)} />
+          <FilePill extension={fileExtensionFromText(filing.extension)} />
         </td>
       </tr>
     </>
