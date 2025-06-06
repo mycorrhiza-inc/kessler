@@ -18,19 +18,7 @@ interface SearchResultsServerProps {
  * Server Component: Fetches initial results and renders the client component.
  */
 
-const SearchResultsServer = async ({
-  searchInfo,
-}: SearchResultsServerProps) => {
-  return (
-    <Suspense
-      fallback={<LoadingSpinner loadingText="Getting Results From Server" />}
-    >
-      <SearchResultsServerUnsuspended searchInfo={searchInfo} />
-    </Suspense>
-  );
-};
-export default SearchResultsServer;
-async function SearchResultsServerUnsuspended({
+async function SearchResultsServerStandalone({
   searchInfo,
 }: SearchResultsServerProps) {
   // Fetch two pages worth of data server-side
@@ -46,13 +34,17 @@ async function SearchResultsServerUnsuspended({
     );
 
     return (
-      <SearchResultsClient
-        reloadOnChange={reloadOnChange}
-        searchInfo={searchInfo}
-        initialData={initialResults}
+      <Suspense
+        fallback={<LoadingSpinner loadingText="Getting Results From Server" />}
       >
-        <RawSearchResults data={initialResults} />
-      </SearchResultsClient>
+        <SearchResultsClient
+          reloadOnChange={reloadOnChange}
+          searchInfo={searchInfo}
+          initialData={initialResults}
+        >
+          <RawSearchResults data={initialResults} />
+        </SearchResultsClient>
+      </Suspense>
     );
   } catch (error) {
     return (
@@ -63,3 +55,4 @@ async function SearchResultsServerUnsuspended({
     );
   }
 }
+export default SearchResultsServerStandalone;

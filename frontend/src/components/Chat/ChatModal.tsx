@@ -5,11 +5,11 @@ import {
 } from "@/lib/filters";
 import { useMemo, useState } from "react";
 import Modal from "../styled-components/Modal";
-import {
-  ChatBoxInternalsState,
-  ChatBoxInternalsStateless,
-  initialChatState,
-} from "./ChatBoxInternals";
+// import {
+//   ChatBoxInternalsState,
+//   ChatBoxInternalsStateless,
+//   initialChatState,
+// } from "./ChatBoxInternals";
 import { useKesslerStore } from "@/lib/store";
 
 export const ExperimentalChatModalClickDiv = ({
@@ -46,27 +46,27 @@ export const ChatModalClickDiv = ({
   children?: React.ReactNode;
   className?: string;
 }) => {
-  const initialFilterState = useMemo(() => {
-    return initialFiltersFromInherited(inheritedFilters);
-  }, [inheritedFilters]);
-  const filterState = initialFilterState; // Maybe add a state hook for the llm setting its own filters or something.
+  // const initialFilterState = useMemo(() => {
+  //   return initialFiltersFromInherited(inheritedFilters);
+  // }, [inheritedFilters]);
+  // const filterState = initialFilterState; // Maybe add a state hook for the llm setting its own filters or something.
   const [open, setOpen] = useState(false);
   const [citations, setCitations] = useState<any[]>([]);
-  const clickButton = () => setOpen((prev) => !prev);
-  const [chatState, setChatState] =
-    useState<ChatBoxInternalsState>(initialChatState);
+  const toggleOpen = () => setOpen((prev) => !prev);
+  // const [chatState, setChatState] =
+  //   useState<ChatBoxInternalsState>(initialChatState);
 
   return (
     <>
       <Modal setOpen={setOpen} open={open}>
-        <ChatBoxInternalsStateless
-          setCitations={setCitations}
-          ragFilters={filterState}
-          chatState={chatState}
-          setChatState={setChatState}
-        />
+        <div></div>
+        {/* <ChatBoxInternalsStateless */}
+        {/*   setCitations={setCitations} */}
+        {/*   ragFilters={filterState} */}
+        {/*   chatState={chatState} */}
+        {/*   setChatState={setChatState} */}
       </Modal>
-      <div onClick={clickButton} className={className}>
+      <div onClick={toggleOpen} className={className}>
         {children}
       </div>
     </>

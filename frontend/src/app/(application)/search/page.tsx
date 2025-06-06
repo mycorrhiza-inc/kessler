@@ -2,7 +2,7 @@ import React, { Suspense } from "react";
 import HomeSearchBar, {
   HomeSearchBarClientBaseUrl,
 } from "@/components/NewSearch/HomeSearch";
-import SearchResultsServer from "@/components/Search/SearchResultsServer";
+import SearchResultsServerStandalone from "@/components/Search/SearchResultsServer";
 import LoadingSpinner from "@/components/styled-components/LoadingSpinner";
 import {
   GenericSearchInfo,
@@ -33,7 +33,7 @@ export default function Page({ searchParams }: SearchPageProps) {
           <LoadingSpinner loadingText="Fetching results from server." />
         }
       >
-        <SearchResultsServer searchInfo={searchInfo} />
+        <SearchResultsServerStandalone searchInfo={searchInfo} />
       </Suspense>
     </>
   );

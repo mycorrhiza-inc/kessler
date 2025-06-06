@@ -14,7 +14,6 @@ import {
 } from "@/lib/types/backend_schemas";
 import Link from "next/link";
 import { ExperimentalChatModalClickDiv } from "../Chat/ChatModal";
-import { FilterField } from "@/lib/filters";
 import { AuthorInfoPill, DocketPill } from "../Tables/TextPills";
 import { getClientRuntimeEnv } from "@/lib/env_variables/env_variables_hydration_script";
 import { FileExtension, fileExtensionFromText } from "../Tables/FileExtension";
@@ -142,22 +141,22 @@ const DocumentHeader = ({
               Open in New Tab
             </Link>
           )}
-          {verified && (
-            <ExperimentalChatModalClickDiv
-              className="btn btn-accent"
-              inheritedFilters={[
-                { filter: FilterField.MatchFileUUID, value: objectId },
-              ]}
-            >
-              Chat with Document
-            </ExperimentalChatModalClickDiv>
-          )}
+          {/* {verified && ( */}
+          {/* <ExperimentalChatModalClickDiv */}
+          {/*   className="btn btn-accent" */}
+          {/*   inheritedFilters={[ */}
+          {/*     { filter: FilterField.MatchFileUUID, value: objectId }, */}
+          {/*   ]} */}
+          {/* > */}
+          {/*   Chat with Document */}
+          {/* </ExperimentalChatModalClickDiv> */}
+          {/* )} */}
         </div>
       </div>
       <p>
         <b>Case Number:</b> {"   "}
         <DocketPill
-          docket_named_id={documentObject.mdata.docket_id as string}
+          docketId={documentObject.mdata.docket_id as string}
         />
       </p>
       {documentObject.authors && (

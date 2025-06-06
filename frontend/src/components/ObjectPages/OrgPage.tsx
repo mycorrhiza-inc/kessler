@@ -5,7 +5,7 @@ import {
 import { BreadcrumbValues } from "../SitemapUtils";
 
 import HeaderCard from "./HeaderCard";
-import SearchResultsServer from "../Search/SearchResultsServer";
+import SearchResultsServerStandalone from "../Search/SearchResultsServer";
 import { GenericSearchType } from "@/lib/adapters/genericSearchCallback";
 
 export const generateOrganizationData = async (orgId: string) => {
@@ -33,15 +33,15 @@ export default function OrganizationPage({
             "Automatically generated org descriptions coming soon"}
         </p>
       </HeaderCard>
-      <SearchResultsServer
+      <SearchResultsServerStandalone
         searchInfo={{
           query: "",
           search_type: GenericSearchType.Filling,
         }}
-        // inheritedFilters={[
-        //   // { filter: FilterField.MatchAuthorUUID, value: orgInfo.id },
-        //   { filter: FilterField.MatchAuthor, value: orgInfo.name },
-        // ]}
+      // inheritedFilters={[
+      //   // { filter: FilterField.MatchAuthorUUID, value: orgInfo.id },
+      //   { filter: FilterField.MatchAuthor, value: orgInfo.name },
+      // ]}
       />
     </>
   );

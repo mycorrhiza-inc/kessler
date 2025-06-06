@@ -4,7 +4,6 @@ import { GiMushroomsCluster } from "react-icons/gi";
 import StateSelector from "./StateSelector";
 import SearchBox from "./SearchBox";
 import { useKesslerStore } from "@/lib/store";
-import { Filters } from "@/lib/types/new_filter_types";
 import { DynamicSingleSelect } from "@/components/Filters/FilterSingleSelect";
 
 const states = [

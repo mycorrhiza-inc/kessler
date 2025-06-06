@@ -1,4 +1,3 @@
-import { Filters } from "../types/new_filter_types";
 import {
   PaginationData,
   SearchResult,
@@ -12,6 +11,7 @@ import { adaptFilingToCard } from "./genericCardAdapters";
 import { DocumentCardData } from "../types/generic_card_types";
 import { contextualApiUrl, getEnvConfig } from "../env_variables/env_variables";
 import assert from "assert";
+import { BackendFilterObject } from "../filters";
 
 export enum GenericSearchType {
   Filling = "filing",
@@ -23,7 +23,7 @@ export enum GenericSearchType {
 export interface GenericSearchInfo {
   search_type: GenericSearchType;
   query: string;
-  filters?: Filters;
+  filters?: BackendFilterObject;
 }
 
 export const searchInvoke = async (

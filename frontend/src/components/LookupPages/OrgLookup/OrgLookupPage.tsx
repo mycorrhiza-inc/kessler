@@ -9,12 +9,6 @@ const OrgLookupPage = () => {
     <>
       <h1 className="text-3xl font-bold">Organizations</h1>
       <div className="pr-4 w-full">
-        <SearchBox
-          input={{
-            pageContext: PageContextMode.Organizations,
-            setSearchQuery: setQueryString,
-          }}
-        />
         {/* <OrganizationTableInfiniteScroll lookup_data={{ query: queryString }} /> */}
       </div>
     </>

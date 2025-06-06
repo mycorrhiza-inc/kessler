@@ -17,7 +17,7 @@ export const LinkDocket = ({
   docket_named_id: string;
   text?: string;
 }) => {
-  return <DocketPill text={text} docket_named_id={docket_named_id} />;
+  return <DocketPill text={text} docketId={docket_named_id} />;
 };
 
 // export const LinkOrg = ({

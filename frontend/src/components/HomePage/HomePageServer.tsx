@@ -6,7 +6,7 @@ import HomeSearchBar from "../NewSearch/HomeSearch";
 import SearchResultsClient from "../Search/SearchResultsClient";
 import { GenericSearchType } from "@/lib/adapters/genericSearchCallback";
 import HomePageClient from "./HomePageClient";
-import SearchResultsServer from "../Search/SearchResultsServer";
+import SearchResultsServerStandalone from "../Search/SearchResultsServer";
 import LoadingSpinner from "../styled-components/LoadingSpinner";
 
 export const HomePageServer = () => {
@@ -33,7 +33,7 @@ const HomeRecentTables = () => {
           <Link className="text-3xl font-bold hover:underline" href="/dockets">
             Dockets
           </Link>
-          <SearchResultsServer
+          <SearchResultsServerStandalone
             searchInfo={{
               query: "",
               search_type: GenericSearchType.Docket,
@@ -49,7 +49,7 @@ const HomeRecentTables = () => {
             Organizations
           </Link>
 
-          <SearchResultsServer
+          <SearchResultsServerStandalone
             searchInfo={{
               query: "",
               search_type: GenericSearchType.Organization,
@@ -66,7 +66,7 @@ const HomeRecentTables = () => {
       </ExperimentalChatModalClickDiv>
 
       <h1 className=" text-2xl font-bold">Newest Docs</h1>
-      <SearchResultsServer
+      <SearchResultsServerStandalone
         searchInfo={{
           query: "",
           search_type: GenericSearchType.Filling,
