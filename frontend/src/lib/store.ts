@@ -15,6 +15,6 @@ export const useKesslerStore = create<KesslerState>()((set) => ({
   setIsLoggedIn: (isLoggedIn: boolean) => set({ isLoggedIn }),
   setExperimentalFeaturesEnabled: (experimentalFeaturesEnabled: boolean) =>
     set({ experimentalFeaturesEnabled }),
-  defaultState: "",
+  defaultState: "new-york",
   setDefaultState: (defaultState: string) => set({ defaultState }),
 }));

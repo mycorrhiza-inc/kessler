@@ -116,7 +116,7 @@ export function DynamicMultiSelect({
         w-full min-h-[3rem] p-3 text-left border-2 rounded-lg transition-all duration-200
         ${isOpen ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-300'}
         ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-base-100 hover:border-gray-400 cursor-pointer'}
-        ${selectedValues.length > 0 ? 'bg-blue-50' : ''}
+        ${selectedValues.length > 0 ? 'bg-base-100' : ''}
       `}
         onClick={handleDropdownToggle}
         disabled={disabled}
@@ -227,7 +227,7 @@ export function DynamicMultiSelect({
                         className={`
                         cursor-pointer flex items-center justify-between p-3 rounded-md transition-colors
                         ${option.disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'}
-                        ${isSelected ? 'bg-blue-50' : ''}
+                        ${isSelected ? 'bg-base-200' : 'bg-base-100'}
                       `}
                       >
                         <div className="flex items-center gap-3 flex-1 min-w-0">
