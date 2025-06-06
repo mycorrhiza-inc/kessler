@@ -8,6 +8,7 @@ import {
   GenericSearchInfo,
   GenericSearchType,
 } from "@/lib/adapters/genericSearchCallback";
+import AIOServerSearch from "@/components/NewSearch/AIOServerSearch";
 
 interface SearchPageProps {
   searchParams: { q?: string };
@@ -15,26 +16,8 @@ interface SearchPageProps {
 
 export default function Page({ searchParams }: SearchPageProps) {
   const initialQuery = (searchParams.q || "").trim();
-  const searchInfo: GenericSearchInfo = {
-    query: initialQuery,
-    search_type: GenericSearchType.Filling,
-  };
 
   return (
-    <>
-      <div className="flex flex-col items-center justify-center bg-base-100 p-4">
-        <HomeSearchBarClientBaseUrl
-          baseUrl="/search"
-          initialState={initialQuery}
-        />
-      </div>
-      <Suspense
-        fallback={
-          <LoadingSpinner loadingText="Fetching results from server." />
-        }
-      >
-        <SearchResultsServerStandalone searchInfo={searchInfo} />
-      </Suspense>
-    </>
+    <AIOServerSearch searchType={GenericSearchType.Filling} initialQuery={initialQuery} initialFilters={[]} />
   );
 }

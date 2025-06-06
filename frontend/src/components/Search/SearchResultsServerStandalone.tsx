@@ -26,7 +26,6 @@ async function SearchResultsServerStandalone({
   const PAGE_SIZE = 40;
   const intiialPagination = { limit: PAGE_SIZE * initialPages, page: 0 };
 
-  const reloadOnChange = 0;
   try {
     const initialResults: SearchResult[] = await searchInvoke(
       searchInfo,
@@ -38,7 +37,7 @@ async function SearchResultsServerStandalone({
         fallback={<LoadingSpinner loadingText="Getting Results From Server" />}
       >
         <SearchResultsClient
-          reloadOnChange={reloadOnChange}
+          reloadOnChange={0}
           searchInfo={searchInfo}
           initialData={initialResults}
         >
