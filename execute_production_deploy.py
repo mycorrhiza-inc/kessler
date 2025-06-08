@@ -63,7 +63,8 @@ def deploy_configuration(template_content):
     # Stop and start services
     subprocess.run(
         [
-            "podman-compose",
+            "docker",
+            "compose",
             "--env-file",
             "deploy.env",
             "-f",
