@@ -89,7 +89,8 @@ services:
       - "8083:8080"
     volumes:
       - "./volumes/letsencrypt:/letsencrypt"
-      - "/run/podman/podman.sock:/var/run/docker.sock:ro"
+      # - "/run/podman/podman.sock:/var/run/docker.sock:ro"
+      - /var/run/docker.sock:/var/run/docker.sock
       - "./traefik_dynamic.yaml:/etc/traefik/traefik_dynamic.yaml:ro"
   valkey:
     hostname: valkey
