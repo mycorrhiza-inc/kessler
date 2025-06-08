@@ -7,7 +7,6 @@ WORKDIR /app
 COPY package.json package-lock.json ./   
 RUN NODE_ENV=development npm install --force
 COPY ./tsconfig.json ./
-COPY ./build_time_variables.env ./.env
 COPY . .
 # Im, sorry - nic
 ENV NEXT_PUBLIC_KESSLER_API_URL=https://api.kessler.xyz

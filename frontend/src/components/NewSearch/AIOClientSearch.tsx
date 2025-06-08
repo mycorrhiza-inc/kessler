@@ -1,3 +1,4 @@
+"use client";
 import { ReactNode, Suspense, useState } from "react";
 import HomeSearchBar, { HomeSearchBarClientBaseUrl } from "./HomeSearch";
 import LoadingSpinner from "../styled-components/LoadingSpinner";

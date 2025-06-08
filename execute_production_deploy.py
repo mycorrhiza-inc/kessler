@@ -74,7 +74,15 @@ def deploy_configuration(template_content):
     )
     subprocess.run(
         # podman-compose --env-file deploy.env -f prod.compose.yaml up
-        ["podman-compose", "--env-file", "deploy.env", "-f", "prod.compose.yaml", "up"],
+        [
+            "docker",
+            "compose",
+            "--env-file",
+            "deploy.env",
+            "-f",
+            "prod.compose.yaml",
+            "up",
+        ],
         check=True,
     )
 
