@@ -23,7 +23,7 @@ type DateRangeOutput struct {
 
 // NewDateRangeFilter creates a new date range filter implementation
 func NewDateRangeFilter() FilterFunc {
-	log = logger.GetLogger("date_range_filter")
+	log = logger.Named("date_range_filter")
 
 	return func(input interface{}) (interface{}, error) {
 		// Type assertion for input

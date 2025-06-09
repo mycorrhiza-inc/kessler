@@ -9,9 +9,10 @@ import {
 } from "@clerk/nextjs";
 import { EnvVariablesClientProvider } from "@/lib/env_variables/env_variables_hydration_script";
 
-const PostHogPageView = dynamic(() => import("./PostHogPageView"), {
-  ssr: false,
-});
+import PostHogPageView from "@/components/Posthog/PostHogPageView";
+// const PostHogPageView = dynamic(() => import("../components/Posthog/PostHogPageView"), {
+//   ssr: false,k
+// });
 
 const defaultUrl = "https://kessler.xyz";
 

@@ -31,7 +31,7 @@ type FilterService struct {
 	logger      *otelzap.Logger
 }
 
-var log = logger.GetLogger("main")
+var log = logger.Named("main")
 
 // NewFilterService creates a new instance of FilterService
 func NewFilterService(db *pgxpool.Pool, cache *memcache.Client) *FilterService {
@@ -39,7 +39,7 @@ func NewFilterService(db *pgxpool.Pool, cache *memcache.Client) *FilterService {
 	if err != nil {
 		log.Fatal("unable to load filter field", zap.Error(err))
 	}
-	filter_log := logger.GetLogger("filter_service")
+	filter_log := logger.Named("filter_service")
 
 	qe := database.GetTx()
 

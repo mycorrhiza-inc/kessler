@@ -32,7 +32,7 @@ const (
 )
 
 func upsertFullFileToDB(ctx context.Context, obj files.CompleteFileSchema, interact DatabaseInteraction) (files.CompleteFileSchema, error) {
-	log := logger.GetLogger("file db ingest")
+	log := logger.Named("file db ingest")
 	log.Info("Attempting to insert file into database: ", zap.String("name", obj.Name))
 	// if constants.MOCK_DB_CONNECTION {
 	// 	return &obj, nil

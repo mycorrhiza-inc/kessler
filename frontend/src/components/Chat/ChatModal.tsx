@@ -10,7 +10,7 @@ import Modal from "../styled-components/Modal";
 //   ChatBoxInternalsStateless,
 //   initialChatState,
 // } from "./ChatBoxInternals";
-import { useKesslerStore } from "@/lib/store";
+import { useKesslerStore } from "@/lib/_store";
 
 export const ExperimentalChatModalClickDiv = ({
   inheritedFilters,

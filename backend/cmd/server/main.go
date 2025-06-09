@@ -3,69 +3,274 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
 	"kessler/internal/admin"
 	"kessler/internal/autocomplete"
 	"kessler/internal/cache"
 	"kessler/internal/database"
 	"kessler/internal/filters"
+	filterconfig "kessler/internal/filters/config"
 	"kessler/internal/health"
 	"kessler/internal/jobs"
 	ConversationsHandler "kessler/internal/objects/conversations/handler"
 	FilesHandler "kessler/internal/objects/files/handler"
 	OrganizationsHandler "kessler/internal/objects/organizations/handler"
-	"kessler/internal/rag"
 	"kessler/internal/search"
 	"kessler/pkg/logger"
-	"net/http"
-	"os"
-	"time"
 
 	"github.com/gorilla/mux"
-
-	"go.opentelemetry.io/otel"
+	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.uber.org/zap"
 )
 
-var SupabaseSecret = os.Getenv("SUPABASE_ANON_KEY")
-var tracer = otel.Tracer("kessler-main")
+const (
+	defaultPort     = "4041"
+	standardTimeout = 20 * time.Second
+	adminTimeout    = 10 * time.Minute
+	shutdownTimeout = 30 * time.Second
+)
 
-type AccessTokenData struct {
-	AccessToken string `json:"access_token"`
+func main() {
+	// Initialize logger first
+	if err := logger.Init(logger.DefaultConfig()); err != nil {
+		log.Fatalf("Failed to initialize logger: %v", err)
+	}
+	defer logger.Sync()
+
+	// Create root context with logger
+	ctx := logger.WithLogger(context.Background())
+	log := logger.FromContext(ctx)
+
+	log.InfoContext(ctx, "Starting application",
+		zap.String("env", os.Getenv("GO_ENV")),
+		zap.String("port", getPort()),
+	)
+
+	// Initialize dependencies
+	if err := initDependencies(ctx); err != nil {
+		log.FatalContext(ctx, "Failed to initialize dependencies", zap.Error(err))
+	}
+
+	// Setup router and middleware
+	router := setupRouter(ctx)
+
+	// Create server
+	server := &http.Server{
+		Addr:         ":" + getPort(),
+		Handler:      router,
+		ReadTimeout:  adminTimeout,
+		WriteTimeout: adminTimeout,
+	}
+
+	// Start server in goroutine
+	serverErrors := make(chan error, 1)
+	go func() {
+		log.InfoContext(ctx, "Server starting", zap.String("address", server.Addr))
+		serverErrors <- server.ListenAndServe()
+	}()
+
+	// Wait for interrupt signal or server error
+	shutdown := make(chan os.Signal, 1)
+	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
+
+	select {
+	case err := <-serverErrors:
+		if err != http.ErrServerClosed {
+			log.ErrorContext(ctx, "Server failed", zap.Error(err))
+		}
+	case sig := <-shutdown:
+		log.InfoContext(ctx, "Shutdown signal received", zap.String("signal", sig.String()))
+
+		// Graceful shutdown
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+		defer cancel()
+
+		if err := server.Shutdown(shutdownCtx); err != nil {
+			log.ErrorContext(ctx, "Graceful shutdown failed", zap.Error(err))
+			server.Close()
+		}
+	}
+
+	log.InfoContext(ctx, "Application stopped")
 }
 
-// CORS middleware function
-func corsDomainMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		domain := os.Getenv("DOMAIN")
-		if domain != "" {
-			domain = "https://" + domain
-			// Set CORS headers
-			w.Header().Set("Access-Control-Allow-Origin", domain) // or specify allowed origin
-		} else {
-			w.Header().Set("Access-Control-Allow-Origin", "*") // or specify allowed origin
-		}
-		// Putting these in here temporarially, it seems that our cursed wrapping multiple
-		// timeouts inside multiple routers broke mux's traditonal cors method handling.
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, Origin")
-		w.Header().Set("Access-Control-Allow-Credentials", "true")
+func initDependencies(ctx context.Context) error {
+	log := logger.FromContext(ctx)
 
-		if r.Method == http.MethodOptions {
-			w.WriteHeader(http.StatusOK)
-			return
+	// Initialize database
+	log.InfoContext(ctx, "Connecting to database")
+	if err := database.Init(30); err != nil {
+		return fmt.Errorf("database initialization failed: %w", err)
+	}
+	log.InfoContext(ctx, "Database connection successful")
+
+	// Initialize cache
+	log.InfoContext(ctx, "Initializing memcached")
+	if err := cache.InitMemcached("localhost:11211"); err != nil {
+		return fmt.Errorf("memcached initialization failed: %w", err)
+	}
+
+	// Test cache connection
+	if err := cache.MemcachedClient.Ping(); err != nil {
+		log.WarnContext(ctx, "Cache ping failed", zap.Error(err))
+	} else {
+		log.InfoContext(ctx, "Cache initialized and tested successfully")
+	}
+
+	return nil
+}
+
+// Add debug middleware to see all incoming requests
+func debugMiddleware() func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			fmt.Printf("🔍 INCOMING REQUEST: %s %s\n", r.Method, r.URL.Path)
+			fmt.Printf("🔍 DEBUG: %s %s\n", r.Method, r.URL.Path)
+			fmt.Printf("🔍 Headers: %v\n", r.Header)
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+func setupRouter(ctx context.Context) http.Handler {
+	log := logger.FromContext(ctx) // set up logger
+
+	r := mux.NewRouter()
+	r.StrictSlash(true) // handle trailing slashes
+
+	// Add debug middleware first to see all requests
+	r.Use(debugMiddleware())
+
+	// Apply global middleware in correct order
+	r.Use(logger.Middleware())        // Add logger to context first
+	r.Use(logger.TracingMiddleware()) // Then tracing (uses logger from context)
+	r.Use(corsMiddleware())           // Finally CORS
+
+	// Create standard subrouter with timeout
+	standardRoute := r.PathPrefix("").Subrouter()
+	standardRoute.Use(timeoutMiddleware(standardTimeout))
+
+	// Register route groups
+	registerPublicRoutes(standardRoute, log)
+	registerSystemRoutes(standardRoute, log)
+	registerAdminRoutes(standardRoute, log)
+
+	// Add a catch-all debug route to see what's not matching
+	r.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Printf("🚨 CATCH-ALL: %s %s (no route matched)\n", r.Method, r.URL.Path)
+		w.WriteHeader(http.StatusNotFound)
+		fmt.Fprintf(w, "No route found for %s %s", r.Method, r.URL.Path)
+	})
+
+	log.InfoContext(ctx, "All routes registered successfully")
+
+	// Print all registered routes for debugging
+	printRoutes(r)
+
+	return r
+}
+
+// Add route printing function
+func printRoutes(r *mux.Router) {
+	fmt.Println("📋 Registered routes:")
+	r.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
+		pathTemplate, err := route.GetPathTemplate()
+		if err == nil {
+			methods, _ := route.GetMethods()
+			fmt.Printf("   %s %v\n", pathTemplate, methods)
 		}
-		// Call the next handler
-		next.ServeHTTP(w, r)
+		return nil
 	})
 }
 
-func HandleVersionHash(w http.ResponseWriter, r *http.Request) {
-	// Get the version hash from the environment variable
-	versionHash := os.Getenv("VERSION_HASH")
-	if versionHash == "" {
-		versionHash = "unknown"
+func registerPublicRoutes(router *mux.Router, log *otelzap.Logger) {
+	fmt.Println("🔧 Registering public routes...")
+
+	// Public API routes
+	publicSubroute := router.PathPrefix("/public").Subrouter()
+	FilesHandler.DefineFileRoutes(publicSubroute)
+	OrganizationsHandler.DefineOrganizationRoutes(publicSubroute)
+	ConversationsHandler.DefineConversationsRoutes(publicSubroute)
+	fmt.Println("   ✅ Public CRUD routes registered")
+
+	// Search routes
+	searchSubroute := router.PathPrefix("/search").Subrouter()
+	search.RegisterSearchRoutes(searchSubroute)
+	fmt.Println("   ✅ Search routes registered")
+
+	if err := filters.RegisterFilterRoutes(searchSubroute); err != nil {
+		log.ErrorContext(context.Background(), "Failed to register filter routes", zap.Error(err))
+	} else {
+		fmt.Println("   ✅ Filter routes registered on search subroute")
 	}
-	w.Write([]byte(versionHash))
+
+	// Filter config routes
+	filterSubroute := router.PathPrefix("/filters").Subrouter()
+	filterconfig.RegisterFilterConfigRoutes(filterSubroute)
+	fmt.Println("   ✅ Filter config routes registered")
+
+	// Autocomplete routes
+	autocompleteSubroute := router.PathPrefix("/autocomplete").Subrouter()
+	autocomplete.DefineAutocompleteRoutes(autocompleteSubroute)
+	fmt.Println("   ✅ Autocomplete routes registered")
+
+	// Jobs routes
+	jobSubroute := router.PathPrefix("/jobs").Subrouter()
+	jobs.DefineJobRoutes(jobSubroute)
+	fmt.Println("   ✅ Job routes registered")
+}
+
+func registerSystemRoutes(router *mux.Router, log *otelzap.Logger) {
+	fmt.Println("🔧 Registering system routes...")
+
+	// Health check routes
+	healthSubroute := router.PathPrefix("/health").Subrouter()
+	health.DefineHealthRoutes(healthSubroute)
+	fmt.Println("   ✅ Health routes registered")
+
+	// Version endpoint
+	router.HandleFunc("/version_hash", handleVersionHash)
+	fmt.Println("   ✅ Version endpoint registered")
+}
+
+func registerAdminRoutes(router *mux.Router, log *otelzap.Logger) {
+	fmt.Println("🔧 Registering admin routes...")
+
+	// Admin routes with longer timeout
+	adminRoute := router.PathPrefix("/admin").Subrouter()
+	adminRoute.Use(timeoutMiddleware(adminTimeout))
+	admin.DefineAdminRoutes(adminRoute)
+	fmt.Println("   ✅ Admin routes registered")
+}
+
+func corsMiddleware() func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			domain := os.Getenv("DOMAIN")
+			origin := "*"
+			if domain != "" {
+				origin = "https://" + domain
+			}
+
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, Origin")
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
+
+			if r.Method == http.MethodOptions {
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
 }
 
 func timeoutMiddleware(timeout time.Duration) mux.MiddlewareFunc {
@@ -76,8 +281,13 @@ func timeoutMiddleware(timeout time.Duration) mux.MiddlewareFunc {
 
 			r = r.WithContext(ctx)
 
-			done := make(chan bool)
+			done := make(chan bool, 1)
 			go func() {
+				defer func() {
+					if recover() != nil {
+						done <- true
+					}
+				}()
 				next.ServeHTTP(w, r)
 				done <- true
 			}()
@@ -86,126 +296,23 @@ func timeoutMiddleware(timeout time.Duration) mux.MiddlewareFunc {
 			case <-ctx.Done():
 				w.WriteHeader(http.StatusGatewayTimeout)
 				fmt.Fprintf(w, "Request timeout after %v\n", timeout)
-				return
 			case <-done:
-				return
 			}
 		})
 	}
 }
 
-func main() {
-	// initialize the database connection pool
-	logger.Init()
-	log := logger.GetLogger("main")
-	tracer := otel.Tracer("my-service")
-	ctx, span := tracer.Start(context.Background(), "my-operation")
-	ctx = logger.WithLogger(ctx)
-	defer span.End()
-
-	// port_str := os.Getenv("PORT")
-	// log.Debug("env string")
-	// port, err := strconv.Atoi()
-	// if err != nil {
-	// 	log.Fatal("no port set")
-	// }
-	logger.Info(ctx, "starting application",
-		// zap.String("env", os.Getenv("GO_ENV")),
-		zap.Int("port", 7001))
-
-	logger.Info(ctx, "connecting to database")
-	if err := database.Init(30); err != nil {
-		log.Fatal("unable to connect to connect to the database ", zap.Error(err))
+func handleVersionHash(w http.ResponseWriter, r *http.Request) {
+	versionHash := os.Getenv("VERSION_HASH")
+	if versionHash == "" {
+		versionHash = "unknown"
 	}
-	logger.Info(ctx, "database connection successiful")
+	w.Write([]byte(versionHash))
+}
 
-	defer database.ConnPool.Close()
-
-	// setting up the cache
-	log.Info("initializing memecached")
-	if err := cache.InitMemcached("localhost:11211"); err != nil {
-		log.Fatal("unable to connect to memcached", zap.Error(err))
+func getPort() string {
+	if port := os.Getenv("PORT"); port != "" {
+		return port
 	}
-	log.Info("cache initialized")
-	log.Info("---\ttesting cache\t---")
-	err := cache.MemcachedClient.Ping()
-	if err != nil {
-		log.Error("failed to ping cache")
-	}
-	log.Info("---\tcache successfully working\t---")
-
-	log.Info("---\tregistering api routes\t---")
-
-	r := mux.NewRouter()
-	rootRoute := r.PathPrefix("/v2").Subrouter()
-
-	// default subrouter
-	const standardTimeout = time.Second * 20
-	standardRoute := rootRoute.PathPrefix("").Subrouter()
-	standardRoute.Use(timeoutMiddleware(standardTimeout))
-
-	// standard rest for conversations, files, and organizations
-	publicSubroute := standardRoute.PathPrefix("/public").Subrouter()
-	FilesHandler.DefineFileRoutes(publicSubroute)
-	OrganizationsHandler.DefineOrganizationRoutes(publicSubroute)
-	ConversationsHandler.DefineConversationsRoutes(publicSubroute)
-	log.Info("CRUD registered")
-
-	// heathcheck
-	healthSubroute := standardRoute.PathPrefix("/health").Subrouter()
-	health.DefineHealthRoutes(healthSubroute)
-	log.Info("heath registered")
-
-	// search endpoints
-	searchSubroute := standardRoute.PathPrefix("/search").Subrouter()
-	search.DefineSearchRoutes(searchSubroute)
-	log.Info("search registered")
-
-	err = filters.RegisterFilterRoutes(searchSubroute)
-	if err != nil {
-		log.Fatal("error registering filter routes", zap.Error(err))
-	}
-	log.Info("registered filters route")
-	log.Info("---\t🎉 api routes have been registed 🎉\t---")
-
-	// search autocomplete sugggestions endpoints
-	autocompleteSubroute := standardRoute.PathPrefix("/autocomplete").Subrouter()
-	autocomplete.DefineAutocompleteRoutes(autocompleteSubroute)
-
-	ragSubroute := standardRoute.PathPrefix("/rag").Subrouter()
-	ragSubroute.HandleFunc("/basic_chat", rag.HandleBasicChatRequest)
-	ragSubroute.HandleFunc("/chat", rag.HandleRagChatRequest)
-
-	standardRoute.HandleFunc("/version_hash", HandleVersionHash)
-
-	// admin route
-	const adminTimeout = time.Minute * 10
-	adminRoute := rootRoute.PathPrefix("/admin").Subrouter()
-	adminRoute.Use(timeoutMiddleware(adminTimeout))
-	admin.DefineAdminRoutes(adminRoute)
-
-	// jobs routes
-	jobSubroute := rootRoute.PathPrefix("/jobs").Subrouter()
-	jobs.DefineJobRoutes(jobSubroute)
-
-	// Commenting out temporarially, it seems that our cursed wrapping multiple
-	// timeouts inside multiple routers broke it.
-	// r.Use(mux.CORSMethodMiddleware(r))
-	r.Use(corsDomainMiddleware)
-	log.Info("routes registered")
-	handler := logger.TracingMiddleware()(r)
-	log.Info("set necessary routes")
-
-	server := &http.Server{
-		Addr:    ":4041",
-		Handler: handler,
-		// Set longer timeouts at server level to allow for admin operations
-		ReadTimeout:  adminTimeout,
-		WriteTimeout: adminTimeout,
-	}
-	log.Info("server started",
-		zap.String("address", ":4041"))
-	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		log.Fatal("Webserver Failed: %s", zap.Error(err))
-	}
+	return defaultPort
 }

@@ -29,7 +29,7 @@ type QueryFilter interface{}
 
 func NewTextFilter() FilterFunc {
 	tf := &TextFilter{
-		logger: logger.GetLogger("text_filter"),
+		logger: logger.Named("text_filter"),
 	}
 	return tf.Apply
 }

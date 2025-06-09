@@ -4,7 +4,7 @@ import { AuroraBackground } from "../aceternity/aurora-background";
 import { motion } from "framer-motion";
 import { Highlight } from "../aceternity/hero-highlight";
 import { Compare } from "../aceternity/compare";
-import { useKesslerStore } from "@/lib/store";
+import { useKesslerStore } from "@/lib/_store";
 import Link from "next/link";
 import { rootApplicationSlug } from "@/lib/page_context";
 

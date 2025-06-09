@@ -15,7 +15,7 @@ interface FilterFieldDefinition {
   }>;
 }
 
-interface DynamicMultiSelectProps {
+export interface DynamicMultiSelectProps {
   fieldDefinition: FilterFieldDefinition;
   value: string;
   onChange: (value: string) => void;
@@ -167,9 +167,9 @@ export function DynamicMultiSelect({
 
       {/* Dropdown Content */}
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border-2 border-gray-200 rounded-lg shadow-lg max-h-80 overflow-hidden">
+        <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-base-100 border-2 border-gray-200 rounded-lg shadow-lg max-h-80 overflow-hidden">
           {/* Search Box */}
-          <div className="p-3 border-b border-gray-200 bg-gray-50">
+          <div className="p-3 border-b border-gray-200 bg-base-100">
             <div className="relative">
               <input
                 type="text"
@@ -226,7 +226,7 @@ export function DynamicMultiSelect({
                       <label
                         className={`
                         cursor-pointer flex items-center justify-between p-3 rounded-md transition-colors
-                        ${option.disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'}
+                        ${option.disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-base-100'}
                         ${isSelected ? 'bg-base-200' : 'bg-base-100'}
                       `}
                       >
@@ -263,7 +263,7 @@ export function DynamicMultiSelect({
 
           {/* Footer with selection summary */}
           {selectedValues.length > 0 && (
-            <div className="p-3 border-t border-gray-200 bg-gray-50 text-xs text-gray-600 flex justify-between items-center">
+            <div className="p-3 border-t border-gray-200 bg-base-100 text-xs text-gray-600 flex justify-between items-center">
               <span>
                 {selectedValues.length} item{selectedValues.length !== 1 ? 's' : ''} selected
               </span>

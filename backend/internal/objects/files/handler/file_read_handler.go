@@ -21,7 +21,7 @@ import (
 	"go.uber.org/zap"
 )
 
-var log = logger.GetLogger("file read/write handler")
+var log = logger.Named("file read/write handler")
 
 func FileWithMetaGetHandler(w http.ResponseWriter, r *http.Request) {
 	q := database.GetTx()

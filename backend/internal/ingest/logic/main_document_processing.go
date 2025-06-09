@@ -18,7 +18,7 @@ import (
 var OS_HASH_FILEDIR = os.Getenv("OS_HASH_FILEDIR")
 
 func ProcessFile(ctx context.Context, complete_file files.CompleteFileSchema) error {
-	log := logger.GetLogger("process_file")
+	log := logger.Named("process_file")
 	_, err := ProcessFileRaw(ctx, &complete_file, files.DocStatusCompleted)
 	if err != nil {
 		log.Warn("Encountered error processing file", zap.String("name", complete_file.Name), zap.Error(err))

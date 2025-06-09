@@ -15,7 +15,7 @@ import (
 	"go.uber.org/zap"
 )
 
-var log = logger.GetLogger("files crud")
+var log = logger.Named("files crud")
 
 func UpsertFileAttachmentTexts(ctx context.Context, q dbstore.Queries, attachment_uuid uuid.UUID, texts []files.AttachmentChildTextSource, insert bool) error {
 	error_list := []error{}
