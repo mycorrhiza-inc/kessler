@@ -1,6 +1,6 @@
 "use client";
-import HomeSearchBar from "@/components/NewSearch/HomeSearch";
+import StandardSearchbar from "@/components/NewSearch/HomeSearch";
 
 export default function Page() {
-  return <HomeSearchBar setTriggeredQuery={() => { }} />;
+  return <StandardSearchbar setTriggeredQuery={() => { }} />;
 }

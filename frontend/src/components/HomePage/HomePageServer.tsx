@@ -2,7 +2,7 @@ import Link from "next/link";
 import { useState, useEffect, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ExperimentalChatModalClickDiv } from "../Chat/ChatModal";
-import HomeSearchBar from "../NewSearch/HomeSearch";
+import StandardSearchbar from "../NewSearch/HomeSearch";
 import SearchResultsClient from "../Search/SearchResultsClient";
 import { GenericSearchType } from "@/lib/adapters/genericSearchCallback";
 import HomePageClient from "./HomePageClient";

@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { HomeSearchBarClientBaseUrl } from "./HomeSearch";
+import { StandardSearchbarClientBaseUrl } from "./HomeSearch";
 import LoadingSpinner from "../styled-components/LoadingSpinner";
 import SearchResultsServerStandalone from "../Search/SearchResultsServerStandalone";
 import { GenericSearchInfo, GenericSearchType, searchInvoke } from "@/lib/adapters/genericSearchCallback";

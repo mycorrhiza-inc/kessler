@@ -1,6 +1,6 @@
 "use client";
 import { motion, AnimatePresence } from "framer-motion";
-import HomeSearchBar from "../NewSearch/HomeSearch";
+import StandardSearchbar from "../NewSearch/HomeSearch";
 
 import { useSearchState } from "@/lib/hooks/useSearchState";
 import { SearchResultsHomepageComponent } from "@/components/Search/SearchResults";
@@ -39,7 +39,7 @@ export default function HomePageClient({
         className="flex flex-col items-center justify-center  bg-base-100 p-4"
         style={{ overflow: "visible" }}
       >
-        <HomeSearchBar setTriggeredQuery={setTriggeredQuery} />
+        <StandardSearchbar setTriggeredQuery={setTriggeredQuery} />
       </motion.div>
 
       <AnimatePresence mode="wait">
