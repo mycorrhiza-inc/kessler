@@ -1,6 +1,5 @@
 "use client"
-import React, { useMemo, useCallback, useEffect, useState, useRef } from "react";
-import { Dispatch, SetStateAction } from "react";
+import React, { useMemo, useCallback, useEffect, useState } from "react";
 import {
   FilterFieldDefinition,
   FilterInputType,
@@ -8,40 +7,43 @@ import {
   FilterConfigurationManager,
   FilterEndpoints,
   ValidationResult,
-  FilterOption,
   createFilterManager,
 } from "@/lib/filters";
 import clsx from "clsx";
+
+// Import Kessler store hooks
+import {
+  useFilters,
+  useFilterField,
+  useFilterFields,
+  useFilterLoadingState,
+  useFilterInitialization,
+  useFilterSystemLifecycle,
+  useUrlSync,
+  useFilterPersistence,
+  initializeFilterSystem,
+  safeUpdateFilter,
+  safeBulkUpdateFilters,
+  getFilterSystemStatus,
+} from "@/lib/store";
 
 // Import the canonical multiselect component
 import { DynamicMultiSelect } from "@/components/Filters/FilterMultiSelect";
 
 // =============================================================================
-// TYPES AND INTERFACES
+// ENHANCED TYPES WITH KESSLER INTEGRATION
 // =============================================================================
 
 /**
- * Base props for all document filter components
+ * Base props for Kessler-integrated filter components
  */
-export interface BaseDocumentFiltersProps {
-  /** Current filter values */
-  queryOptions: FilterValues;
-  /** Function to update filter values */
-  setQueryOptions: Dispatch<SetStateAction<FilterValues>>;
+export interface KesslerFilterProps {
   /** Array of filter field IDs to display */
   showFields: string[];
   /** Optional array of filter field IDs to disable */
   disabledFields?: string[];
-  /** Filter configuration manager instance */
-  configManager: FilterConfigurationManager;
-}
-
-/**
- * Props for the main DynamicDocumentFilters component
- */
-export interface DynamicDocumentFiltersProps extends BaseDocumentFiltersProps {
-  /** CSS class name for the container */
-  className?: string;
+  /** Backend endpoints configuration */
+  endpoints: FilterEndpoints;
   /** Whether to apply max-width-xs to inputs */
   maxWidthXs?: boolean;
   /** Custom input class names */
@@ -55,33 +57,27 @@ export interface DynamicDocumentFiltersProps extends BaseDocumentFiltersProps {
   customRenderers?: Record<string, FilterRenderer>;
   /** Event handlers */
   onFilterChange?: (fieldId: string, value: string) => void;
-  onFilterFocus?: (fieldId: string) => void;
-  onFilterBlur?: (fieldId: string) => void;
   onValidationChange?: (validation: ValidationResult) => void;
-  /** Loading and error states */
-  isLoading?: boolean;
-  error?: string | null;
   /** Whether to show validation errors inline */
   showValidationErrors?: boolean;
+  /** Auto-initialize the filter system */
+  autoInitialize?: boolean;
+  /** Enable URL synchronization */
+  enableUrlSync?: boolean;
+  /** Enable filter persistence */
+  enablePersistence?: boolean;
 }
 
 /**
- * Props for layout-specific wrapper components
+ * Props for the main Kessler-integrated component
  */
-export interface LayoutDocumentFiltersProps extends Omit<BaseDocumentFiltersProps, 'configManager'> {
-  /** Backend endpoints configuration */
-  endpoints: FilterEndpoints;
-  /** Whether to apply max-width-xs to inputs */
-  maxWidthXs?: boolean;
-  /** Custom input class names */
-  inputClassNames?: DynamicDocumentFiltersProps['inputClassNames'];
-  /** Custom render functions for specific filter fields */
-  customRenderers?: DynamicDocumentFiltersProps['customRenderers'];
-  /** Event handlers */
-  onFilterChange?: DynamicDocumentFiltersProps['onFilterChange'];
-  onValidationChange?: DynamicDocumentFiltersProps['onValidationChange'];
-  /** Whether to show validation errors inline */
-  showValidationErrors?: boolean;
+export interface KesslerDynamicFiltersProps extends KesslerFilterProps {
+  /** CSS class name for the container */
+  className?: string;
+  /** Loading state override */
+  isLoading?: boolean;
+  /** Error state override */
+  error?: string | null;
 }
 
 /**
@@ -95,591 +91,324 @@ type FilterRenderer = (
   isDisabled: boolean
 ) => React.ReactElement;
 
-/**
- * Layout configuration options
- */
-export enum FilterLayout {
-  List = "list",
-  Grid = "grid",
-  Flex = "flex",
-  Custom = "custom",
-}
-
 // =============================================================================
-// CUSTOM COMPONENTS FOR DYNAMIC INPUTS
+// IMPROVED FILTER MANAGER INITIALIZATION
 // =============================================================================
 
 /**
- * Dynamic date range picker component
+ * Enhanced hook for managing filters with better error handling
  */
-interface DynamicDateRangeProps {
-  fieldDefinition: FilterFieldDefinition;
-  value: string;
-  onChange: (value: string) => void;
-  onFocus?: () => void;
-  onBlur?: () => void;
-  disabled?: boolean;
-  className?: string;
-}
+export const useKesslerFilters = (endpoints: FilterEndpoints, autoInitialize = true) => {
+  const [filterManager, setFilterManager] = useState<FilterConfigurationManager | null>(null);
+  const [initError, setInitError] = useState<string | null>(null);
+  const [isCreatingManager, setIsCreatingManager] = useState(false);
 
-function DynamicDateRange(props: DynamicDateRangeProps): React.ReactElement {
-  const {
-    fieldDefinition,
-    value,
-    onChange,
-    onFocus,
-    onBlur,
-    disabled = false,
-    className,
-  } = props;
-
-  const [startDate, endDate] = value.split('|');
-
-  const handleStartDateChange = useCallback((newStartDate: string) => {
-    const newValue = `${newStartDate}|${endDate || ''}`;
-    onChange(newValue);
-  }, [endDate, onChange]);
-
-  const handleEndDateChange = useCallback((newEndDate: string) => {
-    const newValue = `${startDate || ''}|${newEndDate}`;
-    onChange(newValue);
-  }, [startDate, onChange]);
-
-  return (
-    <div className={clsx("flex gap-2", className)}>
-      <input
-        type="date"
-        value={startDate || ''}
-        onChange={(e) => handleStartDateChange(e.target.value)}
-        onFocus={onFocus}
-        onBlur={onBlur}
-        disabled={disabled}
-        className="input input-bordered flex-1"
-        placeholder="Start date"
-      />
-      <span className="self-center">to</span>
-      <input
-        type="date"
-        value={endDate || ''}
-        onChange={(e) => handleEndDateChange(e.target.value)}
-        onFocus={onFocus}
-        onBlur={onBlur}
-        disabled={disabled}
-        className="input input-bordered flex-1"
-        placeholder="End date"
-      />
-    </div>
-  );
-}
-
-// =============================================================================
-// LAYOUT WRAPPER COMPONENTS
-// =============================================================================
-
-/**
- * Document filters displayed in a vertical list layout
- * Perfect for forms, mobile views, and detailed input scenarios
- */
-export function DynamicDocumentFiltersList(props: LayoutDocumentFiltersProps): React.ReactElement {
-  return (
-    <DynamicDocumentFiltersWithManager
-      {...props}
-      className="grid grid-flow-row auto-rows-max gap-4"
-    />
-  );
-}
-
-/**
- * Document filters displayed in a 4-column grid layout
- * Best for desktop dashboards and wide screens with lots of space
- */
-export function DynamicDocumentFiltersGrid(props: LayoutDocumentFiltersProps): React.ReactElement {
-  return (
-    <DynamicDocumentFiltersWithManager
-      {...props}
-      className="grid grid-cols-4 gap-4"
-    />
-  );
-}
-
-/**
- * Document filters displayed in a responsive grid layout
- * Adapts from 1 column on mobile to 4 columns on large screens
- */
-export function ResponsiveDynamicDocumentFilters(props: LayoutDocumentFiltersProps): React.ReactElement {
-  return (
-    <DynamicDocumentFiltersWithManager
-      {...props}
-      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
-    />
-  );
-}
-
-/**
- * Document filters displayed in a horizontal flex layout
- * Ideal for toolbars, search bars, and compact filter interfaces
- */
-export function InlineDynamicDocumentFilters(props: LayoutDocumentFiltersProps): React.ReactElement {
-  return (
-    <DynamicDocumentFiltersWithManager
-      {...props}
-      className="flex flex-wrap gap-4"
-      maxWidthXs={true}
-    />
-  );
-}
-
-/**
- * Document filters in a 2-column layout
- * Good balance between space efficiency and readability
- */
-export function TwoColumnDynamicDocumentFilters(props: LayoutDocumentFiltersProps): React.ReactElement {
-  return (
-    <DynamicDocumentFiltersWithManager
-      {...props}
-      className="grid grid-cols-1 md:grid-cols-2 gap-4"
-    />
-  );
-}
-
-/**
- * Document filters in a 3-column layout
- * Great for medium-width containers
- */
-export function ThreeColumnDynamicDocumentFilters(props: LayoutDocumentFiltersProps): React.ReactElement {
-  return (
-    <DynamicDocumentFiltersWithManager
-      {...props}
-      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-    />
-  );
-}
-
-/**
- * Document filters with custom spacing and sizing
- * Provides more control over layout appearance
- */
-export function CustomSpacingDynamicDocumentFilters(props: LayoutDocumentFiltersProps): React.ReactElement {
-  return (
-    <DynamicDocumentFiltersWithManager
-      {...props}
-      className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 p-4"
-    />
-  );
-}
-
-// =============================================================================
-// WRAPPER COMPONENT WITH CONFIGURATION MANAGER
-// =============================================================================
-
-/**
- * Wrapper component that manages the filter configuration loading
- */
-function DynamicDocumentFiltersWithManager(props: LayoutDocumentFiltersProps & { className?: string }): React.ReactElement {
-  const { endpoints, ...restProps } = props;
-  const [configManager] = useState(() => createFilterManager(endpoints));
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
+  // Initialize filter manager with error handling
   useEffect(() => {
-    const loadConfiguration = async () => {
+    let mounted = true;
+
+    const createManager = async () => {
+      if (isCreatingManager) return;
+
       try {
-        setIsLoading(true);
-        setError(null);
-        await configManager.loadConfiguration();
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load filter configuration');
+        setIsCreatingManager(true);
+        setInitError(null);
+
+        console.log('Creating filter manager with endpoints:', endpoints);
+
+        // Validate endpoints
+        if (!endpoints || typeof endpoints !== 'object') {
+          throw new Error('Invalid endpoints configuration');
+        }
+
+        if (!endpoints.configuration) {
+          throw new Error('Missing configuration endpoint');
+        }
+
+        // Create manager
+        const manager = createFilterManager(endpoints);
+
+        if (!mounted) return;
+
+        console.log('Filter manager created successfully');
+        setFilterManager(manager);
+
+      } catch (error) {
+        console.error('Failed to create filter manager:', error);
+        if (mounted) {
+          setInitError(error instanceof Error ? error.message : 'Failed to create filter manager');
+        }
       } finally {
-        setIsLoading(false);
+        if (mounted) {
+          setIsCreatingManager(false);
+        }
       }
     };
 
-    loadConfiguration();
-  }, [configManager]);
+    createManager();
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <span className="loading loading-spinner loading-md"></span>
-        <span className="ml-2">Loading filter configuration...</span>
-      </div>
-    );
-  }
+    return () => {
+      mounted = false;
+    };
+  }, [endpoints, isCreatingManager]);
 
-  if (error) {
-    return (
-      <div className="alert alert-error">
-        <span>Error loading filters: {error}</span>
-      </div>
-    );
-  }
-
-  return (
-    <DynamicDocumentFilters
-      {...restProps}
-      configManager={configManager}
-      isLoading={isLoading}
-      error={error}
-    />
+  // Use Kessler store lifecycle management with better error handling
+  const lifecycle = useFilterSystemLifecycle(
+    filterManager || undefined,
+    [],
+    autoInitialize && !!filterManager
   );
-}
+
+  // Get filter state and actions from Kessler store
+  const filterState = useFilters();
+
+  // Combine local and store errors
+  const combinedError = initError || lifecycle.error;
+
+  return {
+    ...filterState,
+    ...lifecycle,
+    filterManager,
+    error: combinedError,
+    isCreatingManager,
+    isReady: lifecycle.isReady && !combinedError && !isCreatingManager,
+  };
+};
+
+/**
+ * Hook for specific filter field with enhanced error handling
+ */
+export const useKesslerFilterField = (fieldId: string) => {
+  const value = useFilterField(fieldId);
+  const { setFilter, isFieldDisabled, filterManager } = useFilters();
+  const isLoading = useFilterLoadingState(fieldId);
+
+  const updateField = useCallback(async (newValue: string) => {
+    try {
+      const result = await safeUpdateFilter(fieldId, newValue);
+      if (!result.success) {
+        console.error(`Failed to update field ${fieldId}:`, result.error);
+      }
+      return result.success;
+    } catch (error) {
+      console.error(`Error updating field ${fieldId}:`, error);
+      return false;
+    }
+  }, [fieldId]);
+
+  const fieldDefinition = useMemo(() => {
+    return filterManager?.getField(fieldId) || null;
+  }, [filterManager, fieldId]);
+
+  return {
+    value,
+    updateField,
+    isLoading,
+    isDisabled: isFieldDisabled(fieldId),
+    fieldDefinition,
+    setFilter: (value: string) => setFilter(fieldId, value),
+  };
+};
 
 // =============================================================================
-// MAIN COMPONENT
+// ENHANCED BASE FILTER COMPONENT
 // =============================================================================
 
 /**
- * Main dynamic document filters component
- * Renders filters based on backend configuration with extensible rendering
+ * Base Kessler-integrated filter component with improved error handling
  */
-export function DynamicDocumentFilters(props: DynamicDocumentFiltersProps): React.ReactElement {
+function KesslerDynamicFilters(props: KesslerDynamicFiltersProps): React.ReactElement {
   const {
     className = "grid grid-flow-row auto-rows-max gap-4",
-    queryOptions,
-    setQueryOptions,
     showFields,
     disabledFields = [],
-    configManager,
+    endpoints,
     maxWidthXs = false,
     inputClassNames = {},
     customRenderers = {},
     onFilterChange,
-    onFilterFocus,
-    onFilterBlur,
     onValidationChange,
-    isLoading = false,
-    error,
     showValidationErrors = true,
+    autoInitialize = true,
+    enableUrlSync = true,
+    enablePersistence = true,
+    isLoading: loadingOverride,
+    error: errorOverride,
   } = props;
 
-  // =============================================================================
-  // STATE AND MEMOIZED VALUES
-  // =============================================================================
+  // Initialize Kessler store with enhanced error handling
+  const {
+    filters,
+    filterManager,
+    filterError,
+    validateFilters,
+    setFilter,
+    isReady,
+    isInitializing,
+    isCreatingManager,
+    error: kesslerError,
+  } = useKesslerFilters(endpoints, autoInitialize);
 
-  const [validationResult, setValidationResult] = useState<ValidationResult>({
-    isValid: true,
-    errors: [],
-    warnings: []
-  });
+  // Enable URL sync if requested (only when ready)
+  useUrlSync(enableUrlSync && isReady);
 
-  // Use ref to track if we've called onValidationChange to prevent loops
-  const validationChangeRef = useRef<ValidationResult | null>(null);
+  // Enable persistence if requested (only when ready)
+  useFilterPersistence(enablePersistence && isReady, enablePersistence && isReady);
 
-  /**
-   * Create a lookup set for disabled fields for O(1) access
-   */
-  const disabledFieldsSet = useMemo(() => {
-    return new Set(disabledFields);
-  }, [disabledFields]);
+  // Create disabled fields set
+  const disabledFieldsSet = useMemo(() => new Set(disabledFields), [disabledFields]);
 
-  /**
-   * Get field definitions for the fields to show, sorted by order
-   */
+  // Get sorted field definitions
   const sortedFields = useMemo(() => {
-    const fieldDefinitions = showFields
-      .map((fieldId) => configManager.getField(fieldId))
-      .filter((field): field is FilterFieldDefinition => field !== null)
-      .sort((a, b) => a.order - b.order);
+    if (!filterManager) return [];
 
-    return fieldDefinitions;
-  }, [showFields, configManager]);
+    try {
+      return showFields
+        .map((fieldId) => filterManager.getField(fieldId))
+        .filter((field): field is FilterFieldDefinition => field !== null)
+        .sort((a, b) => a.order - b.order);
+    } catch (error) {
+      console.error('Error getting field definitions:', error);
+      return [];
+    }
+  }, [showFields, filterManager]);
 
-  /**
-   * Generate CSS class for input width constraint
-   */
-  const maxWidthClass = useMemo(() => {
-    return maxWidthXs ? "max-w-xs" : "";
-  }, [maxWidthXs]);
+  // Generate CSS class for input width constraint
+  const maxWidthClass = useMemo(() => maxWidthXs ? "max-w-xs" : "", [maxWidthXs]);
 
-  // =============================================================================
-  // VALIDATION - FIXED TO PREVENT INFINITE LOOPS
-  // =============================================================================
+  // Enhanced filter change handler with better error handling
+  const handleFilterChange = useCallback(async (fieldId: string, value: string) => {
+    try {
+      const result = await safeUpdateFilter(fieldId, value);
+      if (result.success) {
+        onFilterChange?.(fieldId, value);
+      } else {
+        console.error(`Failed to update filter ${fieldId}:`, result.error);
+      }
+    } catch (error) {
+      console.error(`Error updating filter ${fieldId}:`, error);
+    }
+  }, [onFilterChange]);
 
-  /**
-   * Validate current filter values with proper dependency management
-   */
+  // Validation effect with error handling
   useEffect(() => {
-    const validation = configManager.validateFilters(queryOptions);
-
-    // Only update if validation actually changed
-    const hasChanged =
-      validationResult.isValid !== validation.isValid ||
-      validationResult.errors.length !== validation.errors.length ||
-      validationResult.warnings.length !== validation.warnings.length;
-
-    if (hasChanged) {
-      setValidationResult(validation);
-
-      // Only call onValidationChange if it's different from the last call
-      if (
-        onValidationChange &&
-        (!validationChangeRef.current ||
-          validationChangeRef.current.isValid !== validation.isValid ||
-          validationChangeRef.current.errors.length !== validation.errors.length)
-      ) {
-        validationChangeRef.current = validation;
+    if (onValidationChange && filterManager && isReady) {
+      try {
+        const validation = validateFilters();
         onValidationChange(validation);
+      } catch (error) {
+        console.error('Error validating filters:', error);
       }
     }
-  }, [queryOptions, configManager]); // Removed onValidationChange from dependencies
-
-  // =============================================================================
-  // EVENT HANDLERS
-  // =============================================================================
-
-  /**
-   * Handle input changes with validation
-   */
-  const handleInputChange = useCallback((
-    event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-    fieldId: string,
-  ) => {
-    const newValue = event.target.value;
-    handleValueChange(fieldId, newValue);
-  }, []);
-
-  /**
-   * Handle programmatic value changes
-   */
-  const handleValueChange = useCallback((fieldId: string, value: string) => {
-    setQueryOptions((prevOptions) => ({
-      ...prevOptions,
-      [fieldId]: value,
-    }));
-
-    onFilterChange?.(fieldId, value);
-  }, [setQueryOptions, onFilterChange]);
-
-  /**
-   * Handle focus events
-   */
-  const handleFocus = useCallback((fieldId: string) => {
-    onFilterFocus?.(fieldId);
-  }, [onFilterFocus]);
-
-  /**
-   * Handle blur events
-   */
-  const handleBlur = useCallback((fieldId: string) => {
-    onFilterBlur?.(fieldId);
-  }, [onFilterBlur]);
+  }, [filters, validateFilters, onValidationChange, filterManager, isReady]);
 
   // =============================================================================
   // RENDER FUNCTIONS
   // =============================================================================
 
-  /**
-   * Renders a text input filter
-   */
   const renderTextInput = useCallback((
     fieldId: string,
     fieldDefinition: FilterFieldDefinition,
     isDisabled: boolean
-  ) => (
-    <input
-      className={clsx(
-        "input input-bordered w-full",
-        maxWidthClass,
-        inputClassNames.text,
-        isDisabled && "input-disabled"
-      )}
-      type="text"
-      disabled={isDisabled}
-      value={queryOptions[fieldId] || ""}
-      onChange={(e) => handleInputChange(e, fieldId)}
-      onFocus={() => handleFocus(fieldId)}
-      onBlur={() => handleBlur(fieldId)}
-      title={fieldDefinition.displayName}
-      placeholder={fieldDefinition.placeholder}
-      aria-label={fieldDefinition.displayName}
-      aria-describedby={`${fieldId}-description`}
-    />
-  ), [queryOptions, handleInputChange, handleFocus, handleBlur, maxWidthClass, inputClassNames.text]);
+  ) => {
+    const value = filters[fieldId] || "";
 
-  /**
-   * Renders a number input filter
-   */
-  const renderNumberInput = useCallback((
-    fieldId: string,
-    fieldDefinition: FilterFieldDefinition,
-    isDisabled: boolean
-  ) => (
-    <input
-      className={clsx(
-        "input input-bordered w-full",
-        maxWidthClass,
-        inputClassNames.number,
-        isDisabled && "input-disabled"
-      )}
-      type="number"
-      disabled={isDisabled}
-      value={queryOptions[fieldId] || ""}
-      onChange={(e) => handleInputChange(e, fieldId)}
-      onFocus={() => handleFocus(fieldId)}
-      onBlur={() => handleBlur(fieldId)}
-      title={fieldDefinition.displayName}
-      placeholder={fieldDefinition.placeholder}
-      aria-label={fieldDefinition.displayName}
-      min={fieldDefinition.validation?.min}
-      max={fieldDefinition.validation?.max}
-    />
-  ), [queryOptions, handleInputChange, handleFocus, handleBlur, maxWidthClass, inputClassNames.number]);
+    return (
+      <input
+        className={clsx(
+          "input input-bordered w-full",
+          maxWidthClass,
+          inputClassNames.text,
+          isDisabled && "input-disabled"
+        )}
+        type="text"
+        disabled={isDisabled}
+        value={value}
+        onChange={(e) => handleFilterChange(fieldId, e.target.value)}
+        title={fieldDefinition.displayName}
+        placeholder={fieldDefinition.placeholder}
+        aria-label={fieldDefinition.displayName}
+      />
+    );
+  }, [filters, handleFilterChange, maxWidthClass, inputClassNames.text]);
 
-  /**
-   * Renders a select dropdown filter
-   */
   const renderSelectInput = useCallback((
     fieldId: string,
     fieldDefinition: FilterFieldDefinition,
     isDisabled: boolean
-  ) => (
-    <select
-      disabled={isDisabled}
-      className={clsx(
-        "select select-bordered w-full",
-        maxWidthClass,
-        inputClassNames.select,
-        isDisabled && "select-disabled"
-      )}
-      value={queryOptions[fieldId] || ""}
-      onChange={(e) => handleInputChange(e, fieldId)}
-      onFocus={() => handleFocus(fieldId)}
-      onBlur={() => handleBlur(fieldId)}
-      aria-label={fieldDefinition.displayName}
-    >
-      <option value="">{fieldDefinition.placeholder || 'Select an option...'}</option>
-      {fieldDefinition.options?.map((option) => (
-        <option
-          key={option.value}
-          value={option.value}
-          disabled={option.disabled}
-        >
-          {option.label}
-        </option>
-      ))}
-    </select>
-  ), [queryOptions, handleInputChange, handleFocus, handleBlur, maxWidthClass, inputClassNames.select]);
+  ) => {
+    const value = filters[fieldId] || "";
 
-  /**
-   * Renders a date input filter
-   */
+    return (
+      <select
+        disabled={isDisabled}
+        className={clsx(
+          "select select-bordered w-full",
+          maxWidthClass,
+          inputClassNames.select,
+          isDisabled && "select-disabled"
+        )}
+        value={value}
+        onChange={(e) => handleFilterChange(fieldId, e.target.value)}
+        aria-label={fieldDefinition.displayName}
+      >
+        <option value="">{fieldDefinition.placeholder || 'Select an option...'}</option>
+        {fieldDefinition.options?.map((option) => (
+          <option
+            key={option.value}
+            value={option.value}
+            disabled={option.disabled}
+          >
+            {option.label}
+          </option>
+        ))}
+      </select>
+    );
+  }, [filters, handleFilterChange, maxWidthClass, inputClassNames.select]);
+
   const renderDateInput = useCallback((
     fieldId: string,
     fieldDefinition: FilterFieldDefinition,
     isDisabled: boolean
-  ) => (
-    <input
-      className={clsx(
-        "input input-bordered w-full",
-        maxWidthClass,
-        inputClassNames.date,
-        isDisabled && "input-disabled"
-      )}
-      type="date"
-      disabled={isDisabled}
-      value={queryOptions[fieldId] || ""}
-      onChange={(e) => handleInputChange(e, fieldId)}
-      onFocus={() => handleFocus(fieldId)}
-      onBlur={() => handleBlur(fieldId)}
-      title={fieldDefinition.displayName}
-      aria-label={fieldDefinition.displayName}
-    />
-  ), [queryOptions, handleInputChange, handleFocus, handleBlur, maxWidthClass, inputClassNames.date]);
+  ) => {
+    const value = filters[fieldId] || "";
 
-  /**
-   * Renders a multi-select filter using the canonical DynamicMultiSelect component
-   */
+    return (
+      <input
+        className={clsx(
+          "input input-bordered w-full",
+          maxWidthClass,
+          inputClassNames.date,
+          isDisabled && "input-disabled"
+        )}
+        type="date"
+        disabled={isDisabled}
+        value={value}
+        onChange={(e) => handleFilterChange(fieldId, e.target.value)}
+        title={fieldDefinition.displayName}
+        aria-label={fieldDefinition.displayName}
+      />
+    );
+  }, [filters, handleFilterChange, maxWidthClass, inputClassNames.date]);
+
   const renderMultiSelectInput = useCallback((
     fieldId: string,
     fieldDefinition: FilterFieldDefinition,
     isDisabled: boolean
-  ) => (
-    <DynamicMultiSelect
-      fieldDefinition={fieldDefinition}
-      value={queryOptions[fieldId] || ""}
-      onChange={(value) => handleValueChange(fieldId, value)}
-      onFocus={() => handleFocus(fieldId)}
-      onBlur={() => handleBlur(fieldId)}
-      disabled={isDisabled}
-      className={clsx(maxWidthClass)}
-    />
-  ), [queryOptions, handleValueChange, handleFocus, handleBlur, maxWidthClass]);
+  ) => {
+    const value = filters[fieldId] || "";
 
-  /**
-   * Renders a date range filter
-   */
-  const renderDateRangeInput = useCallback((
-    fieldId: string,
-    fieldDefinition: FilterFieldDefinition,
-    isDisabled: boolean
-  ) => (
-    <DynamicDateRange
-      fieldDefinition={fieldDefinition}
-      value={queryOptions[fieldId] || ""}
-      onChange={(value) => handleValueChange(fieldId, value)}
-      onFocus={() => handleFocus(fieldId)}
-      onBlur={() => handleBlur(fieldId)}
-      disabled={isDisabled}
-      className={clsx(maxWidthClass)}
-    />
-  ), [queryOptions, handleValueChange, handleFocus, handleBlur, maxWidthClass]);
+    return (
+      <DynamicMultiSelect
+        fieldDefinition={fieldDefinition}
+        value={value}
+        onChange={(newValue) => handleFilterChange(fieldId, newValue)}
+        disabled={isDisabled}
+        className={clsx(maxWidthClass)}
+      />
+    );
+  }, [filters, handleFilterChange, maxWidthClass]);
 
-  /**
-   * Renders a boolean/checkbox filter
-   */
-  const renderBooleanInput = useCallback((
-    fieldId: string,
-    fieldDefinition: FilterFieldDefinition,
-    isDisabled: boolean
-  ) => (
-    <div className="form-control">
-      <label className="label cursor-pointer justify-start gap-2">
-        <input
-          type="checkbox"
-          className="checkbox"
-          disabled={isDisabled}
-          checked={queryOptions[fieldId] === "true"}
-          onChange={(e) => handleValueChange(fieldId, e.target.checked ? "true" : "false")}
-          onFocus={() => handleFocus(fieldId)}
-          onBlur={() => handleBlur(fieldId)}
-          aria-label={fieldDefinition.displayName}
-        />
-        <span className="label-text">{fieldDefinition.placeholder || 'Enable'}</span>
-      </label>
-    </div>
-  ), [queryOptions, handleValueChange, handleFocus, handleBlur]);
-
-  /**
-   * Renders a UUID input filter with validation
-   */
-  const renderUUIDInput = useCallback((
-    fieldId: string,
-    fieldDefinition: FilterFieldDefinition,
-    isDisabled: boolean
-  ) => (
-    <input
-      className={clsx(
-        "input input-bordered w-full font-mono text-sm",
-        maxWidthClass,
-        inputClassNames.text,
-        isDisabled && "input-disabled"
-      )}
-      type="text"
-      disabled={isDisabled}
-      value={queryOptions[fieldId] || ""}
-      onChange={(e) => handleInputChange(e, fieldId)}
-      onFocus={() => handleFocus(fieldId)}
-      onBlur={() => handleBlur(fieldId)}
-      title={fieldDefinition.displayName}
-      placeholder={fieldDefinition.placeholder || "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"}
-      aria-label={fieldDefinition.displayName}
-      pattern="[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
-    />
-  ), [queryOptions, handleInputChange, handleFocus, handleBlur, maxWidthClass, inputClassNames.text]);
-
-  /**
-   * Main filter rendering function with support for custom renderers
-   */
   const renderFilter = useCallback((
     fieldId: string,
     fieldDefinition: FilterFieldDefinition
@@ -688,185 +417,463 @@ export function DynamicDocumentFilters(props: DynamicDocumentFiltersProps): Reac
 
     // Check for custom renderer first
     if (customRenderers[fieldId]) {
-      return customRenderers[fieldId](
-        fieldId,
-        fieldDefinition,
-        queryOptions[fieldId] || "",
-        (value) => handleValueChange(fieldId, value),
-        isDisabled
-      );
-    }
-
-    // Handle disabled state with generic text input for most types
-    if (isDisabled && fieldDefinition.inputType !== FilterInputType.Hidden) {
-      return renderTextInput(fieldId, fieldDefinition, true);
+      try {
+        return customRenderers[fieldId](
+          fieldId,
+          fieldDefinition,
+          filters[fieldId] || "",
+          (value) => handleFilterChange(fieldId, value),
+          isDisabled
+        );
+      } catch (error) {
+        console.error(`Error rendering custom filter ${fieldId}:`, error);
+        // Fall back to default renderer
+      }
     }
 
     // Render based on input type
     switch (fieldDefinition.inputType) {
       case FilterInputType.Text:
-        return renderTextInput(fieldId, fieldDefinition, false);
-
-      case FilterInputType.Number:
-        return renderNumberInput(fieldId, fieldDefinition, false);
-
+        return renderTextInput(fieldId, fieldDefinition, isDisabled);
       case FilterInputType.Select:
-        return renderSelectInput(fieldId, fieldDefinition, false);
-
-      case FilterInputType.MultiSelect:
-        return renderMultiSelectInput(fieldId, fieldDefinition, false);
-
+        return renderSelectInput(fieldId, fieldDefinition, isDisabled);
       case FilterInputType.Date:
-        return renderDateInput(fieldId, fieldDefinition, false);
-
-      case FilterInputType.DateRange:
-        return renderDateRangeInput(fieldId, fieldDefinition, false);
-
-      case FilterInputType.Boolean:
-        return renderBooleanInput(fieldId, fieldDefinition, false);
-
-      case FilterInputType.UUID:
-        return renderUUIDInput(fieldId, fieldDefinition, false);
-
-      case FilterInputType.Custom:
-        console.warn(`Custom input type for field ${fieldId} requires a custom renderer`);
-        return renderTextInput(fieldId, fieldDefinition, false);
-
+        return renderDateInput(fieldId, fieldDefinition, isDisabled);
+      case FilterInputType.MultiSelect:
+        return renderMultiSelectInput(fieldId, fieldDefinition, isDisabled);
       case FilterInputType.Hidden:
         return null;
-
       default:
-        console.warn(`Unknown input type for filter ${fieldId}:`, fieldDefinition.inputType);
-        return renderTextInput(fieldId, fieldDefinition, false);
+        return renderTextInput(fieldId, fieldDefinition, isDisabled);
     }
   }, [
     disabledFieldsSet,
     customRenderers,
-    queryOptions,
-    handleValueChange,
+    filters,
+    handleFilterChange,
     renderTextInput,
-    renderNumberInput,
     renderSelectInput,
-    renderMultiSelectInput,
     renderDateInput,
-    renderDateRangeInput,
-    renderBooleanInput,
-    renderUUIDInput,
+    renderMultiSelectInput,
   ]);
 
-  /**
-   * Get validation errors for a specific field
-   */
-  const getFieldErrors = useCallback((fieldId: string) => {
-    return validationResult.errors.filter(error => error.fieldId === fieldId);
-  }, [validationResult.errors]);
-
-  /**
-   * Renders the complete filter field with label, input, and validation
-   */
   const renderFilterField = useCallback((
     fieldId: string,
     fieldDefinition: FilterFieldDefinition
   ): React.ReactElement => {
     const filterInput = renderFilter(fieldId, fieldDefinition);
-    const fieldErrors = showValidationErrors ? getFieldErrors(fieldId) : [];
-    const hasErrors = fieldErrors.length > 0;
 
-    // Don't render anything if the filter type is Hidden
     if (!filterInput) {
       return <React.Fragment key={fieldId} />;
     }
 
     return (
       <div key={fieldId} className="form-control w-full">
-        {/* Label with tooltip and required indicator */}
         <div className="label">
           <span className="label-text">
-            <div
-              className="tooltip tooltip-top"
-              data-tip={fieldDefinition.description}
-            >
+            <div className="tooltip tooltip-top" data-tip={fieldDefinition.description}>
               <span className="cursor-help">
                 {fieldDefinition.displayName}
                 {fieldDefinition.required && (
-                  <span className="text-error ml-1" aria-label="Required field">*</span>
+                  <span className="text-error ml-1">*</span>
                 )}
               </span>
             </div>
           </span>
         </div>
-
-        {/* Filter input with error styling */}
-        <div className={clsx(hasErrors && "has-error")}>
-          {filterInput}
-        </div>
-
-        {/* Validation errors */}
-        {showValidationErrors && fieldErrors.length > 0 && (
-          <div className="label">
-            <span className="label-text-alt text-error">
-              {fieldErrors[0].message}
-            </span>
-          </div>
-        )}
-
-        {/* Field description for screen readers */}
-        <div id={`${fieldId}-description`} className="sr-only">
-          {fieldDefinition.description}
-        </div>
+        {filterInput}
       </div>
     );
-  }, [renderFilter, getFieldErrors, showValidationErrors]);
+  }, [renderFilter]);
 
   // =============================================================================
-  // RENDER
+  // RENDER LOGIC WITH ENHANCED ERROR HANDLING
   // =============================================================================
 
+  const isLoading = loadingOverride ?? isInitializing ?? isCreatingManager;
+  const error = errorOverride ?? kesslerError ?? filterError;
+
+  // Loading state
   if (isLoading) {
     return (
       <div className={clsx(className, "flex items-center justify-center p-8")}>
         <span className="loading loading-spinner loading-md mr-2"></span>
-        <span>Loading filters...</span>
+        <span>
+          {isCreatingManager ? 'Creating filter manager...' :
+            isInitializing ? 'Initializing filters...' :
+              'Loading filters...'}
+        </span>
       </div>
     );
   }
 
+  // Error state with detailed information
   if (error) {
     return (
-      <div className={clsx(className)}>
+      <div className={className}>
         <div className="alert alert-error">
           <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <span>Error loading filters: {error}</span>
+          <div>
+            <h3 className="font-bold">Filter System Error</h3>
+            <div className="text-sm">{error}</div>
+            <div className="mt-2">
+              <button
+                className="btn btn-sm btn-outline"
+                onClick={() => window.location.reload()}
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Debug Information */}
+        <div className="mt-4 collapse collapse-arrow bg-base-200">
+          <input type="checkbox" />
+          <div className="collapse-title text-sm font-medium">
+            🔍 Debug Information
+          </div>
+          <div className="collapse-content text-xs">
+            <div className="space-y-2">
+              <div><strong>Filter Manager:</strong> {filterManager ? 'Created' : 'Not created'}</div>
+              <div><strong>Is Ready:</strong> {isReady ? 'Yes' : 'No'}</div>
+              <div><strong>Endpoints:</strong> {JSON.stringify(endpoints, null, 2)}</div>
+              <div><strong>Show Fields:</strong> {JSON.stringify(showFields)}</div>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
+  // Not ready state
+  if (!isReady) {
+    return (
+      <div className={className}>
+        <div className="alert alert-warning">
+          <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+          <span>Filter system is not ready. Please wait for initialization to complete...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // No fields to display
+  if (sortedFields.length === 0) {
+    return (
+      <div className={className}>
+        <div className="alert alert-info">
+          <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <span>No filter fields configured for display.</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Render filters
   return (
     <div className={className} role="group" aria-label="Document filters">
       {sortedFields.map((fieldDefinition) =>
         renderFilterField(fieldDefinition.id, fieldDefinition)
       )}
+    </div>
+  );
+}
 
-      {/* Global validation summary */}
-      {showValidationErrors && !validationResult.isValid && (
-        <div className="alert alert-warning mt-4">
-          <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-          </svg>
-          <div>
-            <p className="font-semibold">Please fix the following issues:</p>
-            <ul className="list-disc list-inside mt-2">
-              {validationResult.errors.slice(0, 3).map((error, index) => (
-                <li key={index} className="text-sm">{error.message}</li>
-              ))}
-              {validationResult.errors.length > 3 && (
-                <li className="text-sm">...and {validationResult.errors.length - 3} more</li>
-              )}
-            </ul>
+// =============================================================================
+// LAYOUT WRAPPER COMPONENTS WITH ERROR BOUNDARIES
+// =============================================================================
+
+/**
+ * Error boundary wrapper for filter components
+ */
+function FilterErrorBoundary({
+  children,
+  fallback
+}: {
+  children: React.ReactNode;
+  fallback?: React.ReactNode;
+}) {
+  const [hasError, setHasError] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    const handleError = (event: ErrorEvent) => {
+      setHasError(true);
+      setError(new Error(event.message));
+    };
+
+    window.addEventListener('error', handleError);
+    return () => window.removeEventListener('error', handleError);
+  }, []);
+
+  if (hasError) {
+    return fallback || (
+      <div className="alert alert-error">
+        <span>Filter component error: {error?.message}</span>
+        <button
+          className="btn btn-sm btn-outline ml-2"
+          onClick={() => {
+            setHasError(false);
+            setError(null);
+          }}
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+}
+
+/**
+ * List layout with Kessler store integration and error boundary
+ */
+export function KesslerDocumentFiltersList(props: KesslerFilterProps): React.ReactElement {
+  return (
+    <FilterErrorBoundary>
+      <KesslerDynamicFilters
+        {...props}
+        className="grid grid-flow-row auto-rows-max gap-4"
+      />
+    </FilterErrorBoundary>
+  );
+}
+
+/**
+ * Grid layout with Kessler store integration and error boundary
+ */
+export function KesslerDocumentFiltersGrid(props: KesslerFilterProps): React.ReactElement {
+  return (
+    <FilterErrorBoundary>
+      <KesslerDynamicFilters
+        {...props}
+        className="grid grid-cols-4 gap-4"
+      />
+    </FilterErrorBoundary>
+  );
+}
+
+/**
+ * Responsive layout with Kessler store integration and error boundary
+ */
+export function KesslerResponsiveDynamicDocumentFilters(props: KesslerFilterProps): React.ReactElement {
+  return (
+    <FilterErrorBoundary>
+      <KesslerDynamicFilters
+        {...props}
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+      />
+    </FilterErrorBoundary>
+  );
+}
+
+/**
+ * Inline layout with Kessler store integration and error boundary
+ */
+export function KesslerInlineDynamicDocumentFilters(props: KesslerFilterProps): React.ReactElement {
+  return (
+    <FilterErrorBoundary>
+      <KesslerDynamicFilters
+        {...props}
+        className="flex flex-wrap gap-4"
+        maxWidthXs={true}
+      />
+    </FilterErrorBoundary>
+  );
+}
+
+// =============================================================================
+// ENHANCED FILTER CONTROLS WITH BETTER ERROR HANDLING
+// =============================================================================
+
+/**
+ * Filter control panel with enhanced error handling
+ */
+export function KesslerFilterControls(): React.ReactElement {
+  const {
+    hasActiveFilters,
+    resetFilters,
+    persistFilters,
+    clearPersistedFilters,
+    loadPersistedFilters,
+    filters,
+    filterError,
+    isInitialized,
+  } = useFilters();
+
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+  const handleAction = async (action: string, fn: () => Promise<void> | void) => {
+    try {
+      setActionLoading(action);
+      setActionError(null);
+      await fn();
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : `Failed to ${action}`);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleClearAll = () => handleAction('clear filters', async () => {
+    await resetFilters();
+  });
+
+  const handleSaveFilters = () => handleAction('save filters', () => {
+    persistFilters();
+  });
+
+  const handleLoadSavedFilters = () => handleAction('load filters', async () => {
+    const savedFilters = loadPersistedFilters();
+    if (savedFilters) {
+      const result = await safeBulkUpdateFilters(savedFilters);
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to load filters');
+      }
+    }
+  });
+
+  const activeFilterCount = useMemo(() => {
+    return Object.values(filters).filter(value => value !== "").length;
+  }, [filters]);
+
+  if (!isInitialized) {
+    return (
+      <div className="flex items-center gap-2 p-2">
+        <span className="loading loading-spinner loading-sm"></span>
+        <span className="text-sm">Initializing filters...</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2 p-4 bg-base-100 border rounded-lg">
+      <div className="flex-1">
+        <div className="text-sm font-medium">
+          {hasActiveFilters() ? (
+            <span className="text-primary">
+              {activeFilterCount} active filter{activeFilterCount !== 1 ? 's' : ''}
+            </span>
+          ) : (
+            <span className="text-gray-500">No active filters</span>
+          )}
+        </div>
+        {(filterError || actionError) && (
+          <div className="text-xs text-error mt-1">{filterError || actionError}</div>
+        )}
+      </div>
+
+      <div className="flex gap-2">
+        <button
+          onClick={handleSaveFilters}
+          className={`btn btn-sm btn-outline ${actionLoading === 'save filters' ? 'loading' : ''}`}
+          disabled={!hasActiveFilters() || !!actionLoading}
+          title="Save current filters"
+        >
+          💾 Save
+        </button>
+
+        <button
+          onClick={handleLoadSavedFilters}
+          className={`btn btn-sm btn-outline ${actionLoading === 'load filters' ? 'loading' : ''}`}
+          disabled={!!actionLoading}
+          title="Load saved filters"
+        >
+          📁 Load
+        </button>
+
+        <button
+          onClick={handleClearAll}
+          className={`btn btn-sm btn-outline btn-error ${actionLoading === 'clear filters' ? 'loading' : ''}`}
+          disabled={!hasActiveFilters() || !!actionLoading}
+          title="Clear all filters"
+        >
+          🗑️ Clear All
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
+// FILTER STATUS INDICATOR WITH ENHANCED DIAGNOSTICS
+// =============================================================================
+
+/**
+ * Enhanced filter system status indicator
+ */
+export function KesslerFilterStatus(): React.ReactElement {
+  const [status, setStatus] = useState(() => getFilterSystemStatus());
+  const [showDetails, setShowDetails] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setStatus(getFilterSystemStatus());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const getStatusColor = () => {
+    if (status.hasError) return "error";
+    if (!status.isReady) return "warning";
+    return "success";
+  };
+
+  const getStatusIcon = () => {
+    if (status.hasError) return "❌";
+    if (!status.isReady) return "⏳";
+    return "✅";
+  };
+
+  return (
+    <div className={`alert alert-${getStatusColor()} p-2`}>
+      <div className="flex items-center gap-2 text-sm w-full">
+        <span>{getStatusIcon()}</span>
+        <div className="flex-1">
+          <div className="font-medium">
+            Filter System: {status.isReady ? 'Ready' : status.isInitializing ? 'Initializing' : 'Error'}
           </div>
+          <div className="text-xs opacity-75">
+            {status.activeFilterCount}/{status.totalFields} active •
+            {status.hasInheritedFilters && ' Inherited • '}
+            {status.urlSyncEnabled && ' URL Sync • '}
+            Updates: {status.updateCount}
+          </div>
+        </div>
+
+        <button
+          onClick={() => setShowDetails(!showDetails)}
+          className="btn btn-xs btn-ghost"
+        >
+          {showDetails ? '▲' : '▼'}
+        </button>
+      </div>
+
+      {showDetails && (
+        <div className="mt-2 p-2 bg-base-100 rounded text-xs">
+          <div className="grid grid-cols-2 gap-2">
+            <div><strong>Initialized:</strong> {status.isInitialized ? 'Yes' : 'No'}</div>
+            <div><strong>Initializing:</strong> {status.isInitializing ? 'Yes' : 'No'}</div>
+            <div><strong>Has Error:</strong> {status.hasError ? 'Yes' : 'No'}</div>
+            <div><strong>URL Sync:</strong> {status.urlSyncEnabled ? 'On' : 'Off'}</div>
+            <div><strong>Pending:</strong> {status.pendingUpdateCount}</div>
+            <div><strong>Disabled:</strong> {status.disabledFieldCount}</div>
+          </div>
+          {status.errorMessage && (
+            <div className="mt-2 text-error">
+              <strong>Error:</strong> {status.errorMessage}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -874,156 +881,71 @@ export function DynamicDocumentFilters(props: DynamicDocumentFiltersProps): Reac
 }
 
 // =============================================================================
-// UTILITY HOOKS
+// COMPLETE FILTER SYSTEM COMPONENT WITH ERROR BOUNDARIES
 // =============================================================================
 
 /**
- * Custom hook for managing filter state with validation and persistence
+ * Complete filter system with enhanced error handling
  */
-export function useDocumentFilters(
-  initialFilters: FilterValues,
-  onFiltersChange?: (filters: FilterValues) => void
-) {
-  const [filters, setFilters] = useState<FilterValues>(initialFilters);
-
-  const updateFilters = useCallback((
-    newFilters: FilterValues | ((prev: FilterValues) => FilterValues)
-  ) => {
-    setFilters((prev) => {
-      const updated = typeof newFilters === 'function' ? newFilters(prev) : newFilters;
-      onFiltersChange?.(updated);
-      return updated;
-    });
-  }, [onFiltersChange]);
-
-  const clearFilters = useCallback(() => {
-    updateFilters(initialFilters);
-  }, [initialFilters, updateFilters]);
-
-  const hasActiveFilters = useMemo(() => {
-    return Object.values(filters).some(value => value !== "");
-  }, [filters]);
-
-  const getActiveFilterCount = useMemo(() => {
-    return Object.values(filters).filter(value => value !== "").length;
-  }, [filters]);
-
-  const setFieldValue = useCallback((fieldId: string, value: string) => {
-    updateFilters(prev => ({ ...prev, [fieldId]: value }));
-  }, [updateFilters]);
-
-  const clearField = useCallback((fieldId: string) => {
-    updateFilters(prev => ({ ...prev, [fieldId]: "" }));
-  }, [updateFilters]);
-
-  return {
-    filters,
-    setFilters: updateFilters,
-    clearFilters,
-    hasActiveFilters,
-    getActiveFilterCount,
-    setFieldValue,
-    clearField,
-  };
+interface KesslerFilterSystemProps extends KesslerFilterProps {
+  /** Layout type */
+  layout?: 'list' | 'grid' | 'responsive' | 'inline';
+  /** Show filter controls */
+  showControls?: boolean;
+  /** Show status indicator */
+  showStatus?: boolean;
+  /** Container class name */
+  containerClassName?: string;
 }
 
-/**
- * Custom hook for managing filter configuration loading and caching
- */
-export function useFilterConfiguration(endpoints: FilterEndpoints) {
-  const [configManager, setConfigManager] = useState<FilterConfigurationManager | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export function KesslerFilterSystem(props: KesslerFilterSystemProps): React.ReactElement {
+  const {
+    layout = 'list',
+    showControls = true,
+    showStatus = false,
+    containerClassName = "",
+    ...filterProps
+  } = props;
 
-  useEffect(() => {
-    const loadConfiguration = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-
-        const manager = createFilterManager(endpoints);
-        await manager.loadConfiguration();
-
-        setConfigManager(manager);
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to load filter configuration';
-        setError(errorMessage);
-        console.error('Filter configuration loading error:', err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadConfiguration();
-  }, [endpoints]);
-
-  const reloadConfiguration = useCallback(async () => {
-    if (!configManager) return;
-
-    try {
-      setIsLoading(true);
-      setError(null);
-      await configManager.loadConfiguration(true); // Force reload
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to reload filter configuration';
-      setError(errorMessage);
-    } finally {
-      setIsLoading(false);
+  const getLayoutComponent = () => {
+    switch (layout) {
+      case 'grid':
+        return KesslerDocumentFiltersGrid;
+      case 'responsive':
+        return KesslerResponsiveDynamicDocumentFilters;
+      case 'inline':
+        return KesslerInlineDynamicDocumentFilters;
+      default:
+        return KesslerDocumentFiltersList;
     }
-  }, [configManager]);
-
-  return {
-    configManager,
-    isLoading,
-    error,
-    reloadConfiguration,
   };
+
+  const LayoutComponent = getLayoutComponent();
+
+  return (
+    <FilterErrorBoundary>
+      <div className={clsx("space-y-4", containerClassName)}>
+        {showStatus && <KesslerFilterStatus />}
+        {showControls && <KesslerFilterControls />}
+        <LayoutComponent {...filterProps} />
+      </div>
+    </FilterErrorBoundary>
+  );
 }
 
-/**
- * Custom hook for filter validation with debouncing
- */
-export function useFilterValidation(
-  filters: FilterValues,
-  configManager: FilterConfigurationManager | null,
-  debounceMs: number = 300
-) {
-  const [validationResult, setValidationResult] = useState<ValidationResult>({
-    isValid: true,
-    errors: [],
-    warnings: []
-  });
-  const [isValidating, setIsValidating] = useState(false);
+// =============================================================================
+// EXPORT ALL COMPONENTS WITH PROPER EXPORTS
+// =============================================================================
 
-  // Debounced validation effect
-  useEffect(() => {
-    if (!configManager) return;
+// Primary exports
+export {
+  KesslerDynamicFilters as default,
+  FilterErrorBoundary,
+};
 
-    const timeoutId = setTimeout(async () => {
-      setIsValidating(true);
-      try {
-        const result = configManager.validateFilters(filters);
-        setValidationResult(result);
-      } catch (error) {
-        console.error('Validation error:', error);
-        setValidationResult({
-          isValid: false,
-          errors: [{ fieldId: '_system', message: 'Validation failed', type: 'system' }],
-          warnings: []
-        });
-      } finally {
-        setIsValidating(false);
-      }
-    }, debounceMs);
 
-    return () => clearTimeout(timeoutId);
-  }, [filters, configManager, debounceMs]);
-
-  return {
-    validationResult,
-    isValidating,
-  };
-}
-
-// Default export for backward compatibility
-export default DynamicDocumentFilters;
+// Legacy compatibility exports for existing code
+export const DynamicDocumentFiltersList = KesslerDocumentFiltersList;
+export const DynamicDocumentFiltersGrid = KesslerDocumentFiltersGrid;
+export const ResponsiveDynamicDocumentFilters = KesslerResponsiveDynamicDocumentFilters;
+export const InlineDynamicDocumentFilters = KesslerInlineDynamicDocumentFilters;

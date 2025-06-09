@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { GiMushroomsCluster } from "react-icons/gi";
 import StateSelector from "./StateSelector";
 import SearchBox from "./SearchBox";
-import { useKesslerStore } from "@/lib/store";
+import { useKesslerStore } from "@/lib/_store";
 import { DynamicSingleSelect } from "@/components/Filters/FilterSingleSelect";
 
 const states = [

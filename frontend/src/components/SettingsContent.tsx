@@ -1,6 +1,6 @@
 import ThemeSelector from "./ThemeSelector";
 
-import { useKesslerStore } from "@/lib/store";
+import { useKesslerStore } from "@/lib/_store";
 import Link from "next/link";
 // The password reset is horribly insecure, but it was horribly insecure before and did allow a password reset with a stolen cookie, but now there is a button that does the same thing. Welp...
 const SettingsContent = () => {
