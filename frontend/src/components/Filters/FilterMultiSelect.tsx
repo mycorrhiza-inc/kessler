@@ -15,7 +15,7 @@ interface FilterFieldDefinition {
   }>;
 }
 
-interface DynamicMultiSelectProps {
+export interface DynamicMultiSelectProps {
   fieldDefinition: FilterFieldDefinition;
   value: string;
   onChange: (value: string) => void;

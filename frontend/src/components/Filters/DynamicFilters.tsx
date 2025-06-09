@@ -13,6 +13,9 @@ import {
 } from "@/lib/filters";
 import clsx from "clsx";
 
+// Import the canonical multiselect component
+import { DynamicMultiSelect } from "@/components/Filters/FilterMultiSelect";
+
 // =============================================================================
 // TYPES AND INTERFACES
 // =============================================================================
@@ -107,281 +110,6 @@ export enum FilterLayout {
 // =============================================================================
 
 /**
- * Dynamic multi-select component that loads options from configuration
- */
-interface DynamicMultiSelectProps {
-  fieldDefinition: FilterFieldDefinition;
-  value: string;
-  onChange: (value: string) => void;
-  onFocus?: () => void;
-  onBlur?: () => void;
-  disabled?: boolean;
-  className?: string;
-}
-
-function DynamicMultiSelect(props: DynamicMultiSelectProps): React.ReactElement {
-  const {
-    fieldDefinition,
-    value,
-    onChange,
-    onFocus,
-    onBlur,
-    disabled = false,
-    className,
-  } = props;
-
-  const [selectedValues, setSelectedValues] = useState<string[]>(
-    value ? value.split(',').filter(Boolean) : []
-  );
-  const [isOpen, setIsOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-
-  const handleSelectionChange = useCallback((selectedOptions: string[]) => {
-    setSelectedValues(selectedOptions);
-    onChange(selectedOptions.join(','));
-  }, [onChange]);
-
-  const toggleOption = useCallback((optionValue: string) => {
-    const newSelection = selectedValues.includes(optionValue)
-      ? selectedValues.filter(v => v !== optionValue)
-      : [...selectedValues, optionValue];
-    handleSelectionChange(newSelection);
-  }, [selectedValues, handleSelectionChange]);
-
-  const removeSelectedItem = useCallback((optionValue: string, event: React.MouseEvent) => {
-    event.stopPropagation();
-    const newSelection = selectedValues.filter(v => v !== optionValue);
-    handleSelectionChange(newSelection);
-  }, [selectedValues, handleSelectionChange]);
-
-  // Filter options based on search term
-  const filteredOptions = useMemo(() => {
-    if (!searchTerm) return fieldDefinition.options || [];
-    return (fieldDefinition.options || []).filter(option =>
-      option.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      option.value.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [fieldDefinition.options, searchTerm]);
-
-  // Get selected option labels for display
-  const selectedLabels = useMemo(() => {
-    return selectedValues.map(value => {
-      const option = fieldDefinition.options?.find(opt => opt.value === value);
-      return option ? option.label : value;
-    });
-  }, [selectedValues, fieldDefinition.options]);
-
-  const handleDropdownToggle = useCallback(() => {
-    if (!disabled) {
-      setIsOpen(!isOpen);
-      if (!isOpen) {
-        onFocus?.();
-      } else {
-        onBlur?.();
-      }
-    }
-  }, [disabled, isOpen, onFocus, onBlur]);
-
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-  }, []);
-
-  const clearSearch = useCallback(() => {
-    setSearchTerm('');
-  }, []);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Element;
-      if (isOpen && !target.closest('.dropdown')) {
-        setIsOpen(false);
-        onBlur?.();
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isOpen, onBlur]);
-
-  return (
-    <div className={clsx("dropdown", isOpen && "dropdown-open", className)}>
-      {/* Main Button */}
-      <div
-        tabIndex={0}
-        role="button"
-        className={clsx(
-          "btn btn-outline w-full justify-start min-h-fit h-auto py-2 px-3",
-          disabled && "btn-disabled"
-        )}
-        onClick={handleDropdownToggle}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            handleDropdownToggle();
-          }
-        }}
-      >
-        <div className="w-full text-left">
-          {selectedValues.length === 0 ? (
-            <span className="text-gray-500">{fieldDefinition.placeholder || 'Select options...'}</span>
-          ) : (
-            <div className="space-y-1">
-              <div className="font-medium text-sm text-gray-700">
-                {fieldDefinition.displayName}: {selectedValues.length} selected
-              </div>
-              <div className="flex flex-wrap gap-1">
-                {selectedLabels.map((label, index) => (
-                  <span
-                    key={selectedValues[index]}
-                    className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-full text-xs"
-                  >
-                    {label}
-                    <button
-                      type="button"
-                      onClick={(e) => removeSelectedItem(selectedValues[index], e)}
-                      className="hover:bg-primary/20 rounded-full p-0.5 transition-colors"
-                      aria-label={`Remove ${label}`}
-                    >
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Dropdown Arrow */}
-        <svg
-          className={clsx("w-4 h-4 transition-transform flex-shrink-0", isOpen && "rotate-180")}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </div>
-
-      {/* Dropdown Content */}
-      {isOpen && (
-        <div className="dropdown-content z-[1] menu p-0 shadow-lg bg-base-100 rounded-box w-full border border-base-300">
-          {/* Search Box */}
-          <div className="p-3 border-b border-base-300">
-            <div className="relative">
-              <input
-                type="text"
-                className="input input-bordered input-sm w-full pl-8 pr-8"
-                placeholder={`Search ${fieldDefinition.displayName.toLowerCase()}...`}
-                value={searchTerm}
-                onChange={handleSearchChange}
-                onClick={(e) => e.stopPropagation()}
-              />
-              <svg
-                className="w-4 h-4 absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              {searchTerm && (
-                <button
-                  type="button"
-                  onClick={clearSearch}
-                  className="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Options List */}
-          <div className="max-h-60 overflow-y-auto">
-            {filteredOptions.length === 0 ? (
-              <div className="p-3 text-center text-gray-500 text-sm">
-                {searchTerm ? 'No options match your search' : 'No options available'}
-              </div>
-            ) : (
-              <ul className="p-1">
-                {filteredOptions.map((option) => {
-                  const isSelected = selectedValues.includes(option.value);
-                  const optionLabel = fieldDefinition.options?.find(opt => opt.value === option.value)?.label || option.value;
-
-                  return (
-                    <li key={option.value}>
-                      <label
-                        className={clsx(
-                          "cursor-pointer flex items-center justify-between p-2 rounded hover:bg-base-200 transition-colors",
-                          option.disabled && "opacity-50 cursor-not-allowed"
-                        )}
-                      >
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => !option.disabled && toggleOption(option.value)}
-                            disabled={disabled || option.disabled}
-                            className="checkbox checkbox-sm flex-shrink-0"
-                            onClick={(e) => e.stopPropagation()}
-                          />
-                          <span className="text-sm truncate flex-1">{option.label}</span>
-                        </div>
-
-                        {/* Option Pill */}
-                        {isSelected && (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-full text-xs flex-shrink-0 ml-2">
-                            {optionLabel}
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleOption(option.value);
-                              }}
-                              className="hover:bg-primary/20 rounded-full p-0.5 transition-colors"
-                              aria-label={`Remove ${optionLabel}`}
-                            >
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                              </svg>
-                            </button>
-                          </span>
-                        )}
-                      </label>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
-
-          {/* Footer with selection summary */}
-          {selectedValues.length > 0 && (
-            <div className="p-3 border-t border-base-300 bg-base-50 text-xs text-gray-600">
-              {selectedValues.length} item{selectedValues.length !== 1 ? 's' : ''} selected
-              {selectedValues.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => handleSelectionChange([])}
-                  className="ml-2 text-primary hover:text-primary-focus underline"
-                >
-                  Clear all
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-/**
  * Dynamic date range picker component
  */
 interface DynamicDateRangeProps {
@@ -450,6 +178,7 @@ function DynamicDateRange(props: DynamicDateRangeProps): React.ReactElement {
 
 /**
  * Document filters displayed in a vertical list layout
+ * Perfect for forms, mobile views, and detailed input scenarios
  */
 export function DynamicDocumentFiltersList(props: LayoutDocumentFiltersProps): React.ReactElement {
   return (
@@ -462,6 +191,7 @@ export function DynamicDocumentFiltersList(props: LayoutDocumentFiltersProps): R
 
 /**
  * Document filters displayed in a 4-column grid layout
+ * Best for desktop dashboards and wide screens with lots of space
  */
 export function DynamicDocumentFiltersGrid(props: LayoutDocumentFiltersProps): React.ReactElement {
   return (
@@ -474,6 +204,7 @@ export function DynamicDocumentFiltersGrid(props: LayoutDocumentFiltersProps): R
 
 /**
  * Document filters displayed in a responsive grid layout
+ * Adapts from 1 column on mobile to 4 columns on large screens
  */
 export function ResponsiveDynamicDocumentFilters(props: LayoutDocumentFiltersProps): React.ReactElement {
   return (
@@ -486,6 +217,7 @@ export function ResponsiveDynamicDocumentFilters(props: LayoutDocumentFiltersPro
 
 /**
  * Document filters displayed in a horizontal flex layout
+ * Ideal for toolbars, search bars, and compact filter interfaces
  */
 export function InlineDynamicDocumentFilters(props: LayoutDocumentFiltersProps): React.ReactElement {
   return (
@@ -493,6 +225,45 @@ export function InlineDynamicDocumentFilters(props: LayoutDocumentFiltersProps):
       {...props}
       className="flex flex-wrap gap-4"
       maxWidthXs={true}
+    />
+  );
+}
+
+/**
+ * Document filters in a 2-column layout
+ * Good balance between space efficiency and readability
+ */
+export function TwoColumnDynamicDocumentFilters(props: LayoutDocumentFiltersProps): React.ReactElement {
+  return (
+    <DynamicDocumentFiltersWithManager
+      {...props}
+      className="grid grid-cols-1 md:grid-cols-2 gap-4"
+    />
+  );
+}
+
+/**
+ * Document filters in a 3-column layout
+ * Great for medium-width containers
+ */
+export function ThreeColumnDynamicDocumentFilters(props: LayoutDocumentFiltersProps): React.ReactElement {
+  return (
+    <DynamicDocumentFiltersWithManager
+      {...props}
+      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+    />
+  );
+}
+
+/**
+ * Document filters with custom spacing and sizing
+ * Provides more control over layout appearance
+ */
+export function CustomSpacingDynamicDocumentFilters(props: LayoutDocumentFiltersProps): React.ReactElement {
+  return (
+    <DynamicDocumentFiltersWithManager
+      {...props}
+      className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 p-4"
     />
   );
 }
@@ -816,7 +587,7 @@ export function DynamicDocumentFilters(props: DynamicDocumentFiltersProps): Reac
   ), [queryOptions, handleInputChange, handleFocus, handleBlur, maxWidthClass, inputClassNames.date]);
 
   /**
-   * Renders a multi-select filter
+   * Renders a multi-select filter using the canonical DynamicMultiSelect component
    */
   const renderMultiSelectInput = useCallback((
     fieldId: string,

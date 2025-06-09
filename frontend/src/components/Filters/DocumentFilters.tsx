@@ -92,15 +92,6 @@ export enum FilterLayout {
 /**
  * Dynamic multi-select component that loads options from configuration
  */
-interface DynamicMultiSelectProps {
-  fieldDefinition: FilterFieldDefinition;
-  value: string;
-  onChange: (value: string) => void;
-  onFocus?: () => void;
-  onBlur?: () => void;
-  disabled?: boolean;
-  className?: string;
-}
 
 
 // =============================================================================
