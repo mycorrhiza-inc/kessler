@@ -36,18 +36,18 @@ export const useSearchState = (): SearchStateExport => {
   const [searchTriggerIndicator, setSearchTriggerIndicator] = useState(0);
 
   const triggerSearch = (trigger?: TriggerSearchObject) => {
-    const exec_query =
-      trigger?.query === "" ? "" : (trigger?.query ?? searchQuery);
-    const exec_filters = trigger?.filters || filters;
-    setSearchTriggerIndicator((prev) => (prev + 1) % 1024);
-    setSearchUrl(exec_query, exec_filters);
-    setIsSearching(true);
     if (trigger?.query || trigger?.query === "") {
       setSearchQuery(trigger.query);
     }
     if (trigger?.filters) {
       replaceFilters(trigger.filters);
     }
+    const exec_query =
+      trigger?.query === "" ? "" : (trigger?.query ?? searchQuery);
+    const exec_filters = trigger?.filters || filters;
+    setSearchUrl(exec_query, exec_filters);
+    setIsSearching(true);
+    setSearchTriggerIndicator((prev) => (prev + 1) % 1024);
   };
   const getResultsCallback = useMemo(
     () => generateSearchFunctions({ query: trimmedQuery, filters: filters }),

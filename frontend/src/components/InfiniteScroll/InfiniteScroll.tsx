@@ -41,7 +41,7 @@ const InfiniteScroll: React.FC<InfiniteScrollProps> = ({
       loadingRef.current = true;
       setLoadingMore(true);
       getMore()
-        .catch((err) => setError((err as Error).message))
+        .catch((err) => setError(err.message || "unknown error encountered"))
         .finally(() => {
           setLoadingMore(false);
           loadingRef.current = false;
