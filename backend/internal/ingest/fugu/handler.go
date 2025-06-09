@@ -63,7 +63,7 @@ func NewMigrationHandler(service *MigrationService) *MigrationServiceHandler {
 
 // RegisterMigrationRoutes registers migration routes with the router
 func RegisterMigrationRoutes(r *mux.Router) error {
-	fuguServerURL := "http://fugudb"
+	fuguServerURL := "http://localhost/fugu"
 	service := NewMigrationService(fuguServerURL)
 	msh := NewMigrationHandler(service)
 

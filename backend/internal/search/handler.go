@@ -32,7 +32,6 @@ type SearchResponse struct {
 type SearchResultItem struct {
 	ID          string                 `json:"id"`
 	Score       float32                `json:"score"`
-	Text        string                 `json:"text,omitempty"`
 	Metadata    map[string]interface{} `json:"metadata"`
 	Facet       []string               `json:"facet,omitempty"`
 	CaseNumber  string                 `json:"case_number,omitempty"`
@@ -42,6 +41,7 @@ type SearchResultItem struct {
 	FiledDate   string                 `json:"filed_date,omitempty"`
 	FilingType  string                 `json:"filing_type,omitempty"`
 	PartyName   string                 `json:"party_name,omitempty"`
+	// Text        string                 `json:"text,omitempty"`
 }
 
 // Fugu search request types
@@ -61,7 +61,7 @@ type FuguSearchResult struct {
 	ID       []string                 `json:"id"`
 	Metadata []map[string]interface{} `json:"metadata"`
 	Score    float32                  `json:"score"` // Changed to float64
-	Text     []string                 `json:"text"`
+	// Text     []string                 `json:"text"`
 }
 
 type FuguSearchResponse struct {
@@ -258,8 +258,8 @@ func (s *SearchService) executeSearch(ctx context.Context, client *fugusdk.Clien
 
 		for i, result := range response.Results {
 			fuguResponse.Result[i] = FuguSearchResult{
-				ID:       []string{result.ID},
-				Text:     []string{result.Text},
+				ID: []string{result.ID},
+				// Text:     []string{result.Text},
 				Score:    result.Score, // Now both are float64
 				Metadata: []map[string]interface{}{},
 				Facet:    result.Facets,
@@ -384,9 +384,9 @@ func (h *SearchServiceHandler) SearchWithFallback(w http.ResponseWriter, r *http
 		response = &SearchResponse{
 			Data: []SearchResultItem{
 				{
-					ID:          "mock-1",
-					Score:       0.95,
-					Text:        "This is a mock search result for query: " + searchReq.Query,
+					ID:    "mock-1",
+					Score: 0.95,
+					// Text:        "This is a mock search result for query: " + searchReq.Query,
 					Metadata:    map[string]interface{}{"source": "mock", "type": "fallback"},
 					CaseNumber:  "MOCK-001",
 					FileName:    "mock_document.pdf",
@@ -394,9 +394,9 @@ func (h *SearchServiceHandler) SearchWithFallback(w http.ResponseWriter, r *http
 					Description: "Mock search result returned because backend is unavailable",
 				},
 				{
-					ID:          "mock-2",
-					Score:       0.87,
-					Text:        "Another mock result to test search functionality",
+					ID:    "mock-2",
+					Score: 0.87,
+					// Text:        "Another mock result to test search functionality",
 					Metadata:    map[string]interface{}{"source": "mock", "type": "fallback"},
 					CaseNumber:  "MOCK-002",
 					FileName:    "another_mock.pdf",
@@ -688,12 +688,12 @@ func (s *SearchService) transformSearchResponse(fuguResponse *FuguSearchResponse
 		}
 
 		// Extract text (join if multiple text segments)
-		var text string
-		if len(result.Text) > 0 {
-			// For now, take the first text segment
-			// Could be modified to join all segments if needed
-			text = result.Text[0]
-		}
+		// var text string
+		// if len(result.Text) > 0 {
+		// 	// For now, take the first text segment
+		// 	// Could be modified to join all segments if needed
+		// 	text = result.Text[0]
+		// }
 
 		// Extract metadata (use first metadata object if multiple)
 		var metadata map[string]interface{}
@@ -705,9 +705,9 @@ func (s *SearchService) transformSearchResponse(fuguResponse *FuguSearchResponse
 
 		// Create frontend result item
 		item := SearchResultItem{
-			ID:       primaryID,
-			Score:    result.Score,
-			Text:     text,
+			ID:    primaryID,
+			Score: result.Score,
+			// Text:     text,
 			Metadata: metadata,
 			Facet:    result.Facet,
 		}
