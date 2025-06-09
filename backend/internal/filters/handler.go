@@ -8,6 +8,7 @@ import (
 	"kessler/internal/objects/networking"
 	"kessler/pkg/logger"
 	"net/http"
+
 	// "time"
 
 	"github.com/gorilla/mux"
@@ -51,7 +52,7 @@ func (h *FilterServiceHandler) GetFilters(w http.ResponseWriter, r *http.Request
 	pagination := networking.PaginationFromUrlParams(r)
 
 	client, err := fugusdk.NewClient(ctx,
-		"http://fugudb",
+		"http://localhost/fugu",
 	)
 
 	// All operations now include validation

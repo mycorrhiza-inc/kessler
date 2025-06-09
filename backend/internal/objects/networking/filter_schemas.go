@@ -20,7 +20,7 @@ const (
 )
 
 func getLogger() *otelzap.Logger {
-	return logger.GetLogger(LoggerName)
+	return logger.Named(LoggerName)
 }
 
 type Metadata struct {

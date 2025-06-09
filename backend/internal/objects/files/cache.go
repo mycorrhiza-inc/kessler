@@ -22,7 +22,7 @@ const (
 )
 
 func getLogger() *otelzap.Logger {
-	return logger.GetLogger(LoggerName)
+	return logger.Named(LoggerName)
 }
 
 func CachedFileText(fileID uuid.UUID, language string) (FileTextSchema, error) {

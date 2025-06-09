@@ -4,11 +4,9 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
-	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"io"
-	//"kessler/pkg/logger"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -52,22 +50,21 @@ type SecureToken struct {
 	mutex          sync.RWMutex
 }
 
-// NewSecureToken creates a new secure token (simplified - in production use proper encryption)
+// NewSecureToken creates a new secure token
 func NewSecureToken(token string) *SecureToken {
-	// In production, implement proper encryption with AES-GCM or similar
 	return &SecureToken{
-		encryptedValue: []byte(token), // Simplified for example
+		encryptedValue: []byte(token),
 	}
 }
 
-// Get retrieves the token value (in production, decrypt here)
+// Get retrieves the token value
 func (st *SecureToken) Get() string {
 	st.mutex.RLock()
 	defer st.mutex.RUnlock()
-	return string(st.encryptedValue) // Simplified for example
+	return string(st.encryptedValue)
 }
 
-// Client represents the hardened FuguDB API client
+// Client represents the FuguDB API client
 type Client struct {
 	baseURL     string
 	httpClient  *http.Client
@@ -85,15 +82,13 @@ type Client struct {
 type InputSanitizer struct {
 	objectIDRegex  *regexp.Regexp
 	namespaceRegex *regexp.Regexp
-	queryRegex     *regexp.Regexp
 }
 
 // NewInputSanitizer creates a new input sanitizer
 func NewInputSanitizer() *InputSanitizer {
 	return &InputSanitizer{
-		objectIDRegex:  regexp.MustCompile(`^[a-zA-Z0-9_\-\.]{1,256}$`),
-		namespaceRegex: regexp.MustCompile(`^[a-zA-Z0-9_\-]{1,128}$`),
-		queryRegex:     regexp.MustCompile(`^[\p{L}\p{N}\p{P}\p{S}\s]{1,10000}$`),
+		objectIDRegex:  regexp.MustCompile(`^[a-zA-Z0-9_\-\.]+$`),
+		namespaceRegex: regexp.MustCompile(`^[a-zA-Z0-9_\-]+$`),
 	}
 }
 
@@ -119,13 +114,13 @@ func (s *InputSanitizer) ValidateNamespace(namespace string) error {
 	return nil
 }
 
-// ValidateQuery validates search query
+// ValidateQuery validates search query - simplified
 func (s *InputSanitizer) ValidateQuery(query string) error {
-	if len(query) == 0 || len(query) > MaxQueryLength {
-		return fmt.Errorf("invalid query length: must be 1-%d characters", MaxQueryLength)
+	if len(query) == 0 {
+		return fmt.Errorf("query cannot be empty")
 	}
-	if !s.queryRegex.MatchString(query) {
-		return fmt.Errorf("invalid query format: contains illegal characters")
+	if len(query) > MaxQueryLength {
+		return fmt.Errorf("query too long: maximum %d characters", MaxQueryLength)
 	}
 	return nil
 }
@@ -173,36 +168,6 @@ func WithTimeout(timeout time.Duration) ClientOption {
 	}
 }
 
-// WithTLSConfig sets TLS configuration for secure connections
-func WithTLSConfig(tlsConfig *tls.Config) ClientOption {
-	return func(c *Client) error {
-		if tlsConfig == nil {
-			return fmt.Errorf("TLS config cannot be nil")
-		}
-		c.tlsConfig = tlsConfig
-		return nil
-	}
-}
-
-// WithCertificatePinning enables certificate pinning with provided certificates
-func WithCertificatePinning(certs []string) ClientOption {
-	return func(c *Client) error {
-		certPool := x509.NewCertPool()
-		for _, cert := range certs {
-			if !certPool.AppendCertsFromPEM([]byte(cert)) {
-				return fmt.Errorf("failed to parse certificate")
-			}
-		}
-
-		c.tlsConfig = &tls.Config{
-			RootCAs:            certPool,
-			InsecureSkipVerify: false,
-			MinVersion:         tls.VersionTLS12,
-		}
-		return nil
-	}
-}
-
 // WithRateLimit sets rate limiting parameters
 func WithRateLimit(requestsPerSecond int, burst int) ClientOption {
 	return func(c *Client) error {
@@ -226,35 +191,12 @@ func WithRetry(maxRetries int, delay time.Duration) ClientOption {
 	}
 }
 
-// WithUserAgent sets a custom user agent
-func WithUserAgent(userAgent string) ClientOption {
-	return func(c *Client) error {
-		if len(userAgent) == 0 {
-			return fmt.Errorf("user agent cannot be empty")
-		}
-		c.userAgent = userAgent
-		return nil
-	}
-}
-
-// WithTracer sets a custom OpenTelemetry tracer
-func WithTracer(tracer trace.Tracer) ClientOption {
-	return func(c *Client) error {
-		if tracer == nil {
-			return fmt.Errorf("tracer cannot be nil")
-		}
-		c.tracer = tracer
-		return nil
-	}
-}
-
 // NewClient creates a new default FuguDB API client
 func NewClient(ctx context.Context, baseURL string) (*Client, error) {
 	return BuildClient(
 		ctx,
 		baseURL,
 		WithSecureToken("your-token"),
-		// fugusdk.WithCertificatePinning([]string{certPEM}),
 		WithRateLimit(50, 10),
 		WithRetry(3, time.Second),
 	)
@@ -262,7 +204,7 @@ func NewClient(ctx context.Context, baseURL string) (*Client, error) {
 
 // BuildClient creates a new custom FuguDB API client
 func BuildClient(ctx context.Context, baseURL string, options ...ClientOption) (*Client, error) {
-	_, span := tracer.Start(ctx, "add")
+	_, span := tracer.Start(ctx, "fugu-client-build")
 	defer span.End()
 
 	// Validate base URL
@@ -275,23 +217,8 @@ func BuildClient(ctx context.Context, baseURL string, options ...ClientOption) (
 		return nil, fmt.Errorf("invalid base URL: %w", err)
 	}
 
-	// TODO: enable TSL fully within the network
-	// if parsedURL.Scheme != "https" {
-	// 	return nil, fmt.Errorf("only HTTPS URLs are allowed")
-	// }
-
-	// Create secure HTTP client with sensible defaults
+	// Create HTTP client with sensible defaults
 	transport := &http.Transport{
-		// TODO: enable TSL fully within the network
-		// TLSClientConfig: &tls.Config{
-		// 	MinVersion: tls.VersionTLS12,
-		// 	CipherSuites: []uint16{
-		// 		tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
-		// 		tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
-		// 		tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
-		// 		tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
-		// 	},
-		// },
 		DisableKeepAlives:     false,
 		DisableCompression:    false,
 		MaxIdleConns:          100,
@@ -321,15 +248,10 @@ func BuildClient(ctx context.Context, baseURL string, options ...ClientOption) (
 		}
 	}
 
-	// Update transport with custom TLS config if provided
-	if client.tlsConfig != nil {
-		transport.TLSClientConfig = client.tlsConfig
-	}
-
 	return client, nil
 }
 
-// ObjectRecord represents a sanitized object to be indexed
+// ObjectRecord represents an object to be indexed (matches Rust struct)
 type ObjectRecord struct {
 	ID        string                 `json:"id"`
 	Text      string                 `json:"text"`
@@ -364,28 +286,20 @@ func (o *ObjectRecord) Validate(sanitizer *InputSanitizer) error {
 	return nil
 }
 
-// SearchQuery represents a sanitized search request
-type SearchQuery struct {
-	Query   string   `json:"query"`
-	Filters []string `json:"filters,omitempty"`
+// Pagination matches the Rust Pagination struct
+type Pagination struct {
+	Page    *int `json:"page,omitempty"`
+	PerPage *int `json:"per_page,omitempty"`
 }
 
-// Validate validates the search query
-func (s *SearchQuery) Validate(sanitizer *InputSanitizer) error {
-	if err := sanitizer.ValidateQuery(s.Query); err != nil {
-		return fmt.Errorf("invalid query: %w", err)
-	}
-
-	for _, filter := range s.Filters {
-		if len(filter) > MaxQueryLength {
-			return fmt.Errorf("filter too long: maximum %d characters", MaxQueryLength)
-		}
-	}
-
-	return nil
+// FuguSearchQuery matches the Rust FuguSearchQuery struct exactly
+type FuguSearchQuery struct {
+	Query   string      `json:"query"`
+	Filters *[]string   `json:"filters,omitempty"`
+	Page    *Pagination `json:"page,omitempty"`
 }
 
-// IndexRequest represents a request to index objects
+// IndexRequest matches the Rust IndexRequest struct
 type IndexRequest struct {
 	Data []ObjectRecord `json:"data"`
 }
@@ -410,9 +324,24 @@ func (i *IndexRequest) Validate(sanitizer *InputSanitizer) error {
 }
 
 // SanitizedResponse represents a sanitized API response
+// This matches what Fugu actually returns
 type SanitizedResponse struct {
-	Data    interface{} `json:"data,omitempty"`
-	Message string      `json:"message,omitempty"`
+	Results []FuguSearchResult `json:"results,omitempty"`
+	Total   int                `json:"total,omitempty"`
+	Page    int                `json:"page,omitempty"`
+	PerPage int                `json:"per_page,omitempty"`
+	Query   string             `json:"query,omitempty"`
+	Data    interface{}        `json:"data,omitempty"` // Keep this for other endpoints
+	Message string             `json:"message,omitempty"`
+}
+
+// FuguSearchResult represents a search result from Fugu
+type FuguSearchResult struct {
+	ID       string                 `json:"id"`
+	Score    float32                `json:"score"`
+	Text     string                 `json:"text"`
+	Metadata map[string]interface{} `json:"metadata,omitempty"`
+	Facets   []string               `json:"facets,omitempty"`
 }
 
 // APIError represents a sanitized API error
@@ -424,51 +353,6 @@ type APIError struct {
 
 func (e *APIError) Error() string {
 	return fmt.Sprintf("API error %d: %s", e.StatusCode, e.Message)
-}
-
-// sanitizeErrorMessage removes sensitive information from error messages
-func sanitizeErrorMessage(message string) string {
-	// Remove potential sensitive patterns
-	sensitive := []string{
-		"password", "token", "key", "secret", "auth",
-		"database", "internal", "stack trace", "sql",
-	}
-
-	lower := strings.ToLower(message)
-	for _, word := range sensitive {
-		if strings.Contains(lower, word) {
-			return "An internal error occurred. Please contact support."
-		}
-	}
-
-	// Limit message length
-	if len(message) > 200 {
-		return message[:200] + "..."
-	}
-
-	return message
-}
-
-// limitedReader wraps an io.Reader to limit the number of bytes read
-type limitedReader struct {
-	reader io.Reader
-	limit  int64
-	read   int64
-}
-
-func (lr *limitedReader) Read(p []byte) (int, error) {
-	if lr.read >= lr.limit {
-		return 0, fmt.Errorf("response body too large: maximum %d bytes", lr.limit)
-	}
-
-	remaining := lr.limit - lr.read
-	if int64(len(p)) > remaining {
-		p = p[:remaining]
-	}
-
-	n, err := lr.reader.Read(p)
-	lr.read += int64(n)
-	return n, err
 }
 
 // makeRequest performs a secure HTTP request with retries and rate limiting
@@ -504,13 +388,11 @@ func (c *Client) makeRequest(ctx context.Context, method, path string, body inte
 	return nil, lastErr
 }
 
-// doRequest performs a single HTTP request with tracing and security measures
+// doRequest performs a single HTTP request with tracing
 func (c *Client) doRequest(ctx context.Context, method, path string, body interface{}) (*http.Response, error) {
-	// Start tracing span (with minimal sensitive data)
 	ctx, span := c.tracer.Start(ctx, fmt.Sprintf("fugusdk.%s", strings.ToLower(method)))
 	defer span.End()
 
-	// Add safe attributes to span
 	span.SetAttributes(
 		attribute.String("http.method", method),
 		attribute.String("http.path", path),
@@ -542,12 +424,9 @@ func (c *Client) doRequest(ctx context.Context, method, path string, body interf
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
-	// Set secure headers
+	// Set headers
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("User-Agent", c.userAgent)
-	req.Header.Set("X-Content-Type-Options", "nosniff")
-	req.Header.Set("X-Frame-Options", "DENY")
-	req.Header.Set("X-XSS-Protection", "1; mode=block")
 
 	// Add authentication token if present
 	if c.token != nil {
@@ -564,11 +443,7 @@ func (c *Client) doRequest(ctx context.Context, method, path string, body interf
 		return nil, fmt.Errorf("request failed: %w", err)
 	}
 
-	// Add safe response attributes to span
-	span.SetAttributes(
-		attribute.Int("http.status_code", resp.StatusCode),
-	)
-
+	span.SetAttributes(attribute.Int("http.status_code", resp.StatusCode))
 	return resp, nil
 }
 
@@ -580,25 +455,18 @@ func (c *Client) handleResponse(resp *http.Response, result interface{}) error {
 		}
 	}()
 
-	// Limit response body size
-	limitedBody := &limitedReader{
-		reader: resp.Body,
-		limit:  MaxResponseBodySize,
-	}
-
-	body, err := io.ReadAll(limitedBody)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return fmt.Errorf("failed to read response body: %w", err)
 	}
 
 	if resp.StatusCode >= 400 {
-		// Sanitize error message to prevent information disclosure
 		message := "An error occurred"
 		if len(body) > 0 {
 			var errorResp map[string]interface{}
 			if json.Unmarshal(body, &errorResp) == nil {
 				if errMsg, ok := errorResp["error"].(string); ok {
-					message = sanitizeErrorMessage(errMsg)
+					message = errMsg
 				}
 			}
 		}
@@ -619,7 +487,7 @@ func (c *Client) handleResponse(resp *http.Response, result interface{}) error {
 	return nil
 }
 
-// Health checks the health of the API
+// Health checks the health of the API - matches Rust endpoint
 func (c *Client) Health(ctx context.Context) error {
 	resp, err := c.makeRequest(ctx, "GET", "/health", nil)
 	if err != nil {
@@ -629,7 +497,7 @@ func (c *Client) Health(ctx context.Context) error {
 	return c.handleResponse(resp, nil)
 }
 
-// IngestObjects ingests multiple objects into the database with validation
+// IngestObjects ingests multiple objects into the database - matches Rust /ingest endpoint
 func (c *Client) IngestObjects(ctx context.Context, objects []ObjectRecord) error {
 	req := IndexRequest{Data: objects}
 
@@ -647,10 +515,10 @@ func (c *Client) IngestObjects(ctx context.Context, objects []ObjectRecord) erro
 	return c.handleResponse(resp, &result)
 }
 
-// Search performs a validated search across all namespaces
-func (c *Client) Search(ctx context.Context, query SearchQuery) (*SanitizedResponse, error) {
+// Search performs a POST search - matches Rust /search POST endpoint
+func (c *Client) Search(ctx context.Context, query FuguSearchQuery) (*SanitizedResponse, error) {
 	// Validate query
-	if err := query.Validate(c.sanitizer); err != nil {
+	if err := c.sanitizer.ValidateQuery(query.Query); err != nil {
 		return nil, fmt.Errorf("validation failed: %w", err)
 	}
 
@@ -664,7 +532,7 @@ func (c *Client) Search(ctx context.Context, query SearchQuery) (*SanitizedRespo
 	return &result, err
 }
 
-// SearchText performs a simple validated text search
+// SearchText performs a GET search with query parameter - matches Rust /search GET endpoint
 func (c *Client) SearchText(ctx context.Context, query string) (*SanitizedResponse, error) {
 	// Validate query
 	if err := c.sanitizer.ValidateQuery(query); err != nil {
@@ -685,26 +553,7 @@ func (c *Client) SearchText(ctx context.Context, query string) (*SanitizedRespon
 	return &result, err
 }
 
-// AdvancedQuery performs a validated advanced query
-func (c *Client) AdvancedQuery(ctx context.Context, queryData interface{}) (*SanitizedResponse, error) {
-	// Basic validation of query data size
-	if jsonData, err := json.Marshal(queryData); err != nil {
-		return nil, fmt.Errorf("invalid query data: %w", err)
-	} else if len(jsonData) > MaxRequestBodySize {
-		return nil, fmt.Errorf("query data too large: maximum %d bytes", MaxRequestBodySize)
-	}
-
-	resp, err := c.makeRequest(ctx, "POST", "/query/advanced", queryData)
-	if err != nil {
-		return nil, err
-	}
-
-	var result SanitizedResponse
-	err = c.handleResponse(resp, &result)
-	return &result, err
-}
-
-// GetObjectByID retrieves a specific object by its validated ID
+// GetObjectByID retrieves a specific object by its ID - matches Rust /objects/{id} endpoint
 func (c *Client) GetObjectByID(ctx context.Context, objectID string) (*SanitizedResponse, error) {
 	// Validate object ID
 	if err := c.sanitizer.ValidateObjectID(objectID); err != nil {
@@ -723,7 +572,7 @@ func (c *Client) GetObjectByID(ctx context.Context, objectID string) (*Sanitized
 	return &result, err
 }
 
-// ListFilters lists all available filters
+// ListFilters lists all available filters - matches Rust /filters endpoint
 func (c *Client) ListFilters(ctx context.Context) (*SanitizedResponse, error) {
 	resp, err := c.makeRequest(ctx, "GET", "/filters", nil)
 	if err != nil {
@@ -735,7 +584,7 @@ func (c *Client) ListFilters(ctx context.Context) (*SanitizedResponse, error) {
 	return &result, err
 }
 
-// GetNamespaceFilters gets filters for a validated namespace
+// GetNamespaceFilters gets filters for a namespace - matches Rust /filters/{namespace} endpoint
 func (c *Client) GetNamespaceFilters(ctx context.Context, namespace string) (*SanitizedResponse, error) {
 	// Validate namespace
 	if err := c.sanitizer.ValidateNamespace(namespace); err != nil {
@@ -752,70 +601,4 @@ func (c *Client) GetNamespaceFilters(ctx context.Context, namespace string) (*Sa
 	var result SanitizedResponse
 	err = c.handleResponse(resp, &result)
 	return &result, err
-}
-
-// BatchClient provides secure batch operations
-type BatchClient struct {
-	*Client
-	objects []ObjectRecord
-	mutex   sync.Mutex
-}
-
-// NewBatch creates a new secure batch client
-func (c *Client) NewBatch() *BatchClient {
-	return &BatchClient{
-		Client:  c,
-		objects: make([]ObjectRecord, 0),
-	}
-}
-
-// AddObject adds a validated object to the batch
-func (b *BatchClient) AddObject(object ObjectRecord) error {
-	// Validate object
-	if err := object.Validate(b.sanitizer); err != nil {
-		return fmt.Errorf("validation failed: %w", err)
-	}
-
-	b.mutex.Lock()
-	defer b.mutex.Unlock()
-
-	if len(b.objects) >= MaxBatchSize {
-		return fmt.Errorf("batch size limit exceeded: maximum %d objects", MaxBatchSize)
-	}
-
-	b.objects = append(b.objects, object)
-	return nil
-}
-
-// Execute executes the batch operation with validation
-func (b *BatchClient) Execute(ctx context.Context) error {
-	b.mutex.Lock()
-	defer b.mutex.Unlock()
-
-	if len(b.objects) == 0 {
-		return nil
-	}
-
-	err := b.IngestObjects(ctx, b.objects)
-	if err != nil {
-		return err
-	}
-
-	// Clear the batch after successful execution
-	b.objects = b.objects[:0]
-	return nil
-}
-
-// Size returns the current batch size safely
-func (b *BatchClient) Size() int {
-	b.mutex.Lock()
-	defer b.mutex.Unlock()
-	return len(b.objects)
-}
-
-// Clear clears the batch safely
-func (b *BatchClient) Clear() {
-	b.mutex.Lock()
-	defer b.mutex.Unlock()
-	b.objects = b.objects[:0]
 }

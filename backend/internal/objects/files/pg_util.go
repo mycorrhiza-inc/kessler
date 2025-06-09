@@ -118,7 +118,7 @@ func InsertPubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreatio
 }
 
 func UpdatePubPrivateFileObj(q dbstore.Queries, ctx context.Context, fileCreation FileCreationDataRaw, private bool, pgUUID uuid.UUID) (FileSchema, error) {
-	log := logger.GetLogger("UpdatePubPrivateFileObj")
+	log := logger.Named("UpdatePubPrivateFileObj")
 
 	params := dbstore.UpdateFileParams{
 		Extension:     fileCreation.Extension,
