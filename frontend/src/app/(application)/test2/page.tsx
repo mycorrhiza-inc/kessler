@@ -1050,9 +1050,8 @@ export default function KesslerTestPageFixed() {
             <div>
               <h3 className="font-semibold mb-2">Environment</h3>
               <div className="text-sm space-y-1">
-                <div>Browser: {typeof window !== 'undefined' ? 'Client-side' : 'SSR'}</div>
-                <div>localStorage: {typeof window !== 'undefined' && window.localStorage ? 'Available' : 'Not available'}</div>
-                <div>URL: {typeof window !== 'undefined' ? window.location.pathname : 'SSR'}</div>
+                {/* <div>localStorage: {typeof window !== 'undefined' && window.localStorage ? 'Available' : 'Not available'}</div> */}
+                {/* <div>URL: {typeof window !== 'undefined' ? window.location.pathname : 'SSR'}</div> */}
               </div>
             </div>
 

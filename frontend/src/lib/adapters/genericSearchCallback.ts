@@ -28,7 +28,7 @@ export interface GenericSearchInfo {
 
 export const searchInvoke = async (
   info: GenericSearchInfo,
-  pagination: PaginationData,
+  pagination: PaginationData
 ) => {
   const callback = createGenericSearchCallback(info);
   return await callback(pagination);
@@ -36,7 +36,7 @@ export const searchInvoke = async (
 
 export const mutateIndexifySearchResults = (
   results: SearchResult[],
-  pagination: PaginationData,
+  pagination: PaginationData
 ) => {
   const offset = pagination.limit * pagination.page;
   for (let index = 0; index < results.length; index++) {
@@ -65,16 +65,15 @@ interface SearchResponse {
   data: any[]; // Replace with actual filing data type
 }
 
-
 export const createGenericSearchCallback = (
-  info: GenericSearchInfo,
+  info: GenericSearchInfo
 ): SearchResultsGetter => {
-
   // debug and default to dummy search results for stylistic changes.
-  //info.search_type = GenericSearchType.Dummy as GenericSearchType
+  info.search_type = GenericSearchType.Filling as GenericSearchType;
   //console.log("All searches are dummys for momentary testing purposes")
 
-  const api_url = contextualApiUrl(getEnvConfig());
+  // const api_url = contextualApiUrl(getEnvConfig());
+  const api_url = "http://localhost";
 
   console.log("searching with api_url:", api_url);
   console.log("info:", info);
@@ -98,10 +97,9 @@ export const createGenericSearchCallback = (
           }
 
           const results = await generateFakeResults(pagination);
-          console.log("Got fake results")
+          console.log("Got fake results");
           mutateIndexifySearchResults(results, pagination);
           return results;
-
         } catch (error) {
           if (axios.isAxiosError(error)) {
             console.error("Axios error in dummy search:", error.message);
@@ -121,19 +119,22 @@ export const createGenericSearchCallback = (
         const paginationQueryString = queryStringFromPagination(pagination);
         const { query: searchQuery, filters: searchFilters } = info;
 
-        console.log("query data:", searchQuery);
+        console.log("query data:", info);
         console.log("SEARCH FILTERS DISABLED UNTIL MIRRI UPDATES THE DB");
         console.log("API URL:", api_url);
 
         try {
-          const url = `${api_url}/v2/search/file${paginationQueryString}`;
-          const requestData: SearchRequest = { query: searchQuery };
+          // const url = `${api_url}/v2/search/file${paginationQueryString}`;
+          const url = `${api_url}/v2/search`;
+          const requestData: SearchRequest = { query: info.query };
 
-          const response = await axios.post<SearchResponse>(url, requestData);
+          const response = await axios.post<SearchResponse>(url, info);
 
           if (!response.data) {
             throw new Error(
-              `Search data returned from backend URL ${url} with data ${JSON.stringify(requestData)} was undefined`
+              `Search data returned from backend URL ${url} with data ${JSON.stringify(
+                requestData
+              )} was undefined`
             );
           }
 
@@ -143,7 +144,9 @@ export const createGenericSearchCallback = (
           }
 
           if (typeof response.data === "string") {
-            console.warn("Received string response instead of expected data structure");
+            console.warn(
+              "Received string response instead of expected data structure"
+            );
             return [];
           }
 
@@ -151,14 +154,14 @@ export const createGenericSearchCallback = (
           console.log(`Successfully got ${filings.length} search results`);
           console.log("Getting data");
 
-          const searchResults: DocumentCardData[] = filings.map(adaptFilingToCard);
+          const searchResults: DocumentCardData[] =
+            filings.map(adaptFilingToCard);
 
           mutateIndexifySearchResults(searchResults, pagination);
           return searchResults;
-
         } catch (error) {
           if (axios.isAxiosError(error)) {
-            console.error("Axios error in filing search:", error.message);
+            console.error("Axios error in filing search:", error);
             if (error.response) {
               console.error("Response status:", error.response.status);
               console.error("Response data:", error.response.data);
