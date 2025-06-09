@@ -36,7 +36,7 @@ const transformStateToValue = (stateName: string) => {
   return stateName.toLowerCase().replace(/\s+/g, '-');
 };
 
-export const StandardSearchbarClientBaseUrl = ({
+export const StandardSearchBarClientBaseUrl = ({
   baseUrl,
   initialState,
 }: {
@@ -48,14 +48,14 @@ export const StandardSearchbarClientBaseUrl = ({
     if (q) window.location.href = `${baseUrl}?q=${encodeURIComponent(q)}`;
   };
   return (
-    <StandardSearchbar
+    <StandardSearchBar
       setTriggeredQuery={handleSearch}
       initialState={initialState}
     />
   );
 };
 
-export default function StandardSearchbar({
+export default function StandardSearchBar({
   // what is this for?
   setTriggeredQuery,
   initialState,

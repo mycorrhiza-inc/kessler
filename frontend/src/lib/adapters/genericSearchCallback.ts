@@ -71,8 +71,8 @@ export const createGenericSearchCallback = (
 ): SearchResultsGetter => {
 
   // debug and default to dummy search results for stylistic changes.
-  info.search_type = GenericSearchType.Dummy as GenericSearchType
-  console.log("All searches are dummys for momentary testing purposes")
+  //info.search_type = GenericSearchType.Dummy as GenericSearchType
+  //console.log("All searches are dummys for momentary testing purposes")
 
   const api_url = contextualApiUrl(getEnvConfig());
 

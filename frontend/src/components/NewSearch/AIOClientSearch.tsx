@@ -1,6 +1,6 @@
 "use client";
 import { ReactNode, Suspense, useState } from "react";
-import StandardSearchbar, { StandardSearchbarClientBaseUrl } from "./HomeSearch";
+import StandardSearchBar, { StandardSearchBarClientBaseUrl } from "./HomeSearch";
 import LoadingSpinner from "../styled-components/LoadingSpinner";
 import SearchResultsServerStandalone from "../Search/SearchResultsServerStandalone";
 import { SearchResult } from "@/lib/types/new_search_types";
@@ -42,7 +42,7 @@ const AIOClientSearchComponent = ({
     <>
       <div className="flex flex-col items-center justify-center bg-base-100 p-4">
 
-        <StandardSearchbar
+        <StandardSearchBar
           setTriggeredQuery={handleSearch}
           initialState={initialQuery}
         />
