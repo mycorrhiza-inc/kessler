@@ -16,7 +16,7 @@ interface AIOClientProps {
   initialData?: SearchResult[];
   children?: React.ReactNode; // SSR seed
 }
-const AIOClientSearchComponent = ({
+const AllInOneClientSearchComponent = ({
   searchType,
   initialQuery,
   initialFilters,
@@ -59,4 +59,4 @@ const AIOClientSearchComponent = ({
 
 }
 
-export default AIOClientSearchComponent;
+export default AllInOneClientSearchComponent;

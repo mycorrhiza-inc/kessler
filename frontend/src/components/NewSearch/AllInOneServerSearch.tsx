@@ -3,7 +3,7 @@ import { StandardSearchBarClientBaseUrl } from "./HomeSearch";
 import LoadingSpinner from "../styled-components/LoadingSpinner";
 import SearchResultsServerStandalone from "../Search/SearchResultsServerStandalone";
 import { GenericSearchInfo, GenericSearchType, searchInvoke } from "@/lib/adapters/genericSearchCallback";
-import AIOClientSearchComponent from "./AIOClientSearch";
+import AllInOneClientSearchComponent from "./AllInOneClientSearch";
 import { SearchResult } from "@/lib/types/new_search_types";
 import { BackendFilterObject } from "@/lib/filters";
 import RawSearchResults from "../Search/RawSearchResults";
@@ -15,7 +15,7 @@ interface AIOServerProps {
   initialFilters: BackendFilterObject;
   searchType: GenericSearchType;
 }
-const AIOServerSearch = async ({ initialQuery, initialFilters, searchType }: AIOServerProps) => {
+const AllInOneServerSearch = async ({ initialQuery, initialFilters, searchType }: AIOServerProps) => {
 
   // Fetch two pages worth of data server-side
   const initialPages = 2;
@@ -38,13 +38,13 @@ const AIOServerSearch = async ({ initialQuery, initialFilters, searchType }: AIO
       <Suspense
         fallback={<LoadingSpinner loadingText="Getting Results From Server" />}
       >
-        <AIOClientSearchComponent
+        <AllInOneClientSearchComponent
           initialQuery={initialQuery}
           initialFilters={initialFilters}
           searchType={searchType}
         >
           <RawSearchResults data={initialResults} />
-        </AIOClientSearchComponent>
+        </AllInOneClientSearchComponent>
       </Suspense>
     );
   } catch (error) {
@@ -56,4 +56,4 @@ const AIOServerSearch = async ({ initialQuery, initialFilters, searchType }: AIO
     );
   }
 }
-export default AIOServerSearch;
+export default AllInOneServerSearch;

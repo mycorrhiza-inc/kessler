@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { ConvoSearchRequestData } from "../SearchRequestData";
-import AIOServerSearch from "@/components/NewSearch/AIOServerSearch";
+import AllInOneServerSearch from "@/components/NewSearch/AllInOneServerSearch";
 import { GenericSearchType } from "@/lib/adapters/genericSearchCallback";
 
 const ConvoLookupPage = () => {
@@ -10,7 +10,7 @@ const ConvoLookupPage = () => {
       <h1 className="text-3xl font-bold">Dockets</h1>
       <div className="pr-4 w-full">
 
-        <AIOServerSearch searchType={GenericSearchType.Docket} initialQuery="" initialFilters={[]} />
+        <AllInOneServerSearch searchType={GenericSearchType.Docket} initialQuery="" initialFilters={[]} />
       </div>
     </>
   );

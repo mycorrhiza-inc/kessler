@@ -173,10 +173,13 @@ export const createGenericSearchCallback = (
       };
 
     case GenericSearchType.Filling:
+      console.log("returning a filling async callback:")
       return async (pagination: PaginationData): Promise<SearchResult[]> => {
+        console.log("weird stuff mark 1")
         const paginationQueryString = queryStringFromPagination(pagination);
         const { query: searchQuery } = info;
         const url = `${api_url}/v2/search/file${paginationQueryString}`;
+        console.log("does this trigger the weird stuff.")
         const requestData: SearchRequest = { query: searchQuery };
 
         console.log("query data:", info);
