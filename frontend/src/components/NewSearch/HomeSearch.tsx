@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { GiMushroomsCluster } from "react-icons/gi";
 import StateSelector from "./StateSelector";
 import SearchBox from "./SearchBox";
-import { useKesslerStore } from "@/lib/store";
+import { useKesslerStore } from "@/lib/_store";
 import { DynamicSingleSelect } from "@/components/Filters/FilterSingleSelect";
 
 const states = [
@@ -36,7 +36,7 @@ const transformStateToValue = (stateName: string) => {
   return stateName.toLowerCase().replace(/\s+/g, '-');
 };
 
-export const HomeSearchBarClientBaseUrl = ({
+export const StandardSearchBarClientBaseUrl = ({
   baseUrl,
   initialState,
 }: {
@@ -48,14 +48,15 @@ export const HomeSearchBarClientBaseUrl = ({
     if (q) window.location.href = `${baseUrl}?q=${encodeURIComponent(q)}`;
   };
   return (
-    <HomeSearchBar
+    <StandardSearchBar
       setTriggeredQuery={handleSearch}
       initialState={initialState}
     />
   );
 };
 
-export default function HomeSearchBar({
+export default function StandardSearchBar({
+  // what is this for?
   setTriggeredQuery,
   initialState,
 }: {

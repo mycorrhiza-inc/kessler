@@ -22,7 +22,7 @@ type MultiSelectOutput struct {
 
 // NewMultiSelectFilter creates a new multi-select filter implementation
 func NewMultiSelectFilter() FilterFunc {
-	log := logger.GetLogger("multi_select_filter")
+	log := logger.Named("multi_select_filter")
 
 	return func(input interface{}) (interface{}, error) {
 		// Type assertion for input

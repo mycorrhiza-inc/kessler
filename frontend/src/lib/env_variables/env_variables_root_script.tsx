@@ -7,10 +7,10 @@ import { getEnvConfig } from "./env_variables";
  * Embeds runtime environment configuration into the HTML.
  * Uses next-runtime-env under the hood.
  */
-export default function EnvVariablesScript() {
+export default async function EnvVariablesScript() {
   noStore();
 
-  const nonce = headers().get("x-nonce") || undefined;
+  const nonce = (await headers()).get("x-nonce") || undefined;
 
   const env_obj = getEnvConfig();
 

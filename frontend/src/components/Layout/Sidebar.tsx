@@ -7,7 +7,7 @@ import { BsArrowBarLeft, BsArrowBarRight } from "react-icons/bs";
 import Link from "next/link";
 import { IoHomeSharp, IoDocument, IoSettingsSharp } from "react-icons/io5";
 import { FaRectangleList, FaUserGroup } from "react-icons/fa6";
-import { useKesslerStore } from "@/lib/store";
+import { useKesslerStore } from "@/lib/_store";
 import { ChevronDownIcon, HamburgerIcon, UserIcon } from "@/components/Icons";
 import Modal from "@/components/styled-components/Modal";
 import SettingsContent from "@/components/SettingsContent";

@@ -12,7 +12,7 @@ import (
 	"go.uber.org/zap"
 )
 
-var log = logger.GetLogger("ingest handler")
+var log = logger.Named("ingest handler")
 
 func DefineGlobalRouter(router *mux.Router) {
 	// Version endpoint
