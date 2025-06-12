@@ -11,10 +11,10 @@ import {
   CompleteFileSchema,
 } from "@/lib/types/backend_schemas";
 import { CLIENT_API_URL } from "@/lib/env_variables";
-import { FileExtension } from "@/style_components/Pills/FileExtension";
+import { FileExtension, fileExtensionFromText } from "@/style_components/Pills/FileExtension";
 import XlsxViewer from "@/style_components/messages/XlsxCannotBeViewedMessage";
 import ErrorMessage from "@/style_components/messages/ErrorMessage";
-import { DocketPill } from "@/style_components/Pills/TextPills";
+import { AuthorInfoPill, DocketPill } from "@/style_components/Pills/TextPills";
 import LoadingSpinner from "@/style_components/misc/LoadingSpinner";
 import MarkdownRenderer from "@/style_components/misc/MarkdownRenderer";
 
