@@ -1,26 +1,89 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@plugin "daisyui" {
+  themes: lemonade --default, retro, luxury;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* @plugin "daisyui/theme" { */
+/*   name: "kessler"; */
+/*   default: true; */
+/*   prefersdark: false; */
+/*   color-scheme: light; */
+/**/
+/*   --color-primary: oklch(87% 0.1 102); */
+/*   --color-secondary: oklch(29% 0 0); */
+/*   --color-accent: oklch(79% 0.12 141); */
+/*   --color-neutral: oklch(42% 0 0); */
+/*   --color-base-100: oklch(93% 0.015 91); */
+/*   --color-base-200: oklch(90% 0.015 91); */
+/*   --color-base-300: oklch(85% 0.015 91); */
+/*   --color-base-content: oklch(20% 0 0); */
+/**/
+/*   --color-info: oklch(29% 0 0); */
+/*   --color-success: oklch(90.79% 0.19 141); */
+/*   --color-success-content: oklch(29.12% 0.08 141); */
+/*   --color-warning: oklch(95% 0.13 102); */
+/*   --color-error: oklch(76% 0.15 21); */
+/**/
+/*   --radius-box: 20px; */
+/*   --radius-btn: 8px; */
+/*   --radius-badge: 32px; */
+/*   --border-btn: 1px; */
+/* } */
+/**/
+/* @custom-variant dark (&:is(.dark *)); */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@theme {
+  --animate-aurora: aurora 60s linear infinite;
+  --animate-meteor-effect: meteor 5s linear infinite;
+
+  @keyframes aurora {
+    from {
+      background-position:
+        50% 50%,
+        50% 50%;
+    }
+
+    to {
+      background-position:
+        350% 50%,
+        350% 50%;
+    }
+  }
+
+  @keyframes meteor {
+    0% {
+      transform: rotate(215deg) translateX(0);
+      opacity: 1;
+    }
+
+    70% {
+      opacity: 1;
+    }
+
+    100% {
+      transform: rotate(215deg) translateX(-500px);
+      opacity: 0;
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
 }
