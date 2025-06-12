@@ -1,21 +1,19 @@
 "use client";
 import { completeFileSchemaGet } from "@/lib/requests/search";
 import useSWRImmutable from "swr";
-import LoadingSpinner from "../styled-components/LoadingSpinner";
 import { DocumentMainTabs } from "./DocumentBody";
 import { CompleteFileSchema } from "@/lib/types/backend_schemas";
-import Modal from "../styled-components/Modal";
 
-import { useState } from "react";
-import { getClientRuntimeEnv } from "@/lib/env_variables/env_variables_hydration_script";
+import { CLIENT_API_URL } from "@/lib/env_variables";
+import LoadingSpinner from "@/style_components/misc/LoadingSpinner";
+import Modal from "@/style_components/misc/Modal";
 type ModalProps = {
   objectId: string;
   children?: React.ReactNode;
   isPage: boolean;
 };
 const DocumentModalBody = ({ objectId, isPage }: ModalProps) => {
-  const runtimeConfig = getClientRuntimeEnv();
-  const semiCompleteFileUrl = `${runtimeConfig.public_api_url}/v2/public/files/${objectId}`;
+  const semiCompleteFileUrl = `${CLIENT_API_URL}/v2/public/files/${objectId}`;
   const { data, error, isLoading } = useSWRImmutable(
     semiCompleteFileUrl,
     completeFileSchemaGet,

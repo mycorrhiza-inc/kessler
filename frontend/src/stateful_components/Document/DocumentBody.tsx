@@ -4,31 +4,26 @@ import React, { memo } from "react";
 import * as Tabs from "@radix-ui/react-tabs";
 
 import PDFViewer from "./PDFViewer";
-import MarkdownRenderer from "@/components/MarkdownRenderer";
-import LoadingSpinner from "@/components/styled-components/LoadingSpinner";
 import { fetchTextDataFromURL } from "./documentLoader";
 import useSWRImmutable from "swr";
 import {
   AuthorInformation,
   CompleteFileSchema,
 } from "@/lib/types/backend_schemas";
-import Link from "next/link";
-import { ExperimentalChatModalClickDiv } from "../Chat/ChatModal";
-import { AuthorInfoPill, DocketPill } from "../Tables/TextPills";
-import { getClientRuntimeEnv } from "@/lib/env_variables/env_variables_hydration_script";
-import { FileExtension, fileExtensionFromText } from "../Tables/FileExtension";
-import XlsxViewer from "../messages/XlsxCannotBeViewedMessage";
-import ErrorMessage from "../messages/ErrorMessage";
+import { CLIENT_API_URL } from "@/lib/env_variables";
+import { FileExtension } from "@/style_components/Pills/FileExtension";
+import XlsxViewer from "@/style_components/messages/XlsxCannotBeViewedMessage";
+import ErrorMessage from "@/style_components/messages/ErrorMessage";
+import { DocketPill } from "@/style_components/Pills/TextPills";
+import LoadingSpinner from "@/style_components/misc/LoadingSpinner";
+import MarkdownRenderer from "@/style_components/misc/MarkdownRenderer";
+
 
 // import { ErrorBoundary } from "react-error-boundary";
 //
-const getSafePublicAPIUrl = () => {
-  const runtimeConfigClient = getClientRuntimeEnv();
-  return runtimeConfigClient.public_api_url;
-};
 
 const MarkdownContent = memo(({ docUUID }: { docUUID: string }) => {
-  const markdown_url = `${getSafePublicAPIUrl()}/v2/public/files/${docUUID}/markdown`;
+  const markdown_url = `${CLIENT_API_URL}/v2/public/files/${docUUID}/markdown`;
   // axios.get(`https://api.kessler.xyz/v2/public/files/${objectid}/markdown`),
   const { data, error, isLoading } = useSWRImmutable(
     markdown_url,
@@ -89,7 +84,7 @@ const DocumentContent = ({
   docUUID: string;
   extension: FileExtension;
 }) => {
-  const documentUrl = `${getSafePublicAPIUrl()}/v2/public/files/${docUUID}/raw`;
+  const documentUrl = `${CLIENT_API_URL}/v2/public/files/${docUUID}/raw`;
   if (extension == FileExtension.PDF) {
     return <PDFViewer file={documentUrl} />;
   }
@@ -112,10 +107,7 @@ const DocumentHeader = ({
   const verified = (documentObject.verified || false) as boolean;
   const summary = documentObject.extra.summary;
   const underscoredTitle = title ? title.replace(/ /g, "_") : "Unkown_Document";
-  const runtimeConfig = getClientRuntimeEnv();
-  const runtimeConfigUrlSafe =
-    runtimeConfig.public_api_url || "https://api.kessler.xyz";
-  const fileUrlNamedDownload = `${runtimeConfigUrlSafe}/v2/public/files/${objectId}/raw/${underscoredTitle}.${extension}`;
+  const fileUrlNamedDownload = `${CLIENT_API_URL}/v2/public/files/${objectId}/raw/${underscoredTitle}.${extension}`;
   const kesslerFileUrl = `/files/${objectId}`;
   const authors_unpluralized =
     documentObject.authors?.length == 1 ? "Author" : "Authors";
