@@ -4,13 +4,14 @@ interface MarkdownRendererProps {
   children: string;
   color?: string;
 }
-const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
+export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
   children,
   color,
 }) => {
   return (
     <div>MARKDOWN RENDER IS BROKEN - NEEDS SIMPLIFICATION AND REFACTORING</div>)
 };
+export default MarkdownRenderer;
 // import Markdown from "react-markdown";
 // import rehypeKatex from "rehype-katex";
 // import remarkMath from "remark-math";
