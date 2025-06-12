@@ -1,10 +1,9 @@
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
-import { debounce } from "lodash";
 import React from "react";
-import { 
-  FilterValues, 
-  FilterConfiguration, 
+import {
+  FilterValues,
+  FilterConfiguration,
   FilterConfigurationManager,
   InheritedFilterValues,
   createInitialFiltersFromInherited,
@@ -32,36 +31,36 @@ interface PendingUpdate {
 interface FilterState {
   // Current filter values
   filters: FilterValues;
-  
+
   // Filter configuration and manager
   filterConfiguration: FilterConfiguration | null;
   filterManager: FilterConfigurationManager | null;
-  
+
   // Inherited filters (from URL params, parent components, etc.)
   inheritedFilters: InheritedFilterValues;
-  
+
   // Loading and error states
   isLoadingFilters: boolean;
   filterError: string | null;
-  
+
   // Disabled fields (typically from inherited filters)
   disabledFields: string[];
-  
+
   // Field-level loading states
   fieldLoadingStates: FieldLoadingState;
-  
+
   // Initialization state
   isInitialized: boolean;
   isInitializing: boolean;
   initializationError: string | null;
-  
+
   // Pending updates queue
   pendingUpdates: PendingUpdate[];
-  
+
   // URL synchronization
   urlSyncEnabled: boolean;
   lastUrlSync: number;
-  
+
   // Performance tracking
   lastUpdateTimestamp: number;
   updateCount: number;
@@ -72,57 +71,57 @@ interface FilterActions {
   setFilter: (fieldId: string, value: string) => Promise<boolean>;
   setFilters: (filters: FilterValues, skipValidation?: boolean) => Promise<boolean>;
   updateFilter: (fieldId: string, value: string) => Promise<boolean>;
-  
+
   // Reset operations
   resetFilters: () => Promise<void>;
   resetSpecificFilters: (fieldIds: string[]) => Promise<void>;
   resetFiltersForDataset: (dataset?: string) => Promise<void>;
-  
+
   // Configuration management
   setFilterConfiguration: (config: FilterConfiguration) => void;
   setFilterManager: (manager: FilterConfigurationManager) => void;
-  
+
   // Inherited filters management
   setInheritedFilters: (inherited: InheritedFilterValues) => void;
   applyInheritedFilters: () => Promise<void>;
-  
+
   // Loading and error states
   setIsLoadingFilters: (loading: boolean) => void;
   setFilterError: (error: string | null) => void;
   setFieldLoading: (fieldId: string, loading: boolean) => void;
-  
+
   // Initialization
   initialize: (manager: FilterConfigurationManager, inheritedFilters?: InheritedFilterValues) => Promise<boolean>;
   setInitialized: (initialized: boolean) => void;
   setInitializing: (initializing: boolean) => void;
   setInitializationError: (error: string | null) => void;
-  
+
   // Pending updates
   queueUpdate: (fieldId: string, value: string) => void;
   processPendingUpdates: () => Promise<void>;
   clearPendingUpdates: () => void;
-  
+
   // URL synchronization - FIXED
   enableUrlSync: () => void;
   disableUrlSync: () => void;
   syncWithUrl: () => void;
   updateUrlFromFilters: () => void;
-  
+
   // Utility functions
   hasActiveFilters: () => boolean;
   getFilterValue: (fieldId: string) => string;
   isFieldDisabled: (fieldId: string) => boolean;
   validateFilters: (filters?: FilterValues) => ValidationResult;
-  
+
   // URL parameter handling
   resetFiltersFromUrl: () => Promise<void>;
   getDatasetFromUrl: () => string | null;
-  
+
   // Persistence
   persistFilters: () => void;
   loadPersistedFilters: () => FilterValues | null;
   clearPersistedFilters: () => void;
-  
+
   // Cleanup
   cleanup: () => void;
 }
@@ -161,7 +160,7 @@ const sanitizeString = (str: string): string => {
 
 const createSafeURLSearchParams = (): URLSearchParams | null => {
   if (isSSR()) return null;
-  
+
   try {
     return new URLSearchParams(window.location.search);
   } catch {
@@ -172,7 +171,7 @@ const createSafeURLSearchParams = (): URLSearchParams | null => {
 const safePersistence = {
   setItem: (key: string, value: string): boolean => {
     if (isSSR()) return false;
-    
+
     try {
       if (window.localStorage) {
         localStorage.setItem(key, value);
@@ -183,10 +182,10 @@ const safePersistence = {
     }
     return false;
   },
-  
+
   getItem: (key: string): string | null => {
     if (isSSR()) return null;
-    
+
     try {
       if (window.localStorage) {
         return localStorage.getItem(key);
@@ -196,10 +195,10 @@ const safePersistence = {
     }
     return null;
   },
-  
+
   removeItem: (key: string): boolean => {
     if (isSSR()) return false;
-    
+
     try {
       if (window.localStorage) {
         localStorage.removeItem(key);
@@ -215,6 +214,32 @@ const safePersistence = {
 // =============================================================================
 // DEBOUNCED OPERATIONS
 // =============================================================================
+// Eliminate dependancy on lodash
+export function debounce<F extends (...args: any[]) => void>(
+  fn: F,
+  delay: number
+): ((...args: Parameters<F>) => void) & { cancel: () => void } {
+  let timer: ReturnType<typeof setTimeout> | null = null;
+
+  const debounced = (...args: Parameters<F>) => {
+    if (timer !== null) {
+      clearTimeout(timer);
+    }
+    timer = setTimeout(() => {
+      fn(...args);
+      timer = null;
+    }, delay);
+  };
+
+  debounced.cancel = () => {
+    if (timer !== null) {
+      clearTimeout(timer);
+      timer = null;
+    }
+  };
+
+  return debounced;
+}
 
 const debouncedPersist = debounce((filters: FilterValues) => {
   safePersistence.setItem('kessler_filters', JSON.stringify(filters));
@@ -222,24 +247,24 @@ const debouncedPersist = debounce((filters: FilterValues) => {
 
 const debouncedUrlUpdate = debounce((filters: FilterValues) => {
   if (isSSR()) return;
-  
+
   try {
     const url = new URL(window.location.href);
     const params = url.searchParams;
-    
+
     // Clear existing filter params
-    const filterKeys = Array.from(params.keys()).filter(key => 
+    const filterKeys = Array.from(params.keys()).filter(key =>
       key.startsWith('filter_') || ['dataset', 'case_number', 'filing_type'].includes(key)
     );
     filterKeys.forEach(key => params.delete(key));
-    
+
     // Add current filters
     Object.entries(filters).forEach(([key, value]) => {
       if (value && value.trim() !== '') {
         params.set(`filter_${key}`, sanitizeString(value));
       }
     });
-    
+
     // Update URL without triggering navigation
     window.history.replaceState({}, '', url.toString());
   } catch (error) {
@@ -257,7 +282,7 @@ export const useKesslerStore = create<KesslerStore>()(
     experimentalFeaturesEnabled: false,
     isLoggedIn: false,
     defaultState: "new-york",
-    
+
     // === FILTER STATE ===
     filters: {},
     filterConfiguration: null,
@@ -275,61 +300,61 @@ export const useKesslerStore = create<KesslerStore>()(
     lastUrlSync: 0,
     lastUpdateTimestamp: 0,
     updateCount: 0,
-    
+
     // === EXISTING ACTIONS ===
     setIsLoggedIn: (isLoggedIn: boolean) => set({ isLoggedIn }),
     setExperimentalFeaturesEnabled: (experimentalFeaturesEnabled: boolean) =>
       set({ experimentalFeaturesEnabled }),
     setDefaultState: (defaultState: string) => set({ defaultState }),
-    
+
     // === ENHANCED FILTER VALUE MANAGEMENT ===
     setFilter: async (fieldId: string, value: string): Promise<boolean> => {
       const state = get();
-      
+
       // Guard: Check initialization
       if (!state.isInitialized) {
         console.warn('Store not initialized, queueing filter update');
         state.queueUpdate(fieldId, value);
         return false;
       }
-      
+
       // Guard: Check if currently loading
       if (state.isLoadingFilters) {
         console.warn('Cannot set filter while loading configuration');
         return false;
       }
-      
+
       // Guard: Check filter manager
       if (!state.filterManager) {
         console.error('FilterManager not initialized');
         return false;
       }
-      
+
       // Sanitize input
       const sanitizedValue = sanitizeString(value);
-      
+
       // Validate field exists and is enabled
       const field = state.filterManager.getField(fieldId);
       if (!field) {
         console.warn(`Unknown filter field: ${fieldId}`);
         return false;
       }
-      
+
       if (!field.enabled) {
         console.warn(`Filter field is disabled: ${fieldId}`);
         return false;
       }
-      
+
       // Validate value
       const testFilters = { ...state.filters, [fieldId]: sanitizedValue };
       const validation = state.filterManager.validateFilters(testFilters);
-      
+
       if (!validation.isValid) {
         console.error('Filter validation failed:', validation.errors);
         set({ filterError: validation.errors[0]?.message || 'Validation failed' });
         return false;
       }
-      
+
       // Update state
       set((currentState) => ({
         filters: {
@@ -340,32 +365,32 @@ export const useKesslerStore = create<KesslerStore>()(
         lastUpdateTimestamp: Date.now(),
         updateCount: currentState.updateCount + 1,
       }));
-      
+
       // Trigger side effects
       const newState = get();
       newState.persistFilters();
-      
+
       if (newState.urlSyncEnabled) {
         debouncedUrlUpdate(newState.filters);
       }
-      
+
       return true;
     },
-    
+
     setFilters: async (filters: FilterValues, skipValidation = false): Promise<boolean> => {
       const state = get();
-      
+
       if (!state.isInitialized && !skipValidation) {
         console.warn('Store not initialized, cannot set filters');
         return false;
       }
-      
+
       // Sanitize all values
       const sanitizedFilters: FilterValues = {};
       Object.entries(filters).forEach(([key, value]) => {
         sanitizedFilters[key] = sanitizeString(value || '');
       });
-      
+
       // Validate if not skipping
       if (!skipValidation && state.filterManager) {
         const validation = state.filterManager.validateFilters(sanitizedFilters);
@@ -375,84 +400,84 @@ export const useKesslerStore = create<KesslerStore>()(
           return false;
         }
       }
-      
+
       set({
         filters: { ...sanitizedFilters },
         filterError: null,
         lastUpdateTimestamp: Date.now(),
         updateCount: state.updateCount + 1,
       });
-      
+
       // Trigger side effects
       const newState = get();
       newState.persistFilters();
-      
+
       if (newState.urlSyncEnabled) {
         debouncedUrlUpdate(newState.filters);
       }
-      
+
       return true;
     },
-    
+
     updateFilter: async (fieldId: string, value: string): Promise<boolean> => {
       return get().setFilter(fieldId, value);
     },
-    
+
     // === ENHANCED RESET OPERATIONS ===
     resetFilters: async (): Promise<void> => {
       const state = get();
-      
+
       let emptyFilters: FilterValues = {};
       if (state.filterManager) {
         emptyFilters = state.filterManager.createEmptyFilters();
       }
-      
+
       await state.setFilters(emptyFilters, true);
     },
-    
+
     resetSpecificFilters: async (fieldIds: string[]): Promise<void> => {
       const state = get();
       const newFilters = { ...state.filters };
-      
+
       fieldIds.forEach((fieldId) => {
         newFilters[fieldId] = "";
       });
-      
+
       await state.setFilters(newFilters);
     },
-    
+
     resetFiltersForDataset: async (dataset?: string): Promise<void> => {
       const state = get();
       const targetDataset = dataset || state.getDatasetFromUrl();
-      
+
       if (targetDataset) {
         console.log(`Resetting filters for dataset: ${targetDataset}`);
       }
-      
+
       await state.resetFilters();
     },
-    
+
     // === CONFIGURATION MANAGEMENT ===
     setFilterConfiguration: (config: FilterConfiguration) => {
       set({ filterConfiguration: config });
     },
-    
+
     setFilterManager: (manager: FilterConfigurationManager) => {
       set({ filterManager: manager });
     },
-    
+
     // === INHERITED FILTERS MANAGEMENT ===
     setInheritedFilters: (inherited: InheritedFilterValues) => {
       const disabledFields = getDisabledFieldsFromInherited(inherited);
-      set({ 
+      set({
         inheritedFilters: inherited,
-        disabledFields 
+        disabledFields
       });
     },
-    
+
     applyInheritedFilters: async (): Promise<void> => {
       const state = get();
-      
+
       if (state.filterManager && state.inheritedFilters.length > 0) {
         const initialFilters = createInitialFiltersFromInherited(
           state.inheritedFilters,
@@ -461,16 +486,16 @@ export const useKesslerStore = create<KesslerStore>()(
         await state.setFilters(initialFilters, true);
       }
     },
-    
+
     // === LOADING AND ERROR STATES ===
     setIsLoadingFilters: (loading: boolean) => {
       set({ isLoadingFilters: loading });
     },
-    
+
     setFilterError: (error: string | null) => {
       set({ filterError: error });
     },
-    
+
     setFieldLoading: (fieldId: string, loading: boolean) => {
       set(state => ({
         fieldLoadingStates: {
@@ -479,38 +504,38 @@ export const useKesslerStore = create<KesslerStore>()(
         }
       }));
     },
-    
+
     // === INITIALIZATION ===
     initialize: async (manager: FilterConfigurationManager, inheritedFilters: InheritedFilterValues = []): Promise<boolean> => {
       const state = get();
-      
+
       // Prevent concurrent initialization
       if (state.isInitializing || state.isInitialized) {
         console.warn('Filter system already initialized or initializing');
         return state.isInitialized;
       }
-      
+
       try {
-        set({ 
-          isInitializing: true, 
+        set({
+          isInitializing: true,
           initializationError: null,
-          filterError: null 
+          filterError: null
         });
-        
+
         // Load configuration
         const config = await manager.loadConfiguration();
-        
+
         // Set up store
         set({
           filterManager: manager,
           filterConfiguration: config,
         });
-        
+
         // Set inherited filters
         if (inheritedFilters.length > 0) {
           state.setInheritedFilters(inheritedFilters);
         }
-        
+
         // Try to load persisted filters first
         const persistedFilters = state.loadPersistedFilters();
         if (persistedFilters) {
@@ -524,25 +549,25 @@ export const useKesslerStore = create<KesslerStore>()(
             await state.resetFilters();
           }
         }
-        
+
         // Process any pending updates
         await state.processPendingUpdates();
-        
+
         // Enable URL sync
         state.enableUrlSync();
-        
-        set({ 
+
+        set({
           isInitialized: true,
           isInitializing: false,
           initializationError: null
         });
-        
+
         console.log('Filter system initialized successfully');
         return true;
-        
+
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "Unknown initialization error";
-        set({ 
+        set({
           initializationError: errorMessage,
           isInitializing: false,
           isInitialized: false
@@ -551,19 +576,19 @@ export const useKesslerStore = create<KesslerStore>()(
         return false;
       }
     },
-    
+
     setInitialized: (initialized: boolean) => {
       set({ isInitialized: initialized });
     },
-    
+
     setInitializing: (initializing: boolean) => {
       set({ isInitializing: initializing });
     },
-    
+
     setInitializationError: (error: string | null) => {
       set({ initializationError: error });
     },
-    
+
     // === PENDING UPDATES ===
     queueUpdate: (fieldId: string, value: string) => {
       set(state => ({
@@ -573,59 +598,59 @@ export const useKesslerStore = create<KesslerStore>()(
         ]
       }));
     },
-    
+
     processPendingUpdates: async (): Promise<void> => {
       const state = get();
-      
+
       if (state.pendingUpdates.length === 0) return;
-      
+
       console.log(`Processing ${state.pendingUpdates.length} pending updates`);
-      
+
       // Process updates sequentially
       for (const update of state.pendingUpdates) {
         await state.setFilter(update.fieldId, update.value);
       }
-      
+
       state.clearPendingUpdates();
     },
-    
+
     clearPendingUpdates: () => {
       set({ pendingUpdates: [] });
     },
-    
+
     // === URL SYNCHRONIZATION - FIXED ===
     enableUrlSync: () => {
       const state = get();
-      
+
       if (isSSR() || state.urlSyncEnabled) return;
-      
+
       set({ urlSyncEnabled: true });
-      
+
       // Listen for browser navigation
       const handlePopState = () => {
         const currentState = get();
         currentState.syncWithUrl();
       };
-      
+
       if (!isSSR()) {
         window.addEventListener('popstate', handlePopState);
       }
     },
-    
+
     disableUrlSync: () => {
       set({ urlSyncEnabled: false });
     },
-    
+
     syncWithUrl: () => {
       if (isSSR()) return;
-      
+
       const state = get();
       const urlParams = createSafeURLSearchParams();
-      
+
       if (!urlParams) return;
-      
+
       const urlFilters: FilterValues = {};
-      
+
       // Extract filter parameters from URL
       for (const [key, value] of urlParams.entries()) {
         if (key.startsWith('filter_')) {
@@ -633,45 +658,45 @@ export const useKesslerStore = create<KesslerStore>()(
           urlFilters[fieldId] = sanitizeString(value);
         }
       }
-      
+
       // Update filters if they differ from current state
       const hasChanges = Object.keys(urlFilters).some(
         key => urlFilters[key] !== state.filters[key]
       );
-      
+
       if (hasChanges) {
         state.setFilters({ ...state.filters, ...urlFilters });
         set({ lastUrlSync: Date.now() });
       }
     },
-    
+
     updateUrlFromFilters: () => {
       const state = get();
       if (state.urlSyncEnabled) {
         debouncedUrlUpdate(state.filters);
       }
     },
-    
+
     // === UTILITY FUNCTIONS ===
     hasActiveFilters: () => {
       const { filters } = get();
       return hasActiveFilters(filters);
     },
-    
+
     getFilterValue: (fieldId: string) => {
       const { filters } = get();
       return filters[fieldId] || "";
     },
-    
+
     isFieldDisabled: (fieldId: string) => {
       const { disabledFields } = get();
       return disabledFields.includes(fieldId);
     },
-    
+
     validateFilters: (filters?: FilterValues): ValidationResult => {
       const state = get();
       const filtersToValidate = filters || state.filters;
-      
+
       if (!state.filterManager) {
         return {
           isValid: false,
@@ -679,39 +704,39 @@ export const useKesslerStore = create<KesslerStore>()(
           warnings: []
         };
       }
-      
+
       return state.filterManager.validateFilters(filtersToValidate);
     },
-    
+
     // === URL PARAMETER HANDLING ===
     resetFiltersFromUrl: async (): Promise<void> => {
       const state = get();
       const dataset = state.getDatasetFromUrl();
       await state.resetFiltersForDataset(dataset || undefined);
     },
-    
+
     getDatasetFromUrl: () => {
       if (isSSR()) return null;
-      
+
       const urlParams = createSafeURLSearchParams();
       if (!urlParams) return null;
-      
+
       const dataset = urlParams.get("dataset");
       return dataset ? sanitizeString(dataset) : null;
     },
-    
+
     // === PERSISTENCE ===
     persistFilters: () => {
       const { filters } = get();
       debouncedPersist(filters);
     },
-    
+
     loadPersistedFilters: (): FilterValues | null => {
       const stored = safePersistence.getItem('kessler_filters');
       if (!stored) return null;
-      
+
       const parsed = safeJsonParse<FilterValues>(stored, {});
-      
+
       // Sanitize persisted values
       const sanitized: FilterValues = {};
       Object.entries(parsed).forEach(([key, value]) => {
@@ -719,25 +744,25 @@ export const useKesslerStore = create<KesslerStore>()(
           sanitized[key] = sanitizeString(value);
         }
       });
-      
+
       return sanitized;
     },
-    
+
     clearPersistedFilters: () => {
       safePersistence.removeItem('kessler_filters');
     },
-    
+
     // === CLEANUP ===
     cleanup: () => {
       const state = get();
-      
+
       // Cancel debounced operations
       debouncedPersist.cancel();
       debouncedUrlUpdate.cancel();
-      
+
       // Clear pending updates
       state.clearPendingUpdates();
-      
+
       // Reset state
       set({
         isInitialized: false,
@@ -815,7 +840,7 @@ export const useFilterInitialization = () => {
  */
 export const useFilters = () => {
   const store = useKesslerStore();
-  
+
   return {
     // State
     filters: store.filters,
@@ -831,7 +856,7 @@ export const useFilters = () => {
     initializationError: store.initializationError,
     pendingUpdates: store.pendingUpdates,
     urlSyncEnabled: store.urlSyncEnabled,
-    
+
     // Actions
     setFilter: store.setFilter,
     setFilters: store.setFilters,
@@ -847,13 +872,13 @@ export const useFilters = () => {
     setFilterError: store.setFilterError,
     setFieldLoading: store.setFieldLoading,
     initialize: store.initialize,
-    
+
     // URL Sync - FIXED
     enableUrlSync: store.enableUrlSync,
     disableUrlSync: store.disableUrlSync,
     syncWithUrl: store.syncWithUrl,
     updateUrlFromFilters: store.updateUrlFromFilters,
-    
+
     // Utilities
     hasActiveFilters: store.hasActiveFilters,
     getFilterValue: store.getFilterValue,
@@ -873,13 +898,13 @@ export const useFilters = () => {
  */
 export const useKesslerCore = () => {
   const store = useKesslerStore();
-  
+
   return {
     // State
     isLoggedIn: store.isLoggedIn,
     experimentalFeaturesEnabled: store.experimentalFeaturesEnabled,
     defaultState: store.defaultState,
-    
+
     // Actions
     setIsLoggedIn: store.setIsLoggedIn,
     setExperimentalFeaturesEnabled: store.setExperimentalFeaturesEnabled,
@@ -933,11 +958,11 @@ export const initializeFilterSystem = async (
  * Safe filter update with validation
  */
 export const safeUpdateFilter = async (
-  fieldId: string, 
+  fieldId: string,
   value: string
 ): Promise<{ success: boolean; error?: string }> => {
   const store = useKesslerStore.getState();
-  
+
   try {
     const success = await store.setFilter(fieldId, value);
     return { success };
@@ -955,7 +980,7 @@ export const safeBulkUpdateFilters = async (
 ): Promise<{ success: boolean; error?: string; rolledBack?: boolean }> => {
   const store = useKesslerStore.getState();
   const originalFilters = { ...store.filters };
-  
+
   try {
     const success = await store.setFilters(filters);
     if (!success) {
@@ -977,7 +1002,7 @@ export const safeBulkUpdateFilters = async (
  */
 export const getFilterSystemStatus = () => {
   const store = useKesslerStore.getState();
-  
+
   return {
     isReady: store.isInitialized && !store.isInitializing && !store.initializationError,
     isInitialized: store.isInitialized,
@@ -1025,7 +1050,7 @@ export const cleanupFilterSystem = (): void => {
  */
 export const getFilterPerformanceMetrics = () => {
   const store = useKesslerStore.getState();
-  
+
   return {
     updateCount: store.updateCount,
     lastUpdateTimestamp: store.lastUpdateTimestamp,
@@ -1131,12 +1156,12 @@ export const useUrlSync = (enabled = true) => {
  * Hook for persisting filters across sessions
  */
 export const useFilterPersistence = (autoLoad = true, autoPersist = true) => {
-  const { 
-    persistFilters, 
-    loadPersistedFilters, 
+  const {
+    persistFilters,
+    loadPersistedFilters,
     clearPersistedFilters,
     isInitialized,
-    setFilters 
+    setFilters
   } = useFilters();
 
   // Load persisted filters on mount
@@ -1299,7 +1324,7 @@ export const useMemoryMonitor = (threshold = 1024 * 1024) => { // 1MB threshold
     const checkMemory = () => {
       const metrics = getFilterPerformanceMetrics();
       const totalSize = metrics.memoryUsage.filtersSize + metrics.memoryUsage.configurationSize;
-      
+
       if (totalSize > threshold) {
         setWarning(true);
         console.warn('Filter system memory usage high:', totalSize, 'bytes');

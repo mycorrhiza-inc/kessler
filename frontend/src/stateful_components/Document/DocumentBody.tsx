@@ -1,11 +1,10 @@
 "use client";
-// TODO: change the network fetch stuff so that this can be SSR'd
-import React, { memo } from "react";
-import * as Tabs from "@radix-ui/react-tabs";
+
+import Link from 'next/link';
+import React, { memo, useState } from "react";
 
 import PDFViewer from "./PDFViewer";
 import { fetchTextDataFromURL } from "./documentLoader";
-import useSWRImmutable from "swr";
 import {
   AuthorInformation,
   CompleteFileSchema,
@@ -18,64 +17,31 @@ import { AuthorInfoPill, DocketPill } from "@/style_components/Pills/TextPills";
 import LoadingSpinner from "@/style_components/misc/LoadingSpinner";
 import MarkdownRenderer from "@/style_components/misc/MarkdownRenderer";
 
-
-// import { ErrorBoundary } from "react-error-boundary";
-//
-
 const MarkdownContent = memo(({ docUUID }: { docUUID: string }) => {
-  const markdown_url = `${CLIENT_API_URL}/v2/public/files/${docUUID}/markdown`;
-  // axios.get(`https://api.kessler.xyz/v2/public/files/${objectid}/markdown`),
-  const { data, error, isLoading } = useSWRImmutable(
-    markdown_url,
-    fetchTextDataFromURL,
-  );
-  if (isLoading) {
-    return <LoadingSpinner loadingText="Loading Document" />;
-  }
-  const text = data;
-  if (error) {
-    return (
-      <p>
-        Encountered an error getting text from the server.
-        <br /> {String(error)}
-      </p>
-    );
-  }
-  if (text == undefined) {
-    return <p>Document text is undefined.</p>;
-  }
-  return <MarkdownRenderer>{text}</MarkdownRenderer>;
+  // TODO: Replace this placeholder with real fetch + SSR support
+  return <p>IMPLEMENT SOME KIND OF NOT SHITTY FETCHING FRAMEWORK FOR THIS, AND ALSO LET IT BE SSRABLE</p>;
 });
 
-const MetadataContent = memo(({ metadata }: { metadata: any }) => {
-  // if (isLoading) {
-  //   return <LoadingSpinner loadingText="Loading Document Metadata" />;
-  // }
-  // if (error) {
-  //   return <p>Encountered an error getting text from the server.</p>;
-  // }
-
-  return (
-    <div className="overflow-x-auto">
-      <table className="table table-zebra">
-        <thead>
-          <tr>
-            <th>Field</th>
-            <th>Value</th>
+const MetadataContent = memo(({ metadata }: { metadata: any }) => (
+  <div className="overflow-x-auto">
+    <table className="table table-zebra">
+      <thead>
+        <tr>
+          <th>Field</th>
+          <th>Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        {Object.entries(metadata).map(([key, value]) => (
+          <tr key={key}>
+            <td>{key}</td>
+            <td>{String(value)}</td>
           </tr>
-        </thead>
-        <tbody>
-          {Object.entries(metadata).map(([key, value]) => (
-            <tr key={key}>
-              <td>{key}</td>
-              <td>{String(value)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-});
+        ))}
+      </tbody>
+    </table>
+  </div>
+));
 
 const DocumentContent = ({
   docUUID,
@@ -85,10 +51,10 @@ const DocumentContent = ({
   extension: FileExtension;
 }) => {
   const documentUrl = `${CLIENT_API_URL}/v2/public/files/${docUUID}/raw`;
-  if (extension == FileExtension.PDF) {
+  if (extension === FileExtension.PDF) {
     return <PDFViewer file={documentUrl} />;
   }
-  if (extension == FileExtension.XLSX) {
+  if (extension === FileExtension.XLSX) {
     return <XlsxViewer file={documentUrl} />;
   }
   return <ErrorMessage error={`Cannot Display Document Type`} />;
@@ -107,10 +73,12 @@ const DocumentHeader = ({
   const verified = (documentObject.verified || false) as boolean;
   const summary = documentObject.extra.summary;
   const underscoredTitle = title ? title.replace(/ /g, "_") : "Unkown_Document";
-  const fileUrlNamedDownload = `${CLIENT_API_URL}/v2/public/files/${objectId}/raw/${underscoredTitle}.${extension}`;
+  const fileUrlNamedDownload =
+    `${CLIENT_API_URL}/v2/public/files/${objectId}/raw/${underscoredTitle}.${extension}`;
   const kesslerFileUrl = `/files/${objectId}`;
   const authors_unpluralized =
-    documentObject.authors?.length == 1 ? "Author" : "Authors";
+    documentObject.authors?.length === 1 ? "Author" : "Authors";
+
   return (
     <>
       <div className="card-title flex justify-between items-start">
@@ -133,29 +101,17 @@ const DocumentHeader = ({
               Open in New Tab
             </Link>
           )}
-          {/* {verified && ( */}
-          {/* <ExperimentalChatModalClickDiv */}
-          {/*   className="btn btn-accent" */}
-          {/*   inheritedFilters={[ */}
-          {/*     { filter: FilterField.MatchFileUUID, value: objectId }, */}
-          {/*   ]} */}
-          {/* > */}
-          {/*   Chat with Document */}
-          {/* </ExperimentalChatModalClickDiv> */}
-          {/* )} */}
         </div>
       </div>
       <p>
-        <b>Case Number:</b> {"   "}
-        <DocketPill
-          docketId={documentObject.mdata.docket_id as string}
-        />
+        <b>Case Number:</b> {'   '}
+        <DocketPill docketId={documentObject.mdata.docket_id as string} />
       </p>
       {documentObject.authors && (
         <p>
-          <b>{authors_unpluralized}:</b>{" "}
+          <b>{authors_unpluralized}:</b>{' '}
           {documentObject.authors.map((a: AuthorInformation) => (
-            <AuthorInfoPill author_info={a} />
+            <AuthorInfoPill author_info={a} key={a.id} />
           ))}
         </p>
       )}
@@ -181,77 +137,96 @@ export const DocumentMainTabs = ({
   isPage: boolean;
 }) => {
   const objectId = documentObject.id;
-  var metadata = documentObject.mdata;
-  metadata.hash = documentObject.hash;
-  // TODO: Make this into a library function or something.
-  const showText =
-    documentObject?.verified && documentObject?.extension != "xlsx";
-  // Temporary fix while we sort out the bad documents
-  const showRawDocument = documentObject?.verified;
-  const extension = fileExtensionFromText(documentObject?.extension);
-  const getDefaultTab = (
-    showRawDocument: boolean,
-    showText: boolean,
-  ): string => {
-    if (!showRawDocument) {
-      if (!showText) {
-        return "tab3";
-      }
-      return "tab2";
-    }
-    return "tab1";
-  };
-  const defaultTab = getDefaultTab(showRawDocument, showText);
-  return (
-    <div className="modal-content standard-box ">
-      <DocumentHeader documentObject={documentObject} isPage={isPage} />
-      <Tabs.Root
-        className="TabsRoot"
-        role="tablist tabs tabs-bordered tabs-lg"
-        defaultValue={defaultTab}
-      >
-        <Tabs.List
-          className="TabsList flex gap-2 border-b border-base-300"
-          aria-label="Document Sections"
-        >
-          {showRawDocument && (
-            <Tabs.Trigger
-              className="TabsTrigger px-6 py-3 font-bold hover:bg-base-200 transition-colors duration-200 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary"
-              value="tab1"
-            >
-              📄 Document
-            </Tabs.Trigger>
-          )}
+  const metadata = { ...documentObject.mdata, hash: documentObject.hash };
 
-          {showText && (
-            <Tabs.Trigger
-              className="TabsTrigger px-6 py-3 font-bold hover:bg-base-200 transition-colors duration-200 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary"
-              value="tab2"
-            >
-              📝 Document Text
-            </Tabs.Trigger>
-          )}
-          <Tabs.Trigger
-            className="TabsTrigger px-6 py-3 font-bold hover:bg-base-200 transition-colors duration-200 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary"
-            value="tab3"
-          >
-            ℹ️ Metadata
-          </Tabs.Trigger>
-        </Tabs.List>
+  const showText =
+    documentObject.verified && documentObject.extension !== "xlsx";
+  const showRawDocument = documentObject.verified;
+  const extension = fileExtensionFromText(documentObject.extension);
+
+  type TabValue = "tab1" | "tab2" | "tab3";
+  const getDefaultTab = (): TabValue => {
+    if (showRawDocument) return "tab1";
+    if (showText) return "tab2";
+    return "tab3";
+  };
+
+  const [activeTab, setActiveTab] = useState<TabValue>(getDefaultTab());
+
+  return (
+    <div className="modal-content standard-box">
+      <DocumentHeader documentObject={documentObject} isPage={isPage} />
+
+      {/* Tabs List */}
+      <div
+        role="tablist"
+        aria-label="Document Sections"
+        className="TabsList flex gap-2 border-b border-base-300"
+      >
         {showRawDocument && (
-          <Tabs.Content className="TabsContent" value="tab1">
-            <DocumentContent docUUID={objectId} extension={extension} />
-          </Tabs.Content>
+          <button
+            role="tab"
+            aria-selected={activeTab === "tab1"}
+            onClick={() => setActiveTab("tab1")}
+            className={`px-6 py-3 font-bold hover:bg-base-200 transition-colors duration-200 ${
+              activeTab === "tab1"
+                ? "border-b-2 border-primary text-primary"
+                : ""
+            }`}
+          >
+            📄 Document
+          </button>
         )}
+
         {showText && (
-          <Tabs.Content className="TabsContent" value="tab2">
-            <MarkdownContent docUUID={objectId} />
-          </Tabs.Content>
+          <button
+            role="tab"
+            aria-selected={activeTab === "tab2"}
+            onClick={() => setActiveTab("tab2")}
+            className={`px-6 py-3 font-bold hover:bg-base-200 transition-colors duration-200 ${
+              activeTab === "tab2"
+                ? "border-b-2 border-primary text-primary"
+                : ""
+            }`}
+          >
+            📝 Document Text
+          </button>
         )}
-        <Tabs.Content className="TabsContent" value="tab3">
-          <MetadataContent metadata={metadata} />
-        </Tabs.Content>
-      </Tabs.Root>
+
+        <button
+          role="tab"
+          aria-selected={activeTab === "tab3"}
+          onClick={() => setActiveTab("tab3")}
+          className={`px-6 py-3 font-bold hover:bg-base-200 transition-colors duration-200 ${
+            activeTab === "tab3"
+              ? "border-b-2 border-primary text-primary"
+              : ""
+          }`}
+        >
+          ℹ️ Metadata
+        </button>
+      </div>
+
+      {/* Tabs Content */}
+      <div className="mt-4">
+        {showRawDocument && activeTab === "tab1" && (
+          <div className="TabsContent">
+            <DocumentContent docUUID={objectId} extension={extension} />
+          </div>
+        )}
+
+        {showText && activeTab === "tab2" && (
+          <div className="TabsContent">
+            <MarkdownContent docUUID={objectId} />
+          </div>
+        )}
+
+        {activeTab === "tab3" && (
+          <div className="TabsContent">
+            <MetadataContent metadata={metadata} />
+          </div>
+        )}
+      </div>
     </div>
   );
 };

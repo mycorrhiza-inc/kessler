@@ -4,9 +4,9 @@ import {
   SearchResult,
   SearchResultsGetter,
 } from "../types/new_search_types";
-import { sleep } from "@/utils/utils";
 import { AuthorCardData, CardData, CardType, DocketCardData, DocumentCardData } from "../types/generic_card_types";
 import { AuthorInformation } from "../types/backend_schemas";
+import { sleep } from "../utils";
 const randomRecentDate = () => {
   const date = new Date();
   date.setMonth(date.getMonth() - Math.floor(Math.random() * 6));
