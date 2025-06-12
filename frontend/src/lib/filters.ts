@@ -4,7 +4,7 @@
  * and their configurations are loaded from a backend endpoint.
  */
 
-import { contextualApiUrl, getEnvConfig } from "./env_variables/env_variables";
+import { getContextualAPIUrl } from "./env_variables";
 
 // =============================================================================
 // CORE TYPES
@@ -615,7 +615,7 @@ export function clearSpecificFilters(
 
 
 export const makeFilterEndpoints = (): FilterEndpoints => {
-  const contextual_url = contextualApiUrl(getEnvConfig())
+  const contextual_url = getContextualAPIUrl()
   return {
     configuration: `${contextual_url}/api/filters/configuration`,
     convertFilters: `${contextual_url}/api/filters/convert`,

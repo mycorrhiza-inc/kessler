@@ -1,5 +1,9 @@
 k8s/templates/secrets.yaml
 
+data/fugu_db
+
+frontend-old/
+frontend-new/
 
 
 hidden_service
