@@ -1,6 +1,5 @@
 "use client";
 import { completeFileSchemaGet } from "@/lib/requests/search";
-import useSWRImmutable from "swr";
 import { DocumentMainTabs } from "./DocumentBody";
 import { CompleteFileSchema } from "@/lib/types/backend_schemas";
 
@@ -14,20 +13,21 @@ type ModalProps = {
 };
 const DocumentModalBody = ({ objectId, isPage }: ModalProps) => {
   const semiCompleteFileUrl = `${CLIENT_API_URL}/v2/public/files/${objectId}`;
-  const { data, error, isLoading } = useSWRImmutable(
-    semiCompleteFileUrl,
-    completeFileSchemaGet,
-  );
-  if (isLoading) {
-    return <LoadingSpinner loadingText="Loading Document" />;
-  }
-  if (error) {
-    return (
-      <p>Encountered an error getting text from the server: {String(error)}</p>
-    );
-  }
-  const docObj = data as CompleteFileSchema;
-  return <DocumentMainTabs documentObject={docObj} isPage={isPage} />;
+  // const { data, error, isLoading } = useSWRImmutable(
+  //   semiCompleteFileUrl,
+  //   completeFileSchemaGet,
+  // );
+  // if (isLoading) {
+  //   return <LoadingSpinner loadingText="Loading Document" />;
+  // }
+  // if (error) {
+  //   return (
+  //     <p>Encountered an error getting text from the server: {String(error)}</p>
+  //   );
+  // }
+  // const docObj = data as CompleteFileSchema;
+  // return <DocumentMainTabs documentObject={docObj} isPage={isPage} />;
+  return <p>NOT IMPLEMENTED</p>
 };
 
 const DocumentModal = ({

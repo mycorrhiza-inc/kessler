@@ -111,7 +111,7 @@ const DocumentHeader = ({
         <p>
           <b>{authors_unpluralized}:</b>{' '}
           {documentObject.authors.map((a: AuthorInformation) => (
-            <AuthorInfoPill author_info={a} key={a.id} />
+            <AuthorInfoPill author_info={a} key={a.author_id} />
           ))}
         </p>
       )}
