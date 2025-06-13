@@ -1,6 +1,6 @@
 "use client"
+import { TextPill } from '@/style_components/Pills/TextPills';
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import { TextPill } from "@/components/Tables/TextPills"
 
 // Types for the component
 interface FilterFieldDefinition {

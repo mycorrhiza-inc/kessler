@@ -1,7 +1,7 @@
 import { CardData, CardType } from "@/lib/types/generic_card_types";
 import { clsx } from "clsx";
 import React from "react";
-import { AuthorPill } from "../Tables/TextPills";
+import { AuthorPill } from "../Pills/TextPills";
 
 const getTimestampLabel = (type: CardType): string => {
   switch (type) {

@@ -2,8 +2,6 @@
 import { ReactNode, useState } from "react";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
-import { BreadcrumbValues } from "../SitemapUtils";
-import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 import Link from "next/link";
 
 interface LayoutProps {

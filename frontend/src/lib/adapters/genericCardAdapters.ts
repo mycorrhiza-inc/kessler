@@ -1,6 +1,15 @@
-import { CardData } from "@/components/NewSearch/GenericResultCard";
 import React from "react";
 
+import type { Filing } from "@/lib/types/FilingTypes";
+import type { OrganizationInfo } from "@/lib/requests/organizations";
+import type { Conversation } from "@/lib/conversations";
+import {
+  AuthorCardData,
+  CardData,
+  CardType,
+  DocketCardData,
+  DocumentCardData,
+} from "../types/generic_card_types";
 /**
  * Adapter interface for mapping search hits to card data and handling query params.
  */
@@ -15,15 +24,6 @@ export interface SearchAdapter<Hit> {
   getEmptyState?(): React.ReactNode;
 }
 
-import type { Filing } from "@/lib/types/FilingTypes";
-import type { OrganizationInfo } from "@/lib/requests/organizations";
-import type { Conversation } from "@/lib/conversations";
-import {
-  AuthorCardData,
-  CardType,
-  DocketCardData,
-  DocumentCardData,
-} from "../types/generic_card_types";
 
 /**
  * Helper: Format ISO date string to human-readable date.

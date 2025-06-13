@@ -1,4 +1,5 @@
 import React from "react";
+import { subdividedHueFromSeed } from "../Pills/TextPills";
 
 interface MarkdownRendererProps {
   children: string;
@@ -21,7 +22,6 @@ export default MarkdownRenderer;
 // import { dracula } from "react-syntax-highlighter/dist/cjs/styles/prism";
 // import rehypeComponents from "rehype-components";
 // import { LinkDocket, LinkFile } from "./Chat/LLMComponents";
-// import { subdividedHueFromSeed } from "./Tables/TextPills";
 // const CodeBlock = ({ node, inline, className, children, ...props }: any) => {
 //   const match = /language-(\w+)/.exec(className || "");
 //   const codeContent = String(children).replace(/\n$/, "");

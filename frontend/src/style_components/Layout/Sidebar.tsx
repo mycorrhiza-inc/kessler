@@ -1,16 +1,14 @@
 // Sidebar.tsx
 "use client";
 import React, { useState } from "react";
-import { Code, Database, FileText, Menu, Settings } from "lucide-react";
-import { GiMushroomsCluster } from "react-icons/gi";
 import { BsArrowBarLeft, BsArrowBarRight } from "react-icons/bs";
 import Link from "next/link";
 import { IoHomeSharp, IoDocument, IoSettingsSharp } from "react-icons/io5";
 import { FaRectangleList, FaUserGroup } from "react-icons/fa6";
-import { useKesslerStore } from "@/lib/_store";
-import { ChevronDownIcon, HamburgerIcon, UserIcon } from "@/components/Icons";
-import Modal from "@/components/styled-components/Modal";
-import SettingsContent from "@/components/SettingsContent";
+import { ChevronDownIcon, HamburgerIcon, UserIcon } from "@/style_components/misc/Icons";
+import { RiMenuUnfold3Line } from "react-icons/ri";
+// import Modal from "@/components/styled-components/Modal";
+// import SettingsContent from "@/components/SettingsContent";
 
 
 interface SidebarButtonProps {
@@ -109,7 +107,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           </button>
         ) : (
           <button className="p-2 bg-base-100 dark:bg-base-800 rounded-full  hover:bg-base-200 dark:hover:bg-base-700 transition-colors border-2 border-secondary">
-            <Menu size={24} />
+            <RiMenuUnfold3Line size={24} />
           </button>
         )}
         <div className="flex gap-2">
@@ -150,9 +148,9 @@ const Sidebar: React.FC<SidebarProps> = ({
         >
           <UserIcon />
         </div>
-        <Modal open={settingsOpen} setOpen={setSettingsOpen}>
-          <SettingsContent />
-        </Modal>
+        {/* <Modal open={settingsOpen} setOpen={setSettingsOpen}> */}
+        {/*   <SettingsContent /> */}
+        {/* </Modal> */}
 
         {/* Resize Handle */}
         <div

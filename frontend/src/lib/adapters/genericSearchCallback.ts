@@ -9,8 +9,6 @@ import axios from "axios";
 import { hydratedSearchResultsToFilings } from "../requests/search";
 import { adaptFilingToCard } from "./genericCardAdapters";
 import { DocumentCardData } from "../types/generic_card_types";
-import { contextualApiUrl, getEnvConfig } from "../env_variables/env_variables";
-import assert from "assert";
 import { BackendFilterObject } from "../filters";
 
 export enum GenericSearchType {

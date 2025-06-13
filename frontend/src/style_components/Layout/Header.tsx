@@ -1,14 +1,13 @@
 // "use client"
 import { GiMushroomsCluster } from "react-icons/gi";
-import { BreadcrumbValues, HeaderBreadcrumbs } from "../SitemapUtils";
 import Link from "next/link";
 
 export default function Header({
   children,
-  breadcrumbs,
+  // breadcrumbs,
 }: {
   children?: React.ReactNode;
-  breadcrumbs: BreadcrumbValues;
+  // breadcrumbs: BreadcrumbValues;
 }) {
   return (
     <div className="fixed top-0 left-0 flex flex-row justify-start h-15 pt-5 w-full bg-base-100 z-1000 p-2">
@@ -22,7 +21,7 @@ export default function Header({
         </Link>
       </div>
       <div className="h-15 flex-1">
-        <HeaderBreadcrumbs breadcrumbs={breadcrumbs} />
+        {/* <HeaderBreadcrumbs breadcrumbs={breadcrumbs} /> */}
       </div>
       <div>{children}</div>
     </div>
