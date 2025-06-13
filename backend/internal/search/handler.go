@@ -441,6 +441,9 @@ func RegisterSearchRoutes(router *mux.Router) error {
 	router.HandleFunc("/", handler.GetSearchInfo).Methods(http.MethodGet)
 	router.HandleFunc("", handler.GetSearchInfo).Methods(http.MethodGet)
 
+	// GET search endpoint (using query parameter)
+	router.HandleFunc("/query", handler.SearchTextGet).Methods(http.MethodGet)
+
 	// Main search endpoint with fallback
 	router.HandleFunc("/", handler.SearchWithFallback).Methods(http.MethodPost)
 	router.HandleFunc("", handler.SearchWithFallback).Methods(http.MethodPost)
@@ -550,6 +553,67 @@ func (h *SearchServiceHandler) SearchFiles(w http.ResponseWriter, r *http.Reques
 	// For now, this just delegates to the main search handler
 	// Could be specialized later for file-specific logic
 	h.Search(w, r)
+}
+
+// @Summary     Search with GET Request
+// @Description Performs a search using query parameters
+// @Tags        search
+// @Produce     json
+// @Param       q query string true "Search query"
+// @Param       page query int false "Page number"
+// @Param       limit query int false "Results per page"
+// @Success     200 {object} SearchResponse
+// @Failure     400 {string} string "Invalid query"
+// @Failure     500 {string} string "Internal server error"
+// @Router      /search/query [get]
+func (h *SearchServiceHandler) SearchTextGet(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	ctx, span := tracer.Start(ctx, "search-api:search-text-get")
+	defer span.End()
+
+	logger.Info(ctx, "GET search request received")
+
+	// Extract query parameter
+	query := r.URL.Query().Get("q")
+	if query == "" {
+		logger.Error(ctx, "empty search query provided")
+		http.Error(w, "Query parameter 'q' is required", http.StatusBadRequest)
+		return
+	}
+
+	// Extract pagination from query parameters
+	pagination := h.extractPagination(r)
+
+	// Extract filters from query parameters if any
+	filters := h.extractFilters(r)
+
+	logger.Info(ctx, "processing GET search request",
+		zap.String("query", query),
+		zap.Int("page", pagination.Page),
+		zap.Int("limit", pagination.Limit),
+		zap.Int("filter_count", len(filters)))
+
+	// Process the search
+	response, err := h.service.ProcessSearch(ctx, query, filters, pagination)
+	if err != nil {
+		logger.Error(ctx, "search processing failed", zap.Error(err))
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	logger.Info(ctx, "search processing completed successfully",
+		zap.Int("result_count", len(response.Data)))
+
+	// Return response
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		logger.Error(ctx, "failed to encode search response", zap.Error(err))
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	logger.Info(ctx, "GET search completed successfully",
+		zap.Int("result_count", len(response.Data)))
 }
 
 // extractPagination extracts pagination parameters from query string

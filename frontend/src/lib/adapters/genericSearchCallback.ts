@@ -123,8 +123,8 @@ export const createGenericSearchCallback = (
   info.search_type = GenericSearchType.Filling as GenericSearchType;
   //console.log("All searches are dummys for momentary testing purposes")
 
-  // const api_url = contextualApiUrl(getEnvConfig());
-  const api_url = "http://localhost";
+  const api_url = contextualApiUrl(getEnvConfig());
+  // const api_url = "http://localhost";
 
   // =======
   //   info.search_type = GenericSearchType.Dummy as GenericSearchType;
@@ -158,7 +158,7 @@ export const createGenericSearchCallback = (
           return results;
         } catch (error) {
           if (axios.isAxiosError(error)) {
-            console.error("Axios error in dummy search:", error.message);
+            console.log("Axios error in dummy search:", error);
             if (error.response) {
               console.error("Response status:", error.response.status);
               console.error("Response data:", error.response.data);
@@ -173,11 +173,12 @@ export const createGenericSearchCallback = (
     case GenericSearchType.Filling:
       console.log("returning a filling async callback:")
       return async (pagination: PaginationData): Promise<SearchResult[]> => {
-        console.log("weird stuff mark 1")
-        const paginationQueryString = queryStringFromPagination(pagination);
+        // const paginationQueryString = queryStringFromPagination(pagination);
+        // const { query: searchQuery } = info;
+        // const url = `${api_url}/v2/search/file${paginationQueryString}`;
+        // // const paginationQueryString = queryStringFromPagination(pagination)/* ; */
         const { query: searchQuery } = info;
-        const url = `${api_url}/v2/search/file${paginationQueryString}`;
-        console.log("does this trigger the weird stuff.")
+        const url = `${api_url}/v2/search/`;
         const requestData: SearchRequest = { query: searchQuery };
 
         console.log("query data:", info);
