@@ -12,7 +12,6 @@ hidden_service
 # Fixing the accidentially adding pnpm-lock.yaml to git repo
 frontend/.env
 backend/.env
-**/pnpm-lock.yaml
 
 **/tmp
 backend/tmp

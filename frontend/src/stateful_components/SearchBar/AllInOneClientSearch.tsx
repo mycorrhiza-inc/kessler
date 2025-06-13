@@ -1,5 +1,5 @@
 "use client";
-import { UrlParams } from "@/lib/hooks/useUrlParams"
+import { UrlParams } from "@/lib/types/url_params"
 import { PageContextMode } from "@/lib/types/SearchTypes";
 
 export interface AIOSearchProps {

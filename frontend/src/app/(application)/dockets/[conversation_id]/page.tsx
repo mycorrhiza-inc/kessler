@@ -1,4 +1,4 @@
-import { useUrlParams } from "@/lib/hooks/useUrlParams";
+import { useUrlParamsClient } from "@/lib/types/url_params";
 import { PageContextMode } from "@/lib/types/SearchTypes";
 import RenderedConvo from "@/stateful_components/RenderedObjectCards/RednderedConvo";
 import AllInOneClientSearch from "@/stateful_components/SearchBar/AllInOneClientSearch";
@@ -7,14 +7,17 @@ import { Suspense } from "react";
 
 export default async function Page({
   params,
+  searchParams
 }: {
   params: Promise<{ conversation_id: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
 
 
-  const urlParams = useUrlParams();
+  const urlParams = useUrlParamsClient();
 
   const convo_id = (await params).conversation_id;
+  const resolved_params = await searchParams
 
   return (
     <div className="p-4">

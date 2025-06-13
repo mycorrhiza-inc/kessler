@@ -1,6 +1,6 @@
 
 import React, { Suspense } from "react";
-import { useUrlParams } from "@/lib/hooks/useUrlParams";
+import { useUrlParamsClient } from "@/lib/types/url_params";
 import AllInOneClientSearch from "@/stateful_components/SearchBar/AllInOneClientSearch";
 import DynamicFilters from "@/stateful_components/Filters/DynamicFilters";
 import { PageContextMode } from "@/lib/types/SearchTypes";
@@ -13,7 +13,7 @@ export default async function OrgPage({
   params: Promise<{ organization_id: string }>;
 }) {
 
-  const urlParams = useUrlParams();
+  const urlParams = useUrlParamsClient();
 
   const org_id = (await params).organization_id;
 

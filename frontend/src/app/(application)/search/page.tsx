@@ -1,11 +1,14 @@
 import React from "react";
-import { useUrlParams } from "@/lib/hooks/useUrlParams";
 import AllInOneClientSearch from "@/stateful_components/SearchBar/AllInOneClientSearch";
 import DynamicFilters from "@/stateful_components/Filters/DynamicFilters";
 import { PageContextMode } from "@/lib/types/SearchTypes";
 
-export default function SearchPage() {
-  const urlParams = useUrlParams();
+export default async function SearchPage(
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+) {
+  const untypedUrlParams = await searchParams;
+
+
 
   return (
     <div className="p-4">

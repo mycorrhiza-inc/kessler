@@ -1,11 +1,11 @@
 import React from "react";
-import { useUrlParams } from "@/lib/hooks/useUrlParams";
+import { useUrlParamsClient } from "@/lib/types/url_params";
 import AllInOneClientSearch from "@/stateful_components/SearchBar/AllInOneClientSearch";
 import DynamicFilters from "@/stateful_components/Filters/DynamicFilters";
 import { PageContextMode } from "@/lib/types/SearchTypes";
 
 export default function OrgSearchPage() {
-  const urlParams = useUrlParams();
+  const urlParams = useUrlParamsClient();
 
   return (
     <div className="p-4">

@@ -1,11 +1,13 @@
 import React from "react";
-import { useUrlParams } from "@/lib/hooks/useUrlParams";
+import { useUrlParamsClient } from "@/lib/types/url_params";
 import AllInOneClientSearch from "@/stateful_components/SearchBar/AllInOneClientSearch";
 import DynamicFilters from "@/stateful_components/Filters/DynamicFilters";
 import { PageContextMode } from "@/lib/types/SearchTypes";
 
-export default function DocketSearchPage() {
-  const urlParams = useUrlParams();
+export default async function DocketSearchPage(
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+) {
+  const urlParams = await searchParams;
 
   return (
     <div className="p-4">
