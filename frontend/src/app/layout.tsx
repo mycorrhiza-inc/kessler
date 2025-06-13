@@ -37,29 +37,27 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <PHProvider>
-        <ClerkProvider
-          publishableKey="pk_test_YWNlLXdhbGxhYnktODQuY2xlcmsuYWNjb3VudHMuZGV2JA"
-        >
-          <head>
-            <meta
-              name="viewport"
-              content="width=device-width, initial-scale=1.0"
-            />
-          </head>
-          <body className="bg-base-100">
-            <ThemeProvider defaultTheme="kessler">
-              <Suspense>
-                <PostHogPageView />
-              </Suspense>
-              <main className="">
-                <div className="flex-1 w-100vw flex flex-col items-center">
-                  {/* <Navbar user={user} /> */}
-                  {children}
-                </div>
-              </main>
-            </ThemeProvider>
-          </body>
-        </ClerkProvider>
+        {/* <ClerkProvider> */}
+        <head>
+          <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0"
+          />
+        </head>
+        <body className="bg-base-100">
+          <ThemeProvider defaultTheme="kessler">
+            <Suspense>
+              <PostHogPageView />
+            </Suspense>
+            <main className="">
+              <div className="flex-1 w-100vw flex flex-col items-center">
+                {/* <Navbar user={user} /> */}
+                {children}
+              </div>
+            </main>
+          </ThemeProvider>
+        </body>
+        {/* </ClerkProvider> */}
       </PHProvider>
     </html>
   );
