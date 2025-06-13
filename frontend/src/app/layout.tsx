@@ -7,6 +7,7 @@ import {
   ClerkProvider,
 } from "@clerk/nextjs";
 import PostHogPageView from "@/stateful_components/tracking/Posthog/PostHogPageView";
+import { Suspense } from "react";
 
 // const PostHogPageView = dynamic(() => import("../components/Posthog/PostHogPageView"), {
 //   ssr: false,k
@@ -47,7 +48,9 @@ export default function RootLayout({
           </head>
           <body className="bg-base-100">
             <ThemeProvider defaultTheme="kessler">
-              <PostHogPageView />
+              <Suspense>
+                <PostHogPageView />
+              </Suspense>
               <main className="">
                 <div className="flex-1 w-100vw flex flex-col items-center">
                   {/* <Navbar user={user} /> */}

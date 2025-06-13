@@ -5,7 +5,7 @@ import { PageContextMode } from "@/lib/types/SearchTypes";
 import { generateTypeUrlParams } from "@/lib/types/url_params";
 
 export default async function SearchPage(
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+  { searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }
 ) {
 
   const untypedUrlParams = await searchParams;
