@@ -120,35 +120,3 @@ export function encodeFilterParamaters(params: TypedUrlParams): string {
 
   return `?${parts.join("&")}`;
 }
-
-// /**
-//  * React hook to read and parse current URL search parameters.
-//  * @returns TypedUrlParams based on the browser's current query string
-//  */
-// export function useTypedUrlParams(): TypedUrlParams {
-//   const searchParams = useSearchParams();
-//
-//   return useMemo(() => {
-//     // Build raw params map
-//     const raw: { [key: string]: string | string[] | undefined } = {};
-//     // URLSearchParams may have multiple values per key
-//     Array.from(searchParams.keys()).forEach((key) => {
-//       const values = searchParams.getAll(key);
-//       raw[key] = values.length > 1 ? values : values[0];
-//     });
-//     return generateTypeUrlParams(raw);
-//   }, [searchParams]);
-// }
-//
-// /**
-//  * React hook to construct a pathname with encoded query params.
-//  * @param params TypedUrlParams to encode
-//  * @returns Full URL path including current pathname and query string
-//  */
-// export function useUrlWithParams(params: TypedUrlParams): string {
-//   const pathname = usePathname();
-//   return useMemo(() => {
-//     const queryString = encodeFilterParamaters(params);
-//     return `${pathname}${queryString}`;
-//   }, [pathname, params]);
-// }
