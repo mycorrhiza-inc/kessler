@@ -1,7 +1,9 @@
-"use client";
-import { useSearchParams, usePathname } from "next/navigation";
-import { useMemo } from "react";
 import { DEFAULT_PAGE_SIZE } from "../constants";
+
+export type RawURLParam = { [key: string]: string | string[] | undefined }
+
+
+// export type RawURLParamPromise = Promise<RawURLParam>
 
 export interface UrlQueryParams {
   query?: string;
