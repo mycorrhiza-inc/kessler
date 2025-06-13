@@ -1,18 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useResizeObserver } from "@wojtekmaj/react-hooks";
 import { pdfjs, Document, Page } from "react-pdf";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css";
 import dynamic from "next/dynamic";
 
 import "./PDFViewer.css";
+import LoadingSpinner from "@/style_components/misc/LoadingSpinner";
+import ErrorMessage from "@/style_components/messages/ErrorMessage";
 
-import type { PDFDocumentProxy } from "pdfjs-dist";
-import LoadingSpinner from "../styled-components/LoadingSpinner";
-import ErrorMessage from "../messages/ErrorMessage";
-import { fi } from "date-fns/locale";
+// import type { PDFDocumentProxy } from "pdfjs-dist";
 
 // TODO : Inline at some point so we dont get screwed by a malicious cdn.
 pdfjs.GlobalWorkerOptions.workerSrc =
@@ -95,7 +93,7 @@ const PDFViewer = ({ file }: { file: string }) => {
     setRenderErr(err.message);
   };
   return (
-    <PDFViewerRaw file={fileData} setLoading={() => {}} onLoadError={onError} />
+    <PDFViewerRaw file={fileData} setLoading={() => { }} onLoadError={onError} />
   );
 };
 
@@ -120,11 +118,12 @@ function PDFViewerRaw({
     }
   }, []);
 
-  useResizeObserver(containerRef, resizeObserverOptions, onResize);
+  throw new Error("panicing now to avoid having to throw on a new dependancy, check PDFViewer.tsx for more details")
+  // useResizeObserver(containerRef, resizeObserverOptions, onResize);
 
   function onDocumentLoadSuccess({
     numPages: nextNumPages,
-  }: PDFDocumentProxy): void {
+  }: any): void {
     setLoading(false);
     setNumPages(nextNumPages);
   }
