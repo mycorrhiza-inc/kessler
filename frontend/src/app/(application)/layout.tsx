@@ -1,6 +1,6 @@
 // import "@/app/globals.css";
 import { CLIENT_API_URL } from "@/lib/env_variables";
-import AuthGuard from "@/stateful_components/AuthGuard";
+import AuthGuard from "@/stateful_components/tracking/AuthGuard";
 import Header from "@/style_components/Layout/Header";
 import Layout from "@/style_components/Layout/Layout";
 
