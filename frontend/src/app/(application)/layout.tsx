@@ -32,27 +32,20 @@ export default async function ApplicationLayout({
   return (
     <AuthGuard isLoggedIn={isLoggedIn}>
       <Header>
-        {/* <div className="relative flex gap-3"> */}
-        <SignedIn>
-          <Link
-            href="/dashboard"
-            className="px-4 py-2 rounded-full bg-[#131316] text-white text-sm font-semibold"
-          >
-            Dashboard
-          </Link>
-        </SignedIn>
-        <SignedOut>
-          <SignUpButton />
-          {/* <button className="px-4 py-2 rounded-full bg-[#131316] text-white text-sm font-semibold"> */}
-          {/*   Sign up */}
-          {/* </button> */}
-          <SignInButton />
-          {/*   <button className="px-4 py-2 rounded-full bg-[#131316] text-white text-sm font-semibold"> */}
-          {/*     Sign in */}
-          {/*   </button> */}
-          {/* </SignInButton> */}
-        </SignedOut>
-        {/* </div> */}
+        <div className="relative flex gap-3">
+          {/* <SignedIn> */}
+          {/*   <Link */}
+          {/*     href="/dashboard" */}
+          {/*     className="px-4 py-2 rounded-full bg-[#131316] text-white text-sm font-semibold" */}
+          {/*   > */}
+          {/*     Dashboard */}
+          {/*   </Link> */}
+          {/* </SignedIn> */}
+          {/* <SignedOut> */}
+          {/*   <SignUpButton /> */}
+          {/*   <SignInButton /> */}
+          {/* </SignedOut> */}
+        </div>
       </Header>
       <Layout>{children}</Layout>
     </AuthGuard>

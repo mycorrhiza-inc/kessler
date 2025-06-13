@@ -33,7 +33,7 @@ services:
     expose:
       - 3000
     command:
-      - "npm"
+      - "pnpm"
       - "run"
       - "dev"
 

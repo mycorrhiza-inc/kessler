@@ -1,11 +1,11 @@
 import React from "react";
 import AllInOneClientSearch from "@/stateful_components/SearchBar/AllInOneClientSearch";
-import DynamicFilters from "@/stateful_components/Filters/DynamicFilters";
 import { PageContextMode } from "@/lib/types/SearchTypes";
 import { generateTypeUrlParams } from "@/lib/types/url_params";
 
 export default async function OrgSearchPage(
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+
+  { searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }
 ) {
   const untypedUrlParams = await searchParams;
   const urlParams = generateTypeUrlParams(untypedUrlParams)
