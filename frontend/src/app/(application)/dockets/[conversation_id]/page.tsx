@@ -1,4 +1,4 @@
-import { useUrlParamsClient } from "@/lib/types/url_params";
+import { generateTypeUrlParams, } from "@/lib/types/url_params";
 import { PageContextMode } from "@/lib/types/SearchTypes";
 import RenderedConvo from "@/stateful_components/RenderedObjectCards/RednderedConvo";
 import AllInOneClientSearch from "@/stateful_components/SearchBar/AllInOneClientSearch";
@@ -13,11 +13,11 @@ export default async function Page({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
 
+  const untypedUrlParams = await searchParams;
+  const urlParams = generateTypeUrlParams(untypedUrlParams)
 
-  const urlParams = useUrlParamsClient();
 
   const convo_id = (await params).conversation_id;
-  const resolved_params = await searchParams
 
   return (
     <div className="p-4">
@@ -25,7 +25,7 @@ export default async function Page({
         <RenderedConvo convo_id={convo_id} />
       </Suspense>
       <h1 className="text-2xl font-bold mb-4">Search [org-name]'s Filings</h1>
-      <AllInOneClientSearch urlParams={urlParams} pageContext={PageContextMode.Files}
+      <AllInOneClientSearch urlParams={urlParams.queryData} pageContext={PageContextMode.Files}
       />
       {/* <DynamicFilters filters={filters} dataset={dataset} /> */}
     </div>
