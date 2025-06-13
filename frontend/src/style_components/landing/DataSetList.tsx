@@ -1,4 +1,4 @@
-import { FileCheckIcon, PublicCommentIcon } from "@/components/Icons";
+import { FileCheckIcon, PublicCommentIcon } from "@/style_components/misc/Icons";
 
 interface StateData {
   name: string;
@@ -7,7 +7,7 @@ interface StateData {
   filing: boolean;
 }
 
-const StatesList = () => {};
+const StatesList = () => { };
 
 export const SupportedStates = ({ className }: { className: string }) => {
   const DataSets = [

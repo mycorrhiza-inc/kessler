@@ -1,4 +1,4 @@
-import { subdividedHueFromSeed } from "../Tables/TextPills";
+import { subdividedHueFromSeed } from "@/style_components/Pills/TextPills";
 
 export interface OrgAutocompleteInfo {
   value: string;

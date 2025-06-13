@@ -1,6 +1,7 @@
 // Figure out way to statically render this markdown without needing a UseState
 
-import MarkdownRenderer from "../MarkdownRenderer";
+import MarkdownRenderer from "../misc/MarkdownRenderer";
+
 
 const Pricing = ({ className }: { className: string }) => {
   const pricing_tiers = [
