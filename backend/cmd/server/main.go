@@ -18,10 +18,10 @@ import (
 	filterconfig "kessler/internal/filters/config"
 	"kessler/internal/health"
 	"kessler/internal/jobs"
+	"kessler/internal/objects"
 	ConversationsHandler "kessler/internal/objects/conversations/handler"
 	FilesHandler "kessler/internal/objects/files/handler"
 	OrganizationsHandler "kessler/internal/objects/organizations/handler"
-	"kessler/internal/objects"
 	"kessler/internal/search"
 	"kessler/pkg/logger"
 

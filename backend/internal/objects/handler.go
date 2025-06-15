@@ -53,7 +53,7 @@ func RegisterObjectRoutes(r *mux.Router) error {
 	handler := NewObjectHandler(service)
 
 	// Create objects subrouter
-	objectsRoute := r.PathPrefix("/objects").Subrouter()
+	objectsRoute := r.PathPrefix("").Subrouter()
 
 	// Get object by ID endpoint
 	objectsRoute.HandleFunc("/{id}", handler.GetObjectByID).Methods(http.MethodGet)
@@ -113,3 +113,4 @@ func (h *ObjectHandler) GetObjectByID(w http.ResponseWriter, r *http.Request) {
 
 	logger.Info(ctx, "successfully retrieved object", zap.String("object_id", objectID))
 }
+

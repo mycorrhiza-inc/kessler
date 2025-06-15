@@ -32,7 +32,7 @@ func RegisterFilterRoutes(r *mux.Router) error {
 	fsh := &FilterServiceHandler{
 		service: service,
 	}
-	filtersRoute := r.PathPrefix("/filters").Subrouter()
+	filtersRoute := r.PathPrefix("/").Subrouter()
 	filtersRoute.HandleFunc(
 		"",
 		fsh.GetFilters,

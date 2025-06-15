@@ -18,6 +18,24 @@ import (
 
 var tracer = otel.Tracer("search-endpoint")
 
+func RegisterSearchRoutes(router *mux.Router) error {
+	fuguServerURL := "http://fugudb:3301" // Make sure this matches your docker-compose
+	filterConfigSvc := filterconfig.NewFilterConfigService(fuguServerURL)
+	service := NewSearchService(fuguServerURL, filterConfigSvc)
+	handler := NewSearchHandler(service)
+
+	fmt.Println("🔧 Registering search routes with fallback...")
+
+	// GET search endpoint (using query parameter)
+	router.HandleFunc("/", handler.SearchTextGet).Methods(http.MethodGet)
+
+	// Search health check
+	router.HandleFunc("/health", handler.HealthCheck).Methods(http.MethodGet)
+
+	fmt.Println("✅ Search routes registered with fallback")
+	return nil
+}
+
 // Frontend request types
 type SearchRequest struct {
 	Query string `json:"query"`
@@ -115,18 +133,6 @@ func NewSearchService(fuguServerURL string, filterConfigSvc *filterconfig.Filter
 	return &SearchService{
 		fuguServerURL:   fuguServerURL,
 		filterConfigSvc: filterConfigSvc,
-	}
-}
-
-// SearchServiceHandler handles HTTP requests for search
-type SearchServiceHandler struct {
-	service *SearchService
-}
-
-// NewSearchHandler creates a new search handler
-func NewSearchHandler(service *SearchService) *SearchServiceHandler {
-	return &SearchServiceHandler{
-		service: service,
 	}
 }
 
@@ -343,119 +349,16 @@ func (s *SearchService) ProcessSearch(ctx context.Context, query string, filters
 	return frontendResponse, nil
 }
 
-// Add a fallback search handler for testing
-func (h *SearchServiceHandler) SearchWithFallback(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	ctx, span := tracer.Start(ctx, "search-api:search-with-fallback")
-	defer span.End()
-
-	logger.Info(ctx, "search request received (with fallback)")
-
-	// Parse request body
-	var searchReq SearchRequest
-	if err := json.NewDecoder(r.Body).Decode(&searchReq); err != nil {
-		logger.Error(ctx, "failed to decode search request", zap.Error(err))
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		return
-	}
-
-	if searchReq.Query == "" {
-		logger.Error(ctx, "empty search query provided")
-		http.Error(w, "Query cannot be empty", http.StatusBadRequest)
-		return
-	}
-
-	// Extract pagination and filters
-	pagination := h.extractPagination(r)
-	filters := h.extractFilters(r)
-
-	logger.Info(ctx, "processing search request",
-		zap.String("query", searchReq.Query),
-		zap.Int("page", pagination.Page),
-		zap.Int("limit", pagination.Limit),
-		zap.Int("filter_count", len(filters)))
-
-	// Try the real search first
-	response, err := h.service.ProcessSearch(ctx, searchReq.Query, filters, pagination)
-	if err != nil {
-		logger.Warn(ctx, "real search failed, using fallback", zap.Error(err))
-
-		// Fallback to mock response
-		response = &SearchResponse{
-			Data: []SearchResultItem{
-				{
-					ID:          "mock-1",
-					Score:       0.95,
-					Text:        "This is a mock search result for query: " + searchReq.Query,
-					Metadata:    map[string]interface{}{"source": "mock", "type": "fallback"},
-					CaseNumber:  "MOCK-001",
-					FileName:    "mock_document.pdf",
-					FilingType:  "Mock Filing",
-					Description: "Mock search result returned because backend is unavailable",
-				},
-				{
-					ID:          "mock-2",
-					Score:       0.87,
-					Text:        "Another mock result to test search functionality",
-					Metadata:    map[string]interface{}{"source": "mock", "type": "fallback"},
-					CaseNumber:  "MOCK-002",
-					FileName:    "another_mock.pdf",
-					FilingType:  "Test Filing",
-					Description: "Second mock result for testing",
-				},
-			},
-		}
-
-		logger.Info(ctx, "using fallback response",
-			zap.Int("mock_result_count", len(response.Data)))
-	}
-
-	logger.Info(ctx, "search processing completed successfully",
-		zap.Int("result_count", len(response.Data)))
-
-	// Return response
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
-	logger.Info(ctx, "about to encode response")
-
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		logger.Error(ctx, "failed to encode search response", zap.Error(err))
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
-
-	logger.Info(ctx, "response encoded and sent successfully")
+// SearchServiceHandler handles HTTP requests for search
+type SearchServiceHandler struct {
+	service *SearchService
 }
 
-// Update the route registration to use the fallback handler temporarily
-func RegisterSearchRoutes(router *mux.Router) error {
-	fuguServerURL := "http://fugudb:3301" // Make sure this matches your docker-compose
-	filterConfigSvc := filterconfig.NewFilterConfigService(fuguServerURL)
-	service := NewSearchService(fuguServerURL, filterConfigSvc)
-	handler := NewSearchHandler(service)
-
-	fmt.Println("🔧 Registering search routes with fallback...")
-
-	// GET endpoint for search info/status
-	router.HandleFunc("/", handler.GetSearchInfo).Methods(http.MethodGet)
-	router.HandleFunc("", handler.GetSearchInfo).Methods(http.MethodGet)
-
-	// GET search endpoint (using query parameter)
-	router.HandleFunc("/query", handler.SearchTextGet).Methods(http.MethodGet)
-
-	// Main search endpoint with fallback
-	router.HandleFunc("/", handler.SearchWithFallback).Methods(http.MethodPost)
-	router.HandleFunc("", handler.SearchWithFallback).Methods(http.MethodPost)
-
-	// File search endpoint (for compatibility)
-	router.HandleFunc("/file", handler.SearchFiles).Methods(http.MethodPost)
-
-	// Search health check
-	router.HandleFunc("/health", handler.HealthCheck).Methods(http.MethodGet)
-
-	fmt.Println("✅ Search routes registered with fallback")
-	return nil
+// NewSearchHandler creates a new search handler
+func NewSearchHandler(service *SearchService) *SearchServiceHandler {
+	return &SearchServiceHandler{
+		service: service,
+	}
 }
 
 // GetSearchInfo handles GET requests to /search endpoint
@@ -541,18 +444,10 @@ func (h *SearchServiceHandler) Search(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// ADD THIS DEBUG LOGGING
 	logger.Info(ctx, "response encoded and sent successfully")
 
 	logger.Info(ctx, "search completed successfully",
 		zap.Int("result_count", len(response.Data)))
-}
-
-// SearchFiles handles file-specific search requests (for frontend compatibility)
-func (h *SearchServiceHandler) SearchFiles(w http.ResponseWriter, r *http.Request) {
-	// For now, this just delegates to the main search handler
-	// Could be specialized later for file-specific logic
-	h.Search(w, r)
 }
 
 // @Summary     Search with GET Request
@@ -565,7 +460,7 @@ func (h *SearchServiceHandler) SearchFiles(w http.ResponseWriter, r *http.Reques
 // @Success     200 {object} SearchResponse
 // @Failure     400 {string} string "Invalid query"
 // @Failure     500 {string} string "Internal server error"
-// @Router      /search/query [get]
+// @Router      /search [get]
 func (h *SearchServiceHandler) SearchTextGet(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	ctx, span := tracer.Start(ctx, "search-api:search-text-get")
