@@ -189,8 +189,8 @@ func setupRouter(ctx context.Context) http.Handler {
 	registerSystemRoutes(standardRoute, log)
 	registerAdminRoutes(standardRoute, log)
 
-	// ← New indexing endpoints:
-	indexing.RegisterIndexingRoutes(standardRoute)
+	
+	// indexing.RegisterIndexingRoutes(standardRoute)
 
 	// Add a catch-all debug route to see what's not matching
 	r.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -284,6 +284,8 @@ func registerAdminRoutes(router *mux.Router, log *otelzap.Logger) {
 	adminRoute := router.PathPrefix("/admin").Subrouter()
 	adminRoute.Use(timeoutMiddleware(adminTimeout))
 	admin.DefineAdminRoutes(adminRoute)
+		// Admin indexing endpoints
+		indexing.RegisterAdminIndexingRoutes(adminRoute)
 	fmt.Println("   ✅ Admin routes registered")
 }
 

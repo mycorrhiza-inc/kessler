@@ -9,11 +9,11 @@ import (
 	"kessler/pkg/logger"
 )
 
-// IndexHandler provides HTTP endpoints for indexing.
+// IndexHandler provides HTTP endpoints for admin indexing.
 // @Tags Indexing
-// @Description Endpoints for indexing conversations and organizations into FuguDB
+// @Description Admin endpoints for indexing conversations and organizations into FuguDB
 // @Produce json
-// @Router /index [basePath]
+// @Router /admin/indexing [basePath]
 type IndexHandler struct {
 	svc *IndexService
 }
@@ -23,9 +23,9 @@ func NewIndexHandler(svc *IndexService) *IndexHandler {
 	return &IndexHandler{svc: svc}
 }
 
-// RegisterIndexingRoutes mounts indexing endpoints under /index.
-func RegisterIndexingRoutes(r *mux.Router) {
-	sr := r.PathPrefix("/index").Subrouter()
+// RegisterAdminIndexingRoutes mounts indexing endpoints under /admin/indexing.
+func RegisterAdminIndexingRoutes(r *mux.Router) {
+	sr := r.PathPrefix("/indexing").Subrouter()
 	h := NewIndexHandler(NewIndexService("http://fugudb:3301"))
 
 	sr.HandleFunc("/conversations", h.IndexAllConversations).Methods(http.MethodPost)
@@ -39,7 +39,7 @@ func RegisterIndexingRoutes(r *mux.Router) {
 // @Description Retrieves all conversations from the database and indexes them in FuguDB
 // @Success 200 {object} map[string]int{"indexed":int}
 // @Failure 500 {object} map[string]string{"error":string}
-// @Router /index/conversations [post]
+// @Router /admin/indexing/conversations [post]
 func (h *IndexHandler) IndexAllConversations(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	count, err := h.svc.IndexAllConversations(ctx)
@@ -57,7 +57,7 @@ func (h *IndexHandler) IndexAllConversations(w http.ResponseWriter, r *http.Requ
 // @Param id path string true "Conversation UUID"
 // @Success 200 {object} map[string]int{"indexed":int}
 // @Failure 400 {object} map[string]string{"error":string}
-// @Router /index/conversations/{id} [post]
+// @Router /admin/indexing/conversations/{id} [post]
 func (h *IndexHandler) IndexConversationByID(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	id := mux.Vars(r)["id"]
@@ -75,7 +75,7 @@ func (h *IndexHandler) IndexConversationByID(w http.ResponseWriter, r *http.Requ
 // @Description Retrieves all organizations from the database and indexes them in FuguDB
 // @Success 200 {object} map[string]int{"indexed":int}
 // @Failure 500 {object} map[string]string{"error":string}
-// @Router /index/organizations [post]
+// @Router /admin/indexing/organizations [post]
 func (h *IndexHandler) IndexAllOrganizations(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	count, err := h.svc.IndexAllOrganizations(ctx)
@@ -93,7 +93,7 @@ func (h *IndexHandler) IndexAllOrganizations(w http.ResponseWriter, r *http.Requ
 // @Param id path string true "Organization UUID"
 // @Success 200 {object} map[string]int{"indexed":int}
 // @Failure 400 {object} map[string]string{"error":string}
-// @Router /index/organizations/{id} [post]
+// @Router /admin/indexing/organizations/{id} [post]
 func (h *IndexHandler) IndexOrganizationByID(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	id := mux.Vars(r)["id"]
@@ -117,4 +117,3 @@ func (h *IndexHandler) respondJSON(w http.ResponseWriter, status int, payload in
 func (h *IndexHandler) respondError(w http.ResponseWriter, status int, msg string) {
 	h.respondJSON(w, status, map[string]string{"error": msg})
 }
-
