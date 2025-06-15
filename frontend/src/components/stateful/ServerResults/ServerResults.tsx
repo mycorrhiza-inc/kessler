@@ -52,6 +52,7 @@ export default async function ServerSearchResults({ baseUrl, objectType, urlPara
         >
           Previous
         </Link>
+        <p>Page {urlParams.paginationData.page || 0}</p>
         <Link
           href={nextHref}
           className={`btn btn-outline${isLastPage ? ' btn-disabled' : ''}`}
