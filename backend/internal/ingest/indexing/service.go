@@ -28,7 +28,7 @@ func NewIndexService(fuguURL string) *IndexService {
 	}
 }
 
-// IndexAllConversations retrieves all conversations and batch indexes them.
+// IndexAllConversations retrieves all conversations and batch indexes them in chunks.
 func (s *IndexService) IndexAllConversations(ctx context.Context) (int, error) {
 	rows, err := s.q.ConversationCompleteQuickwitListGet(ctx)
 	if err != nil {
@@ -54,20 +54,8 @@ func (s *IndexService) IndexAllConversations(ctx context.Context) (int, error) {
 		return 0, fmt.Errorf("new fugu client: %w", err)
 	}
 
-	// Use batch upsert for better performance and detailed response
-	response, err := client.BatchUpsertObjects(ctx, recs)
-	if err != nil {
-		return 0, fmt.Errorf("batch index conversations: %w", err)
-	}
-
-	// Log the response for debugging
-	log.Printf("Successfully indexed conversations: %s", response.Message)
-	if response.UpsertedCount != nil {
-		log.Printf("Upserted count: %d", *response.UpsertedCount)
-		return *response.UpsertedCount, nil
-	}
-
-	return len(recs), nil
+	// Process in chunks to avoid batch size limits
+	return s.processBatchInChunks(ctx, client, recs, "conversations")
 }
 
 // IndexConversationByID retrieves one conversation by UUID and indexes it.
@@ -108,7 +96,7 @@ func (s *IndexService) IndexConversationByID(ctx context.Context, idStr string) 
 	return 1, nil
 }
 
-// IndexAllOrganizations retrieves all organizations and batch indexes them.
+// IndexAllOrganizations retrieves all organizations and batch indexes them in chunks.
 func (s *IndexService) IndexAllOrganizations(ctx context.Context) (int, error) {
 	rows, err := s.q.OrganizationCompleteQuickwitListGet(ctx)
 	if err != nil {
@@ -134,20 +122,8 @@ func (s *IndexService) IndexAllOrganizations(ctx context.Context) (int, error) {
 		return 0, fmt.Errorf("new fugu client: %w", err)
 	}
 
-	// Use batch upsert for better performance and detailed response
-	response, err := client.BatchUpsertObjects(ctx, recs)
-	if err != nil {
-		return 0, fmt.Errorf("batch index organizations: %w", err)
-	}
-
-	// Log the response for debugging
-	log.Printf("Successfully indexed organizations: %s", response.Message)
-	if response.UpsertedCount != nil {
-		log.Printf("Upserted count: %d", *response.UpsertedCount)
-		return *response.UpsertedCount, nil
-	}
-
-	return len(recs), nil
+	// Process in chunks to avoid batch size limits
+	return s.processBatchInChunks(ctx, client, recs, "organizations")
 }
 
 // IndexOrganizationByID retrieves one organization by UUID and indexes it.
@@ -268,4 +244,38 @@ func (s *IndexService) SearchAll(ctx context.Context, query string, page, perPag
 	}
 
 	return client.AdvancedSearch(ctx, query, nil, page, perPage)
+}
+
+// processBatchInChunks handles large batches by splitting them into smaller chunks
+func (s *IndexService) processBatchInChunks(ctx context.Context, client *fugusdk.Client, recs []fugusdk.ObjectRecord, entityType string) (int, error) {
+	const chunkSize = 500 // Use 500 to stay well under the 1000 limit
+	totalProcessed := 0
+
+	log.Printf("Processing %d %s in chunks of %d", len(recs), entityType, chunkSize)
+
+	for i := 0; i < len(recs); i += chunkSize {
+		end := i + chunkSize
+		if end > len(recs) {
+			end = len(recs)
+		}
+
+		chunk := recs[i:end]
+		log.Printf("Processing chunk %d-%d of %d %s", i+1, end, len(recs), entityType)
+
+		response, err := client.BatchUpsertObjects(ctx, chunk)
+		if err != nil {
+			return totalProcessed, fmt.Errorf("batch index %s chunk %d-%d: %w", entityType, i+1, end, err)
+		}
+
+		chunkProcessed := len(chunk)
+		if response.UpsertedCount != nil {
+			chunkProcessed = *response.UpsertedCount
+		}
+
+		totalProcessed += chunkProcessed
+		log.Printf("Successfully processed chunk %d-%d: %s (processed: %d)", i+1, end, response.Message, chunkProcessed)
+	}
+
+	log.Printf("Successfully indexed %d %s in total", totalProcessed, entityType)
+	return totalProcessed, nil
 }
