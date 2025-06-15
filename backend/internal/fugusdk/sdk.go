@@ -26,7 +26,7 @@ const (
 	DefaultTimeout = 30 * time.Second
 
 	// SDK version for user agent
-	SDKVersion = "1.0.0"
+	SDKVersion = "1.1.0"
 
 	// Security limits
 	MaxRequestBodySize  = 10 * 1024 * 1024 // 10MB
@@ -304,6 +304,11 @@ type IndexRequest struct {
 	Data []ObjectRecord `json:"data"`
 }
 
+// BatchIndexRequest matches the Rust BatchIndexRequest struct
+type BatchIndexRequest struct {
+	Objects []ObjectRecord `json:"objects"`
+}
+
 // Validate validates the index request
 func (i *IndexRequest) Validate(sanitizer *InputSanitizer) error {
 	if len(i.Data) == 0 {
@@ -323,16 +328,36 @@ func (i *IndexRequest) Validate(sanitizer *InputSanitizer) error {
 	return nil
 }
 
+// Validate validates the batch index request
+func (b *BatchIndexRequest) Validate(sanitizer *InputSanitizer) error {
+	if len(b.Objects) == 0 {
+		return fmt.Errorf("objects cannot be empty")
+	}
+
+	if len(b.Objects) > MaxBatchSize {
+		return fmt.Errorf("batch too large: maximum %d objects", MaxBatchSize)
+	}
+
+	for idx, obj := range b.Objects {
+		if err := obj.Validate(sanitizer); err != nil {
+			return fmt.Errorf("invalid object at index %d: %w", idx, err)
+		}
+	}
+
+	return nil
+}
+
 // SanitizedResponse represents a sanitized API response
-// This matches what Fugu actually returns
 type SanitizedResponse struct {
-	Results []FuguSearchResult `json:"results,omitempty"`
-	Total   int                `json:"total,omitempty"`
-	Page    int                `json:"page,omitempty"`
-	PerPage int                `json:"per_page,omitempty"`
-	Query   string             `json:"query,omitempty"`
-	Data    interface{}        `json:"data,omitempty"` // Keep this for other endpoints
-	Message string             `json:"message,omitempty"`
+	Results       []FuguSearchResult `json:"results,omitempty"`
+	Total         int                `json:"total,omitempty"`
+	Page          int                `json:"page,omitempty"`
+	PerPage       int                `json:"per_page,omitempty"`
+	Query         string             `json:"query,omitempty"`
+	Data          interface{}        `json:"data,omitempty"`
+	Message       string             `json:"message,omitempty"`
+	Status        string             `json:"status,omitempty"`
+	UpsertedCount *int               `json:"upserted_count,omitempty"`
 }
 
 // FuguSearchResult represents a search result from Fugu
@@ -497,22 +522,81 @@ func (c *Client) Health(ctx context.Context) error {
 	return c.handleResponse(resp, nil)
 }
 
-// IngestObjects ingests multiple objects into the database - matches Rust /ingest endpoint
-func (c *Client) IngestObjects(ctx context.Context, objects []ObjectRecord) error {
+// IngestObjects ingests multiple objects into the database (now performs upserts)
+// This matches the updated Rust /ingest endpoint that performs upserts by default
+func (c *Client) IngestObjects(ctx context.Context, objects []ObjectRecord) (*SanitizedResponse, error) {
 	req := IndexRequest{Data: objects}
 
 	// Validate request
 	if err := req.Validate(c.sanitizer); err != nil {
-		return fmt.Errorf("validation failed: %w", err)
+		return nil, fmt.Errorf("validation failed: %w", err)
 	}
 
 	resp, err := c.makeRequest(ctx, "POST", "/ingest", req)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	var result SanitizedResponse
-	return c.handleResponse(resp, &result)
+	err = c.handleResponse(resp, &result)
+	return &result, err
+}
+
+// UpsertObjects explicitly upserts multiple objects - matches Rust PUT /objects endpoint
+func (c *Client) UpsertObjects(ctx context.Context, objects []ObjectRecord) (*SanitizedResponse, error) {
+	req := IndexRequest{Data: objects}
+
+	// Validate request
+	if err := req.Validate(c.sanitizer); err != nil {
+		return nil, fmt.Errorf("validation failed: %w", err)
+	}
+
+	resp, err := c.makeRequest(ctx, "PUT", "/objects", req)
+	if err != nil {
+		return nil, err
+	}
+
+	var result SanitizedResponse
+	err = c.handleResponse(resp, &result)
+	return &result, err
+}
+
+// BatchUpsertObjects performs batch upsert with detailed response - matches Rust /batch/upsert endpoint
+func (c *Client) BatchUpsertObjects(ctx context.Context, objects []ObjectRecord) (*SanitizedResponse, error) {
+	req := BatchIndexRequest{Objects: objects}
+
+	// Validate request
+	if err := req.Validate(c.sanitizer); err != nil {
+		return nil, fmt.Errorf("validation failed: %w", err)
+	}
+
+	resp, err := c.makeRequest(ctx, "POST", "/batch/upsert", req)
+	if err != nil {
+		return nil, err
+	}
+
+	var result SanitizedResponse
+	err = c.handleResponse(resp, &result)
+	return &result, err
+}
+
+// DeleteObject deletes a single object by ID - matches Rust DELETE /objects/{id} endpoint
+func (c *Client) DeleteObject(ctx context.Context, objectID string) (*SanitizedResponse, error) {
+	// Validate object ID
+	if err := c.sanitizer.ValidateObjectID(objectID); err != nil {
+		return nil, fmt.Errorf("validation failed: %w", err)
+	}
+
+	path := fmt.Sprintf("/objects/%s", url.PathEscape(objectID))
+
+	resp, err := c.makeRequest(ctx, "DELETE", path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var result SanitizedResponse
+	err = c.handleResponse(resp, &result)
+	return &result, err
 }
 
 // Search performs a POST search - matches Rust /search POST endpoint
@@ -601,4 +685,45 @@ func (c *Client) GetNamespaceFilters(ctx context.Context, namespace string) (*Sa
 	var result SanitizedResponse
 	err = c.handleResponse(resp, &result)
 	return &result, err
+}
+
+// Convenience methods for common operations
+
+// AddOrUpdateObject is a convenience method for upserting a single object
+func (c *Client) AddOrUpdateObject(ctx context.Context, object ObjectRecord) (*SanitizedResponse, error) {
+	return c.UpsertObjects(ctx, []ObjectRecord{object})
+}
+
+// AddOrUpdateObjects is an alias for UpsertObjects for backward compatibility
+func (c *Client) AddOrUpdateObjects(ctx context.Context, objects []ObjectRecord) (*SanitizedResponse, error) {
+	return c.UpsertObjects(ctx, objects)
+}
+
+// SimpleSearch is a convenience method for basic text search
+func (c *Client) SimpleSearch(ctx context.Context, query string) (*SanitizedResponse, error) {
+	return c.SearchText(ctx, query)
+}
+
+// AdvancedSearch is a convenience method for search with filters and pagination
+func (c *Client) AdvancedSearch(ctx context.Context, query string, filters []string, page, perPage int) (*SanitizedResponse, error) {
+	searchQuery := FuguSearchQuery{
+		Query: query,
+	}
+
+	if len(filters) > 0 {
+		searchQuery.Filters = &filters
+	}
+
+	if page > 0 || perPage > 0 {
+		pagination := &Pagination{}
+		if page > 0 {
+			pagination.Page = &page
+		}
+		if perPage > 0 {
+			pagination.PerPage = &perPage
+		}
+		searchQuery.Page = pagination
+	}
+
+	return c.Search(ctx, searchQuery)
 }

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"kessler/internal/cache"
 	"kessler/internal/database"
-	"kessler/internal/fugusdk"
 	"kessler/internal/objects/networking"
 	"kessler/pkg/logger"
 	"net/http"
@@ -17,8 +16,6 @@ import (
 )
 
 var tracer = otel.Tracer("filter-endpoint")
-
-func span(r *http.Request) {}
 
 type FilterServiceHandler struct {
 	service *FilterService
@@ -35,7 +32,7 @@ func RegisterFilterRoutes(r *mux.Router) error {
 	fsh := &FilterServiceHandler{
 		service: service,
 	}
-	filtersRoute := r.PathPrefix("/filters").Subrouter()
+	filtersRoute := r.PathPrefix("/").Subrouter()
 	filtersRoute.HandleFunc(
 		"",
 		fsh.GetFilters,
@@ -51,18 +48,10 @@ func (h *FilterServiceHandler) GetFilters(w http.ResponseWriter, r *http.Request
 	state := r.URL.Query().Get("state")
 	pagination := networking.PaginationFromUrlParams(r)
 
-	client, err := fugusdk.NewClient(ctx,
-		"http://localhost/fugu",
-	)
-
-	// All operations now include validation
-	objects := []fugusdk.ObjectRecord{{
-		ID:        "doc-1",
-		Text:      "Sample document",
-		Namespace: "docs",
-	}}
-
-	err = client.IngestObjects(ctx, objects)
+	// We will add actual usage of the FuguDB client in a future implementation
+	// client, err := fugusdk.NewClient(ctx,
+	// 	"http://localhost/fugu",
+	// )
 
 	f, err := h.service.GetFiltersByDataset(r.Context(), state)
 

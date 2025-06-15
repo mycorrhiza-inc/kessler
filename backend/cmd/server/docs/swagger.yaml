@@ -1,0 +1,195 @@
+swagger: '2.0'
+info:
+  description: Kessler Backend API with FuguDB Integration
+  title: Kessler API
+  termsOfService: http://swagger.io/terms/
+  contact:
+    name: Kessler API Support
+    url: https://kessler.xyz
+    email: support@kessler.xyz
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: '1.0'
+host: localhost:4041
+basePath: ""
+schemes: ["http"]
+paths:
+  /filters/{namespace}:
+    get:
+      description: Retrieves filters available for a specific namespace
+      produces:
+        - application/json
+      tags:
+        - filters
+      summary: Get Namespace Filters
+      parameters:
+        - type: string
+          description: Namespace
+          name: namespace
+          in: path
+          required: true
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/fugusdk.SanitizedResponse'
+        '400':
+          description: Invalid namespace
+          schema:
+            type: string
+        '500':
+          description: Internal server error
+          schema:
+            type: string
+  /objects/{id}:
+    get:
+      description: Retrieves a specific object by its ID
+      produces:
+        - application/json
+      tags:
+        - objects
+      summary: Get Object by ID
+      parameters:
+        - type: string
+          description: Object ID
+          name: id
+          in: path
+          required: true
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/objects.ObjectResponse'
+        '400':
+          description: Invalid object ID
+          schema:
+            type: string
+        '404':
+          description: Object not found
+          schema:
+            type: string
+        '500':
+          description: Internal server error
+          schema:
+            type: string
+  /search/query:
+    get:
+      description: Performs a search using query parameters
+      produces:
+        - application/json
+      tags:
+        - search
+      summary: Search with GET Request
+      parameters:
+        - type: string
+          description: Search query
+          name: q
+          in: query
+          required: true
+        - type: integer
+          description: Page number
+          name: page
+          in: query
+        - type: integer
+          description: Results per page
+          name: limit
+          in: query
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/search.SearchResponse'
+        '400':
+          description: Invalid query
+          schema:
+            type: string
+        '500':
+          description: Internal server error
+          schema:
+            type: string
+definitions:
+  fugusdk.FuguSearchResult:
+    type: object
+    properties:
+      facets:
+        type: array
+        items:
+          type: string
+      id:
+        type: string
+      metadata:
+        type: object
+        additionalProperties: true
+      score:
+        type: number
+        format: float
+      text:
+        type: string
+  fugusdk.SanitizedResponse:
+    type: object
+    properties:
+      data: {}
+      message:
+        type: string
+      page:
+        type: integer
+      per_page:
+        type: integer
+      query:
+        type: string
+      results:
+        type: array
+        items:
+          $ref: '#/definitions/fugusdk.FuguSearchResult'
+      total:
+        type: integer
+  objects.ObjectResponse:
+    type: object
+    properties:
+      data: {}
+      id:
+        type: string
+      metadata: {}
+      namespace:
+        type: string
+      text:
+        type: string
+  search.SearchResponse:
+    type: object
+    properties:
+      data:
+        type: array
+        items:
+          $ref: '#/definitions/search.SearchResultItem'
+  search.SearchResultItem:
+    type: object
+    properties:
+      case_number:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      facet:
+        type: array
+        items:
+          type: string
+      file_name:
+        type: string
+      filed_date:
+        type: string
+      filing_type:
+        type: string
+      id:
+        type: string
+      metadata:
+        type: object
+        additionalProperties: true
+      party_name:
+        type: string
+      score:
+        type: number
+        format: float
+      text:
+        type: string
