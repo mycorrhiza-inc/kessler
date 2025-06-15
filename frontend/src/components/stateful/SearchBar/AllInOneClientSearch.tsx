@@ -5,7 +5,6 @@ import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { FaSearch } from "react-icons/fa";
 import { SearchBar } from "@/components/style/search/SearchBar";
-import { HomepageLogo } from "@/components/style/misc/Logo";
 
 export interface AIOSearchProps {
   urlParams: UrlQueryParams
@@ -31,7 +30,7 @@ export default function AllInOneClientSearch({ urlParams, queryType: pageContext
     const url = baseUrl + encodedUrlQuery
     router.push(url)
   }
-  return <div>
+  return <div style={{ display: 'flex', justifyContent: 'center' }}>
     <SearchBar value={query} onChange={setQuery} />
   </div>
 }

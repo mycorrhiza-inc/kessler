@@ -7,7 +7,8 @@ export function Logo({ className, style }: { className?: string; style?: React.C
 }
 
 
-export function HomepageLogo() {
+export function LogoHomepage({ bottomText }: { bottomText?: string }) {
+  const defindedBottomText = bottomText || "Public Utility Commissions, Simplified."
   return <div className="flex flex-col items-center space-y-2" >
     <div className="flex flex-row items-center space-x-9">
       <Logo className="text-6xl lg:text-7xl xl:text-9xl text-base-content" />
@@ -16,7 +17,7 @@ export function HomepageLogo() {
       </h1>
     </div>
     <p className="text-md xl:text-xl text-gray-600 text-center font-serif">
-      Public Utility Commissions, Simplified.
+      {defindedBottomText}
     </p>
   </div>
 
