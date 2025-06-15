@@ -3,8 +3,8 @@ package search
 import (
 	"context"
 	"fmt"
-	filterconfig "kessler/internal/filters/config"
 	"kessler/internal/fugusdk"
+	"kessler/internal/search/filter"
 	"kessler/pkg/logger"
 	"strings"
 	"time"
@@ -13,7 +13,7 @@ import (
 	"go.uber.org/zap"
 )
 
-var tracer = otel.Tracer("search-endpoint")
+var serviceTracer = otel.Tracer("search-service")
 
 // Frontend request types
 type SearchRequest struct {
@@ -93,20 +93,23 @@ type SearchStatistics struct {
 
 // SearchService handles the business logic for search operations
 type SearchService struct {
-	fuguServerURL   string
-	filterConfigSvc *filterconfig.FilterConfigService
+	fuguServerURL string
+	filterService *filter.Service
 }
 
 // NewSearchService creates a new search service
-func NewSearchService(fuguServerURL string, filterConfigSvc *filterconfig.FilterConfigService) *SearchService {
+func NewSearchService(fuguServerURL string, filterService *filter.Service) *SearchService {
 	return &SearchService{
-		fuguServerURL:   fuguServerURL,
-		filterConfigSvc: filterConfigSvc,
+		fuguServerURL: fuguServerURL,
+		filterService: filterService,
 	}
 }
 
-// convertFiltersToBackend converts frontend filters to backend facet format
+// convertFiltersToBackend converts frontend filters to backend facet format using filter service
 func (s *SearchService) convertFiltersToBackend(ctx context.Context, filters map[string]string, namespace string) ([]string, error) {
+	ctx, span := serviceTracer.Start(ctx, "search-service:convert-filters-to-backend")
+	defer span.End()
+
 	var filterStrings []string
 
 	// Add namespace filter if specified
@@ -123,22 +126,88 @@ func (s *SearchService) convertFiltersToBackend(ctx context.Context, filters map
 		zap.Any("filters", filters),
 		zap.String("namespace", namespace))
 
-	// Convert frontend filters to facet format
-	for key, value := range filters {
-		if value != "" && key != "q" && key != "page" && key != "per_page" && key != "limit" && key != "namespace" {
-			// Convert "field:value" format to facet format that Rust expects
-			// This will be parsed by parse_filter_to_facet in Rust
-			facetFilter := fmt.Sprintf("%s:%s", key, value)
-			filterStrings = append(filterStrings, facetFilter)
+	// Use filter service to convert frontend filters to backend format
+	backendFilters, err := s.filterService.ConvertFiltersToBackend(ctx, filters)
+	if err != nil {
+		logger.Warn(ctx, "failed to convert filters using filter service, falling back to simple conversion", zap.Error(err))
+		// Fallback to simple conversion if filter service fails
+		return s.fallbackFilterConversion(filters, namespace), nil
+	}
+
+	// Convert the backend filters map to facet strings that Fugu expects
+	for key, value := range backendFilters {
+		if value != nil {
+			if strValue, ok := value.(string); ok && strValue != "" {
+				// Convert to facet format: "metadata/field_name:value"
+				facetFilter := fmt.Sprintf("metadata/%s:%s", key, strValue)
+				filterStrings = append(filterStrings, facetFilter)
+			}
 		}
 	}
 
-	logger.Info(ctx, "filters converted to facet format",
+	logger.Info(ctx, "filters converted to facet format using filter service",
 		zap.Int("original_filter_count", len(filters)),
 		zap.Int("backend_filter_count", len(filterStrings)),
 		zap.Strings("backend_filters", filterStrings))
 
 	return filterStrings, nil
+}
+
+// fallbackFilterConversion provides simple filter conversion when filter service is unavailable
+func (s *SearchService) fallbackFilterConversion(filters map[string]string, namespace string) []string {
+	var filterStrings []string
+
+	// Add namespace filter if specified
+	if namespace != "" {
+		filterStrings = append(filterStrings, namespace)
+	}
+
+	// Simple field:value conversion with metadata prefix
+	for key, value := range filters {
+		if value != "" && key != "q" && key != "page" && key != "per_page" && key != "limit" && key != "namespace" {
+			// Convert to facet format: "metadata/field_name:value"
+			facetFilter := fmt.Sprintf("metadata/%s:%s", key, value)
+			filterStrings = append(filterStrings, facetFilter)
+		}
+	}
+
+	return filterStrings
+}
+
+// validateFilters validates filters using the filter service before processing
+func (s *SearchService) validateFilters(ctx context.Context, filters map[string]string) error {
+	ctx, span := serviceTracer.Start(ctx, "search-service:validate-filters")
+	defer span.End()
+
+	if len(filters) == 0 {
+		return nil
+	}
+
+	// Use filter service to validate filters
+	validation, err := s.filterService.ValidateFilters(ctx, filters)
+	if err != nil {
+		logger.Warn(ctx, "filter validation failed, proceeding without validation", zap.Error(err))
+		return nil // Don't fail search if validation service is down
+	}
+
+	if !validation.IsValid {
+		// Log validation errors but don't fail the search
+		logger.Warn(ctx, "filter validation found issues",
+			zap.Int("error_count", len(validation.Errors)),
+			zap.Int("warning_count", len(validation.Warnings)))
+
+		for _, validationError := range validation.Errors {
+			logger.Warn(ctx, "filter validation error",
+				zap.String("field_id", validationError.FieldID),
+				zap.String("message", validationError.Message),
+				zap.String("type", validationError.Type))
+		}
+
+		// For now, log warnings but allow the search to proceed
+		// In a stricter implementation, you might want to return an error here
+	}
+
+	return nil
 }
 
 // createFuguSearchQuery creates a Fugu search query from the request parameters
@@ -167,7 +236,7 @@ func (s *SearchService) createFuguSearchQuery(query string, filters []string, pa
 
 // executeSearch executes the search against Fugu backend
 func (s *SearchService) executeSearch(ctx context.Context, client *fugusdk.Client, query fugusdk.FuguSearchQuery) (*fugusdk.SanitizedResponse, error) {
-	ctx, span := tracer.Start(ctx, "search-service:execute-search")
+	ctx, span := serviceTracer.Start(ctx, "search-service:execute-search")
 	defer span.End()
 
 	logger.Info(ctx, "executing search on fugu backend")
@@ -203,9 +272,9 @@ func (s *SearchService) executeSearch(ctx context.Context, client *fugusdk.Clien
 	return response, nil
 }
 
-// ProcessSearch processes a search request with namespace support
+// ProcessSearch processes a search request with namespace support and filter validation
 func (s *SearchService) ProcessSearch(ctx context.Context, query string, filters map[string]string, pagination PaginationParams, namespace string) (*SearchResponse, error) {
-	ctx, span := tracer.Start(ctx, "search-service:process-search")
+	ctx, span := serviceTracer.Start(ctx, "search-service:process-search")
 	defer span.End()
 
 	startTime := time.Now()
@@ -214,6 +283,12 @@ func (s *SearchService) ProcessSearch(ctx context.Context, query string, filters
 		zap.String("query", query),
 		zap.String("namespace", namespace),
 		zap.String("fugu_url", s.fuguServerURL))
+
+	// Validate filters using filter service
+	if err := s.validateFilters(ctx, filters); err != nil {
+		logger.Error(ctx, "filter validation failed", zap.Error(err))
+		return nil, fmt.Errorf("invalid filters: %w", err)
+	}
 
 	// Create fugu client with timeout
 	clientCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
@@ -227,14 +302,11 @@ func (s *SearchService) ProcessSearch(ctx context.Context, query string, filters
 
 	logger.Info(ctx, "fugu client created successfully")
 
-	// Convert filters to backend format with namespace
+	// Convert filters to backend format with namespace using filter service
 	backendFilters, err := s.convertFiltersToBackend(ctx, filters, namespace)
 	if err != nil {
-		logger.Warn(ctx, "failed to convert filters, proceeding without filters", zap.Error(err))
-		backendFilters = []string{}
-		if namespace != "" {
-			backendFilters = []string{namespace}
-		}
+		logger.Warn(ctx, "failed to convert filters, proceeding with fallback", zap.Error(err))
+		backendFilters = s.fallbackFilterConversion(filters, namespace)
 	}
 
 	logger.Info(ctx, "filters converted",
@@ -273,7 +345,7 @@ func (s *SearchService) ProcessSearch(ctx context.Context, query string, filters
 
 // GetSearchInfo provides information about search capabilities and status
 func (s *SearchService) GetSearchInfo(ctx context.Context) (*SearchInfo, error) {
-	ctx, span := tracer.Start(ctx, "search-service:get-search-info")
+	ctx, span := serviceTracer.Start(ctx, "search-service:get-search-info")
 	defer span.End()
 
 	// Create fugu client to get backend status
@@ -289,8 +361,8 @@ func (s *SearchService) GetSearchInfo(ctx context.Context) (*SearchInfo, error) 
 		logger.Warn(ctx, "fugu backend health check failed", zap.Error(err))
 	}
 
-	// Get available filters from filter config service
-	config, err := s.filterConfigSvc.BuildFilterConfiguration(ctx)
+	// Get available filters from filter service
+	config, err := s.filterService.BuildFilterConfiguration(ctx)
 	var availableFilters []string
 	var indexedFields []string
 
