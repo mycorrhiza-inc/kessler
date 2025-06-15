@@ -28,7 +28,7 @@ import {
 } from "@/lib/store";
 
 // Import the canonical multiselect component
-import { DynamicMultiSelect } from "@/stateful_components/Filters/FilterMultiSelect";
+import { DynamicMultiSelect } from "@/components/stateful/Filters/FilterMultiSelect";
 
 // =============================================================================
 // ENHANCED TYPES WITH KESSLER INTEGRATION

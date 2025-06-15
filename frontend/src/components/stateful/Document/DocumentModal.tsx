@@ -4,8 +4,8 @@ import { DocumentMainTabs } from "./DocumentBody";
 import { CompleteFileSchema } from "@/lib/types/backend_schemas";
 
 import { CLIENT_API_URL } from "@/lib/env_variables";
-import LoadingSpinner from "@/style_components/misc/LoadingSpinner";
-import Modal from "@/style_components/misc/Modal";
+import LoadingSpinner from "@/components/style/misc/LoadingSpinner";
+import Modal from "@/components/style/misc/Modal";
 type ModalProps = {
   objectId: string;
   children?: React.ReactNode;

@@ -12,8 +12,8 @@ export interface UrlQueryParams {
 }
 
 export interface UrlPaginationParams {
-  page: number; // Defaults to zero
-  limit: number; // Defaults to DEFAULT_PAGE_SIZE
+  page?: number; // Defaults to zero
+  limit?: number; // Defaults to DEFAULT_PAGE_SIZE
 }
 
 export interface TypedUrlParams {
@@ -85,7 +85,7 @@ export function generateTypeUrlParams(
  * @param params Typed URL params
  * @returns Encoded query string starting with `?` or empty string
  */
-export function encodeFilterParamaters(params: TypedUrlParams): string {
+export function encodeUrlParams(params: TypedUrlParams): string {
   const parts: string[] = [];
   const { queryData, paginationData } = params;
 
@@ -109,10 +109,10 @@ export function encodeFilterParamaters(params: TypedUrlParams): string {
   }
 
   // Pagination: include only if not default
-  if (paginationData.page > 0) {
+  if (paginationData.page && paginationData.page > 0) {
     parts.push(`page=${paginationData.page}`);
   }
-  if (paginationData.limit > DEFAULT_PAGE_SIZE) {
+  if (paginationData.limit && paginationData.limit != DEFAULT_PAGE_SIZE) {
     parts.push(`limit=${paginationData.limit}`);
   }
 

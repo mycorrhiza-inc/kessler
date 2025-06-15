@@ -10,12 +10,12 @@ import {
   CompleteFileSchema,
 } from "@/lib/types/backend_schemas";
 import { CLIENT_API_URL } from "@/lib/env_variables";
-import { FileExtension, fileExtensionFromText } from "@/style_components/Pills/FileExtension";
-import XlsxViewer from "@/style_components/messages/XlsxCannotBeViewedMessage";
-import ErrorMessage from "@/style_components/messages/ErrorMessage";
-import { AuthorInfoPill, DocketPill } from "@/style_components/Pills/TextPills";
-import LoadingSpinner from "@/style_components/misc/LoadingSpinner";
-import MarkdownRenderer from "@/style_components/misc/MarkdownRenderer";
+import { FileExtension, fileExtensionFromText } from "@/components/style/Pills/FileExtension";
+import XlsxViewer from "@/components/style/messages/XlsxCannotBeViewedMessage";
+import ErrorMessage from "@/components/style/messages/ErrorMessage";
+import { AuthorInfoPill, DocketPill } from "@/components/style/Pills/TextPills";
+import LoadingSpinner from "@/components/style/misc/LoadingSpinner";
+import MarkdownRenderer from "@/components/style/misc/MarkdownRenderer";
 
 const MarkdownContent = memo(({ docUUID }: { docUUID: string }) => {
   // TODO: Replace this placeholder with real fetch + SSR support

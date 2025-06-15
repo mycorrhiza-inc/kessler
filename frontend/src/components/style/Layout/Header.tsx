@@ -1,6 +1,7 @@
 // "use client"
 import { GiMushroomsCluster } from "react-icons/gi";
 import Link from "next/link";
+import { Logo } from "../misc/Logo";
 
 export default function Header({
   children,
@@ -14,7 +15,7 @@ export default function Header({
       <div className="z-50" style={{ width: `200px` }}>
         <Link href="/">
           <div className="flex flex-row items-center z-80 w-auto pl-5">
-            <GiMushroomsCluster style={{ fontSize: "2.75em" }} />
+            <Logo style={{ fontSize: "2.75em" }} />
             <span className="w-10" />
             <span className="font-bold text-lg font-serif">KESSLER</span>
           </div>
