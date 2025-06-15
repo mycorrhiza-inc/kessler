@@ -1,8 +1,8 @@
 import { generateTypeUrlParams, } from "@/lib/types/url_params";
-import { PageContextMode } from "@/lib/types/SearchTypes";
-import RenderedConvo from "@/componenets/stateful/RenderedObjectCards/RednderedConvo";
-import AllInOneClientSearch from "@/componenets/stateful/SearchBar/AllInOneClientSearch";
-import LoadingSpinner from "@/componenets/style/misc/LoadingSpinner";
+import { ObjectQueryType } from "@/lib/types/SearchTypes";
+import RenderedConvo from "@/components/stateful/RenderedObjectCards/RednderedConvo";
+import AllInOneClientSearch from "@/components/stateful/SearchBar/AllInOneClientSearch";
+import LoadingSpinner from "@/components/style/misc/LoadingSpinner";
 import { Suspense } from "react";
 
 export default async function Page({
@@ -25,7 +25,7 @@ export default async function Page({
         <RenderedConvo convo_id={convo_id} />
       </Suspense>
       <h1 className="text-2xl font-bold mb-4">Search [org-name]'s Filings</h1>
-      <AllInOneClientSearch urlParams={urlParams.queryData} pageContext={PageContextMode.Files}
+      <AllInOneClientSearch urlParams={urlParams.queryData} queryType={ObjectQueryType.Files}
       />
       {/* <DynamicFilters filters={filters} dataset={dataset} /> */}
     </div>

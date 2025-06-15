@@ -1,7 +1,6 @@
 import React from "react";
-import AllInOneClientSearch from "@/componenets/stateful/SearchBar/AllInOneClientSearch";
-import DynamicFilters from "@/componenets/stateful/Filters/DynamicFilters";
-import { PageContextMode } from "@/lib/types/SearchTypes";
+import AllInOneClientSearch from "@/components/stateful/SearchBar/AllInOneClientSearch";
+import { ObjectQueryType } from "@/lib/types/SearchTypes";
 import { generateTypeUrlParams } from "@/lib/types/url_params";
 
 export default async function SearchPage(
@@ -15,7 +14,7 @@ export default async function SearchPage(
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-4">Search</h1>
-      <AllInOneClientSearch urlParams={urlParams.queryData} pageContext={PageContextMode.Files}
+      <AllInOneClientSearch urlParams={urlParams.queryData} queryType={ObjectQueryType.Files}
       />
       {/* <DynamicFilters filters={filters} dataset={dataset} /> */}
     </div>

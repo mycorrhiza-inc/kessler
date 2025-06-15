@@ -1,4 +1,4 @@
-import { FileCheckIcon, PublicCommentIcon } from "@/componenets/style/misc/Icons";
+import { FileCheckIcon, PublicCommentIcon } from "@/components/style/misc/Icons";
 
 interface StateData {
   name: string;

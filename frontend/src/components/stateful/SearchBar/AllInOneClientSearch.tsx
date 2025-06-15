@@ -1,16 +1,19 @@
 "use client";
 import { encodeUrlParams, TypedUrlParams, UrlQueryParams } from "@/lib/types/url_params"
-import { PageContextMode } from "@/lib/types/SearchTypes";
+import { ObjectQueryType } from "@/lib/types/SearchTypes";
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { FaSearch } from "react-icons/fa";
+import { SearchBar } from "@/components/style/search/SearchBar";
+import { HomepageLogo } from "@/components/style/misc/Logo";
 
 export interface AIOSearchProps {
   urlParams: UrlQueryParams
 }
 
-export default function AllInOneClientSearch({ urlParams, pageContext, overrideBaseUrl }: {
+export default function AllInOneClientSearch({ urlParams, queryType: pageContext, overrideBaseUrl }: {
   urlParams: UrlQueryParams,
-  pageContext: PageContextMode,
+  queryType: ObjectQueryType,
   overrideBaseUrl?: string
 }) {
   const router = useRouter()
@@ -28,5 +31,8 @@ export default function AllInOneClientSearch({ urlParams, pageContext, overrideB
     const url = baseUrl + encodedUrlQuery
     router.push(url)
   }
-  return <div>Not Implemented</div>
+  return <div>
+    <SearchBar value={query} onChange={setQuery} />
+  </div>
 }
+

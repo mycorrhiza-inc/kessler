@@ -47,22 +47,22 @@ export interface Filter extends BasicSuggestion {
   exclude?: boolean;
   excludable: boolean;
 };
-export enum PageContextMode {
+export enum ObjectQueryType {
   Files,
   Organizations,
   Conversations,
 }
 export interface FileSearchBoxProps {
-  pageContext: PageContextMode.Files;
+  pageContext: ObjectQueryType.Files;
   setSearchData: React.Dispatch<React.SetStateAction<QueryDataFile>>;
   inheritedFileFilters: InheritedFilterValues;
 }
 export interface OrgSearchBoxProps {
-  pageContext: PageContextMode.Organizations;
+  pageContext: ObjectQueryType.Organizations;
   setSearchQuery: React.Dispatch<React.SetStateAction<string>>;
 }
 export interface DocketSearchBoxProps {
-  pageContext: PageContextMode.Conversations;
+  pageContext: ObjectQueryType.Conversations;
   setSearchData: React.Dispatch<React.SetStateAction<ConvoSearchRequestData>>;
 }
 

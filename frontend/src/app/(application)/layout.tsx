@@ -1,8 +1,8 @@
 // import "@/app/globals.css";
 import { CLIENT_API_URL } from "@/lib/env_variables";
-import AuthGuard from "@/componenets/stateful/tracking/AuthGuard";
-import Header from "@/componenets/style/Layout/Header";
-import Layout from "@/componenets/style/Layout/Layout";
+import AuthGuard from "@/components/stateful/tracking/AuthGuard";
+import Header from "@/components/style/Layout/Header";
+import Layout from "@/components/style/Layout/Layout";
 
 import { SignedIn, SignedOut, SignInButton, SignUp, SignUpButton } from "@clerk/nextjs";
 import Link from "next/link";

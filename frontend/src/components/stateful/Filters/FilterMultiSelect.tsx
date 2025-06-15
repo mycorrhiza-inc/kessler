@@ -1,5 +1,5 @@
 "use client"
-import { TextPill } from '@/componenets/style/Pills/TextPills';
+import { TextPill } from '@/components/style/Pills/TextPills';
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 
 // Mock FilterFieldDefinition for demo
