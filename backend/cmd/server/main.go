@@ -15,7 +15,6 @@ import (
 	"kessler/internal/cache"
 	"kessler/internal/database"
 	"kessler/internal/filters"
-	filterconfig "kessler/internal/filters/config"
 	"kessler/internal/health"
 	indexing "kessler/internal/ingest/indexing"
 	"kessler/internal/jobs"
