@@ -5,7 +5,7 @@ import { BsArrowBarLeft, BsArrowBarRight } from "react-icons/bs";
 import Link from "next/link";
 import { IoHomeSharp, IoDocument, IoSettingsSharp } from "react-icons/io5";
 import { FaRectangleList, FaUserGroup } from "react-icons/fa6";
-import { ChevronDownIcon, HamburgerIcon, UserIcon } from "@/style_components/misc/Icons";
+import { ChevronDownIcon, HamburgerIcon, UserIcon } from "@/componenets/style/misc/Icons";
 import { RiMenuUnfold3Line } from "react-icons/ri";
 // import Modal from "@/components/styled-components/Modal";
 // import SettingsContent from "@/components/SettingsContent";

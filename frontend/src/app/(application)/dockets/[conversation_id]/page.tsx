@@ -1,8 +1,8 @@
 import { generateTypeUrlParams, } from "@/lib/types/url_params";
 import { PageContextMode } from "@/lib/types/SearchTypes";
-import RenderedConvo from "@/stateful_components/RenderedObjectCards/RednderedConvo";
-import AllInOneClientSearch from "@/stateful_components/SearchBar/AllInOneClientSearch";
-import LoadingSpinner from "@/style_components/misc/LoadingSpinner";
+import RenderedConvo from "@/componenets/stateful/RenderedObjectCards/RednderedConvo";
+import AllInOneClientSearch from "@/componenets/stateful/SearchBar/AllInOneClientSearch";
+import LoadingSpinner from "@/componenets/style/misc/LoadingSpinner";
 import { Suspense } from "react";
 
 export default async function Page({

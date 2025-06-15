@@ -7,8 +7,8 @@ import "react-pdf/dist/esm/Page/TextLayer.css";
 import dynamic from "next/dynamic";
 
 import "./PDFViewer.css";
-import LoadingSpinner from "@/style_components/misc/LoadingSpinner";
-import ErrorMessage from "@/style_components/messages/ErrorMessage";
+import LoadingSpinner from "@/componenets/style/misc/LoadingSpinner";
+import ErrorMessage from "@/componenets/style/messages/ErrorMessage";
 
 // import type { PDFDocumentProxy } from "pdfjs-dist";
 

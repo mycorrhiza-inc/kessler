@@ -1,5 +1,5 @@
 "use client"
-import { TextPill } from '@/style_components/Pills/TextPills';
+import { TextPill } from '@/componenets/style/Pills/TextPills';
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 
 // Types for the component

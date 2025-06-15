@@ -1,6 +1,6 @@
 import React from "react";
-import AllInOneClientSearch from "@/stateful_components/SearchBar/AllInOneClientSearch";
-import DynamicFilters from "@/stateful_components/Filters/DynamicFilters";
+import AllInOneClientSearch from "@/componenets/stateful/SearchBar/AllInOneClientSearch";
+import DynamicFilters from "@/componenets/stateful/Filters/DynamicFilters";
 import { PageContextMode } from "@/lib/types/SearchTypes";
 import { generateTypeUrlParams } from "@/lib/types/url_params";
 

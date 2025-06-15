@@ -1,11 +1,11 @@
 
 import React, { Suspense } from "react";
 import { generateTypeUrlParams } from "@/lib/types/url_params";
-import AllInOneClientSearch from "@/stateful_components/SearchBar/AllInOneClientSearch";
-import DynamicFilters from "@/stateful_components/Filters/DynamicFilters";
+import AllInOneClientSearch from "@/componenets/stateful/SearchBar/AllInOneClientSearch";
+import DynamicFilters from "@/componenets/stateful/Filters/DynamicFilters";
 import { PageContextMode } from "@/lib/types/SearchTypes";
-import LoadingSpinner from "@/style_components/misc/LoadingSpinner";
-import RenderedOrg from "@/stateful_components/RenderedObjectCards/RednderedOrg";
+import LoadingSpinner from "@/componenets/style/misc/LoadingSpinner";
+import RenderedOrg from "@/componenets/stateful/RenderedObjectCards/RednderedOrg";
 
 export default async function OrgPage({
   params,

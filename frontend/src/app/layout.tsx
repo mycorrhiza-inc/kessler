@@ -6,7 +6,7 @@ import dynamic from "next/dynamic";
 import {
   ClerkProvider,
 } from "@clerk/nextjs";
-import PostHogPageView from "@/stateful_components/tracking/Posthog/PostHogPageView";
+import PostHogPageView from "@/componenets/stateful/tracking/Posthog/PostHogPageView";
 import { Suspense } from "react";
 
 // const PostHogPageView = dynamic(() => import("../components/Posthog/PostHogPageView"), {

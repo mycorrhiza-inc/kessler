@@ -1,5 +1,5 @@
 import React from "react";
-import AllInOneClientSearch from "@/stateful_components/SearchBar/AllInOneClientSearch";
+import AllInOneClientSearch from "@/componenets/stateful/SearchBar/AllInOneClientSearch";
 import { PageContextMode } from "@/lib/types/SearchTypes";
 import { generateTypeUrlParams } from "@/lib/types/url_params";
 
