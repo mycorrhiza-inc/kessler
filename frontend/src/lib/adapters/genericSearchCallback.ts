@@ -10,6 +10,8 @@ import { hydratedSearchResultsToFilings } from "../requests/search";
 import { adaptFilingToCard } from "./genericCardAdapters";
 import { DocumentCardData } from "../types/generic_card_types";
 import { BackendFilterObject } from "../filters";
+import { TypedUrlParams } from "../types/url_params";
+import { DEFAULT_PAGE_SIZE } from "../constants";
 
 export enum GenericSearchType {
   Filling = "filing",
@@ -24,6 +26,17 @@ export interface GenericSearchInfo {
   filters?: BackendFilterObject;
 }
 
+export const searchInvokeFromUrlParams = async (urlParams: TypedUrlParams, objectType: GenericSearchType) => {
+  const searchInfo: GenericSearchInfo = {
+    query: urlParams.queryData.query || "",
+    search_type: objectType,
+  }
+  const pagination: PaginationData = {
+    page: urlParams.paginationData.page || 0,
+    limit: urlParams.paginationData.limit || DEFAULT_PAGE_SIZE
+  }
+  return await searchInvoke(searchInfo, pagination)
+}
 export const searchInvoke = async (
   info: GenericSearchInfo,
   pagination: PaginationData
@@ -120,7 +133,8 @@ export const createGenericSearchCallback = (
   info: GenericSearchInfo
 ): SearchResultsGetter => {
   // debug and default to dummy search results for stylistic changes.
-  info.search_type = GenericSearchType.Filling as GenericSearchType;
+  // info.search_type = GenericSearchType.Filling as GenericSearchType;
+  info.search_type = GenericSearchType.Dummy as GenericSearchType;
   //console.log("All searches are dummys for momentary testing purposes")
 
   // const api_url = contextualApiUrl(getEnvConfig());

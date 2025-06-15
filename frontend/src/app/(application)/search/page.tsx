@@ -17,7 +17,7 @@ export default async function SearchPage(
       <LogoHomepage bottomText="Search" />
       <AllInOneClientSearch urlParams={urlParams.queryData} queryType={ObjectQueryType.Files}
       />
-      {/* <DynamicFilters filters={filters} dataset={dataset} /> */}
+      <
     </div>
   );
 }
