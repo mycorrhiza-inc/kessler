@@ -8,7 +8,7 @@ export const GetConversationInformation = async (
 ): Promise<Conversation> => {
   // get the conversation information from the database
   const conversation = await axios.get(
-    `${getContextualAPIUrl()}/v2/public/conversations/${conversation_id}`,
+    `${getContextualAPIUrl()}/public/conversations/${conversation_id}`,
   );
   return conversation.data;
 };

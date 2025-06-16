@@ -50,7 +50,7 @@ const DocumentContent = ({
   docUUID: string;
   extension: FileExtension;
 }) => {
-  const documentUrl = `${CLIENT_API_URL}/v2/public/files/${docUUID}/raw`;
+  const documentUrl = `${CLIENT_API_URL}/public/files/${docUUID}/raw`;
   if (extension === FileExtension.PDF) {
     return <PDFViewer file={documentUrl} />;
   }
@@ -74,7 +74,7 @@ const DocumentHeader = ({
   const summary = documentObject.extra.summary;
   const underscoredTitle = title ? title.replace(/ /g, "_") : "Unkown_Document";
   const fileUrlNamedDownload =
-    `${CLIENT_API_URL}/v2/public/files/${objectId}/raw/${underscoredTitle}.${extension}`;
+    `${CLIENT_API_URL}/public/files/${objectId}/raw/${underscoredTitle}.${extension}`;
   const kesslerFileUrl = `/files/${objectId}`;
   const authors_unpluralized =
     documentObject.authors?.length === 1 ? "Author" : "Authors";
