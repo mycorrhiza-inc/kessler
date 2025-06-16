@@ -54,7 +54,8 @@ export async function ServerSearchResultsUnsuspended({ baseUrl, objectType, urlP
       </div>
       <div className="flex justify-center my-4 space-x-2">
         <div className="join bg-base-100">
-          <Link
+          {/* Using an a tag instead of a Link tag, because Link tags wait for the entire page to load before doing a transition even with stuff thats behind a suspense. */}
+          <a
             href={prevHref}
             className={
               clsx("join-item btn btn-outline text-2xl",
@@ -62,9 +63,9 @@ export async function ServerSearchResultsUnsuspended({ baseUrl, objectType, urlP
               )}
           >
             «
-          </Link>
+          </a>
           <p className="join-item btn btn-outline text-base pointer-events-none select-none">Page {urlParams.paginationData.page || 0}</p>
-          <Link
+          <a
             href={nextHref}
             className={
               clsx("join-item btn btn-outline text-2xl",
@@ -72,7 +73,7 @@ export async function ServerSearchResultsUnsuspended({ baseUrl, objectType, urlP
               )}
           >
             »
-          </Link>
+          </a>
         </div>
       </div>
     </div >
