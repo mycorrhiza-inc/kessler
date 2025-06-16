@@ -15,16 +15,22 @@ interface ServerSearchResultProps {
 }
 
 export default async function ServerSearchResults(params: ServerSearchResultProps) {
+
+  const cardResults = await searchInvokeFromUrlParams(params.urlParams, params.objectType, params.inherentRouteFilters || {});
   return <Suspense fallback={<LoadingSpinner loadingText="Loading Server Results" />}>
-    <ServerSearchResultsUnsuspended {...params} />
+    <ServerSearchResultsRaw baseUrl={params.baseUrl} urlParams={params.urlParams} results={cardResults} />
 
   </Suspense>
 }
 
-export async function ServerSearchResultsUnsuspended({ baseUrl, objectType, urlParams, inherentRouteFilters }: ServerSearchResultProps) {
+interface ServerSearchResultsRawParams {
+  baseUrl: string;
+  urlParams: TypedUrlParams;
+  results: any[]
+}
+export function ServerSearchResultsRaw({ baseUrl, urlParams, results }: ServerSearchResultsRawParams) {
   // Perform search based on URL params
-  const cardResults = await searchInvokeFromUrlParams(urlParams, objectType, inherentRouteFilters || {});
-  const cardElements = cardResults.map((card_data) => (
+  const cardElements = results.map((card_data) => (
     <Card key={card_data.id} size={CardSize.Medium} data={card_data} />
   ));
 
@@ -32,7 +38,7 @@ export async function ServerSearchResultsUnsuspended({ baseUrl, objectType, urlP
   const currentPage = urlParams.paginationData.page || 0;
   const limit = urlParams.paginationData.limit || DEFAULT_PAGE_SIZE;
   // If fewer results than limit, we are on the last page
-  const isLastPage = cardResults.length < limit;
+  const isLastPage = results.length < limit;
 
   // Build URLs for previous/next
 
@@ -55,6 +61,7 @@ export async function ServerSearchResultsUnsuspended({ baseUrl, objectType, urlP
       <div className="flex justify-center my-4 space-x-2">
         <div className="join bg-base-100">
           {/* Using an a tag instead of a Link tag, because Link tags wait for the entire page to load before doing a transition even with stuff thats behind a suspense. */}
+          {/* It does seem like there is a solution to this problem described here using some magic routing flags, I should implement this, but not now: https://medium.com/@amirilovic/how-to-use-react-suspense-for-data-loading-4b68f9200c19 */}
           <a
             href={prevHref}
             className={
