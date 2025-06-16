@@ -62,9 +62,6 @@ export function adaptOrganizationToCard(org: OrganizationInfo): DocketCardData {
     name: org.name || org.title || "",
     description: org.description || "",
     timestamp: formatDate(org.updated_at || org.created_at || org.createdAt),
-    authors: Array.isArray(org.admins)
-      ? org.admins.map((u: any) => u.username || u.id || String(u))
-      : undefined,
     extraInfo: org.location || org.address,
   };
 }
@@ -79,7 +76,7 @@ export function adaptConversationToCard(convo: Conversation): AuthorCardData {
     name: convo.name || convo.id,
     description: convo.description || "",
     timestamp: formatDate(convo.updated_at || (convo as any).last_active_at),
-    authors: (convo as any).participants || undefined,
+    // authors: (convo as any).participants || undefined,
     extraInfo: convo.docket_id ? `Docket: ${convo.docket_id}` : undefined,
   };
 }
