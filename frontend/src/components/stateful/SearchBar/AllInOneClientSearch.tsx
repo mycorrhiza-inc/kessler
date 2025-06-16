@@ -10,10 +10,11 @@ export interface AIOSearchProps {
   urlParams: UrlQueryParams
 }
 
-export default function AllInOneClientSearch({ urlParams, queryType: pageContext, overrideBaseUrl }: {
+export default function AllInOneClientSearch({ urlParams, queryType: pageContext, overrideBaseUrl, excludeFilters }: {
   urlParams: UrlQueryParams,
   queryType: ObjectQueryType,
-  overrideBaseUrl?: string
+  overrideBaseUrl?: string,
+  excludeFilters?: boolean,
 }) {
   const router = useRouter()
   const impliedUrl: string = usePathname();
@@ -31,8 +32,12 @@ export default function AllInOneClientSearch({ urlParams, queryType: pageContext
     router.push(url)
   }
 
-  return <div style={{ display: 'flex', justifyContent: 'center' }}>
-    <SearchBar placeholder="Search" value={query} setQuery={setQuery} searchExecute={executeSearch} />
-  </div>
+  if (excludeFilters) {
+    return <div style={{ display: 'flex', justifyContent: 'center' }}>
+      <SearchBar placeholder="Search" value={query} setQuery={setQuery} searchExecute={executeSearch} />
+    </div>
+  }
+  // Else integrate the filter selector into the search component.
+  return <></>
 }
 
