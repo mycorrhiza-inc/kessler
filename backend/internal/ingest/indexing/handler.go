@@ -1,3 +1,4 @@
+// indexing/handler.go
 package indexing
 
 import (
@@ -40,7 +41,7 @@ func RegisterAdminIndexingRoutes(r *mux.Router) {
 	sr.HandleFunc("/organizations/{id}", h.IndexOrganizationByID).Methods(http.MethodPost)
 	sr.HandleFunc("/organizations/{id}", h.DeleteOrganization).Methods(http.MethodDelete)
 
-	// Data endpoints - full CRUD operations
+	// Data endpoints - full CRUD operations with namespace facet support
 	sr.HandleFunc("/data", h.IndexAllData).Methods(http.MethodPost)
 	sr.HandleFunc("/data/batch-ingest", h.BatchIngestData).Methods(http.MethodPost)
 	sr.HandleFunc("/data/{id}", h.IndexDataRecordByID).Methods(http.MethodPost)
@@ -53,7 +54,7 @@ func RegisterAdminIndexingRoutes(r *mux.Router) {
 
 // IndexAllConversations godoc
 // @Summary Batch index all conversations
-// @Description Retrieves all conversations from the database and indexes them in FuguDB
+// @Description Retrieves all conversations from the database and indexes them in FuguDB with proper namespace facets
 // @Success 200 {object} map[string]int{"indexed":int}
 // @Failure 500 {object} map[string]string{"error":string}
 // @Router /admin/indexing/conversations [post]
@@ -74,7 +75,7 @@ func (h *IndexHandler) IndexAllConversations(w http.ResponseWriter, r *http.Requ
 
 // IndexConversationByID godoc
 // @Summary Index a conversation by ID
-// @Description Retrieves a single conversation by UUID and indexes it in FuguDB
+// @Description Retrieves a single conversation by UUID and indexes it in FuguDB with proper namespace facets
 // @Param id path string true "Conversation UUID"
 // @Success 200 {object} map[string]int{"indexed":int}
 // @Failure 400 {object} map[string]string{"error":string}
@@ -122,7 +123,7 @@ func (h *IndexHandler) DeleteConversation(w http.ResponseWriter, r *http.Request
 
 // IndexAllOrganizations godoc
 // @Summary Batch index all organizations
-// @Description Retrieves all organizations from the database and indexes them in FuguDB
+// @Description Retrieves all organizations from the database and indexes them in FuguDB with proper namespace facets
 // @Success 200 {object} map[string]int{"indexed":int}
 // @Failure 500 {object} map[string]string{"error":string}
 // @Router /admin/indexing/organizations [post]
@@ -143,7 +144,7 @@ func (h *IndexHandler) IndexAllOrganizations(w http.ResponseWriter, r *http.Requ
 
 // IndexOrganizationByID godoc
 // @Summary Index an organization by ID
-// @Description Retrieves a single organization by UUID and indexes it in FuguDB
+// @Description Retrieves a single organization by UUID and indexes it in FuguDB with proper namespace facets
 // @Param id path string true "Organization UUID"
 // @Success 200 {object} map[string]int{"indexed":int}
 // @Failure 400 {object} map[string]string{"error":string}
@@ -191,7 +192,7 @@ func (h *IndexHandler) DeleteOrganization(w http.ResponseWriter, r *http.Request
 
 // IndexAllData godoc
 // @Summary Index all conversations and organizations
-// @Description Bulk operation to index all conversations and organizations from the database
+// @Description Bulk operation to index all conversations and organizations from the database with proper namespace facets
 // @Success 200 {object} map[string]interface{}
 // @Failure 500 {object} map[string]string{"error":string}
 // @Router /admin/indexing/all [post]
@@ -210,7 +211,7 @@ func (h *IndexHandler) IndexAllData(w http.ResponseWriter, r *http.Request) {
 		"conversations_indexed": convCount,
 		"organizations_indexed": orgCount,
 		"total_indexed":         convCount + orgCount,
-		"message":               "Successfully indexed all data",
+		"message":               "Successfully indexed all data with namespace facets",
 	}
 
 	logger.Info(ctx, "successfully indexed all data",
@@ -221,9 +222,9 @@ func (h *IndexHandler) IndexAllData(w http.ResponseWriter, r *http.Request) {
 
 // BatchIngestData godoc
 // @Summary Batch ingest arbitrary data records
-// @Description Accepts a batch of data records and indexes them in FuguDB
+// @Description Accepts a batch of data records and indexes them in FuguDB with namespace facet support
 // @Accept json
-// @Param request body DataIngestRequest true "Batch ingest request"
+// @Param request body DataIngestRequest true "Batch ingest request with namespace facet fields"
 // @Success 200 {object} DataIngestResponse
 // @Success 206 {object} DataIngestResponse "Partial success"
 // @Failure 400 {object} map[string]string{"error":string}
@@ -247,7 +248,8 @@ func (h *IndexHandler) BatchIngestData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logger.Info(ctx, "processing batch data ingest request", zap.Int("record_count", len(ingestReq.Records)))
+	logger.Info(ctx, "processing batch data ingest request",
+		zap.Int("record_count", len(ingestReq.Records)))
 
 	// Process the ingestion
 	response, err := h.svc.ProcessBatchDataIngest(ctx, ingestReq.Records)
@@ -280,10 +282,10 @@ func (h *IndexHandler) BatchIngestData(w http.ResponseWriter, r *http.Request) {
 
 // IndexDataRecordByID godoc
 // @Summary Index a single data record by ID
-// @Description Accepts a single data record and indexes it in FuguDB
+// @Description Accepts a single data record and indexes it in FuguDB with namespace facet support
 // @Accept json
 // @Param id path string true "Data Record ID"
-// @Param request body DataRecord true "Data record to index"
+// @Param request body DataRecord true "Data record to index with namespace facet fields"
 // @Success 200 {object} map[string]int{"indexed":int}
 // @Failure 400 {object} map[string]string{"error":string}
 // @Failure 500 {object} map[string]string{"error":string}
