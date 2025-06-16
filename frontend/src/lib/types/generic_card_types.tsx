@@ -8,6 +8,7 @@ export enum CardType {
 
 export const BaseCardDataValidator = z.object({
   name: z.string(),
+  object_id: z.string().uuid(),
   description: z.string(),
   timestamp: z.string(),
   extraInfo: z.string().optional(),
@@ -54,7 +55,8 @@ Example JSON for AuthorCardData:
   "timestamp": "2025-06-16T12:34:56Z",
   "extraInfo": "PhD in fungal biology",
   "index": 1,
-  "type": "author"
+  "type": "author",
+  "object_id": "550e8400-e29b-41d4-a716-446655440000"
 }
 
 Example JSON for DocketCardData:
@@ -63,7 +65,8 @@ Example JSON for DocketCardData:
   "description": "Legal docket for case 1234",
   "timestamp": "2025-01-10T09:00:00Z",
   "index": 2,
-  "type": "docket"
+  "type": "docket",
+  "object_id": "550e8400-e29b-41d4-a716-446655440001"
 }
 
 Example JSON for DocumentCardData:
@@ -74,6 +77,7 @@ Example JSON for DocumentCardData:
   "extraInfo": "Published in Nature",
   "index": 3,
   "type": "document",
+  "object_id": "550e8400-e29b-41d4-a716-446655440002",
   "authors": [
     {
       "author_name": "Jane Doe",
