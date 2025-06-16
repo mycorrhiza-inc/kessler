@@ -52,7 +52,7 @@ describe("CardDataValidators", () => {
   }`;
 
   it("parses valid AuthorCardData JSON correctly", () => {
-    const parsed = AuthorCardDataValidator.partial(JSON.parse(authorJson));
+    const parsed = AuthorCardDataValidator.parse(JSON.parse(authorJson));
     expect(parsed.name).toBe("Jane Doe");
     expect(parsed.type).toBe("author");
   });

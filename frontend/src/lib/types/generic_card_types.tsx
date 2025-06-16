@@ -10,7 +10,7 @@ export const BaseCardDataValidator = z.object({
   name: z.string(),
   object_uuid: z.string().uuid(),
   description: z.string(),
-  timestamp: z.date(),
+  timestamp: z.string(),
   extraInfo: z.string().optional(),
   index: z.number(),
 });
