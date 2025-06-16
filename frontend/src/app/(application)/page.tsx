@@ -12,6 +12,6 @@ export default async function Page(
   const targetSearchUrl = "/search"
   return <DefaultContainer>
     <LogoHomepage />
-    <AllInOneClientSearch urlParams={urlParams.queryData} queryType={ObjectQueryType.Files} overrideBaseUrl={targetSearchUrl} />
+    <AllInOneClientSearch urlParams={urlParams.queryData} queryType={ObjectQueryType.Files} overrideBaseUrl={targetSearchUrl} disableFilterSelection />
   </DefaultContainer>;
 }

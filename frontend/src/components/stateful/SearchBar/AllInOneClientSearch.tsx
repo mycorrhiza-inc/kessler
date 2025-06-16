@@ -6,38 +6,58 @@ import { usePathname, useRouter } from "next/navigation";
 import { FaSearch } from "react-icons/fa";
 import { SearchBar } from "@/components/style/search/SearchBar";
 
+import { KesslerFilterSystem } from '@/components/stateful/Filters/DynamicFilters';
+import { makeFilterEndpoints } from '@/lib/filters';
+
 export interface AIOSearchProps {
   urlParams: UrlQueryParams
 }
 
-export default function AllInOneClientSearch({ urlParams, queryType: pageContext, overrideBaseUrl, excludeFilters }: {
+export default function AllInOneClientSearch({ urlParams, queryType: pageContext, overrideBaseUrl, disableFilterSelection }: {
   urlParams: UrlQueryParams,
   queryType: ObjectQueryType,
   overrideBaseUrl?: string,
-  excludeFilters?: boolean,
+  disableFilterSelection?: boolean,
 }) {
   const router = useRouter()
   const impliedUrl: string = usePathname();
   const baseUrl = overrideBaseUrl || impliedUrl || "/search"
   const [query, setQuery] = useState(urlParams.query || "")
-  const [filters, setFilters] = useState({})
 
   const executeSearch = () => {
-    var newQueryParams = urlParams;
-    newQueryParams.query = query
+    const newQueryParams = { ...urlParams, query };
     const newParams: TypedUrlParams = { queryData: newQueryParams, paginationData: {} }
-
     const encodedUrlQuery = encodeUrlParams(newParams)
     const url = baseUrl + encodedUrlQuery
     router.push(url)
   }
 
-  if (excludeFilters) {
-    return <div style={{ display: 'flex', justifyContent: 'center' }}>
-      <SearchBar placeholder="Search" value={query} setQuery={setQuery} searchExecute={executeSearch} />
-    </div>
+  if (disableFilterSelection) {
+    return (
+      <div className="flex justify-center">
+        <SearchBar placeholder="Search" value={query} setQuery={setQuery} searchExecute={executeSearch} />
+      </div>
+    )
   }
-  // Else integrate the filter selector into the search component.
-  return <></>
-}
 
+  // Render search bar with integrated filters
+  return (
+    <div className="flex flex-col md:flex-row gap-4 items-start">
+      {/* Filters Section */}
+      <div className="flex-1">
+        <KesslerFilterSystem
+          showFields={Object.keys(urlParams.filters || {})}
+          endpoints={makeFilterEndpoints()}
+          layout="inline"
+          showControls={false}
+          showStatus={false}
+        />
+      </div>
+
+      {/* Search Section */}
+      <div className="flex-1 flex justify-center">
+        <SearchBar placeholder="Search" value={query} setQuery={setQuery} searchExecute={executeSearch} />
+      </div>
+    </div>
+  );
+}
