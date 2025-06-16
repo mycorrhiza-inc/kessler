@@ -14,13 +14,18 @@ interface ServerSearchResultProps {
   inherentRouteFilters?: Record<string, string>
 }
 
+
 export default async function ServerSearchResults(params: ServerSearchResultProps) {
+  return <Suspense fallback={<LoadingSpinner loadingText="Loading Server Results" />}>
+    <ServerSearchResultsUnsuspended {...params} />
+  </Suspense>
+}
+
+export async function ServerSearchResultsUnsuspended(params: ServerSearchResultProps) {
 
   const cardResults = await searchInvokeFromUrlParams(params.urlParams, params.objectType, params.inherentRouteFilters || {});
-  return <Suspense fallback={<LoadingSpinner loadingText="Loading Server Results" />}>
-    <ServerSearchResultsRaw baseUrl={params.baseUrl} urlParams={params.urlParams} results={cardResults} />
+  return <ServerSearchResultsRaw baseUrl={params.baseUrl} urlParams={params.urlParams} results={cardResults} />
 
-  </Suspense>
 }
 
 interface ServerSearchResultsRawParams {
