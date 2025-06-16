@@ -2,15 +2,17 @@ import Card, { CardSize } from "@/components/style/cards/GenericResultCard";
 import { GenericSearchType, searchInvokeFromUrlParams } from "@/lib/adapters/genericSearchCallback";
 import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import { TypedUrlParams, encodeUrlParams } from "@/lib/types/url_params";
+import clsx from "clsx";
 import Link from "next/link";
 
 interface ServerSearchResultProps {
   baseUrl: string;
   objectType: GenericSearchType;
   urlParams: TypedUrlParams;
+  inherentRouteFilters?: Record<string, string>
 }
 
-export default async function ServerSearchResults({ baseUrl, objectType, urlParams }: ServerSearchResultProps) {
+export default async function ServerSearchResults({ baseUrl, objectType, urlParams, inherentRouteFilters }: ServerSearchResultProps) {
   // Perform search based on URL params
   const cardResults = await searchInvokeFromUrlParams(urlParams, objectType);
   const cardElements = cardResults.map((card_data) => (
@@ -24,42 +26,46 @@ export default async function ServerSearchResults({ baseUrl, objectType, urlPara
   const isLastPage = cardResults.length < limit;
 
   // Build URLs for previous/next
-  const prevPage = Math.max(currentPage - 1, 0);
-  const nextPage = currentPage + 1;
 
-  const prevParams: TypedUrlParams = {
-    ...urlParams,
-    paginationData: { ...urlParams.paginationData, page: prevPage },
-  };
-  const nextParams: TypedUrlParams = {
-    ...urlParams,
-    paginationData: { ...urlParams.paginationData, page: nextPage },
-  };
+  const gotoPageHref = (page: number): string => {
+    const params: TypedUrlParams = {
+      ...urlParams,
+      paginationData: { ...urlParams.paginationData, page: page },
+    }
+    return `${baseUrl}${encodeUrlParams(params)}`
+  }
 
-  const prevHref = `${baseUrl}${encodeUrlParams(prevParams)}`;
-  const nextHref = `${baseUrl}${encodeUrlParams(nextParams)}`;
+  const prevHref = gotoPageHref(Math.max(currentPage - 1, 0));
+  const nextHref = gotoPageHref(currentPage + 1);
 
   return (
     <div>
       <div className="grid grid-cols-1 gap-4">
         {cardElements}
       </div>
-
       <div className="flex justify-center my-4 space-x-2">
-        <Link
-          href={prevHref}
-          className={`btn btn-outline${currentPage === 0 ? ' btn-disabled' : ''}`}
-        >
-          Previous
-        </Link>
-        <p>Page {urlParams.paginationData.page || 0}</p>
-        <Link
-          href={nextHref}
-          className={`btn btn-outline${isLastPage ? ' btn-disabled' : ''}`}
-        >
-          Next
-        </Link>
+        <div className="join bg-base-100">
+          <Link
+            href={prevHref}
+            className={
+              clsx("join-item btn btn-outline text-2xl",
+                (currentPage === 0 ? 'btn-disabled' : '')
+              )}
+          >
+            «
+          </Link>
+          <p className="join-item btn btn-outline text-base pointer-events-none select-none">Page {urlParams.paginationData.page || 0}</p>
+          <Link
+            href={nextHref}
+            className={
+              clsx("join-item btn btn-outline text-2xl",
+                (isLastPage ? 'btn-disabled' : '')
+              )}
+          >
+            »
+          </Link>
+        </div>
       </div>
-    </div>
+    </div >
   );
 }

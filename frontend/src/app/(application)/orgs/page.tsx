@@ -17,7 +17,6 @@ export default async function OrgSearchPage(
       <LogoHomepage bottomText="Organization Search: TODO MAKE SO IT SEARCHES ORGS AND NOT FILINGS" />
       <AllInOneClientSearch urlParams={urlParams.queryData} queryType={ObjectQueryType.Organizations}
       />
-      {/* <DynamicFilters filters={filters} dataset={dataset} /> */}
     </DefaultContainer>
   );
 }
