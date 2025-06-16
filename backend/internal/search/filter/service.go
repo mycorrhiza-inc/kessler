@@ -1,3 +1,4 @@
+// service.go
 package filter
 
 import (
@@ -200,6 +201,147 @@ func (s *Service) BuildFilterConfiguration(ctx context.Context) (*FilterConfigur
 	return config, nil
 }
 
+// ConvertFiltersToBackend converts frontend filters to backend format
+func (s *Service) ConvertFiltersToBackend(ctx context.Context, filters map[string]string) (map[string]interface{}, error) {
+	ctx, span := serviceTracer.Start(ctx, "filter-service:convert-to-backend")
+	defer span.End()
+
+	// Get current configuration to map field IDs to backend keys
+	config, err := s.BuildFilterConfiguration(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get configuration: %w", err)
+	}
+
+	// Create field ID to backend key mapping
+	fieldMap := make(map[string]string)
+	for _, field := range config.Fields {
+		fieldMap[field.ID] = field.BackendKey
+	}
+
+	// Convert filters
+	backendFilters := make(map[string]interface{})
+	for fieldID, value := range filters {
+		if value == "" {
+			continue
+		}
+
+		backendKey, exists := fieldMap[fieldID]
+		if !exists {
+			logger.Warn(ctx, "unknown filter field", zap.String("field_id", fieldID))
+			continue
+		}
+
+		backendFilters[backendKey] = value
+	}
+
+	return backendFilters, nil
+}
+
+// ValidateFilters validates filter values against the current configuration
+func (s *Service) ValidateFilters(ctx context.Context, filters map[string]string) (*ValidateFiltersResponse, error) {
+	ctx, span := serviceTracer.Start(ctx, "filter-service:validate-filters")
+	defer span.End()
+
+	// Get current configuration
+	config, err := s.BuildFilterConfiguration(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get configuration: %w", err)
+	}
+
+	// Create field ID to field mapping
+	fieldMap := make(map[string]FilterFieldDefinition)
+	for _, field := range config.Fields {
+		fieldMap[field.ID] = field
+	}
+
+	var errors []ValidationError
+	var warnings []ValidationWarning
+
+	// Validate each filter
+	for fieldID, value := range filters {
+		field, exists := fieldMap[fieldID]
+		if !exists {
+			warnings = append(warnings, ValidationWarning{
+				FieldID: fieldID,
+				Message: "Unknown filter field",
+				Type:    "unknown_field",
+			})
+			continue
+		}
+
+		if !field.Enabled {
+			warnings = append(warnings, ValidationWarning{
+				FieldID: fieldID,
+				Message: "Filter field is disabled",
+				Type:    "disabled_field",
+			})
+			continue
+		}
+
+		// Validate field value
+		fieldErrors := s.validateFieldValue(field, value)
+		errors = append(errors, fieldErrors...)
+	}
+
+	return &ValidateFiltersResponse{
+		IsValid:  len(errors) == 0,
+		Errors:   errors,
+		Warnings: warnings,
+	}, nil
+}
+
+// GetDynamicOptions gets dynamic options for a specific field
+func (s *Service) GetDynamicOptions(ctx context.Context, fieldID string, context map[string]string, namespace string) ([]FilterOption, error) {
+	ctx, span := serviceTracer.Start(ctx, "filter-service:get-dynamic-options")
+	defer span.End()
+
+	// Create fugu client to fetch dynamic data
+	client, err := fugusdk.NewClient(ctx, s.fuguServerURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create fugu client: %w", err)
+	}
+
+	// Get current filter configuration to understand the field
+	var config *FilterConfiguration
+	if namespace != "" {
+		config, err = s.BuildNamespaceFilterConfiguration(ctx, namespace)
+	} else {
+		config, err = s.BuildFilterConfiguration(ctx)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to get configuration: %w", err)
+	}
+
+	// Find the field definition
+	var field *FilterFieldDefinition
+	for _, f := range config.Fields {
+		if f.ID == fieldID {
+			field = &f
+			break
+		}
+	}
+
+	if field == nil {
+		return nil, fmt.Errorf("field not found: %s", fieldID)
+	}
+
+	// If field already has static options, return them
+	if len(field.Options) > 0 {
+		return field.Options, nil
+	}
+
+	// For dynamic options, we need to query the actual data
+	options, err := s.fetchDynamicOptionsFromFugu(ctx, client, field, context, namespace)
+	if err != nil {
+		logger.Warn(ctx, "failed to fetch dynamic options, returning empty list",
+			zap.String("field_id", fieldID),
+			zap.Error(err))
+		return []FilterOption{}, nil
+	}
+
+	return options, nil
+}
+
 // parseFacetsFromResponse extracts facet information from fugu response
 func (s *Service) parseFacetsFromResponse(response *fugusdk.SanitizedResponse) ([]FacetInfo, error) {
 	// Parse the actual fugu response format: {"filters":[["/metadata/field_name",count],...]}
@@ -281,10 +423,22 @@ func (s *Service) convertFacetsToFields(facets []FacetInfo) []FilterFieldDefinit
 // extractFieldNameFromFacet extracts the filter field name from a facet path
 func (s *Service) extractFieldNameFromFacet(facetPath string) string {
 	// For paths like "/metadata/case_number", extract "case_number"
+	// Skip namespace paths like "/namespace/NYPUC/organization"
 	parts := strings.Split(strings.Trim(facetPath, "/"), "/")
-	if len(parts) < 2 || parts[0] != "metadata" {
+
+	if len(parts) < 2 {
 		return ""
 	}
+
+	// Skip namespace facets - handled separately in namespace_service.go
+	if parts[0] == "namespace" {
+		return ""
+	}
+
+	if parts[0] != "metadata" {
+		return ""
+	}
+
 	return parts[len(parts)-1] // Get the last segment after /metadata/
 }
 
@@ -466,95 +620,6 @@ func (s *Service) createFilterCategories() []FilterCategory {
 	}
 }
 
-// ConvertFiltersToBackend converts frontend filters to backend format
-func (s *Service) ConvertFiltersToBackend(ctx context.Context, filters map[string]string) (map[string]interface{}, error) {
-	ctx, span := serviceTracer.Start(ctx, "filter-service:convert-to-backend")
-	defer span.End()
-
-	// Get current configuration to map field IDs to backend keys
-	config, err := s.BuildFilterConfiguration(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get configuration: %w", err)
-	}
-
-	// Create field ID to backend key mapping
-	fieldMap := make(map[string]string)
-	for _, field := range config.Fields {
-		fieldMap[field.ID] = field.BackendKey
-	}
-
-	// Convert filters
-	backendFilters := make(map[string]interface{})
-	for fieldID, value := range filters {
-		if value == "" {
-			continue
-		}
-
-		backendKey, exists := fieldMap[fieldID]
-		if !exists {
-			logger.Warn(ctx, "unknown filter field", zap.String("field_id", fieldID))
-			continue
-		}
-
-		backendFilters[backendKey] = value
-	}
-
-	return backendFilters, nil
-}
-
-// ValidateFilters validates filter values against the current configuration
-func (s *Service) ValidateFilters(ctx context.Context, filters map[string]string) (*ValidateFiltersResponse, error) {
-	ctx, span := serviceTracer.Start(ctx, "filter-service:validate-filters")
-	defer span.End()
-
-	// Get current configuration
-	config, err := s.BuildFilterConfiguration(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get configuration: %w", err)
-	}
-
-	// Create field ID to field mapping
-	fieldMap := make(map[string]FilterFieldDefinition)
-	for _, field := range config.Fields {
-		fieldMap[field.ID] = field
-	}
-
-	var errors []ValidationError
-	var warnings []ValidationWarning
-
-	// Validate each filter
-	for fieldID, value := range filters {
-		field, exists := fieldMap[fieldID]
-		if !exists {
-			warnings = append(warnings, ValidationWarning{
-				FieldID: fieldID,
-				Message: "Unknown filter field",
-				Type:    "unknown_field",
-			})
-			continue
-		}
-
-		if !field.Enabled {
-			warnings = append(warnings, ValidationWarning{
-				FieldID: fieldID,
-				Message: "Filter field is disabled",
-				Type:    "disabled_field",
-			})
-			continue
-		}
-
-		// Validate field value
-		fieldErrors := s.validateFieldValue(field, value)
-		errors = append(errors, fieldErrors...)
-	}
-
-	return &ValidateFiltersResponse{
-		IsValid:  len(errors) == 0,
-		Errors:   errors,
-		Warnings: warnings,
-	}, nil
-}
-
 // validateFieldValue validates a single field value
 func (s *Service) validateFieldValue(field FilterFieldDefinition, value string) []ValidationError {
 	var errors []ValidationError
@@ -730,53 +795,6 @@ func (s *Service) validateFieldValue(field FilterFieldDefinition, value string) 
 	return errors
 }
 
-// GetDynamicOptions gets dynamic options for a specific field
-func (s *Service) GetDynamicOptions(ctx context.Context, fieldID string, context map[string]string, namespace string) ([]FilterOption, error) {
-	ctx, span := serviceTracer.Start(ctx, "filter-service:get-dynamic-options")
-	defer span.End()
-
-	// Create fugu client to fetch dynamic data
-	client, err := fugusdk.NewClient(ctx, s.fuguServerURL)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create fugu client: %w", err)
-	}
-
-	// Get current filter configuration to understand the field
-	config, err := s.BuildFilterConfiguration(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get configuration: %w", err)
-	}
-
-	// Find the field definition
-	var field *FilterFieldDefinition
-	for _, f := range config.Fields {
-		if f.ID == fieldID {
-			field = &f
-			break
-		}
-	}
-
-	if field == nil {
-		return nil, fmt.Errorf("field not found: %s", fieldID)
-	}
-
-	// If field already has static options, return them
-	if len(field.Options) > 0 {
-		return field.Options, nil
-	}
-
-	// For dynamic options, we need to query the actual data
-	options, err := s.fetchDynamicOptionsFromFugu(ctx, client, field, context, namespace)
-	if err != nil {
-		logger.Warn(ctx, "failed to fetch dynamic options, returning empty list",
-			zap.String("field_id", fieldID),
-			zap.Error(err))
-		return []FilterOption{}, nil
-	}
-
-	return options, nil
-}
-
 // fetchDynamicOptionsFromFugu fetches dynamic options from Fugu based on field configuration
 func (s *Service) fetchDynamicOptionsFromFugu(ctx context.Context, client *fugusdk.Client, field *FilterFieldDefinition, context map[string]string, namespace string) ([]FilterOption, error) {
 	switch field.InputType {
@@ -799,7 +817,7 @@ func (s *Service) fetchSelectOptions(ctx context.Context, client *fugusdk.Client
 
 	// Add namespace filter if specified
 	if namespace != "" {
-		filters := []string{namespace}
+		filters := []string{fmt.Sprintf("namespace/%s", namespace)}
 		searchQuery.Filters = &filters
 	}
 
@@ -905,4 +923,12 @@ func (s *Service) formatOptionLabel(value string, inputType FilterInputType) str
 	}
 
 	return value
+}
+
+// BuildNamespaceFilterConfiguration is a convenience method that delegates to NamespaceService
+// This allows the base Service to work with namespace functionality when needed
+func (s *Service) BuildNamespaceFilterConfiguration(ctx context.Context, namespace string) (*FilterConfiguration, error) {
+	// Create a namespace service instance and delegate
+	nsService := &NamespaceService{Service: s}
+	return nsService.BuildNamespaceFilterConfiguration(ctx, namespace)
 }
