@@ -27,7 +27,7 @@ export interface GenericSearchInfo {
   filters?: BackendFilterObject;
 }
 
-export const searchInvokeFromUrlParams = async (urlParams: TypedUrlParams, objectType: GenericSearchType) => {
+export const searchInvokeFromUrlParams = async (urlParams: TypedUrlParams, objectType: GenericSearchType, inheritedFilters: Record<string, string>) => {
   const searchInfo: GenericSearchInfo = {
     query: urlParams.queryData.query || "",
     search_type: objectType,

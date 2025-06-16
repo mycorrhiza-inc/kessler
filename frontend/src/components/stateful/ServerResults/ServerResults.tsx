@@ -1,9 +1,11 @@
 import Card, { CardSize } from "@/components/style/cards/GenericResultCard";
+import LoadingSpinner from "@/components/style/misc/LoadingSpinner";
 import { GenericSearchType, searchInvokeFromUrlParams } from "@/lib/adapters/genericSearchCallback";
 import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import { TypedUrlParams, encodeUrlParams } from "@/lib/types/url_params";
 import clsx from "clsx";
 import Link from "next/link";
+import { Suspense } from "react";
 
 interface ServerSearchResultProps {
   baseUrl: string;
@@ -12,9 +14,16 @@ interface ServerSearchResultProps {
   inherentRouteFilters?: Record<string, string>
 }
 
-export default async function ServerSearchResults({ baseUrl, objectType, urlParams, inherentRouteFilters }: ServerSearchResultProps) {
+export default async function ServerSearchResults(params: ServerSearchResultProps) {
+  return <Suspense fallback={<LoadingSpinner loadingText="Loading Server Results" />}>
+    <ServerSearchResultsUnsuspended {...params} />
+
+  </Suspense>
+}
+
+export async function ServerSearchResultsUnsuspended({ baseUrl, objectType, urlParams, inherentRouteFilters }: ServerSearchResultProps) {
   // Perform search based on URL params
-  const cardResults = await searchInvokeFromUrlParams(urlParams, objectType);
+  const cardResults = await searchInvokeFromUrlParams(urlParams, objectType, inherentRouteFilters || {});
   const cardElements = cardResults.map((card_data) => (
     <Card key={card_data.id} size={CardSize.Medium} data={card_data} />
   ));
@@ -49,7 +58,7 @@ export default async function ServerSearchResults({ baseUrl, objectType, urlPara
             href={prevHref}
             className={
               clsx("join-item btn btn-outline text-2xl",
-                (currentPage === 0 ? 'btn-disabled' : '')
+                currentPage === 0 && 'btn-disabled'
               )}
           >
             «
@@ -59,7 +68,7 @@ export default async function ServerSearchResults({ baseUrl, objectType, urlPara
             href={nextHref}
             className={
               clsx("join-item btn btn-outline text-2xl",
-                (isLastPage ? 'btn-disabled' : '')
+                isLastPage && 'btn-disabled'
               )}
           >
             »
