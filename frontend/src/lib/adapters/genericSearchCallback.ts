@@ -12,6 +12,7 @@ import { DocumentCardData } from "../types/generic_card_types";
 import { BackendFilterObject } from "../filters";
 import { TypedUrlParams } from "../types/url_params";
 import { DEFAULT_PAGE_SIZE } from "../constants";
+import { getContextualAPIUrl } from "../env_variables";
 
 export enum GenericSearchType {
   Filling = "filing",
@@ -137,7 +138,7 @@ export const createGenericSearchCallback = (
   info.search_type = GenericSearchType.Dummy as GenericSearchType;
   //console.log("All searches are dummys for momentary testing purposes")
 
-  const api_url = contextualApiUrl(getEnvConfig());
+  const api_url = getContextualAPIUrl();
   // const api_url = "http://localhost";
 
   // =======
@@ -157,7 +158,7 @@ export const createGenericSearchCallback = (
     case GenericSearchType.Dummy:
       return async (pagination: PaginationData): Promise<SearchResult> => {
         try {
-          const url = `${api_url}/v2/version_hash`;
+          const url = `${api_url}/version_hash`;
           const response = await axios.get(url);
 
           if (!response.data) {
@@ -189,10 +190,10 @@ export const createGenericSearchCallback = (
       return async (pagination: PaginationData): Promise<SearchResult[]> => {
         // const paginationQueryString = queryStringFromPagination(pagination);
         // const { query: searchQuery } = info;
-        // const url = `${api_url}/v2/search/file${paginationQueryString}`;
+        // const url = `${api_url}/search/file${paginationQueryString}`;
         // // const paginationQueryString = queryStringFromPagination(pagination)/* ; */
         const { query: searchQuery } = info;
-        const url = `${api_url}/v2/search/`;
+        const url = `${api_url}/search/`;
         const requestData: SearchRequest = { query: searchQuery };
 
         console.log("query data:", info);
@@ -200,8 +201,8 @@ export const createGenericSearchCallback = (
         console.log("API URL:", api_url);
 
         //         try {
-        //           // const url = `${api_url}/v2/search/file${paginationQueryString}`;
-        //           const url = `${api_url}/v2/search`;
+        //           // const url = `${api_url}/search/file${paginationQueryString}`;
+        //           const url = `${api_url}/search`;
         //           const requestData: SearchRequest = { query: info.query };
         //
         //           const response = await axios.post<SearchResponse>(url, info);

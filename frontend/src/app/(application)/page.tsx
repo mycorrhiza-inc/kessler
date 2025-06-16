@@ -8,8 +8,9 @@ export default async function Page(
 ) {
   const untypedUrlParams = await searchParams;
   const urlParams = generateTypeUrlParams(untypedUrlParams)
-  return <div className="flex justify-center items-center">
+  const targetSearchUrl = "/search"
+  return <div className="flex justify-center items-center flex-col ">
     <LogoHomepage />
-    <AllInOneClientSearch urlParams={urlParams.queryData} queryType={ObjectQueryType.Files} />
+    <AllInOneClientSearch urlParams={urlParams.queryData} queryType={ObjectQueryType.Files} overrideBaseUrl={targetSearchUrl} />
   </div>;
 }

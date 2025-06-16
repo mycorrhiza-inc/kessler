@@ -30,8 +30,9 @@ export default function AllInOneClientSearch({ urlParams, queryType: pageContext
     const url = baseUrl + encodedUrlQuery
     router.push(url)
   }
+
   return <div style={{ display: 'flex', justifyContent: 'center' }}>
-    <SearchBar value={query} onChange={setQuery} />
+    <SearchBar value={query} setQuery={setQuery} searchExecute={executeSearch} />
   </div>
 }
 

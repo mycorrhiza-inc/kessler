@@ -12,7 +12,7 @@ type ModalProps = {
   isPage: boolean;
 };
 const DocumentModalBody = ({ objectId, isPage }: ModalProps) => {
-  const semiCompleteFileUrl = `${CLIENT_API_URL}/v2/public/files/${objectId}`;
+  const semiCompleteFileUrl = `${CLIENT_API_URL}/public/files/${objectId}`;
   // const { data, error, isLoading } = useSWRImmutable(
   //   semiCompleteFileUrl,
   //   completeFileSchemaGet,
