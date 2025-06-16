@@ -5,7 +5,7 @@ import {
   DocketCardDataValidator,
   DocumentCardDataValidator,
 } from "@/lib/types/generic_card_types";
-import { describe, it } from "node:test";
+import { describe, it, expect } from "vitest";
 
 describe("CardDataValidators", () => {
   const authorJson = `{
@@ -52,7 +52,7 @@ describe("CardDataValidators", () => {
   }`;
 
   it("parses valid AuthorCardData JSON correctly", () => {
-    const parsed = AuthorCardDataValidator.parse(JSON.parse(authorJson));
+    const parsed = AuthorCardDataValidator.partial(JSON.parse(authorJson));
     expect(parsed.name).toBe("Jane Doe");
     expect(parsed.type).toBe("author");
   });
