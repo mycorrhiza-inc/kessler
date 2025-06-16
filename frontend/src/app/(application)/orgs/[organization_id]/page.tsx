@@ -30,6 +30,6 @@ export default async function OrgPage({
       <AllInOneClientSearch urlParams={urlParams.queryData} queryType={ObjectQueryType.Files}
       />
       {/* <DynamicFilters filters={filters} dataset={dataset} /> */}
-    </div>
+    </DefaultContainer>
   );
 }
