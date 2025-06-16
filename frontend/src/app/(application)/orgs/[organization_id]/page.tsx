@@ -6,6 +6,7 @@ import DynamicFilters from "@/components/stateful/Filters/DynamicFilters";
 import { ObjectQueryType } from "@/lib/types/SearchTypes";
 import LoadingSpinner from "@/components/style/misc/LoadingSpinner";
 import RenderedOrg from "@/components/stateful/RenderedObjectCards/RednderedOrg";
+import DefaultContainer from "@/components/stateful/PageContainer/DefaultContainer";
 
 export default async function OrgPage({
   params,
@@ -21,7 +22,7 @@ export default async function OrgPage({
   const org_id = (await params).organization_id;
 
   return (
-    <div className="p-4">
+    <DefaultContainer>
       <Suspense fallback={<LoadingSpinner loadingText="Loading Organization Data" />}>
         <RenderedOrg org_id={org_id} />
       </Suspense>

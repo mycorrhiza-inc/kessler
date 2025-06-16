@@ -4,6 +4,7 @@ import DynamicFilters from "@/components/stateful/Filters/DynamicFilters";
 import { ObjectQueryType } from "@/lib/types/SearchTypes";
 import { generateTypeUrlParams } from "@/lib/types/url_params";
 import { LogoHomepage } from "@/components/style/misc/Logo";
+import DefaultContainer from "@/components/stateful/PageContainer/DefaultContainer";
 
 export default async function DocketSearchPage(
   { searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }
@@ -12,13 +13,13 @@ export default async function DocketSearchPage(
   const urlParams = generateTypeUrlParams(untypedUrlParams)
 
   return (
-    <div className="p-4">
+    <DefaultContainer>
       <h1 className="text-2xl font-bold mb-4"></h1>
 
       <LogoHomepage bottomText="Docket Search: TODO MAKE IT SEARCH DOCKETS NOT FILINGS" />
       <AllInOneClientSearch urlParams={urlParams.queryData} queryType={ObjectQueryType.Conversations}
       />
       {/* <DynamicFilters filters={filters} dataset={dataset} /> */}
-    </div>
+    </DefaultContainer>
   );
 }

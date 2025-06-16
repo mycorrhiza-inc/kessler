@@ -5,6 +5,7 @@ import { generateTypeUrlParams } from "@/lib/types/url_params";
 import { LogoHomepage } from "@/components/style/misc/Logo";
 import ServerSearchResults from "@/components/stateful/ServerResults/ServerResults";
 import { GenericSearchType } from "@/lib/adapters/genericSearchCallback";
+import DefaultContainer from "@/components/stateful/PageContainer/DefaultContainer";
 
 export default async function SearchPage(
   { searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }
@@ -15,11 +16,11 @@ export default async function SearchPage(
 
 
   return (
-    <div className="flex justify-center items-center flex-col">
+    <DefaultContainer>
       <LogoHomepage bottomText="Search" />
       <AllInOneClientSearch urlParams={urlParams.queryData} queryType={ObjectQueryType.Files}
       />
       <ServerSearchResults urlParams={urlParams} baseUrl="/search" objectType={GenericSearchType.Filling} />
-    </div>
+    </DefaultContainer>
   );
 }

@@ -3,6 +3,7 @@ import { ObjectQueryType } from "@/lib/types/SearchTypes";
 import { generateTypeUrlParams } from "@/lib/types/url_params";
 import AllInOneClientSearch from "@/components/stateful/SearchBar/AllInOneClientSearch";
 import { LogoHomepage } from "@/components/style/misc/Logo";
+import DefaultContainer from "@/components/stateful/PageContainer/DefaultContainer";
 
 export default async function OrgSearchPage(
 
@@ -12,7 +13,7 @@ export default async function OrgSearchPage(
   const urlParams = generateTypeUrlParams(untypedUrlParams)
 
   return (
-    <div className="p-4">
+    <DefaultContainer >
       <LogoHomepage bottomText="Organization Search: TODO MAKE SO IT SEARCHES ORGS AND NOT FILINGS" />
       <AllInOneClientSearch urlParams={urlParams.queryData} queryType={ObjectQueryType.Organizations}
       />

@@ -32,7 +32,7 @@ export default function AllInOneClientSearch({ urlParams, queryType: pageContext
   }
 
   return <div style={{ display: 'flex', justifyContent: 'center' }}>
-    <SearchBar value={query} setQuery={setQuery} searchExecute={executeSearch} />
+    <SearchBar placeholder="Search" value={query} setQuery={setQuery} searchExecute={executeSearch} />
   </div>
 }
 

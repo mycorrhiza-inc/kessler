@@ -4,6 +4,7 @@ import RenderedConvo from "@/components/stateful/RenderedObjectCards/RednderedCo
 import AllInOneClientSearch from "@/components/stateful/SearchBar/AllInOneClientSearch";
 import LoadingSpinner from "@/components/style/misc/LoadingSpinner";
 import { Suspense } from "react";
+import DefaultContainer from "@/components/stateful/PageContainer/DefaultContainer";
 
 export default async function Page({
   params,
@@ -20,7 +21,7 @@ export default async function Page({
   const convo_id = (await params).conversation_id;
 
   return (
-    <div className="p-4">
+    <DefaultContainer>
       <Suspense fallback={<LoadingSpinner loadingText="Loading Organization Data" />}>
         <RenderedConvo convo_id={convo_id} />
       </Suspense>
@@ -28,6 +29,6 @@ export default async function Page({
       <AllInOneClientSearch urlParams={urlParams.queryData} queryType={ObjectQueryType.Files}
       />
       {/* <DynamicFilters filters={filters} dataset={dataset} /> */}
-    </div>
+    </DefaultContainer>
   );
 }
