@@ -14,6 +14,7 @@ import (
 	"kessler/internal/autocomplete"
 	"kessler/internal/cache"
 	"kessler/internal/database"
+	"kessler/internal/dbstore"
 	"kessler/internal/filters"
 	"kessler/internal/health"
 	indexing "kessler/internal/ingest/indexing"
@@ -55,6 +56,12 @@ const (
 	shutdownTimeout = 30 * time.Second
 )
 
+// AppDependencies holds all the dependencies needed by the application
+type AppDependencies struct {
+	DB    dbstore.DBTX
+	Cache cache.CacheController
+}
+
 func main() {
 	// Initialize logger first
 	if err := logger.Init(logger.DefaultConfig()); err != nil {
@@ -72,12 +79,13 @@ func main() {
 	)
 
 	// Initialize dependencies
-	if err := initDependencies(ctx); err != nil {
+	deps, err := initDependencies(ctx)
+	if err != nil {
 		log.FatalContext(ctx, "Failed to initialize dependencies", zap.Error(err))
 	}
 
-	// Setup router and middleware
-	router := setupRouter(ctx)
+	// Setup router and middleware with dependencies
+	router := setupRouter(ctx, deps)
 
 	// Create server
 	server := &http.Server{
@@ -119,30 +127,43 @@ func main() {
 	log.InfoContext(ctx, "Application stopped")
 }
 
-func initDependencies(ctx context.Context) error {
+func initDependencies(ctx context.Context) (*AppDependencies, error) {
 	log := logger.FromContext(ctx)
 
 	// Initialize database
 	log.InfoContext(ctx, "Connecting to database")
-	if err := database.Init(30); err != nil {
-		return fmt.Errorf("database initialization failed: %w", err)
+	pool, err := database.Init(30)
+	if err != nil {
+		return nil, fmt.Errorf("database initialization failed: %w", err)
 	}
 	log.InfoContext(ctx, "Database connection successful")
 
 	// Initialize cache
 	log.InfoContext(ctx, "Initializing memcached")
 	if err := cache.InitMemcached("localhost:11211"); err != nil {
-		return fmt.Errorf("memcached initialization failed: %w", err)
+		return nil, fmt.Errorf("memcached initialization failed: %w", err)
+	}
+
+	// Create cache controller
+	cacheController, err := cache.NewCacheController()
+	if err != nil {
+		log.WarnContext(ctx, "Failed to create cache controller", zap.Error(err))
+		// Continue without cache - it's optional
 	}
 
 	// Test cache connection
-	if err := cache.MemcachedClient.Ping(); err != nil {
-		log.WarnContext(ctx, "Cache ping failed", zap.Error(err))
-	} else {
-		log.InfoContext(ctx, "Cache initialized and tested successfully")
+	if cacheController.Client != nil {
+		if err := cacheController.Client.Ping(); err != nil {
+			log.WarnContext(ctx, "Cache ping failed", zap.Error(err))
+		} else {
+			log.InfoContext(ctx, "Cache initialized and tested successfully")
+		}
 	}
 
-	return nil
+	return &AppDependencies{
+		DB:    pool,
+		Cache: cacheController,
+	}, nil
 }
 
 // Add debug middleware to see all incoming requests
@@ -157,7 +178,7 @@ func debugMiddleware() func(http.Handler) http.Handler {
 	}
 }
 
-func setupRouter(ctx context.Context) http.Handler {
+func setupRouter(ctx context.Context, deps *AppDependencies) http.Handler {
 	log := logger.FromContext(ctx) // set up logger
 
 	r := mux.NewRouter()
@@ -183,10 +204,10 @@ func setupRouter(ctx context.Context) http.Handler {
 	standardRoute := r.PathPrefix("").Subrouter()
 	standardRoute.Use(timeoutMiddleware(standardTimeout))
 
-	// Register route groups
-	registerPublicRoutes(standardRoute, log)
-	registerSystemRoutes(standardRoute, log)
-	registerAdminRoutes(standardRoute, log)
+	// Register route groups with dependencies
+	registerPublicRoutes(standardRoute, log, deps)
+	registerSystemRoutes(standardRoute, log, deps)
+	registerAdminRoutes(standardRoute, log, deps)
 
 	// indexing.RegisterIndexingRoutes(standardRoute)
 
@@ -218,21 +239,32 @@ func printRoutes(r *mux.Router) {
 	})
 }
 
-func registerPublicRoutes(router *mux.Router, log *otelzap.Logger) {
+func registerPublicRoutes(router *mux.Router, log *otelzap.Logger, deps *AppDependencies) {
 	fmt.Println("🔧 Registering public routes...")
 
-	// Public API routes
+	// Public API routes - pass DB to handlers that need it
 	publicSubroute := router.PathPrefix("/public").Subrouter()
-	FilesHandler.DefineFileRoutes(publicSubroute)
-	OrganizationsHandler.DefineOrganizationRoutes(publicSubroute)
-	ConversationsHandler.DefineConversationsRoutes(publicSubroute)
+	FilesHandler.DefineFileRoutes(
+		publicSubroute.PathPrefix("/files").Subrouter(),
+		deps.DB,
+	)
+	OrganizationsHandler.DefineOrganizationRoutes(
+		publicSubroute.PathPrefix("/organizations").Subrouter(),
+		deps.DB)
+	ConversationsHandler.DefineConversationsRoutes(
+		publicSubroute.PathPrefix("/conversations").Subrouter(),
+		deps.DB)
 	fmt.Println("   ✅ Public CRUD routes registered")
 
-	// Search routes
+	// Search routes - pass DB to search
 	searchSubroute := router.PathPrefix("/search").Subrouter()
-	search.RegisterSearchRoutes(searchSubroute)
+	if err := search.RegisterSearchRoutes(searchSubroute, deps.DB); err != nil {
+		log.ErrorContext(context.Background(), "Failed to register search routes", zap.Error(err))
+	}
 	v2SearchSubroute := router.PathPrefix("/v2/search").Subrouter()
-	search.RegisterSearchRoutes(v2SearchSubroute)
+	if err := search.RegisterSearchRoutes(v2SearchSubroute, deps.DB); err != nil {
+		log.ErrorContext(context.Background(), "Failed to register v2 search routes", zap.Error(err))
+	}
 	fmt.Println("   ✅ Search routes registered")
 
 	if err := filters.RegisterFilterRoutes(searchSubroute); err != nil {
@@ -246,23 +278,23 @@ func registerPublicRoutes(router *mux.Router, log *otelzap.Logger) {
 	objects.RegisterObjectRoutes(objectsSubroute)
 	fmt.Println("   ✅ Object routes registered")
 
-	// Autocomplete routes
-	autocompleteSubroute := router.PathPrefix("/autocomplete").Subrouter()
-	autocomplete.DefineAutocompleteRoutes(autocompleteSubroute)
+	autocomplete.DefineAutocompleteRoutes(
+		router.PathPrefix("/autocomplete").Subrouter(),
+	)
 	fmt.Println("   ✅ Autocomplete routes registered")
 
-	// Jobs routes
+	// Jobs routes - pass DB if needed
 	jobSubroute := router.PathPrefix("/jobs").Subrouter()
-	jobs.DefineJobRoutes(jobSubroute)
+	jobs.DefineJobRoutes(jobSubroute, deps.DB)
 	fmt.Println("   ✅ Job routes registered")
 }
 
-func registerSystemRoutes(router *mux.Router, log *otelzap.Logger) {
+func registerSystemRoutes(router *mux.Router, log *otelzap.Logger, deps *AppDependencies) {
 	fmt.Println("🔧 Registering system routes...")
 
-	// Health check routes
+	// Health check routes - pass DB for health checks
 	healthSubroute := router.PathPrefix("/health").Subrouter()
-	health.DefineHealthRoutes(healthSubroute)
+	health.DefineHealthRoutes(healthSubroute, deps.DB)
 	fmt.Println("   ✅ Health routes registered")
 
 	// Version endpoint
@@ -270,15 +302,15 @@ func registerSystemRoutes(router *mux.Router, log *otelzap.Logger) {
 	fmt.Println("   ✅ Version endpoint registered")
 }
 
-func registerAdminRoutes(router *mux.Router, log *otelzap.Logger) {
+func registerAdminRoutes(router *mux.Router, log *otelzap.Logger, deps *AppDependencies) {
 	fmt.Println("🔧 Registering admin routes...")
 
 	// Admin routes with longer timeout
 	adminRoute := router.PathPrefix("/admin").Subrouter()
 	adminRoute.Use(timeoutMiddleware(adminTimeout))
-	admin.DefineAdminRoutes(adminRoute)
+	admin.DefineAdminRoutes(adminRoute, deps.DB)
 	// Admin indexing endpoints
-	indexing.RegisterAdminIndexingRoutes(adminRoute)
+	indexing.RegisterAdminIndexingRoutes(adminRoute, deps.DB)
 	fmt.Println("   ✅ Admin routes registered")
 }
 
