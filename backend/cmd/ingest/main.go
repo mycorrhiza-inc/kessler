@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"kessler/internal/ingest/routes"
 	"kessler/internal/ingest/tasks"
 	"kessler/pkg/logger"
@@ -62,7 +63,8 @@ func main() {
 	// Create asynq client
 	client := asynq.NewClient(asynq.RedisClientOpt{Addr: redisAddr})
 	defer client.Close()
-	log := logger.GetLogger("main_ingest")
+	ctx := logger.WithLogger(context.Background())
+	log := logger.FromContext(ctx)
 
 	// Create API subrouter with client middleware
 	api := r.PathPrefix(root).Subrouter()
