@@ -3,10 +3,11 @@ package search
 import (
 	"context"
 	"fmt"
+	"kessler/internal/cache"
+	"kessler/internal/dbstore"
 	"kessler/internal/fugusdk"
 	"kessler/internal/search/filter"
 	"kessler/pkg/logger"
-	"strings"
 	"time"
 
 	"go.opentelemetry.io/otel"
@@ -26,13 +27,13 @@ type SearchRequest struct {
 
 // Frontend response types
 type SearchResponse struct {
-	Data        []SearchResultItem `json:"data"`
-	Total       int                `json:"total,omitempty"`
-	Page        int                `json:"page,omitempty"`
-	PerPage     int                `json:"per_page,omitempty"`
-	Query       string             `json:"query,omitempty"`
-	Namespace   string             `json:"namespace,omitempty"`
-	ProcessTime string             `json:"process_time,omitempty"`
+	Data        []CardData `json:"data"`
+	Total       int        `json:"total,omitempty"`
+	Page        int        `json:"page,omitempty"`
+	PerPage     int        `json:"per_page,omitempty"`
+	Query       string     `json:"query,omitempty"`
+	Namespace   string     `json:"namespace,omitempty"`
+	ProcessTime string     `json:"process_time,omitempty"`
 }
 
 // SearchResultItem represents a single search result for the frontend
@@ -92,17 +93,28 @@ type SearchStatistics struct {
 }
 
 // SearchService handles the business logic for search operations
+// SearchService with database access
 type SearchService struct {
 	fuguServerURL string
 	filterService *filter.Service
+	db            dbstore.DBTX
+	cacheCtrl     cache.CacheController
 }
 
 // NewSearchService creates a new search service
-func NewSearchService(fuguServerURL string, filterService *filter.Service) *SearchService {
+func NewSearchService(fuguServerURL string, filterService *filter.Service, db dbstore.DBTX) (*SearchService, error) {
+	cacheCtrl, err := cache.NewCacheController()
+	if err != nil {
+		logger.Warn(context.Background(), "failed to initialize cache controller", zap.Error(err))
+		// Continue without cache
+	}
+
 	return &SearchService{
 		fuguServerURL: fuguServerURL,
 		filterService: filterService,
-	}
+		db:            db,
+		cacheCtrl:     cacheCtrl,
+	}, nil
 }
 
 // convertFiltersToBackend converts frontend filters to backend facet format using filter service
@@ -309,17 +321,8 @@ func (s *SearchService) ProcessSearch(ctx context.Context, query string, filters
 		backendFilters = s.fallbackFilterConversion(filters, namespace)
 	}
 
-	logger.Info(ctx, "filters converted",
-		zap.Int("original_filter_count", len(filters)),
-		zap.Int("backend_filter_count", len(backendFilters)))
-
 	// Create fugu search query using SDK types
 	fuguQuery := s.createFuguSearchQuery(query, backendFilters, pagination)
-
-	logger.Info(ctx, "created fugu query",
-		zap.String("query", fuguQuery.Query),
-		zap.Any("filters", fuguQuery.Filters),
-		zap.Any("page", fuguQuery.Page))
 
 	// Execute search on fugu with timeout
 	searchCtx, searchCancel := context.WithTimeout(ctx, 15*time.Second)
@@ -334,8 +337,12 @@ func (s *SearchService) ProcessSearch(ctx context.Context, query string, filters
 	logger.Info(ctx, "fugu search completed",
 		zap.Int("result_count", len(fuguResponse.Results)))
 
-	// Transform fugu response to frontend format
-	frontendResponse := s.transformSearchResponse(fuguResponse, query, namespace, pagination, time.Since(startTime))
+	// Transform fugu response to frontend format with hydration
+	frontendResponse, err := s.transformSearchResponse(ctx, fuguResponse, query, namespace, pagination, time.Since(startTime))
+	if err != nil {
+		logger.Error(ctx, "failed to transform search response", zap.Error(err))
+		return nil, fmt.Errorf("failed to transform response: %w", err)
+	}
 
 	logger.Info(ctx, "search processing completed successfully",
 		zap.Int("final_result_count", len(frontendResponse.Data)))
@@ -416,92 +423,4 @@ func (s *SearchService) GetSearchInfo(ctx context.Context) (*SearchInfo, error) 
 	}
 
 	return info, nil
-}
-
-// transformSearchResponse transforms fugu response to frontend format
-func (s *SearchService) transformSearchResponse(fuguResponse *fugusdk.SanitizedResponse, query, namespace string, pagination PaginationParams, processTime time.Duration) *SearchResponse {
-	if fuguResponse == nil || len(fuguResponse.Results) == 0 {
-		return &SearchResponse{
-			Data:        []SearchResultItem{},
-			Total:       0,
-			Page:        pagination.Page,
-			PerPage:     pagination.Limit,
-			Query:       query,
-			Namespace:   namespace,
-			ProcessTime: processTime.String(),
-		}
-	}
-
-	var frontendResults []SearchResultItem
-
-	for _, result := range fuguResponse.Results {
-		// Create frontend result item
-		item := SearchResultItem{
-			ID:       result.ID,
-			Score:    result.Score,
-			Text:     result.Text,
-			Metadata: result.Metadata,
-			Facet:    result.Facets,
-		}
-
-		// Extract namespace from facets if available
-		if len(result.Facets) > 0 {
-			// Look for namespace facets (those without metadata/ prefix)
-			for _, facet := range result.Facets {
-				if !strings.HasPrefix(facet, "metadata/") {
-					item.Namespace = facet
-					break
-				}
-			}
-		}
-
-		// Extract commonly used metadata fields for easier frontend access
-		if result.Metadata != nil {
-			if caseNumber, ok := result.Metadata["case_number"].(string); ok {
-				item.CaseNumber = caseNumber
-			}
-			if createdAt, ok := result.Metadata["created_at"].(string); ok {
-				item.CreatedAt = createdAt
-			}
-			if description, ok := result.Metadata["description"].(string); ok {
-				item.Description = description
-			}
-			if fileName, ok := result.Metadata["file_name"].(string); ok {
-				item.FileName = fileName
-			}
-			if filedDate, ok := result.Metadata["filed_date"].(string); ok {
-				item.FiledDate = filedDate
-			}
-			if filingType, ok := result.Metadata["filing_type"].(string); ok {
-				item.FilingType = filingType
-			}
-			if partyName, ok := result.Metadata["party_name"].(string); ok {
-				item.PartyName = partyName
-			}
-			if docketGovID, ok := result.Metadata["docket_gov_id"].(string); ok {
-				item.Metadata["docket_gov_id"] = docketGovID
-			}
-			if totalDocuments, ok := result.Metadata["total_documents"]; ok {
-				item.Metadata["total_documents"] = totalDocuments
-			}
-			if totalDocumentsAuthored, ok := result.Metadata["total_documents_authored"]; ok {
-				item.Metadata["total_documents_authored"] = totalDocumentsAuthored
-			}
-			if isPerson, ok := result.Metadata["is_person"]; ok {
-				item.Metadata["is_person"] = isPerson
-			}
-		}
-
-		frontendResults = append(frontendResults, item)
-	}
-
-	return &SearchResponse{
-		Data:        frontendResults,
-		Total:       fuguResponse.Total,
-		Page:        pagination.Page,
-		PerPage:     pagination.Limit,
-		Query:       query,
-		Namespace:   namespace,
-		ProcessTime: processTime.String(),
-	}
 }
