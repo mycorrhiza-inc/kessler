@@ -5,11 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"kessler/internal/database"
 	"kessler/internal/dbstore"
 	"kessler/internal/objects/conversations"
 	"kessler/internal/objects/networking"
-	"kessler/pkg/util"
+	"kessler/pkg/database"
 	"net/http"
 	"time"
 
@@ -19,32 +18,44 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func DefineConversationsRoutes(r *mux.Router) {
+type ConversationHandler struct {
+	db dbstore.DBTX
+}
+
+func NewConversationHandler(db dbstore.DBTX) *ConversationHandler {
+	return &ConversationHandler{
+		db: db,
+	}
+}
+
+func DefineConversationsRoutes(r *mux.Router, db dbstore.DBTX) {
+	handler := NewConversationHandler(db)
 	// ------- conversations subroute -------
-	conversationsRouter := r.PathPrefix("/conversations").Subrouter()
-
-	conversationsRouter.HandleFunc(
+	r.HandleFunc(
 		"/list",
-		ConversationSemiCompletePaginatedList,
+		handler.ConversationSemiCompletePaginatedList,
 	).Methods(http.MethodGet)
 
-	conversationsRouter.HandleFunc(
+	r.HandleFunc(
 		"/named-lookup/{name}",
-		ConversationGetByUnknownHandler,
+		handler.ConversationGetByUnknownHandler,
 	).Methods(http.MethodGet)
 
-	conversationsRouter.HandleFunc(
+	r.HandleFunc(
 		"/verify",
-		ConversationVerifyHandler,
+		handler.ConversationVerifyHandler,
 	).Methods(http.MethodPost)
 
-	conversationsRouter.HandleFunc(
+	r.HandleFunc(
 		"/list/semi-complete",
-		ConversationSemiCompleteListAll,
+		handler.ConversationSemiCompleteListAll,
 	).Methods(http.MethodGet)
 }
 
-func ConversationGetByUnknownHandler(w http.ResponseWriter, r *http.Request) {
+func (h *ConversationHandler) ConversationGetByUnknownHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	ctx, span := tracer.Start(ctx, "conversations:ConversationGetByUnknownHandler")
+	defer span.End()
 	log.Info(fmt.Sprintf("Getting file with metadata"))
 	q := database.GetTx()
 
@@ -111,7 +122,10 @@ func ConversationGetByName(ctx context.Context, q *dbstore.Queries, docketIdStr 
 	return conv_infos[0], nil
 }
 
-func ConversationVerifyHandler(w http.ResponseWriter, r *http.Request) {
+func (h *ConversationHandler) ConversationVerifyHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	ctx, span := tracer.Start(ctx, "conversations:ConversationVerifyHandler")
+	defer span.End()
 	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {
 		errorstring := fmt.Sprintf("Error reading request body: %v\n", err)
@@ -262,9 +276,12 @@ func FileConversationUpsert(ctx context.Context, q dbstore.Queries, file_id uuid
 	return err
 }
 
-func ConversationSemiCompletePaginatedList(w http.ResponseWriter, r *http.Request) {
+func (h *ConversationHandler) ConversationSemiCompletePaginatedList(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	ctx, span := tracer.Start(ctx, "conversations:ConversationSemiCompletePaginatedList")
+	defer span.End()
 	paginationData := networking.PaginationFromUrlParams(r)
-	q := util.DBQueriesFromRequest(r)
+	q := database.GetQueries(h.db)
 	ctx := r.Context()
 	args := dbstore.ConversationSemiCompleteInfoListPaginatedParams{
 		Limit:  int32(paginationData.Limit),
@@ -295,7 +312,10 @@ type ConversationSemiCompleteInfo struct {
 	DateUpdated   time.Time              `json:"date_updated"`
 }
 
-func ConversationSemiCompleteListAll(w http.ResponseWriter, r *http.Request) {
+func (h *ConversationHandler) ConversationSemiCompleteListAll(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	ctx, span := tracer.Start(ctx, "conversations:ConversationSemiCompleteListAll")
+	defer span.End()
 	log.Info(fmt.Sprintf("Getting all proceedings"))
 	q := database.GetTx()
 

@@ -201,7 +201,8 @@ func (s *MigrationService) ProcessBatchIngest(ctx context.Context, records []Rec
 
 	// Ingest valid objects if any
 	if len(fuguObjects) > 0 {
-		if err := client.IngestObjects(ctx, fuguObjects); err != nil {
+		_, err := client.IngestObjects(ctx, fuguObjects)
+		if err != nil {
 			logger.Error(ctx, "fugu ingestion failed", zap.Error(err))
 
 			// Mark all remaining objects as failed

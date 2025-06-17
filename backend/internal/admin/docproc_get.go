@@ -44,7 +44,7 @@ func HandleUnverifedCompleteFileSchemaList(w http.ResponseWriter, r *http.Reques
 }
 
 func UnverifedCompleteFileSchemaRandomList(ctx context.Context, max_responses uint) ([]files.CompleteFileSchema, error) {
-	q := util.DBQueriesFromContext(ctx)
+	q := dbstore.New(deps.DB)  // TODO: Pass the correct dependency injection here
 	log.Info(fmt.Sprintf("Getting %d unverified files\n", max_responses))
 	db_files, err := q.FilesListUnverified(ctx, int32(max_responses)*2)
 	// If postgres return randomization doesnt work, then you can still get it to kinda work by returning double the results, randomizing and throwing away half.
@@ -87,9 +87,10 @@ func CompleteFileSchemasFromUUIDs(ctx context.Context, uuids []uuid.UUID) ([]fil
 		wg.Add(1)
 		go func(file_uuid uuid.UUID, dbtx_val dbstore.DBTX) {
 			defer wg.Done()
-			q := *dbstore.New(dbtx_val)
+			q := dbstore.New(dbtx_val)
 			// start := time.Now()
-			complete_file, err := FileHandler.CompleteFileSchemaGetFromUUID(ctx, q, file_uuid)
+			fh := FileHandler.NewFileHandler(dbtx_val)
+			complete_file, err := fh.CompleteFileSchemaGetFromUUID(ctx, q, file_uuid)
 			// elapsed := time.Since(start)
 			// TODO: Debug why these loading times are so fucking slow.
 			// if elapsed > 10*time.Second {
