@@ -8,12 +8,26 @@ import (
 	"time"
 
 	"kessler/internal/cache"
-	"kessler/internal/database"
+	"kessler/internal/dbstore"
+	"kessler/pkg/database"
 	"kessler/pkg/logger"
 
 	"github.com/gorilla/mux"
+	"go.opentelemetry.io/otel"
 	"go.uber.org/zap"
 )
+
+var tracer = otel.Tracer("health-endpoint")
+
+type HealthHandler struct {
+	db dbstore.DBTX
+}
+
+func NewHealthHandler(db dbstore.DBTX) *HealthHandler {
+	return &HealthHandler{
+		db,
+	}
+}
 
 // HealthStatus represents the overall health status
 type HealthStatus string
@@ -48,19 +62,20 @@ type SimpleHealthResponse struct {
 	Message   string       `json:"message"`
 }
 
-func DefineHealthRoutes(r *mux.Router) {
+func DefineHealthRoutes(r *mux.Router, db dbstore.DBTX) {
+	handler := NewHealthHandler(db)
 	// Kubernetes-style endpoints
-	r.HandleFunc("/", HealthHandler).Methods(http.MethodGet)         // Detailed health
-	r.HandleFunc("/live", LivenessHandler).Methods(http.MethodGet)   // Liveness probe
-	r.HandleFunc("/ready", ReadinessHandler).Methods(http.MethodGet) // Readiness probe
+	r.HandleFunc("/", handler.CheckHealth).Methods(http.MethodGet)         // Detailed health
+	r.HandleFunc("/live", handler.CheckLiveness).Methods(http.MethodGet)   // Liveness probe
+	r.HandleFunc("/ready", handler.CheckReadiness).Methods(http.MethodGet) // Readiness probe
 
 	// Legacy endpoints (keeping your existing ones but making them GET)
-	r.HandleFunc("/complete-check", HealthHandler).Methods(http.MethodGet, http.MethodPost)
-	r.HandleFunc("/minimal-check", LivenessHandler).Methods(http.MethodGet, http.MethodPost)
+	r.HandleFunc("/complete-check", handler.CheckHealth).Methods(http.MethodGet, http.MethodPost)
+	r.HandleFunc("/minimal-check", handler.CheckLiveness).Methods(http.MethodGet, http.MethodPost)
 }
 
 // LivenessHandler checks if the application is alive (basic check)
-func LivenessHandler(w http.ResponseWriter, r *http.Request) {
+func (h *HealthHandler) CheckLiveness(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := logger.FromContext(ctx)
 
@@ -80,8 +95,8 @@ func LivenessHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-// ReadinessHandler checks if the application is ready to serve traffic
-func ReadinessHandler(w http.ResponseWriter, r *http.Request) {
+// CheckReadiness checks if the application is ready to serve traffic
+func (h *HealthHandler) CheckReadiness(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := logger.FromContext(ctx)
 
@@ -92,7 +107,7 @@ func ReadinessHandler(w http.ResponseWriter, r *http.Request) {
 	overallStatus := StatusHealthy
 
 	// Check database
-	dbHealth := checkDatabase(ctx)
+	dbHealth := h.checkDatabase(ctx)
 	components["database"] = dbHealth
 	if dbHealth.Status != StatusHealthy {
 		overallStatus = StatusUnhealthy
@@ -120,7 +135,7 @@ func ReadinessHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // HealthHandler performs comprehensive health checks
-func HealthHandler(w http.ResponseWriter, r *http.Request) {
+func (h *HealthHandler) CheckHealth(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := logger.FromContext(ctx)
 
@@ -130,7 +145,7 @@ func HealthHandler(w http.ResponseWriter, r *http.Request) {
 	overallStatus := StatusHealthy
 
 	// Check database
-	dbHealth := checkDatabase(ctx)
+	dbHealth := h.checkDatabase(ctx)
 	components["database"] = dbHealth
 	if dbHealth.Status == StatusUnhealthy {
 		overallStatus = StatusUnhealthy
@@ -139,7 +154,7 @@ func HealthHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check cache
-	cacheHealth := checkCache(ctx)
+	cacheHealth := h.checkCache(ctx)
 	components["cache"] = cacheHealth
 	if cacheHealth.Status == StatusUnhealthy {
 		if overallStatus == StatusHealthy {
@@ -176,14 +191,14 @@ func HealthHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // checkDatabase verifies database connectivity
-func checkDatabase(ctx context.Context) ComponentHealth {
+func (h *HealthHandler) checkDatabase(ctx context.Context) ComponentHealth {
 	start := time.Now()
 
 	// Create a timeout context for the database check
 	checkCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	q := database.GetTx()
+	q := database.GetQueries(h.db)
 	_, err := q.HealthCheck(checkCtx)
 
 	duration := time.Since(start)
@@ -206,7 +221,7 @@ func checkDatabase(ctx context.Context) ComponentHealth {
 }
 
 // checkCache verifies cache connectivity
-func checkCache(ctx context.Context) ComponentHealth {
+func (h *HealthHandler) checkCache(ctx context.Context) ComponentHealth {
 	start := time.Now()
 
 	// Create a timeout context for the cache check
@@ -268,19 +283,19 @@ func getVersion() string {
 }
 
 // Legacy functions for backward compatibility
-func CompleteHealthCheckHandler(w http.ResponseWriter, r *http.Request) {
-	HealthHandler(w, r)
+func (h *HealthHandler) CompleteHealthCheckHandler(w http.ResponseWriter, r *http.Request) {
+	h.CheckHealth(w, r)
 }
 
-func MinimalHealthCheckHandler(w http.ResponseWriter, r *http.Request) {
-	LivenessHandler(w, r)
+func (h *HealthHandler) MinimalHealthCheckHandler(w http.ResponseWriter, r *http.Request) {
+	h.CheckLiveness(w, r)
 }
 
-func MinimalHealthCheck(r *http.Request) error {
+func (h *HealthHandler) MinimalHealthCheck(r *http.Request) error {
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
-	q := database.GetTx()
+	q := database.GetQueries(h.db)
 	_, err := q.HealthCheck(ctx)
 	return err
 }
