@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"kessler/internal/dbstore"
 	"kessler/internal/fugusdk"
 	"kessler/internal/search/filter"
 	"kessler/pkg/logger"
@@ -20,15 +21,19 @@ import (
 var tracer = otel.Tracer("search-service")
 
 // RegisterSearchRoutes registers all search-related routes including filter configuration
-func RegisterSearchRoutes(router *mux.Router) error {
+func RegisterSearchRoutes(router *mux.Router, db dbstore.DBTX) error {
 	fuguServerURL := "http://fugudb:3301"
 
 	// Create filter service and handler
 	filterService := filter.NewService(fuguServerURL)
 	filterHandler := filter.NewHandler(filterService)
 
-	// Create search service and handler
-	service := NewSearchService(fuguServerURL, filterService)
+	// Create search service and handler with database
+	service, err := NewSearchService(fuguServerURL, filterService, db)
+	if err != nil {
+		return fmt.Errorf("failed to create search service: %w", err)
+	}
+
 	handler := NewSearchHandler(service, filterHandler)
 
 	fmt.Println("🔧 Registering search routes...")
@@ -56,6 +61,28 @@ func RegisterSearchRoutes(router *mux.Router) error {
 
 	fmt.Println("✅ Search routes registered successfully")
 	return nil
+}
+
+// MarshalJSON for SearchResponse to handle the interface type
+func (sr SearchResponse) MarshalJSON() ([]byte, error) {
+	// Create a temporary struct with the same fields but data as []interface{}
+	type Alias SearchResponse
+	return json.Marshal(&struct {
+		Data []interface{} `json:"data"`
+		*Alias
+	}{
+		Data:  convertCardsToInterface(sr.Data),
+		Alias: (*Alias)(&sr),
+	})
+}
+
+// Helper function to convert []CardData to []interface{}
+func convertCardsToInterface(cards []CardData) []interface{} {
+	result := make([]interface{}, len(cards))
+	for i, card := range cards {
+		result[i] = card
+	}
+	return result
 }
 
 // SearchServiceHandler handles HTTP requests for search
