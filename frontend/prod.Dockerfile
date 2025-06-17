@@ -14,7 +14,7 @@ RUN corepack enable
 WORKDIR /app
 COPY pnpm-lock.yaml ./
 
-ENV NEXT_PUBLIC_KESSLER_API_URL=https://api.kessler.xyz
+ENV NEXT_PUBLIC_KESSLER_API_URL=https://nightly-api.kessler.xyz
 ENV NEXT_PUBLIC_NIGHTLY_KESSLER_API_URL=https://nightly-api.kessler.xyz
 ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_YWNlLXdhbGxhYnktODQuY2xlcmsuYWNjb3VudHMuZGV2JA
 ENV NEXT_PUBLIC_CLERK_FRONTEND_API=ace-wallaby-84.clerk.accounts.dev
@@ -31,8 +31,13 @@ RUN pnpm build
 FROM base
 WORKDIR /app
 COPY --from=deps /app/node_modules /app/node_modules
-COPY --from=build /app/dist /app/dist
+COPY --from=build /app/.next /app/.next
+COPY --from=build /app/public /app/public
+COPY --from=build /app/next.config.ts /app/next.config.ts
+COPY --from=build /app/package.json /app/package.json
 ENV NODE_ENV production
-CMD ["node", "./dist/index.js"]
+ENV PORT 3000
+EXPOSE 3000
+CMD ["node", "server.js"]
 
 
