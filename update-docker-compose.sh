@@ -40,14 +40,14 @@ function process_branch() {
             git fetch
             git reset --hard HEAD
             git clean -fd
-            git checkout "$commit_hash"
+            git checkout "$commit_hash" --recurse-submodules
             echo "Checked out specific commit: $commit_hash"
         else
             git clean -fd
             git fetch
             git reset --hard HEAD
             git clean -fd
-            git switch "$branch"
+            git checkout "$branch" --recurse-submodules
             git reset --hard origin/"$branch"
             echo "Updated branch $branch to latest"
         fi
@@ -66,9 +66,12 @@ function process_branch() {
         sudo docker build -t "fractalhuman1/kessler-backend-server:${current_hash}" --platform linux/amd64 --file ./backend/prod.server.Dockerfile ./backend
         sudo docker build -t "fractalhuman1/kessler-backend-ingest:${current_hash}" --platform linux/amd64 --file ./backend/prod.ingest.Dockerfile ./backend
 
+        sudo docker build -t "fractalhuman1/kessler-fugudb:${current_hash}" --platform linux/amd64 --file ./fugudb/Dockerfile ./fugudb
+
         sudo docker push "fractalhuman1/kessler-frontend:${current_hash}"
         sudo docker push "fractalhuman1/kessler-backend-server:${current_hash}"
         sudo docker push "fractalhuman1/kessler-backend-ingest:${current_hash}"
+        sudo docker push "fractalhuman1/kessler-fugudb:${current_hash}"
 
         # Update docker-compose.yml on the server
         # Set deployment variables based on environment

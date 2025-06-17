@@ -3,7 +3,6 @@ import { encodeUrlParams, TypedUrlParams, UrlQueryParams } from "@/lib/types/url
 import { ObjectQueryType } from "@/lib/types/SearchTypes";
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { FaSearch } from "react-icons/fa";
 import { SearchBar } from "@/components/style/search/SearchBar";
 
 import { KesslerFilterSystem } from '@/components/stateful/Filters/DynamicFilters';
@@ -33,6 +32,7 @@ export default function AllInOneClientSearch({ urlParams, queryType: pageContext
   }
 
   if (disableFilterSelection) {
+    // if (true) {
     return (
       <div className="flex justify-center">
         <SearchBar placeholder="Search" value={query} setQuery={setQuery} searchExecute={executeSearch} />

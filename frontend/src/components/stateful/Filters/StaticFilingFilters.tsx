@@ -1,0 +1,132 @@
+"use client";
+
+import { encodeUrlParams, TypedUrlParams } from "@/lib/types/url_params";
+import { useState } from "react";
+import { DynamicMultiSelect } from "./FilterMultiSelect";
+import { DynamicSingleSelect } from "./FilterSingleSelect";
+import { useRouter } from "next/router";
+
+// Minimal filter definition used to render dynamic filters
+export enum FilterType {
+  Single,
+  Multi,
+}
+export interface MinimalFilterDefinition {
+  filterType: FilterType;
+  id: string;
+  displayName: string;
+  description?: string;
+  placeholder?: string;
+}
+
+/**
+ * HardcodedFileFilters defines which filters to show for filing.
+ * - MultiSelect: author_id, file_extension
+ * - SingleSelect: conversation_id, file_class
+ */
+export default function HardcodedFileFilters({
+  urlParams,
+  baseUrl,
+}: {
+  urlParams: TypedUrlParams;
+  baseUrl: string;
+}) {
+  const fileFilterInfo: MinimalFilterDefinition[] = [
+    {
+      filterType: FilterType.Multi,
+      id: "author_id",
+      displayName: "Author",
+      description: "Filter by author",
+      placeholder: "Select authors",
+    },
+    {
+      filterType: FilterType.Multi,
+      id: "file_extension",
+      displayName: "File Extension",
+      description: "Filter by file extension",
+      placeholder: "Select file extensions",
+    },
+    {
+      filterType: FilterType.Single,
+      id: "conversation_id",
+      displayName: "Conversation",
+      description: "Filter by conversation",
+      placeholder: "Select a conversation",
+    },
+    {
+      filterType: FilterType.Single,
+      id: "file_class",
+      displayName: "File Class",
+      description: "Filter by file class",
+      placeholder: "Select file class",
+    },
+  ];
+
+  return (
+    <HardCodedFiltersFromInfo
+      urlParams={urlParams}
+      baseUrl={baseUrl}
+      hardcodedFilterInfo={fileFilterInfo}
+    />
+  );
+}
+
+export function HardCodedFiltersFromInfo({
+  urlParams,
+  baseUrl,
+  hardcodedFilterInfo,
+}: {
+  urlParams: TypedUrlParams;
+  baseUrl: string;
+  hardcodedFilterInfo: MinimalFilterDefinition[];
+}) {
+  // Initialize filter values from URL params
+  const initialFilters = urlParams.queryData.filters || {};
+  const [filterValues, setFilterValues] = useState<Record<string, string>>(
+    initialFilters
+  );
+  const router = useRouter();
+
+  // Update filter and navigate
+  const handleFilterChange = (id: string) => (value: string) => {
+    const updated = { ...filterValues, [id]: value };
+    setFilterValues(updated);
+
+    const newParams: TypedUrlParams = {
+      paginationData: urlParams.paginationData,
+      queryData: { ...urlParams.queryData, filters: updated },
+    };
+    const endpoint = baseUrl + encodeUrlParams(newParams);
+    router.push(endpoint);
+  };
+
+  return (
+    <div className="filter-container flex space-x-4">
+      {hardcodedFilterInfo.map((def) => {
+        const value = filterValues[def.id] || "";
+        const fieldDef = {
+          id: def.id,
+          displayName: def.displayName,
+          description: def.description || "",
+          placeholder: def.placeholder || "",
+          options: [],
+        };
+        return def.filterType === FilterType.Multi ? (
+          <DynamicMultiSelect
+            key={def.id}
+            fieldDefinition={fieldDef}
+            value={value}
+            onChange={handleFilterChange(def.id)}
+          />
+        ) : (
+          <DynamicSingleSelect
+            key={def.id}
+            fieldDefinition={fieldDef}
+            value={value}
+            onChange={handleFilterChange(def.id)}
+          />
+        );
+      })}
+    </div>
+  );
+}

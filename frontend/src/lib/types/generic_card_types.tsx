@@ -1,4 +1,4 @@
-import { AuthorInformation } from "./backend_schemas";
+import { z } from "zod";
 
 export enum CardType {
   Author = "author",
@@ -6,25 +6,42 @@ export enum CardType {
   Document = "document",
 }
 
-export interface BaseCardData {
-  name: string;
-  description: string;
-  timestamp: string;
-  authors?: Array<AuthorInformation>;
-  extraInfo?: string;
-  index: number;
-}
+export const BaseCardDataValidator = z.object({
+  name: z.string(),
+  object_uuid: z.string().uuid(),
+  description: z.string(),
+  timestamp: z.string(),
+  extraInfo: z.string().optional(),
+  index: z.number(),
+});
 
-export interface AuthorCardData extends BaseCardData {
-  type: CardType.Author;
-}
+export const AuthorCardDataValidator = BaseCardDataValidator.extend({
+  type: z.literal(CardType.Author),
+});
 
-export interface DocketCardData extends BaseCardData {
-  type: CardType.Docket;
-}
+export const DocketCardDataValidator = BaseCardDataValidator.extend({
+  type: z.literal(CardType.Docket),
+});
 
-export interface DocumentCardData extends BaseCardData {
-  type: CardType.Document;
-}
+export const DocumentCardDataValidator = BaseCardDataValidator.extend({
+  type: z.literal(CardType.Document),
+  authors: z.array(
+    z.object({
+      author_name: z.string(),
+      is_person: z.boolean(),
+      is_primary_author: z.boolean(),
+      author_id: z.string(),
+    })
+  ),
+});
 
-export type CardData = AuthorCardData | DocketCardData | DocumentCardData;
+export const CardDataValidator = z.union([
+  AuthorCardDataValidator,
+  DocketCardDataValidator,
+  DocumentCardDataValidator,
+]);
+
+export type AuthorCardData = z.infer<typeof AuthorCardDataValidator>;
+export type DocketCardData = z.infer<typeof DocketCardDataValidator>;
+export type DocumentCardData = z.infer<typeof DocumentCardDataValidator>;
+export type CardData = z.infer<typeof CardDataValidator>;

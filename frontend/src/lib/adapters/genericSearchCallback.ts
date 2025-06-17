@@ -200,55 +200,6 @@ export const createGenericSearchCallback = (
         console.log("SEARCH FILTERS DISABLED UNTIL MIRRI UPDATES THE DB");
         console.log("API URL:", api_url);
 
-        //         try {
-        //           // const url = `${api_url}/search/file${paginationQueryString}`;
-        //           const url = `${api_url}/search`;
-        //           const requestData: SearchRequest = { query: info.query };
-        //
-        //           const response = await axios.post<SearchResponse>(url, info);
-        //
-        //           if (!response.data) {
-        //             throw new Error(
-        //               `Search data returned from backend URL ${url} with data ${JSON.stringify(
-        //                 requestData
-        //               )} was undefined`
-        //             );
-        //           }
-        //
-        //           if (Array.isArray(response.data) && response.data.length === 0) {
-        //             console.warn("Response length is zero - no results found");
-        //             return [];
-        //           }
-        //
-        //           if (typeof response.data === "string") {
-        //             console.warn(
-        //               "Received string response instead of expected data structure"
-        //             );
-        //             return [];
-        //           }
-        //
-        //           const filings = hydratedSearchResultsToFilings(response.data);
-        //           console.log(`Successfully got ${filings.length} search results`);
-        //           console.log("Getting data");
-        //
-        //           const searchResults: DocumentCardData[] =
-        //             filings.map(adaptFilingToCard);
-        //
-        //           mutateIndexifySearchResults(searchResults, pagination);
-        //           return searchResults;
-        //         } catch (error) {
-        //           if (axios.isAxiosError(error)) {
-        //             console.error("Axios error in filing search:", error);
-        //             if (error.response) {
-        //               console.error("Response status:", error.response.status);
-        //               console.error("Response data:", error.response.data);
-        //             }
-        //           } else {
-        //             console.error("Unexpected error in filing search:", error);
-        //           }
-        //           throw error;
-        //         }
-        // =======
         return performSearchRequest<SearchRequest, any[], DocumentCardData>(
           url,
           'post',
