@@ -7,9 +7,12 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gorilla/mux"
-	"go.uber.org/zap"
+	"kessler/internal/dbstore"
 	"kessler/pkg/logger"
+
+	"github.com/gorilla/mux"
+	"go.opentelemetry.io/otel"
+	"go.uber.org/zap"
 )
 
 // IndexHandler provides HTTP endpoints for admin indexing.
@@ -21,15 +24,19 @@ type IndexHandler struct {
 	svc *IndexService
 }
 
+var tracer = otel.Tracer("http-server")
+
 // NewIndexHandler creates a new handler backed by IndexService.
 func NewIndexHandler(svc *IndexService) *IndexHandler {
 	return &IndexHandler{svc: svc}
 }
 
 // RegisterAdminIndexingRoutes mounts indexing endpoints under /admin/indexing.
-func RegisterAdminIndexingRoutes(r *mux.Router) {
+func RegisterIndexingRoutes(r *mux.Router, db dbstore.DBTX) {
 	sr := r.PathPrefix("/indexing").Subrouter()
-	h := NewIndexHandler(NewIndexService("http://fugudb:3301"))
+
+	// TODO: have this be configurable
+	h := NewIndexHandler(NewIndexService("http://fugudb:3301", db))
 
 	// Conversation endpoints
 	sr.HandleFunc("/conversations", h.IndexAllConversations).Methods(http.MethodPost)

@@ -11,27 +11,26 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
-	"kessler/internal/database"
 	"kessler/internal/dbstore"
 	"kessler/internal/fugusdk"
+	"kessler/pkg/database"
 	"kessler/pkg/logger"
 )
 
 // IndexService fetches DB records and indexes them into FuguDB.
 type IndexService struct {
 	fuguURL          string
-	q                *dbstore.Queries
+	db               dbstore.DBTX
 	defaultNamespace string // e.g., "NYPUC"
 }
 
 // NewIndexService constructs an IndexService pointing at fuguURL.
-func NewIndexService(fuguURL string) *IndexService {
+func NewIndexService(fuguURL string, db dbstore.DBTX) *IndexService {
 	// Use the shared connection pool (implements dbstore.DBTX)
-	db := database.ConnPool
 	return &IndexService{
 		fuguURL:          fuguURL,
-		q:                dbstore.New(db),
 		defaultNamespace: "NYPUC", // Configure this based on your organization
+		db:               db,
 	}
 }
 
@@ -64,7 +63,8 @@ type DataIngestResponse struct {
 
 // IndexAllConversations retrieves all conversations and batch indexes them in chunks.
 func (s *IndexService) IndexAllConversations(ctx context.Context) (int, error) {
-	rows, err := s.q.DocketConversationList(ctx)
+	q := database.GetQueries(s.db)
+	rows, err := q.DocketConversationList(ctx)
 	if err != nil {
 		return 0, fmt.Errorf("fetch all conversations: %w", err)
 	}
@@ -119,7 +119,8 @@ func (s *IndexService) IndexAllConversations(ctx context.Context) (int, error) {
 
 // IndexAllOrganizations retrieves all organizations and batch indexes them in chunks.
 func (s *IndexService) IndexAllOrganizations(ctx context.Context) (int, error) {
-	rows, err := s.q.OrganizationCompleteQuickwitListGet(ctx)
+	q := database.GetQueries(s.db)
+	rows, err := q.OrganizationCompleteQuickwitListGet(ctx)
 	if err != nil {
 		return 0, fmt.Errorf("fetch all organizations: %w", err)
 	}
@@ -177,7 +178,8 @@ func (s *IndexService) IndexConversationByID(ctx context.Context, idStr string) 
 		return 0, fmt.Errorf("invalid conversation id: %w", err)
 	}
 
-	c, err := s.q.DocketConversationRead(ctx, id)
+	q := database.GetQueries(s.db)
+	c, err := q.DocketConversationRead(ctx, id)
 	if err != nil {
 		return 0, fmt.Errorf("read conversation: %w", err)
 	}
@@ -226,7 +228,8 @@ func (s *IndexService) IndexOrganizationByID(ctx context.Context, idStr string) 
 		return 0, fmt.Errorf("invalid organization id: %w", err)
 	}
 
-	o, err := s.q.OrganizationRead(ctx, id)
+	q := database.GetQueries(s.db)
+	o, err := q.OrganizationRead(ctx, id)
 	if err != nil {
 		return 0, fmt.Errorf("read organization: %w", err)
 	}
