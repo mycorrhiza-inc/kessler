@@ -1,3 +1,4 @@
+// objects/files/handler/file_write_handler.go
 package handler
 
 import (
@@ -5,12 +6,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"kessler/internal/database"
 	"kessler/internal/dbstore"
 	ConvoHandler "kessler/internal/objects/conversations/handler"
 	"kessler/internal/objects/files"
 	"kessler/internal/objects/files/crud"
 	"kessler/internal/objects/files/validation"
+	"kessler/pkg/logger"
 	"net/http"
 	"strings"
 
@@ -20,24 +21,17 @@ import (
 	"go.uber.org/zap"
 )
 
-type FileUpsertHandlerConfig struct {
-	Private      bool
-	Insert       bool
-	Deduplicate  bool
-	IsAuthorized func(*http.Request) bool
-	GetDBQueries func(*http.Request) *dbstore.Queries
-}
-
 // Chatgt came up with these, and I actually kind of like them
 func respondError(w http.ResponseWriter, message string, statusCode int) {
-	log.Info(message)
+	logger.Info(context.Background(), message)
 	http.Error(w, message, statusCode)
 }
 
-func makeFileUpsertHandler(config FileUpsertHandlerConfig) http.HandlerFunc {
+// makeFileUpsertHandler creates a handler for file upsert operations
+func (h *FileHandler) makeFileUpsertHandler(config FileUpsertHandlerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		q := database.GetTx()
 		ctx := r.Context()
+		log := logger.FromContext(ctx)
 
 		// Validate HTTP method and path
 		if !config.Insert && r.URL.Path == "/v2/public/files/insert" {
@@ -62,14 +56,15 @@ func makeFileUpsertHandler(config FileUpsertHandlerConfig) http.HandlerFunc {
 			newDocInfo.ID = docUUID
 		}
 		args := IngestDocParams{
-			DocInfo:     newDocInfo,
-			Insert:      config.Insert,
-			Deduplicate: config.Deduplicate,
+			DocInfo: newDocInfo,
+			Insert:  config.Insert,
 		}
 
-		// Process file ingestion
+		// Process file ingestion using handler's database connection
+		q := dbstore.New(h.db)
 		result, err := ingestFile(ctx, q, args)
 		if err != nil {
+			log.Error("file ingestion failed", zap.Error(err))
 			respondError(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -179,7 +174,9 @@ func upsertFileRecord(ctx context.Context, q *dbstore.Queries, data files.FileCr
 }
 
 func processAssociations(ctx context.Context, q dbstore.Queries, docInfo files.CompleteFileSchema, insert bool) ([]string, bool) {
+	log := logger.FromContext(ctx)
 	var errors []string
+
 	addError := func(err error, context string) {
 		if err != nil {
 			log.Error(context, zap.Error(err))
