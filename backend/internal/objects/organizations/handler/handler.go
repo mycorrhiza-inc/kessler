@@ -17,7 +17,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgtype"
+	"go.opentelemetry.io/otel"
 )
+
+var tracer = otel.Tracer("organizations-handler")
 
 // OrgHandler holds dependencies for organization operations
 type OrgHandler struct {
@@ -76,8 +79,7 @@ func (h *OrgHandler) OrganizationVerifyHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	ctx := r.Context()
-	q := *database.GetTx()
+	q := *database.GetQueries(h.db)
 
 	author_info := authors.AuthorInformation{AuthorName: req.OrganizationName, IsPerson: req.IsPerson}
 	author_info, err = VerifyAuthorOrganizationUUID(ctx, q, &author_info)
@@ -125,7 +127,7 @@ func (h *OrgHandler) OrgGetWithFilesHandler(w http.ResponseWriter, r *http.Reque
 	ctx, span := tracer.Start(ctx, "organizations:OrgGetWithFilesHandler")
 	defer span.End()
 	log.Info(fmt.Sprintf("Getting file with metadata"))
-	q := database.GetTx()
+	q := database.GetQueries(h.db)
 
 	params := mux.Vars(r)
 	orgID := params["uuid"]
@@ -134,7 +136,6 @@ func (h *OrgHandler) OrgGetWithFilesHandler(w http.ResponseWriter, r *http.Reque
 		http.Error(w, "Invalid File ID format", http.StatusBadRequest)
 		return
 	}
-	ctx := r.Context()
 
 	complete_org_info, err := OrgWithFilesGetByID(ctx, q, parsedUUID)
 	if err != nil {
@@ -216,7 +217,6 @@ func (h *OrgHandler) OrgSemiCompletePaginated(w http.ResponseWriter, r *http.Req
 	defer span.End()
 	paginationData := networking.PaginationFromUrlParams(r)
 	q := database.GetQueries(h.db)
-	ctx := r.Context()
 	args := dbstore.OrganizationSemiCompleteInfoListPaginatedParams{
 		Limit:  int32(paginationData.Limit),
 		Offset: int32(paginationData.Offset),

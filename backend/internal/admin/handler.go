@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"go.opentelemetry.io/otel"
 )
 
 var tracer = otel.Tracer("admin-handler")
