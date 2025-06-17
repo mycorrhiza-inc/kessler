@@ -3,7 +3,7 @@ package filters
 import (
 	"encoding/json"
 	"kessler/internal/cache"
-	"kessler/internal/database"
+	"kessler/internal/dbstore"
 	"kessler/internal/objects/networking"
 	"kessler/pkg/logger"
 	"net/http"
@@ -27,8 +27,8 @@ func NewFilterHandler(service *FilterService) *FilterServiceHandler {
 	}
 }
 
-func RegisterFilterRoutes(r *mux.Router) error {
-	service := NewFilterService(database.ConnPool, cache.MemcachedClient)
+func RegisterFilterRoutes(r *mux.Router, db dbstore.DBTX) error {
+	service := NewFilterService(db, cache.MemcachedClient)
 	fsh := &FilterServiceHandler{
 		service: service,
 	}
