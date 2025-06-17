@@ -7,7 +7,6 @@ import (
 	"kessler/internal/objects/files"
 
 	"github.com/google/uuid"
-	"go.uber.org/zap"
 )
 
 func DeduplicateFileAttachments(ctx context.Context, q *dbstore.Queries, file *files.CompleteFileSchema) (*files.CompleteFileSchema, error) {
@@ -36,15 +35,4 @@ func DeduplicateSingularAttachment(ctx context.Context, q *dbstore.Queries, atta
 		return attachment, nil
 	}
 	return attachment, nil
-}
-
-func InsertAttachmentsForFile(ctx context.Context, q *dbstore.Queries, file files.CompleteFileSchema) error {
-	var nilerr error
-	_, err := DeduplicateFileAttachments(ctx, q, &file)
-	if err != nil {
-		log.Warn("Encountered error deduplicating attachments for file: ", zap.Error(err))
-		return err
-	}
-
-	return nilerr
 }

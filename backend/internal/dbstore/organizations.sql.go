@@ -76,6 +76,56 @@ func (q *Queries) AuthorshipDocumentDeleteAll(ctx context.Context, documentID uu
 	return err
 }
 
+const authorshipDocumentListOrganizations = `-- name: AuthorshipDocumentListOrganizations :many
+SELECT
+    rdoa.document_id,
+    rdoa.organization_id,
+    rdoa.is_primary_author,
+    rdoa.created_at,
+    rdoa.updated_at
+FROM
+    public.relation_documents_organizations_authorship rdoa
+WHERE
+    rdoa.document_id = $1
+ORDER BY
+    rdoa.is_primary_author DESC,
+    rdoa.created_at ASC
+`
+
+type AuthorshipDocumentListOrganizationsRow struct {
+	DocumentID      uuid.UUID
+	OrganizationID  uuid.UUID
+	IsPrimaryAuthor pgtype.Bool
+	CreatedAt       pgtype.Timestamptz
+	UpdatedAt       pgtype.Timestamptz
+}
+
+func (q *Queries) AuthorshipDocumentListOrganizations(ctx context.Context, documentID uuid.UUID) ([]AuthorshipDocumentListOrganizationsRow, error) {
+	rows, err := q.db.Query(ctx, authorshipDocumentListOrganizations, documentID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []AuthorshipDocumentListOrganizationsRow
+	for rows.Next() {
+		var i AuthorshipDocumentListOrganizationsRow
+		if err := rows.Scan(
+			&i.DocumentID,
+			&i.OrganizationID,
+			&i.IsPrimaryAuthor,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const authorshipDocumentOrganizationInsert = `-- name: AuthorshipDocumentOrganizationInsert :one
 INSERT INTO
     public.relation_documents_organizations_authorship (

@@ -1,13 +1,15 @@
+// filters.go
 package fugusdk
 
-// Updated Go SDK methods to work with filter config system
+// Updated Go SDK methods to work with filter config system and namespace facets
 
 import (
 	"context"
 	"fmt"
+	"strings"
 )
 
-// FilterBuilder helps build validated filters for Fugu search
+// FilterBuilder helps build validated filters for Fugu search with namespace support
 type FilterBuilder struct {
 	filters   map[string]string
 	namespace string
@@ -40,6 +42,28 @@ func (fb *FilterBuilder) AddFilter(field, value string) *FilterBuilder {
 	return fb
 }
 
+// AddNamespaceFacetFilter adds a namespace facet filter
+func (fb *FilterBuilder) AddNamespaceFacetFilter(namespace, facetType, value string) *FilterBuilder {
+	facetPath := fmt.Sprintf("namespace/%s/%s/%s", namespace, facetType, value)
+	fb.filters[facetPath] = value
+	return fb
+}
+
+// AddOrganizationFilter is a convenience method for adding organization namespace facets
+func (fb *FilterBuilder) AddOrganizationFilter(namespace, organization string) *FilterBuilder {
+	return fb.AddNamespaceFacetFilter(namespace, "organization", organization)
+}
+
+// AddConversationFilter is a convenience method for adding conversation namespace facets
+func (fb *FilterBuilder) AddConversationFilter(namespace, conversationID string) *FilterBuilder {
+	return fb.AddNamespaceFacetFilter(namespace, "conversation", conversationID)
+}
+
+// AddDataTypeFilter is a convenience method for adding data type namespace facets
+func (fb *FilterBuilder) AddDataTypeFilter(namespace, dataType string) *FilterBuilder {
+	return fb.AddNamespaceFacetFilter(namespace, "data", dataType)
+}
+
 // Validate validates all filters using the filter config service
 func (fb *FilterBuilder) Validate(ctx context.Context) (*FilterValidationResult, error) {
 	if len(fb.filters) == 0 {
@@ -50,9 +74,23 @@ func (fb *FilterBuilder) Validate(ctx context.Context) (*FilterValidationResult,
 		Filters: fb.filters,
 	}
 
-	resp, err := fb.client.makeRequest(ctx, "POST", "/search/filters/validate", validateReq)
+	// Try namespace-specific validation endpoint if namespace is set
+	endpoint := "/search/filters/validate"
+	if fb.namespace != "" {
+		endpoint = fmt.Sprintf("/search/filters/namespace/%s/validate", fb.namespace)
+	}
+
+	resp, err := fb.client.makeRequest(ctx, "POST", endpoint, validateReq)
 	if err != nil {
-		return nil, err
+		// Fallback to general validation endpoint
+		if fb.namespace != "" {
+			resp, err = fb.client.makeRequest(ctx, "POST", "/search/filters/validate", validateReq)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, err
+		}
 	}
 
 	var result FilterValidationResult
@@ -76,21 +114,35 @@ func (fb *FilterBuilder) BuildWithValidation(ctx context.Context) ([]string, err
 	return fb.Build(ctx)
 }
 
-// Build converts filters to backend format using filter config service
+// Build converts filters to backend format using filter config service with namespace support
 func (fb *FilterBuilder) Build(ctx context.Context) ([]string, error) {
 	if len(fb.filters) == 0 {
 		if fb.namespace != "" {
-			return []string{fb.namespace}, nil
+			return []string{fmt.Sprintf("namespace/%s", fb.namespace)}, nil
 		}
 		return []string{}, nil
 	}
 
-	// Use filter config service to convert filters
+	// Check if we have namespace facets in filters
+	hasNamespaceFacets := false
+	for filterKey := range fb.filters {
+		if strings.HasPrefix(filterKey, "namespace/") {
+			hasNamespaceFacets = true
+			break
+		}
+	}
+
+	// Use namespace-aware filter conversion if available
 	convertReq := FilterConvertRequest{
 		Filters: fb.filters,
 	}
 
-	resp, err := fb.client.makeRequest(ctx, "POST", "/search/filters/convert", convertReq)
+	endpoint := "/search/filters/convert"
+	if fb.namespace != "" {
+		endpoint = fmt.Sprintf("/search/filters/namespace/%s/convert", fb.namespace)
+	}
+
+	resp, err := fb.client.makeRequest(ctx, "POST", endpoint, convertReq)
 	if err != nil {
 		// Fallback to simple conversion if service unavailable
 		return fb.buildFallback(), nil
@@ -105,15 +157,29 @@ func (fb *FilterBuilder) Build(ctx context.Context) ([]string, error) {
 	// Convert backend filters map to string slice
 	var filterStrings []string
 
-	// Add namespace first if specified
-	if fb.namespace != "" {
-		filterStrings = append(filterStrings, fb.namespace)
+	// Add namespace first if specified and not already in filters
+	if fb.namespace != "" && !hasNamespaceFacets {
+		filterStrings = append(filterStrings, fmt.Sprintf("namespace/%s", fb.namespace))
 	}
 
 	// Add converted filters
 	for field, value := range convertResp.BackendFilters {
 		if valueStr, ok := value.(string); ok && valueStr != "" {
-			filterStrings = append(filterStrings, fmt.Sprintf("%s:%s", field, valueStr))
+			// Handle namespace facet format
+			if strings.HasPrefix(field, "namespace/") {
+				filterStrings = append(filterStrings, field)
+			} else {
+				filterStrings = append(filterStrings, fmt.Sprintf("%s:%s", field, valueStr))
+			}
+		} else if valueSlice, ok := value.([]string); ok {
+			// Handle multiple values (for namespace facets)
+			for _, v := range valueSlice {
+				if strings.HasPrefix(field, "namespace/") {
+					filterStrings = append(filterStrings, fmt.Sprintf("%s/%s", field, v))
+				} else {
+					filterStrings = append(filterStrings, fmt.Sprintf("%s:%s", field, v))
+				}
+			}
 		}
 	}
 
@@ -126,13 +192,19 @@ func (fb *FilterBuilder) buildFallback() []string {
 
 	// Add namespace first if specified
 	if fb.namespace != "" {
-		filterStrings = append(filterStrings, fb.namespace)
+		filterStrings = append(filterStrings, fmt.Sprintf("namespace/%s", fb.namespace))
 	}
 
-	// Simple field:value conversion
+	// Convert filters - handle namespace facets specially
 	for field, value := range fb.filters {
 		if value != "" {
-			filterStrings = append(filterStrings, fmt.Sprintf("%s:%s", field, value))
+			if strings.HasPrefix(field, "namespace/") {
+				// This is already a namespace facet path
+				filterStrings = append(filterStrings, field)
+			} else {
+				// Regular metadata filter
+				filterStrings = append(filterStrings, fmt.Sprintf("%s:%s", field, value))
+			}
 		}
 	}
 
@@ -182,6 +254,25 @@ func (c *Client) GetFilterConfiguration(ctx context.Context) (*FilterConfigurati
 	return &config, err
 }
 
+// GetNamespaceFilterConfiguration retrieves filter configuration for a specific namespace
+func (c *Client) GetNamespaceFilterConfiguration(ctx context.Context, namespace string) (*FilterConfiguration, error) {
+	// Validate namespace
+	if err := c.sanitizer.ValidateNamespace(namespace); err != nil {
+		return nil, fmt.Errorf("validation failed: %w", err)
+	}
+
+	path := fmt.Sprintf("/search/filters/namespace/%s/configuration", namespace)
+	resp, err := c.makeRequest(ctx, "GET", path, nil)
+	if err != nil {
+		// Fallback to general configuration
+		return c.GetFilterConfiguration(ctx)
+	}
+
+	var config FilterConfiguration
+	err = c.handleResponse(resp, &config)
+	return &config, err
+}
+
 // GetDynamicFilterOptions gets dynamic options for a specific filter field
 func (c *Client) GetDynamicFilterOptions(ctx context.Context, fieldID string, context map[string]string, namespace string) ([]FilterOption, error) {
 	optionsReq := FilterOptionsRequest{
@@ -190,7 +281,12 @@ func (c *Client) GetDynamicFilterOptions(ctx context.Context, fieldID string, co
 		Namespace: namespace,
 	}
 
-	resp, err := c.makeRequest(ctx, "POST", "/search/filters/options", optionsReq)
+	endpoint := "/search/filters/options"
+	if namespace != "" {
+		endpoint = fmt.Sprintf("/search/filters/namespace/%s/options", namespace)
+	}
+
+	resp, err := c.makeRequest(ctx, "POST", endpoint, optionsReq)
 	if err != nil {
 		return nil, err
 	}
@@ -263,17 +359,22 @@ type FilterOptionsResponse struct {
 	Options []FilterOption `json:"options"`
 }
 
-// Enhanced search methods using filter config system
+// Enhanced search methods using filter config system with namespace support
 
-// SearchWithValidatedFilters performs a search with validated filters
+// SearchWithValidatedFilters performs a search with validated filters and namespace support
 func (c *Client) SearchWithValidatedFilters(ctx context.Context, query string, filters map[string]string, namespace string, page, perPage int) (*SanitizedResponse, error) {
-	// Build and validate filters
+	// Build and validate filters using namespace-aware builder
 	filterBuilder := c.NewFilterBuilder()
 	if namespace != "" {
 		filterBuilder.AddNamespaceFilter(namespace)
 	}
 	for field, value := range filters {
-		filterBuilder.AddMetadataFilter(field, value)
+		// Check if this is a namespace facet filter
+		if strings.HasPrefix(field, "namespace/") {
+			filterBuilder.AddFilter(field, value)
+		} else {
+			filterBuilder.AddMetadataFilter(field, value)
+		}
 	}
 
 	// Build with validation
@@ -319,7 +420,7 @@ func (c *Client) SearchInNamespace(ctx context.Context, query, namespace string,
 	return c.SearchWithValidatedFilters(ctx, query, metadataFilters, namespace, page, perPage)
 }
 
-// BuildSmartFilters creates filters using the configuration system
+// BuildSmartFilters creates filters using the configuration system with namespace support
 func (c *Client) BuildSmartFilters(ctx context.Context) (*SmartFilterBuilder, error) {
 	config, err := c.GetFilterConfiguration(ctx)
 	if err != nil {
@@ -333,7 +434,22 @@ func (c *Client) BuildSmartFilters(ctx context.Context) (*SmartFilterBuilder, er
 	}, nil
 }
 
-// SmartFilterBuilder provides intelligent filter building based on configuration
+// BuildSmartFiltersForNamespace creates filters using namespace-specific configuration
+func (c *Client) BuildSmartFiltersForNamespace(ctx context.Context, namespace string) (*SmartFilterBuilder, error) {
+	config, err := c.GetNamespaceFilterConfiguration(ctx, namespace)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get namespace filter configuration: %w", err)
+	}
+
+	return &SmartFilterBuilder{
+		client:    c,
+		config:    config,
+		values:    make(map[string]string),
+		namespace: namespace,
+	}, nil
+}
+
+// SmartFilterBuilder provides intelligent filter building based on configuration with namespace support
 type SmartFilterBuilder struct {
 	client    *Client
 	config    *FilterConfiguration
@@ -376,6 +492,36 @@ func (sfb *SmartFilterBuilder) SetNamespace(namespace string) *SmartFilterBuilde
 	return sfb
 }
 
+// SetOrganization sets the organization namespace facet filter
+func (sfb *SmartFilterBuilder) SetOrganization(organization string) error {
+	if sfb.namespace == "" {
+		return fmt.Errorf("namespace must be set before setting organization")
+	}
+	facetKey := fmt.Sprintf("namespace/%s/organization", sfb.namespace)
+	sfb.values[facetKey] = organization
+	return nil
+}
+
+// SetConversation sets the conversation namespace facet filter
+func (sfb *SmartFilterBuilder) SetConversation(conversationID string) error {
+	if sfb.namespace == "" {
+		return fmt.Errorf("namespace must be set before setting conversation")
+	}
+	facetKey := fmt.Sprintf("namespace/%s/conversation", sfb.namespace)
+	sfb.values[facetKey] = conversationID
+	return nil
+}
+
+// SetDataType sets the data type namespace facet filter
+func (sfb *SmartFilterBuilder) SetDataType(dataType string) error {
+	if sfb.namespace == "" {
+		return fmt.Errorf("namespace must be set before setting data type")
+	}
+	facetKey := fmt.Sprintf("namespace/%s/data", sfb.namespace)
+	sfb.values[facetKey] = dataType
+	return nil
+}
+
 // Build creates the final filter list with full validation
 func (sfb *SmartFilterBuilder) Build(ctx context.Context) ([]string, error) {
 	// Use the filter builder for final conversion
@@ -410,4 +556,207 @@ func (sfb *SmartFilterBuilder) GetFieldsByCategory() map[string][]FilterFieldDef
 		}
 	}
 	return fieldsByCategory
+}
+
+// GetNamespaceFields returns fields specific to namespace facets
+func (sfb *SmartFilterBuilder) GetNamespaceFields() []FilterFieldDefinition {
+	var namespaceFields []FilterFieldDefinition
+	for _, field := range sfb.config.Fields {
+		if field.Enabled && field.Category == "namespace" {
+			namespaceFields = append(namespaceFields, field)
+		}
+	}
+	return namespaceFields
+}
+
+// Enhanced namespace-aware filter builder methods
+
+// CreateNamespaceAwareFilterBuilder creates a filter builder with namespace context
+func (c *Client) CreateNamespaceAwareFilterBuilder(ctx context.Context, namespace string) (*NamespaceAwareFilterBuilder, error) {
+	// Get namespace info to populate available options
+	namespaceInfo, err := c.GetNamespaceInfo(ctx, namespace)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get namespace info: %w", err)
+	}
+
+	// Get filter configuration for this namespace
+	config, err := c.GetNamespaceFilterConfiguration(ctx, namespace)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get namespace filter configuration: %w", err)
+	}
+
+	return &NamespaceAwareFilterBuilder{
+		client:        c,
+		namespace:     namespace,
+		namespaceInfo: namespaceInfo,
+		config:        config,
+		filters:       make(map[string]string),
+	}, nil
+}
+
+// NamespaceAwareFilterBuilder provides namespace-specific filter building capabilities
+type NamespaceAwareFilterBuilder struct {
+	client        *Client
+	namespace     string
+	namespaceInfo *NamespaceInfo
+	config        *FilterConfiguration
+	filters       map[string]string
+}
+
+// SetOrganizationFilter adds an organization filter with validation
+func (nafb *NamespaceAwareFilterBuilder) SetOrganizationFilter(organization string) error {
+	// Validate that the organization exists in this namespace
+	found := false
+	for _, org := range nafb.namespaceInfo.Organizations {
+		if org == organization {
+			found = true
+			break
+		}
+	}
+	if !found {
+		return fmt.Errorf("organization '%s' not found in namespace '%s'", organization, nafb.namespace)
+	}
+
+	nafb.filters["organization"] = organization
+	return nil
+}
+
+// SetConversationFilter adds a conversation filter with validation
+func (nafb *NamespaceAwareFilterBuilder) SetConversationFilter(conversationID string) error {
+	// Validate that the conversation exists in this namespace
+	found := false
+	for _, conv := range nafb.namespaceInfo.Conversations {
+		if conv == conversationID {
+			found = true
+			break
+		}
+	}
+	if !found {
+		return fmt.Errorf("conversation '%s' not found in namespace '%s'", conversationID, nafb.namespace)
+	}
+
+	nafb.filters["conversation"] = conversationID
+	return nil
+}
+
+// SetDataTypeFilter adds a data type filter with validation
+func (nafb *NamespaceAwareFilterBuilder) SetDataTypeFilter(dataType string) error {
+	// Validate that the data type exists in this namespace
+	found := false
+	for _, dt := range nafb.namespaceInfo.DataTypes {
+		if dt == dataType {
+			found = true
+			break
+		}
+	}
+	if !found {
+		return fmt.Errorf("data type '%s' not found in namespace '%s'", dataType, nafb.namespace)
+	}
+
+	nafb.filters["data_type"] = dataType
+	return nil
+}
+
+// SetMetadataFilter adds a metadata filter
+func (nafb *NamespaceAwareFilterBuilder) SetMetadataFilter(field, value string) *NamespaceAwareFilterBuilder {
+	nafb.filters[field] = value
+	return nafb
+}
+
+// GetAvailableOrganizations returns all organizations in this namespace
+func (nafb *NamespaceAwareFilterBuilder) GetAvailableOrganizations() []string {
+	return nafb.namespaceInfo.Organizations
+}
+
+// GetAvailableConversations returns all conversations in this namespace
+func (nafb *NamespaceAwareFilterBuilder) GetAvailableConversations() []string {
+	return nafb.namespaceInfo.Conversations
+}
+
+// GetAvailableDataTypes returns all data types in this namespace
+func (nafb *NamespaceAwareFilterBuilder) GetAvailableDataTypes() []string {
+	return nafb.namespaceInfo.DataTypes
+}
+
+// Build creates the final validated filter list
+func (nafb *NamespaceAwareFilterBuilder) Build(ctx context.Context) ([]string, error) {
+	// Convert to namespace facet builder for final processing
+	facetBuilder := nafb.client.NewNamespaceFacetBuilder(nafb.namespace)
+
+	// Add namespace-specific filters
+	for field, value := range nafb.filters {
+		switch field {
+		case "organization":
+			facetBuilder.AddOrganizationFilter(value)
+		case "conversation":
+			facetBuilder.AddConversationFilter(value)
+		case "data_type":
+			facetBuilder.AddDataTypeFilter(value)
+		default:
+			// Add as custom facet for metadata filters
+			facetBuilder.AddCustomFacet(fmt.Sprintf("metadata/%s/%s", field, value))
+		}
+	}
+
+	return facetBuilder.GetFilters(), nil
+}
+
+// Search performs a search with the built namespace-aware filters
+func (nafb *NamespaceAwareFilterBuilder) Search(ctx context.Context, query string, page, perPage int) (*SanitizedResponse, error) {
+	filters, err := nafb.Build(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to build filters: %w", err)
+	}
+
+	return nafb.client.SearchWithNamespaceFacets(ctx, query, filters, page, perPage)
+}
+
+// Utility methods for namespace filter integration
+
+// ValidateNamespaceFilters validates that all namespace facet filters are valid for the given namespace
+func (c *Client) ValidateNamespaceFilters(ctx context.Context, namespace string, filters map[string]string) error {
+	namespaceInfo, err := c.GetNamespaceInfo(ctx, namespace)
+	if err != nil {
+		return fmt.Errorf("failed to get namespace info: %w", err)
+	}
+
+	for field, value := range filters {
+		switch {
+		case strings.HasSuffix(field, "/organization"):
+			found := false
+			for _, org := range namespaceInfo.Organizations {
+				if org == value {
+					found = true
+					break
+				}
+			}
+			if !found {
+				return fmt.Errorf("organization '%s' not found in namespace '%s'", value, namespace)
+			}
+		case strings.HasSuffix(field, "/conversation"):
+			found := false
+			for _, conv := range namespaceInfo.Conversations {
+				if conv == value {
+					found = true
+					break
+				}
+			}
+			if !found {
+				return fmt.Errorf("conversation '%s' not found in namespace '%s'", value, namespace)
+			}
+		case strings.HasSuffix(field, "/data"):
+			found := false
+			for _, dt := range namespaceInfo.DataTypes {
+				if dt == value {
+					found = true
+					break
+				}
+			}
+			if !found {
+				return fmt.Errorf("data type '%s' not found in namespace '%s'", value, namespace)
+			}
+		}
+	}
+
+	return nil
 }

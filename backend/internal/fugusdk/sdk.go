@@ -1,3 +1,4 @@
+// sdk.go
 package fugusdk
 
 import (
@@ -26,7 +27,7 @@ const (
 	DefaultTimeout = 30 * time.Second
 
 	// SDK version for user agent
-	SDKVersion = "1.1.0"
+	SDKVersion = "1.2.0" // Updated version for namespace support
 
 	// Security limits
 	MaxRequestBodySize  = 10 * 1024 * 1024 // 10MB
@@ -251,15 +252,25 @@ func BuildClient(ctx context.Context, baseURL string, options ...ClientOption) (
 	return client, nil
 }
 
-// ObjectRecord represents an object to be indexed (matches Rust struct)
+// ObjectRecord represents an object to be indexed with namespace facet support
 type ObjectRecord struct {
 	ID        string                 `json:"id"`
 	Text      string                 `json:"text"`
 	Metadata  map[string]interface{} `json:"metadata,omitempty"`
 	Namespace string                 `json:"namespace,omitempty"`
+
+	// New fields for namespace facets
+	Organization   string `json:"organization,omitempty"`
+	ConversationID string `json:"conversation_id,omitempty"`
+	DataType       string `json:"data_type,omitempty"`
+
+	// Optional timestamps
+	DateCreated   string `json:"date_created,omitempty"`
+	DateUpdated   string `json:"date_updated,omitempty"`
+	DatePublished string `json:"date_published,omitempty"`
 }
 
-// Validate validates the object record
+// Validate validates the object record with namespace field support
 func (o *ObjectRecord) Validate(sanitizer *InputSanitizer) error {
 	if err := sanitizer.ValidateObjectID(o.ID); err != nil {
 		return fmt.Errorf("invalid object ID: %w", err)
@@ -276,6 +287,27 @@ func (o *ObjectRecord) Validate(sanitizer *InputSanitizer) error {
 	if o.Namespace != "" {
 		if err := sanitizer.ValidateNamespace(o.Namespace); err != nil {
 			return fmt.Errorf("invalid namespace: %w", err)
+		}
+	}
+
+	// Validate organization field format if present
+	if o.Organization != "" {
+		if len(o.Organization) > MaxNamespaceLength {
+			return fmt.Errorf("organization name too long: maximum %d characters", MaxNamespaceLength)
+		}
+	}
+
+	// Validate conversation ID format if present
+	if o.ConversationID != "" {
+		if len(o.ConversationID) > MaxObjectIDLength {
+			return fmt.Errorf("conversation ID too long: maximum %d characters", MaxObjectIDLength)
+		}
+	}
+
+	// Validate data type format if present
+	if o.DataType != "" {
+		if len(o.DataType) > MaxNamespaceLength {
+			return fmt.Errorf("data type name too long: maximum %d characters", MaxNamespaceLength)
 		}
 	}
 
@@ -523,7 +555,7 @@ func (c *Client) Health(ctx context.Context) error {
 }
 
 // IngestObjects ingests multiple objects into the database (now performs upserts)
-// This matches the updated Rust /ingest endpoint that performs upserts by default
+// Enhanced to support namespace facets automatically
 func (c *Client) IngestObjects(ctx context.Context, objects []ObjectRecord) (*SanitizedResponse, error) {
 	req := IndexRequest{Data: objects}
 
@@ -532,9 +564,32 @@ func (c *Client) IngestObjects(ctx context.Context, objects []ObjectRecord) (*Sa
 		return nil, fmt.Errorf("validation failed: %w", err)
 	}
 
-	resp, err := c.makeRequest(ctx, "POST", "/ingest", req)
+	// Check if any objects have namespace facet fields
+	hasNamespaceFacets := false
+	for _, obj := range objects {
+		if obj.Organization != "" || obj.ConversationID != "" || obj.DataType != "" {
+			hasNamespaceFacets = true
+			break
+		}
+	}
+
+	// Use namespace-aware endpoint if namespace facets are present
+	endpoint := "/ingest"
+	if hasNamespaceFacets {
+		endpoint = "/ingest/namespace"
+	}
+
+	resp, err := c.makeRequest(ctx, "POST", endpoint, req)
 	if err != nil {
-		return nil, err
+		// Fallback to regular ingest if namespace endpoint fails
+		if hasNamespaceFacets && endpoint == "/ingest/namespace" {
+			resp, err = c.makeRequest(ctx, "POST", "/ingest", req)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, err
+		}
 	}
 
 	var result SanitizedResponse
@@ -599,16 +654,35 @@ func (c *Client) DeleteObject(ctx context.Context, objectID string) (*SanitizedR
 	return &result, err
 }
 
-// Search performs a POST search - matches Rust /search POST endpoint
+// Search performs a POST search - enhanced to automatically use namespace endpoints when appropriate
 func (c *Client) Search(ctx context.Context, query FuguSearchQuery) (*SanitizedResponse, error) {
 	// Validate query
 	if err := c.sanitizer.ValidateQuery(query.Query); err != nil {
 		return nil, fmt.Errorf("validation failed: %w", err)
 	}
 
-	resp, err := c.makeRequest(ctx, "POST", "/search", query)
+	// Check if filters contain namespace facets
+	endpoint := "/search"
+	if query.Filters != nil {
+		for _, filter := range *query.Filters {
+			if strings.HasPrefix(filter, "namespace/") {
+				endpoint = "/search/namespace"
+				break
+			}
+		}
+	}
+
+	resp, err := c.makeRequest(ctx, "POST", endpoint, query)
 	if err != nil {
-		return nil, err
+		// Fallback to regular search if namespace endpoint fails
+		if endpoint == "/search/namespace" {
+			resp, err = c.makeRequest(ctx, "POST", "/search", query)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, err
+		}
 	}
 
 	var result SanitizedResponse
@@ -675,7 +749,7 @@ func (c *Client) GetNamespaceFilters(ctx context.Context, namespace string) (*Sa
 		return nil, fmt.Errorf("validation failed: %w", err)
 	}
 
-	path := fmt.Sprintf("/filters/%s", url.PathEscape(namespace))
+	path := fmt.Sprintf("/filters/namespace/%s", url.PathEscape(namespace))
 
 	resp, err := c.makeRequest(ctx, "GET", path, nil)
 	if err != nil {

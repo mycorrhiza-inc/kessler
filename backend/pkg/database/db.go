@@ -1,19 +1,41 @@
-package util
+package database
 
 import (
 	"context"
 	"kessler/internal/dbstore"
-	"net/http"
 	"os"
 	"time"
 
 	"github.com/charmbracelet/log"
-
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func PgPoolConfig(maxConns int32) *pgxpool.Config {
+// GetQueries returns a new Queries instance with the given pool
+func GetQueries(pool dbstore.DBTX) *dbstore.Queries {
+	return dbstore.New(pool)
+}
+
+// Init initializes the connection pool with the given number of maximum connections
+// Returns the pool for explicit dependency injection
+func Init(maxConn int32) (*pgxpool.Pool, error) {
+	config := pgPoolConfig(maxConn)
+	newPool, err := pgxpool.NewWithConfig(context.Background(), config)
+	if err != nil {
+		return nil, err
+	}
+
+	return newPool, nil
+}
+
+// InitWithoutGlobal creates a new pool without setting the global variable
+// This is the preferred method for new code
+func InitWithoutGlobal(maxConn int32) (*pgxpool.Pool, error) {
+	config := pgPoolConfig(maxConn)
+	return pgxpool.NewWithConfig(context.Background(), config)
+}
+
+func pgPoolConfig(maxConns int32) *pgxpool.Config {
 	const defaultMaxConns = int32(30)
 	if maxConns == 0 {
 		maxConns = defaultMaxConns
@@ -26,7 +48,6 @@ func PgPoolConfig(maxConns int32) *pgxpool.Config {
 
 	// Your own Database URL
 	DATABASE_URL := os.Getenv("DATABASE_CONNECTION_STRING")
-
 	dbConfig, err := pgxpool.ParseConfig(DATABASE_URL)
 	if err != nil {
 		log.Fatal("Failed to create a config, error: ", err)
@@ -38,6 +59,7 @@ func PgPoolConfig(maxConns int32) *pgxpool.Config {
 	dbConfig.MaxConnIdleTime = defaultMaxConnIdleTime
 	dbConfig.HealthCheckPeriod = defaultHealthCheckPeriod
 	dbConfig.ConnConfig.ConnectTimeout = defaultConnectTimeout
+
 	// Removed to clean up logging in golang
 	dbConfig.BeforeAcquire = func(ctx context.Context, c *pgx.Conn) bool {
 		// log.Info("Before acquiring the connection pool to the database!!")
@@ -56,46 +78,9 @@ func PgPoolConfig(maxConns int32) *pgxpool.Config {
 	return dbConfig
 }
 
-func CreateDBContextWithTimeout(timeout time.Duration, maxConns int) context.Context {
-	// Create a context with the specified timeout.
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-
-	// Initialize the connection pool.
-	connPool, err := pgxpool.NewWithConfig(context.Background(), PgPoolConfig(int32(maxConns)))
-	if err != nil {
-		log.Fatal("Failed to create database connection pool: ", err)
+// Close closes the connection pool
+func Close(pool *pgxpool.Pool) {
+	if pool != nil {
+		pool.Close()
 	}
-
-	// Attach the connection pool to the context.
-	ctx = context.WithValue(ctx, "db", connPool)
-
-	// Close the pool and release context resources when the context is done.
-	go func() {
-		<-ctx.Done()     // Wait until the context is canceled or times out.
-		connPool.Close() // Close the connection pool.
-		cancel()         // Release the context's resources.
-	}()
-
-	return ctx
-}
-
-func DBTXFromContext(ctx context.Context) dbstore.DBTX {
-	pool := ctx.Value("db").(*pgxpool.Pool)
-	// connection, err := pool.Acquire(ctx)
-	// if err != nil {
-	// 	panic(err)
-	// }
-	return pool
-}
-
-func DBQueriesFromContext(ctx context.Context) *dbstore.Queries {
-	dbtx := DBTXFromContext(ctx)
-	q := dbstore.New(dbtx)
-	return q
-}
-
-func DBQueriesFromRequest(r *http.Request) *dbstore.Queries {
-	ctx := r.Context()
-	q := DBQueriesFromContext(ctx)
-	return q
 }

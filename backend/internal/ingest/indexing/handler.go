@@ -1,3 +1,4 @@
+// indexing/handler.go
 package indexing
 
 import (
@@ -6,9 +7,12 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gorilla/mux"
-	"go.uber.org/zap"
+	"kessler/internal/dbstore"
 	"kessler/pkg/logger"
+
+	"github.com/gorilla/mux"
+	"go.opentelemetry.io/otel"
+	"go.uber.org/zap"
 )
 
 // IndexHandler provides HTTP endpoints for admin indexing.
@@ -20,15 +24,19 @@ type IndexHandler struct {
 	svc *IndexService
 }
 
+var tracer = otel.Tracer("http-server")
+
 // NewIndexHandler creates a new handler backed by IndexService.
 func NewIndexHandler(svc *IndexService) *IndexHandler {
 	return &IndexHandler{svc: svc}
 }
 
 // RegisterAdminIndexingRoutes mounts indexing endpoints under /admin/indexing.
-func RegisterAdminIndexingRoutes(r *mux.Router) {
+func RegisterIndexingRoutes(r *mux.Router, db dbstore.DBTX) {
 	sr := r.PathPrefix("/indexing").Subrouter()
-	h := NewIndexHandler(NewIndexService("http://fugudb:3301"))
+
+	// TODO: have this be configurable
+	h := NewIndexHandler(NewIndexService("http://fugudb:3301", db))
 
 	// Conversation endpoints
 	sr.HandleFunc("/conversations", h.IndexAllConversations).Methods(http.MethodPost)
@@ -40,7 +48,7 @@ func RegisterAdminIndexingRoutes(r *mux.Router) {
 	sr.HandleFunc("/organizations/{id}", h.IndexOrganizationByID).Methods(http.MethodPost)
 	sr.HandleFunc("/organizations/{id}", h.DeleteOrganization).Methods(http.MethodDelete)
 
-	// Data endpoints - full CRUD operations
+	// Data endpoints - full CRUD operations with namespace facet support
 	sr.HandleFunc("/data", h.IndexAllData).Methods(http.MethodPost)
 	sr.HandleFunc("/data/batch-ingest", h.BatchIngestData).Methods(http.MethodPost)
 	sr.HandleFunc("/data/{id}", h.IndexDataRecordByID).Methods(http.MethodPost)
@@ -53,12 +61,15 @@ func RegisterAdminIndexingRoutes(r *mux.Router) {
 
 // IndexAllConversations godoc
 // @Summary Batch index all conversations
-// @Description Retrieves all conversations from the database and indexes them in FuguDB
+// @Description Retrieves all conversations from the database and indexes them in FuguDB with proper namespace facets
 // @Success 200 {object} map[string]int{"indexed":int}
 // @Failure 500 {object} map[string]string{"error":string}
 // @Router /admin/indexing/conversations [post]
 func (h *IndexHandler) IndexAllConversations(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	ctx, span := tracer.Start(ctx, "indexing:IndexAllConversations")
+	defer span.End()
+
 	logger.Info(ctx, "indexing all conversations requested")
 
 	count, err := h.svc.IndexAllConversations(ctx)
@@ -74,13 +85,16 @@ func (h *IndexHandler) IndexAllConversations(w http.ResponseWriter, r *http.Requ
 
 // IndexConversationByID godoc
 // @Summary Index a conversation by ID
-// @Description Retrieves a single conversation by UUID and indexes it in FuguDB
+// @Description Retrieves a single conversation by UUID and indexes it in FuguDB with proper namespace facets
 // @Param id path string true "Conversation UUID"
 // @Success 200 {object} map[string]int{"indexed":int}
 // @Failure 400 {object} map[string]string{"error":string}
 // @Router /admin/indexing/conversations/{id} [post]
 func (h *IndexHandler) IndexConversationByID(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	ctx, span := tracer.Start(ctx, "indexing:IndexConversationByID")
+	defer span.End()
+
 	id := mux.Vars(r)["id"]
 
 	logger.Info(ctx, "indexing conversation by ID", zap.String("conversation_id", id))
@@ -105,6 +119,9 @@ func (h *IndexHandler) IndexConversationByID(w http.ResponseWriter, r *http.Requ
 // @Router /admin/indexing/conversations/{id} [delete]
 func (h *IndexHandler) DeleteConversation(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	ctx, span := tracer.Start(ctx, "indexing:DeleteConversation")
+	defer span.End()
+
 	id := mux.Vars(r)["id"]
 
 	logger.Info(ctx, "deleting conversation from index", zap.String("conversation_id", id))
@@ -122,12 +139,15 @@ func (h *IndexHandler) DeleteConversation(w http.ResponseWriter, r *http.Request
 
 // IndexAllOrganizations godoc
 // @Summary Batch index all organizations
-// @Description Retrieves all organizations from the database and indexes them in FuguDB
+// @Description Retrieves all organizations from the database and indexes them in FuguDB with proper namespace facets
 // @Success 200 {object} map[string]int{"indexed":int}
 // @Failure 500 {object} map[string]string{"error":string}
 // @Router /admin/indexing/organizations [post]
 func (h *IndexHandler) IndexAllOrganizations(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	ctx, span := tracer.Start(ctx, "indexing:IndexAllOrganizations")
+	defer span.End()
+
 	logger.Info(ctx, "indexing all organizations requested")
 
 	count, err := h.svc.IndexAllOrganizations(ctx)
@@ -143,13 +163,16 @@ func (h *IndexHandler) IndexAllOrganizations(w http.ResponseWriter, r *http.Requ
 
 // IndexOrganizationByID godoc
 // @Summary Index an organization by ID
-// @Description Retrieves a single organization by UUID and indexes it in FuguDB
+// @Description Retrieves a single organization by UUID and indexes it in FuguDB with proper namespace facets
 // @Param id path string true "Organization UUID"
 // @Success 200 {object} map[string]int{"indexed":int}
 // @Failure 400 {object} map[string]string{"error":string}
 // @Router /admin/indexing/organizations/{id} [post]
 func (h *IndexHandler) IndexOrganizationByID(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	ctx, span := tracer.Start(ctx, "indexing:IndexOrganizationByID")
+	defer span.End()
+
 	id := mux.Vars(r)["id"]
 
 	logger.Info(ctx, "indexing organization by ID", zap.String("organization_id", id))
@@ -174,6 +197,9 @@ func (h *IndexHandler) IndexOrganizationByID(w http.ResponseWriter, r *http.Requ
 // @Router /admin/indexing/organizations/{id} [delete]
 func (h *IndexHandler) DeleteOrganization(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	ctx, span := tracer.Start(ctx, "indexing:DeleteOrganization")
+	defer span.End()
+
 	id := mux.Vars(r)["id"]
 
 	logger.Info(ctx, "deleting organization from index", zap.String("organization_id", id))
@@ -191,12 +217,15 @@ func (h *IndexHandler) DeleteOrganization(w http.ResponseWriter, r *http.Request
 
 // IndexAllData godoc
 // @Summary Index all conversations and organizations
-// @Description Bulk operation to index all conversations and organizations from the database
+// @Description Bulk operation to index all conversations and organizations from the database with proper namespace facets
 // @Success 200 {object} map[string]interface{}
 // @Failure 500 {object} map[string]string{"error":string}
 // @Router /admin/indexing/all [post]
 func (h *IndexHandler) IndexAllData(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	ctx, span := tracer.Start(ctx, "indexing:IndexAllData")
+	defer span.End()
+
 	logger.Info(ctx, "indexing all data requested")
 
 	convCount, orgCount, err := h.svc.IndexAllData(ctx)
@@ -210,7 +239,7 @@ func (h *IndexHandler) IndexAllData(w http.ResponseWriter, r *http.Request) {
 		"conversations_indexed": convCount,
 		"organizations_indexed": orgCount,
 		"total_indexed":         convCount + orgCount,
-		"message":               "Successfully indexed all data",
+		"message":               "Successfully indexed all data with namespace facets",
 	}
 
 	logger.Info(ctx, "successfully indexed all data",
@@ -221,9 +250,9 @@ func (h *IndexHandler) IndexAllData(w http.ResponseWriter, r *http.Request) {
 
 // BatchIngestData godoc
 // @Summary Batch ingest arbitrary data records
-// @Description Accepts a batch of data records and indexes them in FuguDB
+// @Description Accepts a batch of data records and indexes them in FuguDB with namespace facet support
 // @Accept json
-// @Param request body DataIngestRequest true "Batch ingest request"
+// @Param request body DataIngestRequest true "Batch ingest request with namespace facet fields"
 // @Success 200 {object} DataIngestResponse
 // @Success 206 {object} DataIngestResponse "Partial success"
 // @Failure 400 {object} map[string]string{"error":string}
@@ -231,6 +260,9 @@ func (h *IndexHandler) IndexAllData(w http.ResponseWriter, r *http.Request) {
 // @Router /admin/indexing/data/batch-ingest [post]
 func (h *IndexHandler) BatchIngestData(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	ctx, span := tracer.Start(ctx, "indexing:BatchIngestData")
+	defer span.End()
+
 	logger.Info(ctx, "batch data ingest request received")
 
 	// Parse request body
@@ -247,7 +279,8 @@ func (h *IndexHandler) BatchIngestData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logger.Info(ctx, "processing batch data ingest request", zap.Int("record_count", len(ingestReq.Records)))
+	logger.Info(ctx, "processing batch data ingest request",
+		zap.Int("record_count", len(ingestReq.Records)))
 
 	// Process the ingestion
 	response, err := h.svc.ProcessBatchDataIngest(ctx, ingestReq.Records)
@@ -280,16 +313,19 @@ func (h *IndexHandler) BatchIngestData(w http.ResponseWriter, r *http.Request) {
 
 // IndexDataRecordByID godoc
 // @Summary Index a single data record by ID
-// @Description Accepts a single data record and indexes it in FuguDB
+// @Description Accepts a single data record and indexes it in FuguDB with namespace facet support
 // @Accept json
 // @Param id path string true "Data Record ID"
-// @Param request body DataRecord true "Data record to index"
+// @Param request body DataRecord true "Data record to index with namespace facet fields"
 // @Success 200 {object} map[string]int{"indexed":int}
 // @Failure 400 {object} map[string]string{"error":string}
 // @Failure 500 {object} map[string]string{"error":string}
 // @Router /admin/indexing/data/{id} [post]
 func (h *IndexHandler) IndexDataRecordByID(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	ctx, span := tracer.Start(ctx, "indexing:IndexDataRecordByID")
+	defer span.End()
+
 	id := mux.Vars(r)["id"]
 
 	logger.Info(ctx, "indexing data record by ID", zap.String("data_record_id", id))
@@ -334,6 +370,9 @@ func (h *IndexHandler) IndexDataRecordByID(w http.ResponseWriter, r *http.Reques
 // @Router /admin/indexing/data/{id} [delete]
 func (h *IndexHandler) DeleteDataRecord(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	ctx, span := tracer.Start(ctx, "indexing:DeleteDataRecord")
+	defer span.End()
+
 	id := mux.Vars(r)["id"]
 
 	logger.Info(ctx, "deleting data record from index", zap.String("data_record_id", id))
@@ -357,6 +396,9 @@ func (h *IndexHandler) DeleteDataRecord(w http.ResponseWriter, r *http.Request) 
 // @Router /admin/indexing/data/health [get]
 func (h *IndexHandler) DataHealthCheck(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	ctx, span := tracer.Start(ctx, "indexing:DataHealthCheck")
+	defer span.End()
+
 	logger.Info(ctx, "data health check requested")
 
 	// Check FuguDB health through the service

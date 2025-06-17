@@ -1,3 +1,4 @@
+// objects/files/handler/file_write_handler.go
 package handler
 
 import (
@@ -5,12 +6,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"kessler/internal/database"
 	"kessler/internal/dbstore"
 	ConvoHandler "kessler/internal/objects/conversations/handler"
 	"kessler/internal/objects/files"
 	"kessler/internal/objects/files/crud"
 	"kessler/internal/objects/files/validation"
+	"kessler/pkg/database"
+	"kessler/pkg/logger"
 	"net/http"
 	"strings"
 
@@ -20,24 +22,17 @@ import (
 	"go.uber.org/zap"
 )
 
-type FileUpsertHandlerConfig struct {
-	Private      bool
-	Insert       bool
-	Deduplicate  bool
-	IsAuthorized func(*http.Request) bool
-	GetDBQueries func(*http.Request) *dbstore.Queries
-}
-
 // Chatgt came up with these, and I actually kind of like them
 func respondError(w http.ResponseWriter, message string, statusCode int) {
-	log.Info(message)
+	logger.Info(context.Background(), message)
 	http.Error(w, message, statusCode)
 }
 
-func makeFileUpsertHandler(config FileUpsertHandlerConfig) http.HandlerFunc {
+// makeFileUpsertHandler creates a handler for file upsert operations
+func (h *FileHandler) makeFileUpsertHandler(config FileUpsertHandlerConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		q := database.GetTx()
 		ctx := r.Context()
+		log := logger.FromContext(ctx)
 
 		// Validate HTTP method and path
 		if !config.Insert && r.URL.Path == "/v2/public/files/insert" {
@@ -62,14 +57,14 @@ func makeFileUpsertHandler(config FileUpsertHandlerConfig) http.HandlerFunc {
 			newDocInfo.ID = docUUID
 		}
 		args := IngestDocParams{
-			DocInfo:     newDocInfo,
-			Insert:      config.Insert,
-			Deduplicate: config.Deduplicate,
+			DocInfo: newDocInfo,
+			Insert:  config.Insert,
 		}
 
-		// Process file ingestion
-		result, err := ingestFile(ctx, q, args)
+		// Process file ingestion using handler's database connection
+		result, err := h.ingestFile(ctx, args)
 		if err != nil {
+			log.Error("file ingestion failed", zap.Error(err))
 			respondError(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -92,7 +87,7 @@ type IngestDocParams struct {
 	Deduplicate bool
 }
 
-func ingestFile(ctx context.Context, q *dbstore.Queries, params IngestDocParams) (files.CompleteFileSchema, error) {
+func (h *FileHandler) ingestFile(ctx context.Context, params IngestDocParams) (files.CompleteFileSchema, error) {
 	var err error
 	docInfo := params.DocInfo
 	docUUID := docInfo.ID
@@ -119,19 +114,19 @@ func ingestFile(ctx context.Context, q *dbstore.Queries, params IngestDocParams)
 	creationData.Verified = pgtype.Bool{Bool: false, Valid: true}
 
 	// Insert or update main file record
-	fileSchema, err := upsertFileRecord(ctx, q, creationData, docUUID, params.Insert)
+	fileSchema, err := h.upsertFileRecord(ctx, creationData, docUUID, params.Insert)
 	if err != nil {
 		return docInfo, fmt.Errorf("file upsert error: %w", err)
 	}
 	docInfo.ID = fileSchema.ID
 
 	// Process associations
-	associationErrors, hasErrored := processAssociations(ctx, *q, docInfo, params.Insert)
+	associationErrors, hasErrored := h.processAssociations(ctx, docInfo, params.Insert)
 	docInfo.Stage.IsErrored = docInfo.Stage.IsErrored || hasErrored
 	docInfo.Stage.DatabaseErrorMsg += strings.Join(associationErrors, "\n")
 
 	// Update verification status
-	if err := updateVerificationStatus(ctx, q, docInfo); err != nil {
+	if err := h.updateVerificationStatus(ctx, docInfo); err != nil {
 		return docInfo, fmt.Errorf("verification update error: %w", err)
 	}
 
@@ -170,16 +165,19 @@ func parseRequestBody(r *http.Request) (files.CompleteFileSchema, error) {
 	return docInfo, nil
 }
 
-func upsertFileRecord(ctx context.Context, q *dbstore.Queries, data files.FileCreationDataRaw, docUUID uuid.UUID, insert bool) (files.FileSchema, error) {
+func (h *FileHandler) upsertFileRecord(ctx context.Context, data files.FileCreationDataRaw, docUUID uuid.UUID, insert bool) (files.FileSchema, error) {
 	private := false
+	q := database.GetQueries(h.db)
 	if insert {
 		return files.InsertPubPrivateFileObj(*q, ctx, data, private)
 	}
 	return files.UpdatePubPrivateFileObj(*q, ctx, data, private, docUUID)
 }
 
-func processAssociations(ctx context.Context, q dbstore.Queries, docInfo files.CompleteFileSchema, insert bool) ([]string, bool) {
+func (h *FileHandler) processAssociations(ctx context.Context, docInfo files.CompleteFileSchema, insert bool) ([]string, bool) {
+	log := logger.FromContext(ctx)
 	var errors []string
+
 	addError := func(err error, context string) {
 		if err != nil {
 			log.Error(context, zap.Error(err))
@@ -187,21 +185,24 @@ func processAssociations(ctx context.Context, q dbstore.Queries, docInfo files.C
 		}
 	}
 
+	q := *database.GetQueries(h.db)
 	addError(crud.UpsertFileAttachments(ctx, q, docInfo.ID, docInfo.Attachments, insert), "attachments")
 	addError(crud.UpsertFileMetadata(ctx, q, docInfo.ID, docInfo.Mdata, insert), "metadata")
 	addError(crud.UpsertFileExtras(ctx, q, docInfo.ID, docInfo.Extra, insert), "extras")
 	addError(crud.FileAuthorsUpsert(ctx, q, docInfo.ID, docInfo.Authors, insert), "authors")
-	addError(ConvoHandler.FileConversationUpsert(ctx, q, docInfo.ID, docInfo.Conversation, insert), "conversation")
+	convh := ConvoHandler.NewConversationHandler(h.db)
+	addError(convh.FileConversationUpsert(ctx, q, docInfo.ID, docInfo.Conversation, insert), "conversation")
 
 	return errors, len(errors) > 0
 }
 
-func updateVerificationStatus(ctx context.Context, q *dbstore.Queries, docInfo files.CompleteFileSchema) error {
+func (h *FileHandler) updateVerificationStatus(ctx context.Context, docInfo files.CompleteFileSchema) error {
 	if !docInfo.Stage.IsErrored && docInfo.Stage.IsCompleted {
 		params := dbstore.FileVerifiedUpdateParams{
 			Verified: pgtype.Bool{Bool: true, Valid: true},
 			ID:       docInfo.ID,
 		}
+		q := database.GetQueries(h.db)
 		if _, err := q.FileVerifiedUpdate(ctx, params); err != nil {
 			return fmt.Errorf("failed to update verification status: %w", err)
 		}

@@ -207,3 +207,18 @@ ORDER BY
     document_count DESC
 LIMIT
     $1 OFFSET $2;
+
+-- name: AuthorshipDocumentListOrganizations :many
+SELECT
+    rdoa.document_id,
+    rdoa.organization_id,
+    rdoa.is_primary_author,
+    rdoa.created_at,
+    rdoa.updated_at
+FROM
+    public.relation_documents_organizations_authorship rdoa
+WHERE
+    rdoa.document_id = $1
+ORDER BY
+    rdoa.is_primary_author DESC,
+    rdoa.created_at ASC;

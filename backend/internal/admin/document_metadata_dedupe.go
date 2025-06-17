@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"kessler/internal/database"
 	"kessler/internal/dbstore"
 	"kessler/internal/objects/authors"
 	"kessler/internal/objects/conversations"
 	"kessler/internal/objects/files"
+	"kessler/pkg/database"
 	"net/http"
 
 	"github.com/charmbracelet/log"
@@ -23,7 +23,7 @@ type DocumentMetadataCheck struct {
 	AuthorString  string `json:"author_string"`
 }
 
-func HandleCheckDocumentMetadata(w http.ResponseWriter, r *http.Request) {
+func (h *AdminHandler) HandleCheckDocumentMetadata(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -36,8 +36,7 @@ func HandleCheckDocumentMetadata(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
-	q := *database.GetTx()
-	file, err := CheckDocumentMetadata(args, q, ctx)
+	file, err := h.CheckDocumentMetadata(args, ctx)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error checking document metadata: %v", err), http.StatusInternalServerError)
 		return
@@ -55,12 +54,13 @@ func HandleCheckDocumentMetadata(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func CheckDocumentMetadata(args DocumentMetadataCheck, q dbstore.Queries, ctx context.Context) (files.CompleteFileSchema, error) {
+func (h *AdminHandler) CheckDocumentMetadata(args DocumentMetadataCheck, ctx context.Context) (files.CompleteFileSchema, error) {
 	params := dbstore.FileCheckForDuplicatesParams{
 		Name:        args.Name,
 		Extension:   args.Extension,
 		DocketGovID: args.NamedDocketID,
 	}
+	q := database.GetQueries(h.db)
 	results, err := q.FileCheckForDuplicates(ctx, params)
 	if err != nil {
 		return files.CompleteFileSchema{}, err
@@ -128,6 +128,3 @@ func CheckDocumentMetadata(args DocumentMetadataCheck, q dbstore.Queries, ctx co
 	}
 	return file, nil
 }
-
-// Example Metadata Schema
-// {"id": "14f92e3e-6748-4f64-8c1a-1200547bf8e9", "url": "https://documents.dps.ny.gov/public/Common/ViewDoc.aspx?DocRefId={2071B08B-0000-C730-9754-1C39327CCC7D}", "date": "11/08/2023", "lang": "en", "title": "Staff Proposal on the Transition of Utility Reported Community-Scale Energy Usage Data", "author": "New York State Department of Public Service", "source": "New York State Department of Public Service", "authors": ["New York State Department of Public Service"], "language": "en", "docket_id": "20-M-0082", "extension": "pdf", "file_class": "Plans and Proposals", "item_number": "249", "author_email": "", "author_organisation": "New York State Department of Public Service"}

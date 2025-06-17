@@ -73,7 +73,7 @@ func RegisterObjectRoutes(r *mux.Router) error {
 // @Router      /objects/{id} [get]
 func (h *ObjectHandler) GetObjectByID(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	ctx, span := tracer.Start(ctx, "objects-api:get-object-by-id")
+	ctx, span := tracer.Start(ctx, "objects:GetObjectByID")
 	defer span.End()
 
 	// Get object ID from URL
@@ -113,4 +113,3 @@ func (h *ObjectHandler) GetObjectByID(w http.ResponseWriter, r *http.Request) {
 
 	logger.Info(ctx, "successfully retrieved object", zap.String("object_id", objectID))
 }
-

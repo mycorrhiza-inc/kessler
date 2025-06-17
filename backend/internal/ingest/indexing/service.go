@@ -1,3 +1,4 @@
+// indexing/serv// indexing/service.go
 package indexing
 
 import (
@@ -10,25 +11,26 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
-	"kessler/internal/database"
 	"kessler/internal/dbstore"
 	"kessler/internal/fugusdk"
+	"kessler/pkg/database"
 	"kessler/pkg/logger"
 )
 
 // IndexService fetches DB records and indexes them into FuguDB.
 type IndexService struct {
-	fuguURL string
-	q       *dbstore.Queries
+	fuguURL          string
+	db               dbstore.DBTX
+	defaultNamespace string // e.g., "NYPUC"
 }
 
 // NewIndexService constructs an IndexService pointing at fuguURL.
-func NewIndexService(fuguURL string) *IndexService {
+func NewIndexService(fuguURL string, db dbstore.DBTX) *IndexService {
 	// Use the shared connection pool (implements dbstore.DBTX)
-	db := database.ConnPool
 	return &IndexService{
-		fuguURL: fuguURL,
-		q:       dbstore.New(db),
+		fuguURL:          fuguURL,
+		defaultNamespace: "NYPUC", // Configure this based on your organization
+		db:               db,
 	}
 }
 
@@ -37,6 +39,12 @@ type DataRecord struct {
 	ID       string                 `json:"id"`
 	Text     string                 `json:"text"`
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
+
+	// Optional namespace facet fields
+	Namespace      string `json:"namespace,omitempty"`
+	Organization   string `json:"organization,omitempty"`
+	ConversationID string `json:"conversation_id,omitempty"`
+	DataType       string `json:"data_type,omitempty"`
 }
 
 // DataIngestRequest represents the incoming batch data ingest request
@@ -55,7 +63,8 @@ type DataIngestResponse struct {
 
 // IndexAllConversations retrieves all conversations and batch indexes them in chunks.
 func (s *IndexService) IndexAllConversations(ctx context.Context) (int, error) {
-	rows, err := s.q.DocketConversationList(ctx)
+	q := database.GetQueries(s.db)
+	rows, err := q.DocketConversationList(ctx)
 	if err != nil {
 		return 0, fmt.Errorf("fetch all conversations: %w", err)
 	}
@@ -77,13 +86,17 @@ func (s *IndexService) IndexAllConversations(ctx context.Context) (int, error) {
 			ID:   c.ID.String(),
 			Text: text,
 			Metadata: map[string]interface{}{
-				"docket_gov_id": c.DocketGovID,
-				"description":   c.Description,
-				"state":         c.State,
-				"matter_type":   c.MatterType,
-				"industry_type": c.IndustryType,
+				"docket_gov_id":   c.DocketGovID,
+				"description":     c.Description,
+				"state":           c.State,
+				"matter_type":     c.MatterType,
+				"industry_type":   c.IndustryType,
+				"conversation_id": c.ID.String(), // Store specific ID in metadata
 			},
-			Namespace: "conversations",
+			// Use proper namespace facet structure (categorical only)
+			Namespace:      s.defaultNamespace,
+			ConversationID: c.ID.String(),  // This triggers namespace/NYPUC/conversation facet
+			DataType:       "conversation", // This triggers namespace/NYPUC/data facet
 		})
 	}
 
@@ -96,7 +109,7 @@ func (s *IndexService) IndexAllConversations(ctx context.Context) (int, error) {
 		return 0, nil
 	}
 
-	client, err := fugusdk.NewClient(ctx, s.fuguURL)
+	client, err := s.createFuguClient(ctx)
 	if err != nil {
 		return 0, fmt.Errorf("new fugu client: %w", err)
 	}
@@ -106,7 +119,8 @@ func (s *IndexService) IndexAllConversations(ctx context.Context) (int, error) {
 
 // IndexAllOrganizations retrieves all organizations and batch indexes them in chunks.
 func (s *IndexService) IndexAllOrganizations(ctx context.Context) (int, error) {
-	rows, err := s.q.OrganizationCompleteQuickwitListGet(ctx)
+	q := database.GetQueries(s.db)
+	rows, err := q.OrganizationCompleteQuickwitListGet(ctx)
 	if err != nil {
 		return 0, fmt.Errorf("fetch all organizations: %w", err)
 	}
@@ -131,8 +145,12 @@ func (s *IndexService) IndexAllOrganizations(ctx context.Context) (int, error) {
 				"description":              o.Description,
 				"is_person":                o.IsPerson.Bool,
 				"total_documents_authored": o.TotalDocumentsAuthored,
+				"organization_name":        o.Name, // Store specific name in metadata
 			},
-			Namespace: "organizations",
+			// Use proper namespace facet structure (categorical only)
+			Namespace:    s.defaultNamespace,
+			Organization: o.Name,         // This triggers namespace/NYPUC/organization facet
+			DataType:     "organization", // This triggers namespace/NYPUC/data facet
 		})
 	}
 
@@ -145,7 +163,7 @@ func (s *IndexService) IndexAllOrganizations(ctx context.Context) (int, error) {
 		return 0, nil
 	}
 
-	client, err := fugusdk.NewClient(ctx, s.fuguURL)
+	client, err := s.createFuguClient(ctx)
 	if err != nil {
 		return 0, fmt.Errorf("new fugu client: %w", err)
 	}
@@ -160,7 +178,8 @@ func (s *IndexService) IndexConversationByID(ctx context.Context, idStr string) 
 		return 0, fmt.Errorf("invalid conversation id: %w", err)
 	}
 
-	c, err := s.q.DocketConversationRead(ctx, id)
+	q := database.GetQueries(s.db)
+	c, err := q.DocketConversationRead(ctx, id)
 	if err != nil {
 		return 0, fmt.Errorf("read conversation: %w", err)
 	}
@@ -175,13 +194,20 @@ func (s *IndexService) IndexConversationByID(ctx context.Context, idStr string) 
 		ID:   c.ID.String(),
 		Text: text,
 		Metadata: map[string]interface{}{
-			"docket_gov_id": c.DocketGovID,
-			"description":   c.Description,
+			"docket_gov_id":   c.DocketGovID,
+			"description":     c.Description,
+			"state":           c.State,
+			"matter_type":     c.MatterType,
+			"industry_type":   c.IndustryType,
+			"conversation_id": c.ID.String(), // Store specific ID in metadata
 		},
-		Namespace: "conversations",
+		// Use proper namespace facet structure (categorical only)
+		Namespace:      s.defaultNamespace,
+		ConversationID: c.ID.String(),
+		DataType:       "conversation",
 	}
 
-	client, err := fugusdk.NewClient(ctx, s.fuguURL)
+	client, err := s.createFuguClient(ctx)
 	if err != nil {
 		return 0, fmt.Errorf("new fugu client: %w", err)
 	}
@@ -202,7 +228,8 @@ func (s *IndexService) IndexOrganizationByID(ctx context.Context, idStr string) 
 		return 0, fmt.Errorf("invalid organization id: %w", err)
 	}
 
-	o, err := s.q.OrganizationRead(ctx, id)
+	q := database.GetQueries(s.db)
+	o, err := q.OrganizationRead(ctx, id)
 	if err != nil {
 		return 0, fmt.Errorf("read organization: %w", err)
 	}
@@ -217,13 +244,17 @@ func (s *IndexService) IndexOrganizationByID(ctx context.Context, idStr string) 
 		ID:   o.ID.String(),
 		Text: text,
 		Metadata: map[string]interface{}{
-			"description": o.Description,
-			"is_person":   o.IsPerson.Bool,
+			"description":       o.Description,
+			"is_person":         o.IsPerson.Bool,
+			"organization_name": o.Name, // Store specific name in metadata
 		},
-		Namespace: "organizations",
+		// Use proper namespace facet structure (categorical only)
+		Namespace:    s.defaultNamespace,
+		Organization: o.Name,
+		DataType:     "organization",
 	}
 
-	client, err := fugusdk.NewClient(ctx, s.fuguURL)
+	client, err := s.createFuguClient(ctx)
 	if err != nil {
 		return 0, fmt.Errorf("new fugu client: %w", err)
 	}
@@ -240,7 +271,7 @@ func (s *IndexService) IndexOrganizationByID(ctx context.Context, idStr string) 
 // ProcessBatchDataIngest handles the business logic for batch data ingestion
 func (s *IndexService) ProcessBatchDataIngest(ctx context.Context, records []DataRecord) (*DataIngestResponse, error) {
 	// Create fugu client
-	client, err := fugusdk.NewClient(ctx, s.fuguURL)
+	client, err := s.createFuguClient(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create fugu client: %w", err)
 	}
@@ -309,17 +340,28 @@ func (s *IndexService) IndexDataRecordByID(ctx context.Context, record DataRecor
 	}
 
 	// Create fugu client
-	client, err := fugusdk.NewClient(ctx, s.fuguURL)
+	client, err := s.createFuguClient(ctx)
 	if err != nil {
 		return 0, fmt.Errorf("failed to create fugu client: %w", err)
 	}
 
-	// Create fugu object
+	// Create fugu object with proper namespace facets
 	fuguObj := fugusdk.ObjectRecord{
-		ID:        record.ID,
-		Text:      strings.TrimSpace(record.Text),
-		Metadata:  record.Metadata,
-		Namespace: "data",
+		ID:       record.ID,
+		Text:     strings.TrimSpace(record.Text),
+		Metadata: record.Metadata,
+
+		// Use namespace facet structure
+		Namespace: s.getRecordNamespace(record),
+		DataType:  s.getRecordDataType(record),
+	}
+
+	// Set optional namespace facet fields if provided
+	if record.Organization != "" {
+		fuguObj.Organization = record.Organization
+	}
+	if record.ConversationID != "" {
+		fuguObj.ConversationID = record.ConversationID
 	}
 
 	// Add ingestion metadata
@@ -369,12 +411,23 @@ func (s *IndexService) convertToFuguObjects(ctx context.Context, records []DataR
 			continue
 		}
 
-		// Create fugu object
+		// Create fugu object with proper namespace facets
 		fuguObj := fugusdk.ObjectRecord{
-			ID:        record.ID,
-			Text:      strings.TrimSpace(record.Text),
-			Metadata:  record.Metadata,
-			Namespace: "data", // Use "data" namespace for batch ingested records
+			ID:       record.ID,
+			Text:     strings.TrimSpace(record.Text),
+			Metadata: record.Metadata,
+
+			// Use namespace facet structure
+			Namespace: s.getRecordNamespace(record),
+			DataType:  s.getRecordDataType(record),
+		}
+
+		// Set optional namespace facet fields if provided
+		if record.Organization != "" {
+			fuguObj.Organization = record.Organization
+		}
+		if record.ConversationID != "" {
+			fuguObj.ConversationID = record.ConversationID
 		}
 
 		// Add ingestion metadata
@@ -401,6 +454,33 @@ func (s *IndexService) convertToFuguObjects(ctx context.Context, records []DataR
 	}
 
 	return fuguObjects, conversionErrors
+}
+
+// Helper methods for namespace facet handling
+
+// getRecordNamespace returns the namespace for a record, using default if not specified
+func (s *IndexService) getRecordNamespace(record DataRecord) string {
+	if record.Namespace != "" {
+		return record.Namespace
+	}
+	return s.defaultNamespace
+}
+
+// getRecordDataType returns the data type for a record, with intelligent defaults
+func (s *IndexService) getRecordDataType(record DataRecord) string {
+	if record.DataType != "" {
+		return record.DataType
+	}
+
+	// Intelligent defaults based on record characteristics
+	if record.ConversationID != "" {
+		return "conversation-data"
+	}
+	if record.Organization != "" {
+		return "organization-data"
+	}
+
+	return "general-data"
 }
 
 // parseDate attempts to parse various date formats
@@ -461,9 +541,9 @@ func (s *IndexService) createOrganizationText(name, description, id string) stri
 	return fmt.Sprintf("Organization %s", id)
 }
 
-// DeleteConversationFromIndex removes a conversation from the search index
+// Delete methods remain the same
 func (s *IndexService) DeleteConversationFromIndex(ctx context.Context, idStr string) error {
-	client, err := fugusdk.NewClient(ctx, s.fuguURL)
+	client, err := s.createFuguClient(ctx)
 	if err != nil {
 		return fmt.Errorf("new fugu client: %w", err)
 	}
@@ -477,9 +557,8 @@ func (s *IndexService) DeleteConversationFromIndex(ctx context.Context, idStr st
 	return nil
 }
 
-// DeleteOrganizationFromIndex removes an organization from the search index
 func (s *IndexService) DeleteOrganizationFromIndex(ctx context.Context, idStr string) error {
-	client, err := fugusdk.NewClient(ctx, s.fuguURL)
+	client, err := s.createFuguClient(ctx)
 	if err != nil {
 		return fmt.Errorf("new fugu client: %w", err)
 	}
@@ -493,9 +572,8 @@ func (s *IndexService) DeleteOrganizationFromIndex(ctx context.Context, idStr st
 	return nil
 }
 
-// DeleteDataRecordFromIndex removes a data record from the search index
 func (s *IndexService) DeleteDataRecordFromIndex(ctx context.Context, idStr string) error {
-	client, err := fugusdk.NewClient(ctx, s.fuguURL)
+	client, err := s.createFuguClient(ctx)
 	if err != nil {
 		return fmt.Errorf("new fugu client: %w", err)
 	}
@@ -525,52 +603,6 @@ func (s *IndexService) IndexAllData(ctx context.Context) (int, int, error) {
 	return convCount, orgCount, nil
 }
 
-// SearchConversations searches for conversations using the Fugu search API
-func (s *IndexService) SearchConversations(ctx context.Context, query string, page, perPage int) (*fugusdk.SanitizedResponse, error) {
-	client, err := fugusdk.NewClient(ctx, s.fuguURL)
-	if err != nil {
-		return nil, fmt.Errorf("new fugu client: %w", err)
-	}
-
-	// Search with namespace filter for conversations
-	filters := []string{"conversations"}
-	return client.AdvancedSearch(ctx, query, filters, page, perPage)
-}
-
-// SearchOrganizations searches for organizations using the Fugu search API
-func (s *IndexService) SearchOrganizations(ctx context.Context, query string, page, perPage int) (*fugusdk.SanitizedResponse, error) {
-	client, err := fugusdk.NewClient(ctx, s.fuguURL)
-	if err != nil {
-		return nil, fmt.Errorf("new fugu client: %w", err)
-	}
-
-	// Search with namespace filter for organizations
-	filters := []string{"organizations"}
-	return client.AdvancedSearch(ctx, query, filters, page, perPage)
-}
-
-// SearchData searches for batch ingested data using the Fugu search API
-func (s *IndexService) SearchData(ctx context.Context, query string, page, perPage int) (*fugusdk.SanitizedResponse, error) {
-	client, err := fugusdk.NewClient(ctx, s.fuguURL)
-	if err != nil {
-		return nil, fmt.Errorf("new fugu client: %w", err)
-	}
-
-	// Search with namespace filter for data
-	filters := []string{"data"}
-	return client.AdvancedSearch(ctx, query, filters, page, perPage)
-}
-
-// SearchAll searches across all indexed data
-func (s *IndexService) SearchAll(ctx context.Context, query string, page, perPage int) (*fugusdk.SanitizedResponse, error) {
-	client, err := fugusdk.NewClient(ctx, s.fuguURL)
-	if err != nil {
-		return nil, fmt.Errorf("new fugu client: %w", err)
-	}
-
-	return client.AdvancedSearch(ctx, query, nil, page, perPage)
-}
-
 // processBatchInChunks handles large batches by splitting them into smaller chunks
 func (s *IndexService) processBatchInChunks(ctx context.Context, client *fugusdk.Client, recs []fugusdk.ObjectRecord, entityType string) (int, error) {
 	const chunkSize = 500 // Use 500 to stay well under the 1000 limit
@@ -587,7 +619,8 @@ func (s *IndexService) processBatchInChunks(ctx context.Context, client *fugusdk
 		chunk := recs[i:end]
 		log.Printf("Processing chunk %d-%d of %d %s", i+1, end, len(recs), entityType)
 
-		response, err := client.BatchUpsertObjects(ctx, chunk)
+		// Use IngestObjectsWithNamespaceFacets for proper namespace facet handling
+		response, err := client.IngestObjectsWithNamespaceFacets(ctx, chunk)
 		if err != nil {
 			return totalProcessed, fmt.Errorf("batch index %s chunk %d-%d: %w", entityType, i+1, end, err)
 		}

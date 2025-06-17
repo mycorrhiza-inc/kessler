@@ -3,8 +3,8 @@ package admin
 import (
 	"context"
 	"fmt"
-	"kessler/internal/database"
 	"kessler/internal/dbstore"
+	"kessler/pkg/database"
 	"net/http"
 	"strings"
 	"sync"
@@ -106,10 +106,10 @@ func organizationsNameAsAlias(ctx context.Context, q dbstore.Queries) error {
 	return nil
 }
 
-func completeCleanDatabaseHandler(w http.ResponseWriter, r *http.Request) {
+func (h *AdminHandler) completeCleanDatabaseHandler(w http.ResponseWriter, r *http.Request) {
 	log.Info("Starting complete clean of database\n")
 	ctx := context.Background()
-	q := database.GetTx()
+	q := database.GetQueries(h.db)
 
 	err := deduplicateOrganizationsOnNames(ctx, q)
 	if err != nil {

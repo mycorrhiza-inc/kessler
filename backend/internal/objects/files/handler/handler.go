@@ -1,3 +1,4 @@
+// objects/files/handler/handler.go
 package handler
 
 import (
@@ -7,53 +8,80 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"go.opentelemetry.io/otel"
 )
 
-func DefineFileRoutes(r *mux.Router) {
+var tracer = otel.Tracer("file-handler")
+
+// FileHandler holds dependencies for file operations
+type FileHandler struct {
+	db dbstore.DBTX
+}
+
+// NewFileHandler creates a new file handler with the given database connection
+func NewFileHandler(db dbstore.DBTX) *FileHandler {
+	return &FileHandler{
+		db: db,
+	}
+}
+
+// DefineFileRoutes registers all file-related routes
+func DefineFileRoutes(r *mux.Router, db dbstore.DBTX) {
+	// Create handler instance with database
+	handler := NewFileHandler(db)
+
 	filesRoute := r.PathPrefix("/files").Subrouter()
+
+	// Insert endpoint
 	filesRoute.HandleFunc(
 		"/insert",
-		makeFileUpsertHandler(
+		handler.makeFileUpsertHandler(
 			FileUpsertHandlerConfig{
 				Private: false,
 				Insert:  true,
 			},
 		)).Methods(http.MethodPost)
 
+	// Update endpoint
 	filesRoute.HandleFunc(
 		"/{uuid}/update",
-		makeFileUpsertHandler(
+		handler.makeFileUpsertHandler(
 			FileUpsertHandlerConfig{
 				Private: false,
 				Insert:  false,
 			},
 		)).Methods(http.MethodPost)
+
+	// Get file endpoint
 	filesRoute.HandleFunc(
 		"/{uuid}",
-		FileSemiCompleteGet,
+		handler.FileSemiCompleteGet,
 	).Methods(http.MethodGet)
 
+	// Minimal file endpoint
 	filesRoute.HandleFunc(
 		"/{uuid}/minimal",
-		ReadFileHandler(
+		handler.ReadFileHandler(
 			FileHandlerConfig{
 				private:     false,
 				return_type: "object-minimal",
 			},
 		)).Methods(http.MethodGet)
 
+	// Markdown file endpoint
 	filesRoute.HandleFunc(
 		"/{uuid}/markdown",
-		ReadFileHandler(
+		handler.ReadFileHandler(
 			FileHandlerConfig{
 				private:     false,
 				return_type: "markdown",
 			},
 		)).Methods(http.MethodGet)
 
+	// Raw file endpoint
 	filesRoute.HandleFunc(
 		"/{uuid}/raw",
-		ReadFileHandler(
+		handler.ReadFileHandler(
 			FileHandlerConfig{
 				private:     false,
 				return_type: "raw",
@@ -63,22 +91,23 @@ func DefineFileRoutes(r *mux.Router) {
 	// Hash-based markdown retrieval by content hash
 	filesRoute.HandleFunc(
 		"/hash/{hash}/markdown",
-		FileMarkdownByHashHandler,
+		handler.FileMarkdownByHashHandler,
 	).Methods(http.MethodGet)
 
 	// DO NOT TOUCH. this is necessary for well named downloaded files
 	filesRoute.HandleFunc(
 		"/{uuid}/raw/{filename}",
-		ReadFileHandler(
+		handler.ReadFileHandler(
 			FileHandlerConfig{
 				private:     false,
 				return_type: "raw",
 			},
 		)).Methods(http.MethodGet)
 
+	// Metadata endpoint
 	filesRoute.HandleFunc(
 		"/{uuid}/metadata",
-		FileWithMetaGetHandler,
+		handler.FileWithMetaGetHandler,
 	).Methods(http.MethodGet)
 }
 
@@ -88,11 +117,18 @@ type FileHandlerConfig struct {
 	return_type string // Can be either markdown, object or raw
 }
 
+type FileUpsertHandlerConfig struct {
+	Private bool
+	Insert  bool
+}
+
 type ReturnFilesSchema struct {
 	Files []files.FileSchema `json:"files"`
 }
 
-func GetListAllRawFiles(ctx context.Context, q dbstore.Queries) ([]files.FileSchema, error) {
+// GetListAllRawFiles retrieves all raw files from the database
+func (h *FileHandler) GetListAllRawFiles(ctx context.Context) ([]files.FileSchema, error) {
+	q := dbstore.New(h.db)
 	db_files, err := q.FilesList(ctx)
 	if err != nil {
 		return []files.FileSchema{}, err
@@ -105,8 +141,9 @@ func GetListAllRawFiles(ctx context.Context, q dbstore.Queries) ([]files.FileSch
 	return fileSchemas, nil
 }
 
-func GetListAllFiles(ctx context.Context, q dbstore.Queries) ([]files.FileSchema, error) {
-	db_files, err := GetListAllRawFiles(ctx, q)
+// GetListAllFiles retrieves all files from the database
+func (h *FileHandler) GetListAllFiles(ctx context.Context) ([]files.FileSchema, error) {
+	db_files, err := h.GetListAllRawFiles(ctx)
 	if err != nil {
 		return []files.FileSchema{}, err
 	}
@@ -117,3 +154,7 @@ func GetListAllFiles(ctx context.Context, q dbstore.Queries) ([]files.FileSchema
 	}
 	return fileSchemas, nil
 }
+
+// Note: The actual implementations of these methods are in:
+// - file_read_handler.go (for read operations)
+// - file_write_handler.go (for write operations)

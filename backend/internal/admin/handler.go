@@ -2,10 +2,24 @@ package admin
 
 import (
 	"context"
+	"kessler/internal/dbstore"
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"go.opentelemetry.io/otel"
 )
+
+var tracer = otel.Tracer("admin-handler")
+
+type AdminHandler struct {
+	db dbstore.DBTX
+}
+
+func NewAdminHandler(db dbstore.DBTX) *AdminHandler {
+	return &AdminHandler{
+		db,
+	}
+}
 
 // middlware to set if
 func withVerifiedFileData(next http.Handler) http.Handler {
@@ -24,23 +38,24 @@ func withUnverifiedFileData(next http.Handler) http.Handler {
 	})
 }
 
-func DefineAdminRoutes(admin_subrouter *mux.Router) {
+func DefineAdminRoutes(admin_subrouter *mux.Router, db dbstore.DBTX) {
+	handler := NewAdminHandler(db)
 	admin_subrouter.HandleFunc(
 		"/complete-clean",
-		completeCleanDatabaseHandler,
+		handler.completeCleanDatabaseHandler,
 	).Methods(http.MethodPost)
 
 	admin_subrouter.HandleFunc(
 		"/get-unverified-docs/{max_responses}",
-		HandleUnverifedCompleteFileSchemaList,
+		handler.HandleUnverifedCompleteFileSchemaList,
 	).Methods(http.MethodGet)
 
-	admin_subrouter.HandleFunc(
-		"/generate-email-info/{org_uuid}",
-		ExtractRelaventEmailsFromOrgUUIDHandler,
-	).Methods(http.MethodGet)
+	// admin_subrouter.HandleFunc(
+	// 	"/generate-email-info/{org_uuid}",
+	// 	ExtractRelaventEmailsFromOrgUUIDHandler,
+	// ).Methods(http.MethodGet)
 	admin_subrouter.HandleFunc(
 		"/file-metadata-match",
-		HandleCheckDocumentMetadata,
+		handler.HandleCheckDocumentMetadata,
 	).Methods(http.MethodPost)
 }
