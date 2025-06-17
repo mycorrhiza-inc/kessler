@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"kessler/internal/cache"
 	"kessler/internal/dbstore"
 	"kessler/internal/fugusdk"
 	"kessler/pkg/logger"
@@ -228,7 +229,7 @@ func (s *SearchService) hydrateOrganization(ctx context.Context, id string, scor
 }
 
 // Hydrate document data
-func (s *SearchService) hydrateDocument(ctx context.Context, result fugusdk.SearchResult, index int) (CardData, error) {
+func (s *SearchService) hydrateDocument(ctx context.Context, result fugusdk.FuguSearchResult, index int) (CardData, error) {
 	// Check cache first
 	cacheKey := cache.PrepareKey("search", "document", result.ID)
 	if cached, err := s.getCachedCard(ctx, cacheKey); err == nil {
