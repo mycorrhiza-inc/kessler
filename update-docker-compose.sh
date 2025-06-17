@@ -66,7 +66,7 @@ function process_branch() {
         sudo docker build -t "fractalhuman1/kessler-backend-server:${current_hash}" --platform linux/amd64 --file ./backend/prod.server.Dockerfile ./backend
         sudo docker build -t "fractalhuman1/kessler-backend-ingest:${current_hash}" --platform linux/amd64 --file ./backend/prod.ingest.Dockerfile ./backend
 
-        sudo docker build -t "fractalhuman1/kessler-fugudb:${current_hash}" --platform linux/amd64 --file ./fugudb/Dockerfile ./fugudb
+        sudo docker build -t "fractalhuman1/kessler-fugudb:${current_hash}" --platform linux/amd64 --file ./fugu/Dockerfile ./fugu
 
         sudo docker push "fractalhuman1/kessler-frontend:${current_hash}"
         sudo docker push "fractalhuman1/kessler-backend-server:${current_hash}"
