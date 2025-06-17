@@ -61,11 +61,15 @@ function process_branch() {
     if [ -n "$commit_hash" ] || [ "$current_hash" != "$deployed_hash" ]; then
         echo "Rebuilding and deploying images..."
         
+        echo "Building Frontend Image"
         # Build and push Docker images
         sudo docker build -t "fractalhuman1/kessler-frontend:${current_hash}" --platform linux/amd64 --file ./frontend/prod.Dockerfile ./frontend/
+        echo "Building Backend Server Image"
         sudo docker build -t "fractalhuman1/kessler-backend-server:${current_hash}" --platform linux/amd64 --file ./backend/prod.server.Dockerfile ./backend
+        echo "Building Backend Ingest Image"
         sudo docker build -t "fractalhuman1/kessler-backend-ingest:${current_hash}" --platform linux/amd64 --file ./backend/prod.ingest.Dockerfile ./backend
 
+        echo "Building Fugu Database Image"
         sudo docker build -t "fractalhuman1/kessler-fugudb:${current_hash}" --platform linux/amd64 --file ./fugu/Dockerfile ./fugu
 
         sudo docker push "fractalhuman1/kessler-frontend:${current_hash}"
