@@ -35,10 +35,10 @@ func DefineAdminRoutes(admin_subrouter *mux.Router) {
 		HandleUnverifedCompleteFileSchemaList,
 	).Methods(http.MethodGet)
 
-	admin_subrouter.HandleFunc(
-		"/generate-email-info/{org_uuid}",
-		ExtractRelaventEmailsFromOrgUUIDHandler,
-	).Methods(http.MethodGet)
+	// admin_subrouter.HandleFunc(
+	// 	"/generate-email-info/{org_uuid}",
+	// 	ExtractRelaventEmailsFromOrgUUIDHandler,
+	// ).Methods(http.MethodGet)
 	admin_subrouter.HandleFunc(
 		"/file-metadata-match",
 		HandleCheckDocumentMetadata,
