@@ -11,39 +11,38 @@ import (
 	"kessler/internal/quickwit"
 	"kessler/pkg/timestamp"
 	"kessler/pkg/util"
-	"net/http"
 	"time"
 
 	"github.com/charmbracelet/log"
 	"github.com/google/uuid"
 )
 
-func HandleQuickwitFileIngestFromPostgresFactory(isTest bool) func(http.ResponseWriter,
-	*http.Request) {
-	indexName := quickwit.NYPUCIndex
-	if isTest {
-		indexName = quickwit.TestNYPUCIndex
-	}
-	return func(w http.ResponseWriter, r *http.Request) {
-		// ctx := context.Background()
-		ctx := util.CreateDBContextWithTimeout(time.Minute*90, 5)
-		q := dbstore.New(deps.DB) // replace with correct dependency injection pattern
-		include_unverified := r.URL.Query().Get("include_unverified") == "true"
-		filter_out_unverified := !include_unverified
-
-		log.Info(fmt.Sprintf("Starting Quickwit ingest from Postgres (filter_out_unverified=%v)\n", filter_out_unverified))
-
-		err := QuickwitIngestFromPostgres(q, ctx, filter_out_unverified, indexName)
-		if err != nil {
-			errorstring := fmt.Sprintf("Error ingesting from postgres: %v", err)
-			log.Info(errorstring)
-			http.Error(w, errorstring, http.StatusInternalServerError)
-			return
-		}
-		log.Info("Successfully completed Quickwit ingest from Postgres")
-		w.Write([]byte("Sucessfully ingested from postgres"))
-	}
-}
+// func HandleQuickwitFileIngestFromPostgresFactory(db dbstore.DBTX, isTest bool) func(http.ResponseWriter,
+// 	*http.Request) {
+// 	indexName := quickwit.NYPUCIndex
+// 	if isTest {
+// 		indexName = quickwit.TestNYPUCIndex
+// 	}
+// 	return func(w http.ResponseWriter, r *http.Request) {
+// 		// ctx := context.Background()
+// 		ctx := util.CreateDBContextWithTimeout(time.Minute*90, 5)
+// 		q := database.GetQueries(deps.DB) // replace with correct dependency injection pattern
+// 		include_unverified := r.URL.Query().Get("include_unverified") == "true"
+// 		filter_out_unverified := !include_unverified
+//
+// 		log.Info(fmt.Sprintf("Starting Quickwit ingest from Postgres (filter_out_unverified=%v)\n", filter_out_unverified))
+//
+// 		err := QuickwitIngestFromPostgres(q, ctx, filter_out_unverified, indexName)
+// 		if err != nil {
+// 			errorstring := fmt.Sprintf("Error ingesting from postgres: %v", err)
+// 			log.Info(errorstring)
+// 			http.Error(w, errorstring, http.StatusInternalServerError)
+// 			return
+// 		}
+// 		log.Info("Successfully completed Quickwit ingest from Postgres")
+// 		w.Write([]byte("Sucessfully ingested from postgres"))
+// 	}
+// }
 
 func parsePrimativeAuthorSchema(author_schemas []byte) ([]authors.AuthorInformation, error) {
 	type SimpleAuthorSchema struct {

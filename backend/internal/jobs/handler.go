@@ -1,7 +1,6 @@
 package jobs
 
 import (
-	"context"
 	"fmt"
 	"kessler/internal/dbstore"
 	"kessler/internal/quickwit"
@@ -11,7 +10,10 @@ import (
 
 	"github.com/charmbracelet/log"
 	"github.com/gorilla/mux"
+	"go.opentelemetry.io/otel"
 )
+
+var tracer = otel.Tracer("jobs")
 
 type JobsHandler struct {
 	db dbstore.DBTX
@@ -23,39 +25,40 @@ func NewJobsHandler(db dbstore.DBTX) *JobsHandler {
 	}
 }
 
-func DefineJobRoutes(parent_router *mux.Router) {
+func DefineJobRoutes(parent_router *mux.Router, db dbstore.DBTX) {
+	handler := NewJobsHandler(db)
 	parent_router.HandleFunc(
 		"/index/create/conversations",
-		CreateConversationIndexJobHandler,
+		handler.CreateConversationIndexJobHandler,
 	).Methods(http.MethodGet)
 	parent_router.HandleFunc(
 		"/index/create/organizations",
-		CreateOrganizationIndexJobHandler,
+		handler.CreateOrganizationIndexJobHandler,
 	).Methods(http.MethodGet)
 	parent_router.HandleFunc(
 		"/index/repopulate/conversations",
-		IndexAllDocketsHandler,
+		handler.IndexAllDocketsHandler,
 	).Methods(http.MethodGet)
 	parent_router.HandleFunc(
 		"/index/repopulate/organizations",
-		IndexAllOrganizationsHandler,
+		handler.IndexAllOrganizationsHandler,
 	).Methods(http.MethodGet)
 	parent_router.HandleFunc(
 		"/index/create/files",
-		CreateFileIndexJobHandlerFactory(false),
+		handler.CreateFileIndexJobHandlerFactory(false),
 	).Methods(http.MethodGet)
-	parent_router.HandleFunc(
-		"/index/repopulate/files",
-		HandleQuickwitFileIngestFromPostgresFactory(false),
-	).Methods(http.MethodGet)
+	// parent_router.HandleFunc(
+	// 	"/index/repopulate/files",
+	// 	HandleQuickwitFileIngestFromPostgresFactory(false),
+	// ).Methods(http.MethodGet)
 	parent_router.HandleFunc(
 		"/index/create/files/test",
-		CreateFileIndexJobHandlerFactory(true),
+		handler.CreateFileIndexJobHandlerFactory(true),
 	).Methods(http.MethodGet)
-	parent_router.HandleFunc(
-		"/index/repopulate/files/test",
-		HandleQuickwitFileIngestFromPostgresFactory(true),
-	).Methods(http.MethodGet)
+	// parent_router.HandleFunc(
+	// 	"/index/repopulate/files/test",
+	// 	HandleQuickwitFileIngestFromPostgresFactory(true),
+	// ).Methods(http.MethodGet)
 }
 
 func (h *JobsHandler) CreateConversationIndexJobHandler(w http.ResponseWriter, r *http.Request) {
