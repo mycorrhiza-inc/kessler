@@ -2,11 +2,8 @@ package rag
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"kessler/internal/llm_utils"
 	"kessler/internal/objects/networking"
-	"kessler/internal/search"
 
 	openai "github.com/sashabaranov/go-openai"
 	"github.com/sashabaranov/go-openai/jsonschema"
@@ -36,49 +33,49 @@ var rag_query_func_schema = openai.FunctionDefinition{
 	},
 }
 
-func rag_func_call_filters(filters networking.FilterFields) llm_utils.FunctionCall {
-	return llm_utils.FunctionCall{
-		Schema: rag_query_func_schema,
-		Func: func(query_json string) (llm_utils.ToolCallResults, error) {
-			var queryData map[string]string
-			err := json.Unmarshal([]byte(query_json), &queryData)
-			if err != nil {
-				return llm_utils.ToolCallResults{}, fmt.Errorf("error unmarshaling query_json: %v", err)
-			}
-			search_query, ok := queryData["query"]
-			if !ok {
-				return llm_utils.ToolCallResults{}, fmt.Errorf("query field is missing in query_json")
-			}
-			return rag_query_func_generated_from_filters(filters)(search_query)
-		},
-	}
-}
-
-func rag_query_func_generated_from_filters(filters networking.FilterFields) func(search_query string) (llm_utils.ToolCallResults, error) {
-	return func(search_query string) (llm_utils.ToolCallResults, error) {
-		search_request := search.SearchRequest{
-			Index:         "NY_PUC",
-			Query:         search_query,
-			SearchFilters: filters,
-			GetText:       true,
-			MaxHits:       30,
-		}
-		search_results, err := search.HybridSearch(search_request)
-		if err != nil {
-			return llm_utils.ToolCallResults{}, err
-		}
-		// Increase to give llm more results.
-		const truncation = 4
-		var truncated_search_results []search.SearchDataHydrated
-		if len(search_results) < truncation {
-			truncated_search_results = search_results
-		} else {
-			truncated_search_results = search_results[:truncation]
-		}
-		format_string := search.FormatSearchResults(truncated_search_results, search_query)
-		result := llm_utils.ToolCallResults{Response: format_string}
-		// result := llm_utils.ToolCallResults{Response: format_string, Citations: []llm_utils.Citation(truncated_search_results)}
-
-		return result, nil
-	}
-}
+// func rag_func_call_filters(filters networking.FilterFields) llm_utils.FunctionCall {
+// 	return llm_utils.FunctionCall{
+// 		Schema: rag_query_func_schema,
+// 		Func: func(query_json string) (llm_utils.ToolCallResults, error) {
+// 			var queryData map[string]string
+// 			err := json.Unmarshal([]byte(query_json), &queryData)
+// 			if err != nil {
+// 				return llm_utils.ToolCallResults{}, fmt.Errorf("error unmarshaling query_json: %v", err)
+// 			}
+// 			search_query, ok := queryData["query"]
+// 			if !ok {
+// 				return llm_utils.ToolCallResults{}, fmt.Errorf("query field is missing in query_json")
+// 			}
+// 			return rag_query_func_generated_from_filters(filters)(search_query)
+// 		},
+// 	}
+// }
+//
+// func rag_query_func_generated_from_filters(filters networking.FilterFields) func(search_query string) (llm_utils.ToolCallResults, error) {
+// 	return func(search_query string) (llm_utils.ToolCallResults, error) {
+// 		search_request := search.SearchRequest{
+// 			// Index:         "NY_PUC",
+// 			Query: search_query,
+// 			// SearchFilters: filters,
+// 			// GetText:       true,
+// 			// MaxHits:       30,
+// 		}
+// 		search_results, err := search.HybridSearch(search_request)
+// 		if err != nil {
+// 			return llm_utils.ToolCallResults{}, err
+// 		}
+// 		// Increase to give llm more results.
+// 		const truncation = 4
+// 		var truncated_search_results []search.SearchDataHydrated
+// 		if len(search_results) < truncation {
+// 			truncated_search_results = search_results
+// 		} else {
+// 			truncated_search_results = search_results[:truncation]
+// 		}
+// 		format_string := search.FormatSearchResults(truncated_search_results, search_query)
+// 		result := llm_utils.ToolCallResults{Response: format_string}
+// 		// result := llm_utils.ToolCallResults{Response: format_string, Citations: []llm_utils.Citation(truncated_search_results)}
+//
+// 		return result, nil
+// 	}
+// }

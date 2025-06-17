@@ -62,7 +62,7 @@ func main() {
 	// Create asynq client
 	client := asynq.NewClient(asynq.RedisClientOpt{Addr: redisAddr})
 	defer client.Close()
-	log := logger.GetLogger("main_ingest")
+	log := logger.Global()
 
 	// Create API subrouter with client middleware
 	api := r.PathPrefix(root).Subrouter()
