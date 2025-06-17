@@ -11,16 +11,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// ConnPool the global connection pool for the server
-// Deprecated: Use Init() which returns the pool instead
-var ConnPool *pgxpool.Pool
-
-// GetTx returns a new Queries instance
-// Deprecated: Use GetQueries with explicit pool parameter
-func GetTx() *dbstore.Queries {
-	return dbstore.New(ConnPool)
-}
-
 // GetQueries returns a new Queries instance with the given pool
 func GetQueries(pool dbstore.DBTX) *dbstore.Queries {
 	return dbstore.New(pool)
@@ -34,9 +24,6 @@ func Init(maxConn int32) (*pgxpool.Pool, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	// Keep backwards compatibility by setting global
-	ConnPool = newPool
 
 	return newPool, nil
 }
