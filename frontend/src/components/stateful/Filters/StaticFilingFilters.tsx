@@ -56,8 +56,23 @@ export interface MinimalFilterDefinition {
   placeholder?: string;
 }
 
+export default function HardcodedFileFilters({ urlParams, baseUrl }: { urlParams: TypedUrlParams, baseUrl: string }) {
+  // add filter types for 
+  // MultiSelect:
+  // author_id
+  // file_extension
+  // SingleSelect:
+  // conversation_id
+  // file_class
+  //
+  //
+  const fileFilterInfo: MinimalFilterDefinition[] = [];
 
-export default function HardCodedFileFilters({ urlParams, baseUrl }: { urlParams: TypedUrlParams, baseUrl: string }) {
+  return <HardCodedFiltersFromInfo urlParams={urlParams} baseUrl={baseUrl} hardcodedFilterInfo={fileFilterInfo} />
+}
+
+
+export function HardCodedFiltersFromInfo({ urlParams, baseUrl, hardcodedFilterInfo }: { urlParams: TypedUrlParams, baseUrl: string, hardcodedFilterInfo: MinimalFilterDefinition[] }) {
   const initial_filters = urlParams.queryData.filters || {}
   const [filter_values, setFilterValues] = useState(initial_filters)
   const router = useRouter()
@@ -71,7 +86,8 @@ export default function HardCodedFileFilters({ urlParams, baseUrl }: { urlParams
     const endpoint = baseUrl + encodeUrlParams(new_params)
     router.push(endpoint)
   }
-
-
-  return <DynamicMultiSelect value="" />
+  // Figure out all the state management to get the filters to dynamically update the filter values whenever anything changes.
+  return <>
+    {/* Map the hardcoded filters into a list of dynamic filters */}
+  </>
 }
