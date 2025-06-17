@@ -28,7 +28,7 @@ function process_branch() {
     cd /mycorrhiza
     
     if [ ! -d "/mycorrhiza/kessler" ]; then
-        git clone https://github.com/mycorrhiza-inc/kessler
+        git clone https://github.com/mycorrhiza-inc/kessler --recurse-submodules
         git config --global --add safe.directory /mycorrhiza/kessler
     fi
     
@@ -40,14 +40,14 @@ function process_branch() {
             git fetch
             git reset --hard HEAD
             git clean -fd
-            git checkout "$commit_hash"
+            git checkout "$commit_hash" --recurse-submodules
             echo "Checked out specific commit: $commit_hash"
         else
             git clean -fd
             git fetch
             git reset --hard HEAD
             git clean -fd
-            git switch "$branch"
+            git checkout "$branch" --recurse-submodules
             git reset --hard origin/"$branch"
             echo "Updated branch $branch to latest"
         fi
@@ -61,14 +61,21 @@ function process_branch() {
     if [ -n "$commit_hash" ] || [ "$current_hash" != "$deployed_hash" ]; then
         echo "Rebuilding and deploying images..."
         
+        echo "Building Frontend Image"
         # Build and push Docker images
         sudo docker build -t "fractalhuman1/kessler-frontend:${current_hash}" --platform linux/amd64 --file ./frontend/prod.Dockerfile ./frontend/
+        echo "Building Backend Server Image"
         sudo docker build -t "fractalhuman1/kessler-backend-server:${current_hash}" --platform linux/amd64 --file ./backend/prod.server.Dockerfile ./backend
+        echo "Building Backend Ingest Image"
         sudo docker build -t "fractalhuman1/kessler-backend-ingest:${current_hash}" --platform linux/amd64 --file ./backend/prod.ingest.Dockerfile ./backend
+
+        echo "Building Fugu Database Image"
+        sudo docker build -t "fractalhuman1/kessler-fugudb:${current_hash}" --platform linux/amd64 --file ./fugu/Dockerfile ./fugu
 
         sudo docker push "fractalhuman1/kessler-frontend:${current_hash}"
         sudo docker push "fractalhuman1/kessler-backend-server:${current_hash}"
         sudo docker push "fractalhuman1/kessler-backend-ingest:${current_hash}"
+        sudo docker push "fractalhuman1/kessler-fugudb:${current_hash}"
 
         # Update docker-compose.yml on the server
         # Set deployment variables based on environment

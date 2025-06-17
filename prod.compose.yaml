@@ -92,6 +92,28 @@ services:
       # - "/run/podman/podman.sock:/var/run/docker.sock:ro"
       - /var/run/docker.sock:/var/run/docker.sock
       - "./traefik_dynamic.yaml:/etc/traefik/traefik_dynamic.yaml:ro"
+
+  fugudb:
+    image: fractalhuman1/kessler-fugudb:${VERSION_HASH}
+    environment:
+      <<: *common-env
+    env_file:
+      - ./config/global.env
+    volumes:
+      - ./data/fugu_db:/app/fugu_db
+    working_dir: /app
+    expose:
+      - 3301
+    ports:
+      - 3301:3301
+    # labels:
+    #   - "traefik.enable=true"
+    #   - "traefik.namespace=kessler"
+    #   - "traefik.http.routers.fugu.rule=PathPrefix(`/fugu`)"
+    #   - "traefik.http.middlewares.fugu-stripprefix.stripprefix.prefixes=/fugu"
+    #   - "traefik.http.routers.fugu.middlewares=fugu-stripprefix"
+    #   - "traefik.http.services.fugu.loadbalancer.server.port=3301"
+    #   - "traefik.http.routers.fugu.service=fugu"
   valkey:
     hostname: valkey
     image: valkey/valkey:7.2.5

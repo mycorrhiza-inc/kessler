@@ -14,7 +14,7 @@ const randomRecentDate = () => {
 };
 
 export const generateFakeResults = async ({ page, limit }: PaginationData) => {
-  await sleep(500);
+  await sleep(3000);
   return generateFakeResultsRaw(limit);
 };
 
@@ -28,6 +28,7 @@ export const generateFakeResultsRaw = (count: number): CardData[] => {
       resultTypes[Math.floor(Math.random() * 100) % resultTypes.length];
     const base = {
       id: `fake-result-${i + 1}`,
+      object_uuid: faker.string.uuid(),
       index: 0,
       timestamp: randomRecentDate(),
     };

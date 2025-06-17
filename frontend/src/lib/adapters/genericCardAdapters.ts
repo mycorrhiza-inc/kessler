@@ -43,6 +43,7 @@ function formatDate(isoString: string | undefined): string {
 export function adaptFilingToCard(filing: Filing): DocumentCardData {
   return {
     type: CardType.Document,
+    object_uuid: filing.id,
     index: 0,
     name: filing.title,
     description: filing.file_class || "",
@@ -58,13 +59,11 @@ export function adaptFilingToCard(filing: Filing): DocumentCardData {
 export function adaptOrganizationToCard(org: OrganizationInfo): DocketCardData {
   return {
     type: CardType.Docket,
+    object_uuid: org.id,
     index: 0,
     name: org.name || org.title || "",
     description: org.description || "",
     timestamp: formatDate(org.updated_at || org.created_at || org.createdAt),
-    authors: Array.isArray(org.admins)
-      ? org.admins.map((u: any) => u.username || u.id || String(u))
-      : undefined,
     extraInfo: org.location || org.address,
   };
 }
@@ -75,11 +74,12 @@ export function adaptOrganizationToCard(org: OrganizationInfo): DocketCardData {
 export function adaptConversationToCard(convo: Conversation): AuthorCardData {
   return {
     type: CardType.Author,
+    object_uuid: convo.id,
     index: 0,
     name: convo.name || convo.id,
     description: convo.description || "",
     timestamp: formatDate(convo.updated_at || (convo as any).last_active_at),
-    authors: (convo as any).participants || undefined,
+    // authors: (convo as any).participants || undefined,
     extraInfo: convo.docket_id ? `Docket: ${convo.docket_id}` : undefined,
   };
 }

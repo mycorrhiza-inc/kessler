@@ -10,6 +10,9 @@ import { hydratedSearchResultsToFilings } from "../requests/search";
 import { adaptFilingToCard } from "./genericCardAdapters";
 import { DocumentCardData } from "../types/generic_card_types";
 import { BackendFilterObject } from "../filters";
+import { TypedUrlParams } from "../types/url_params";
+import { DEFAULT_PAGE_SIZE } from "../constants";
+import { getContextualAPIUrl } from "../env_variables";
 
 export enum GenericSearchType {
   Filling = "filing",
@@ -24,6 +27,17 @@ export interface GenericSearchInfo {
   filters?: BackendFilterObject;
 }
 
+export const searchInvokeFromUrlParams = async (urlParams: TypedUrlParams, objectType: GenericSearchType, inheritedFilters: Record<string, string>) => {
+  const searchInfo: GenericSearchInfo = {
+    query: urlParams.queryData.query || "",
+    search_type: objectType,
+  }
+  const pagination: PaginationData = {
+    page: urlParams.paginationData.page || 0,
+    limit: urlParams.paginationData.limit || DEFAULT_PAGE_SIZE
+  }
+  return await searchInvoke(searchInfo, pagination)
+}
 export const searchInvoke = async (
   info: GenericSearchInfo,
   pagination: PaginationData
@@ -120,10 +134,11 @@ export const createGenericSearchCallback = (
   info: GenericSearchInfo
 ): SearchResultsGetter => {
   // debug and default to dummy search results for stylistic changes.
-  info.search_type = GenericSearchType.Filling as GenericSearchType;
+  // info.search_type = GenericSearchType.Filling as GenericSearchType;
+  info.search_type = GenericSearchType.Dummy as GenericSearchType;
   //console.log("All searches are dummys for momentary testing purposes")
 
-  const api_url = contextualApiUrl(getEnvConfig());
+  const api_url = getContextualAPIUrl();
   // const api_url = "http://localhost";
 
   // =======
@@ -143,7 +158,7 @@ export const createGenericSearchCallback = (
     case GenericSearchType.Dummy:
       return async (pagination: PaginationData): Promise<SearchResult> => {
         try {
-          const url = `${api_url}/v2/version_hash`;
+          const url = `${api_url}/version_hash`;
           const response = await axios.get(url);
 
           if (!response.data) {
@@ -175,65 +190,16 @@ export const createGenericSearchCallback = (
       return async (pagination: PaginationData): Promise<SearchResult[]> => {
         // const paginationQueryString = queryStringFromPagination(pagination);
         // const { query: searchQuery } = info;
-        // const url = `${api_url}/v2/search/file${paginationQueryString}`;
+        // const url = `${api_url}/search/file${paginationQueryString}`;
         // // const paginationQueryString = queryStringFromPagination(pagination)/* ; */
         const { query: searchQuery } = info;
-        const url = `${api_url}/v2/search/`;
+        const url = `${api_url}/search/`;
         const requestData: SearchRequest = { query: searchQuery };
 
         console.log("query data:", info);
         console.log("SEARCH FILTERS DISABLED UNTIL MIRRI UPDATES THE DB");
         console.log("API URL:", api_url);
 
-        //         try {
-        //           // const url = `${api_url}/v2/search/file${paginationQueryString}`;
-        //           const url = `${api_url}/v2/search`;
-        //           const requestData: SearchRequest = { query: info.query };
-        //
-        //           const response = await axios.post<SearchResponse>(url, info);
-        //
-        //           if (!response.data) {
-        //             throw new Error(
-        //               `Search data returned from backend URL ${url} with data ${JSON.stringify(
-        //                 requestData
-        //               )} was undefined`
-        //             );
-        //           }
-        //
-        //           if (Array.isArray(response.data) && response.data.length === 0) {
-        //             console.warn("Response length is zero - no results found");
-        //             return [];
-        //           }
-        //
-        //           if (typeof response.data === "string") {
-        //             console.warn(
-        //               "Received string response instead of expected data structure"
-        //             );
-        //             return [];
-        //           }
-        //
-        //           const filings = hydratedSearchResultsToFilings(response.data);
-        //           console.log(`Successfully got ${filings.length} search results`);
-        //           console.log("Getting data");
-        //
-        //           const searchResults: DocumentCardData[] =
-        //             filings.map(adaptFilingToCard);
-        //
-        //           mutateIndexifySearchResults(searchResults, pagination);
-        //           return searchResults;
-        //         } catch (error) {
-        //           if (axios.isAxiosError(error)) {
-        //             console.error("Axios error in filing search:", error);
-        //             if (error.response) {
-        //               console.error("Response status:", error.response.status);
-        //               console.error("Response data:", error.response.data);
-        //             }
-        //           } else {
-        //             console.error("Unexpected error in filing search:", error);
-        //           }
-        //           throw error;
-        //         }
-        // =======
         return performSearchRequest<SearchRequest, any[], DocumentCardData>(
           url,
           'post',

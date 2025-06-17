@@ -4,8 +4,6 @@ import AuthGuard from "@/components/stateful/tracking/AuthGuard";
 import Header from "@/components/style/Layout/Header";
 import Layout from "@/components/style/Layout/Layout";
 
-import { SignedIn, SignedOut, SignInButton, SignUp, SignUpButton } from "@clerk/nextjs";
-import Link from "next/link";
 
 const defaultUrl = "https://kessler.xyz";
 export const metadata = {

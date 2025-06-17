@@ -155,12 +155,13 @@ const MediumCard: React.FC<{ data: CardData }> = ({ data }) => {
         </span>
         <span className="text-xs">{`${data.timestamp} - index:${data.index}`}</span>
       </div>
-      {data.authors && (
+
+      {data.type === CardType.Document && data.authors && (
         <div className="mt-4">
           <h3 className="text-sm font-bold mb-2">Authors</h3>
           <div className="bg-pink-100 p-2 rounded-sm">
             {data.authors.map((author, index) => (
-              <AuthorPill author={author} />
+              <AuthorPill key={index} author={author} />
             ))}
           </div>
         </div>

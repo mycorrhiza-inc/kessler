@@ -3,6 +3,9 @@ import AllInOneClientSearch from "@/components/stateful/SearchBar/AllInOneClient
 import { ObjectQueryType } from "@/lib/types/SearchTypes";
 import { generateTypeUrlParams } from "@/lib/types/url_params";
 import { LogoHomepage } from "@/components/style/misc/Logo";
+import ServerSearchResults from "@/components/stateful/ServerResults/ServerResults";
+import { GenericSearchType } from "@/lib/adapters/genericSearchCallback";
+import DefaultContainer from "@/components/stateful/PageContainer/DefaultContainer";
 
 export default async function SearchPage(
   { searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }
@@ -13,11 +16,11 @@ export default async function SearchPage(
 
 
   return (
-    <div className="flex justify-center items-center">
+    <DefaultContainer>
       <LogoHomepage bottomText="Search" />
       <AllInOneClientSearch urlParams={urlParams.queryData} queryType={ObjectQueryType.Files}
       />
-      {/* <DynamicFilters filters={filters} dataset={dataset} /> */}
-    </div>
+      <ServerSearchResults urlParams={urlParams} baseUrl="/search" objectType={GenericSearchType.Filling} />
+    </DefaultContainer>
   );
 }
