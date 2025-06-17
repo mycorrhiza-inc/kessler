@@ -5,13 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"kessler/internal/database"
 	"kessler/internal/dbstore"
 	"kessler/internal/objects/authors"
 	"kessler/internal/objects/files"
 	"kessler/internal/objects/networking"
 	"kessler/internal/objects/organizations"
-	"kessler/pkg/util"
+	"kessler/pkg/database"
 	"net/http"
 
 	"github.com/charmbracelet/log"
@@ -20,22 +19,35 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func DefineOrganizationRoutes(r *mux.Router) {
-	organizationsRouter := r.PathPrefix("/organizations").Subrouter()
+// OrgHandler holds dependencies for organization operations
+type OrgHandler struct {
+	db dbstore.DBTX
+}
 
-	organizationsRouter.HandleFunc(
+// NewFileHandler creates a new file handler with the given database connection
+func NewOrgHandler(db dbstore.DBTX) *OrgHandler {
+	return &OrgHandler{
+		db: db,
+	}
+}
+
+func DefineOrganizationRoutes(r *mux.Router, db dbstore.DBTX) {
+	organizationsRouter := r.PathPrefix("/organizations").Subrouter()
+	handler := NewOrgHandler(db)
+
+	r.HandleFunc(
 		"/list",
-		OrgSemiCompletePaginated,
+		handler.OrgSemiCompletePaginated,
 	).Methods(http.MethodGet)
 
 	organizationsRouter.HandleFunc(
 		"/{uuid}",
-		OrgGetWithFilesHandler,
+		handler.OrgGetWithFilesHandler,
 	).Methods(http.MethodGet)
 
 	organizationsRouter.HandleFunc(
 		"/verify",
-		OrganizationVerifyHandler,
+		handler.OrganizationVerifyHandler,
 	).Methods(http.MethodPost)
 }
 
@@ -44,7 +56,10 @@ type OrganizationRequest struct {
 	IsPerson         bool   `json:"is_person"`
 }
 
-func OrganizationVerifyHandler(w http.ResponseWriter, r *http.Request) {
+func (h *OrgHandler) OrganizationVerifyHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	ctx, span := tracer.Start(ctx, "organizations:OrganizationVerifyHandler")
+	defer span.End()
 	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {
 		errorstring := fmt.Sprintf("Error reading request body: %v\n", err)
@@ -105,7 +120,10 @@ func VerifyAuthorOrganizationUUID(ctx context.Context, q dbstore.Queries, author
 	return *author_info, nil
 }
 
-func OrgGetWithFilesHandler(w http.ResponseWriter, r *http.Request) {
+func (h *OrgHandler) OrgGetWithFilesHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	ctx, span := tracer.Start(ctx, "organizations:OrgGetWithFilesHandler")
+	defer span.End()
 	log.Info(fmt.Sprintf("Getting file with metadata"))
 	q := database.GetTx()
 
@@ -192,9 +210,12 @@ func OrgWithFilesGetByID(ctx context.Context, q *dbstore.Queries, orgID uuid.UUI
 	}, nil
 }
 
-func OrgSemiCompletePaginated(w http.ResponseWriter, r *http.Request) {
+func (h *OrgHandler) OrgSemiCompletePaginated(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	ctx, span := tracer.Start(ctx, "organizations:OrgSemiCompletePaginated")
+	defer span.End()
 	paginationData := networking.PaginationFromUrlParams(r)
-	q := util.DBQueriesFromRequest(r)
+	q := database.GetQueries(h.db)
 	ctx := r.Context()
 	args := dbstore.OrganizationSemiCompleteInfoListPaginatedParams{
 		Limit:  int32(paginationData.Limit),
