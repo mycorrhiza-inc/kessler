@@ -30,10 +30,8 @@ func DefineFileRoutes(r *mux.Router, db dbstore.DBTX) {
 	// Create handler instance with database
 	handler := NewFileHandler(db)
 
-	filesRoute := r.PathPrefix("/files").Subrouter()
-
 	// Insert endpoint
-	filesRoute.HandleFunc(
+	r.HandleFunc(
 		"/insert",
 		handler.makeFileUpsertHandler(
 			FileUpsertHandlerConfig{
@@ -43,7 +41,7 @@ func DefineFileRoutes(r *mux.Router, db dbstore.DBTX) {
 		)).Methods(http.MethodPost)
 
 	// Update endpoint
-	filesRoute.HandleFunc(
+	r.HandleFunc(
 		"/{uuid}/update",
 		handler.makeFileUpsertHandler(
 			FileUpsertHandlerConfig{
@@ -53,13 +51,13 @@ func DefineFileRoutes(r *mux.Router, db dbstore.DBTX) {
 		)).Methods(http.MethodPost)
 
 	// Get file endpoint
-	filesRoute.HandleFunc(
+	r.HandleFunc(
 		"/{uuid}",
 		handler.FileSemiCompleteGet,
 	).Methods(http.MethodGet)
 
 	// Minimal file endpoint
-	filesRoute.HandleFunc(
+	r.HandleFunc(
 		"/{uuid}/minimal",
 		handler.ReadFileHandler(
 			FileHandlerConfig{
@@ -69,7 +67,7 @@ func DefineFileRoutes(r *mux.Router, db dbstore.DBTX) {
 		)).Methods(http.MethodGet)
 
 	// Markdown file endpoint
-	filesRoute.HandleFunc(
+	r.HandleFunc(
 		"/{uuid}/markdown",
 		handler.ReadFileHandler(
 			FileHandlerConfig{
@@ -79,7 +77,7 @@ func DefineFileRoutes(r *mux.Router, db dbstore.DBTX) {
 		)).Methods(http.MethodGet)
 
 	// Raw file endpoint
-	filesRoute.HandleFunc(
+	r.HandleFunc(
 		"/{uuid}/raw",
 		handler.ReadFileHandler(
 			FileHandlerConfig{
@@ -89,13 +87,13 @@ func DefineFileRoutes(r *mux.Router, db dbstore.DBTX) {
 		)).Methods(http.MethodGet)
 
 	// Hash-based markdown retrieval by content hash
-	filesRoute.HandleFunc(
+	r.HandleFunc(
 		"/hash/{hash}/markdown",
 		handler.FileMarkdownByHashHandler,
 	).Methods(http.MethodGet)
 
 	// DO NOT TOUCH. this is necessary for well named downloaded files
-	filesRoute.HandleFunc(
+	r.HandleFunc(
 		"/{uuid}/raw/{filename}",
 		handler.ReadFileHandler(
 			FileHandlerConfig{
@@ -105,7 +103,7 @@ func DefineFileRoutes(r *mux.Router, db dbstore.DBTX) {
 		)).Methods(http.MethodGet)
 
 	// Metadata endpoint
-	filesRoute.HandleFunc(
+	r.HandleFunc(
 		"/{uuid}/metadata",
 		handler.FileWithMetaGetHandler,
 	).Methods(http.MethodGet)

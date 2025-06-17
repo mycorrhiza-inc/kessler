@@ -35,7 +35,6 @@ func NewOrgHandler(db dbstore.DBTX) *OrgHandler {
 }
 
 func DefineOrganizationRoutes(r *mux.Router, db dbstore.DBTX) {
-	organizationsRouter := r.PathPrefix("/organizations").Subrouter()
 	handler := NewOrgHandler(db)
 
 	r.HandleFunc(
@@ -43,12 +42,12 @@ func DefineOrganizationRoutes(r *mux.Router, db dbstore.DBTX) {
 		handler.OrgSemiCompletePaginated,
 	).Methods(http.MethodGet)
 
-	organizationsRouter.HandleFunc(
+	r.HandleFunc(
 		"/{uuid}",
 		handler.OrgGetWithFilesHandler,
 	).Methods(http.MethodGet)
 
-	organizationsRouter.HandleFunc(
+	r.HandleFunc(
 		"/verify",
 		handler.OrganizationVerifyHandler,
 	).Methods(http.MethodPost)
