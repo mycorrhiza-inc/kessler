@@ -28,6 +28,7 @@ export const generateFakeResultsRaw = (count: number): CardData[] => {
       resultTypes[Math.floor(Math.random() * 100) % resultTypes.length];
     const base = {
       id: `fake-result-${i + 1}`,
+      object_uuid: faker.string.uuid(),
       index: 0,
       timestamp: randomRecentDate(),
     };

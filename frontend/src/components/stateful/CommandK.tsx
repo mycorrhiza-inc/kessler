@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchState } from "@/lib/hooks/useSearchState";
-import { SearchResultsHomepageComponent } from "./SearchResults";
 import {
   GenericSearchInfo,
   GenericSearchType,
@@ -89,11 +88,11 @@ function SearchCommand() {
       </div>
 
       <div className="grow overflow-auto">
-        <SearchResultsHomepageComponent
-          searchInfo={searchInfo}
-          isSearching={searchState.isSearching}
-          reloadOnChange={searchTriggerIndicator}
-        />
+        {/* <SearchResultsHomepageComponent */}
+        {/*   searchInfo={searchInfo} */}
+        {/*   isSearching={searchState.isSearching} */}
+        {/*   reloadOnChange={searchTriggerIndicator} */}
+        {/* /> */}
       </div>
     </div>
   );
