@@ -27,7 +27,7 @@ func HandleQuickwitFileIngestFromPostgresFactory(isTest bool) func(http.Response
 	return func(w http.ResponseWriter, r *http.Request) {
 		// ctx := context.Background()
 		ctx := util.CreateDBContextWithTimeout(time.Minute*90, 5)
-		q := util.DBQueriesFromContext(ctx)
+		q := dbstore.New(deps.DB) // replace with correct dependency injection pattern
 		include_unverified := r.URL.Query().Get("include_unverified") == "true"
 		filter_out_unverified := !include_unverified
 

@@ -60,6 +60,9 @@ func RegisterAdminIndexingRoutes(r *mux.Router) {
 // @Router /admin/indexing/conversations [post]
 func (h *IndexHandler) IndexAllConversations(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	ctx, span := tracer.Start(ctx, "indexing:IndexAllConversations")
+	defer span.End()
+
 	logger.Info(ctx, "indexing all conversations requested")
 
 	count, err := h.svc.IndexAllConversations(ctx)
@@ -82,6 +85,9 @@ func (h *IndexHandler) IndexAllConversations(w http.ResponseWriter, r *http.Requ
 // @Router /admin/indexing/conversations/{id} [post]
 func (h *IndexHandler) IndexConversationByID(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	ctx, span := tracer.Start(ctx, "indexing:IndexConversationByID")
+	defer span.End()
+
 	id := mux.Vars(r)["id"]
 
 	logger.Info(ctx, "indexing conversation by ID", zap.String("conversation_id", id))
@@ -106,6 +112,9 @@ func (h *IndexHandler) IndexConversationByID(w http.ResponseWriter, r *http.Requ
 // @Router /admin/indexing/conversations/{id} [delete]
 func (h *IndexHandler) DeleteConversation(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	ctx, span := tracer.Start(ctx, "indexing:DeleteConversation")
+	defer span.End()
+
 	id := mux.Vars(r)["id"]
 
 	logger.Info(ctx, "deleting conversation from index", zap.String("conversation_id", id))
@@ -129,6 +138,9 @@ func (h *IndexHandler) DeleteConversation(w http.ResponseWriter, r *http.Request
 // @Router /admin/indexing/organizations [post]
 func (h *IndexHandler) IndexAllOrganizations(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	ctx, span := tracer.Start(ctx, "indexing:IndexAllOrganizations")
+	defer span.End()
+
 	logger.Info(ctx, "indexing all organizations requested")
 
 	count, err := h.svc.IndexAllOrganizations(ctx)
@@ -151,6 +163,9 @@ func (h *IndexHandler) IndexAllOrganizations(w http.ResponseWriter, r *http.Requ
 // @Router /admin/indexing/organizations/{id} [post]
 func (h *IndexHandler) IndexOrganizationByID(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	ctx, span := tracer.Start(ctx, "indexing:IndexOrganizationByID")
+	defer span.End()
+
 	id := mux.Vars(r)["id"]
 
 	logger.Info(ctx, "indexing organization by ID", zap.String("organization_id", id))
@@ -175,6 +190,9 @@ func (h *IndexHandler) IndexOrganizationByID(w http.ResponseWriter, r *http.Requ
 // @Router /admin/indexing/organizations/{id} [delete]
 func (h *IndexHandler) DeleteOrganization(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	ctx, span := tracer.Start(ctx, "indexing:DeleteOrganization")
+	defer span.End()
+
 	id := mux.Vars(r)["id"]
 
 	logger.Info(ctx, "deleting organization from index", zap.String("organization_id", id))
@@ -198,6 +216,9 @@ func (h *IndexHandler) DeleteOrganization(w http.ResponseWriter, r *http.Request
 // @Router /admin/indexing/all [post]
 func (h *IndexHandler) IndexAllData(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	ctx, span := tracer.Start(ctx, "indexing:IndexAllData")
+	defer span.End()
+
 	logger.Info(ctx, "indexing all data requested")
 
 	convCount, orgCount, err := h.svc.IndexAllData(ctx)
@@ -232,6 +253,9 @@ func (h *IndexHandler) IndexAllData(w http.ResponseWriter, r *http.Request) {
 // @Router /admin/indexing/data/batch-ingest [post]
 func (h *IndexHandler) BatchIngestData(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	ctx, span := tracer.Start(ctx, "indexing:BatchIngestData")
+	defer span.End()
+
 	logger.Info(ctx, "batch data ingest request received")
 
 	// Parse request body
@@ -292,6 +316,9 @@ func (h *IndexHandler) BatchIngestData(w http.ResponseWriter, r *http.Request) {
 // @Router /admin/indexing/data/{id} [post]
 func (h *IndexHandler) IndexDataRecordByID(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	ctx, span := tracer.Start(ctx, "indexing:IndexDataRecordByID")
+	defer span.End()
+
 	id := mux.Vars(r)["id"]
 
 	logger.Info(ctx, "indexing data record by ID", zap.String("data_record_id", id))
@@ -336,6 +363,9 @@ func (h *IndexHandler) IndexDataRecordByID(w http.ResponseWriter, r *http.Reques
 // @Router /admin/indexing/data/{id} [delete]
 func (h *IndexHandler) DeleteDataRecord(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	ctx, span := tracer.Start(ctx, "indexing:DeleteDataRecord")
+	defer span.End()
+
 	id := mux.Vars(r)["id"]
 
 	logger.Info(ctx, "deleting data record from index", zap.String("data_record_id", id))
@@ -359,6 +389,9 @@ func (h *IndexHandler) DeleteDataRecord(w http.ResponseWriter, r *http.Request) 
 // @Router /admin/indexing/data/health [get]
 func (h *IndexHandler) DataHealthCheck(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	ctx, span := tracer.Start(ctx, "indexing:DataHealthCheck")
+	defer span.End()
+
 	logger.Info(ctx, "data health check requested")
 
 	// Check FuguDB health through the service
