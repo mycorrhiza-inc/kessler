@@ -28,7 +28,7 @@ function process_branch() {
     cd /mycorrhiza
     
     if [ ! -d "/mycorrhiza/kessler" ]; then
-        git clone https://github.com/mycorrhiza-inc/kessler
+        git clone https://github.com/mycorrhiza-inc/kessler --recurse-submodules
         git config --global --add safe.directory /mycorrhiza/kessler
     fi
     
