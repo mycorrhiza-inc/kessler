@@ -8,7 +8,10 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"go.opentelemetry.io/otel"
 )
+
+var tracer = otel.Tracer("file-handler")
 
 // FileHandler holds dependencies for file operations
 type FileHandler struct {

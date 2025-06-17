@@ -26,7 +26,6 @@ func (h *FileHandler) FileWithMetaGetHandler(w http.ResponseWriter, r *http.Requ
 	ctx := r.Context()
 	ctx, span := tracer.Start(ctx, "files:FileWithMetaGetHandler")
 	defer span.End()
-	ctx := r.Context()
 	log := logger.FromContext(ctx)
 
 	params := mux.Vars(r)
@@ -77,7 +76,6 @@ func (h *FileHandler) FileMarkdownByHashHandler(w http.ResponseWriter, r *http.R
 	ctx := r.Context()
 	ctx, span := tracer.Start(ctx, "files:FileMarkdownByHashHandler")
 	defer span.End()
-	ctx := r.Context()
 	log := logger.FromContext(ctx)
 
 	params := mux.Vars(r)
@@ -116,7 +114,6 @@ func (h *FileHandler) FileSemiCompleteGet(w http.ResponseWriter, r *http.Request
 	ctx := r.Context()
 	ctx, span := tracer.Start(ctx, "files:FileSemiCompleteGet")
 	defer span.End()
-	ctx := r.Context()
 	log := logger.FromContext(ctx)
 
 	params := mux.Vars(r)
