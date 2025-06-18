@@ -24,7 +24,7 @@ import (
 
 const (
 	// DefaultTimeout for HTTP requests
-	DefaultTimeout = 30 * time.Second
+	DefaultTimeout = 300 * time.Second
 
 	// SDK version for user agent
 	SDKVersion = "1.2.0" // Updated version for namespace support
