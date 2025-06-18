@@ -1,5 +1,5 @@
 import React from "react";
-import AllInOneClientSearch from "@/components/stateful/SearchBar/AllInOneClientSearch";
+import AllInOneServerSearch from "@/components/stateful/SearchBar/AllInOneServerSearch";
 import { ObjectQueryType } from "@/lib/types/SearchTypes";
 import { generateTypeUrlParams } from "@/lib/types/url_params";
 import { LogoHomepage } from "@/components/style/misc/Logo";
@@ -18,9 +18,11 @@ export default async function SearchPage(
   return (
     <DefaultContainer>
       <LogoHomepage bottomText="Search" />
-      <AllInOneClientSearch urlParams={urlParams.queryData} queryType={ObjectQueryType.Files}
+      <AllInOneServerSearch
+        urlParams={urlParams}
+        queryType={GenericSearchType.Filling}
+        baseUrl="/search"
       />
-      <ServerSearchResults urlParams={urlParams} baseUrl="/search" objectType={GenericSearchType.Filling} />
     </DefaultContainer>
   );
 }

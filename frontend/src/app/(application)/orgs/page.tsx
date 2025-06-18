@@ -1,7 +1,7 @@
 import React from "react";
 import { ObjectQueryType } from "@/lib/types/SearchTypes";
 import { generateTypeUrlParams } from "@/lib/types/url_params";
-import AllInOneClientSearch from "@/components/stateful/SearchBar/AllInOneClientSearch";
+import AllInOneServerSearch from "@/components/stateful/SearchBar/AllInOneServerSearch";
 import { LogoHomepage } from "@/components/style/misc/Logo";
 import DefaultContainer from "@/components/stateful/PageContainer/DefaultContainer";
 import { GenericSearchType } from "@/lib/adapters/genericSearchCallback";
@@ -17,12 +17,10 @@ export default async function OrgSearchPage(
   return (
     <DefaultContainer >
       <LogoHomepage bottomText="Organization Search: TODO MAKE SO IT SEARCHES ORGS AND NOT FILINGS" />
-      <AllInOneClientSearch urlParams={urlParams.queryData} queryType={ObjectQueryType.Organizations}
-      />
-      <ServerSearchResults
-        baseUrl={`/orgs`}
+      <AllInOneServerSearch
         urlParams={urlParams}
-        objectType={GenericSearchType.Organization}
+        queryType={GenericSearchType.Organization}
+        baseUrl="/orgs"
       />
     </DefaultContainer>
   );

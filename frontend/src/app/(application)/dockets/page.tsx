@@ -1,5 +1,5 @@
 import React from "react";
-import AllInOneClientSearch from "@/components/stateful/SearchBar/AllInOneClientSearch";
+import AllInOneServerSearch from "@/components/stateful/SearchBar/AllInOneServerSearch";
 import DynamicFilters from "@/components/stateful/Filters/DynamicFilters";
 import { ObjectQueryType } from "@/lib/types/SearchTypes";
 import { generateTypeUrlParams } from "@/lib/types/url_params";
@@ -19,12 +19,10 @@ export default async function DocketSearchPage(
       <h1 className="text-2xl font-bold mb-4"></h1>
 
       <LogoHomepage bottomText="Docket Search: TODO MAKE IT SEARCH DOCKETS NOT FILINGS" />
-      <AllInOneClientSearch urlParams={urlParams.queryData} queryType={ObjectQueryType.Conversations}
-      />
-      <ServerSearchResults
-        baseUrl={`/dockets`}
+      <AllInOneServerSearch
         urlParams={urlParams}
-        objectType={GenericSearchType.Docket}
+        queryType={GenericSearchType.Docket}
+        baseUrl={`/dockets`}
       />
     </DefaultContainer>
   );

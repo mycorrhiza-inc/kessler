@@ -1,7 +1,7 @@
 import { generateTypeUrlParams, } from "@/lib/types/url_params";
 import { ObjectQueryType } from "@/lib/types/SearchTypes";
 import RenderedConvo from "@/components/stateful/RenderedObjectCards/RednderedConvo";
-import AllInOneClientSearch from "@/components/stateful/SearchBar/AllInOneClientSearch";
+import AllInOneServerSearch from "@/components/stateful/SearchBar/AllInOneServerSearch";
 import LoadingSpinner from "@/components/style/misc/LoadingSpinner";
 import { Suspense } from "react";
 import DefaultContainer from "@/components/stateful/PageContainer/DefaultContainer";
@@ -28,15 +28,12 @@ export default async function Page({
         <RenderedConvo convo_id={convo_id} />
       </Suspense>
       <h1 className="text-2xl font-bold mb-4">Search [org-name]'s Filings</h1>
-      <AllInOneClientSearch urlParams={urlParams.queryData} queryType={ObjectQueryType.Files}
-      />
-      {/* <DynamicFilters filters={filters} dataset={dataset} /> */}
-
-      <ServerSearchResults
-        baseUrl={`/dockets/${convo_id}`}
+      <AllInOneServerSearch
         urlParams={urlParams}
-        objectType={GenericSearchType.Filling}
+        queryType={GenericSearchType.Filling}
+
         inherentRouteFilters={{ "conversation_id": convo_id }}
+        baseUrl={`/dockets/${convo_id}`}
       />
     </DefaultContainer>
   );
