@@ -207,11 +207,11 @@ export const createGenericSearchCallback = (
         console.log("ENDPOINT: ", url)
 
 
-        return performSearchRequest<SearchRequest, any[], DocumentCardData>(
+        return performSearchRequest<SearchRequest, { data: any[] }, DocumentCardData>(
           url,
           'get',
-          (raw_list): DocumentCardData[] => {
-            return raw_list.map((raw): DocumentCardData => {
+          (raw_results): DocumentCardData[] => {
+            return raw_results.data.map((raw): DocumentCardData => {
               return DocumentCardDataValidator.parse(raw)
             });
           },
