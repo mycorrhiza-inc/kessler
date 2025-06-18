@@ -1,10 +1,10 @@
 "use client";
 
-import { encodeUrlParams, TypedUrlParams } from "@/lib/types/url_params";
+import { encodeUrlParams, TypedUrlParams, UrlQueryParams } from "@/lib/types/url_params";
 import { useState } from "react";
 import { DynamicMultiSelect } from "./FilterMultiSelect";
 import { DynamicSingleSelect } from "./FilterSingleSelect";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 // Minimal filter definition used to render dynamic filters
 export enum FilterType {
@@ -28,7 +28,7 @@ export default function HardcodedFileFilters({
   urlParams,
   baseUrl,
 }: {
-  urlParams: TypedUrlParams;
+  urlParams: UrlQueryParams;
   baseUrl: string;
 }) {
   const fileFilterInfo: MinimalFilterDefinition[] = [
@@ -64,7 +64,7 @@ export default function HardcodedFileFilters({
 
   return (
     <HardCodedFiltersFromInfo
-      urlParams={urlParams}
+      urlQueryParams={urlParams}
       baseUrl={baseUrl}
       hardcodedFilterInfo={fileFilterInfo}
     />
@@ -72,20 +72,20 @@ export default function HardcodedFileFilters({
 }
 
 export function HardCodedFiltersFromInfo({
-  urlParams,
+  urlQueryParams,
   baseUrl,
   hardcodedFilterInfo,
 }: {
-  urlParams: TypedUrlParams;
+  urlQueryParams: UrlQueryParams;
   baseUrl: string;
   hardcodedFilterInfo: MinimalFilterDefinition[];
 }) {
   // Initialize filter values from URL params
-  const initialFilters = urlParams.queryData.filters || {};
+  const router = useRouter();
+  const initialFilters = urlQueryParams.filters || {};
   const [filterValues, setFilterValues] = useState<Record<string, string>>(
     initialFilters
   );
-  const router = useRouter();
 
   // Update filter and navigate
   const handleFilterChange = (id: string) => (value: string) => {
@@ -93,15 +93,15 @@ export function HardCodedFiltersFromInfo({
     setFilterValues(updated);
 
     const newParams: TypedUrlParams = {
-      paginationData: urlParams.paginationData,
-      queryData: { ...urlParams.queryData, filters: updated },
+      paginationData: {},
+      queryData: { ...urlQueryParams, filters: updated },
     };
     const endpoint = baseUrl + encodeUrlParams(newParams);
     router.push(endpoint);
   };
 
   return (
-    <div className="filter-container flex space-x-4">
+    <div className="filter-container flex flex-col space-y-24">
       {hardcodedFilterInfo.map((def) => {
         const value = filterValues[def.id] || "";
         const fieldDef = {
