@@ -54,7 +54,7 @@ func Init(cfg Config) error {
 
 // initTracing sets up OpenTelemetry tracing
 func initTracing(serviceName string) error {
-	exporter, err := stdouttrace.New(stdouttrace.WithPrettyPrint())
+	exporter, err := stdouttrace.New()
 	if err != nil {
 		return err
 	}
