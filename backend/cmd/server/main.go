@@ -48,6 +48,31 @@ import (
 // @host		localhost:4041
 // @BasePath	""
 
+// @tag.name Public
+// @tag.description Public CRUD operations (files, organizations, conversations)
+
+// @tag.name Search
+// @tag.description Search endpoints (search, v2/search)
+
+// @tag.name Objects
+// @tag.description Direct object access endpoints
+
+// @tag.name Autocomplete
+// @tag.description Autocomplete endpoints
+
+// @tag.name Jobs
+// @tag.description Job management endpoints
+
+// @tag.name Health
+// @tag.description Health check endpoints
+
+// @tag.name System
+// @tag.description System-related endpoints (version hash)
+
+// @tag.name Admin
+// @tag.description Admin endpoints
+
+
 const (
 	defaultPort     = "4041"
 	standardTimeout = 20 * time.Second

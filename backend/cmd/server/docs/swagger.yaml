@@ -1,195 +1,493 @@
-swagger: '2.0'
+openapi: 3.0.0
 info:
-  description: Kessler Backend API with FuguDB Integration
   title: Kessler API
-  termsOfService: http://swagger.io/terms/
-  contact:
-    name: Kessler API Support
-    url: https://kessler.xyz
-    email: support@kessler.xyz
-  license:
-    name: Apache 2.0
-    url: http://www.apache.org/licenses/LICENSE-2.0.html
-  version: '1.0'
-host: localhost:4041
-basePath: ""
-schemes: ["http"]
+  version: 1.0.0
+  description: |
+    Kessler Backend API with FuguDB Integration
+servers:
+  - url: http://localhost:4041
+tags:
+  - name: Public
+    description: Public CRUD operations (files, organizations, conversations)
+  - name: Search
+    description: Search endpoints (search, v2/search)
+  - name: Objects
+    description: Direct object access endpoints
+  - name: Autocomplete
+    description: Autocomplete endpoints
+  - name: Jobs
+    description: Job management endpoints
+  - name: Health
+    description: Health check endpoints
+  - name: System
+    description: System-related endpoints (version hash)
+  - name: Admin
+    description: Admin endpoints
 paths:
-  /filters/{namespace}:
+  # Public Files
+  /public/files:
     get:
-      description: Retrieves filters available for a specific namespace
-      produces:
-        - application/json
       tags:
-        - filters
-      summary: Get Namespace Filters
-      parameters:
-        - type: string
-          description: Namespace
-          name: namespace
-          in: path
-          required: true
+        - Public
+      summary: List files
       responses:
         '200':
-          description: OK
-          schema:
-            $ref: '#/definitions/fugusdk.SanitizedResponse'
-        '400':
-          description: Invalid namespace
-          schema:
-            type: string
-        '500':
-          description: Internal server error
-          schema:
-            type: string
-  /objects/{id}:
-    get:
-      description: Retrieves a specific object by its ID
-      produces:
-        - application/json
+          description: A list of files
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/File'
+    post:
       tags:
-        - objects
-      summary: Get Object by ID
-      parameters:
-        - type: string
-          description: Object ID
-          name: id
-          in: path
-          required: true
+        - Public
+      summary: Create a new file
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FileInput'
       responses:
-        '200':
-          description: OK
-          schema:
-            $ref: '#/definitions/objects.ObjectResponse'
-        '400':
-          description: Invalid object ID
-          schema:
-            type: string
-        '404':
-          description: Object not found
-          schema:
-            type: string
-        '500':
-          description: Internal server error
-          schema:
-            type: string
-  /search/query:
-    get:
-      description: Performs a search using query parameters
-      produces:
-        - application/json
-      tags:
-        - search
-      summary: Search with GET Request
-      parameters:
-        - type: string
-          description: Search query
-          name: q
-          in: query
-          required: true
-        - type: integer
-          description: Page number
-          name: page
-          in: query
-        - type: integer
-          description: Results per page
-          name: limit
-          in: query
-      responses:
-        '200':
-          description: OK
-          schema:
-            $ref: '#/definitions/search.SearchResponse'
-        '400':
-          description: Invalid query
-          schema:
-            type: string
-        '500':
-          description: Internal server error
-          schema:
-            type: string
-definitions:
-  fugusdk.FuguSearchResult:
-    type: object
-    properties:
-      facets:
-        type: array
-        items:
+        '201':
+          description: Created file
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/File'
+  /public/files/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
           type: string
-      id:
-        type: string
-      metadata:
-        type: object
-        additionalProperties: true
-      score:
-        type: number
-        format: float
-      text:
-        type: string
-  fugusdk.SanitizedResponse:
-    type: object
-    properties:
-      data: {}
-      message:
-        type: string
-      page:
-        type: integer
-      per_page:
-        type: integer
-      query:
-        type: string
-      results:
-        type: array
-        items:
-          $ref: '#/definitions/fugusdk.FuguSearchResult'
-      total:
-        type: integer
-  objects.ObjectResponse:
-    type: object
-    properties:
-      data: {}
-      id:
-        type: string
-      metadata: {}
-      namespace:
-        type: string
-      text:
-        type: string
-  search.SearchResponse:
-    type: object
-    properties:
-      data:
-        type: array
-        items:
-          $ref: '#/definitions/search.SearchResultItem'
-  search.SearchResultItem:
-    type: object
-    properties:
-      case_number:
-        type: string
-      created_at:
-        type: string
-      description:
-        type: string
-      facet:
-        type: array
-        items:
+    get:
+      tags:
+        - Public
+      summary: Get file by ID
+      responses:
+        '200':
+          description: A single file
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/File'
+    put:
+      tags:
+        - Public
+      summary: Update file by ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FileInput'
+      responses:
+        '200':
+          description: Updated file
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/File'
+    delete:
+      tags:
+        - Public
+      summary: Delete file by ID
+      responses:
+        '204':
+          description: File deleted
+
+  # Public Organizations
+  /public/organizations:
+    get:
+      tags:
+        - Public
+      summary: List organizations
+      responses:
+        '200':
+          description: A list of organizations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Organization'
+    post:
+      tags:
+        - Public
+      summary: Create a new organization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizationInput'
+      responses:
+        '201':
+          description: Created organization
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+  /public/organizations/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
           type: string
-      file_name:
-        type: string
-      filed_date:
-        type: string
-      filing_type:
-        type: string
-      id:
-        type: string
-      metadata:
-        type: object
-        additionalProperties: true
-      party_name:
-        type: string
-      score:
-        type: number
-        format: float
-      text:
-        type: string
+    get:
+      tags:
+        - Public
+      summary: Get organization by ID
+      responses:
+        '200':
+          description: A single organization
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+    put:
+      tags:
+        - Public
+      summary: Update organization by ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizationInput'
+      responses:
+        '200':
+          description: Updated organization
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+    delete:
+      tags:
+        - Public
+      summary: Delete organization by ID
+      responses:
+        '204':
+          description: Organization deleted
+
+  # Public Conversations
+  /public/conversations:
+    get:
+      tags:
+        - Public
+      summary: List conversations
+      responses:
+        '200':
+          description: A list of conversations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Conversation'
+    post:
+      tags:
+        - Public
+      summary: Create a new conversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConversationInput'
+      responses:
+        '201':
+          description: Created conversation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Conversation'
+  /public/conversations/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - Public
+      summary: Get conversation by ID
+      responses:
+        '200':
+          description: A single conversation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Conversation'
+    put:
+      tags:
+        - Public
+      summary: Update conversation by ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConversationInput'
+      responses:
+        '200':
+          description: Updated conversation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Conversation'
+    delete:
+      tags:
+        - Public
+      summary: Delete conversation by ID
+      responses:
+        '204':
+          description: Conversation deleted
+
+  # Search
+  /search:
+    get:
+      tags:
+        - Search
+      summary: Search objects (v1)
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+  /v2/search:
+    get:
+      tags:
+        - Search
+      summary: Search objects (v2)
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  # Objects
+  /objects/{objectType}/{id}:
+    tags:
+      - Objects
+    parameters:
+      - name: objectType
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      summary: Get object by type and ID
+      responses:
+        '200':
+          description: Object data
+          content:
+            application/json:
+              schema:
+                type: object
+
+  # Autocomplete
+  /autocomplete:
+    get:
+      tags:
+        - Autocomplete
+      summary: Autocomplete suggestions
+      parameters:
+        - name: prefix
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Suggestions list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+  # Jobs
+  /jobs:
+    get:
+      tags:
+        - Jobs
+      summary: List jobs
+      responses:
+        '200':
+          description: A list of jobs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Job'
+    post:
+      tags:
+        - Jobs
+      summary: Create a new job
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobInput'
+      responses:
+        '201':
+          description: Created job
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+  /jobs/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - Jobs
+      summary: Get job by ID
+      responses:
+        '200':
+          description: A single job
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+
+  # Health
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health checks
+      responses:
+        '200':
+          description: Health status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+
+  # System
+  /version_hash:
+    get:
+      tags:
+        - System
+      summary: Get version hash
+      responses:
+        '200':
+          description: Version hash string
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: unknown
+
+  # Admin (placeholder)
+  /admin/{path*}:
+    x-displayName: Admin Routes
+    get:
+      tags:
+        - Admin
+      summary: Admin endpoint (placeholder)
+      responses:
+        '200':
+          description: Admin response
+components:
+  schemas:
+    File:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        size:
+          type: integer
+    FileInput:
+      type: object
+      properties:
+        name:
+          type: string
+        data:
+          type: string
+    Organization:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+    OrganizationInput:
+      type: object
+      properties:
+        name:
+          type: string
+    Conversation:
+      type: object
+      properties:
+        id:
+          type: string
+        topic:
+          type: string
+    ConversationInput:
+      type: object
+      properties:
+        topic:
+          type: string
+    Job:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+    JobInput:
+      type: object
+      properties:
+        action:
+          type: string
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
