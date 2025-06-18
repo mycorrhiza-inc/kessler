@@ -1,12 +1,8 @@
-import Card, { CardSize } from "@/components/style/cards/GenericResultCard";
 import ErrorMessage from "@/components/style/messages/ErrorMessage";
 import LoadingSpinner from "@/components/style/misc/LoadingSpinner";
 import ServerSearchResultsRaw from "@/components/style/RawPages/RawServerSearchResults";
 import { GenericSearchType, searchInvokeFromUrlParams } from "@/lib/adapters/genericSearchCallback";
-import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import { TypedUrlParams, encodeUrlParams } from "@/lib/types/url_params";
-import clsx from "clsx";
-import Link from "next/link";
 import { Suspense } from "react";
 
 interface ServerSearchResultProps {
@@ -29,8 +25,10 @@ export async function ServerSearchResultsUnsuspended(params: ServerSearchResultP
     const cardResults = await searchInvokeFromUrlParams(params.urlParams, params.objectType, params.inherentRouteFilters || {});
     return <ServerSearchResultsRaw baseUrl={params.baseUrl} urlParams={params.urlParams} results={cardResults} />
   } catch (err: any) {
-    throw err
-    return <ErrorMessage error={JSON.stringify(err)} />
+    console.log(err)
+    return <ErrorMessage
+      message="The Server Could not Complete Your Search Request"
+      error={JSON.stringify(err)} />
   }
 
 }

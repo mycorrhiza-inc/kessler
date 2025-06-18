@@ -203,7 +203,7 @@ export const createGenericSearchCallback = (
         console.log("query data:", info);
         console.log("API URL:", api_url);
         const encodedQueryParams = encodeUrlParams(urlParams)
-        const url = `${api_url}/search${encodedQueryParams}`
+        const url = `${api_url}/search/${encodedQueryParams}`
         console.log("ENDPOINT: ", url)
 
 
@@ -212,7 +212,8 @@ export const createGenericSearchCallback = (
           'get',
           (raw_results): DocumentCardData[] => {
             return raw_results.data.map((raw): DocumentCardData => {
-              return DocumentCardDataValidator.parse(raw)
+              // return DocumentCardDataValidator.parse(raw)
+              return raw as DocumentCardData
             });
           },
         );
