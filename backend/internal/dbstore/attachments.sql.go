@@ -9,6 +9,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const attachmentCreate = `-- name: AttachmentCreate :one
@@ -213,6 +214,312 @@ func (q *Queries) AttachmentUpdate(ctx context.Context, arg AttachmentUpdatePara
 		&i.Mdata,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getAllSearchAttachments = `-- name: GetAllSearchAttachments :many
+SELECT
+	a.id AS id,
+	a.name AS name,
+	a.created_at,
+	fm.mdata,
+	ats.text
+FROM
+	public.attachment AS a
+	LEFT JOIN public.attachment_text_source AS ats
+		ON ats.attachment_id = a.id
+	LEFT JOIN public.file AS f
+		ON f.id = a.file_id
+	LEFT JOIN public.file_metadata AS fm
+		ON fm.id = f.id
+WHERE ats.text IS NOT NULL AND ats.text != ''
+`
+
+type GetAllSearchAttachmentsRow struct {
+	ID        uuid.UUID
+	Name      string
+	CreatedAt pgtype.Timestamptz
+	Mdata     []byte
+	Text      pgtype.Text
+}
+
+func (q *Queries) GetAllSearchAttachments(ctx context.Context) ([]GetAllSearchAttachmentsRow, error) {
+	rows, err := q.db.Query(ctx, getAllSearchAttachments)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetAllSearchAttachmentsRow
+	for rows.Next() {
+		var i GetAllSearchAttachmentsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.CreatedAt,
+			&i.Mdata,
+			&i.Text,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getAttachmentDateRange = `-- name: GetAttachmentDateRange :one
+SELECT 
+	MIN(a.created_at) as earliest_date,
+	MAX(a.created_at) as latest_date
+FROM public.attachment AS a
+WHERE a.created_at IS NOT NULL
+`
+
+type GetAttachmentDateRangeRow struct {
+	EarliestDate interface{}
+	LatestDate   interface{}
+}
+
+func (q *Queries) GetAttachmentDateRange(ctx context.Context) (GetAttachmentDateRangeRow, error) {
+	row := q.db.QueryRow(ctx, getAttachmentDateRange)
+	var i GetAttachmentDateRangeRow
+	err := row.Scan(&i.EarliestDate, &i.LatestDate)
+	return i, err
+}
+
+const getAttachmentExtensionStats = `-- name: GetAttachmentExtensionStats :many
+SELECT 
+	LOWER(a.extension) as extension,
+	COUNT(*) as count
+FROM public.attachment AS a
+WHERE a.extension IS NOT NULL AND a.extension != ''
+GROUP BY LOWER(a.extension)
+ORDER BY count DESC
+LIMIT $1
+`
+
+type GetAttachmentExtensionStatsRow struct {
+	Extension string
+	Count     int64
+}
+
+func (q *Queries) GetAttachmentExtensionStats(ctx context.Context, limit int32) ([]GetAttachmentExtensionStatsRow, error) {
+	rows, err := q.db.Query(ctx, getAttachmentExtensionStats, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetAttachmentExtensionStatsRow
+	for rows.Next() {
+		var i GetAttachmentExtensionStatsRow
+		if err := rows.Scan(&i.Extension, &i.Count); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getAttachmentSearchStats = `-- name: GetAttachmentSearchStats :one
+SELECT 
+	COUNT(*) as total_count,
+	COUNT(ats.text) as with_text_count,
+	COUNT(*) - COUNT(ats.text) as without_text_count
+FROM public.attachment AS a
+LEFT JOIN public.attachment_text_source AS ats ON ats.attachment_id = a.id
+`
+
+type GetAttachmentSearchStatsRow struct {
+	TotalCount       int64
+	WithTextCount    int64
+	WithoutTextCount int32
+}
+
+func (q *Queries) GetAttachmentSearchStats(ctx context.Context) (GetAttachmentSearchStatsRow, error) {
+	row := q.db.QueryRow(ctx, getAttachmentSearchStats)
+	var i GetAttachmentSearchStatsRow
+	err := row.Scan(&i.TotalCount, &i.WithTextCount, &i.WithoutTextCount)
+	return i, err
+}
+
+const getAttachmentsByDateRange = `-- name: GetAttachmentsByDateRange :many
+SELECT
+	a.id,
+	a.name,
+	a.extension,
+	a.created_at,
+	CASE WHEN ats.text IS NOT NULL AND ats.text != '' THEN true ELSE false END as has_text,
+	LENGTH(ats.text) as text_length
+FROM public.attachment AS a
+LEFT JOIN public.attachment_text_source AS ats ON ats.attachment_id = a.id
+WHERE a.created_at >= $1 AND a.created_at <= $2
+ORDER BY a.created_at DESC
+LIMIT $3
+`
+
+type GetAttachmentsByDateRangeParams struct {
+	CreatedAt   pgtype.Timestamptz
+	CreatedAt_2 pgtype.Timestamptz
+	Limit       int32
+}
+
+type GetAttachmentsByDateRangeRow struct {
+	ID         uuid.UUID
+	Name       string
+	Extension  string
+	CreatedAt  pgtype.Timestamptz
+	HasText    bool
+	TextLength float64
+}
+
+func (q *Queries) GetAttachmentsByDateRange(ctx context.Context, arg GetAttachmentsByDateRangeParams) ([]GetAttachmentsByDateRangeRow, error) {
+	rows, err := q.db.Query(ctx, getAttachmentsByDateRange, arg.CreatedAt, arg.CreatedAt_2, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetAttachmentsByDateRangeRow
+	for rows.Next() {
+		var i GetAttachmentsByDateRangeRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Extension,
+			&i.CreatedAt,
+			&i.HasText,
+			&i.TextLength,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getAttachmentsByExtension = `-- name: GetAttachmentsByExtension :many
+SELECT
+	a.id,
+	a.name,
+	a.extension,
+	a.created_at,
+	CASE WHEN ats.text IS NOT NULL AND ats.text != '' THEN true ELSE false END as has_text
+FROM public.attachment AS a
+LEFT JOIN public.attachment_text_source AS ats ON ats.attachment_id = a.id
+WHERE LOWER(a.extension) = LOWER($1)
+ORDER BY a.created_at DESC
+LIMIT $2
+`
+
+type GetAttachmentsByExtensionParams struct {
+	Lower string
+	Limit int32
+}
+
+type GetAttachmentsByExtensionRow struct {
+	ID        uuid.UUID
+	Name      string
+	Extension string
+	CreatedAt pgtype.Timestamptz
+	HasText   bool
+}
+
+func (q *Queries) GetAttachmentsByExtension(ctx context.Context, arg GetAttachmentsByExtensionParams) ([]GetAttachmentsByExtensionRow, error) {
+	rows, err := q.db.Query(ctx, getAttachmentsByExtension, arg.Lower, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetAttachmentsByExtensionRow
+	for rows.Next() {
+		var i GetAttachmentsByExtensionRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Extension,
+			&i.CreatedAt,
+			&i.HasText,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getAttachmentsNeedingReindex = `-- name: GetAttachmentsNeedingReindex :many
+SELECT DISTINCT a.id
+FROM public.attachment AS a
+JOIN public.attachment_text_source AS ats ON ats.attachment_id = a.id
+WHERE ats.text IS NOT NULL AND ats.text != ''
+`
+
+func (q *Queries) GetAttachmentsNeedingReindex(ctx context.Context) ([]uuid.UUID, error) {
+	rows, err := q.db.Query(ctx, getAttachmentsNeedingReindex)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []uuid.UUID
+	for rows.Next() {
+		var id uuid.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getSearchAttachmentById = `-- name: GetSearchAttachmentById :one
+SELECT
+	a.id AS id,
+	a.name AS name,
+	a.created_at,
+	fm.mdata,
+	ats.text
+FROM
+	public.attachment AS a
+	LEFT JOIN public.attachment_text_source AS ats
+		ON ats.attachment_id = a.id
+	LEFT JOIN public.file AS f
+		ON f.id = a.file_id
+	LEFT JOIN public.file_metadata AS fm
+		ON fm.id = f.id
+WHERE a.id = $1
+`
+
+type GetSearchAttachmentByIdRow struct {
+	ID        uuid.UUID
+	Name      string
+	CreatedAt pgtype.Timestamptz
+	Mdata     []byte
+	Text      pgtype.Text
+}
+
+func (q *Queries) GetSearchAttachmentById(ctx context.Context, id uuid.UUID) (GetSearchAttachmentByIdRow, error) {
+	row := q.db.QueryRow(ctx, getSearchAttachmentById, id)
+	var i GetSearchAttachmentByIdRow
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.CreatedAt,
+		&i.Mdata,
+		&i.Text,
 	)
 	return i, err
 }
