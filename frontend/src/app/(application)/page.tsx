@@ -12,8 +12,8 @@ export default async function Page(
   const urlParams = generateTypeUrlParams(untypedUrlParams)
   const targetSearchUrl = "/search"
   return <DefaultContainer>
-    <LogoHomepage />
     <AllInOneServerSearch
+      aboveSearchElement={<LogoHomepage />}
       urlParams={urlParams}
       queryType={GenericSearchType.Filling}
       baseUrl={targetSearchUrl}

@@ -16,8 +16,8 @@ export default async function OrgSearchPage(
 
   return (
     <DefaultContainer >
-      <LogoHomepage bottomText="Organization Search: TODO MAKE SO IT SEARCHES ORGS AND NOT FILINGS" />
       <AllInOneServerSearch
+        aboveSearchElement={<LogoHomepage bottomText="Organization Search: TODO MAKE SO IT SEARCHES ORGS AND NOT FILINGS" />}
         urlParams={urlParams}
         queryType={GenericSearchType.Organization}
         baseUrl="/orgs"
