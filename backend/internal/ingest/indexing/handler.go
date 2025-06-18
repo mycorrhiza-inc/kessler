@@ -2,6 +2,7 @@
 package indexing
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -72,7 +73,10 @@ func RegisterIndexingRoutes(r *mux.Router, db dbstore.DBTX) {
 // @Failure 500 {object} map[string]string{"error":string}
 // @Router /admin/indexing/conversations [post]
 func (h *IndexHandler) IndexAllConversations(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	// Create a context with extended timeout for long-running operations
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
+	defer cancel()
+
 	ctx, span := tracer.Start(ctx, "indexing:IndexAllConversations")
 	defer span.End()
 
@@ -150,7 +154,10 @@ func (h *IndexHandler) DeleteConversation(w http.ResponseWriter, r *http.Request
 // @Failure 500 {object} map[string]string{"error":string}
 // @Router /admin/indexing/organizations [post]
 func (h *IndexHandler) IndexAllOrganizations(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	// Create a context with extended timeout for long-running operations
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
+	defer cancel()
+
 	ctx, span := tracer.Start(ctx, "indexing:IndexAllOrganizations")
 	defer span.End()
 
@@ -228,7 +235,10 @@ func (h *IndexHandler) DeleteOrganization(w http.ResponseWriter, r *http.Request
 // @Failure 500 {object} map[string]string{"error":string}
 // @Router /admin/indexing/attachments [post]
 func (h *IndexHandler) IndexAllAttachments(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	// Create a context with extended timeout for long-running operations
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
+	defer cancel()
+
 	ctx, span := tracer.Start(ctx, "indexing:IndexAllAttachments")
 	defer span.End()
 
@@ -306,7 +316,10 @@ func (h *IndexHandler) DeleteAttachment(w http.ResponseWriter, r *http.Request) 
 // @Failure 500 {object} map[string]string{"error":string}
 // @Router /admin/indexing/all [post]
 func (h *IndexHandler) IndexAllData(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	// Create a context with extended timeout for long-running operations
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Minute)
+	defer cancel()
+
 	ctx, span := tracer.Start(ctx, "indexing:IndexAllData")
 	defer span.End()
 
@@ -341,7 +354,10 @@ func (h *IndexHandler) IndexAllData(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} map[string]string{"error":string}
 // @Router /admin/indexing/complete [post]
 func (h *IndexHandler) IndexCompleteData(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	// Create a context with extended timeout for long-running operations
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Minute)
+	defer cancel()
+
 	ctx, span := tracer.Start(ctx, "indexing:IndexCompleteData")
 	defer span.End()
 

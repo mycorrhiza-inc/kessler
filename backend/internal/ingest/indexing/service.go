@@ -451,7 +451,7 @@ func (s *IndexService) parseDate(dateStr string) (time.Time, error) {
 
 // processBatchInChunks handles large batches by splitting them into smaller chunks
 func (s *IndexService) processBatchInChunks(ctx context.Context, client *fugusdk.Client, recs []fugusdk.ObjectRecord, entityType string) (int, error) {
-	const chunkSize = 500 // Use 500 to stay well under the 1000 limit
+	const chunkSize = 10 // Use 500 to stay well under the 1000 limit
 	totalProcessed := 0
 
 	log.Printf("Processing %d %s in chunks of %d", len(recs), entityType, chunkSize)

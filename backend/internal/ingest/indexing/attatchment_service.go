@@ -74,7 +74,7 @@ func (ai *AttachmentIndexer) IndexAllAttachments(ctx context.Context) (int, erro
 		}
 
 		// Split text into segments if necessary
-		segments := ai.splitTextIntoSegments(text, 9900) // Leave buffer for safety
+		segments := ai.splitTextIntoSegments(text, 9500) // More conservative limit
 
 		if len(segments) > 1 {
 			segmentedCount++
@@ -118,7 +118,7 @@ func (ai *AttachmentIndexer) IndexAllAttachments(ctx context.Context) (int, erro
 
 				// Use proper namespace facet structure for data records
 				Namespace: ai.svc.defaultNamespace,
-				DataType:  "attachment", // This triggers namespace/NYPUC/data facet
+				DataType:  "data/attachment", // This triggers namespace/NYPUC/data/attachment facet
 			})
 		}
 	}
@@ -191,7 +191,7 @@ func (ai *AttachmentIndexer) IndexAttachmentByID(ctx context.Context, idStr stri
 
 	// Split text into segments if necessary
 	text := strings.TrimSpace(row.Text.String)
-	segments := ai.splitTextIntoSegments(text, 9900) // Leave buffer for safety
+	segments := ai.splitTextIntoSegments(text, 9500) // More conservative limit
 
 	if len(segments) > 1 {
 		logger.Info(ctx, "splitting attachment into segments due to length",
@@ -235,7 +235,7 @@ func (ai *AttachmentIndexer) IndexAttachmentByID(ctx context.Context, idStr stri
 
 			// Use proper namespace facet structure for data records
 			Namespace: ai.svc.defaultNamespace,
-			DataType:  "attachment", // This triggers namespace/NYPUC/data facet
+			DataType:  "data/attachment", // This triggers namespace/NYPUC/data/attachment facet
 		}
 
 		response, err := client.AddOrUpdateObject(ctx, rec)
@@ -494,27 +494,47 @@ func (ai *AttachmentIndexer) splitTextIntoSegments(text string, maxLength int) [
 	}
 
 	var segments []string
-	runes := []rune(text) // Use runes to handle Unicode properly
 
-	for i := 0; i < len(runes); i += maxLength {
+	// Work with the original string to ensure we're counting bytes correctly
+	for i := 0; i < len(text); {
 		end := i + maxLength
-		if end > len(runes) {
-			end = len(runes)
+		if end > len(text) {
+			end = len(text)
 		}
 
-		segment := string(runes[i:end])
+		segment := text[i:end]
 
 		// Try to break at word boundaries if we're not at the end
-		if end < len(runes) {
-			// Look backwards for a space to break at
-			lastSpace := strings.LastIndex(segment, " ")
-			if lastSpace > maxLength/2 { // Only break at word if it's not too far back
+		if end < len(text) {
+			// Look backwards for a space to break at (within last 20% of segment)
+			searchStart := len(segment) * 4 / 5 // Start searching from 80% of the way through
+			lastSpace := strings.LastIndex(segment[searchStart:], " ")
+			if lastSpace >= 0 {
+				// Adjust to actual position in segment
+				lastSpace += searchStart
 				segment = segment[:lastSpace]
-				i = i + lastSpace + 1 - maxLength // Adjust index to continue from after the space
+				i += lastSpace + 1 // Move past the space for next segment
+			} else {
+				// No good break point found, use the full segment
+				i = end
 			}
+		} else {
+			// This is the last segment
+			i = end
 		}
 
-		segments = append(segments, strings.TrimSpace(segment))
+		trimmed := strings.TrimSpace(segment)
+		if len(trimmed) > 0 {
+			// Double-check the length before adding
+			if len(trimmed) > maxLength {
+				logger.Error(nil, "segment still too long after splitting",
+					zap.Int("segment_length", len(trimmed)),
+					zap.Int("max_length", maxLength))
+				// Force truncate as emergency fallback
+				trimmed = trimmed[:maxLength-3] + "..."
+			}
+			segments = append(segments, trimmed)
+		}
 	}
 
 	return segments
