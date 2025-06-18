@@ -45,14 +45,14 @@ export default function AllInOneClientSearch({ urlParams, queryType: pageContext
   return (
     <div className="flex flex-col md:flex-row gap-4 items-start">
       {/* Filters Section */}
-      <div className="flex-1">
+      <div className="flex flex-row">
         <HardcodedFileFilters baseUrl={baseUrl} urlParams={urlParams} />
       </div>
 
       {/* Search Section */}
       <div className="flex-1 flex justify-center">
         <SearchBar placeholder="Search" value={query} setQuery={setQuery} searchExecute={executeSearch} />
-      </StaticFilter>
+      </div>
     </div>
   );
 }

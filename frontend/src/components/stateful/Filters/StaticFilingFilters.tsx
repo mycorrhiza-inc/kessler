@@ -4,7 +4,7 @@ import { encodeUrlParams, TypedUrlParams, UrlQueryParams } from "@/lib/types/url
 import { useState } from "react";
 import { DynamicMultiSelect } from "./FilterMultiSelect";
 import { DynamicSingleSelect } from "./FilterSingleSelect";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 // Minimal filter definition used to render dynamic filters
 export enum FilterType {
@@ -81,11 +81,11 @@ export function HardCodedFiltersFromInfo({
   hardcodedFilterInfo: MinimalFilterDefinition[];
 }) {
   // Initialize filter values from URL params
+  const router = useRouter();
   const initialFilters = urlQueryParams.filters || {};
   const [filterValues, setFilterValues] = useState<Record<string, string>>(
     initialFilters
   );
-  const router = useRouter();
 
   // Update filter and navigate
   const handleFilterChange = (id: string) => (value: string) => {
@@ -101,7 +101,7 @@ export function HardCodedFiltersFromInfo({
   };
 
   return (
-    <div className="filter-container flex space-x-4">
+    <div className="filter-container flex flex-col space-y-24">
       {hardcodedFilterInfo.map((def) => {
         const value = filterValues[def.id] || "";
         const fieldDef = {
