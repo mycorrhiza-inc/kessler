@@ -29,8 +29,10 @@ export async function ServerSearchResultsUnsuspended(params: ServerSearchResultP
     const cardResults = await searchInvokeFromUrlParams(params.urlParams, params.objectType, params.inherentRouteFilters || {});
     return <ServerSearchResultsRaw baseUrl={params.baseUrl} urlParams={params.urlParams} results={cardResults} />
   } catch (err: any) {
-    throw err
-    return <ErrorMessage error={JSON.stringify(err)} />
+    console.log(err)
+    return <ErrorMessage
+      message="The Server Could not Complete Your Search Request"
+      error={JSON.stringify(err)} />
   }
 
 }
