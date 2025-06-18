@@ -28,8 +28,8 @@ export default async function OrgPage({
       <Suspense fallback={<LoadingSpinner loadingText="Loading Organization Data" />}>
         <RenderedOrg org_id={org_id} />
       </Suspense>
-      <h1 className="text-2xl font-bold mb-4">Search [org-name]'s Filings</h1>
       <AllInOneServerSearch
+        aboveSearchElement={<h1 className="text-2xl font-bold mb-4">Search [org-name]'s Filings</h1>}
         urlParams={urlParams}
         queryType={GenericSearchType.Filling}
         inherentRouteFilters={{ "author_id": org_id }}

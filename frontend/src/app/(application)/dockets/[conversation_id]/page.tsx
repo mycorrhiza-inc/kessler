@@ -27,8 +27,8 @@ export default async function Page({
       <Suspense fallback={<LoadingSpinner loadingText="Loading Organization Data" />}>
         <RenderedConvo convo_id={convo_id} />
       </Suspense>
-      <h1 className="text-2xl font-bold mb-4">Search [org-name]'s Filings</h1>
       <AllInOneServerSearch
+        aboveSearchElement={<h1 className="text-2xl font-bold mb-4">Search [org-name]'s Filings</h1>}
         urlParams={urlParams}
         queryType={GenericSearchType.Filling}
 
