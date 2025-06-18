@@ -50,6 +50,8 @@ services:
       - "traefik.enable=true"
       - "traefik.namespace=kessler"
       - "traefik.http.routers.backend-server.rule=Host(`${NEXT_PUBLIC_KESSLER_API_URL}`) && PathPrefix(`/v2`)"
+      - "traefik.http.middlewares.backend-stripprefix.stripprefix.prefixes=/v2"
+      - "traefik.http.routers.backend.middlewares=backend-stripprefix"
       - "traefik.http.routers.backend-server.entrypoints=websecure"
       - "traefik.http.routers.backend-server.tls.certresolver=myresolver"
 
