@@ -17,7 +17,7 @@ import (
 
 // IndexHandler provides HTTP endpoints for admin indexing.
 // @Tags Indexing
-// @Description Admin endpoints for indexing conversations, organizations, and batch data into FuguDB
+// @Description Admin endpoints for indexing conversations, organizations, attachments, and batch data into FuguDB
 // @Produce json
 // @Router /admin/indexing [basePath]
 type IndexHandler struct {
@@ -48,6 +48,11 @@ func RegisterIndexingRoutes(r *mux.Router, db dbstore.DBTX) {
 	sr.HandleFunc("/organizations/{id}", h.IndexOrganizationByID).Methods(http.MethodPost)
 	sr.HandleFunc("/organizations/{id}", h.DeleteOrganization).Methods(http.MethodDelete)
 
+	// Attachment endpoints - NEW
+	sr.HandleFunc("/attachments", h.IndexAllAttachments).Methods(http.MethodPost)
+	sr.HandleFunc("/attachments/{id}", h.IndexAttachmentByID).Methods(http.MethodPost)
+	sr.HandleFunc("/attachments/{id}", h.DeleteAttachment).Methods(http.MethodDelete)
+
 	// Data endpoints - full CRUD operations with namespace facet support
 	sr.HandleFunc("/data", h.IndexAllData).Methods(http.MethodPost)
 	sr.HandleFunc("/data/batch-ingest", h.BatchIngestData).Methods(http.MethodPost)
@@ -57,6 +62,7 @@ func RegisterIndexingRoutes(r *mux.Router, db dbstore.DBTX) {
 
 	// Bulk operations
 	sr.HandleFunc("/all", h.IndexAllData).Methods(http.MethodPost)
+	sr.HandleFunc("/complete", h.IndexCompleteData).Methods(http.MethodPost) // NEW: includes attachments
 }
 
 // IndexAllConversations godoc
@@ -215,9 +221,87 @@ func (h *IndexHandler) DeleteOrganization(w http.ResponseWriter, r *http.Request
 	h.respondJSON(w, http.StatusOK, map[string]string{"message": "Organization deleted from index"})
 }
 
+// IndexAllAttachments godoc
+// @Summary Batch index all attachments
+// @Description Retrieves all attachments from the database and indexes them in FuguDB with proper namespace facets as data records
+// @Success 200 {object} map[string]int{"indexed":int}
+// @Failure 500 {object} map[string]string{"error":string}
+// @Router /admin/indexing/attachments [post]
+func (h *IndexHandler) IndexAllAttachments(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	ctx, span := tracer.Start(ctx, "indexing:IndexAllAttachments")
+	defer span.End()
+
+	logger.Info(ctx, "indexing all attachments requested")
+
+	count, err := h.svc.IndexAllAttachments(ctx)
+	if err != nil {
+		logger.Error(ctx, "index all attachments failed", zap.Error(err))
+		h.respondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	logger.Info(ctx, "successfully indexed all attachments", zap.Int("count", count))
+	h.respondJSON(w, http.StatusOK, map[string]int{"indexed": count})
+}
+
+// IndexAttachmentByID godoc
+// @Summary Index an attachment by ID
+// @Description Retrieves a single attachment by ID and indexes it in FuguDB with proper namespace facets as a data record
+// @Param id path string true "Attachment ID"
+// @Success 200 {object} map[string]int{"indexed":int}
+// @Failure 400 {object} map[string]string{"error":string}
+// @Router /admin/indexing/attachments/{id} [post]
+func (h *IndexHandler) IndexAttachmentByID(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	ctx, span := tracer.Start(ctx, "indexing:IndexAttachmentByID")
+	defer span.End()
+
+	id := mux.Vars(r)["id"]
+
+	logger.Info(ctx, "indexing attachment by ID", zap.String("attachment_id", id))
+
+	count, err := h.svc.IndexAttachmentByID(ctx, id)
+	if err != nil {
+		logger.Error(ctx, "index attachment failed", zap.String("attachment_id", id), zap.Error(err))
+		h.respondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	logger.Info(ctx, "successfully indexed attachment", zap.String("attachment_id", id))
+	h.respondJSON(w, http.StatusOK, map[string]int{"indexed": count})
+}
+
+// DeleteAttachment godoc
+// @Summary Delete an attachment from the search index
+// @Description Removes an attachment from the FuguDB search index
+// @Param id path string true "Attachment ID"
+// @Success 200 {object} map[string]string{"message":string}
+// @Failure 400 {object} map[string]string{"error":string}
+// @Router /admin/indexing/attachments/{id} [delete]
+func (h *IndexHandler) DeleteAttachment(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	ctx, span := tracer.Start(ctx, "indexing:DeleteAttachment")
+	defer span.End()
+
+	id := mux.Vars(r)["id"]
+
+	logger.Info(ctx, "deleting attachment from index", zap.String("attachment_id", id))
+
+	err := h.svc.DeleteAttachmentFromIndex(ctx, id)
+	if err != nil {
+		logger.Error(ctx, "delete attachment failed", zap.String("attachment_id", id), zap.Error(err))
+		h.respondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	logger.Info(ctx, "successfully deleted attachment from index", zap.String("attachment_id", id))
+	h.respondJSON(w, http.StatusOK, map[string]string{"message": "Attachment deleted from index"})
+}
+
 // IndexAllData godoc
-// @Summary Index all conversations and organizations
-// @Description Bulk operation to index all conversations and organizations from the database with proper namespace facets
+// @Summary Index all conversations, organizations, and attachments
+// @Description Bulk operation to index all conversations, organizations, and attachments from the database with proper namespace facets
 // @Success 200 {object} map[string]interface{}
 // @Failure 500 {object} map[string]string{"error":string}
 // @Router /admin/indexing/all [post]
@@ -228,7 +312,7 @@ func (h *IndexHandler) IndexAllData(w http.ResponseWriter, r *http.Request) {
 
 	logger.Info(ctx, "indexing all data requested")
 
-	convCount, orgCount, err := h.svc.IndexAllData(ctx)
+	convCount, orgCount, attachCount, err := h.svc.IndexCompleteData(ctx)
 	if err != nil {
 		logger.Error(ctx, "index all data failed", zap.Error(err))
 		h.respondError(w, http.StatusInternalServerError, err.Error())
@@ -238,13 +322,50 @@ func (h *IndexHandler) IndexAllData(w http.ResponseWriter, r *http.Request) {
 	response := map[string]interface{}{
 		"conversations_indexed": convCount,
 		"organizations_indexed": orgCount,
-		"total_indexed":         convCount + orgCount,
+		"attachments_indexed":   attachCount,
+		"total_indexed":         convCount + orgCount + attachCount,
 		"message":               "Successfully indexed all data with namespace facets",
 	}
 
 	logger.Info(ctx, "successfully indexed all data",
 		zap.Int("conversations", convCount),
-		zap.Int("organizations", orgCount))
+		zap.Int("organizations", orgCount),
+		zap.Int("attachments", attachCount))
+	h.respondJSON(w, http.StatusOK, response)
+}
+
+// IndexCompleteData godoc
+// @Summary Index all conversations, organizations, and attachments
+// @Description Bulk operation to index all conversations, organizations, and attachments from the database with proper namespace facets
+// @Success 200 {object} map[string]interface{}
+// @Failure 500 {object} map[string]string{"error":string}
+// @Router /admin/indexing/complete [post]
+func (h *IndexHandler) IndexCompleteData(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	ctx, span := tracer.Start(ctx, "indexing:IndexCompleteData")
+	defer span.End()
+
+	logger.Info(ctx, "indexing complete data requested")
+
+	convCount, orgCount, attachCount, err := h.svc.IndexCompleteData(ctx)
+	if err != nil {
+		logger.Error(ctx, "index complete data failed", zap.Error(err))
+		h.respondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	response := map[string]interface{}{
+		"conversations_indexed": convCount,
+		"organizations_indexed": orgCount,
+		"attachments_indexed":   attachCount,
+		"total_indexed":         convCount + orgCount + attachCount,
+		"message":               "Successfully indexed all complete data with namespace facets",
+	}
+
+	logger.Info(ctx, "successfully indexed complete data",
+		zap.Int("conversations", convCount),
+		zap.Int("organizations", orgCount),
+		zap.Int("attachments", attachCount))
 	h.respondJSON(w, http.StatusOK, response)
 }
 

@@ -1,4 +1,4 @@
-// indexing/serv// indexing/service.go
+// indexing/service.go
 package indexing
 
 import (
@@ -8,30 +8,39 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"go.uber.org/zap"
 
 	"kessler/internal/dbstore"
 	"kessler/internal/fugusdk"
-	"kessler/pkg/database"
 	"kessler/pkg/logger"
 )
 
-// IndexService fetches DB records and indexes them into FuguDB.
+// IndexService is the main service that coordinates indexing operations across all entity types
 type IndexService struct {
 	fuguURL          string
 	db               dbstore.DBTX
 	defaultNamespace string // e.g., "NYPUC"
+
+	// Entity-specific indexers
+	conversationIndexer *ConversationIndexer
+	organizationIndexer *OrganizationIndexer
+	attachmentIndexer   *AttachmentIndexer
 }
 
 // NewIndexService constructs an IndexService pointing at fuguURL.
 func NewIndexService(fuguURL string, db dbstore.DBTX) *IndexService {
-	// Use the shared connection pool (implements dbstore.DBTX)
-	return &IndexService{
+	svc := &IndexService{
 		fuguURL:          fuguURL,
 		defaultNamespace: "NYPUC", // Configure this based on your organization
 		db:               db,
 	}
+
+	// Initialize entity-specific indexers
+	svc.conversationIndexer = NewConversationIndexer(svc)
+	svc.organizationIndexer = NewOrganizationIndexer(svc)
+	svc.attachmentIndexer = NewAttachmentIndexer(svc)
+
+	return svc
 }
 
 // DataRecord represents a single record for batch data ingestion
@@ -61,211 +70,86 @@ type DataIngestResponse struct {
 	ProcessedAt string   `json:"processed_at"`
 }
 
-// IndexAllConversations retrieves all conversations and batch indexes them in chunks.
+// Conversation-related methods (delegate to ConversationIndexer)
 func (s *IndexService) IndexAllConversations(ctx context.Context) (int, error) {
-	q := database.GetQueries(s.db)
-	rows, err := q.DocketConversationList(ctx)
-	if err != nil {
-		return 0, fmt.Errorf("fetch all conversations: %w", err)
-	}
-
-	var recs []fugusdk.ObjectRecord
-	skippedCount := 0
-
-	for _, c := range rows {
-		// Create meaningful text field with fallbacks
-		text := s.createConversationText(c.Name, c.Description, c.DocketGovID, c.ID.String())
-
-		if text == "" {
-			log.Printf("Skipping conversation %s - no valid text content", c.ID.String())
-			skippedCount++
-			continue
-		}
-
-		recs = append(recs, fugusdk.ObjectRecord{
-			ID:   c.ID.String(),
-			Text: text,
-			Metadata: map[string]interface{}{
-				"docket_gov_id":   c.DocketGovID,
-				"description":     c.Description,
-				"state":           c.State,
-				"matter_type":     c.MatterType,
-				"industry_type":   c.IndustryType,
-				"conversation_id": c.ID.String(), // Store specific ID in metadata
-			},
-			// Use proper namespace facet structure (categorical only)
-			Namespace:      s.defaultNamespace,
-			ConversationID: c.ID.String(),  // This triggers namespace/NYPUC/conversation facet
-			DataType:       "conversation", // This triggers namespace/NYPUC/data facet
-		})
-	}
-
-	if skippedCount > 0 {
-		log.Printf("Skipped %d conversations with empty content", skippedCount)
-	}
-
-	if len(recs) == 0 {
-		log.Printf("No valid conversations to index")
-		return 0, nil
-	}
-
-	client, err := s.createFuguClient(ctx)
-	if err != nil {
-		return 0, fmt.Errorf("new fugu client: %w", err)
-	}
-
-	return s.processBatchInChunks(ctx, client, recs, "conversations")
+	return s.conversationIndexer.IndexAllConversations(ctx)
 }
 
-// IndexAllOrganizations retrieves all organizations and batch indexes them in chunks.
-func (s *IndexService) IndexAllOrganizations(ctx context.Context) (int, error) {
-	q := database.GetQueries(s.db)
-	rows, err := q.OrganizationCompleteQuickwitListGet(ctx)
-	if err != nil {
-		return 0, fmt.Errorf("fetch all organizations: %w", err)
-	}
-
-	var recs []fugusdk.ObjectRecord
-	skippedCount := 0
-
-	for _, o := range rows {
-		// Create meaningful text field with fallbacks
-		text := s.createOrganizationText(o.Name, o.Description, o.ID.String())
-
-		if text == "" {
-			log.Printf("Skipping organization %s - no valid text content", o.ID.String())
-			skippedCount++
-			continue
-		}
-
-		recs = append(recs, fugusdk.ObjectRecord{
-			ID:   o.ID.String(),
-			Text: text,
-			Metadata: map[string]interface{}{
-				"description":              o.Description,
-				"is_person":                o.IsPerson.Bool,
-				"total_documents_authored": o.TotalDocumentsAuthored,
-				"organization_name":        o.Name, // Store specific name in metadata
-			},
-			// Use proper namespace facet structure (categorical only)
-			Namespace:    s.defaultNamespace,
-			Organization: o.Name,         // This triggers namespace/NYPUC/organization facet
-			DataType:     "organization", // This triggers namespace/NYPUC/data facet
-		})
-	}
-
-	if skippedCount > 0 {
-		log.Printf("Skipped %d organizations with empty content", skippedCount)
-	}
-
-	if len(recs) == 0 {
-		log.Printf("No valid organizations to index")
-		return 0, nil
-	}
-
-	client, err := s.createFuguClient(ctx)
-	if err != nil {
-		return 0, fmt.Errorf("new fugu client: %w", err)
-	}
-
-	return s.processBatchInChunks(ctx, client, recs, "organizations")
-}
-
-// IndexConversationByID retrieves one conversation by UUID and indexes it.
 func (s *IndexService) IndexConversationByID(ctx context.Context, idStr string) (int, error) {
-	id, err := uuid.Parse(idStr)
-	if err != nil {
-		return 0, fmt.Errorf("invalid conversation id: %w", err)
-	}
-
-	q := database.GetQueries(s.db)
-	c, err := q.DocketConversationRead(ctx, id)
-	if err != nil {
-		return 0, fmt.Errorf("read conversation: %w", err)
-	}
-
-	// Create meaningful text field with fallbacks
-	text := s.createConversationText(c.Name, c.Description, c.DocketGovID, c.ID.String())
-	if text == "" {
-		return 0, fmt.Errorf("conversation %s has no valid text content and cannot be indexed", idStr)
-	}
-
-	rec := fugusdk.ObjectRecord{
-		ID:   c.ID.String(),
-		Text: text,
-		Metadata: map[string]interface{}{
-			"docket_gov_id":   c.DocketGovID,
-			"description":     c.Description,
-			"state":           c.State,
-			"matter_type":     c.MatterType,
-			"industry_type":   c.IndustryType,
-			"conversation_id": c.ID.String(), // Store specific ID in metadata
-		},
-		// Use proper namespace facet structure (categorical only)
-		Namespace:      s.defaultNamespace,
-		ConversationID: c.ID.String(),
-		DataType:       "conversation",
-	}
-
-	client, err := s.createFuguClient(ctx)
-	if err != nil {
-		return 0, fmt.Errorf("new fugu client: %w", err)
-	}
-
-	response, err := client.AddOrUpdateObject(ctx, rec)
-	if err != nil {
-		return 0, fmt.Errorf("index conversation: %w", err)
-	}
-
-	log.Printf("Successfully indexed conversation %s: %s", idStr, response.Message)
-	return 1, nil
+	return s.conversationIndexer.IndexConversationByID(ctx, idStr)
 }
 
-// IndexOrganizationByID retrieves one organization by UUID and indexes it.
+func (s *IndexService) DeleteConversationFromIndex(ctx context.Context, idStr string) error {
+	return s.conversationIndexer.DeleteConversationFromIndex(ctx, idStr)
+}
+
+// Organization-related methods (delegate to OrganizationIndexer)
+func (s *IndexService) IndexAllOrganizations(ctx context.Context) (int, error) {
+	return s.organizationIndexer.IndexAllOrganizations(ctx)
+}
+
 func (s *IndexService) IndexOrganizationByID(ctx context.Context, idStr string) (int, error) {
-	id, err := uuid.Parse(idStr)
+	return s.organizationIndexer.IndexOrganizationByID(ctx, idStr)
+}
+
+func (s *IndexService) DeleteOrganizationFromIndex(ctx context.Context, idStr string) error {
+	return s.organizationIndexer.DeleteOrganizationFromIndex(ctx, idStr)
+}
+
+// Attachment-related methods (delegate to AttachmentIndexer)
+func (s *IndexService) IndexAllAttachments(ctx context.Context) (int, error) {
+	return s.attachmentIndexer.IndexAllAttachments(ctx)
+}
+
+func (s *IndexService) IndexAttachmentByID(ctx context.Context, idStr string) (int, error) {
+	return s.attachmentIndexer.IndexAttachmentByID(ctx, idStr)
+}
+
+func (s *IndexService) DeleteAttachmentFromIndex(ctx context.Context, idStr string) error {
+	return s.attachmentIndexer.DeleteAttachmentFromIndex(ctx, idStr)
+}
+
+// Bulk operations that coordinate across entity types
+func (s *IndexService) IndexAllData(ctx context.Context) (int, int, int, error) {
+	convCount, err := s.IndexAllConversations(ctx)
 	if err != nil {
-		return 0, fmt.Errorf("invalid organization id: %w", err)
+		return 0, 0, 0, fmt.Errorf("index conversations: %w", err)
 	}
 
-	q := database.GetQueries(s.db)
-	o, err := q.OrganizationRead(ctx, id)
+	orgCount, err := s.IndexAllOrganizations(ctx)
 	if err != nil {
-		return 0, fmt.Errorf("read organization: %w", err)
+		return convCount, 0, 0, fmt.Errorf("index organizations: %w", err)
 	}
 
-	// Create meaningful text field with fallbacks
-	text := s.createOrganizationText(o.Name, o.Description, o.ID.String())
-	if text == "" {
-		return 0, fmt.Errorf("organization %s has no valid text content and cannot be indexed", idStr)
-	}
-
-	rec := fugusdk.ObjectRecord{
-		ID:   o.ID.String(),
-		Text: text,
-		Metadata: map[string]interface{}{
-			"description":       o.Description,
-			"is_person":         o.IsPerson.Bool,
-			"organization_name": o.Name, // Store specific name in metadata
-		},
-		// Use proper namespace facet structure (categorical only)
-		Namespace:    s.defaultNamespace,
-		Organization: o.Name,
-		DataType:     "organization",
-	}
-
-	client, err := s.createFuguClient(ctx)
+	attachCount, err := s.IndexAllAttachments(ctx)
 	if err != nil {
-		return 0, fmt.Errorf("new fugu client: %w", err)
+		return convCount, orgCount, 0, fmt.Errorf("index attachments: %w", err)
 	}
 
-	response, err := client.AddOrUpdateObject(ctx, rec)
+	log.Printf("Successfully indexed %d conversations, %d organizations, and %d attachments", convCount, orgCount, attachCount)
+	return convCount, orgCount, attachCount, nil
+}
+
+// IndexCompleteData indexes all conversations, organizations, and attachments
+func (s *IndexService) IndexCompleteData(ctx context.Context) (int, int, int, error) {
+	convCount, err := s.IndexAllConversations(ctx)
 	if err != nil {
-		return 0, fmt.Errorf("index organization: %w", err)
+		return 0, 0, 0, fmt.Errorf("index conversations: %w", err)
 	}
 
-	log.Printf("Successfully indexed organization %s: %s", idStr, response.Message)
-	return 1, nil
+	orgCount, err := s.IndexAllOrganizations(ctx)
+	if err != nil {
+		return convCount, 0, 0, fmt.Errorf("index organizations: %w", err)
+	}
+
+	attachCount, err := s.IndexAllAttachments(ctx)
+	if err != nil {
+		return convCount, orgCount, 0, fmt.Errorf("index attachments: %w", err)
+	}
+
+	log.Printf("Successfully indexed %d conversations, %d organizations, and %d attachments",
+		convCount, orgCount, attachCount)
+	return convCount, orgCount, attachCount, nil
 }
 
 // ProcessBatchDataIngest handles the business logic for batch data ingestion
@@ -394,6 +278,71 @@ func (s *IndexService) IndexDataRecordByID(ctx context.Context, record DataRecor
 	return 1, nil
 }
 
+func (s *IndexService) DeleteDataRecordFromIndex(ctx context.Context, idStr string) error {
+	client, err := s.createFuguClient(ctx)
+	if err != nil {
+		return fmt.Errorf("new fugu client: %w", err)
+	}
+
+	response, err := client.DeleteObject(ctx, idStr)
+	if err != nil {
+		return fmt.Errorf("delete data record from index: %w", err)
+	}
+
+	log.Printf("Successfully deleted data record %s from index: %s", idStr, response.Message)
+	return nil
+}
+
+// Statistics and reporting methods that aggregate across all entity types
+func (s *IndexService) GetSystemStats(ctx context.Context) (map[string]interface{}, error) {
+	stats := make(map[string]interface{})
+
+	// Get stats from each indexer
+	convStats, err := s.conversationIndexer.GetConversationStats(ctx)
+	if err != nil {
+		logger.Error(ctx, "failed to get conversation stats", zap.Error(err))
+		convStats = map[string]interface{}{"error": "failed to retrieve stats"}
+	}
+	stats["conversations"] = convStats
+
+	orgStats, err := s.organizationIndexer.GetOrganizationStats(ctx)
+	if err != nil {
+		logger.Error(ctx, "failed to get organization stats", zap.Error(err))
+		orgStats = map[string]interface{}{"error": "failed to retrieve stats"}
+	}
+	stats["organizations"] = orgStats
+
+	attachStats, err := s.attachmentIndexer.GetAttachmentStats(ctx)
+	if err != nil {
+		logger.Error(ctx, "failed to get attachment stats", zap.Error(err))
+		attachStats = map[string]interface{}{"error": "failed to retrieve stats"}
+	}
+	stats["attachments"] = attachStats
+
+	// Add system-wide metadata
+	stats["namespace"] = s.defaultNamespace
+	stats["generated_at"] = time.Now().Format(time.RFC3339)
+	stats["fugu_url"] = s.fuguURL
+
+	return stats, nil
+}
+
+// GetIndexerByType returns the appropriate indexer for a given entity type
+func (s *IndexService) GetIndexerByType(entityType string) interface{} {
+	switch strings.ToLower(entityType) {
+	case "conversation", "conversations":
+		return s.conversationIndexer
+	case "organization", "organizations":
+		return s.organizationIndexer
+	case "attachment", "attachments":
+		return s.attachmentIndexer
+	default:
+		return nil
+	}
+}
+
+// Helper methods for data processing and utilities
+
 // convertToFuguObjects converts incoming data records to fugu ObjectRecord format
 func (s *IndexService) convertToFuguObjects(ctx context.Context, records []DataRecord) ([]fugusdk.ObjectRecord, map[string]error) {
 	fuguObjects := make([]fugusdk.ObjectRecord, 0, len(records))
@@ -456,8 +405,6 @@ func (s *IndexService) convertToFuguObjects(ctx context.Context, records []DataR
 	return fuguObjects, conversionErrors
 }
 
-// Helper methods for namespace facet handling
-
 // getRecordNamespace returns the namespace for a record, using default if not specified
 func (s *IndexService) getRecordNamespace(record DataRecord) string {
 	if record.Namespace != "" {
@@ -502,107 +449,6 @@ func (s *IndexService) parseDate(dateStr string) (time.Time, error) {
 	return time.Time{}, fmt.Errorf("unable to parse date: %s", dateStr)
 }
 
-// createConversationText creates a meaningful text field for conversation indexing
-// with multiple fallback options to ensure we always have searchable content
-func (s *IndexService) createConversationText(name, description, docketGovID, id string) string {
-	// Try name first (most common case)
-	if text := strings.TrimSpace(name); text != "" {
-		return text
-	}
-
-	// Fall back to description
-	if text := strings.TrimSpace(description); text != "" {
-		return text
-	}
-
-	// Fall back to docket gov ID with meaningful prefix
-	if text := strings.TrimSpace(docketGovID); text != "" {
-		return fmt.Sprintf("Docket %s", text)
-	}
-
-	// Last resort: use UUID with prefix
-	return fmt.Sprintf("Conversation %s", id)
-}
-
-// createOrganizationText creates a meaningful text field for organization indexing
-// with multiple fallback options to ensure we always have searchable content
-func (s *IndexService) createOrganizationText(name, description, id string) string {
-	// Try name first (most common case)
-	if text := strings.TrimSpace(name); text != "" {
-		return text
-	}
-
-	// Fall back to description
-	if text := strings.TrimSpace(description); text != "" {
-		return text
-	}
-
-	// Last resort: use UUID with prefix
-	return fmt.Sprintf("Organization %s", id)
-}
-
-// Delete methods remain the same
-func (s *IndexService) DeleteConversationFromIndex(ctx context.Context, idStr string) error {
-	client, err := s.createFuguClient(ctx)
-	if err != nil {
-		return fmt.Errorf("new fugu client: %w", err)
-	}
-
-	response, err := client.DeleteObject(ctx, idStr)
-	if err != nil {
-		return fmt.Errorf("delete conversation from index: %w", err)
-	}
-
-	log.Printf("Successfully deleted conversation %s from index: %s", idStr, response.Message)
-	return nil
-}
-
-func (s *IndexService) DeleteOrganizationFromIndex(ctx context.Context, idStr string) error {
-	client, err := s.createFuguClient(ctx)
-	if err != nil {
-		return fmt.Errorf("new fugu client: %w", err)
-	}
-
-	response, err := client.DeleteObject(ctx, idStr)
-	if err != nil {
-		return fmt.Errorf("delete organization from index: %w", err)
-	}
-
-	log.Printf("Successfully deleted organization %s from index: %s", idStr, response.Message)
-	return nil
-}
-
-func (s *IndexService) DeleteDataRecordFromIndex(ctx context.Context, idStr string) error {
-	client, err := s.createFuguClient(ctx)
-	if err != nil {
-		return fmt.Errorf("new fugu client: %w", err)
-	}
-
-	response, err := client.DeleteObject(ctx, idStr)
-	if err != nil {
-		return fmt.Errorf("delete data record from index: %w", err)
-	}
-
-	log.Printf("Successfully deleted data record %s from index: %s", idStr, response.Message)
-	return nil
-}
-
-// IndexAllData is a convenience method to index all conversations and organizations
-func (s *IndexService) IndexAllData(ctx context.Context) (int, int, error) {
-	convCount, err := s.IndexAllConversations(ctx)
-	if err != nil {
-		return 0, 0, fmt.Errorf("index conversations: %w", err)
-	}
-
-	orgCount, err := s.IndexAllOrganizations(ctx)
-	if err != nil {
-		return convCount, 0, fmt.Errorf("index organizations: %w", err)
-	}
-
-	log.Printf("Successfully indexed %d conversations and %d organizations", convCount, orgCount)
-	return convCount, orgCount, nil
-}
-
 // processBatchInChunks handles large batches by splitting them into smaller chunks
 func (s *IndexService) processBatchInChunks(ctx context.Context, client *fugusdk.Client, recs []fugusdk.ObjectRecord, entityType string) (int, error) {
 	const chunkSize = 500 // Use 500 to stay well under the 1000 limit
@@ -641,4 +487,115 @@ func (s *IndexService) processBatchInChunks(ctx context.Context, client *fugusdk
 // createFuguClient creates a new FuguDB client for health checks and other operations
 func (s *IndexService) createFuguClient(ctx context.Context) (*fugusdk.Client, error) {
 	return fugusdk.NewClient(ctx, s.fuguURL)
+}
+
+// Health check and maintenance methods
+
+// HealthCheck verifies the service and its dependencies are working
+func (s *IndexService) HealthCheck(ctx context.Context) error {
+	// Test database connection
+	if err := s.db.QueryRow(ctx, "SELECT 1").Scan(new(int)); err != nil {
+		return fmt.Errorf("database health check failed: %w", err)
+	}
+
+	// Test FuguDB connection
+	client, err := s.createFuguClient(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to create fugu client: %w", err)
+	}
+
+	if err := client.Health(ctx); err != nil {
+		return fmt.Errorf("fugu health check failed: %w", err)
+	}
+
+	return nil
+}
+
+// ValidateConfiguration checks that the service is properly configured
+func (s *IndexService) ValidateConfiguration() error {
+	if s.fuguURL == "" {
+		return fmt.Errorf("fugu URL cannot be empty")
+	}
+
+	if s.defaultNamespace == "" {
+		return fmt.Errorf("default namespace cannot be empty")
+	}
+
+	if s.db == nil {
+		return fmt.Errorf("database connection cannot be nil")
+	}
+
+	// Validate indexers are initialized
+	if s.conversationIndexer == nil {
+		return fmt.Errorf("conversation indexer not initialized")
+	}
+	if s.organizationIndexer == nil {
+		return fmt.Errorf("organization indexer not initialized")
+	}
+	if s.attachmentIndexer == nil {
+		return fmt.Errorf("attachment indexer not initialized")
+	}
+
+	return nil
+}
+
+// MaintenanceReindex performs a full reindex of all entities with error tracking
+func (s *IndexService) MaintenanceReindex(ctx context.Context) (map[string]interface{}, error) {
+	startTime := time.Now()
+	results := make(map[string]interface{})
+
+	// Index conversations
+	convCount, convErr := s.IndexAllConversations(ctx)
+	results["conversations"] = map[string]interface{}{
+		"indexed": convCount,
+		"error":   convErr,
+	}
+
+	// Index organizations
+	orgCount, orgErr := s.IndexAllOrganizations(ctx)
+	results["organizations"] = map[string]interface{}{
+		"indexed": orgCount,
+		"error":   orgErr,
+	}
+
+	// Index attachments
+	attachCount, attachErr := s.IndexAllAttachments(ctx)
+	results["attachments"] = map[string]interface{}{
+		"indexed": attachCount,
+		"error":   attachErr,
+	}
+
+	// Calculate totals and summary
+	totalIndexed := convCount + orgCount + attachCount
+	hasErrors := convErr != nil || orgErr != nil || attachErr != nil
+
+	results["summary"] = map[string]interface{}{
+		"total_indexed":    totalIndexed,
+		"duration_seconds": time.Since(startTime).Seconds(),
+		"has_errors":       hasErrors,
+		"started_at":       startTime.Format(time.RFC3339),
+		"completed_at":     time.Now().Format(time.RFC3339),
+	}
+
+	if hasErrors {
+		return results, fmt.Errorf("maintenance reindex completed with errors")
+	}
+
+	log.Printf("Maintenance reindex completed successfully: %d total records indexed in %.2f seconds",
+		totalIndexed, time.Since(startTime).Seconds())
+
+	return results, nil
+}
+
+// CleanupOrphanedRecords removes records from the index that no longer exist in the database
+// This is a placeholder for future implementation
+func (s *IndexService) CleanupOrphanedRecords(ctx context.Context) error {
+	// TODO: Implement cleanup logic
+	// This would involve:
+	// 1. Getting all indexed record IDs from FuguDB
+	// 2. Checking which ones no longer exist in the database
+	// 3. Removing orphaned records from the index
+
+	logger.Info(ctx, "orphaned record cleanup not yet implemented")
+	return nil
 }
