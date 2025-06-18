@@ -144,7 +144,7 @@ const MediumCard: React.FC<{ data: CardData }> = ({ data }) => {
         </div>
       </div>
       <div className="mb-4">
-        <p className="text-sm">{data.description}</p>
+        <p className="text-sm">{data.description.length > 300 ? data.description.slice(0, 300) + "…" : data.description}</p>
         {data.extraInfo && (
           <p className="text-xs text-gray-500">{data.extraInfo}</p>
         )}
