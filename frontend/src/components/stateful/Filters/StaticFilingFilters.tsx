@@ -1,6 +1,6 @@
 "use client";
 
-import { encodeUrlParams, TypedUrlParams } from "@/lib/types/url_params";
+import { encodeUrlParams, TypedUrlParams, UrlQueryParams } from "@/lib/types/url_params";
 import { useState } from "react";
 import { DynamicMultiSelect } from "./FilterMultiSelect";
 import { DynamicSingleSelect } from "./FilterSingleSelect";
@@ -28,7 +28,7 @@ export default function HardcodedFileFilters({
   urlParams,
   baseUrl,
 }: {
-  urlParams: TypedUrlParams;
+  urlParams: UrlQueryParams;
   baseUrl: string;
 }) {
   const fileFilterInfo: MinimalFilterDefinition[] = [
@@ -64,7 +64,7 @@ export default function HardcodedFileFilters({
 
   return (
     <HardCodedFiltersFromInfo
-      urlParams={urlParams}
+      urlQueryParams={urlParams}
       baseUrl={baseUrl}
       hardcodedFilterInfo={fileFilterInfo}
     />
@@ -72,16 +72,16 @@ export default function HardcodedFileFilters({
 }
 
 export function HardCodedFiltersFromInfo({
-  urlParams,
+  urlQueryParams,
   baseUrl,
   hardcodedFilterInfo,
 }: {
-  urlParams: TypedUrlParams;
+  urlQueryParams: UrlQueryParams;
   baseUrl: string;
   hardcodedFilterInfo: MinimalFilterDefinition[];
 }) {
   // Initialize filter values from URL params
-  const initialFilters = urlParams.queryData.filters || {};
+  const initialFilters = urlQueryParams.filters || {};
   const [filterValues, setFilterValues] = useState<Record<string, string>>(
     initialFilters
   );
@@ -93,8 +93,8 @@ export function HardCodedFiltersFromInfo({
     setFilterValues(updated);
 
     const newParams: TypedUrlParams = {
-      paginationData: urlParams.paginationData,
-      queryData: { ...urlParams.queryData, filters: updated },
+      paginationData: {},
+      queryData: { ...urlQueryParams, filters: updated },
     };
     const endpoint = baseUrl + encodeUrlParams(newParams);
     router.push(endpoint);

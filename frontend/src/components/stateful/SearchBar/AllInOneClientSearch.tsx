@@ -7,6 +7,7 @@ import { SearchBar } from "@/components/style/search/SearchBar";
 
 import { KesslerFilterSystem } from '@/components/stateful/Filters/DynamicFilters';
 import { makeFilterEndpoints } from '@/lib/filters';
+import HardcodedFileFilters from "../Filters/StaticFilingFilters";
 
 export interface AIOSearchProps {
   urlParams: UrlQueryParams
@@ -45,19 +46,13 @@ export default function AllInOneClientSearch({ urlParams, queryType: pageContext
     <div className="flex flex-col md:flex-row gap-4 items-start">
       {/* Filters Section */}
       <div className="flex-1">
-        <KesslerFilterSystem
-          showFields={Object.keys(urlParams.filters || {})}
-          endpoints={makeFilterEndpoints()}
-          layout="inline"
-          showControls={false}
-          showStatus={false}
-        />
+        <HardcodedFileFilters baseUrl={baseUrl} urlParams={urlParams} />
       </div>
 
       {/* Search Section */}
       <div className="flex-1 flex justify-center">
         <SearchBar placeholder="Search" value={query} setQuery={setQuery} searchExecute={executeSearch} />
-      </div>
+      </StaticFilter>
     </div>
   );
 }
