@@ -8,9 +8,9 @@ import { generateFakeResults } from "../search/search_utils";
 import axios from "axios";
 import { hydratedSearchResultsToFilings } from "../requests/search";
 import { adaptFilingToCard } from "./genericCardAdapters";
-import { DocumentCardData } from "../types/generic_card_types";
+import { DocumentCardData, DocumentCardDataValidator } from "../types/generic_card_types";
 import { BackendFilterObject } from "../filters";
-import { TypedUrlParams } from "../types/url_params";
+import { encodeUrlParams, TypedUrlParams } from "../types/url_params";
 import { DEFAULT_PAGE_SIZE } from "../constants";
 import { getContextualAPIUrl } from "../env_variables";
 
@@ -24,13 +24,14 @@ export enum GenericSearchType {
 export interface GenericSearchInfo {
   search_type: GenericSearchType;
   query: string;
-  filters?: BackendFilterObject;
+  filters?: Record<string, string>;
 }
 
 export const searchInvokeFromUrlParams = async (urlParams: TypedUrlParams, objectType: GenericSearchType, inheritedFilters: Record<string, string>) => {
   const searchInfo: GenericSearchInfo = {
     query: urlParams.queryData.query || "",
     search_type: objectType,
+    filters: urlParams.queryData.filters
   }
   const pagination: PaginationData = {
     page: urlParams.paginationData.page || 0,
@@ -135,7 +136,9 @@ export const createGenericSearchCallback = (
 ): SearchResultsGetter => {
   // debug and default to dummy search results for stylistic changes.
   // info.search_type = GenericSearchType.Filling as GenericSearchType;
-  info.search_type = GenericSearchType.Dummy as GenericSearchType;
+  if (info.search_type == GenericSearchType.Docket || info.search_type == GenericSearchType.Organization) {
+    info.search_type = GenericSearchType.Dummy as GenericSearchType;
+  }
   //console.log("All searches are dummys for momentary testing purposes")
 
   const api_url = getContextualAPIUrl();
@@ -170,7 +173,8 @@ export const createGenericSearchCallback = (
           const results = await generateFakeResults(pagination);
           console.log("Got fake results");
           mutateIndexifySearchResults(results, pagination);
-          return results;
+          return results; {
+          }
         } catch (error) {
           if (axios.isAxiosError(error)) {
             console.log("Axios error in dummy search:", error);
@@ -186,30 +190,31 @@ export const createGenericSearchCallback = (
       };
 
     case GenericSearchType.Filling:
-      console.log("returning a filling async callback:")
-      return async (pagination: PaginationData): Promise<SearchResult[]> => {
-        // const paginationQueryString = queryStringFromPagination(pagination);
-        // const { query: searchQuery } = info;
-        // const url = `${api_url}/search/file${paginationQueryString}`;
-        // // const paginationQueryString = queryStringFromPagination(pagination)/* ; */
-        const { query: searchQuery } = info;
-        const url = `${api_url}/search/`;
-        const requestData: SearchRequest = { query: searchQuery };
+      return async (pagination: PaginationData): Promise<SearchResult> => {
+        const urlParams: TypedUrlParams = {
+          paginationData: pagination,
+          queryData: {
+            query: info.query,
+            filters: info.filters,
+          }
+        }
+        console.log("returning a filling async callback:")
 
         console.log("query data:", info);
-        console.log("SEARCH FILTERS DISABLED UNTIL MIRRI UPDATES THE DB");
         console.log("API URL:", api_url);
+        const encodedQueryParams = encodeUrlParams(urlParams)
+        const url = `${api_url}/search${encodedQueryParams}`
+        console.log("ENDPOINT: ", url)
+
 
         return performSearchRequest<SearchRequest, any[], DocumentCardData>(
           url,
-          'post',
-          (raw) => {
-            const filings = hydratedSearchResultsToFilings(raw);
-            console.log(`Successfully got ${filings.length} search results`);
-            return filings.map(adaptFilingToCard);
+          'get',
+          (raw_list): DocumentCardData[] => {
+            return raw_list.map((raw): DocumentCardData => {
+              return DocumentCardDataValidator.parse(raw)
+            });
           },
-          pagination,
-          requestData,
         );
       };
 

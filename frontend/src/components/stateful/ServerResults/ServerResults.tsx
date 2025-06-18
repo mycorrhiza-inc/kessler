@@ -1,4 +1,5 @@
 import Card, { CardSize } from "@/components/style/cards/GenericResultCard";
+import ErrorMessage from "@/components/style/messages/ErrorMessage";
 import LoadingSpinner from "@/components/style/misc/LoadingSpinner";
 import ServerSearchResultsRaw from "@/components/style/RawPages/RawServerSearchResults";
 import { GenericSearchType, searchInvokeFromUrlParams } from "@/lib/adapters/genericSearchCallback";
@@ -24,8 +25,13 @@ export default async function ServerSearchResults(params: ServerSearchResultProp
 
 export async function ServerSearchResultsUnsuspended(params: ServerSearchResultProps) {
 
-  const cardResults = await searchInvokeFromUrlParams(params.urlParams, params.objectType, params.inherentRouteFilters || {});
-  return <ServerSearchResultsRaw baseUrl={params.baseUrl} urlParams={params.urlParams} results={cardResults} />
+  try {
+    const cardResults = await searchInvokeFromUrlParams(params.urlParams, params.objectType, params.inherentRouteFilters || {});
+    return <ServerSearchResultsRaw baseUrl={params.baseUrl} urlParams={params.urlParams} results={cardResults} />
+  } catch (err: any) {
+    throw err
+    return <ErrorMessage error={JSON.stringify(err)} />
+  }
 
 }
 
