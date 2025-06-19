@@ -178,7 +178,7 @@ const MediumCard: React.FC<{ data: CardData }> = ({ data }: { data: CardData }) 
 );
 
 const LargeCard: React.FC<{ data: CardData }> = ({ data }: { data: CardData }) => (
-  <div className="card bg-base-200 shadow-2xl p-8 mb-8 sticky top-0 z-10 w-full max-w-full">
+  <div className="card bg-base-200 shadow-2xl p-8 mb-8 top-0 z-10 w-full max-w-full">
     <CardHeader data={data} size={CardSize.Large} />
     <div className="mb-6">
       <h3 className="text-2xl font-bold mb-2">Description</h3>
