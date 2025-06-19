@@ -1,6 +1,5 @@
 import { generateTypeUrlParams, } from "@/lib/types/url_params";
 import { ObjectQueryType } from "@/lib/types/SearchTypes";
-import RenderedConvo from "@/components/stateful/RenderedObjectCards/RednderedConvo";
 import AllInOneServerSearch from "@/components/stateful/SearchBar/AllInOneServerSearch";
 import LoadingSpinner from "@/components/style/misc/LoadingSpinner";
 import { Suspense } from "react";
@@ -18,10 +17,7 @@ export default async function Page({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
 
-  const untypedUrlParams = await searchParams;
-  const urlParams = generateTypeUrlParams(untypedUrlParams)
-
-
+  const urlParams = generateTypeUrlParams(await searchParams);
   const convo_id = (await params).conversation_id;
 
   return (

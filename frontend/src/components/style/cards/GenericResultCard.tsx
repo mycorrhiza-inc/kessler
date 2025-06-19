@@ -196,8 +196,21 @@ const LargeCard: React.FC<{ data: CardData }> = ({ data }: { data: CardData }) =
   </div>
 );
 
+
+const calculateHref = (objectId: string, objectType: CardType) => {
+  switch (objectType) {
+    case CardType.Author:
+      return `/orgs/${objectId}`
+    case CardType.Docket:
+      return `/docket/${objectId}`
+    case CardType.Document:
+      return `/filling/${objectId}`
+  }
+}
+
 // Main component
-const Card = ({ data, href, size = CardSize.Medium }: { data: CardData, href?: string, size?: CardSize }) => {
+const Card = ({ data, disableHref, size = CardSize.Medium }: { data: CardData, disableHref?: boolean, size?: CardSize }) => {
+
   const rawCard: ReactNode = (() => {
     switch (size) {
       case CardSize.Large:
@@ -210,10 +223,11 @@ const Card = ({ data, href, size = CardSize.Medium }: { data: CardData, href?: s
         return <MediumCard data={data} />;
     }
   })()
-  if (href) {
-    return <a href={href}>rawCard</a>
+  if (disableHref) {
+    return rawCard
   }
-  return rawCard
+  const href = calculateHref(data.object_uuid, data.type)
+  return <a href={href}>{rawCard}</a>
 
 };
 
