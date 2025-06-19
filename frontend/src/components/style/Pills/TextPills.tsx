@@ -14,7 +14,7 @@ const oklchSubdivide = (colorNum: number, divisions?: number) => {
 
 export const subdividedHueFromSeed = (seed?: string): string => {
   if (seed === undefined) {
-    return "oklch(40% 0.33 0)";
+    return "oklch(80% 0.16 320)";
   }
   const seed_integer = Math.abs(
     seed
@@ -33,7 +33,7 @@ export const fileTypeColor: Record<FileExtension, string> = {
   [FileExtension.DOCX]: "oklch(70.55% 0.13 240)",
   [FileExtension.XLSX]: "oklch(75.55% 0.17 140)",
   [FileExtension.HTML]: "oklch(80.55% 0.08 60)",
-  [FileExtension.UNKNOWN]: "oklch(60% 0.3 0)",
+  [FileExtension.UNKNOWN]: "oklch(60% 0.24 0)",
 };
 
 // Icon utilities
