@@ -17,7 +17,7 @@ func RegisterCardLookupRoutes(r *mux.Router, db dbstore.DBTX) error {
 	cacheCtrl, _ := cache.NewCacheController()
 
 	// Organization (Author card)
-	r.HandleFunc("/orgs/{id}", func(w http.ResponseWriter, req *http.Request) {
+	r.HandleFunc("/org/{id}", func(w http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
 		vars := mux.Vars(req)
 		id := vars["id"]
@@ -79,7 +79,7 @@ func RegisterCardLookupRoutes(r *mux.Router, db dbstore.DBTX) error {
 	}).Methods("GET")
 
 	// Docket (Conversation card)
-	r.HandleFunc("/dockets/{id}", func(w http.ResponseWriter, req *http.Request) {
+	r.HandleFunc("/convo/{id}", func(w http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
 		vars := mux.Vars(req)
 		id := vars["id"]
@@ -134,4 +134,3 @@ func RegisterCardLookupRoutes(r *mux.Router, db dbstore.DBTX) error {
 
 	return nil
 }
-

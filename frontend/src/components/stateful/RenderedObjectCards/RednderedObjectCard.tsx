@@ -1,8 +1,37 @@
-import Card, { CardSize } from "@/components/style/cards/GenericResultCard";
+import Card, { CardData, CardSize } from "@/components/style/cards/GenericResultCard";
 import ErrorMessage from "@/components/style/messages/ErrorMessage";
 import { GenericSearchType } from "@/lib/adapters/genericSearchCallback";
+import { getContextualAPIUrl } from "@/lib/env_variables";
 import { generateFakeResultsRaw } from "@/lib/search/search_utils";
+import { AuthorCardDataValidator } from "@/lib/types/generic_card_types";
 import { sleep } from "@/lib/utils";
+import axios from "axios";
+
+async function fetchCardData(object_id: string, objectType: GenericSearchType): Promise<CardData> {
+  const api_url = getContextualAPIUrl()
+
+
+  switch (objectType) {
+    case GenericSearchType.Organization:
+      const org_endpoint = `${api_url}/card/org/${object_id}`
+      const org_response = await axios.get(org_endpoint)
+      const org_raw_data = org_response.data
+      const org_data = AuthorCardDataValidator.parse(org_raw_data)
+      return org_data
+
+    case GenericSearchType.Docket:
+      const docket_endpoint = `${api_url}/card/convo/${object_id}`
+      const docket_response = await axios.get(docket_endpoint)
+      const docket_raw_data = docket_response.data
+      const docket_data = AuthorCardDataValidator.parse(docket_raw_data)
+      return docket_data
+    case GenericSearchType.Filling:
+      return generateFakeResultsRaw(1)[0]
+    case GenericSearchType.Dummy:
+      return generateFakeResultsRaw(1)[0]
+  }
+}
+
 
 export default async function RenderedCardObject({ object_id, objectType, size }: { object_id: string, objectType: GenericSearchType, size?: CardSize }) {
   try {
@@ -10,16 +39,9 @@ export default async function RenderedCardObject({ object_id, objectType, size }
     if (!size) {
       size = CardSize.Large as CardSize;
     }
-    switch (objectType) {
-      case GenericSearchType.Organization:
-        return <Card size={size} data={generateFakeResultsRaw(1)[0]} disableHref />
-      case GenericSearchType.Docket:
-        return <Card size={size} data={generateFakeResultsRaw(1)[0]} disableHref />
-      case GenericSearchType.Filling:
-        return <Card size={size} data={generateFakeResultsRaw(1)[0]} disableHref />
-      case GenericSearchType.Dummy:
-        return <Card size={size} data={generateFakeResultsRaw(1)[0]} disableHref />
-    }
+    const cardData = await fetchCardData(object_id, objectType)
+
+    return <Card data={cardData} size={size} disableHref />
   } catch (err) {
     console.log(err)
     return <ErrorMessage message="Could not get object info" error={err} />
