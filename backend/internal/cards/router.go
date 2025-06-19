@@ -1,17 +1,14 @@
 package cards
 
 import (
-	"context"
 	"encoding/json"
-	"net/http"
-	"time"
-
-	"github.com/gorilla/mux"
-	"github.com/google/uuid"
-
 	"kessler/internal/cache"
 	"kessler/internal/dbstore"
 	"kessler/internal/search"
+	"net/http"
+
+	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 )
 
 // RegisterCardLookupRoutes registers endpoints for fetching card data by object UUID.
@@ -137,3 +134,4 @@ func RegisterCardLookupRoutes(r *mux.Router, db dbstore.DBTX) error {
 
 	return nil
 }
+
