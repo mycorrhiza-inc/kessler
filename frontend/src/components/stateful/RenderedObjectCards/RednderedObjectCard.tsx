@@ -12,13 +12,13 @@ export default async function RenderedCardObject({ object_id, objectType, size }
     }
     switch (objectType) {
       case GenericSearchType.Organization:
-        return <Card size={size} data={generateFakeResultsRaw(1)[0]} />
+        return <Card size={size} data={generateFakeResultsRaw(1)[0]} disableHref />
       case GenericSearchType.Docket:
-        return <Card size={size} data={generateFakeResultsRaw(1)[0]} />
+        return <Card size={size} data={generateFakeResultsRaw(1)[0]} disableHref />
       case GenericSearchType.Filling:
-        return <Card size={size} data={generateFakeResultsRaw(1)[0]} />
+        return <Card size={size} data={generateFakeResultsRaw(1)[0]} disableHref />
       case GenericSearchType.Dummy:
-        return <Card size={size} data={generateFakeResultsRaw(1)[0]} />
+        return <Card size={size} data={generateFakeResultsRaw(1)[0]} disableHref />
     }
   } catch (err) {
     console.log(err)

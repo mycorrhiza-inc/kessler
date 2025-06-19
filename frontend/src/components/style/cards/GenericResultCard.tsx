@@ -130,7 +130,8 @@ const CardFooter: React.FC<{ data: CardData; size: CardSize }> = ({ data, size }
       {size === CardSize.Large ? `${getTimestampLabel(data.type)}:` : getTimestampLabel(data.type)}
     </span>
     <span>
-      {size === CardSize.Large ? data.timestamp : `${data.timestamp} - idx:${data.index}`}
+      {/* {size === CardSize.Large ? data.timestamp : `${data.timestamp} - idx:${data.index}`} */}
+      {data.timestamp}
     </span>
   </div>
 );
@@ -177,7 +178,7 @@ const MediumCard: React.FC<{ data: CardData }> = ({ data }: { data: CardData }) 
 );
 
 const LargeCard: React.FC<{ data: CardData }> = ({ data }: { data: CardData }) => (
-  <div className="card bg-base-200 shadow-2xl p-8 mb-8 sticky top-0 z-10">
+  <div className="card bg-base-200 shadow-2xl p-8 mb-8 sticky top-0 z-10 w-full max-w-full">
     <CardHeader data={data} size={CardSize.Large} />
     <div className="mb-6">
       <h3 className="text-2xl font-bold mb-2">Description</h3>
