@@ -63,7 +63,7 @@ type DocumentCardData struct {
 	Index       int              `json:"index"`
 	Type        string           `json:"type"`
 	ObjectUUID  string           `json:"object_uuid"`
-	Authors     []DocumentAuthor `json:"authors,omitempty"`
+	Authors     []DocumentAuthor `json:"authors"`
 }
 
 func (d DocumentCardData) GetType() string {

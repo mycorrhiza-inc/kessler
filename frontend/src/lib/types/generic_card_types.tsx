@@ -31,8 +31,12 @@ export const DocumentCardDataValidator = BaseCardDataValidator.extend({
       is_person: z.boolean(),
       is_primary_author: z.boolean(),
       author_id: z.string(),
-    })
+    }).optional()
   ),
+  conversation: z.object({
+    convo_id: z.string().uuid(),
+    convo_name: z.string()
+  }).optional()
 });
 
 export const CardDataValidator = z.union([
