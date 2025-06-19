@@ -199,6 +199,8 @@ const LargeCard: React.FC<{ data: CardData }> = ({ data }: { data: CardData }) =
 
 
 const calculateHref = (objectId: string, objectType: CardType) => {
+  // Cuts of any segmentation info added on at the end of the object_id
+  objectId = objectId.slice(0, 36)
   switch (objectType) {
     case CardType.Author:
       return `/orgs/${objectId}`
