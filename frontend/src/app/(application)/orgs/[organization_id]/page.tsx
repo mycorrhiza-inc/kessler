@@ -2,15 +2,11 @@
 import React, { Suspense } from "react";
 import { generateTypeUrlParams } from "@/lib/types/url_params";
 import AllInOneServerSearch from "@/components/stateful/SearchBar/AllInOneServerSearch";
-import DynamicFilters from "@/components/stateful/Filters/DynamicFilters";
-import { ObjectQueryType } from "@/lib/types/SearchTypes";
 import LoadingSpinner from "@/components/style/misc/LoadingSpinner";
-import RenderedOrg from "@/components/stateful/RenderedObjectCards/RednderedObjectCard";
 import DefaultContainer from "@/components/stateful/PageContainer/DefaultContainer";
-import ServerSearchResults from "@/components/stateful/ServerResults/ServerResults";
 import { GenericSearchType } from "@/lib/adapters/genericSearchCallback";
-import RenderedCardObject from "@/components/stateful/RenderedObjectCards/RednderedObjectCard";
 import { CardSize } from "@/components/style/cards/GenericResultCard";
+import RenderedCardObject from "@/components/stateful/RenderedObjectCards/RednderedObjectCard";
 
 export default async function OrgPage({
   params,
