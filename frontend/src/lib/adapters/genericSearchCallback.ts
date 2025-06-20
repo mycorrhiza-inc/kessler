@@ -2,14 +2,10 @@ import {
   PaginationData,
   SearchResult,
   SearchResultsGetter,
-  queryStringFromPagination,
 } from "../types/new_search_types";
 import { generateFakeResults } from "../search/search_utils";
 import axios from "axios";
-import { hydratedSearchResultsToFilings } from "../requests/search";
-import { adaptFilingToCard } from "./genericCardAdapters";
-import { DocumentCardData, DocumentCardDataValidator } from "../types/generic_card_types";
-import { BackendFilterObject } from "../filters";
+import { DocumentCardData } from "../types/generic_card_types";
 import { encodeUrlParams, TypedUrlParams } from "../types/url_params";
 import { DEFAULT_PAGE_SIZE } from "../constants";
 import { getContextualAPIUrl } from "../env_variables";
@@ -142,17 +138,7 @@ export const createGenericSearchCallback = (
   //console.log("All searches are dummys for momentary testing purposes")
 
   const api_url = getContextualAPIUrl();
-  // const api_url = "http://localhost";
 
-  // =======
-  //   info.search_type = GenericSearchType.Dummy as GenericSearchType;
-  //   console.log("All searches are dummys for momentary testing purposes");
-  //
-  //   const api_url = contextualApiUrl(getEnvConfig());
-  //   if (!api_url) {
-  //     throw new Error("API URL cannot be undefined");
-  //   }
-  // >>>>>>> main
   console.log("searching with api_url:", api_url);
   console.log("info:", info);
   console.log("search type:", info.search_type);

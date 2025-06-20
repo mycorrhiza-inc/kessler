@@ -51,7 +51,7 @@ export default function ServerSearchResultsRaw({ baseUrl, urlParams, results }: 
           >
             «
           </a>
-          <p className="join-item btn btn-outline text-base pointer-events-none select-none">Page {urlParams.paginationData.page || 0}</p>
+          <p className="join-item btn btn-outline text-base pointer-events-none select-none">Page {(urlParams.paginationData.page || 0) + 1}</p>
           <a
             href={nextHref}
             className={

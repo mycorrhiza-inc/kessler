@@ -4,7 +4,7 @@ const ErrorMessage = ({
   reload,
 }: {
   message?: string;
-  error?: string;
+  error?: any;
   reload?: boolean;
 }) => {
   if (!message) {

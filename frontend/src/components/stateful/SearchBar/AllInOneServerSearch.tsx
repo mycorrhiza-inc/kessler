@@ -25,6 +25,7 @@ export default async function AllInOneServerSearch({ urlParams, queryType, baseU
   if (disableFilterSelection) {
     return (
       <div className="bg-base-100">
+        {aboveSearchElement}
         <ClientSearchBar urlParams={urlParams.queryData} baseUrl={baseUrl} />
         {!disableResults && (
           <ServerSearchResults

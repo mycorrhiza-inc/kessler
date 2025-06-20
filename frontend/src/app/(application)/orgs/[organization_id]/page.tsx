@@ -2,13 +2,11 @@
 import React, { Suspense } from "react";
 import { generateTypeUrlParams } from "@/lib/types/url_params";
 import AllInOneServerSearch from "@/components/stateful/SearchBar/AllInOneServerSearch";
-import DynamicFilters from "@/components/stateful/Filters/DynamicFilters";
-import { ObjectQueryType } from "@/lib/types/SearchTypes";
 import LoadingSpinner from "@/components/style/misc/LoadingSpinner";
-import RenderedOrg from "@/components/stateful/RenderedObjectCards/RednderedOrg";
 import DefaultContainer from "@/components/stateful/PageContainer/DefaultContainer";
-import ServerSearchResults from "@/components/stateful/ServerResults/ServerResults";
 import { GenericSearchType } from "@/lib/adapters/genericSearchCallback";
+import { CardSize } from "@/components/style/cards/GenericResultCard";
+import RenderedCardObject from "@/components/stateful/RenderedObjectCards/RednderedObjectCard";
 
 export default async function OrgPage({
   params,
@@ -26,7 +24,7 @@ export default async function OrgPage({
   return (
     <DefaultContainer>
       <Suspense fallback={<LoadingSpinner loadingText="Loading Organization Data" />}>
-        <RenderedOrg org_id={org_id} />
+        <RenderedCardObject objectType={GenericSearchType.Organization} object_id={org_id} size={CardSize.Large} />
       </Suspense>
       <AllInOneServerSearch
         aboveSearchElement={<h1 className="text-2xl font-bold mb-4">Search [org-name]'s Filings</h1>}
