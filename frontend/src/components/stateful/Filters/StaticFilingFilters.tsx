@@ -113,6 +113,7 @@ export function HardCodedFiltersFromInfo({
         };
         return def.filterType === FilterType.Multi ? (
           <DynamicMultiSelect
+            className="z-index-1"
             key={def.id}
             fieldDefinition={fieldDef}
             value={value}
@@ -120,6 +121,7 @@ export function HardCodedFiltersFromInfo({
           />
         ) : (
           <DynamicSingleSelect
+            className="z-index-1"
             key={def.id}
             fieldDefinition={fieldDef}
             value={value}
