@@ -5,6 +5,10 @@ import { useState } from "react";
 import { DynamicMultiSelect } from "./FilterMultiSelect";
 import { DynamicSingleSelect } from "./FilterSingleSelect";
 import { useRouter } from "next/navigation";
+import {
+  OrganizationsAutocompleteList,
+  ConversationsAutocompleteList,
+} from "./HardcodedAutocompletes";
 
 // Minimal filter definition used to render dynamic filters
 export enum FilterType {
@@ -80,12 +84,9 @@ export function HardCodedFiltersFromInfo({
   baseUrl: string;
   hardcodedFilterInfo: MinimalFilterDefinition[];
 }) {
-  // Initialize filter values from URL params
   const router = useRouter();
   const initialFilters = urlQueryParams.filters || {};
-  const [filterValues, setFilterValues] = useState<Record<string, string>>(
-    initialFilters
-  );
+  const [filterValues, setFilterValues] = useState<Record<string, string>>(initialFilters);
 
   // Update filter and navigate
   const handleFilterChange = (id: string) => (value: string) => {
@@ -100,19 +101,33 @@ export function HardCodedFiltersFromInfo({
     router.push(endpoint);
   };
 
+  // Helper to map filter IDs to static autocomplete options
+  const getStaticOptions = (id: string) => {
+    switch (id) {
+      case "author_id":
+        return OrganizationsAutocompleteList.map((org) => ({ value: org.value, label: org.label }));
+      case "conversation_id":
+        return ConversationsAutocompleteList.map((c) => ({ value: c.value, label: c.label }));
+      default:
+        return [];
+    }
+  };
+
   return (
     <div className="filter-container flex flex-col space-y-24">
       {hardcodedFilterInfo.map((def) => {
         const value = filterValues[def.id] || "";
+        const options = getStaticOptions(def.id);
         const fieldDef = {
           id: def.id,
           displayName: def.displayName,
           description: def.description || "",
           placeholder: def.placeholder || "",
-          options: [],
+          options,
         };
         return def.filterType === FilterType.Multi ? (
           <DynamicMultiSelect
+            className="z-index-1"
             key={def.id}
             fieldDefinition={fieldDef}
             value={value}
@@ -120,6 +135,7 @@ export function HardCodedFiltersFromInfo({
           />
         ) : (
           <DynamicSingleSelect
+            className="z-index-1"
             key={def.id}
             fieldDefinition={fieldDef}
             value={value}
