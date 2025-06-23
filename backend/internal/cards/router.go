@@ -1,14 +1,17 @@
 package cards
 
 import (
+	"context"
 	"encoding/json"
+	"net/http"
+	"time"
+
+	"github.com/gorilla/mux"
+	"github.com/google/uuid"
+
 	"kessler/internal/cache"
 	"kessler/internal/dbstore"
 	"kessler/internal/search"
-	"net/http"
-
-	"github.com/google/uuid"
-	"github.com/gorilla/mux"
 )
 
 // RegisterCardLookupRoutes registers endpoints for fetching card data by object UUID.
@@ -17,7 +20,7 @@ func RegisterCardLookupRoutes(r *mux.Router, db dbstore.DBTX) error {
 	cacheCtrl, _ := cache.NewCacheController()
 
 	// Organization (Author card)
-	r.HandleFunc("/org/{id}", func(w http.ResponseWriter, req *http.Request) {
+	r.HandleFunc("/orgs/{id}", func(w http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
 		vars := mux.Vars(req)
 		id := vars["id"]
@@ -79,7 +82,7 @@ func RegisterCardLookupRoutes(r *mux.Router, db dbstore.DBTX) error {
 	}).Methods("GET")
 
 	// Docket (Conversation card)
-	r.HandleFunc("/convo/{id}", func(w http.ResponseWriter, req *http.Request) {
+	r.HandleFunc("/dockets/{id}", func(w http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
 		vars := mux.Vars(req)
 		id := vars["id"]
