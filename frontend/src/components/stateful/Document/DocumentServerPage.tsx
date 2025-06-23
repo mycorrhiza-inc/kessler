@@ -1,16 +1,18 @@
-import DefaultContainer from "@/components/stateful/PageContainer/DefaultContainer";
 import RenderedCardObject from "@/components/stateful/RenderedObjectCards/RednderedObjectCard";
 import { CardSize } from "@/components/style/cards/GenericResultCard";
 import { GenericSearchType } from "@/lib/adapters/genericSearchCallback";
+import { DocumentMainTabsClient } from "./DocumentBody";
 
-export default async function Page({
-  params,
+export default async function DocumentServerPage({
+  filling_id,
 }: {
-  params: Promise<{ filling_id: string }>;
+  filling_id: string
 }) {
+  const doc_object = { verifed: true, id: filling_id } as any;
 
-  const filling_id = (await params).filling_id;
-  return <DefaultContainer>
+  return <>
     <RenderedCardObject objectType={GenericSearchType.Filling} object_id={filling_id} size={CardSize.Large} />
-  </DefaultContainer>
+    <DocumentMainTabsClient documentObject={doc_object} isPage />
+  </>
+
 }
