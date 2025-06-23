@@ -5,7 +5,7 @@ import {
 } from "../types/new_search_types";
 import { generateFakeResults } from "../search/search_utils";
 import axios from "axios";
-import { DocumentCardData } from "../types/generic_card_types";
+import { DocumentCardData, DocumentCardDataValidator } from "../types/generic_card_types";
 import { encodeUrlParams, TypedUrlParams } from "../types/url_params";
 import { DEFAULT_PAGE_SIZE } from "../constants";
 import { getContextualAPIUrl } from "../env_variables";
@@ -112,6 +112,7 @@ async function performSearchRequest<Req, Res, Item extends SearchResult>(
     if (pagination) {
       mutateIndexifySearchResults(items, pagination);
     }
+    console.log("query response:", items);
     return items;
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -198,7 +199,7 @@ export const createGenericSearchCallback = (
           'get',
           (raw_results): DocumentCardData[] => {
             return raw_results.data.map((raw): DocumentCardData => {
-              // return DocumentCardDataValidator.parse(raw)
+              return DocumentCardDataValidator.parse(raw)
               return raw as DocumentCardData
             });
           },

@@ -10,8 +10,8 @@ interface ServerSearchResultsRawParams {
 }
 export default function ServerSearchResultsRaw({ baseUrl, urlParams, results }: ServerSearchResultsRawParams) {
   // Perform search based on URL params
-  const cardElements = results.map((card_data) => (
-    <Card key={card_data.id} size={CardSize.Medium} data={card_data} />
+  const cardElements = results.map((card_data, index) => (
+    <Card key={`server-results-${card_data.id}-${index}`} size={CardSize.Medium} data={card_data} />
   ));
 
   // Pagination logic
