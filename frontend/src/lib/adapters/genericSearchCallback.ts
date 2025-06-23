@@ -18,30 +18,22 @@ export enum GenericSearchType {
 }
 
 export interface GenericSearchInfo {
-  search_type: GenericSearchType;
   query: string;
   filters?: Record<string, string>;
 }
 
-export const searchInvokeFromUrlParams = async (urlParams: TypedUrlParams, objectType: GenericSearchType, inheritedFilters: Record<string, string>) => {
+export const searchInvokeFromUrlParams = async (urlParams: TypedUrlParams, inheritedFilters: Record<string, string>) => {
   const searchInfo: GenericSearchInfo = {
     query: urlParams.queryData.query || "",
-    search_type: objectType,
     filters: urlParams.queryData.filters
   }
   const pagination: PaginationData = {
     page: urlParams.paginationData.page || 0,
     limit: urlParams.paginationData.limit || DEFAULT_PAGE_SIZE
   }
-  return await searchInvoke(searchInfo, pagination)
-}
-export const searchInvoke = async (
-  info: GenericSearchInfo,
-  pagination: PaginationData
-) => {
-  const callback = createGenericSearchCallback(info);
+  const callback = createGenericSearchCallback(searchInfo);
   return await callback(pagination);
-};
+}
 
 export const mutateIndexifySearchResults = (
   results: SearchResult[],
@@ -132,91 +124,39 @@ export const createGenericSearchCallback = (
 ): SearchResultsGetter => {
   // debug and default to dummy search results for stylistic changes.
   // info.search_type = GenericSearchType.Filling as GenericSearchType;
-  if (info.search_type == GenericSearchType.Docket || info.search_type == GenericSearchType.Organization) {
-    info.search_type = GenericSearchType.Dummy as GenericSearchType;
-  }
-  //console.log("All searches are dummys for momentary testing purposes")
 
   const api_url = getContextualAPIUrl();
 
   console.log("searching with api_url:", api_url);
   console.log("info:", info);
-  console.log("search type:", info.search_type);
 
-  switch (info.search_type) {
-    case GenericSearchType.Dummy:
-      return async (pagination: PaginationData): Promise<SearchResult> => {
-        try {
-          const url = `${api_url}/version_hash`;
-          const response = await axios.get(url);
+  return async (pagination: PaginationData): Promise<SearchResult> => {
+    const urlParams: TypedUrlParams = {
+      paginationData: pagination,
+      queryData: {
+        query: info.query,
+        filters: info.filters,
+      }
+    }
+    console.log("returning a filling async callback:")
 
-          if (!response.data) {
-            throw new Error(
-              `Search data returned from backend URL ${url} was undefined`
-            );
-          }
-
-          const results = await generateFakeResults(pagination);
-          console.log("Got fake results");
-          mutateIndexifySearchResults(results, pagination);
-          return results; {
-          }
-        } catch (error) {
-          if (axios.isAxiosError(error)) {
-            console.log("Axios error in dummy search:", error);
-            if (error.response) {
-              console.error("Response status:", error.response.status);
-              console.error("Response data:", error.response.data);
-            }
-          } else {
-            console.error("Unexpected error in dummy search:", error);
-          }
-          throw error;
-        }
-      };
-
-    case GenericSearchType.Filling:
-      return async (pagination: PaginationData): Promise<SearchResult> => {
-        const urlParams: TypedUrlParams = {
-          paginationData: pagination,
-          queryData: {
-            query: info.query,
-            filters: info.filters,
-          }
-        }
-        console.log("returning a filling async callback:")
-
-        console.log("query data:", info);
-        console.log("API URL:", api_url);
-        const encodedQueryParams = encodeUrlParams(urlParams)
-        const url = `${api_url}/search/${encodedQueryParams}`
-        console.log("ENDPOINT: ", url)
+    console.log("query data:", info);
+    console.log("API URL:", api_url);
+    const encodedQueryParams = encodeUrlParams(urlParams)
+    const url = `${api_url}/search/${encodedQueryParams}`
+    console.log("ENDPOINT: ", url)
 
 
-        return performSearchRequest<SearchRequest, { data: any[] }, DocumentCardData>(
-          url,
-          'get',
-          (raw_results): DocumentCardData[] => {
-            return raw_results.data.map((raw): DocumentCardData => {
-              // return DocumentCardDataValidator.parse(raw)
-              return raw as DocumentCardData
-            });
-          },
-        );
-      };
-
-    case GenericSearchType.Organization:
-      return async (): Promise<SearchResult[]> => {
-        throw new Error("Organization search not implemented");
-      };
-
-    case GenericSearchType.Docket:
-      return async (): Promise<SearchResult[]> => {
-        throw new Error("Docket search not implemented");
-      };
-
-    default:
-      const _exhaustive: never = info.search_type;
-      throw new Error(`Unhandled search type: ${info.search_type}`);
-  }
+    return performSearchRequest<SearchRequest, { data: any[] }, DocumentCardData>(
+      url,
+      'get',
+      (raw_results): DocumentCardData[] => {
+        return raw_results.data.map((raw): DocumentCardData => {
+          // return DocumentCardDataValidator.parse(raw)
+          console.log("data::: ", raw);
+          return raw as DocumentCardData
+        });
+      },
+    );
+  };
 };
