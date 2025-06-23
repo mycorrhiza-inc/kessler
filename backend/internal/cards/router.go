@@ -2,10 +2,11 @@ package cards
 
 import (
 	"encoding/json"
+	"fmt"
 	"kessler/internal/cache"
 	"kessler/internal/dbstore"
-	"kessler/internal/fugusdk"
 	"kessler/internal/search"
+	"kessler/internal/search/filter"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -15,7 +16,18 @@ import (
 // RegisterCardLookupRoutes registers endpoints for fetching card data by object UUID.
 func RegisterCardLookupRoutes(r *mux.Router, db dbstore.DBTX) error {
 	// Initialize cache controller (can continue without cache if unavailable)
+	fuguServerURL := "http://fugudb:3301"
+
+	// Create filter service and handler
+	filterService := filter.NewService(fuguServerURL)
+	filterHandler := filter.NewHandler(filterService)
 	cacheCtrl, _ := cache.NewCacheController()
+	service, err := search.NewSearchService(fuguServerURL, filterService, db)
+	if err != nil {
+		return fmt.Errorf("failed to create search service: %w", err)
+	}
+
+	handler := search.NewSearchHandler(service, filterHandler)
 
 	// Organization (Author card)
 	r.HandleFunc("/org/{id}", func(w http.ResponseWriter, req *http.Request) {
@@ -134,21 +146,20 @@ func RegisterCardLookupRoutes(r *mux.Router, db dbstore.DBTX) error {
 	}).Methods("GET")
 
 	// File (Document card)
-	r.HandleFunc("/file/{id}", func(w http.ResponseWriter, req *http.Request) {
-		ctx := req.Context()
-		id := mux.Vars(req)["id"]
-		// Build raw document card (full hydration)
-		// Create a minimal FuguSearchResult wrapper
-		res := fugusdk.FuguSearchResult{ID: id, Text: "", Metadata: nil}
-		card, err := search.BuildDocumentCard(ctx, db, res, 0, true)
-		if err != nil {
-			http.Error(w, "file not found", http.StatusNotFound)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(card)
-	}).Methods("GET")
+	// r.HandleFunc("/file/{id}", func(w http.ResponseWriter, req *http.Request) {
+	// 	ctx := req.Context()
+	// 	id := mux.Vars(req)["id"]
+	// 	// Build raw document card (full hydration)
+	// 	// Create a minimal FuguSearchResult wrapper
+	// 	res := fugusdk.FuguSearchResult{ID: id, Text: "", Metadata: nil}
+	// 	// card, err := search.BuildDocumentCard(ctx, db, res, 0, true)
+	// 	if err != nil {
+	// 		http.Error(w, "file not found", http.StatusNotFound)
+	// 		return
+	// 	}
+	// 	w.Header().Set("Content-Type", "application/json")
+	// 	json.NewEncoder(w).Encode(card)
+	// }).Methods("GET")
 
 	return nil
 }
-
