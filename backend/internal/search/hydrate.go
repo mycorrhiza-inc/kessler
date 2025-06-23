@@ -148,7 +148,7 @@ func (s *SearchService) cacheCard(ctx context.Context, key string, card CardData
 }
 
 // Hydrate conversation/docket data
-func (s *SearchService) hydrateConversation(ctx context.Context, id string, score float32, index int) (CardData, error) {
+func (s *SearchService) HydrateConversation(ctx context.Context, id string, score float32, index int) (CardData, error) {
 	// Check cache first
 	cacheKey := cache.PrepareKey("search", "conversation", id)
 	if cached, err := s.getCachedCard(ctx, cacheKey); err == nil {
@@ -188,7 +188,7 @@ func (s *SearchService) hydrateConversation(ctx context.Context, id string, scor
 }
 
 // Hydrate organization/author data
-func (s *SearchService) hydrateOrganization(ctx context.Context, id string, score float32, index int) (CardData, error) {
+func (s *SearchService) HydrateOrganization(ctx context.Context, id string, score float32, index int) (CardData, error) {
 	// Check cache first
 	cacheKey := cache.PrepareKey("search", "organization", id)
 	if cached, err := s.getCachedCard(ctx, cacheKey); err == nil {
@@ -236,7 +236,7 @@ func (s *SearchService) hydrateOrganization(ctx context.Context, id string, scor
 }
 
 // Hydrate document data
-func (s *SearchService) hydrateDocument(ctx context.Context, result fugusdk.FuguSearchResult, index int) (CardData, error) {
+func (s *SearchService) HydrateDocument(ctx context.Context, result fugusdk.FuguSearchResult, index int) (CardData, error) {
 	log := logger.FromContext(ctx)
 	// Check cache first
 	cacheKey := cache.PrepareKey("search", "document", result.ID)
@@ -370,11 +370,11 @@ func (s *SearchService) transformSearchResponse(ctx context.Context, fuguRespons
 
 		switch resultType {
 		case "conversation":
-			card, err = s.hydrateConversation(ctx, result.ID, result.Score, i)
+			card, err = s.HydrateConversation(ctx, result.ID, result.Score, i)
 		case "organization":
-			card, err = s.hydrateOrganization(ctx, result.ID, result.Score, i)
+			card, err = s.HydrateOrganization(ctx, result.ID, result.Score, i)
 		default:
-			card, err = s.hydrateDocument(ctx, result, i)
+			card, err = s.HydrateDocument(ctx, result, i)
 		}
 
 		if err != nil {
