@@ -288,6 +288,8 @@ func (s *SearchService) HydrateDocument(ctx context.Context, result fugusdk.Fugu
 					name = fileRec.Name
 				}
 				timestamp = fileRec.DatePublished.Time
+			} else {
+				log.Warn("Failed to read file record", zap.String("file_id", parsedUUID.String()), zap.Error(err))
 			}
 			// Fetch metadata record
 			if metaRec, err := q.FetchMetadata(ctx, parsedUUID); err == nil {
@@ -307,7 +309,11 @@ func (s *SearchService) HydrateDocument(ctx context.Context, result fugusdk.Fugu
 					if cn, ok := m["case_number"].(string); ok {
 						extraInfo = fmt.Sprintf("Case: %s", cn)
 					}
+				} else {
+					log.Warn("Failed to unmarshal metadata JSON", zap.String("file_id", parsedUUID.String()), zap.Error(err))
 				}
+			} else {
+				log.Warn("Failed to fetch metadata record", zap.String("file_id", parsedUUID.String()), zap.Error(err))
 			}
 		}
 	}
