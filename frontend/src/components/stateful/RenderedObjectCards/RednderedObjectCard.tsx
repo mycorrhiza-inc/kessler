@@ -3,7 +3,7 @@ import ErrorMessage from "@/components/style/messages/ErrorMessage";
 import { GenericSearchType } from "@/lib/adapters/genericSearchCallback";
 import { getContextualAPIUrl } from "@/lib/env_variables";
 import { generateFakeResultsRaw } from "@/lib/search/search_utils";
-import { AuthorCardDataValidator } from "@/lib/types/generic_card_types";
+import { AuthorCardDataValidator, DocumentCardDataValidator } from "@/lib/types/generic_card_types";
 import { sleep } from "@/lib/utils";
 import axios from "axios";
 
@@ -35,7 +35,7 @@ async function fetchCardData(object_id: string, objectType: GenericSearchType): 
       const filling_response = await axios.get(filling_endpoint)
       console.log("Filling response data:", filling_response.data)
       const filling_raw_data = filling_response.data
-      const filling_data = AuthorCardDataValidator.parse(filling_raw_data)
+      const filling_data = DocumentCardDataValidator.parse(filling_raw_data)
       return filling_data
     case GenericSearchType.Dummy:
       return generateFakeResultsRaw(1)[0]
