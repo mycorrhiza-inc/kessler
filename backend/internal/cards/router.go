@@ -2,11 +2,11 @@ package cards
 
 import (
 	"encoding/json"
-	"net/http"
-
 	"kessler/internal/cache"
 	"kessler/internal/dbstore"
+	"kessler/internal/fugusdk"
 	"kessler/internal/search"
+	"net/http"
 
 	"github.com/gorilla/mux"
 )
@@ -90,14 +90,13 @@ func RegisterCardLookupRoutes(r *mux.Router, db dbstore.DBTX) error {
 		json.NewEncoder(w).Encode(card)
 	}).Methods("GET")
 
-	
 	// File (Document card)
 	r.HandleFunc("/file/{id}", func(w http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
 		id := mux.Vars(req)["id"]
 		// Build raw document card (full hydration)
 		// Create a minimal FuguSearchResult wrapper
-		res := search.FuguResultWrapper{ID: id, Text: "", Metadata: nil}
+		res := fugusdk.FuguSearchResult{ID: id, Text: "", Metadata: nil}
 		card, err := search.BuildDocumentCard(ctx, db, res, 0, true)
 		if err != nil {
 			http.Error(w, "file not found", http.StatusNotFound)
@@ -109,3 +108,4 @@ func RegisterCardLookupRoutes(r *mux.Router, db dbstore.DBTX) error {
 
 	return nil
 }
+
