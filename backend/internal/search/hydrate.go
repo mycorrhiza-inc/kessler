@@ -49,21 +49,28 @@ func (d DocketCardData) GetType() string {
 }
 
 type DocumentAuthor struct {
-	AuthorName      string `json:"author_name"`
-	IsPerson        bool   `json:"is_person"`
-	IsPrimaryAuthor bool   `json:"is_primary_author"`
-	AuthorID        string `json:"author_id"`
+	AuthorName      string    `json:"author_name"`
+	IsPerson        bool      `json:"is_person"`
+	IsPrimaryAuthor bool      `json:"is_primary_author"`
+	AuthorID        uuid.UUID `json:"author_id"`
+}
+
+type DocumentConversation struct {
+	ConvoName string    `json:"convo_name"`
+	ConvoID   uuid.UUID `json:"convo_id"`
 }
 
 type DocumentCardData struct {
-	Name        string           `json:"name"`
-	Description string           `json:"description"`
-	Timestamp   time.Time        `json:"timestamp"`
-	ExtraInfo   string           `json:"extraInfo,omitempty"`
-	Index       int              `json:"index"`
-	Type        string           `json:"type"`
-	ObjectUUID  string           `json:"object_uuid"`
-	Authors     []DocumentAuthor `json:"authors"`
+	Name         string               `json:"name"`
+	Description  string               `json:"description"`
+	Timestamp    time.Time            `json:"timestamp"`
+	ExtraInfo    string               `json:"extraInfo,omitempty"`
+	Index        int                  `json:"index"`
+	Type         string               `json:"type"`
+	ObjectUUID   uuid.UUID            `json:"object_uuid"`
+	FragmentID   string               `json:"fragment_id"`
+	Authors      []DocumentAuthor     `json:"authors"`
+	Conversation DocumentConversation `json:"conversation"`
 }
 
 func (d DocumentCardData) GetType() string {
@@ -266,35 +273,55 @@ func (s *SearchService) hydrateDocument(ctx context.Context, result fugusdk.Fugu
 	if name == "" {
 		name = fmt.Sprintf("Document %s", result.ID)
 	}
-
+	if len(result.ID) < 36 {
+		return DocketCardData{}, fmt.Errorf("Document does not have long enough uuid.")
+	}
+	parsedUUID, err := uuid.Parse(result.ID[:36])
+	if err != nil {
+		return DocketCardData{}, fmt.Errorf("Could not parse uuid for object")
+	}
 	card := DocumentCardData{
-		Name:        name,
-		Description: description,
-		Timestamp:   timestamp,
-		ExtraInfo:   extraInfo,
-		Index:       index,
-		Type:        "document",
-		ObjectUUID:  result.ID,
-		Authors:     []DocumentAuthor{}, // Would need to query authorship table
+		Name:         name,
+		Description:  description,
+		Timestamp:    timestamp,
+		ExtraInfo:    extraInfo,
+		Index:        index,
+		Type:         "document",
+		ObjectUUID:   parsedUUID,
+		FragmentID:   result.ID[36:],
+		Authors:      []DocumentAuthor{}, // Would need to query authorship table
+		Conversation: DocumentConversation{},
 	}
 
 	// Try to get authors if this is a file document
-	if fileID, err := uuid.Parse(result.ID); err == nil {
-		queries := dbstore.New(s.db)
-		authorships, err := queries.AuthorshipDocumentListOrganizations(ctx, fileID)
-		if err == nil && len(authorships) > 0 {
-			for _, authorship := range authorships {
-				// Get organization details
-				org, err := queries.OrganizationRead(ctx, authorship.OrganizationID)
-				if err == nil {
-					author := DocumentAuthor{
-						AuthorName:      org.Name,
-						IsPerson:        org.IsPerson.Valid && org.IsPerson.Bool,
-						IsPrimaryAuthor: authorship.IsPrimaryAuthor.Valid && authorship.IsPrimaryAuthor.Bool,
-						AuthorID:        org.ID.String(),
-					}
-					card.Authors = append(card.Authors, author)
+	queries := dbstore.New(s.db)
+	authorships, err := queries.AuthorshipDocumentListOrganizations(ctx, parsedUUID)
+	if err == nil && len(authorships) > 0 {
+		for _, authorship := range authorships {
+			// Get organization details
+			org, err := queries.OrganizationRead(ctx, authorship.OrganizationID)
+			if err == nil {
+				author := DocumentAuthor{
+					AuthorName:      org.Name,
+					IsPerson:        org.IsPerson.Valid && org.IsPerson.Bool,
+					IsPrimaryAuthor: authorship.IsPrimaryAuthor.Valid && authorship.IsPrimaryAuthor.Bool,
+					AuthorID:        org.ID,
 				}
+				card.Authors = append(card.Authors, author)
+			}
+		}
+	}
+
+	// Try to get conversation info if this is a file document
+	// conversation_uuid is stored in public.docket_documents
+	conv_info, err := queries.ConversationIDFetchFromFileID(ctx, parsedUUID)
+	if err != nil && len(conv_info) > 0 {
+		// Fetch conversation details
+		conv, err := queries.DocketConversationRead(ctx, conv_info[0].ConversationUuid)
+		if err == nil {
+			card.Conversation = DocumentConversation{
+				ConvoName: conv.Name,
+				ConvoID:   conv.ID,
 			}
 		}
 	}
