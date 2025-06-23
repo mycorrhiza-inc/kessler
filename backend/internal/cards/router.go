@@ -64,7 +64,7 @@ func RegisterCardLookupRoutes(r *mux.Router, db dbstore.DBTX) error {
 			ExtraInfo:   extraInfo,
 			Index:       0,
 			Type:        "author",
-			ObjectUUID:  org.ID.String(),
+			ObjectUUID:  org.ID,
 		}
 
 		// Cache result
@@ -118,7 +118,7 @@ func RegisterCardLookupRoutes(r *mux.Router, db dbstore.DBTX) error {
 			Timestamp:   conv.CreatedAt.Time,
 			Index:       0,
 			Type:        "docket",
-			ObjectUUID:  conv.ID.String(),
+			ObjectUUID:  conv.ID,
 		}
 
 		// Cache result

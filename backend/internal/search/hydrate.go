@@ -28,7 +28,7 @@ type AuthorCardData struct {
 	ExtraInfo   string    `json:"extraInfo,omitempty"`
 	Index       int       `json:"index"`
 	Type        string    `json:"type"`
-	ObjectUUID  string    `json:"object_uuid"`
+	ObjectUUID  uuid.UUID `json:"object_uuid"`
 }
 
 func (a AuthorCardData) GetType() string {
@@ -41,7 +41,7 @@ type DocketCardData struct {
 	Timestamp   time.Time `json:"timestamp"`
 	Index       int       `json:"index"`
 	Type        string    `json:"type"`
-	ObjectUUID  string    `json:"object_uuid"`
+	ObjectUUID  uuid.UUID `json:"object_uuid"`
 }
 
 func (d DocketCardData) GetType() string {
@@ -178,7 +178,7 @@ func (s *SearchService) hydrateConversation(ctx context.Context, id string, scor
 		Timestamp:   conversation.CreatedAt.Time,
 		Index:       index,
 		Type:        "docket",
-		ObjectUUID:  conversation.ID.String(),
+		ObjectUUID:  conversation.ID,
 	}
 
 	// Cache the result
@@ -226,7 +226,7 @@ func (s *SearchService) hydrateOrganization(ctx context.Context, id string, scor
 		ExtraInfo:   extraInfo,
 		Index:       index,
 		Type:        "author",
-		ObjectUUID:  org.ID.String(),
+		ObjectUUID:  org.ID,
 	}
 
 	// Cache the result
