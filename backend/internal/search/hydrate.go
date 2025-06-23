@@ -237,6 +237,7 @@ func (s *SearchService) hydrateOrganization(ctx context.Context, id string, scor
 
 // Hydrate document data
 func (s *SearchService) hydrateDocument(ctx context.Context, result fugusdk.FuguSearchResult, index int) (CardData, error) {
+	log := logger.FromContext(ctx)
 	// Check cache first
 	cacheKey := cache.PrepareKey("search", "document", result.ID)
 	if cached, err := s.getCachedCard(ctx, cacheKey); err == nil {
@@ -292,33 +293,46 @@ func (s *SearchService) hydrateDocument(ctx context.Context, result fugusdk.Fugu
 		Authors:      []DocumentAuthor{}, // Would need to query authorship table
 		Conversation: DocumentConversation{},
 	}
+	log.Info("Successfully Created Initial Card Data", zap.String("file_id", parsedUUID.String()))
 
 	// Try to get authors if this is a file document
 	queries := dbstore.New(s.db)
 	authorships, err := queries.AuthorshipDocumentListOrganizations(ctx, parsedUUID)
-	if err == nil && len(authorships) > 0 {
+	if err != nil {
+		log.Warn("Failed to list authorships", zap.String("file_id", parsedUUID.String()), zap.Error(err))
+	} else if len(authorships) == 0 {
+		log.Warn("No authorships found", zap.String("file_id", parsedUUID.String()))
+	} else {
 		for _, authorship := range authorships {
 			// Get organization details
 			org, err := queries.OrganizationRead(ctx, authorship.OrganizationID)
-			if err == nil {
-				author := DocumentAuthor{
-					AuthorName:      org.Name,
-					IsPerson:        org.IsPerson.Valid && org.IsPerson.Bool,
-					IsPrimaryAuthor: authorship.IsPrimaryAuthor.Valid && authorship.IsPrimaryAuthor.Bool,
-					AuthorID:        org.ID,
-				}
-				card.Authors = append(card.Authors, author)
+			if err != nil {
+				log.Info("Failed to read organization for authorship", zap.String("org_id", authorship.OrganizationID.String()), zap.Error(err))
+				continue
 			}
+			author := DocumentAuthor{
+				AuthorName:      org.Name,
+				IsPerson:        org.IsPerson.Valid && org.IsPerson.Bool,
+				IsPrimaryAuthor: authorship.IsPrimaryAuthor.Valid && authorship.IsPrimaryAuthor.Bool,
+				AuthorID:        org.ID,
+			}
+			card.Authors = append(card.Authors, author)
 		}
 	}
 
 	// Try to get conversation info if this is a file document
 	// conversation_uuid is stored in public.docket_documents
 	conv_info, err := queries.ConversationIDFetchFromFileID(ctx, parsedUUID)
-	if err != nil && len(conv_info) > 0 {
+	if err != nil {
+		log.Warn("Failed to fetch conversation ID from file ID", zap.String("file_id", parsedUUID.String()), zap.Error(err))
+	} else if len(conv_info) == 0 {
+		log.Warn("No conversation info found for file", zap.String("file_id", parsedUUID.String()))
+	} else {
 		// Fetch conversation details
 		conv, err := queries.DocketConversationRead(ctx, conv_info[0].ConversationUuid)
-		if err == nil {
+		if err != nil {
+			log.Info("Failed to read conversation details", zap.String("conversation_id", conv_info[0].ConversationUuid.String()), zap.Error(err))
+		} else {
 			card.Conversation = DocumentConversation{
 				ConvoName: conv.Name,
 				ConvoID:   conv.ID,
