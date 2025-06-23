@@ -2,12 +2,12 @@ package cards
 
 import (
 	"encoding/json"
+	"net/http"
+
 	"kessler/internal/cache"
 	"kessler/internal/dbstore"
 	"kessler/internal/search"
-	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
@@ -19,16 +19,14 @@ func RegisterCardLookupRoutes(r *mux.Router, db dbstore.DBTX) error {
 	// Organization (Author card)
 	r.HandleFunc("/org/{id}", func(w http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
-		vars := mux.Vars(req)
-		id := vars["id"]
+		id := mux.Vars(req)["id"]
+		cacheKey := cache.PrepareKey("search", "organization", id)
 
 		// Try cache first
-		cacheKey := cache.PrepareKey("search", "organization", id)
 		if cacheCtrl.Client != nil {
 			if data, err := cacheCtrl.Get(cacheKey); err == nil {
 				var cached search.AuthorCardData
 				if err := json.Unmarshal(data, &cached); err == nil && cached.Type == "author" {
-					// Return cached card
 					cached.Index = 0
 					w.Header().Set("Content-Type", "application/json")
 					json.NewEncoder(w).Encode(cached)
@@ -37,34 +35,11 @@ func RegisterCardLookupRoutes(r *mux.Router, db dbstore.DBTX) error {
 			}
 		}
 
-		// Parse and fetch from DB
-		orgID, err := uuid.Parse(id)
-		if err != nil {
-			http.Error(w, "invalid UUID", http.StatusBadRequest)
-			return
-		}
-		queries := dbstore.New(db)
-		org, err := queries.OrganizationRead(ctx, orgID)
+		// Build card data
+		card, err := search.BuildAuthorCard(ctx, db, id, 0)
 		if err != nil {
 			http.Error(w, "organization not found", http.StatusNotFound)
 			return
-		}
-
-		// Build card
-		extraInfo := ""
-		if org.IsPerson.Valid && org.IsPerson.Bool {
-			extraInfo = "Individual contributor"
-		} else {
-			extraInfo = "Organization"
-		}
-		card := search.AuthorCardData{
-			Name:        org.Name,
-			Description: org.Description,
-			Timestamp:   org.CreatedAt.Time,
-			ExtraInfo:   extraInfo,
-			Index:       0,
-			Type:        "author",
-			ObjectUUID:  org.ID,
 		}
 
 		// Cache result
@@ -81,11 +56,10 @@ func RegisterCardLookupRoutes(r *mux.Router, db dbstore.DBTX) error {
 	// Docket (Conversation card)
 	r.HandleFunc("/convo/{id}", func(w http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
-		vars := mux.Vars(req)
-		id := vars["id"]
+		id := mux.Vars(req)["id"]
+		cacheKey := cache.PrepareKey("search", "conversation", id)
 
 		// Try cache first
-		cacheKey := cache.PrepareKey("search", "conversation", id)
 		if cacheCtrl.Client != nil {
 			if data, err := cacheCtrl.Get(cacheKey); err == nil {
 				var cached search.DocketCardData
@@ -98,27 +72,11 @@ func RegisterCardLookupRoutes(r *mux.Router, db dbstore.DBTX) error {
 			}
 		}
 
-		// Parse UUID and fetch
-		convID, err := uuid.Parse(id)
+		// Build card data
+		card, err := search.BuildDocketCard(ctx, db, id, 0)
 		if err != nil {
-			http.Error(w, "invalid UUID", http.StatusBadRequest)
+			http.Error(w, "conversation not found", http.StatusNotFound)
 			return
-		}
-		queries := dbstore.New(db)
-		conv, err := queries.DocketConversationRead(ctx, convID)
-		if err != nil {
-			http.Error(w, "docket not found", http.StatusNotFound)
-			return
-		}
-
-		// Build card
-		card := search.DocketCardData{
-			Name:        conv.Name,
-			Description: conv.Description,
-			Timestamp:   conv.CreatedAt.Time,
-			Index:       0,
-			Type:        "docket",
-			ObjectUUID:  conv.ID,
 		}
 
 		// Cache result
@@ -128,6 +86,23 @@ func RegisterCardLookupRoutes(r *mux.Router, db dbstore.DBTX) error {
 			}
 		}
 
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(card)
+	}).Methods("GET")
+
+	
+	// File (Document card)
+	r.HandleFunc("/file/{id}", func(w http.ResponseWriter, req *http.Request) {
+		ctx := req.Context()
+		id := mux.Vars(req)["id"]
+		// Build raw document card (full hydration)
+		// Create a minimal FuguSearchResult wrapper
+		res := search.FuguResultWrapper{ID: id, Text: "", Metadata: nil}
+		card, err := search.BuildDocumentCard(ctx, db, res, 0, true)
+		if err != nil {
+			http.Error(w, "file not found", http.StatusNotFound)
+			return
+		}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(card)
 	}).Methods("GET")
