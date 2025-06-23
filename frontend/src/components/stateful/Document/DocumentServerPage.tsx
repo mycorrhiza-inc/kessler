@@ -8,7 +8,7 @@ export default async function DocumentServerPage({
 }: {
   filling_id: string
 }) {
-  const doc_object = { verifed: true, id: filling_id } as any;
+  const doc_object = { verifed: true, id: filling_id, extension: "pdf" } as any;
 
   return <>
     <RenderedCardObject objectType={GenericSearchType.Filling} object_id={filling_id} size={CardSize.Large} />
