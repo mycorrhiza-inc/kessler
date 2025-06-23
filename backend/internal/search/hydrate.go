@@ -236,7 +236,7 @@ func (s *SearchService) HydrateOrganization(ctx context.Context, id string, scor
 }
 
 // Hydrate document data
-func (s *SearchService) HydrateDocument(ctx context.Context, result fugusdk.FuguSearchResult, index int) (CardData, error) {
+func (s *SearchService) HydrateDocument(ctx context.Context, result fugusdk.FuguSearchResult, index int, full_fetch bool) (CardData, error) {
 	log := logger.FromContext(ctx)
 	// Check cache first
 	cacheKey := cache.PrepareKey("search", "document", result.ID)
@@ -270,16 +270,50 @@ func (s *SearchService) HydrateDocument(ctx context.Context, result fugusdk.Fugu
 		}
 	}
 
-	// If no name, use ID
-	if name == "" {
-		name = fmt.Sprintf("Document %s", result.ID)
-	}
 	if len(result.ID) < 36 {
 		return DocketCardData{}, fmt.Errorf("Document does not have long enough uuid.")
 	}
 	parsedUUID, err := uuid.Parse(result.ID[:36])
 	if err != nil {
 		return DocketCardData{}, fmt.Errorf("Could not parse uuid for object")
+	}
+	if full_fetch {
+		// Fallback to database if metadata not provided
+		needFetch := name == "" || description == result.Text
+		if needFetch {
+			q := dbstore.New(s.db)
+			// Fetch file basic info
+			if fileRec, err := q.ReadFile(ctx, parsedUUID); err == nil {
+				if name == "" {
+					name = fileRec.Name
+				}
+				timestamp = fileRec.DatePublished.Time
+			}
+			// Fetch metadata record
+			if metaRec, err := q.FetchMetadata(ctx, parsedUUID); err == nil {
+				var m map[string]interface{}
+				if err := json.Unmarshal(metaRec.Mdata, &m); err == nil {
+					if fn, ok := m["file_name"].(string); ok {
+						name = fn
+					}
+					if desc2, ok := m["description"].(string); ok {
+						description = desc2
+					}
+					if ca, ok := m["created_at"].(string); ok {
+						if t2, err := time.Parse(time.RFC3339, ca); err == nil {
+							timestamp = t2
+						}
+					}
+					if cn, ok := m["case_number"].(string); ok {
+						extraInfo = fmt.Sprintf("Case: %s", cn)
+					}
+				}
+			}
+		}
+	}
+	// If no name, use ID
+	if name == "" {
+		name = fmt.Sprintf("Document %s", result.ID)
 	}
 	card := DocumentCardData{
 		Name:         name,
@@ -374,7 +408,7 @@ func (s *SearchService) transformSearchResponse(ctx context.Context, fuguRespons
 		case "organization":
 			card, err = s.HydrateOrganization(ctx, result.ID, result.Score, i)
 		default:
-			card, err = s.HydrateDocument(ctx, result, i)
+			card, err = s.HydrateDocument(ctx, result, i, false)
 		}
 
 		if err != nil {

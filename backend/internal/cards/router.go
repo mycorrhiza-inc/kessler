@@ -61,7 +61,7 @@ func RegisterCardLookupRoutes(r *mux.Router, db dbstore.DBTX) error {
 
 		// Build minimal search result for hydration
 		result := fugusdk.FuguSearchResult{ID: id, Text: "", Metadata: nil}
-		cardData, err := service.HydrateDocument(ctx, result, 0)
+		cardData, err := service.HydrateDocument(ctx, result, 0, true)
 		if err != nil {
 			http.Error(w, "file not found", http.StatusNotFound)
 			return
