@@ -16,19 +16,19 @@ import (
 	"go.uber.org/zap"
 )
 
-// Card data types matching the frontend requirements
+// Card data types matching the frontend requirements exactly
 type CardData interface {
 	GetType() string
 }
 
 type AuthorCardData struct {
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	Timestamp   time.Time `json:"timestamp"`
-	ExtraInfo   string    `json:"extraInfo,omitempty"`
-	Index       int       `json:"index"`
-	Type        string    `json:"type"`
-	ObjectUUID  string    `json:"object_uuid"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Timestamp   string `json:"timestamp"`
+	ExtraInfo   string `json:"extraInfo,omitempty"`
+	Index       int    `json:"index"`
+	Type        string `json:"type"`
+	ObjectUUID  string `json:"object_uuid"`
 }
 
 func (a AuthorCardData) GetType() string {
@@ -36,12 +36,12 @@ func (a AuthorCardData) GetType() string {
 }
 
 type DocketCardData struct {
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	Timestamp   time.Time `json:"timestamp"`
-	Index       int       `json:"index"`
-	Type        string    `json:"type"`
-	ObjectUUID  string    `json:"object_uuid"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Timestamp   string `json:"timestamp"`
+	Index       int    `json:"index"`
+	Type        string `json:"type"`
+	ObjectUUID  string `json:"object_uuid"`
 }
 
 func (d DocketCardData) GetType() string {
@@ -55,89 +55,95 @@ type DocumentAuthor struct {
 	AuthorID        string `json:"author_id"`
 }
 
+type DocumentConversation struct {
+	ConvoID   string `json:"convo_id"`
+	ConvoName string `json:"convo_name"`
+}
+
 type DocumentCardData struct {
-	Name        string           `json:"name"`
-	Description string           `json:"description"`
-	Timestamp   time.Time        `json:"timestamp"`
-	ExtraInfo   string           `json:"extraInfo,omitempty"`
-	Index       int              `json:"index"`
-	Type        string           `json:"type"`
-	ObjectUUID  string           `json:"object_uuid"`
-	Authors     []DocumentAuthor `json:"authors"`
+	Name         string                `json:"name"`
+	Description  string                `json:"description"`
+	Timestamp    string                `json:"timestamp"`
+	ExtraInfo    string                `json:"extraInfo,omitempty"`
+	Index        int                   `json:"index"`
+	Type         string                `json:"type"`
+	ObjectUUID   string                `json:"object_uuid"`
+	Authors      []DocumentAuthor      `json:"authors"`
+	Conversation *DocumentConversation `json:"conversation,omitempty"`
 }
 
 func (d DocumentCardData) GetType() string {
 	return "document"
 }
 
-// Updated search response to use card data
-
-// NewSearchService creates a new search service with database access
-
-// Helper to determine result type from facets
-func (s *SearchService) getResultType(facets []string) string {
-	for _, facet := range facets {
-		if strings.Contains(facet, "/conversation") && !strings.Contains(facet, "/data/conversation") {
-			return "conversation"
-		}
-		if strings.Contains(facet, "/organization") {
-			return "organization"
+// Hydrate document data from attachment
+func (s *SearchService) hydrateDocument(ctx context.Context, result fugusdk.FuguSearchResult, index int) (CardData, error) {
+	// Check cache first
+	cacheKey := cache.PrepareKey("search", "document", result.ID)
+	if cached, err := s.getCachedCard(ctx, cacheKey); err == nil {
+		if doc, ok := cached.(DocumentCardData); ok {
+			doc.Index = index
+			return doc, nil
 		}
 	}
-	return "document"
-}
 
-// Get or create cached card data
-func (s *SearchService) getCachedCard(ctx context.Context, key string) (CardData, error) {
-	if s.cacheCtrl.Client == nil {
-		return nil, fmt.Errorf("cache not available")
+	// Extract basic metadata
+	name := ""
+	description := result.Text
+	timestamp := time.Now().Format(time.RFC3339)
+	extraInfo := ""
+
+	if result.Metadata != nil {
+		if fileName, ok := result.Metadata["file_name"].(string); ok {
+			name = fileName
+		}
+		if desc, ok := result.Metadata["description"].(string); ok {
+			description = desc
+		}
+		if createdAt, ok := result.Metadata["created_at"].(string); ok {
+			timestamp = createdAt
+		}
+		if caseNumber, ok := result.Metadata["case_number"].(string); ok {
+			extraInfo = fmt.Sprintf("Case: %s", caseNumber)
+		}
 	}
 
-	data, err := s.cacheCtrl.Get(key)
-	if err != nil {
-		return nil, err
+	if name == "" {
+		name = fmt.Sprintf("Document %s", result.ID)
 	}
 
-	// Try to unmarshal as different card types
-	var authorCard AuthorCardData
-	if err := json.Unmarshal(data, &authorCard); err == nil && authorCard.Type == "author" {
-		return authorCard, nil
+	documentID := result.ID
+	if segmentIndex := strings.Index(documentID, "-segment-"); segmentIndex != -1 {
+		documentID = documentID[:segmentIndex]
 	}
 
-	var docketCard DocketCardData
-	if err := json.Unmarshal(data, &docketCard); err == nil && docketCard.Type == "docket" {
-		return docketCard, nil
+	card := DocumentCardData{
+		Name:        name,
+		Description: description,
+		Timestamp:   timestamp,
+		ExtraInfo:   extraInfo,
+		Index:       index,
+		Type:        "document",
+		ObjectUUID:  documentID,
+		Authors:     []DocumentAuthor{},
 	}
 
-	var docCard DocumentCardData
-	if err := json.Unmarshal(data, &docCard); err == nil && docCard.Type == "document" {
-		return docCard, nil
+	// Remove segment suffix from ID
+
+	// Get attachment authors
+	if attachmentID, err := uuid.Parse(documentID); err == nil {
+		queries := dbstore.New(s.db)
+
+		if attachmentResult, err := queries.GetAttachmentWithAuthors(ctx, attachmentID); err == nil {
+			if attachmentResult.AuthorsJson != "" && attachmentResult.AuthorsJson != "[]" {
+				json.Unmarshal([]byte(attachmentResult.AuthorsJson), &card.Authors)
+			}
+		}
 	}
 
-	return nil, fmt.Errorf("unknown card type in cache")
-}
-
-// Cache card data
-func (s *SearchService) cacheCard(ctx context.Context, key string, card CardData) error {
-	if s.cacheCtrl.Client == nil {
-		return nil // Skip if cache not available
-	}
-
-	data, err := json.Marshal(card)
-	if err != nil {
-		return err
-	}
-
-	// Use appropriate TTL based on card type
-	ttl := cache.DynamicDataTTL
-	switch card.GetType() {
-	case "author", "docket":
-		ttl = cache.LongDataTTL
-	case "document":
-		ttl = cache.StaticDataTTL
-	}
-
-	return s.cacheCtrl.Set(key, data, int32(ttl))
+	// Cache and return
+	s.cacheCard(ctx, cacheKey, card)
+	return card, nil
 }
 
 // Hydrate conversation/docket data
@@ -146,7 +152,7 @@ func (s *SearchService) hydrateConversation(ctx context.Context, id string, scor
 	cacheKey := cache.PrepareKey("search", "conversation", id)
 	if cached, err := s.getCachedCard(ctx, cacheKey); err == nil {
 		if docket, ok := cached.(DocketCardData); ok {
-			docket.Index = index // Update index for current search
+			docket.Index = index
 			return docket, nil
 		}
 	}
@@ -168,15 +174,14 @@ func (s *SearchService) hydrateConversation(ctx context.Context, id string, scor
 	card := DocketCardData{
 		Name:        conversation.Name,
 		Description: conversation.Description,
-		Timestamp:   conversation.CreatedAt.Time,
+		Timestamp:   conversation.CreatedAt.Time.Format(time.RFC3339),
 		Index:       index,
 		Type:        "docket",
 		ObjectUUID:  conversation.ID.String(),
 	}
 
-	// Cache the result
+	// Cache and return
 	s.cacheCard(ctx, cacheKey, card)
-
 	return card, nil
 }
 
@@ -186,7 +191,7 @@ func (s *SearchService) hydrateOrganization(ctx context.Context, id string, scor
 	cacheKey := cache.PrepareKey("search", "organization", id)
 	if cached, err := s.getCachedCard(ctx, cacheKey); err == nil {
 		if author, ok := cached.(AuthorCardData); ok {
-			author.Index = index // Update index for current search
+			author.Index = index
 			return author, nil
 		}
 	}
@@ -215,93 +220,15 @@ func (s *SearchService) hydrateOrganization(ctx context.Context, id string, scor
 	card := AuthorCardData{
 		Name:        org.Name,
 		Description: org.Description,
-		Timestamp:   org.CreatedAt.Time,
+		Timestamp:   org.CreatedAt.Time.Format(time.RFC3339),
 		ExtraInfo:   extraInfo,
 		Index:       index,
 		Type:        "author",
 		ObjectUUID:  org.ID.String(),
 	}
 
-	// Cache the result
+	// Cache and return
 	s.cacheCard(ctx, cacheKey, card)
-
-	return card, nil
-}
-
-// Hydrate document data
-func (s *SearchService) hydrateDocument(ctx context.Context, result fugusdk.FuguSearchResult, index int) (CardData, error) {
-	// Check cache first
-	cacheKey := cache.PrepareKey("search", "document", result.ID)
-	if cached, err := s.getCachedCard(ctx, cacheKey); err == nil {
-		if doc, ok := cached.(DocumentCardData); ok {
-			doc.Index = index // Update index for current search
-			return doc, nil
-		}
-	}
-
-	// Extract metadata
-	name := ""
-	description := result.Text
-	timestamp := time.Now()
-	extraInfo := ""
-
-	if result.Metadata != nil {
-		if fileName, ok := result.Metadata["file_name"].(string); ok {
-			name = fileName
-		}
-		if desc, ok := result.Metadata["description"].(string); ok {
-			description = desc
-		}
-		if createdAt, ok := result.Metadata["created_at"].(string); ok {
-			if t, err := time.Parse(time.RFC3339, createdAt); err == nil {
-				timestamp = t
-			}
-		}
-		if caseNumber, ok := result.Metadata["case_number"].(string); ok {
-			extraInfo = fmt.Sprintf("Case: %s", caseNumber)
-		}
-	}
-
-	// If no name, use ID
-	if name == "" {
-		name = fmt.Sprintf("Document %s", result.ID)
-	}
-
-	card := DocumentCardData{
-		Name:        name,
-		Description: description,
-		Timestamp:   timestamp,
-		ExtraInfo:   extraInfo,
-		Index:       index,
-		Type:        "document",
-		ObjectUUID:  result.ID,
-		Authors:     []DocumentAuthor{}, // Would need to query authorship table
-	}
-
-	// Try to get authors if this is a file document
-	if fileID, err := uuid.Parse(result.ID); err == nil {
-		queries := dbstore.New(s.db)
-		authorships, err := queries.AuthorshipDocumentListOrganizations(ctx, fileID)
-		if err == nil && len(authorships) > 0 {
-			for _, authorship := range authorships {
-				// Get organization details
-				org, err := queries.OrganizationRead(ctx, authorship.OrganizationID)
-				if err == nil {
-					author := DocumentAuthor{
-						AuthorName:      org.Name,
-						IsPerson:        org.IsPerson.Valid && org.IsPerson.Bool,
-						IsPrimaryAuthor: authorship.IsPrimaryAuthor.Valid && authorship.IsPrimaryAuthor.Bool,
-						AuthorID:        org.ID.String(),
-					}
-					card.Authors = append(card.Authors, author)
-				}
-			}
-		}
-	}
-
-	// Cache the result
-	s.cacheCard(ctx, cacheKey, card)
-
 	return card, nil
 }
 
