@@ -24,7 +24,7 @@ export interface AllInOneServerSearchParams {
 export default async function AllInOneServerSearch({ urlParams, queryType, baseUrl, disableFilterSelection, disableResults, inherentRouteFilters, aboveSearchElement }: AllInOneServerSearchParams) {
   if (disableFilterSelection) {
     return (
-      <div className="bg-base-100">
+      <div className="bg-base-100 space-y-8">
         {aboveSearchElement}
         <ClientSearchBar urlParams={urlParams.queryData} baseUrl={baseUrl} />
         {!disableResults && (
@@ -41,7 +41,7 @@ export default async function AllInOneServerSearch({ urlParams, queryType, baseU
 
   return (
     <div className="bg-base-100 min-w-screen flex">
-      <div className="flex flex-col flex-grow items-center">
+      <div className="flex flex-col flex-grow items-center space-y-8">
         {aboveSearchElement}
         <ClientSearchBar urlParams={urlParams.queryData} baseUrl={baseUrl} />
         {!disableResults && (

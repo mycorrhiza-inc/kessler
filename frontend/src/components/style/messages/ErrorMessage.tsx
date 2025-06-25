@@ -26,7 +26,7 @@ const ErrorMessage = ({
             please open an issue on our GitHub repository{" "}
           </a>{" "}
           so we can fix it as soon as possible. Error details:{" "}
-          <i>{error.slice(0, 1000)}</i>
+          <i>{(JSON.stringify(error)).slice(0, 1000)}</i>
         </p>
       )}
       {reload && (

@@ -1,6 +1,6 @@
 "use client";
 import { completeFileSchemaGet } from "@/lib/requests/search";
-import { DocumentMainTabs } from "./DocumentBody";
+import { DocumentMainTabsClient } from "./DocumentBody";
 import { CompleteFileSchema } from "@/lib/types/backend_schemas";
 
 import { CLIENT_API_URL } from "@/lib/env_variables";

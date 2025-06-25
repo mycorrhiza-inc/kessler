@@ -56,6 +56,14 @@ FROM
 WHERE
     docket_gov_id = $1;
 
+-- name: ConversationIDFetchFromFileID :many
+SELECT
+    *
+FROM
+    public.docket_documents
+WHERE
+    file_id = $1;
+
 -- name: DocketConversationRead :one
 SELECT
     *

@@ -1,17 +1,15 @@
+import axios from "axios";
 import {
   PaginationData,
   SearchResult,
-  SearchResultsGetter,
 } from "../types/new_search_types";
-import { generateFakeResults } from "../search/search_utils";
-import axios from "axios";
-import { DocumentCardData } from "../types/generic_card_types";
-import { encodeUrlParams, TypedUrlParams } from "../types/url_params";
+import { DocumentCardData, DocumentCardDataValidator } from "../types/generic_card_types";
+import { TypedUrlParams } from "../types/url_params";
 import { DEFAULT_PAGE_SIZE } from "../constants";
 import { getContextualAPIUrl } from "../env_variables";
 
 export enum GenericSearchType {
-  Filling = "filing",
+  Filing = "filing",
   Organization = "organization",
   Docket = "docket",
   Dummy = "dummy",
@@ -22,141 +20,162 @@ export interface GenericSearchInfo {
   filters?: Record<string, string>;
 }
 
-export const searchInvokeFromUrlParams = async (urlParams: TypedUrlParams, inheritedFilters: Record<string, string>) => {
-  const searchInfo: GenericSearchInfo = {
-    query: urlParams.queryData.query || "",
-    filters: urlParams.queryData.filters
-  }
-  const pagination: PaginationData = {
-    page: urlParams.paginationData.page || 0,
-    limit: urlParams.paginationData.limit || DEFAULT_PAGE_SIZE
-  }
-  const callback = createGenericSearchCallback(searchInfo);
-  return await callback(pagination);
-}
-
-export const mutateIndexifySearchResults = (
-  results: SearchResult[],
-  pagination: PaginationData
-) => {
-  const offset = pagination.limit * pagination.page;
-  for (let index = 0; index < results.length; index++) {
-    results[index].index = index + offset;
-  }
-};
-
-export const isSearchOffsetsValid = (results: SearchResult): boolean => {
-  try {
-    for (let index = 0; index < results.length - 1; index++) {
-      if (results[index].index + 1 != results[index + 1].index) {
-        return false;
-      }
-    }
-    return true;
-  } catch {
-    return false;
-  }
-};
-
+// Request structure matching Go backend SearchRequest
 interface SearchRequest {
   query: string;
+  filters?: Record<string, string>;
+  page: number;
+  per_page: number;
+  namespace?: string;
 }
 
+// Response structure matching Go backend SearchResponse  
 interface SearchResponse {
-  data: any[]; // Replace with actual filing data type
+  data: any[];
+  total?: number;
+  page?: number;
+  per_page?: number;
 }
 
-/**
- * Generic function to perform network search requests and handle response checks.
- */
-async function performSearchRequest<Req, Res, Item extends SearchResult>(
-  url: string,
-  method: 'get' | 'post',
-  transform: (raw: Res) => Item[],
-  pagination?: PaginationData,
-  requestData?: Req,
-): Promise<Item[]> {
+// Main search function that works with the Go POST /search/ endpoint
+export const searchWithUrlParams = async (
+  urlParams: TypedUrlParams,
+  inheritedFilters: Record<string, string> = {}
+): Promise<DocumentCardData[]> => {
+  const requestBody: SearchRequest = {
+    query: urlParams.queryData.query || "",
+    filters: { ...inheritedFilters, ...urlParams.queryData.filters },
+    page: urlParams.paginationData.page || 0,
+    per_page: urlParams.paginationData.limit || DEFAULT_PAGE_SIZE,
+    namespace: urlParams.queryData.namespace
+  };
+
   try {
-    const response =
-      method === 'get'
-        ? await axios.get<Res>(url)
-        : await axios.post<Res>(url, requestData);
-
-    if (!response.data) {
-      throw new Error(
-        `Search data returned from backend URL ${url} was undefined (requestData=${JSON.stringify(requestData)})`
-      );
-    }
-
-    const data = response.data as unknown as Res;
-
-    // Handle empty or unexpected data shapes
-    if (Array.isArray(data) && (data as any[]).length === 0) {
-      console.warn(`Response from ${url} is an empty array`);
-      return [];
-    }
-    if (typeof data === 'string') {
-      console.warn(`Response from ${url} is a string, expected structured data`);
-      return [];
-    }
-
-    const items = transform(data);
-    if (pagination) {
-      mutateIndexifySearchResults(items, pagination);
-    }
-    return items;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      console.error(`Axios error in search (${method.toUpperCase()} ${url}):`, error.message);
-      if (error.response) {
-        console.error('Response status:', error.response.status);
-        console.error('Response data:', error.response.data);
+    const response = await axios.post<SearchResponse>(
+      `${getContextualAPIUrl()}/search/`,
+      requestBody,
+      {
+        headers: {
+          'Content-Type': 'application/json'
+        }
       }
-    } else {
-      console.error(`Unexpected error in search (${method.toUpperCase()} ${url}):`, error);
-    }
+    );
+
+    return response.data.data.map((item): DocumentCardData => {
+      // Uncomment when validator is ready: return DocumentCardDataValidator.parse(item);
+      return item as DocumentCardData;
+    });
+  } catch (error) {
+    console.error("Search request failed:", error);
     throw error;
   }
-}
+};
 
-export const createGenericSearchCallback = (
-  info: GenericSearchInfo
-): SearchResultsGetter => {
-  // debug and default to dummy search results for stylistic changes.
-  // info.search_type = GenericSearchType.Filling as GenericSearchType;
+// Alternative function for namespace-specific searches
+export const searchNamespace = async (
+  query: string,
+  namespace: "conversations" | "organizations" | "",
+  filters: Record<string, string> = {},
+  pagination: PaginationData = { page: 0, limit: DEFAULT_PAGE_SIZE }
+): Promise<DocumentCardData[]> => {
+  const endpoint = namespace ? `/search/${namespace}` : '/search/all';
 
-  const api_url = getContextualAPIUrl();
-
-  console.log("searching with api_url:", api_url);
-  console.log("info:", info);
-
-  return async (pagination: PaginationData): Promise<SearchResult> => {
-    const urlParams: TypedUrlParams = {
-      paginationData: pagination,
-      queryData: {
-        query: info.query,
-        filters: info.filters,
-      }
-    }
-    console.log("returning a filling async callback:")
-
-    console.log("query data:", info);
-    console.log("API URL:", api_url);
-    const encodedQueryParams = encodeUrlParams(urlParams)
-    const url = `${api_url}/search/${encodedQueryParams}`
-    console.log("ENDPOINT: ", url)
-
-
-    return performSearchRequest<SearchRequest, { data: any[] }, DocumentCardData>(
-      url,
-      'get',
-      (raw_results): DocumentCardData[] => {
-        return raw_results.data.map((raw): DocumentCardData => {
-          // return DocumentCardDataValidator.parse(raw)
-          console.log("data::: ", raw);
-          return raw as DocumentCardData
-        });
-      },
-    );
+  const requestBody: SearchRequest = {
+    query,
+    filters,
+    page: pagination.page || 0,
+    per_page: pagination.limit || DEFAULT_PAGE_SIZE
   };
+
+  try {
+    const response = await axios.post<SearchResponse>(
+      `${getContextualAPIUrl()}${endpoint}`,
+      requestBody,
+      {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    return response.data.data.map((item): DocumentCardData => {
+      return item as DocumentCardData;
+    });
+  } catch (error) {
+    console.error(`Search failed for namespace ${namespace}:`, error);
+    throw error;
+  }
+};
+
+// Simple GET search function (uses query parameters)
+export const searchWithGet = async (
+  query: string,
+  filters: Record<string, string> = {},
+  pagination: PaginationData = { page: 0, limit: DEFAULT_PAGE_SIZE },
+  namespace?: string
+): Promise<DocumentCardData[]> => {
+  const params = new URLSearchParams({
+    q: query,
+    page: pagination.page?.toString() || '0',
+    per_page: pagination.limit?.toString() || DEFAULT_PAGE_SIZE.toString(),
+    ...filters
+  });
+
+  if (namespace) {
+    params.set('namespace', namespace);
+  }
+
+  try {
+    const response = await axios.get<SearchResponse>(
+      `${getContextualAPIUrl()}/search/?${params.toString()}`
+    );
+
+    return response.data.data.map((item): DocumentCardData => {
+      return item as DocumentCardData;
+    });
+  } catch (error) {
+    console.error("GET search request failed:", error);
+    throw error;
+  }
+};
+
+// Utility functions
+export const mutateSearchResultsWithIndex = (
+  results: SearchResult[],
+  pagination: PaginationData
+): void => {
+  const offset = pagination.limit * pagination.page;
+  results.forEach((result, index) => {
+    result.index = index + offset;
+  });
+};
+
+export const validateSearchResultsOrder = (results: SearchResult[]): boolean => {
+  if (results.length <= 1) return true;
+
+  return results.every((result, index) =>
+    index === 0 || result.index === results[index - 1].index + 1
+  );
+};
+
+// Get available filters
+export const getAvailableFilters = async (): Promise<any> => {
+  try {
+    const response = await axios.get(`${getContextualAPIUrl()}/search/filters`);
+    return response.data;
+  } catch (error) {
+    console.error("Failed to get available filters:", error);
+    throw error;
+  }
+};
+
+// Health check
+export const checkSearchHealth = async (): Promise<any> => {
+  try {
+    const response = await axios.get(`${getContextualAPIUrl()}/search/health`);
+    return response.data;
+  } catch (error) {
+    console.error("Search health check failed:", error);
+    throw error;
+  }
 };

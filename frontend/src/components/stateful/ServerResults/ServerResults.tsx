@@ -1,7 +1,7 @@
 import ErrorMessage from "@/components/style/messages/ErrorMessage";
 import LoadingSpinner from "@/components/style/misc/LoadingSpinner";
 import ServerSearchResultsRaw from "@/components/style/RawPages/RawServerSearchResults";
-import { GenericSearchType, searchInvokeFromUrlParams } from "@/lib/adapters/genericSearchCallback";
+import { GenericSearchType, searchWithUrlParams } from "@/lib/adapters/genericSearchCallback";
 import { TypedUrlParams, encodeUrlParams } from "@/lib/types/url_params";
 import { Suspense } from "react";
 
@@ -22,7 +22,7 @@ export default async function ServerSearchResults(params: ServerSearchResultProp
 export async function ServerSearchResultsUnsuspended(params: ServerSearchResultProps) {
 
   try {
-    const cardResults = await searchInvokeFromUrlParams(params.urlParams, params.objectType, params.inherentRouteFilters || {});
+    const cardResults = await searchWithUrlParams(params.urlParams, params.inherentRouteFilters || {});
     return <ServerSearchResultsRaw baseUrl={params.baseUrl} urlParams={params.urlParams} results={cardResults} />
   } catch (err: any) {
     console.log(err)
