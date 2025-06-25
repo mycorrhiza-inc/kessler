@@ -8,6 +8,7 @@ import (
 	"kessler/internal/dbstore"
 	"kessler/internal/fugusdk"
 	"kessler/pkg/logger"
+	"kessler/pkg/util"
 	"strings"
 	"time"
 
@@ -252,11 +253,40 @@ func (s *SearchService) HydrateDocument(ctx context.Context, result fugusdk.Fugu
 	name := ""
 	description := result.Text
 	timestamp := time.Now()
+	var err error
 	extraInfo := ""
+	fileID := uuid.Nil
+	convoID := uuid.Nil
+	authorIDs := []uuid.UUID{}
 
 	if result.Metadata != nil {
 		if fileName, ok := result.Metadata["file_name"].(string); ok {
 			name = fileName
+		}
+
+		if fileIDString, ok := result.Metadata["file_id"].(string); ok {
+			fileID, err = uuid.Parse(fileIDString)
+			if err != nil {
+				return DocumentCardData{}, fmt.Errorf("Failed to parse file_id in metadata")
+			}
+		}
+
+		if convoIDString, ok := result.Metadata["conversation_id"].(string); ok {
+			convoID, err = uuid.Parse(convoIDString)
+			if err != nil {
+				return DocumentCardData{}, fmt.Errorf("Failed to parse conversation_id in metadata")
+			}
+		}
+
+		if authorIDsRaw, ok := result.Metadata["author_ids"].([]string); ok {
+			parse_uuids := func(val string) (uuid.UUID, error) {
+				return uuid.Parse(val)
+			}
+			authorIDs, err = util.MapErrorBubble(authorIDsRaw, parse_uuids)
+			if err != nil {
+				return DocumentCardData{}, fmt.Errorf("Failed to parse an author_id in author_ids in metadata")
+			}
+
 		}
 		if desc, ok := result.Metadata["description"].(string); ok {
 			description = desc
@@ -274,7 +304,7 @@ func (s *SearchService) HydrateDocument(ctx context.Context, result fugusdk.Fugu
 	if len(result.ID) < 36 {
 		return DocketCardData{}, fmt.Errorf("Document does not have long enough uuid.")
 	}
-	parsedUUID, err := uuid.Parse(result.ID[:36])
+	parsedAttachmentUUID, err := uuid.Parse(result.ID[:36])
 	if err != nil {
 		return DocketCardData{}, fmt.Errorf("Could not parse uuid for object")
 	}
@@ -284,16 +314,16 @@ func (s *SearchService) HydrateDocument(ctx context.Context, result fugusdk.Fugu
 		if needFetch {
 			q := dbstore.New(s.db)
 			// Fetch file basic info
-			if fileRec, err := q.ReadFile(ctx, parsedUUID); err == nil {
+			if fileRec, err := q.ReadFile(ctx, parsedAttachmentUUID); err == nil {
 				if name == "" {
 					name = fileRec.Name
 				}
 				timestamp = fileRec.DatePublished.Time
 			} else {
-				log.Warn("Failed to read file record", zap.String("file_id", parsedUUID.String()), zap.Error(err))
+				log.Warn("Failed to read file record", zap.String("file_id", parsedAttachmentUUID.String()), zap.Error(err))
 			}
 			// Fetch metadata record
-			if metaRec, err := q.FetchMetadata(ctx, parsedUUID); err == nil {
+			if metaRec, err := q.FetchMetadata(ctx, parsedAttachmentUUID); err == nil {
 				var m map[string]interface{}
 				if err := json.Unmarshal(metaRec.Mdata, &m); err == nil {
 					if fn, ok := m["file_name"].(string); ok {
@@ -311,16 +341,17 @@ func (s *SearchService) HydrateDocument(ctx context.Context, result fugusdk.Fugu
 						extraInfo = fmt.Sprintf("Case: %s", cn)
 					}
 				} else {
-					log.Warn("Failed to unmarshal metadata JSON", zap.String("file_id", parsedUUID.String()), zap.Error(err))
+					log.Warn("Failed to unmarshal metadata JSON", zap.String("file_id", parsedAttachmentUUID.String()), zap.Error(err))
 				}
 			} else {
-				log.Warn("Failed to fetch metadata record", zap.String("file_id", parsedUUID.String()), zap.Error(err))
+				log.Warn("Failed to fetch metadata record", zap.String("file_id", parsedAttachmentUUID.String()), zap.Error(err))
 			}
 		}
 	}
+
 	// If no name, use ID
 	if name == "" {
-		name = fmt.Sprintf("Document %s", result.ID)
+		return DocumentCardData{}, fmt.Errorf("name is nil ")
 	}
 	card := DocumentCardData{
 		Name:         name,
@@ -329,20 +360,34 @@ func (s *SearchService) HydrateDocument(ctx context.Context, result fugusdk.Fugu
 		ExtraInfo:    extraInfo,
 		Index:        index,
 		Type:         "document",
-		ObjectUUID:   parsedUUID,
+		ObjectUUID:   fileID,
 		FragmentID:   result.ID[36:],
 		Authors:      []DocumentAuthor{}, // Would need to query authorship table
 		Conversation: DocumentConversation{},
 	}
-	log.Info("Successfully Created Initial Card Data", zap.String("file_id", parsedUUID.String()))
+	log.Info("Successfully Created Initial Card Data", zap.String("file_id", parsedAttachmentUUID.String()))
+
+	if fileID == uuid.Nil {
+		return DocumentCardData{}, fmt.Errorf("file_id is nil")
+	}
+
+	if convoID == uuid.Nil {
+		return DocumentCardData{}, fmt.Errorf("conversation_id")
+	}
+
+	if len(authorIDs) == 0 {
+		log.Warn("File appears to have no authors", zap.String("raw_id", result.ID), zap.String("file_id", fileID.String()))
+	}
+
+	// TODO: SINCE THE CODE WAS MADE WAY FASTER BY PREFETCHING THE ORGANIZATION AND CONVO IDS IN THE SEARCH RESULTS, COULD YOU MOVE THE CODE THAT DOES THAT INITIAL QUERIES INTO THE FULL FETCH BRANCH, BUT STILL LOOK UP STUFF LIKE THE ORGANIZATION NAME AND CONVERSATION NAME IN THE MAIN CODE PATH
 
 	// Try to get authors if this is a file document
 	queries := dbstore.New(s.db)
-	authorships, err := queries.AuthorshipDocumentListOrganizations(ctx, parsedUUID)
+	authorships, err := queries.AuthorshipDocumentListOrganizations(ctx, parsedAttachmentUUID)
 	if err != nil {
-		log.Warn("Failed to list authorships", zap.String("file_id", parsedUUID.String()), zap.Error(err))
+		log.Warn("Failed to list authorships", zap.String("file_id", parsedAttachmentUUID.String()), zap.Error(err))
 	} else if len(authorships) == 0 {
-		log.Warn("No authorships found", zap.String("file_id", parsedUUID.String()))
+		log.Warn("No authorships found", zap.String("file_id", parsedAttachmentUUID.String()))
 	} else {
 		for _, authorship := range authorships {
 			// Get organization details
@@ -363,11 +408,11 @@ func (s *SearchService) HydrateDocument(ctx context.Context, result fugusdk.Fugu
 
 	// Try to get conversation info if this is a file document
 	// conversation_uuid is stored in public.docket_documents
-	conv_info, err := queries.ConversationIDFetchFromFileID(ctx, parsedUUID)
+	conv_info, err := queries.ConversationIDFetchFromFileID(ctx, parsedAttachmentUUID)
 	if err != nil {
-		log.Warn("Failed to fetch conversation ID from file ID", zap.String("file_id", parsedUUID.String()), zap.Error(err))
+		log.Warn("Failed to fetch conversation ID from file ID", zap.String("file_id", parsedAttachmentUUID.String()), zap.Error(err))
 	} else if len(conv_info) == 0 {
-		log.Warn("No conversation info found for file", zap.String("file_id", parsedUUID.String()))
+		log.Warn("No conversation info found for file", zap.String("file_id", parsedAttachmentUUID.String()))
 	} else {
 		// Fetch conversation details
 		conv, err := queries.DocketConversationRead(ctx, conv_info[0].ConversationUuid)
