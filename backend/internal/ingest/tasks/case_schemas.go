@@ -101,10 +101,10 @@ type AttachmentChildInfo struct {
 }
 
 type RawAttachmentData struct {
-	Hash             string `json:"hash"`
-	Name             string `json:"name"`
-	Extension        string `json:"extension"`
-	GetAttachmentUrl string `json:"get_attachment_url"`
+	Hash             hashes.KesslerHash `json:"hash"`
+	Name             string             `json:"name"`
+	Extension        string             `json:"extension"`
+	GetAttachmentUrl string             `json:"get_attachment_url"`
 	TextObjects      []struct {
 		Quality   int    `json:"quality"`
 		Language  string `json:"language"`

@@ -4,6 +4,10 @@ package indexing
 import (
 	"context"
 	"fmt"
+	"kessler/internal/dbstore"
+	"kessler/internal/fugusdk"
+	"kessler/pkg/database"
+	"kessler/pkg/logger"
 	"log"
 	"strings"
 	"time"
@@ -11,11 +15,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
-
-	"kessler/internal/dbstore"
-	"kessler/internal/fugusdk"
-	"kessler/pkg/database"
-	"kessler/pkg/logger"
 )
 
 // AttachmentIndexer handles attachment-specific indexing operations
@@ -44,8 +43,9 @@ func (ai *AttachmentIndexer) IndexAllAttachments(ctx context.Context) (int, erro
 
 	for _, row := range rows {
 		// Skip if no text content (extra safety check)
+		attachmentID := row.ID
 		if !row.Text.Valid || strings.TrimSpace(row.Text.String) == "" {
-			log.Printf("Skipping attachment %s - no valid text content", row.ID.String())
+			log.Printf("Skipping attachment %s - no valid text content", attachmentID.String())
 			skippedCount++
 			continue
 		}
@@ -59,7 +59,8 @@ func (ai *AttachmentIndexer) IndexAllAttachments(ctx context.Context) (int, erro
 			createdAt = &row.CreatedAt.Time
 		}
 
-		baseMetadata := ai.buildAttachmentMetadata(row.ID, &row.Name, createdAt, row.Mdata)
+		buildMetadataParams := attachmentMetadataParams{id: attachmentID, name: row.Name, createdAt: createdAt, mdata: row.Mdata}
+		baseMetadata := ai.buildAttachmentMetadata(buildMetadataParams)
 
 		// Parse date from metadata if available (matching Python script logic)
 		if dateStr, ok := baseMetadata["date"].(string); ok {
@@ -106,13 +107,13 @@ func (ai *AttachmentIndexer) IndexAllAttachments(ctx context.Context) (int, erro
 			}
 
 			// Create unique ID for each segment
-			recordID := row.ID.String()
+			attachmentIDString := attachmentID.String()
 			if len(segments) > 1 {
-				recordID = fmt.Sprintf("%s-segment-%d", row.ID.String(), segmentIndex)
+				attachmentIDString = fmt.Sprintf("%s-segment-%d", row.ID.String(), segmentIndex)
 			}
 
 			recs = append(recs, fugusdk.ObjectRecord{
-				ID:       recordID,
+				ID:       attachmentIDString,
 				Text:     segment,
 				Metadata: metadata,
 
@@ -170,7 +171,8 @@ func (ai *AttachmentIndexer) IndexAttachmentByID(ctx context.Context, idStr stri
 		createdAt = &row.CreatedAt.Time
 	}
 
-	baseMetadata := ai.buildAttachmentMetadata(row.ID, &row.Name, createdAt, row.Mdata)
+	buildMetadataParams := attachmentMetadataParams{id: row.ID, name: row.Name, createdAt: createdAt, mdata: row.Mdata}
+	baseMetadata := ai.buildAttachmentMetadata(buildMetadataParams)
 
 	// Parse date from metadata if available
 	if dateStr, ok := baseMetadata["date"].(string); ok {
@@ -434,34 +436,34 @@ func (ai *AttachmentIndexer) ValidateAttachmentData(attachmentID string) error {
 
 // Helper methods
 
+type attachmentMetadataParams struct {
+	id        uuid.UUID
+	name      string
+	extension string
+	createdAt *time.Time
+	mdata     []byte
+}
+
 // buildAttachmentMetadata creates metadata for an attachment record
-func (ai *AttachmentIndexer) buildAttachmentMetadata(id uuid.UUID, name *string, createdAt *time.Time, mdata []byte) map[string]interface{} {
+func (ai *AttachmentIndexer) buildAttachmentMetadata(params attachmentMetadataParams) map[string]interface{} {
 	metadata := make(map[string]interface{})
 
 	// Add raw mdata if available
-	if len(mdata) > 0 {
-		metadata["raw_mdata"] = string(mdata)
-		// TODO: Parse JSON metadata if needed
-		// var mdataMap map[string]interface{}
-		// if err := json.Unmarshal(mdata, &mdataMap); err == nil {
-		//     for k, v := range mdataMap {
-		//         metadata[k] = v
-		//     }
-		// }
+	if len(params.mdata) > 0 {
+		metadata["raw_mdata"] = string(params.mdata)
 	}
 
 	// Add attachment-specific metadata
-	if name != nil {
-		metadata["file_name"] = *name
-		// Extract file extension if available
-		if dotIndex := strings.LastIndex(*name, "."); dotIndex != -1 && dotIndex < len(*name)-1 {
-			metadata["file_extension"] = strings.ToLower((*name)[dotIndex+1:])
-		}
+	if params.name != "" {
+		metadata["file_name"] = params.name
 	}
-	if createdAt != nil {
-		metadata["created_at"] = createdAt.Format(time.RFC3339)
+	if params.extension != "" {
+		metadata["file_extension"] = params.extension
 	}
-	metadata["attachment_id"] = id.String()
+	if params.createdAt != nil {
+		metadata["created_at"] = params.createdAt.Format(time.RFC3339)
+	}
+	metadata["attachment_id"] = params.id.String()
 	metadata["migrated_at"] = time.Now().Format(time.RFC3339)
 	metadata["entity_type"] = "attachment"
 

@@ -78,4 +78,3 @@ func respondJSON(w http.ResponseWriter, data search.CardData) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(data)
 }
-

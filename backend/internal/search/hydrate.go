@@ -61,16 +61,17 @@ type DocumentConversation struct {
 }
 
 type DocumentCardData struct {
-	Name         string               `json:"name"`
-	Description  string               `json:"description"`
-	Timestamp    time.Time            `json:"timestamp"`
-	ExtraInfo    string               `json:"extraInfo,omitempty"`
-	Index        int                  `json:"index"`
-	Type         string               `json:"type"`
-	ObjectUUID   uuid.UUID            `json:"object_uuid"`
-	FragmentID   string               `json:"fragment_id"`
-	Authors      []DocumentAuthor     `json:"authors"`
-	Conversation DocumentConversation `json:"conversation"`
+	Name           string               `json:"name"`
+	Description    string               `json:"description"`
+	Timestamp      time.Time            `json:"timestamp"`
+	ExtraInfo      string               `json:"extraInfo,omitempty"`
+	Index          int                  `json:"index"`
+	Type           string               `json:"type"`
+	ObjectUUID     uuid.UUID            `json:"object_uuid"`
+	AttachmentUUID uuid.UUID            `json:"attachment_uuid"`
+	FragmentID     string               `json:"fragment_id"`
+	Authors        []DocumentAuthor     `json:"authors"`
+	Conversation   DocumentConversation `json:"conversation"`
 }
 
 func (d DocumentCardData) GetType() string {
