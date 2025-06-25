@@ -107,7 +107,7 @@ func (ai *AttachmentIndexer) IndexAttachmentByID(ctx context.Context, idStr stri
 	}
 
 	// Prepare records using shared logic
-	records, segmented, err := ai.prepareAttachmentRecords(ctx, q, attachmentRecordParams{
+	records, _, err := ai.prepareAttachmentRecords(ctx, q, attachmentRecordParams{
 		id:        row.ID,
 		fileID:    row.FileID,
 		name:      row.Name,
