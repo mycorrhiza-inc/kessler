@@ -42,6 +42,100 @@ func (ai *AttachmentIndexer) IndexAllAttachments(ctx context.Context) (int, erro
 	segmentedCount := 0
 
 	for _, row := range rows {
+		// Prepare createdAt pointer
+		var createdAt *time.Time
+		if row.CreatedAt.Valid {
+			createdAt = &row.CreatedAt.Time
+		}
+
+		// Use shared preparation logic
+		records, segmented, err := ai.prepareAttachmentRecords(ctx, row.ID, row.Name, createdAt, row.Mdata, row.Text.String)
+		if err != nil {
+			// Skip attachments without valid content
+			log.Printf("Skipping attachment %s: %v", row.ID.String(), err)
+			skippedCount++
+			continue
+		}
+		if segmented {
+			segmentedCount++
+		}
+		recs = append(recs, records...)
+	}
+
+	if skippedCount > 0 {
+		log.Printf("Skipped %d attachments with invalid content", skippedCount)
+	}
+	if segmentedCount > 0 {
+		log.Printf("Segmented %d attachments due to length limits", segmentedCount)
+	}
+	if len(recs) == 0 {
+		log.Printf("No valid attachments to index")
+		return 0, nil
+	}
+
+	client, err := ai.svc.createFuguClient(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("new fugu client: %w", err)
+	}
+
+	return ai.svc.processBatchInChunks(ctx, client, recs, "attachments")
+}
+
+// IndexAttachmentByID retrieves one attachment by ID and indexes it as a data record.
+func (ai *AttachmentIndexer) IndexAttachmentByID(ctx context.Context, idStr string) (int, error) {
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		return 0, fmt.Errorf("invalid attachment id: %w", err)
+	}
+
+	q := database.GetQueries(ai.svc.db)
+	row, err := q.GetSearchAttachmentById(ctx, id)
+	if err != nil {
+		return 0, fmt.Errorf("read attachment: %w", err)
+	}
+
+	var createdAt *time.Time
+	if row.CreatedAt.Valid {
+		createdAt = &row.CreatedAt.Time
+	}
+
+	// Prepare records using shared logic
+	records, _, err := ai.prepareAttachmentRecords(ctx, row.ID, row.Name, createdAt, row.Mdata, row.Text.String)
+	if err != nil {
+		return 0, fmt.Errorf("prepare attachment %s: %w", idStr, err)
+	}
+
+	client, err := ai.svc.createFuguClient(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("new fugu client: %w", err)
+	}
+
+	totalIndexed := 0
+	for _, rec := range records {
+		resp, err := client.AddOrUpdateObject(ctx, rec)
+		if err != nil {
+			return totalIndexed, fmt.Errorf("index attachment segment %s: %w", rec.ID, err)
+		}
+		totalIndexed++
+		log.Printf("Successfully indexed %s: %s", rec.ID, resp.Message)
+	}
+
+	return totalIndexed, nil
+}
+func (ai *AttachmentIndexer) IndexAllAttachments(ctx context.Context) (int, error) {
+	q := database.GetQueries(ai.svc.db)
+
+	// Use the generated SQLC method that matches our indexing needs
+	rows, err := q.GetAllSearchAttachments(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("fetch all searchable attachments: %w", err)
+	}
+
+	var recs []fugusdk.ObjectRecord
+	skippedCount := 0
+	segmentedCount := 0
+
+	for _, row := range rows {
 		// Skip if no text content (extra safety check)
 		attachmentID := row.ID
 		if !row.Text.Valid || strings.TrimSpace(row.Text.String) == "" {
@@ -432,6 +526,81 @@ func (ai *AttachmentIndexer) ValidateAttachmentData(attachmentID string) error {
 	}
 
 	return nil
+}
+
+// Helper methods
+
+// prepareAttachmentRecords prepares object records for an attachment with segmentation and metadata.
+func (ai *AttachmentIndexer) prepareAttachmentRecords(ctx context.Context, id uuid.UUID, name string, createdAt *time.Time, mdata []byte, rawText string) ([]fugusdk.ObjectRecord, bool, error) {
+    // Trim and validate text content
+    text := strings.TrimSpace(rawText)
+    if text == "" {
+        return nil, false, fmt.Errorf("attachment %s has no valid text content", id.String())
+    }
+
+    // Build base metadata
+    params := attachmentMetadataParams{id: id, name: name, createdAt: createdAt, mdata: mdata}
+    baseMetadata := ai.buildAttachmentMetadata(params)
+
+    // Parse date from metadata if available
+    if dateStr, ok := baseMetadata["date"].(string); ok {
+        if parsedTime, err := ai.parseDate(dateStr); err == nil {
+            baseMetadata["date_iso"] = parsedTime.Format(time.RFC3339)
+        } else {
+            logger.Warn(ctx, "could not parse date from metadata",
+                zap.String("attachment_id", id.String()),
+                zap.String("date", dateStr),
+                zap.Error(err))
+        }
+    }
+
+    // Split text into segments
+    maxLen := 9500
+    segments := ai.splitTextIntoSegments(text, maxLen)
+    if len(segments) > 1 {
+        logger.Info(ctx, "splitting attachment into segments due to length",
+            zap.String("attachment_id", id.String()),
+            zap.Int("original_length", len(text)),
+            zap.Int("num_segments", len(segments)))
+    }
+
+    // Build object records for each segment
+    var records []fugusdk.ObjectRecord
+    for i, segment := range segments {
+        // Copy base metadata
+        metadata := make(map[string]interface{}, len(baseMetadata)+5)
+        for k, v := range baseMetadata {
+            metadata[k] = v
+        }
+        // Add segment-specific metadata
+        if len(segments) > 1 {
+            metadata["is_segmented"] = true
+            metadata["segment_index"] = i
+            metadata["total_segments"] = len(segments)
+            metadata["original_text_length"] = len(text)
+            metadata["segment_text_length"] = len(segment)
+        } else {
+            metadata["is_segmented"] = false
+            metadata["segment_index"] = 0
+            metadata["total_segments"] = 1
+        }
+
+        // Unique ID per segment
+        recID := id.String()
+        if len(segments) > 1 {
+            recID = fmt.Sprintf("%s-segment-%d", id.String(), i)
+        }
+
+        records = append(records, fugusdk.ObjectRecord{
+            ID:        recID,
+            Text:      segment,
+            Metadata:  metadata,
+            Namespace: ai.svc.defaultNamespace,
+            DataType:  "data/attachment",
+        })
+    }
+
+    return records, len(segments) > 1, nil
 }
 
 // Helper methods
