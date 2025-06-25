@@ -58,15 +58,13 @@ func (s *SearchService) HydrateDocument(ctx context.Context, result fugusdk.Fugu
 		}
 
 		if authorIDsRaw, ok := result.Metadata["author_ids"].([]string); ok {
-			parse_uuids := func(val string) (uuid.UUID, error) {
-				return uuid.Parse(val)
-			}
-			authorIDs, err = util.MapErrorBubble(authorIDsRaw, parse_uuids)
+			parseUUID := func(val string) (uuid.UUID, error) { return uuid.Parse(val) }
+			authorIDs, err = util.MapErrorBubble(authorIDsRaw, parseUUID)
 			if err != nil {
 				return DocumentCardData{}, fmt.Errorf("Failed to parse an author_id in author_ids in metadata")
 			}
-
 		}
+
 		if desc, ok := result.Metadata["description"].(string); ok {
 			description = desc
 		}
@@ -87,8 +85,9 @@ func (s *SearchService) HydrateDocument(ctx context.Context, result fugusdk.Fugu
 	if err != nil {
 		return DocketCardData{}, fmt.Errorf("Could not parse uuid for object")
 	}
+
+	// Full fetch: fallback to database for missing metadata
 	if full_fetch {
-		// Fallback to database if metadata not provided
 		needFetch := name == "" || description == result.Text
 		if needFetch {
 			q := dbstore.New(s.db)
@@ -128,10 +127,12 @@ func (s *SearchService) HydrateDocument(ctx context.Context, result fugusdk.Fugu
 		}
 	}
 
-	// If no name, use ID
+	// If no name, error out
 	if name == "" {
-		return DocumentCardData{}, fmt.Errorf("name is nil ")
+		return DocumentCardData{}, fmt.Errorf("name is nil")
 	}
+
+	// Initialize card
 	card := DocumentCardData{
 		Name:         name,
 		Description:  description,
@@ -141,62 +142,82 @@ func (s *SearchService) HydrateDocument(ctx context.Context, result fugusdk.Fugu
 		Type:         "document",
 		ObjectUUID:   fileID,
 		FragmentID:   result.ID[36:],
-		Authors:      []DocumentAuthor{}, // Would need to query authorship table
+		Authors:      []DocumentAuthor{},
 		Conversation: DocumentConversation{},
 	}
 	log.Info("Successfully Created Initial Card Data", zap.String("file_id", parsedAttachmentUUID.String()))
 
+	// Validate IDs
 	if fileID == uuid.Nil {
 		return DocumentCardData{}, fmt.Errorf("file_id is nil")
 	}
-
 	if convoID == uuid.Nil {
-		return DocumentCardData{}, fmt.Errorf("conversation_id")
+		return DocumentCardData{}, fmt.Errorf("conversation_id is nil")
 	}
-
 	if len(authorIDs) == 0 {
 		log.Warn("File appears to have no authors", zap.String("raw_id", result.ID), zap.String("file_id", fileID.String()))
 	}
 
-	// TODO: SINCE THE CODE WAS MADE WAY FASTER BY PREFETCHING THE ORGANIZATION AND CONVO IDS IN THE SEARCH RESULTS, COULD YOU MOVE THE CODE THAT DOES THAT INITIAL QUERIES INTO THE FULL FETCH BRANCH, BUT STILL LOOK UP STUFF LIKE THE ORGANIZATION NAME AND CONVERSATION NAME IN THE MAIN CODE PATH
+	// Prefetch organization IDs and conversation IDs depending on full_fetch
+	q := dbstore.New(s.db)
+	type orgInfo struct {
+		ID      uuid.UUID
+		Primary bool
+	}
+	var orgInfos []orgInfo
+	var convUUIDs []uuid.UUID
 
-	// Try to get authors if this is a file document
-	queries := dbstore.New(s.db)
-	authorships, err := queries.AuthorshipDocumentListOrganizations(ctx, parsedAttachmentUUID)
-	if err != nil {
-		log.Warn("Failed to list authorships", zap.String("file_id", parsedAttachmentUUID.String()), zap.Error(err))
-	} else if len(authorships) == 0 {
-		log.Warn("No authorships found", zap.String("file_id", parsedAttachmentUUID.String()))
+	if full_fetch {
+		// Fetch authorship info from DB
+		authorships, err := q.AuthorshipDocumentListOrganizations(ctx, parsedAttachmentUUID)
+		if err != nil {
+			log.Warn("Failed to list authorships", zap.String("file_id", parsedAttachmentUUID.String()), zap.Error(err))
+		} else if len(authorships) == 0 {
+			log.Warn("No authorships found", zap.String("file_id", parsedAttachmentUUID.String()))
+		} else {
+			for _, a := range authorships {
+				orgInfos = append(orgInfos, orgInfo{ID: a.OrganizationID, Primary: a.IsPrimaryAuthor.Valid && a.IsPrimaryAuthor.Bool})
+			}
+		}
+		// Fetch conversation info from DB
+		convInfo, err := q.ConversationIDFetchFromFileID(ctx, parsedAttachmentUUID)
+		if err != nil {
+			log.Warn("Failed to fetch conversation ID from file ID", zap.String("file_id", parsedAttachmentUUID.String()), zap.Error(err))
+		} else if len(convInfo) == 0 {
+			log.Warn("No conversation info found for file", zap.String("file_id", parsedAttachmentUUID.String()))
+		} else {
+			convUUIDs = append(convUUIDs, convInfo[0].ConversationUuid)
+		}
 	} else {
-		for _, authorship := range authorships {
-			// Get organization details
-			org, err := queries.OrganizationRead(ctx, authorship.OrganizationID)
-			if err != nil {
-				log.Info("Failed to read organization for authorship", zap.String("org_id", authorship.OrganizationID.String()), zap.Error(err))
-				continue
-			}
-			author := DocumentAuthor{
-				AuthorName:      org.Name,
-				IsPerson:        org.IsPerson.Valid && org.IsPerson.Bool,
-				IsPrimaryAuthor: authorship.IsPrimaryAuthor.Valid && authorship.IsPrimaryAuthor.Bool,
-				AuthorID:        org.ID,
-			}
-			card.Authors = append(card.Authors, author)
+		// Use metadata-provided IDs
+		for _, id := range authorIDs {
+			orgInfos = append(orgInfos, orgInfo{ID: id, Primary: false})
+		}
+		if convoID != uuid.Nil {
+			convUUIDs = append(convUUIDs, convoID)
 		}
 	}
 
-	// Try to get conversation info if this is a file document
-	// conversation_uuid is stored in public.docket_documents
-	conv_info, err := queries.ConversationIDFetchFromFileID(ctx, parsedAttachmentUUID)
-	if err != nil {
-		log.Warn("Failed to fetch conversation ID from file ID", zap.String("file_id", parsedAttachmentUUID.String()), zap.Error(err))
-	} else if len(conv_info) == 0 {
-		log.Warn("No conversation info found for file", zap.String("file_id", parsedAttachmentUUID.String()))
-	} else {
-		// Fetch conversation details
-		conv, err := queries.DocketConversationRead(ctx, conv_info[0].ConversationUuid)
+	// Lookup organization details
+	for _, info := range orgInfos {
+		org, err := q.OrganizationRead(ctx, info.ID)
 		if err != nil {
-			log.Info("Failed to read conversation details", zap.String("conversation_id", conv_info[0].ConversationUuid.String()), zap.Error(err))
+			log.Warn("Failed to read organization for authorship", zap.String("org_id", info.ID.String()), zap.Error(err))
+			continue
+		}
+		card.Authors = append(card.Authors, DocumentAuthor{
+			AuthorName:      org.Name,
+			IsPerson:        org.IsPerson.Valid && org.IsPerson.Bool,
+			IsPrimaryAuthor: info.Primary,
+			AuthorID:        org.ID,
+		})
+	}
+
+	// Lookup conversation details (use first if multiple)
+	if len(convUUIDs) > 0 {
+		conv, err := q.DocketConversationRead(ctx, convUUIDs[0])
+		if err != nil {
+			log.Warn("Failed to read conversation details", zap.String("conversation_id", convUUIDs[0].String()), zap.Error(err))
 		} else {
 			card.Conversation = DocumentConversation{
 				ConvoName: conv.Name,
