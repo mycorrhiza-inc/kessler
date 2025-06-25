@@ -1,13 +1,11 @@
 package cards
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
-	"time"
 
-	"github.com/gorilla/mux"
 	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 
 	"kessler/internal/cache"
 	"kessler/internal/dbstore"
@@ -63,7 +61,7 @@ func RegisterCardLookupRoutes(r *mux.Router, db dbstore.DBTX) error {
 		card := search.AuthorCardData{
 			Name:        org.Name,
 			Description: org.Description,
-			Timestamp:   org.CreatedAt.Time,
+			Timestamp:   org.CreatedAt.Time.String(),
 			ExtraInfo:   extraInfo,
 			Index:       0,
 			Type:        "author",
@@ -118,7 +116,7 @@ func RegisterCardLookupRoutes(r *mux.Router, db dbstore.DBTX) error {
 		card := search.DocketCardData{
 			Name:        conv.Name,
 			Description: conv.Description,
-			Timestamp:   conv.CreatedAt.Time,
+			Timestamp:   conv.CreatedAt.Time.String(),
 			Index:       0,
 			Type:        "docket",
 			ObjectUUID:  conv.ID.String(),
