@@ -1,6 +1,7 @@
 package hashes
 
 import (
+	"bytes"
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
@@ -16,12 +17,8 @@ import (
 type KesslerHash [32]byte
 
 func (hash KesslerHash) IsZero() bool {
-	for _, b := range hash {
-		if b != 0 {
-			return false
-		}
-	}
-	return true
+	KesslerZeroHash := make([]byte, 32)
+	return bytes.Equal(hash[:], KesslerZeroHash)
 }
 
 func (hash KesslerHash) String() string {

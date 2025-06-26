@@ -19,6 +19,7 @@ export interface UrlPaginationParams {
 export interface TypedUrlParams {
   queryData: UrlQueryParams;
   paginationData: UrlPaginationParams;
+  namespace: string;
 }
 
 /**
@@ -75,7 +76,8 @@ export function generateTypeUrlParams(
 
   return {
     queryData: { query, dataset, filters },
-    paginationData: { page, limit }
+    paginationData: { page, limit },
+    namespace: ""
   };
 }
 

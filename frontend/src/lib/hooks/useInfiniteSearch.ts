@@ -1,14 +1,9 @@
 import { useState, useCallback } from "react";
 import { generateFakeResults } from "@/lib/search/search_utils";
 import {
-  PaginationData,
   SearchResult,
   SearchResultsGetter,
 } from "@/lib/types/new_search_types";
-import {
-  GenericSearchInfo,
-  createGenericSearchCallback,
-} from "../adapters/genericSearchCallback";
 import { DEFAULT_PAGE_SIZE } from "../constants";
 
 export interface UseInfiniteSearchParams {
