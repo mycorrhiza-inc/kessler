@@ -20,7 +20,7 @@ import (
 )
 
 // Updated HydrateDocument function with proper error handling
-func (s *SearchService) HydrateDocument(ctx context.Context, result fugusdk.FuguSearchResult, index int) (CardData, error) {
+func (s *SearchService) HydrateDocument(ctx context.Context, result fugusdk.FuguSearchResult, index int, full_fetch bool) (CardData, error) {
 	// Check cache first
 	cacheKey := cache.PrepareKey("search", "document", result.ID)
 	if cached, err := s.getCachedCard(ctx, cacheKey); err == nil {
@@ -138,6 +138,36 @@ func (s *SearchService) HydrateDocument(ctx context.Context, result fugusdk.Fugu
 		fmt.Printf("Error getting attachment with authors: %v\n", err)
 	}
 
+	if !full_fetch {
+
+		// Lookup organization details
+		for _, info := range orgInfos {
+			org, err := q.OrganizationRead(ctx, info.ID)
+			if err != nil {
+				log.Warn("Failed to read organization for authorship", zap.String("org_id", info.ID.String()), zap.Error(err))
+				continue
+			}
+			card.Authors = append(card.Authors, DocumentAuthor{
+				AuthorName:      org.Name,
+				IsPerson:        org.IsPerson.Valid && org.IsPerson.Bool,
+				IsPrimaryAuthor: info.Primary,
+				AuthorID:        org.ID,
+			})
+		}
+
+		// Lookup conversation details (use first if multiple)
+		if len(convUUIDs) > 0 {
+			conv, err := q.DocketConversationRead(ctx, convUUIDs[0])
+			if err != nil {
+				log.Warn("Failed to read conversation details", zap.String("conversation_id", convUUIDs[0].String()), zap.Error(err))
+			} else {
+				card.Conversation = DocumentConversation{
+					ConvoName: conv.Name,
+					ConvoID:   conv.ID,
+				}
+			}
+		}
+	}
 	// Cache and return
 	s.cacheCard(ctx, cacheKey, card)
 	return card, nil
