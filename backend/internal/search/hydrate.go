@@ -124,11 +124,10 @@ func (s *SearchService) HydrateDocument(ctx context.Context, result fugusdk.Fugu
 	}
 
 	documentID := result.ID
-	docid := uuid.New()
 	if segmentIndex := strings.Index(documentID, "-segment-"); segmentIndex != -1 {
 		documentID = documentID[:segmentIndex]
-		docid = uuid.MustParse(documentID)
 	}
+	docid := uuid.MustParse(documentID)
 
 	card := DocumentCardData{
 		Name:        name,
@@ -142,12 +141,9 @@ func (s *SearchService) HydrateDocument(ctx context.Context, result fugusdk.Fugu
 	}
 
 	// Get attachment authors with proper error handling
-	attachmentID, err := uuid.Parse(documentID)
-	if err != nil {
-	}
 	queries := dbstore.New(s.db)
 
-	attachmentResult, err := queries.GetAttachmentWithAuthors(ctx, attachmentID)
+	attachmentResult, err := queries.GetAttachmentWithAuthors(ctx, docid)
 	if err == nil {
 		logger.Error(ctx, "Error parsing document ID as UUID", zap.Error(err))
 	}
