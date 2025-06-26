@@ -1,6 +1,5 @@
 package cards
 
-//
 // import (
 // 	"encoding/json"
 // 	"fmt"

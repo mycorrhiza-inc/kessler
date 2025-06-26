@@ -26,6 +26,18 @@ func MapErrorDiscard[T any, R any](input_list []T, f func(T) (R, error)) []R {
 	return results
 }
 
+func MapErrorBubble[T any, R any](input_list []T, f func(T) (R, error)) ([]R, error) {
+	results := make([]R, len(input_list))
+	for i, item := range input_list {
+		result, err := f(item)
+		if err != nil {
+			return []R{}, err
+		}
+		results[i] = result
+	}
+	return results, nil
+}
+
 func ConcurrentMapError[T any, R any](input_list []T, f func(T) (R, error), workers int) ([]R, error) {
 	if workers == 0 {
 		workers = len(input_list)

@@ -19,8 +19,10 @@ import (
 	"go.uber.org/zap"
 )
 
-var log = logger.Named("tasks")
-var tracer = otel.Tracer("document-ingest")
+var (
+	log    = logger.Named("tasks")
+	tracer = otel.Tracer("document-ingest")
+)
 
 // IngestOpenscrapersCase processes a case and its associated filings.
 // TODO: Implement persistence logic for cases and filings.
