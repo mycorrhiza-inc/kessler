@@ -92,6 +92,118 @@ FROM
 		ON fm.id = f.id
 WHERE a.id = $1;
 
+-- NEW OPTIMIZED QUERIES FOR AUTHOR DATA
+
+-- name: GetAttachmentWithAuthors :one
+SELECT
+    a.id,
+    a.file_id,
+    a.lang,
+    a.name,
+    a.extension,
+    a.hash,
+    a.mdata,
+    a.created_at,
+    a.updated_at,
+    fm.mdata as file_mdata,
+    ats.text,
+    COALESCE(
+        JSON_AGG(
+            JSON_BUILD_OBJECT(
+                'author_id', o.id::text,
+                'author_name', o.name,
+                'is_person', COALESCE(o.is_person, false),
+                'is_primary_author', COALESCE(rdoa.is_primary_author, false),
+                'description', o.description
+            )
+        ) FILTER (WHERE o.id IS NOT NULL),
+        '[]'::json
+    )::text as authors_json
+FROM
+    public.attachment AS a
+    LEFT JOIN public.file AS f ON f.id = a.file_id
+    LEFT JOIN public.file_metadata AS fm ON fm.id = f.id
+    LEFT JOIN public.attachment_text_source AS ats ON ats.attachment_id = a.id
+    LEFT JOIN public.relation_documents_organizations_authorship AS rdoa ON rdoa.document_id = a.file_id
+    LEFT JOIN public.organization AS o ON o.id = rdoa.organization_id
+WHERE 
+    a.id = $1
+GROUP BY 
+    a.id, a.file_id, a.lang, a.name, a.extension, a.hash, a.mdata, 
+    a.created_at, a.updated_at, fm.mdata, ats.text;
+
+-- name: GetAttachmentAuthorsOnly :many
+SELECT
+    o.id as author_id,
+    o.name as author_name,
+    COALESCE(o.is_person, false) as is_person,
+    COALESCE(rdoa.is_primary_author, false) as is_primary_author,
+    o.description as author_description
+FROM
+    public.attachment AS a
+    INNER JOIN public.relation_documents_organizations_authorship AS rdoa 
+        ON rdoa.document_id = a.file_id
+    INNER JOIN public.organization AS o 
+        ON o.id = rdoa.organization_id
+WHERE 
+    a.id = $1
+ORDER BY 
+    rdoa.is_primary_author DESC NULLS LAST,
+    o.name ASC;
+
+-- name: GetAttachmentsByAuthor :many
+SELECT
+    a.id,
+    a.name,
+    a.extension,
+    a.created_at,
+    COALESCE(rdoa.is_primary_author, false) as is_primary_author,
+    CASE WHEN ats.text IS NOT NULL AND ats.text != '' THEN true ELSE false END as has_text
+FROM
+    public.attachment AS a
+    INNER JOIN public.relation_documents_organizations_authorship AS rdoa 
+        ON rdoa.document_id = a.file_id
+    LEFT JOIN public.attachment_text_source AS ats 
+        ON ats.attachment_id = a.id
+WHERE 
+    rdoa.organization_id = $1
+ORDER BY 
+    rdoa.is_primary_author DESC NULLS LAST,
+    a.created_at DESC
+LIMIT $2;
+
+-- name: GetSearchAttachmentsWithAuthors :many
+SELECT
+    a.id,
+    a.name,
+    a.created_at,
+    fm.mdata,
+    ats.text,
+    COALESCE(
+        JSON_AGG(
+            JSON_BUILD_OBJECT(
+                'author_id', o.id::text,
+                'author_name', o.name,
+                'is_person', COALESCE(o.is_person, false),
+                'is_primary_author', COALESCE(rdoa.is_primary_author, false)
+            )
+        ) FILTER (WHERE o.id IS NOT NULL),
+        '[]'::json
+    )::text as authors_json
+FROM
+    public.attachment AS a
+    LEFT JOIN public.attachment_text_source AS ats ON ats.attachment_id = a.id
+    LEFT JOIN public.file AS f ON f.id = a.file_id
+    LEFT JOIN public.file_metadata AS fm ON fm.id = f.id
+    LEFT JOIN public.relation_documents_organizations_authorship AS rdoa ON rdoa.document_id = a.file_id
+    LEFT JOIN public.organization AS o ON o.id = rdoa.organization_id
+WHERE 
+    ats.text IS NOT NULL AND ats.text != ''
+GROUP BY 
+    a.id, a.name, a.created_at, fm.mdata, ats.text
+ORDER BY 
+    a.created_at DESC;
+
 -- name: GetAttachmentSearchStats :one
 SELECT 
 	COUNT(*) as total_count,
@@ -149,3 +261,37 @@ SELECT
 	MAX(a.created_at) as latest_date
 FROM public.attachment AS a
 WHERE a.created_at IS NOT NULL;
+
+-- BATCH QUERIES FOR PERFORMANCE
+
+-- name: GetMultipleAttachmentsWithAuthors :many
+SELECT
+    a.id,
+    a.name,
+    a.created_at,
+    fm.mdata,
+    ats.text,
+    COALESCE(
+        JSON_AGG(
+            JSON_BUILD_OBJECT(
+                'author_id', o.id::text,
+                'author_name', o.name,
+                'is_person', COALESCE(o.is_person, false),
+                'is_primary_author', COALESCE(rdoa.is_primary_author, false)
+            )
+        ) FILTER (WHERE o.id IS NOT NULL),
+        '[]'::json
+    )::text as authors_json
+FROM
+    public.attachment AS a
+    LEFT JOIN public.attachment_text_source AS ats ON ats.attachment_id = a.id
+    LEFT JOIN public.file AS f ON f.id = a.file_id
+    LEFT JOIN public.file_metadata AS fm ON fm.id = f.id
+    LEFT JOIN public.relation_documents_organizations_authorship AS rdoa ON rdoa.document_id = a.file_id
+    LEFT JOIN public.organization AS o ON o.id = rdoa.organization_id
+WHERE 
+    a.id = ANY($1::uuid[])
+GROUP BY 
+    a.id, a.name, a.created_at, fm.mdata, ats.text
+ORDER BY 
+    a.created_at DESC;

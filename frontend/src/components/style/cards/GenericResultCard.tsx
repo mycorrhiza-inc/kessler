@@ -1,4 +1,5 @@
 import { CardData, CardType } from "@/lib/types/generic_card_types";
+import { redirect } from 'next/navigation';
 import { clsx } from "clsx";
 import React, { ReactNode } from "react";
 import { AuthorPill } from "../Pills/TextPills";
@@ -230,7 +231,7 @@ const Card = ({ data, disableHref, size = CardSize.Medium }: { data: CardData, d
     return rawCard
   }
   const href = calculateHref(data.object_uuid, data.type)
-  return <a href={href}>{rawCard}</a>
+  return <div onClick={redirect(href)}>{rawCard}</div>
 
 };
 

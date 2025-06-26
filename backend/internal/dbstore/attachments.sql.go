@@ -273,6 +273,60 @@ func (q *Queries) GetAllSearchAttachments(ctx context.Context) ([]GetAllSearchAt
 	return items, nil
 }
 
+const getAttachmentAuthorsOnly = `-- name: GetAttachmentAuthorsOnly :many
+SELECT
+    o.id as author_id,
+    o.name as author_name,
+    COALESCE(o.is_person, false) as is_person,
+    COALESCE(rdoa.is_primary_author, false) as is_primary_author,
+    o.description as author_description
+FROM
+    public.attachment AS a
+    INNER JOIN public.relation_documents_organizations_authorship AS rdoa 
+        ON rdoa.document_id = a.file_id
+    INNER JOIN public.organization AS o 
+        ON o.id = rdoa.organization_id
+WHERE 
+    a.id = $1
+ORDER BY 
+    rdoa.is_primary_author DESC NULLS LAST,
+    o.name ASC
+`
+
+type GetAttachmentAuthorsOnlyRow struct {
+	AuthorID          uuid.UUID
+	AuthorName        string
+	IsPerson          bool
+	IsPrimaryAuthor   bool
+	AuthorDescription string
+}
+
+func (q *Queries) GetAttachmentAuthorsOnly(ctx context.Context, id uuid.UUID) ([]GetAttachmentAuthorsOnlyRow, error) {
+	rows, err := q.db.Query(ctx, getAttachmentAuthorsOnly, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetAttachmentAuthorsOnlyRow
+	for rows.Next() {
+		var i GetAttachmentAuthorsOnlyRow
+		if err := rows.Scan(
+			&i.AuthorID,
+			&i.AuthorName,
+			&i.IsPerson,
+			&i.IsPrimaryAuthor,
+			&i.AuthorDescription,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getAttachmentDateRange = `-- name: GetAttachmentDateRange :one
 SELECT 
 	MIN(a.created_at) as earliest_date,
@@ -349,6 +403,145 @@ func (q *Queries) GetAttachmentSearchStats(ctx context.Context) (GetAttachmentSe
 	var i GetAttachmentSearchStatsRow
 	err := row.Scan(&i.TotalCount, &i.WithTextCount, &i.WithoutTextCount)
 	return i, err
+}
+
+const getAttachmentWithAuthors = `-- name: GetAttachmentWithAuthors :one
+
+SELECT
+    a.id,
+    a.file_id,
+    a.lang,
+    a.name,
+    a.extension,
+    a.hash,
+    a.mdata,
+    a.created_at,
+    a.updated_at,
+    fm.mdata as file_mdata,
+    ats.text,
+    COALESCE(
+        JSON_AGG(
+            JSON_BUILD_OBJECT(
+                'author_id', o.id::text,
+                'author_name', o.name,
+                'is_person', COALESCE(o.is_person, false),
+                'is_primary_author', COALESCE(rdoa.is_primary_author, false),
+                'description', o.description
+            )
+        ) FILTER (WHERE o.id IS NOT NULL),
+        '[]'::json
+    )::text as authors_json
+FROM
+    public.attachment AS a
+    LEFT JOIN public.file AS f ON f.id = a.file_id
+    LEFT JOIN public.file_metadata AS fm ON fm.id = f.id
+    LEFT JOIN public.attachment_text_source AS ats ON ats.attachment_id = a.id
+    LEFT JOIN public.relation_documents_organizations_authorship AS rdoa ON rdoa.document_id = a.file_id
+    LEFT JOIN public.organization AS o ON o.id = rdoa.organization_id
+WHERE 
+    a.id = $1
+GROUP BY 
+    a.id, a.file_id, a.lang, a.name, a.extension, a.hash, a.mdata, 
+    a.created_at, a.updated_at, fm.mdata, ats.text
+`
+
+type GetAttachmentWithAuthorsRow struct {
+	ID          uuid.UUID
+	FileID      uuid.UUID
+	Lang        string
+	Name        string
+	Extension   string
+	Hash        string
+	Mdata       []byte
+	CreatedAt   pgtype.Timestamptz
+	UpdatedAt   pgtype.Timestamptz
+	FileMdata   []byte
+	Text        pgtype.Text
+	AuthorsJson string
+}
+
+// NEW OPTIMIZED QUERIES FOR AUTHOR DATA
+func (q *Queries) GetAttachmentWithAuthors(ctx context.Context, id uuid.UUID) (GetAttachmentWithAuthorsRow, error) {
+	row := q.db.QueryRow(ctx, getAttachmentWithAuthors, id)
+	var i GetAttachmentWithAuthorsRow
+	err := row.Scan(
+		&i.ID,
+		&i.FileID,
+		&i.Lang,
+		&i.Name,
+		&i.Extension,
+		&i.Hash,
+		&i.Mdata,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.FileMdata,
+		&i.Text,
+		&i.AuthorsJson,
+	)
+	return i, err
+}
+
+const getAttachmentsByAuthor = `-- name: GetAttachmentsByAuthor :many
+SELECT
+    a.id,
+    a.name,
+    a.extension,
+    a.created_at,
+    COALESCE(rdoa.is_primary_author, false) as is_primary_author,
+    CASE WHEN ats.text IS NOT NULL AND ats.text != '' THEN true ELSE false END as has_text
+FROM
+    public.attachment AS a
+    INNER JOIN public.relation_documents_organizations_authorship AS rdoa 
+        ON rdoa.document_id = a.file_id
+    LEFT JOIN public.attachment_text_source AS ats 
+        ON ats.attachment_id = a.id
+WHERE 
+    rdoa.organization_id = $1
+ORDER BY 
+    rdoa.is_primary_author DESC NULLS LAST,
+    a.created_at DESC
+LIMIT $2
+`
+
+type GetAttachmentsByAuthorParams struct {
+	OrganizationID uuid.UUID
+	Limit          int32
+}
+
+type GetAttachmentsByAuthorRow struct {
+	ID              uuid.UUID
+	Name            string
+	Extension       string
+	CreatedAt       pgtype.Timestamptz
+	IsPrimaryAuthor bool
+	HasText         bool
+}
+
+func (q *Queries) GetAttachmentsByAuthor(ctx context.Context, arg GetAttachmentsByAuthorParams) ([]GetAttachmentsByAuthorRow, error) {
+	rows, err := q.db.Query(ctx, getAttachmentsByAuthor, arg.OrganizationID, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetAttachmentsByAuthorRow
+	for rows.Next() {
+		var i GetAttachmentsByAuthorRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Extension,
+			&i.CreatedAt,
+			&i.IsPrimaryAuthor,
+			&i.HasText,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getAttachmentsByDateRange = `-- name: GetAttachmentsByDateRange :many
@@ -488,6 +681,77 @@ func (q *Queries) GetAttachmentsNeedingReindex(ctx context.Context) ([]uuid.UUID
 	return items, nil
 }
 
+const getMultipleAttachmentsWithAuthors = `-- name: GetMultipleAttachmentsWithAuthors :many
+
+SELECT
+    a.id,
+    a.name,
+    a.created_at,
+    fm.mdata,
+    ats.text,
+    COALESCE(
+        JSON_AGG(
+            JSON_BUILD_OBJECT(
+                'author_id', o.id::text,
+                'author_name', o.name,
+                'is_person', COALESCE(o.is_person, false),
+                'is_primary_author', COALESCE(rdoa.is_primary_author, false)
+            )
+        ) FILTER (WHERE o.id IS NOT NULL),
+        '[]'::json
+    )::text as authors_json
+FROM
+    public.attachment AS a
+    LEFT JOIN public.attachment_text_source AS ats ON ats.attachment_id = a.id
+    LEFT JOIN public.file AS f ON f.id = a.file_id
+    LEFT JOIN public.file_metadata AS fm ON fm.id = f.id
+    LEFT JOIN public.relation_documents_organizations_authorship AS rdoa ON rdoa.document_id = a.file_id
+    LEFT JOIN public.organization AS o ON o.id = rdoa.organization_id
+WHERE 
+    a.id = ANY($1::uuid[])
+GROUP BY 
+    a.id, a.name, a.created_at, fm.mdata, ats.text
+ORDER BY 
+    a.created_at DESC
+`
+
+type GetMultipleAttachmentsWithAuthorsRow struct {
+	ID          uuid.UUID
+	Name        string
+	CreatedAt   pgtype.Timestamptz
+	Mdata       []byte
+	Text        pgtype.Text
+	AuthorsJson string
+}
+
+// BATCH QUERIES FOR PERFORMANCE
+func (q *Queries) GetMultipleAttachmentsWithAuthors(ctx context.Context, dollar_1 []uuid.UUID) ([]GetMultipleAttachmentsWithAuthorsRow, error) {
+	rows, err := q.db.Query(ctx, getMultipleAttachmentsWithAuthors, dollar_1)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetMultipleAttachmentsWithAuthorsRow
+	for rows.Next() {
+		var i GetMultipleAttachmentsWithAuthorsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.CreatedAt,
+			&i.Mdata,
+			&i.Text,
+			&i.AuthorsJson,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getSearchAttachmentById = `-- name: GetSearchAttachmentById :one
 SELECT
 	a.id AS id,
@@ -528,4 +792,73 @@ func (q *Queries) GetSearchAttachmentById(ctx context.Context, id uuid.UUID) (Ge
 		&i.Text,
 	)
 	return i, err
+}
+
+const getSearchAttachmentsWithAuthors = `-- name: GetSearchAttachmentsWithAuthors :many
+SELECT
+    a.id,
+    a.name,
+    a.created_at,
+    fm.mdata,
+    ats.text,
+    COALESCE(
+        JSON_AGG(
+            JSON_BUILD_OBJECT(
+                'author_id', o.id::text,
+                'author_name', o.name,
+                'is_person', COALESCE(o.is_person, false),
+                'is_primary_author', COALESCE(rdoa.is_primary_author, false)
+            )
+        ) FILTER (WHERE o.id IS NOT NULL),
+        '[]'::json
+    )::text as authors_json
+FROM
+    public.attachment AS a
+    LEFT JOIN public.attachment_text_source AS ats ON ats.attachment_id = a.id
+    LEFT JOIN public.file AS f ON f.id = a.file_id
+    LEFT JOIN public.file_metadata AS fm ON fm.id = f.id
+    LEFT JOIN public.relation_documents_organizations_authorship AS rdoa ON rdoa.document_id = a.file_id
+    LEFT JOIN public.organization AS o ON o.id = rdoa.organization_id
+WHERE 
+    ats.text IS NOT NULL AND ats.text != ''
+GROUP BY 
+    a.id, a.name, a.created_at, fm.mdata, ats.text
+ORDER BY 
+    a.created_at DESC
+`
+
+type GetSearchAttachmentsWithAuthorsRow struct {
+	ID          uuid.UUID
+	Name        string
+	CreatedAt   pgtype.Timestamptz
+	Mdata       []byte
+	Text        pgtype.Text
+	AuthorsJson string
+}
+
+func (q *Queries) GetSearchAttachmentsWithAuthors(ctx context.Context) ([]GetSearchAttachmentsWithAuthorsRow, error) {
+	rows, err := q.db.Query(ctx, getSearchAttachmentsWithAuthors)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetSearchAttachmentsWithAuthorsRow
+	for rows.Next() {
+		var i GetSearchAttachmentsWithAuthorsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.CreatedAt,
+			&i.Mdata,
+			&i.Text,
+			&i.AuthorsJson,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

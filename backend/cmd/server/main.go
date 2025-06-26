@@ -6,7 +6,7 @@ import (
 	"kessler/internal/admin"
 	"kessler/internal/autocomplete"
 	"kessler/internal/cache"
-	"kessler/internal/cards"
+	// "kessler/internal/cards"
 	"kessler/internal/dbstore"
 	"kessler/internal/health"
 	"kessler/internal/jobs"
@@ -281,12 +281,12 @@ func registerPublicRoutes(router *mux.Router, log *otelzap.Logger, deps *AppDepe
 		deps.DB)
 	fmt.Println("   ✅ Public CRUD routes registered")
 
-	cardSubroute := router.PathPrefix("/card").Subrouter()
-	if err := cards.RegisterCardLookupRoutes(cardSubroute, deps.DB); err != nil {
-		log.ErrorContext(context.Background(), "Failed to register card lookup routes", zap.Error(err))
-	} else {
-		fmt.Println("   ✅ Card Lookup routes registered")
-	}
+	// cardSubroute := router.PathPrefix("/card").Subrouter()
+	// if err := cards.RegisterCardLookupRoutes(cardSubroute, deps.DB); err != nil {
+	// 	log.ErrorContext(context.Background(), "Failed to register card lookup routes", zap.Error(err))
+	// } else {
+	// 	fmt.Println("   ✅ Card Lookup routes registered")
+	// }
 
 	// Search routes - pass DB to search
 	searchSubroute := router.PathPrefix("/search").Subrouter()
