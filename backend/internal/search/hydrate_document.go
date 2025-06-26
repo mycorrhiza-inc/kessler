@@ -8,10 +8,13 @@ import (
 	"kessler/internal/dbstore"
 	"kessler/internal/fugusdk"
 	"kessler/pkg/logger"
+	"kessler/pkg/util"
 	"strings"
 	"time"
 
+	"github.com/charmbracelet/log"
 	"github.com/google/uuid"
+
 	//"go.opentelemetry.io/otel"
 	"go.uber.org/zap"
 )
@@ -27,23 +30,49 @@ func (s *SearchService) HydrateDocument(ctx context.Context, result fugusdk.Fugu
 		}
 	}
 
-	// Extract basic metadata
+	// Extract metadata
 	name := ""
 	description := result.Text
 	timestamp := time.Now()
+	var err error
 	extraInfo := ""
+	fileID := uuid.Nil
+	convoID := uuid.Nil
+	authorIDs := []uuid.UUID{}
 
 	if result.Metadata != nil {
 		if fileName, ok := result.Metadata["file_name"].(string); ok {
 			name = fileName
 		}
+
+		if fileIDString, ok := result.Metadata["file_id"].(string); ok {
+			fileID, err = uuid.Parse(fileIDString)
+			if err != nil {
+				return DocumentCardData{}, fmt.Errorf("Failed to parse file_id in metadata")
+			}
+		}
+
+		if convoIDString, ok := result.Metadata["conversation_id"].(string); ok {
+			convoID, err = uuid.Parse(convoIDString)
+			if err != nil {
+				return DocumentCardData{}, fmt.Errorf("Failed to parse conversation_id in metadata")
+			}
+		}
+
+		if authorIDsRaw, ok := result.Metadata["author_ids"].([]string); ok {
+			parseUUID := func(val string) (uuid.UUID, error) { return uuid.Parse(val) }
+			authorIDs, err = util.MapErrorBubble(authorIDsRaw, parseUUID)
+			if err != nil {
+				return DocumentCardData{}, fmt.Errorf("Failed to parse an author_id in author_ids in metadata")
+			}
+		}
+
 		if desc, ok := result.Metadata["description"].(string); ok {
 			description = desc
 		}
 		if createdAt, ok := result.Metadata["created_at"].(string); ok {
-			parsed, err := time.Parse(time.RFC3339, createdAt)
-			if err == nil {
-				timestamp = parsed
+			if t, err := time.Parse(time.RFC3339, createdAt); err == nil {
+				timestamp = t
 			}
 		}
 		if caseNumber, ok := result.Metadata["case_number"].(string); ok {
@@ -51,15 +80,26 @@ func (s *SearchService) HydrateDocument(ctx context.Context, result fugusdk.Fugu
 		}
 	}
 
+	if len(result.ID) < 36 {
+		return DocketCardData{}, fmt.Errorf("Document does not have long enough uuid.")
+	}
+	parsedAttachmentUUID, err := uuid.Parse(result.ID[:36])
+	if err != nil {
+		return DocketCardData{}, fmt.Errorf("Could not parse uuid for object")
+	}
+
 	if name == "" {
 		name = fmt.Sprintf("Document %s", result.ID)
 	}
 
-	documentID := result.ID
-	docid := uuid.New()
-	if segmentIndex := strings.Index(documentID, "-segment-"); segmentIndex != -1 {
-		documentID = documentID[:segmentIndex]
-		docid = uuid.MustParse(documentID)
+	attachmentIDRaw := result.ID
+	attachID := uuid.New()
+	if segmentIndex := strings.Index(attachmentIDRaw, "-segment-"); segmentIndex != -1 {
+		attachmentIDRaw = attachmentIDRaw[:segmentIndex]
+	}
+	attachID, err = uuid.Parse(attachmentIDRaw)
+	if err != nil {
+		log.Error("Could not parse attachmentID", zap.String("attach_id", attachmentIDRaw))
 	}
 
 	card := DocumentCardData{
@@ -69,17 +109,14 @@ func (s *SearchService) HydrateDocument(ctx context.Context, result fugusdk.Fugu
 		ExtraInfo:   extraInfo,
 		Index:       index,
 		Type:        "document",
-		ObjectUUID:  docid,
+		ObjectUUID:  attachID,
 		Authors:     []DocumentAuthor{}, // Initialize empty slice
 	}
 
 	// Get attachment authors with proper error handling
-	attachmentID, err := uuid.Parse(documentID)
-	if err != nil {
-	}
 	queries := dbstore.New(s.db)
 
-	attachmentResult, err := queries.GetAttachmentWithAuthors(ctx, attachmentID)
+	attachmentResult, err := queries.GetAttachmentWithAuthors(ctx, attachID)
 	if err == nil {
 		logger.Error(ctx, "Error parsing document ID as UUID", zap.Error(err))
 	}
