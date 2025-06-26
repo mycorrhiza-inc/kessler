@@ -5,7 +5,7 @@ import AllInOneServerSearch from "@/components/stateful/SearchBar/AllInOneServer
 import LoadingSpinner from "@/components/style/misc/LoadingSpinner";
 import DefaultContainer from "@/components/stateful/PageContainer/DefaultContainer";
 import { GenericSearchType } from "@/lib/adapters/genericSearchCallback";
-import { CardSize } from "@/components/style/cards/GenericResultCard";
+import { CardSize } from "@/components/style/cards/SizedCards";
 import RenderedCardObject from "@/components/stateful/RenderedObjectCards/RednderedObjectCard";
 
 export default async function OrgPage({
