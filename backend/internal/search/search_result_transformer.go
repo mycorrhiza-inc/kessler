@@ -2,6 +2,7 @@ package search
 
 import (
 	"context"
+	"fmt"
 	"kessler/internal/fugusdk"
 	"kessler/pkg/logger"
 	"time"
@@ -39,6 +40,7 @@ func (s *SearchService) transformSearchResponse(ctx context.Context, fuguRespons
 			card, err = s.HydrateOrganization(ctx, result.ID, result.Score, i)
 		default:
 			card, err = s.HydrateDocument(ctx, result, i)
+			fmt.Printf("card returned::: %v\n\n\n\n", card)
 		}
 
 		if err != nil {

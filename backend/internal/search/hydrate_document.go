@@ -39,124 +39,132 @@ func (s *SearchService) hydrateDocumentAuthors(ctx context.Context, card *Docume
 	queries := dbstore.New(s.db)
 
 	attachmentResult, err := queries.GetAttachmentWithAuthors(ctx, card.ObjectUUID)
-	if err == nil {
-		logger.Error(ctx, "Error parsing document ID as UUID", zap.Error(err))
+	if err != nil {
+		logger.Error(ctx, "Error getting attachment with authors", zap.Error(err))
+		return err // CRITICAL: Must return here
 	}
+
 	// Check if we have valid JSON authors data
 	if attachmentResult.AuthorsJson != "" && attachmentResult.AuthorsJson != "[]" {
-		logger.Debug(ctx, "Raw authors JSON", zap.Dict(attachmentResult.AuthorsJson))
+		logger.Debug(ctx, "Raw authors JSON", zap.String("json", attachmentResult.AuthorsJson))
 
 		// Parse the JSON into authors slice
 		var authors []DocumentAuthor
 		if err := json.Unmarshal([]byte(attachmentResult.AuthorsJson), &authors); err != nil {
-			// Log the error but don't fail the entire operation
 			logger.Error(ctx, "Error parsing authors JSON", zap.Error(err))
-			logger.Error(ctx, "JSON content", zap.Dict(attachmentResult.AuthorsJson))
-		} else {
-			card.Authors = authors
-			logger.Debug(ctx, "Successfully parsed authors", zap.Any("authors", authors))
+			logger.Error(ctx, "JSON content", zap.String("json", attachmentResult.AuthorsJson))
+			return err // Return error instead of continuing silently
 		}
-	} else {
-		return fmt.Errorf("Error getting attachment with authors: %v\n", err)
+
+		card.Authors = authors
+		logger.Debug(ctx, "Successfully parsed authors", zap.Any("authors", authors))
 	}
+
 	return nil
 }
 
-// Updated HydrateDocument function with proper error handling
 func (s *SearchService) HydrateDocument(ctx context.Context, result fugusdk.FuguSearchResult, index int) (CardData, error) {
 	// Check cache first
 	cacheKey := cache.PrepareKey("search", "document", result.ID)
 
-	cached, err := s.getCachedCard(ctx, cacheKey)
-	if err != nil {
-		logger.Error(ctx, "Error getting cached card card ", zap.Error(err))
-	}
-
-	doc, ok := cached.(DocumentCardData)
-	if ok {
-		doc.Index = index
-		return doc, nil
+	if cached, err := s.getCachedCard(ctx, cacheKey); err == nil {
+		if doc, ok := cached.(DocumentCardData); ok {
+			doc.Index = index
+			return doc, nil
+		}
 	}
 
 	// validate and hydrate card data
-	card := DocumentCardData{}
+	card := DocumentCardData{
+		Index: index,
+	}
+
+	// Parse AttachmentUUID and FragmentID from result.ID first
+	segmentIndex := strings.Index(result.ID, "-segment-")
+	if segmentIndex == -1 {
+		// No segment found - this might be a full document reference
+		var err error
+		card.AttachmentUUID, err = uuid.Parse(result.ID)
+		if err != nil {
+			return DocumentCardData{}, fmt.Errorf("Could not parse document ID as UUID: %w", err)
+		}
+		card.FragmentID = ""
+	} else {
+		// Validate ID length before parsing
+		if len(result.ID) < 36 { // UUID_LEN
+			return DocumentCardData{}, fmt.Errorf("Document ID too short for UUID: %s", result.ID)
+		}
+
+		var err error
+		card.AttachmentUUID, err = uuid.Parse(result.ID[:segmentIndex])
+		if err != nil {
+			return DocumentCardData{}, fmt.Errorf("Could not parse attachment UUID: %w", err)
+		}
+		card.FragmentID = result.ID[segmentIndex+len("-segment-"):]
+	}
 
 	if result.Metadata != nil {
-		fileName, ok := result.Metadata["file_name"].(string)
-		if ok {
+		// File name
+		if fileName, ok := result.Metadata["file_name"].(string); ok {
 			card.Name = fileName
 		}
 
-		fileIDString, ok := result.Metadata["file_id"].(string)
-		if ok {
+		// ObjectUUID
+		if fileIDString, ok := result.Metadata["file_id"].(string); ok {
 			fileID, err := uuid.Parse(fileIDString)
 			if err != nil {
-				return DocumentCardData{}, fmt.Errorf("Failed to parse file_id in metadata", err)
+				return DocumentCardData{}, fmt.Errorf("Failed to parse file_id in metadata: %w", err)
 			}
 			card.ObjectUUID = fileID
-
 		}
 
-		convoIDString, ok := result.Metadata["conversation_id"].(string)
-		if ok {
+		// Conversation
+		if convoIDString, ok := result.Metadata["conversation_id"].(string); ok {
 			convoID, err := uuid.Parse(convoIDString)
 			if err != nil {
-				return DocumentCardData{}, fmt.Errorf("Failed to parse conversation_id in metadata", err)
+				return DocumentCardData{}, fmt.Errorf("Failed to parse conversation_id in metadata: %w", err)
 			}
 
 			err = s.hydrateDocumentConvos(ctx, &card, convoID)
 			if err != nil {
-				return DocumentCardData{}, fmt.Errorf("Failed to hydrate conversaton", err)
+				return DocumentCardData{}, fmt.Errorf("Failed to hydrate conversation: %w", err)
 			}
 		}
 
-		authorIDsRaw, ok := result.Metadata["author_ids"].([]string)
-		if ok {
+		// Authors
+		if authorIDsRaw, ok := result.Metadata["author_ids"].([]string); ok {
 			parseUUID := func(val string) (uuid.UUID, error) { return uuid.Parse(val) }
 			authorIDs, err := util.MapErrorBubble(authorIDsRaw, parseUUID)
 			if err != nil {
-				return DocumentCardData{}, fmt.Errorf("Failed to parse an author_id in author_ids in metadata")
+				return DocumentCardData{}, fmt.Errorf("Failed to parse author_ids in metadata: %w", err)
 			}
 			err = s.hydrateDocumentAuthors(ctx, &card, authorIDs)
 			if err != nil {
-				return DocumentCardData{}, fmt.Errorf("Failed to hydrate authors in metadata", err)
+				return DocumentCardData{}, fmt.Errorf("Failed to hydrate authors: %w", err)
 			}
 		}
 
-		desc, ok := result.Metadata["description"].(string)
-		if ok {
+		// Description
+		if desc, ok := result.Metadata["description"].(string); ok {
 			card.Description = desc
 		}
 
-		createdAt, ok := result.Metadata["created_at"].(string)
-		if ok {
-			t, err := time.Parse(time.RFC3339, createdAt)
-			if err == nil {
+		// Timestamp
+		if createdAt, ok := result.Metadata["created_at"].(string); ok {
+			if t, err := time.Parse(time.RFC3339, createdAt); err == nil {
 				card.Timestamp = t
+			} else {
+				logger.Warn(ctx, "Failed to parse created_at timestamp", zap.Error(err))
 			}
 		}
 
-		caseNumber, ok := result.Metadata["case_number"].(string)
-		if ok {
+		// Case number
+		if caseNumber, ok := result.Metadata["case_number"].(string); ok {
 			card.ExtraInfo = fmt.Sprintf("Case: %s", caseNumber)
 		}
 	}
 
-	const UUID_LEN = 36
-	segmentIndex := strings.Index(result.ID, "-segment-")
-	if len(result.ID) < UUID_LEN {
-		return DocumentCardData{}, fmt.Errorf("Document does not have long enough uuid.")
-	}
-	// WARN: assumes there is no prefixing
-	card.AttachmentUUID, err = uuid.Parse(result.ID[:segmentIndex])
-	if err != nil {
-		return DocumentCardData{}, fmt.Errorf("Could not parse uuid for object")
-	}
-
-	if segmentIndex > 0 {
-		card.FragmentID = result.ID[segmentIndex:]
-	}
-
+	// Set default name if not provided
 	if card.Name == "" {
 		card.Name = fmt.Sprintf("Document %s", result.ID)
 	}
