@@ -38,7 +38,7 @@ func (s *SearchService) transformSearchResponse(ctx context.Context, fuguRespons
 		case "organization":
 			card, err = s.HydrateOrganization(ctx, result.ID, result.Score, i)
 		default:
-			card, err = s.HydrateDocument(ctx, result, i, false)
+			card, err = s.HydrateDocument(ctx, result, i)
 		}
 
 		if err != nil {
