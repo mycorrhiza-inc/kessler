@@ -47,7 +47,7 @@ export const searchWithUrlParams = async (
     filters: { ...inheritedFilters, ...urlParams.queryData.filters },
     page: urlParams.paginationData.page || 0,
     per_page: urlParams.paginationData.limit || DEFAULT_PAGE_SIZE,
-    namespace: urlParams.queryData.namespace
+    namespace: ""
   };
 
   try {
