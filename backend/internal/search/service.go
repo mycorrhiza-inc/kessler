@@ -338,7 +338,7 @@ func (s *SearchService) ProcessSearch(ctx context.Context, query string, filters
 
 	logger.Info(ctx, "fugu search completed",
 		zap.Int("result_count", len(fuguResponse.Results)))
-	logger.Info(ctx, "fugu search result:",
+	logger.Debug(ctx, "fugu search result:",
 		zap.Any("result body", fuguResponse.Results))
 
 	// Transform fugu response to frontend format with hydration
