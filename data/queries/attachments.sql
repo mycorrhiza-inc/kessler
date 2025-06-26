@@ -59,6 +59,7 @@ ORDER BY
 -- name: GetAllSearchAttachments :many
 SELECT
 	a.id AS id,
+  a.file_id as file_id,
 	a.name AS name,
 	a.created_at,
 	fm.mdata,
@@ -76,6 +77,7 @@ WHERE ats.text IS NOT NULL AND ats.text != '';
 -- name: GetSearchAttachmentById :one
 SELECT
 	a.id AS id,
+  a.file_id as file_id,
 	a.name AS name,
 	a.created_at,
 	fm.mdata,

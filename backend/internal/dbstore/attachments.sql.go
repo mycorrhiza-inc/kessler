@@ -221,6 +221,7 @@ func (q *Queries) AttachmentUpdate(ctx context.Context, arg AttachmentUpdatePara
 const getAllSearchAttachments = `-- name: GetAllSearchAttachments :many
 SELECT
 	a.id AS id,
+  a.file_id as file_id,
 	a.name AS name,
 	a.created_at,
 	fm.mdata,
@@ -238,6 +239,7 @@ WHERE ats.text IS NOT NULL AND ats.text != ''
 
 type GetAllSearchAttachmentsRow struct {
 	ID        uuid.UUID
+	FileID    uuid.UUID
 	Name      string
 	CreatedAt pgtype.Timestamptz
 	Mdata     []byte
@@ -255,6 +257,7 @@ func (q *Queries) GetAllSearchAttachments(ctx context.Context) ([]GetAllSearchAt
 		var i GetAllSearchAttachmentsRow
 		if err := rows.Scan(
 			&i.ID,
+			&i.FileID,
 			&i.Name,
 			&i.CreatedAt,
 			&i.Mdata,
@@ -752,6 +755,7 @@ func (q *Queries) GetMultipleAttachmentsWithAuthors(ctx context.Context, dollar_
 const getSearchAttachmentById = `-- name: GetSearchAttachmentById :one
 SELECT
 	a.id AS id,
+  a.file_id as file_id,
 	a.name AS name,
 	a.created_at,
 	fm.mdata,
@@ -769,6 +773,7 @@ WHERE a.id = $1
 
 type GetSearchAttachmentByIdRow struct {
 	ID        uuid.UUID
+	FileID    uuid.UUID
 	Name      string
 	CreatedAt pgtype.Timestamptz
 	Mdata     []byte
@@ -780,6 +785,7 @@ func (q *Queries) GetSearchAttachmentById(ctx context.Context, id uuid.UUID) (Ge
 	var i GetSearchAttachmentByIdRow
 	err := row.Scan(
 		&i.ID,
+		&i.FileID,
 		&i.Name,
 		&i.CreatedAt,
 		&i.Mdata,
