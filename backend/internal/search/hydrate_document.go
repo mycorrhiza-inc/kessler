@@ -116,55 +116,54 @@ func (s *SearchService) HydrateDocument(ctx context.Context, result fugusdk.Fugu
 	// Get attachment authors with proper error handling
 	queries := dbstore.New(s.db)
 
-	attachmentResult, err := queries.GetAttachmentWithAuthors(ctx, attachID)
-	if err == nil {
-		logger.Error(ctx, "Error parsing document ID as UUID", zap.Error(err))
-	}
-	// Check if we have valid JSON authors data
-	if attachmentResult.AuthorsJson != "" && attachmentResult.AuthorsJson != "[]" {
-		logger.Debug(ctx, "Raw authors JSON", zap.Dict(attachmentResult.AuthorsJson))
-
-		// Parse the JSON into authors slice
-		var authors []DocumentAuthor
-		if err := json.Unmarshal([]byte(attachmentResult.AuthorsJson), &authors); err != nil {
-			// Log the error but don't fail the entire operation
-			logger.Error(ctx, "Error parsing authors JSON", zap.Error(err))
-			logger.Error(ctx, "JSON content", zap.Dict(attachmentResult.AuthorsJson))
-		} else {
-			card.Authors = authors
-			logger.Debug(ctx, "Successfully parsed authors", zap.Any("authors", authors))
+	if full_fetch {
+		attachmentResult, err := queries.GetAttachmentWithAuthors(ctx, attachID)
+		if err == nil {
+			logger.Error(ctx, "Error parsing document ID as UUID", zap.Error(err))
 		}
-	} else {
-		fmt.Printf("Error getting attachment with authors: %v\n", err)
+		// Check if we have valid JSON authors data
+		if attachmentResult.AuthorsJson != "" && attachmentResult.AuthorsJson != "[]" {
+			logger.Debug(ctx, "Raw authors JSON", zap.Dict(attachmentResult.AuthorsJson))
+
+			// Parse the JSON into authors slice
+			var authors []DocumentAuthor
+			if err := json.Unmarshal([]byte(attachmentResult.AuthorsJson), &authors); err != nil {
+				// Log the error but don't fail the entire operation
+				logger.Error(ctx, "Error parsing authors JSON", zap.Error(err))
+				logger.Error(ctx, "JSON content", zap.Dict(attachmentResult.AuthorsJson))
+			} else {
+				card.Authors = authors
+				logger.Debug(ctx, "Successfully parsed authors", zap.Any("authors", authors))
+			}
+		} else {
+			fmt.Printf("Error getting attachment with authors: %v\n", err)
+		}
 	}
 
 	if !full_fetch {
-
 		// Lookup organization details
-		for _, info := range orgInfos {
-			org, err := q.OrganizationRead(ctx, info.ID)
+		for _, orgID := range authorIDs {
+			org, err := queries.OrganizationRead(ctx, orgID)
 			if err != nil {
-				log.Warn("Failed to read organization for authorship", zap.String("org_id", info.ID.String()), zap.Error(err))
+				log.Warn("Failed to read organization for authorship", zap.String("org_id", orgID.String()), zap.Error(err))
 				continue
 			}
 			card.Authors = append(card.Authors, DocumentAuthor{
 				AuthorName:      org.Name,
 				IsPerson:        org.IsPerson.Valid && org.IsPerson.Bool,
-				IsPrimaryAuthor: info.Primary,
+				IsPrimaryAuthor: true,
 				AuthorID:        org.ID,
 			})
 		}
 
 		// Lookup conversation details (use first if multiple)
-		if len(convUUIDs) > 0 {
-			conv, err := q.DocketConversationRead(ctx, convUUIDs[0])
-			if err != nil {
-				log.Warn("Failed to read conversation details", zap.String("conversation_id", convUUIDs[0].String()), zap.Error(err))
-			} else {
-				card.Conversation = DocumentConversation{
-					ConvoName: conv.Name,
-					ConvoID:   conv.ID,
-				}
+		conv, err := queries.DocketConversationRead(ctx, convoID)
+		if err != nil {
+			log.Warn("Failed to read conversation details", zap.String("conversation_id", convoID.String()), zap.Error(err))
+		} else {
+			card.Conversation = DocumentConversation{
+				ConvoName: conv.Name,
+				ConvoID:   conv.ID,
 			}
 		}
 	}
