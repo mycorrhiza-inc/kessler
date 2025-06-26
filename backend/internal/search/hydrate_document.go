@@ -94,7 +94,9 @@ func (s *SearchService) HydrateDocument(ctx context.Context, result fugusdk.Fugu
 
 	attachmentIDRaw := result.ID
 	attachID := uuid.New()
+	fragmentID := ""
 	if segmentIndex := strings.Index(attachmentIDRaw, "-segment-"); segmentIndex != -1 {
+		fragmentID = attachmentIDRaw[segmentIndex:]
 		attachmentIDRaw = attachmentIDRaw[:segmentIndex]
 	}
 	attachID, err = uuid.Parse(attachmentIDRaw)
@@ -103,14 +105,17 @@ func (s *SearchService) HydrateDocument(ctx context.Context, result fugusdk.Fugu
 	}
 
 	card := DocumentCardData{
-		Name:        name,
-		Description: description,
-		Timestamp:   timestamp,
-		ExtraInfo:   extraInfo,
-		Index:       index,
-		Type:        "document",
-		ObjectUUID:  attachID,
-		Authors:     []DocumentAuthor{}, // Initialize empty slice
+		Name:           name,
+		Description:    description,
+		Timestamp:      timestamp,
+		ExtraInfo:      extraInfo,
+		Index:          index,
+		Type:           "document",
+		ObjectUUID:     fileID,
+		AttachmentUUID: attachID,
+		FragmentID:     fragmentID,
+		Authors:        []DocumentAuthor{}, // Initialize empty slice
+		Conversation:   DocumentConversation{},
 	}
 
 	// Get attachment authors with proper error handling
@@ -141,8 +146,14 @@ func (s *SearchService) HydrateDocument(ctx context.Context, result fugusdk.Fugu
 	}
 
 	if !full_fetch {
+		// TODO: Run both of these concurrently with a goroutine or something.
+
 		// Lookup organization details
 		for _, orgID := range authorIDs {
+			if orgID == uuid.Nil {
+				log.Error("Encountered null org_id when hydrating without a full fetch", zap.String("attach_id", attachID.String()), zap.String("file_id", fileID.String()))
+				return DocumentCardData{}, fmt.Errorf("Encountered null org_id when hydrating without a full fetch")
+			}
 			org, err := queries.OrganizationRead(ctx, orgID)
 			if err != nil {
 				log.Warn("Failed to read organization for authorship", zap.String("org_id", orgID.String()), zap.Error(err))
@@ -156,7 +167,11 @@ func (s *SearchService) HydrateDocument(ctx context.Context, result fugusdk.Fugu
 			})
 		}
 
-		// Lookup conversation details (use first if multiple)
+		// Lookup conversation details
+		if convoID == uuid.Nil {
+			log.Error("Encountered null convo_id when hydrating without a full fetch", zap.String("attach_id", attachID.String()), zap.String("file_id", fileID.String()))
+			return DocumentCardData{}, fmt.Errorf("Encountered null convo_id when hydrating without a full fetch")
+		}
 		conv, err := queries.DocketConversationRead(ctx, convoID)
 		if err != nil {
 			log.Warn("Failed to read conversation details", zap.String("conversation_id", convoID.String()), zap.Error(err))
