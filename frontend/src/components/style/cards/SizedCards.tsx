@@ -1,5 +1,4 @@
 import { CardData, CardType } from "@/lib/types/generic_card_types";
-import { redirect } from 'next/navigation';
 import { clsx } from "clsx";
 import React, { ReactNode } from "react";
 import { AuthorPill } from "../Pills/TextPills";
@@ -199,22 +198,8 @@ const LargeCard: React.FC<{ data: CardData }> = ({ data }: { data: CardData }) =
 );
 
 
-const calculateHref = (objectId: string, objectType: CardType) => {
-  // Cuts of any segmentation info added on at the end of the object_id
-  objectId = objectId.slice(0, 36)
-  switch (objectType) {
-    case CardType.Author:
-      return `/orgs/${objectId}`
-    case CardType.Docket:
-      return `/docket/${objectId}`
-    case CardType.Document:
-      return `/filling/${objectId}`
-  }
-}
 
-// Main component
 const Card = ({ data, disableHref, size = CardSize.Medium }: { data: CardData, disableHref?: boolean, size?: CardSize }) => {
-
   const rawCard: ReactNode = (() => {
     switch (size) {
       case CardSize.Large:
@@ -230,10 +215,11 @@ const Card = ({ data, disableHref, size = CardSize.Medium }: { data: CardData, d
   if (disableHref) {
     return rawCard
   }
-  const href = calculateHref(data.object_uuid, data.type)
-  return <div onClick={redirect(href)}>{rawCard}</div>
+
+  return rawCard
 
 };
 
 export default Card;
+export { LargeCard, MediumCard, SmallCard };
 export type { CardData };
