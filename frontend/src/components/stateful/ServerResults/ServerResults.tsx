@@ -7,7 +7,6 @@ import { Suspense } from "react";
 
 interface ServerSearchResultProps {
   baseUrl: string;
-  objectType: GenericSearchType;
   urlParams: TypedUrlParams;
   inherentRouteFilters?: Record<string, string>
 }

@@ -12,7 +12,6 @@ export interface AIOSearchProps {
 
 export interface AllInOneServerSearchParams {
   urlParams: TypedUrlParams,
-  queryType: GenericSearchType,
   baseUrl: string,
   inherentRouteFilters?: Record<string, string>
   disableFilterSelection?: boolean,
@@ -21,7 +20,7 @@ export interface AllInOneServerSearchParams {
 }
 
 
-export default async function AllInOneServerSearch({ urlParams, queryType, baseUrl, disableFilterSelection, disableResults, inherentRouteFilters, aboveSearchElement }: AllInOneServerSearchParams) {
+export default async function AllInOneServerSearch({ urlParams, baseUrl, disableFilterSelection, disableResults, inherentRouteFilters, aboveSearchElement }: AllInOneServerSearchParams) {
   if (disableFilterSelection) {
     return (
       <div className="bg-base-100 space-y-8">
@@ -31,7 +30,6 @@ export default async function AllInOneServerSearch({ urlParams, queryType, baseU
           <ServerSearchResults
             baseUrl={baseUrl}
             urlParams={urlParams}
-            objectType={GenericSearchType.Filling}
             inherentRouteFilters={inherentRouteFilters}
           />
         )}
@@ -49,7 +47,6 @@ export default async function AllInOneServerSearch({ urlParams, queryType, baseU
             <ServerSearchResults
               baseUrl={baseUrl}
               urlParams={urlParams}
-              objectType={GenericSearchType.Filling}
               inherentRouteFilters={inherentRouteFilters}
             />
           </div>
