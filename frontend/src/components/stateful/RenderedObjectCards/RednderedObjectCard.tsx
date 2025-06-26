@@ -1,4 +1,4 @@
-import Card, { CardData, CardSize } from "@/components/style/cards/GenericResultCard";
+import Card, { CardData, CardSize } from "@/components/style/cards/SizedCards";
 import ErrorMessage from "@/components/style/messages/ErrorMessage";
 import { GenericSearchType } from "@/lib/adapters/genericSearchCallback";
 import { getContextualAPIUrl } from "@/lib/env_variables";

@@ -1,5 +1,5 @@
 import RenderedCardObject from "@/components/stateful/RenderedObjectCards/RednderedObjectCard";
-import { CardSize } from "@/components/style/cards/GenericResultCard";
+import { CardSize } from "@/components/style/cards/SizedCards";
 import { GenericSearchType } from "@/lib/adapters/genericSearchCallback";
 import { DocumentMainTabsClient } from "./DocumentBody";
 
