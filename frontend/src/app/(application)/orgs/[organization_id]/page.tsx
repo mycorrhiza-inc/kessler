@@ -29,7 +29,6 @@ export default async function OrgPage({
       <AllInOneServerSearch
         aboveSearchElement={<h1 className="text-2xl font-bold mb-4">Search [org-name]'s Filings</h1>}
         urlParams={urlParams}
-        queryType={GenericSearchType.Filing}
         inherentRouteFilters={{ "author_id": org_id }}
         baseUrl={`/orgs/${org_id}`}
       />

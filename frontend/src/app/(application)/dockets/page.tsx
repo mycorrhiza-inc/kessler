@@ -21,7 +21,6 @@ export default async function DocketSearchPage(
       <AllInOneServerSearch
         aboveSearchElement={<LogoHomepage bottomText="Docket Search: TODO MAKE IT SEARCH DOCKETS NOT FILINGS" />}
         urlParams={urlParams}
-        queryType={GenericSearchType.Docket}
         baseUrl={`/dockets`}
       />
     </DefaultContainer>

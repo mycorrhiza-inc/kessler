@@ -29,7 +29,6 @@ export default async function Page({
         aboveSearchElement={<h1 className="text-2xl font-bold mb-4">Search [org-name]'s Filings</h1>
         }
         urlParams={urlParams}
-        queryType={GenericSearchType.Filing}
 
         inherentRouteFilters={{ "conversation_id": convo_id }}
         baseUrl={`/dockets/${convo_id}`}
