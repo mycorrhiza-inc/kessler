@@ -136,7 +136,7 @@ const CardFooter: React.FC<{ data: CardData; size: CardSize }> = ({ data, size }
   </div>
 );
 
-const CardAuthors: React.FC<{ authors: AuthorInformation[]; size: CardSize }> = ({ authors, size }) => (
+const CardAuthors: React.FC<{ authors: (AuthorInformation | undefined)[]; size: CardSize }> = ({ authors, size }) => (
   <div className={clsx(size === CardSize.Large ? "mt-6" : "mt-4")}>
     <h3 className={clsx(
       size === CardSize.Large ? "text-2xl font-bold mb-2" : "text-sm font-semibold mb-2"
@@ -146,7 +146,7 @@ const CardAuthors: React.FC<{ authors: AuthorInformation[]; size: CardSize }> = 
     <div className={clsx(
       size === CardSize.Large ? "flex flex-wrap gap-4" : "flex flex-wrap gap-2 bg-pink-100 p-2 rounded-sm"
     )}>
-      {authors.map((author, idx) => (
+      {authors.map((author, idx) => author && (
         <AuthorPill key={idx} author={author} />
       ))}
     </div>
@@ -199,27 +199,5 @@ const LargeCard: React.FC<{ data: CardData }> = ({ data }: { data: CardData }) =
 
 
 
-const Card = ({ data, disableHref, size = CardSize.Medium }: { data: CardData, disableHref?: boolean, size?: CardSize }) => {
-  const rawCard: ReactNode = (() => {
-    switch (size) {
-      case CardSize.Large:
-        return <LargeCard data={data} />;
-      case CardSize.Small:
-        return <SmallCard data={data} />;
-      case CardSize.Medium:
-        return <MediumCard data={data} />;
-      default:
-        return <MediumCard data={data} />;
-    }
-  })()
-  if (disableHref) {
-    return rawCard
-  }
-
-  return rawCard
-
-};
-
-export default Card;
 export { LargeCard, MediumCard, SmallCard };
 export type { CardData };
