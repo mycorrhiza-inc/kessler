@@ -27,7 +27,7 @@ const Card = ({ data, disableHref, size = CardSize.Medium }: { data: CardData, d
       case CardSize.Small:
         return <SmallCard data={data} />;
       case CardSize.Medium:
-        return <MediumCard data={data} />;
+        return <MediumCard data={data} enableClickAnimation={!disableHref} />;
       default:
         return <MediumCard data={data} />;
     }

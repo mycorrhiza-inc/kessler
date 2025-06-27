@@ -166,8 +166,15 @@ const SmallCard: React.FC<{ data: CardData }> = ({ data }: { data: CardData }) =
   </div>
 );
 
-const MediumCard: React.FC<{ data: CardData }> = ({ data }: { data: CardData }) => (
-  <div className="card bg-base-200 shadow-xl p-4 mb-4">
+
+const MediumCard = ({ data, enableClickAnimation = false }: {
+  data: CardData;
+  enableClickAnimation?: boolean;
+}) => (
+  <div
+    className={`card bg-base-200 shadow-xl p-4 mb-4 transition-transform ${enableClickAnimation ? 'active:scale-95 cursor-pointer' : ''
+      }`}
+  >
     <CardHeader data={data} size={CardSize.Medium} />
     <CardDescription data={data} size={CardSize.Medium} />
     <CardFooter data={data} size={CardSize.Medium} />
