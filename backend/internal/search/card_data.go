@@ -52,8 +52,9 @@ type DocumentAuthor struct {
 }
 
 type DocumentConversation struct {
-	ConvoName string    `json:"convo_name"`
-	ConvoID   uuid.UUID `json:"convo_id"`
+	ConvoName   string    `json:"convo_name"`
+	ConvoNumber string    `json:"convo_number"`
+	ConvoID     uuid.UUID `json:"convo_id"`
 }
 
 type DocumentCardData struct {
@@ -81,7 +82,8 @@ func (d DocumentCardData) GetType() string {
 // Helper to determine result type from facets
 func (s *SearchService) getResultType(facets []string) string {
 	for _, facet := range facets {
-		if strings.Contains(facet, "/conversation") && !strings.Contains(facet, "/data/conversation") {
+		if strings.Contains(facet, "/conversation") && !strings.Contains(facet, "/data/conversation") &&
+			!strings.Contains(facet, "metadata/conversation_id") {
 			return "conversation"
 		}
 		if strings.Contains(facet, "/organization") {

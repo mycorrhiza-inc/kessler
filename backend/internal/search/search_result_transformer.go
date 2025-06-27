@@ -2,7 +2,6 @@ package search
 
 import (
 	"context"
-	"fmt"
 	"kessler/internal/fugusdk"
 	"kessler/pkg/logger"
 	"time"
@@ -13,6 +12,7 @@ import (
 // Update ProcessSearch to use the new transformer
 // Updated transformSearchResponse to return card data
 func (s *SearchService) transformSearchResponse(ctx context.Context, fuguResponse *fugusdk.SanitizedResponse, query, namespace string, pagination PaginationParams, processTime time.Duration) (*SearchResponse, error) {
+	log := logger.FromContext(ctx)
 	if fuguResponse == nil || len(fuguResponse.Results) == 0 {
 		return &SearchResponse{
 			Data:        []CardData{},
@@ -24,11 +24,19 @@ func (s *SearchService) transformSearchResponse(ctx context.Context, fuguRespons
 			ProcessTime: processTime.String(),
 		}, nil
 	}
+	log.Info("Got result from fugu successfully", zap.Int("results_len", len(fuguResponse.Results)))
 
 	var cards []CardData
 
 	for i, result := range fuguResponse.Results {
 		resultType := s.getResultType(result.Facets)
+		// log.Debug("Debugging search result",
+		// 	zap.String("result_id", result.ID),
+		// 	zap.String("text", result.Text[:100]),
+		// 	zap.Any("metadata", result.Metadata),
+		// 	zap.Any("facets", result.Facets),
+		// 	zap.String("detected_type", resultType),
+		// )
 
 		var card CardData
 		var err error
@@ -40,7 +48,6 @@ func (s *SearchService) transformSearchResponse(ctx context.Context, fuguRespons
 			card, err = s.HydrateOrganization(ctx, result.ID, result.Score, i)
 		default:
 			card, err = s.HydrateDocument(ctx, result, i)
-			fmt.Printf("card returned::: %v\n\n\n\n", card)
 		}
 
 		if err != nil {
@@ -50,6 +57,10 @@ func (s *SearchService) transformSearchResponse(ctx context.Context, fuguRespons
 				zap.Error(err))
 			continue // Skip this result
 		}
+
+		// log.Debug("Debugging returned card result",
+		// 	zap.Any("card", card),
+		// )
 
 		cards = append(cards, card)
 	}
