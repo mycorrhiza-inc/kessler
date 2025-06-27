@@ -2,7 +2,6 @@ package search
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"kessler/internal/cache"
 	"kessler/internal/dbstore"
@@ -33,32 +32,32 @@ func (s *SearchService) hydrateDocumentConvos(ctx context.Context, card *Documen
 		}
 		return nil
 	}
-
 }
+
 func (s *SearchService) hydrateDocumentAuthors(ctx context.Context, card *DocumentCardData, authorIDs []uuid.UUID) error {
 	queries := dbstore.New(s.db)
 
-	attachmentResult, err := queries.GetAttachmentWithAuthors(ctx, card.ObjectUUID)
-	if err != nil {
-		logger.Error(ctx, "Error getting attachment with authors", zap.Error(err))
-		return err // CRITICAL: Must return here
-	}
-
-	// Check if we have valid JSON authors data
-	if attachmentResult.AuthorsJson != "" && attachmentResult.AuthorsJson != "[]" {
-		logger.Debug(ctx, "Raw authors JSON", zap.String("json", attachmentResult.AuthorsJson))
-
-		// Parse the JSON into authors slice
-		var authors []DocumentAuthor
-		if err := json.Unmarshal([]byte(attachmentResult.AuthorsJson), &authors); err != nil {
-			logger.Error(ctx, "Error parsing authors JSON", zap.Error(err))
-			logger.Error(ctx, "JSON content", zap.String("json", attachmentResult.AuthorsJson))
-			return err // Return error instead of continuing silently
-		}
-
-		card.Authors = authors
-		logger.Debug(ctx, "Successfully parsed authors", zap.Any("authors", authors))
-	}
+	// attachmentResult, err := queries.GetAttachmentWithAuthors(ctx, card.ObjectUUID)
+	// if err != nil {
+	// 	logger.Error(ctx, "Error getting attachment with authors", zap.Error(err))
+	// 	return err // CRITICAL: Must return here
+	// }
+	//
+	// // Check if we have valid JSON authors data
+	// if attachmentResult.AuthorsJson != "" && attachmentResult.AuthorsJson != "[]" {
+	// 	logger.Debug(ctx, "Raw authors JSON", zap.String("json", attachmentResult.AuthorsJson))
+	//
+	// 	// Parse the JSON into authors slice
+	// 	var authors []DocumentAuthor
+	// 	if err := json.Unmarshal([]byte(attachmentResult.AuthorsJson), &authors); err != nil {
+	// 		logger.Error(ctx, "Error parsing authors JSON", zap.Error(err))
+	// 		logger.Error(ctx, "JSON content", zap.String("json", attachmentResult.AuthorsJson))
+	// 		return err // Return error instead of continuing silently
+	// 	}
+	//
+	// 	card.Authors = authors
+	// 	logger.Debug(ctx, "Successfully parsed authors", zap.Any("authors", authors))
+	// }
 
 	return nil
 }

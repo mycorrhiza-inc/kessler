@@ -2,7 +2,6 @@ package search
 
 import (
 	"context"
-	"fmt"
 	"kessler/internal/fugusdk"
 	"kessler/pkg/logger"
 	"time"
@@ -30,7 +29,7 @@ func (s *SearchService) transformSearchResponse(ctx context.Context, fuguRespons
 
 	for i, result := range fuguResponse.Results {
 		resultType := s.getResultType(result.Facets)
-		log.Info("Debugging search result",
+		log.Debug("Debugging search result",
 			zap.String("result_id", result.ID),
 			zap.String("text", result.Text[:100]),
 			zap.Any("metadata", result.Metadata),
