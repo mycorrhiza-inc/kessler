@@ -12,7 +12,7 @@ export interface UrlQueryParams {
 }
 
 export interface UrlPaginationParams {
-  page?: number; // Defaults to zero
+  page?: number; // Should default to 1
   limit?: number; // Defaults to DEFAULT_PAGE_SIZE
 }
 
@@ -111,7 +111,7 @@ export function encodeUrlParams(params: TypedUrlParams): string {
   }
 
   // Pagination: include only if not default
-  if (paginationData.page && paginationData.page > 0) {
+  if (paginationData.page && paginationData.page > 1) {
     parts.push(`page=${paginationData.page}`);
   }
   if (paginationData.limit && paginationData.limit != DEFAULT_PAGE_SIZE) {

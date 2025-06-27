@@ -16,7 +16,7 @@ export default function ServerSearchResultsRaw({ baseUrl, urlParams, results }: 
   ));
 
   // Pagination logic
-  const currentPage = urlParams.paginationData.page || 0;
+  const currentPage = urlParams.paginationData.page || 1;
   const limit = urlParams.paginationData.limit || DEFAULT_PAGE_SIZE;
   // If fewer results than limit, we are on the last page
   const isLastPage = results.length < limit;
@@ -47,12 +47,12 @@ export default function ServerSearchResultsRaw({ baseUrl, urlParams, results }: 
             href={prevHref}
             className={
               clsx("join-item btn btn-outline text-2xl",
-                currentPage === 0 && 'btn-disabled'
+                currentPage === 1 && 'btn-disabled'
               )}
           >
             «
           </a>
-          <p className="join-item btn btn-outline text-base pointer-events-none select-none">Page {(urlParams.paginationData.page || 0) + 1}</p>
+          <p className="join-item btn btn-outline text-base pointer-events-none select-none">Page {(urlParams.paginationData.page || 1)}</p>
           <a
             href={nextHref}
             className={
