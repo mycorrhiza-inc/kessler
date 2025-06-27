@@ -66,7 +66,7 @@ function SearchCommand() {
   };
   const searchInfo: GenericSearchInfo = {
     query: searchQuery,
-    search_type: GenericSearchType.Filling,
+    search_type: GenericSearchType.Filing,
   };
 
   return (

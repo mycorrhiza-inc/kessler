@@ -1,4 +1,4 @@
-import Card, { CardData, CardSize } from "@/components/style/cards/SizedCards";
+import { CardData, CardSize } from "@/components/style/cards/SizedCards";
 import ErrorMessage from "@/components/style/messages/ErrorMessage";
 import { GenericSearchType } from "@/lib/adapters/genericSearchCallback";
 import { getContextualAPIUrl } from "@/lib/env_variables";
@@ -6,6 +6,7 @@ import { generateFakeResultsRaw } from "@/lib/search/search_utils";
 import { AuthorCardDataValidator, DocumentCardDataValidator } from "@/lib/types/generic_card_types";
 import { sleep } from "@/lib/utils";
 import axios from "axios";
+import Card from "../Card/LinkedCard";
 
 async function fetchCardData(object_id: string, objectType: GenericSearchType): Promise<CardData> {
   const api_url = getContextualAPIUrl()
@@ -29,7 +30,7 @@ async function fetchCardData(object_id: string, objectType: GenericSearchType): 
       const docket_raw_data = docket_response.data
       const docket_data = AuthorCardDataValidator.parse(docket_raw_data)
       return docket_data
-    case GenericSearchType.Filling:
+    case GenericSearchType.Filing:
       const filling_endpoint = `${api_url}/card/file/${object_id}`
       console.log("Fetching Filling data from:", filling_endpoint)
       const filling_response = await axios.get(filling_endpoint)
