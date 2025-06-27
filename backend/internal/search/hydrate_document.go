@@ -95,7 +95,8 @@ func (s *SearchService) HydrateDocument(ctx context.Context, result fugusdk.Fugu
 
 	// validate and hydrate card data
 	card := DocumentCardData{
-		Index: index,
+		Index:       index,
+		Description: result.Text,
 	}
 
 	// Parse AttachmentUUID and FragmentID from result.ID first
