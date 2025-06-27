@@ -24,18 +24,19 @@ func (s *SearchService) transformSearchResponse(ctx context.Context, fuguRespons
 			ProcessTime: processTime.String(),
 		}, nil
 	}
+	log.Info("Got result from fugu successfully", zap.Int("results_len", len(fuguResponse.Results)))
 
 	var cards []CardData
 
 	for i, result := range fuguResponse.Results {
 		resultType := s.getResultType(result.Facets)
-		log.Debug("Debugging search result",
-			zap.String("result_id", result.ID),
-			zap.String("text", result.Text[:100]),
-			zap.Any("metadata", result.Metadata),
-			zap.Any("facets", result.Facets),
-			zap.String("detected_type", resultType),
-		)
+		// log.Debug("Debugging search result",
+		// 	zap.String("result_id", result.ID),
+		// 	zap.String("text", result.Text[:100]),
+		// 	zap.Any("metadata", result.Metadata),
+		// 	zap.Any("facets", result.Facets),
+		// 	zap.String("detected_type", resultType),
+		// )
 
 		var card CardData
 		var err error
@@ -57,9 +58,9 @@ func (s *SearchService) transformSearchResponse(ctx context.Context, fuguRespons
 			continue // Skip this result
 		}
 
-		log.Info("Debugging returned card result",
-			zap.Any("card", card),
-		)
+		// log.Debug("Debugging returned card result",
+		// 	zap.Any("card", card),
+		// )
 
 		cards = append(cards, card)
 	}
