@@ -12,6 +12,7 @@ import (
 // Update ProcessSearch to use the new transformer
 // Updated transformSearchResponse to return card data
 func (s *SearchService) transformSearchResponse(ctx context.Context, fuguResponse *fugusdk.SanitizedResponse, query, namespace string, pagination PaginationParams, processTime time.Duration) (*SearchResponse, error) {
+	log := logger.FromContext(ctx)
 	if fuguResponse == nil || len(fuguResponse.Results) == 0 {
 		return &SearchResponse{
 			Data:        []CardData{},
@@ -28,6 +29,13 @@ func (s *SearchService) transformSearchResponse(ctx context.Context, fuguRespons
 
 	for i, result := range fuguResponse.Results {
 		resultType := s.getResultType(result.Facets)
+		log.Info("Debugging search result",
+			zap.String("result_id", result.ID),
+			zap.String("text", result.Text[:100]),
+			zap.Any("metadata", result.Metadata),
+			zap.Any("facets", result.Facets),
+			zap.String("detected_type", resultType),
+		)
 
 		var card CardData
 		var err error
@@ -38,7 +46,7 @@ func (s *SearchService) transformSearchResponse(ctx context.Context, fuguRespons
 		case "organization":
 			card, err = s.HydrateOrganization(ctx, result.ID, result.Score, i)
 		default:
-			card, err = s.HydrateDocument(ctx, result, i)
+			card, err = s.HydrateDocument(ctx, result, i, false)
 		}
 
 		if err != nil {

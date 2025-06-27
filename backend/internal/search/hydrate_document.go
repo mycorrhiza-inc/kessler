@@ -80,14 +80,6 @@ func (s *SearchService) HydrateDocument(ctx context.Context, result fugusdk.Fugu
 		}
 	}
 
-	if len(result.ID) < 36 {
-		return DocketCardData{}, fmt.Errorf("Document does not have long enough uuid.")
-	}
-	parsedAttachmentUUID, err := uuid.Parse(result.ID[:36])
-	if err != nil {
-		return DocketCardData{}, fmt.Errorf("Could not parse uuid for object")
-	}
-
 	if name == "" {
 		name = fmt.Sprintf("Document %s", result.ID)
 	}
