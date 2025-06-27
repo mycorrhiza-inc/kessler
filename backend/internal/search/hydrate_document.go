@@ -36,7 +36,27 @@ func (s *SearchService) hydrateDocumentConvos(ctx context.Context, card *Documen
 
 func (s *SearchService) hydrateDocumentAuthors(ctx context.Context, card *DocumentCardData, authorIDs []uuid.UUID) error {
 	queries := dbstore.New(s.db)
+	authors := []DocumentAuthor{}
 
+	for _, orgID := range authorIDs {
+		if orgID == uuid.Nil {
+			log.Error("Encountered null org_id when hydrating without a full fetch", zap.String("attach_id", card.AttachmentUUID.String()), zap.String("file_id", card.ObjectUUID.String()))
+			return fmt.Errorf("Encountered null org_id when hydrating without a full fetch")
+		}
+		org, err := queries.OrganizationRead(ctx, orgID)
+		if err != nil {
+			log.Warn("Failed to read organization for authorship", zap.String("org_id", orgID.String()), zap.Error(err))
+			continue
+		}
+		authors = append(authors, DocumentAuthor{
+			AuthorName:      org.Name,
+			IsPerson:        org.IsPerson.Valid && org.IsPerson.Bool,
+			IsPrimaryAuthor: true,
+			AuthorID:        org.ID,
+		})
+	}
+	card.Authors = authors
+	return nil
 	// attachmentResult, err := queries.GetAttachmentWithAuthors(ctx, card.ObjectUUID)
 	// if err != nil {
 	// 	logger.Error(ctx, "Error getting attachment with authors", zap.Error(err))
