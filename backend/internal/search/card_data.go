@@ -52,8 +52,9 @@ type DocumentAuthor struct {
 }
 
 type DocumentConversation struct {
-	ConvoName string    `json:"convo_name"`
-	ConvoID   uuid.UUID `json:"convo_id"`
+	ConvoName   string    `json:"convo_name"`
+	ConvoNumber string    `json:"convo_number"`
+	ConvoID     uuid.UUID `json:"convo_id"`
 }
 
 type DocumentCardData struct {

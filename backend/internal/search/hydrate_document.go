@@ -8,10 +8,10 @@ import (
 	"kessler/internal/fugusdk"
 	"kessler/pkg/logger"
 	"kessler/pkg/util"
+	"reflect"
 	"strings"
 	"time"
 
-	"github.com/charmbracelet/log"
 	"github.com/google/uuid"
 
 	//"go.opentelemetry.io/otel"
@@ -19,22 +19,37 @@ import (
 )
 
 func (s *SearchService) hydrateDocumentConvos(ctx context.Context, card *DocumentCardData, convoID uuid.UUID) error {
+	log := logger.FromContext(ctx)
 	queries := dbstore.New(s.db)
 
 	conv, err := queries.DocketConversationRead(ctx, convoID)
 	if err != nil {
 		log.Warn("Failed to read conversation details", zap.String("conversation_id", convoID.String()), zap.Error(err))
 		return err
-	} else {
-		card.Conversation = DocumentConversation{
-			ConvoName: conv.Name,
-			ConvoID:   conv.ID,
-		}
-		return nil
 	}
+	convName := strings.TrimSpace(conv.Name)
+	convNum := strings.TrimSpace(conv.DocketGovID)
+	if convNum == "" {
+		log.Warn("Conversation number is undefined", zap.String("conversation_id", convoID.String()))
+	}
+	if convName == "" {
+		log.Warn("Conversation name is undefined", zap.String("conversation_id", convoID.String()))
+		convName = convNum
+	}
+	card.Conversation = DocumentConversation{
+		ConvoName:   convName,
+		ConvoNumber: conv.DocketGovID,
+		ConvoID:     conv.ID,
+	}
+	return nil
 }
 
 func (s *SearchService) hydrateDocumentAuthors(ctx context.Context, card *DocumentCardData, authorIDs []uuid.UUID) error {
+	log := logger.FromContext(ctx)
+	if len(authorIDs) == 0 {
+		log.Warn("Card has no document authors", zap.String("attach_id", card.AttachmentUUID.String()))
+		return nil
+	}
 	queries := dbstore.New(s.db)
 	authors := []DocumentAuthor{}
 
@@ -48,8 +63,12 @@ func (s *SearchService) hydrateDocumentAuthors(ctx context.Context, card *Docume
 			log.Warn("Failed to read organization for authorship", zap.String("org_id", orgID.String()), zap.Error(err))
 			continue
 		}
+		authName := strings.TrimSpace(org.Name)
+		if authName == "" {
+			log.Warn("Organization name is null", zap.String("org_id", orgID.String()))
+		}
 		authors = append(authors, DocumentAuthor{
-			AuthorName:      org.Name,
+			AuthorName:      authName,
 			IsPerson:        org.IsPerson.Valid && org.IsPerson.Bool,
 			IsPrimaryAuthor: true,
 			AuthorID:        org.ID,
@@ -78,11 +97,10 @@ func (s *SearchService) hydrateDocumentAuthors(ctx context.Context, card *Docume
 	// 	card.Authors = authors
 	// 	logger.Debug(ctx, "Successfully parsed authors", zap.Any("authors", authors))
 	// }
-
-	return nil
 }
 
 func (s *SearchService) HydrateDocument(ctx context.Context, result fugusdk.FuguSearchResult, index int) (CardData, error) {
+	log := logger.FromContext(ctx)
 	// Check cache first
 	cacheKey := cache.PrepareKey("search", "document", result.ID)
 
@@ -96,7 +114,8 @@ func (s *SearchService) HydrateDocument(ctx context.Context, result fugusdk.Fugu
 	// validate and hydrate card data
 	card := DocumentCardData{
 		Index:       index,
-		Description: result.Text,
+		Description: result.Text[:200],
+		Type:        "document",
 	}
 
 	// Parse AttachmentUUID and FragmentID from result.ID first
@@ -152,8 +171,11 @@ func (s *SearchService) HydrateDocument(ctx context.Context, result fugusdk.Fugu
 		}
 
 		// Authors
-		if authorIDsRaw, ok := result.Metadata["author_ids"].([]string); ok {
-			parseUUID := func(val string) (uuid.UUID, error) { return uuid.Parse(val) }
+		if authorIDsRaw, ok := result.Metadata["author_ids"].([]interface{}); ok {
+			parseUUID := func(val interface{}) (uuid.UUID, error) {
+				valString := val.(string)
+				return uuid.Parse(valString)
+			}
 			authorIDs, err := util.MapErrorBubble(authorIDsRaw, parseUUID)
 			if err != nil {
 				return DocumentCardData{}, fmt.Errorf("Failed to parse author_ids in metadata: %w", err)
@@ -162,6 +184,16 @@ func (s *SearchService) HydrateDocument(ctx context.Context, result fugusdk.Fugu
 			if err != nil {
 				return DocumentCardData{}, fmt.Errorf("Failed to hydrate authors: %w", err)
 			}
+			if len(card.Authors) != len(authorIDsRaw) {
+				log.Error("Something went really wrong with author hydration, mismatch between ids provided and final author length", zap.Int("raw_author_ids_len", len(authorIDsRaw)), zap.Int("author_info_len", len(card.Authors)))
+
+				return DocumentCardData{}, fmt.Errorf("Mismatch in raw_author_ids_len and author_info_len")
+			}
+		} else {
+			log.Warn("Authors were not detected",
+				zap.String("fugu_id", result.ID),
+				zap.Any("author_ids", result.Metadata["author_ids"]),
+				zap.Any("author_ids_type", reflect.TypeOf(result.Metadata["author_ids"])))
 		}
 
 		// Description
@@ -182,6 +214,8 @@ func (s *SearchService) HydrateDocument(ctx context.Context, result fugusdk.Fugu
 		if caseNumber, ok := result.Metadata["case_number"].(string); ok {
 			card.ExtraInfo = fmt.Sprintf("Case: %s", caseNumber)
 		}
+	} else {
+		log.Error("Result had no metadata", zap.String("fugu_id", result.ID))
 	}
 
 	// Set default name if not provided
