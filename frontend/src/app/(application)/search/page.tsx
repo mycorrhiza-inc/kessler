@@ -20,7 +20,6 @@ export default async function SearchPage(
       <AllInOneServerSearch
         aboveSearchElement={<LogoHomepage bottomText="Search" />}
         urlParams={urlParams}
-        queryType={GenericSearchType.Filling}
         baseUrl="/search"
       />
     </DefaultContainer>

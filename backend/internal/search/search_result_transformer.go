@@ -2,6 +2,7 @@ package search
 
 import (
 	"context"
+	"fmt"
 	"kessler/internal/fugusdk"
 	"kessler/pkg/logger"
 	"time"

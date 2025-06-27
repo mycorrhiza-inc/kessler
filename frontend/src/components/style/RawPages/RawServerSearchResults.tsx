@@ -1,5 +1,5 @@
 import { encodeUrlParams, TypedUrlParams } from "@/lib/types/url_params";
-import Card, { CardSize } from "../cards/GenericResultCard";
+import Card, { CardSize } from "../cards/SizedCards";
 import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import clsx from "clsx";
 
