@@ -57,6 +57,10 @@ func (s *SearchService) transformSearchResponse(ctx context.Context, fuguRespons
 			continue // Skip this result
 		}
 
+		log.Info("Debugging returned card result",
+			zap.Any("card", card),
+		)
+
 		cards = append(cards, card)
 	}
 
