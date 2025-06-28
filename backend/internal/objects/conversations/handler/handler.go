@@ -12,6 +12,7 @@ import (
 	"kessler/pkg/database"
 	"kessler/pkg/logger"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/charmbracelet/log"
@@ -92,15 +93,15 @@ func (h *ConversationHandler) ConversationGetCardInfo(w http.ResponseWriter, r *
 }
 
 func ConvoRawToDocketCard(raw dbstore.DocketConversation) search.DocketCardData {
-	actual_name := raw.Name
+	actual_name := strings.TrimSpace(raw.Name)
 	if actual_name == "" {
-		actual_name = raw.DocketGovID
+		actual_name = strings.TrimSpace(raw.DocketGovID)
 	}
 	if actual_name == "" {
-		actual_name = raw.Description
+		actual_name = strings.TrimSpace(raw.Description)
 	}
 	return search.DocketCardData{
-		Name:         raw.Name,
+		Name:         actual_name,
 		DocketNumber: raw.DocketGovID,
 		ObjectUUID:   raw.ID,
 		Description:  raw.Description,
