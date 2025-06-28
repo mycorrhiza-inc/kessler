@@ -32,12 +32,13 @@ func (a AuthorCardData) GetType() string {
 }
 
 type DocketCardData struct {
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	Timestamp   time.Time `json:"timestamp"`
-	Index       int       `json:"index"`
-	Type        string    `json:"type"`
-	ObjectUUID  uuid.UUID `json:"object_uuid"`
+	Name         string    `json:"name"`
+	Description  string    `json:"description"`
+	Timestamp    time.Time `json:"timestamp"`
+	Index        int       `json:"index"`
+	Type         string    `json:"type"`
+	ObjectUUID   uuid.UUID `json:"object_uuid"`
+	DocketNumber string    `json:"docket_number"`
 }
 
 func (d DocketCardData) GetType() string {

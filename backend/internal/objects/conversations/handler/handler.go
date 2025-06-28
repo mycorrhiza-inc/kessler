@@ -71,7 +71,7 @@ func (h *ConversationHandler) ConversationGetCardInfo(w http.ResponseWriter, r *
 	rawConvoID := params["uuid"]
 	convoUUID, err := uuid.Parse(rawConvoID)
 	if err != nil {
-		errorstring := fmt.Sprintf("Error parsing file %v: %v", rawConvoID, err)
+		errorstring := fmt.Sprintf("Error parsing uuid %v: %v", rawConvoID, err)
 		log.Info(errorstring)
 		http.Error(w, errorstring, http.StatusBadRequest)
 		return
@@ -80,11 +80,10 @@ func (h *ConversationHandler) ConversationGetCardInfo(w http.ResponseWriter, r *
 	q := dbstore.New(h.db)
 	orgRaw, err := q.DocketConversationRead(ctx, convoUUID)
 	if err != nil {
-		log.Info("encountered error getting file from uuid", zap.Error(err))
+		log.Info("encountered error getting conversation from uuid", zap.Error(err))
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	// All identical to the card info so far
 	card := ConvoRawToDocketCard(orgRaw)
 
 	response, _ := json.Marshal(card)
@@ -94,12 +93,13 @@ func (h *ConversationHandler) ConversationGetCardInfo(w http.ResponseWriter, r *
 
 func ConvoRawToDocketCard(raw dbstore.DocketConversation) search.DocketCardData {
 	return search.DocketCardData{
-		Name:        raw.Name,
-		ObjectUUID:  raw.ID,
-		Description: raw.Description,
-		Timestamp:   raw.CreatedAt.Time,
-		Type:        "docket",
-		Index:       0,
+		Name:         raw.Name,
+		DocketNumber: raw.DocketGovID,
+		ObjectUUID:   raw.ID,
+		Description:  raw.Description,
+		Timestamp:    raw.CreatedAt.Time,
+		Type:         "docket",
+		Index:        0,
 	}
 }
 

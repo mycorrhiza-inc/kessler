@@ -20,6 +20,7 @@ export const AuthorCardDataValidator = BaseCardDataValidator.extend({
 });
 
 export const DocketCardDataValidator = BaseCardDataValidator.extend({
+  docket_number: z.string(),
   type: z.literal(CardType.Docket),
 });
 
