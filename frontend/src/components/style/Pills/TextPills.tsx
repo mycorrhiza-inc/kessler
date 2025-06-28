@@ -140,7 +140,7 @@ export const BasePill = ({
   href,
   onClick,
   onRemove,
-  color = "oklch(83% 0.123 0)",
+  color = "oklch(75% 0.16 000)",
   textColor = 'auto',
   size = 'xs',
   className = '',
@@ -311,7 +311,7 @@ export const ConversationPill = ({
   baseUrl = "/dockets",
   ...props
 }: ConvoPillProps) => {
-  const displayText = convo_info.convo_num || convo_info.convo_name || convo_info.convo_id || ""
+  const displayText = convo_info.convo_number || convo_info.convo_name || convo_info.convo_id || ""
   const href = `${baseUrl}/${convo_info.convo_id}`;
 
   return (
