@@ -8,6 +8,7 @@ import (
 	"kessler/internal/dbstore"
 	"kessler/internal/objects/conversations"
 	"kessler/internal/objects/networking"
+	"kessler/internal/search"
 	"kessler/pkg/database"
 	"kessler/pkg/logger"
 	"net/http"
@@ -18,6 +19,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.opentelemetry.io/otel"
+	"go.uber.org/zap"
 	// "go.uber.org/zap"
 )
 
@@ -41,6 +43,8 @@ func DefineConversationsRoutes(r *mux.Router, db dbstore.DBTX) {
 		handler.ConversationSemiCompletePaginatedList,
 	).Methods(http.MethodGet)
 
+	r.HandleFunc("/{uuid}/card", handler.ConversationGetCardInfo).Methods(http.MethodGet)
+
 	r.HandleFunc(
 		"/named-lookup/{name}",
 		handler.ConversationGetByUnknownHandler,
@@ -55,6 +59,48 @@ func DefineConversationsRoutes(r *mux.Router, db dbstore.DBTX) {
 		"/list/semi-complete",
 		handler.ConversationSemiCompleteListAll,
 	).Methods(http.MethodGet)
+}
+
+func (h *ConversationHandler) ConversationGetCardInfo(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	ctx, span := tracer.Start(ctx, "conversations:ConversationGetCardInfo")
+	defer span.End()
+	log := logger.FromContext(ctx)
+
+	params := mux.Vars(r)
+	rawConvoID := params["uuid"]
+	convoUUID, err := uuid.Parse(rawConvoID)
+	if err != nil {
+		errorstring := fmt.Sprintf("Error parsing file %v: %v", rawConvoID, err)
+		log.Info(errorstring)
+		http.Error(w, errorstring, http.StatusBadRequest)
+		return
+	}
+
+	q := dbstore.New(h.db)
+	orgRaw, err := q.DocketConversationRead(ctx, convoUUID)
+	if err != nil {
+		log.Info("encountered error getting file from uuid", zap.Error(err))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	// All identical to the card info so far
+	card := ConvoRawToDocketCard(orgRaw)
+
+	response, _ := json.Marshal(card)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(response)
+}
+
+func ConvoRawToDocketCard(raw dbstore.DocketConversation) search.DocketCardData {
+	return search.DocketCardData{
+		Name:        raw.Name,
+		ObjectUUID:  raw.ID,
+		Description: raw.Description,
+		Timestamp:   raw.CreatedAt.Time,
+		Type:        "docket",
+		Index:       0,
+	}
 }
 
 func (h *ConversationHandler) ConversationGetByUnknownHandler(w http.ResponseWriter, r *http.Request) {

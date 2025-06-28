@@ -10,7 +10,9 @@ import (
 	"kessler/internal/objects/files"
 	"kessler/internal/objects/networking"
 	"kessler/internal/objects/organizations"
+	"kessler/internal/search"
 	"kessler/pkg/database"
+	"kessler/pkg/logger"
 	"net/http"
 
 	"github.com/charmbracelet/log"
@@ -18,6 +20,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.opentelemetry.io/otel"
+	"go.uber.org/zap"
 )
 
 var tracer = otel.Tracer("organizations-handler")
@@ -51,6 +54,49 @@ func DefineOrganizationRoutes(r *mux.Router, db dbstore.DBTX) {
 		"/verify",
 		handler.OrganizationVerifyHandler,
 	).Methods(http.MethodPost)
+}
+
+func (h *OrgHandler) OrganizationGetCardInfo(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	ctx, span := tracer.Start(ctx, "organizations:OrganizationGetCardInfo")
+	defer span.End()
+	log := logger.FromContext(ctx)
+
+	params := mux.Vars(r)
+	rawOrgID := params["uuid"]
+	orgUUID, err := uuid.Parse(rawOrgID)
+	if err != nil {
+		errorstring := fmt.Sprintf("Error parsing file %v: %v", rawOrgID, err)
+		log.Info(errorstring)
+		http.Error(w, errorstring, http.StatusBadRequest)
+		return
+	}
+
+	q := dbstore.New(h.db)
+	orgRaw, err := q.OrganizationRead(ctx, orgUUID)
+	if err != nil {
+		log.Info("encountered error getting file from uuid", zap.Error(err))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	// All identical to the card info so far
+	card := OrgRawToOrgCard(orgRaw)
+
+	response, _ := json.Marshal(card)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(response)
+}
+
+func OrgRawToOrgCard(raw dbstore.Organization) search.AuthorCardData {
+	return search.AuthorCardData{
+		Name:        raw.Name,
+		ObjectUUID:  raw.ID,
+		Description: raw.Description,
+		Timestamp:   raw.CreatedAt.Time,
+		Type:        "author",
+		ExtraInfo:   "",
+		Index:       0,
+	}
 }
 
 type OrganizationRequest struct {
