@@ -56,9 +56,9 @@ export function adaptFilingToCard(filing: Filing): DocumentCardData {
 /**
  * Adapter: OrganizationInfo → DocketCardData
  */
-export function adaptOrganizationToCard(org: OrganizationInfo): DocketCardData {
+export function adaptOrganizationToCard(org: OrganizationInfo): AuthorCardData {
   return {
-    type: CardType.Docket,
+    type: CardType.Author,
     object_uuid: org.id,
     index: 0,
     name: org.name || org.title || "",
@@ -71,10 +71,11 @@ export function adaptOrganizationToCard(org: OrganizationInfo): DocketCardData {
 /**
  * Adapter: Conversation → AuthorCardData
  */
-export function adaptConversationToCard(convo: Conversation): AuthorCardData {
+export function adaptConversationToCard(convo: Conversation): DocketCardData {
   return {
-    type: CardType.Author,
+    type: CardType.Docket,
     object_uuid: convo.id,
+    docket_number: convo.docket_id,
     index: 0,
     name: convo.name || convo.id,
     description: convo.description || "",

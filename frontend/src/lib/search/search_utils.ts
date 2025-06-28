@@ -49,6 +49,7 @@ export const generateFakeResultsRaw = (count: number): CardData[] => {
         const docket_data: DocketCardData = {
           ...base,
           type: CardType.Docket,
+          docket_number: `${faker.string.alpha({ length: 3, casing: "upper" })}-${faker.string.alpha({ length: 3, casing: "upper" })}-${faker.string.alpha({ length: 3, casing: "upper" })}`,
           name: `${agency}-${faker.string.alpha({ length: 3, casing: "upper" })}-${faker.date.recent().getFullYear()}-${faker.string.numeric(4)}`,
           description: `${agency} ${faker.commerce.product()} Regulations`,
           extraInfo: `Comment period closes ${faker.date.soon({ days: 30 }).toLocaleDateString()}`,
