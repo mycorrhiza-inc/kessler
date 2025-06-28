@@ -14,7 +14,7 @@ async function fetchCardData(object_id: string, objectType: GenericSearchType): 
 
   switch (objectType) {
     case GenericSearchType.Organization:
-      const org_endpoint = `${api_url}/card/org/${object_id}`
+      const org_endpoint = `${api_url}/public/organizations/${object_id}/card`
       console.log("Fetching Organization data from:", org_endpoint)
       const org_response = await axios.get(org_endpoint)
       console.log("Organization response data:", org_response.data)
@@ -23,7 +23,7 @@ async function fetchCardData(object_id: string, objectType: GenericSearchType): 
       return org_data
 
     case GenericSearchType.Docket:
-      const docket_endpoint = `${api_url}/card/convo/${object_id}`
+      const docket_endpoint = `${api_url}/public/conversations/${object_id}/card`
       console.log("Fetching Docket data from:", docket_endpoint)
       const docket_response = await axios.get(docket_endpoint)
       console.log("Docket response data:", docket_response.data)
@@ -31,7 +31,7 @@ async function fetchCardData(object_id: string, objectType: GenericSearchType): 
       const docket_data = AuthorCardDataValidator.parse(docket_raw_data)
       return docket_data
     case GenericSearchType.Filing:
-      const filling_endpoint = `${api_url}/card/file/${object_id}`
+      const filling_endpoint = `${api_url}/public/files/${object_id}/card`
       console.log("Fetching Filling data from:", filling_endpoint)
       const filling_response = await axios.get(filling_endpoint)
       console.log("Filling response data:", filling_response.data)
