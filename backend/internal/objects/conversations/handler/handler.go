@@ -92,6 +92,10 @@ func (h *ConversationHandler) ConversationGetCardInfo(w http.ResponseWriter, r *
 }
 
 func ConvoRawToDocketCard(raw dbstore.DocketConversation) search.DocketCardData {
+	actual_name := raw.Name
+	if actual_name == "" {
+		actual_name = raw.DocketGovID
+	}
 	return search.DocketCardData{
 		Name:         raw.Name,
 		DocketNumber: raw.DocketGovID,
