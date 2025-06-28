@@ -1,7 +1,7 @@
 import { CardData, CardType } from "@/lib/types/generic_card_types";
 import { clsx } from "clsx";
 import React, { ReactNode } from "react";
-import { AuthorPill } from "../Pills/TextPills";
+import { AuthorPill, ConversationPill, ConvoInfo } from "../Pills/TextPills";
 import { AuthorInformation } from "@/lib/types/backend_schemas";
 
 // Card sizes
@@ -121,6 +121,7 @@ const CardDescription: React.FC<{ data: CardData; size: CardSize }> = ({ data, s
   return <p className={className}>{content}</p>;
 };
 
+
 const CardFooter: React.FC<{ data: CardData; size: CardSize }> = ({ data, size }) => (
   <div className={clsx(
     "flex items-center justify-between text-gray-500",
@@ -136,19 +137,33 @@ const CardFooter: React.FC<{ data: CardData; size: CardSize }> = ({ data, size }
   </div>
 );
 
-const CardAuthors: React.FC<{ authors: (AuthorInformation | undefined)[]; size: CardSize }> = ({ authors, size }) => (
-  <div className={clsx(size === CardSize.Large ? "mt-6" : "mt-4")}>
-    <h3 className={clsx(
-      size === CardSize.Large ? "text-2xl font-bold mb-2" : "text-sm font-semibold mb-2"
-    )}>
-      Authors
-    </h3>
-    <div className={clsx(
-      size === CardSize.Large ? "flex flex-wrap gap-4" : "flex flex-wrap gap-2 bg-pink-100 p-2 rounded-sm"
-    )}>
-      {authors.map((author, idx) => author && (
-        <AuthorPill key={idx} author={author} />
-      ))}
+const DocumentCardExtras = ({ authors, convo, size }: { authors: (AuthorInformation | undefined)[], size: CardSize, convo: ConvoInfo }) => (
+  <div className={clsx("flex flex-row space-x-2 justify-between", size === CardSize.Large ? "mt-6" : "mt-4")}>
+    <div>
+      <h3 className={clsx("mb-2",
+        size === CardSize.Large ? "text-2xl font-bold" : "text-sm font-semibold"
+      )}>
+        Authors
+      </h3>
+      <div className={clsx("flex flex-wrap",
+        size === CardSize.Large ? "gap-4" : "gap-2 bg-pink-100 p-2 rounded-sm"
+      )}>
+        {authors.map((author: AuthorInformation | undefined, idx) => author && (
+          <AuthorPill key={idx} author={author} />
+        ))}
+      </div>
+    </div>
+    <div>
+      <h3 className={clsx("mb-2",
+        size === CardSize.Large ? "text-2xl font-bold" : "text-sm font-semibold"
+      )}>
+        Docket
+      </h3>
+      <div className={clsx("flex flex-wrap",
+        size === CardSize.Large ? "gap-4" : "gap-2 bg-green-100 p-2 rounded-sm"
+      )}>
+        <ConversationPill convo_info={convo} />
+      </div>
     </div>
   </div>
 );
@@ -178,8 +193,8 @@ const MediumCard = ({ data, enableClickAnimation = false }: {
     <CardHeader data={data} size={CardSize.Medium} />
     <CardDescription data={data} size={CardSize.Medium} />
     <CardFooter data={data} size={CardSize.Medium} />
-    {data.type === CardType.Document && data.authors && (
-      <CardAuthors authors={data.authors} size={CardSize.Medium} />
+    {data.type === CardType.Document && data.authors && data.conversation && (
+      <DocumentCardExtras authors={data.authors} size={CardSize.Medium} convo={data.conversation} />
     )}
   </div>
 );
@@ -198,8 +213,8 @@ const LargeCard: React.FC<{ data: CardData }> = ({ data }: { data: CardData }) =
       </div>
     )}
     <CardFooter data={data} size={CardSize.Large} />
-    {data.type === CardType.Document && data.authors && (
-      <CardAuthors authors={data.authors} size={CardSize.Large} />
+    {data.type === CardType.Document && data.authors && data.conversation && (
+      <DocumentCardExtras authors={data.authors} size={CardSize.Large} convo={data.conversation} />
     )}
   </div>
 );

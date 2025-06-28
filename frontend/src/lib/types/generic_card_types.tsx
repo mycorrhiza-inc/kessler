@@ -20,6 +20,7 @@ export const AuthorCardDataValidator = BaseCardDataValidator.extend({
 });
 
 export const DocketCardDataValidator = BaseCardDataValidator.extend({
+  docket_number: z.string(),
   type: z.literal(CardType.Docket),
 });
 
@@ -35,7 +36,8 @@ export const DocumentCardDataValidator = BaseCardDataValidator.extend({
   ),
   conversation: z.object({
     convo_id: z.string().uuid(),
-    convo_name: z.string()
+    convo_name: z.string(),
+    convo_number: z.string()
   }).optional()
 });
 
