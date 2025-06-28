@@ -35,7 +35,8 @@ export const DocumentCardDataValidator = BaseCardDataValidator.extend({
   ),
   conversation: z.object({
     convo_id: z.string().uuid(),
-    convo_name: z.string()
+    convo_name: z.string(),
+    convo_num: z.string()
   }).optional()
 });
 

@@ -31,8 +31,8 @@ export function generateTypeUrlParams(
   untyped_params: { [key: string]: string | string[] | undefined }
 ): TypedUrlParams {
   // Extract known parameters
-  const rawQuery = untyped_params["q"];
-  const rawDataset = untyped_params["dataset"];
+  const rawQuery = untyped_params["q"] || untyped_params["query"] || "";
+  const rawDataset = untyped_params["dataset"] || "";
   const rawPage = untyped_params["page"];
   const rawLimit = untyped_params["limit"];
 

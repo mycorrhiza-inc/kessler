@@ -112,11 +112,16 @@ interface AuthorPillProps extends Omit<BasePillProps, 'children' | 'color' | 'hr
 }
 
 // Docket-specific props
-interface DocketPillProps extends Omit<BasePillProps, 'children' | 'color' | 'href'> {
-  docketId: string;
-  text?: string;
+export interface ConvoInfo {
+  convo_id: string,
+  convo_name: string,
+  convo_num: string,
+}
+interface ConvoPillProps extends Omit<BasePillProps, 'children' | 'color' | 'href'> {
+  convo_info: ConvoInfo;
   baseUrl?: string;
 }
+
 
 // Utility to determine text color based on background
 const getAutoTextColor = (backgroundColor: string): 'black' | 'white' => {
@@ -301,19 +306,18 @@ export const AuthorPill = ({
 };
 
 // Docket Pill Component
-export const DocketPill = ({
-  docketId,
-  text,
+export const ConversationPill = ({
+  convo_info,
   baseUrl = "/dockets",
   ...props
-}: DocketPillProps) => {
-  const displayText = text || docketId;
-  const href = `${baseUrl}/${docketId}`;
+}: ConvoPillProps) => {
+  const displayText = convo_info.convo_num || convo_info.convo_name || convo_info.convo_id || ""
+  const href = `${baseUrl}/${convo_info.convo_id}`;
 
   return (
     <TextPill
       text={displayText}
-      seed={docketId}
+      seed={convo_info.convo_id}
       href={href}
       variant="docket"
       aria-label={`View docket ${displayText}`}

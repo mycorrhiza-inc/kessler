@@ -12,7 +12,7 @@ import { FileExtension, fileExtensionFromText } from "@/components/style/Pills/F
 import { CLIENT_API_URL } from "@/lib/env_variables";
 import { CompleteFileSchema } from "@/lib/types/backend_schemas";
 import { AuthorInformation } from "@/lib/types/backend_schemas";
-import { DocketPill, AuthorInfoPill } from "@/components/style/Pills/TextPills";
+import { ConversationPill, AuthorInfoPill } from "@/components/style/Pills/TextPills";
 
 // Minimal data shape required by DocumentMainTabs
 export interface DocumentMainTabsData {
@@ -89,7 +89,7 @@ const DocumentHeader = ({
           )}
         </div>
       </div>
-      <p><b>Case Number:</b> <DocketPill docketId={mdata.docket_id as string} /></p>
+      <p><b>Case Number:</b> <ConversationPill docketId={mdata.docket_id as string} /></p>
       {authors && (
         <p>
           <b>{authors.length === 1 ? 'Author' : 'Authors'}:</b>{' '}
