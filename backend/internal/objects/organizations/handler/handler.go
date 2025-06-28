@@ -51,6 +51,11 @@ func DefineOrganizationRoutes(r *mux.Router, db dbstore.DBTX) {
 	).Methods(http.MethodGet)
 
 	r.HandleFunc(
+		"/{uuid}/card",
+		handler.OrganizationGetCardInfo,
+	).Methods(http.MethodGet)
+
+	r.HandleFunc(
 		"/verify",
 		handler.OrganizationVerifyHandler,
 	).Methods(http.MethodPost)
