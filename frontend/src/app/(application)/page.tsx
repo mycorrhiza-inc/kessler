@@ -15,7 +15,6 @@ export default async function Page(
     <AllInOneServerSearch
       aboveSearchElement={<LogoHomepage />}
       urlParams={urlParams}
-      queryType={GenericSearchType.Filling}
       baseUrl={targetSearchUrl}
       disableFilterSelection
       disableResults

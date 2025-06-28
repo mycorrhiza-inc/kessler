@@ -42,10 +42,13 @@ export const searchWithUrlParams = async (
   urlParams: TypedUrlParams,
   inheritedFilters: Record<string, string> = {}
 ): Promise<DocumentCardData[]> => {
+
+  // Handle the converstion from beginning at 1 indexing, to beginning at 0 indexing here. Backend should never worry about this
+  const actual_page = (urlParams.paginationData.page || 1) - 1;
   const requestBody: SearchRequest = {
     query: urlParams.queryData.query || "",
     filters: { ...inheritedFilters, ...urlParams.queryData.filters },
-    page: urlParams.paginationData.page || 0,
+    page: actual_page,
     per_page: urlParams.paginationData.limit || DEFAULT_PAGE_SIZE,
     namespace: ""
   };

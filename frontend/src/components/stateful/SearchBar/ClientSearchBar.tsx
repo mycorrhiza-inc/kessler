@@ -22,7 +22,7 @@ export default function ClientSearchBar({ urlParams, baseUrl }: {
 
   const executeSearch = () => {
     const newQueryParams = { ...urlParams, query };
-    const newParams: TypedUrlParams = { queryData: newQueryParams, paginationData: {} }
+    const newParams: TypedUrlParams = { queryData: newQueryParams, paginationData: {}, namespace: "" }
     const encodedUrlQuery = encodeUrlParams(newParams)
     const url = baseUrl + encodedUrlQuery
     router.push(url)

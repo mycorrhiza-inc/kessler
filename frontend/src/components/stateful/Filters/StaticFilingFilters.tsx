@@ -95,6 +95,7 @@ export function HardCodedFiltersFromInfo({
 
     const newParams: TypedUrlParams = {
       paginationData: {},
+      namespace: "",
       queryData: { ...urlQueryParams, filters: updated },
     };
     const endpoint = baseUrl + encodeUrlParams(newParams);

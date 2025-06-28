@@ -11,7 +11,7 @@ export default async function DocumentServerPage({
   const doc_object = { verifed: true, id: filling_id, extension: "pdf" } as any;
 
   return <>
-    <RenderedCardObject objectType={GenericSearchType.Filling} object_id={filling_id} size={CardSize.Large} />
+    <RenderedCardObject objectType={GenericSearchType.Filing} object_id={filling_id} size={CardSize.Large} />
     <DocumentMainTabsClient documentObject={doc_object} isPage />
   </>
 

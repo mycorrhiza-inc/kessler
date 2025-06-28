@@ -68,7 +68,7 @@ describe("CardDataValidators", () => {
     expect(parsed.name).toBe("Research Paper on Mycorrhizae");
     expect(parsed.type).toBe("document");
     expect(parsed.authors.length).toBe(2);
-    expect(parsed.authors[0].author_name).toBe("Jane Doe");
+    expect(parsed.authors[0]?.author_name).toBe("Jane Doe");
   });
 
   it("fails parsing invalid JSON for AuthorCardData", () => {

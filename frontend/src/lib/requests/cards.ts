@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { z } from "zod";
-import { CardData, CardType } from "@/lib/types/generic_card_types";
+import { CardType } from "@/lib/types/generic_card_types";
 
 
 export const BaseCardDataValidator = z.object({
