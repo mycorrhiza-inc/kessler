@@ -27,7 +27,7 @@ export const hydratedSearchResultsToFilings = (
       },
     );
   const valid_files: CompleteFileSchema[] = verifified_nullable_files.filter(
-    (file) => file !== null,
+    (file: any) => file !== null,
   ) as CompleteFileSchema[]; // filter out null _files.filter
   const filings = valid_files.map(
     (file: CompleteFileSchema): Filing => generateFilingFromFileSchema(file),

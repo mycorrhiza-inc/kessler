@@ -31,40 +31,12 @@ func DefineFileRoutes(r *mux.Router, db dbstore.DBTX) {
 	handler := NewFileHandler(db)
 
 	// Insert endpoint
-	r.HandleFunc(
-		"/insert",
-		handler.makeFileUpsertHandler(
-			FileUpsertHandlerConfig{
-				Private: false,
-				Insert:  true,
-			},
-		)).Methods(http.MethodPost)
 
-	// Update endpoint
 	r.HandleFunc(
-		"/{uuid}/update",
-		handler.makeFileUpsertHandler(
-			FileUpsertHandlerConfig{
-				Private: false,
-				Insert:  false,
-			},
-		)).Methods(http.MethodPost)
-
-	// Get file endpoint
-	r.HandleFunc(
-		"/{uuid}",
+		"/{uuid}/card",
 		handler.FileSemiCompleteGet,
 	).Methods(http.MethodGet)
-
 	// Minimal file endpoint
-	r.HandleFunc(
-		"/{uuid}/minimal",
-		handler.ReadFileHandler(
-			FileHandlerConfig{
-				private:     false,
-				return_type: "object-minimal",
-			},
-		)).Methods(http.MethodGet)
 
 	// Markdown file endpoint
 	r.HandleFunc(
@@ -85,12 +57,6 @@ func DefineFileRoutes(r *mux.Router, db dbstore.DBTX) {
 				return_type: "raw",
 			},
 		)).Methods(http.MethodGet)
-
-	// Hash-based markdown retrieval by content hash
-	r.HandleFunc(
-		"/hash/{hash}/markdown",
-		handler.FileMarkdownByHashHandler,
-	).Methods(http.MethodGet)
 
 	// DO NOT TOUCH. this is necessary for well named downloaded files
 	r.HandleFunc(
