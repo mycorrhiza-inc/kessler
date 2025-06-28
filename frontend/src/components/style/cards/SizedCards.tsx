@@ -213,8 +213,8 @@ const LargeCard: React.FC<{ data: CardData }> = ({ data }: { data: CardData }) =
       </div>
     )}
     <CardFooter data={data} size={CardSize.Large} />
-    {data.type === CardType.Document && data.authors && (
-      <DocumentCardExtras authors={data.authors} size={CardSize.Large} />
+    {data.type === CardType.Document && data.authors && data.conversation && (
+      <DocumentCardExtras authors={data.authors} size={CardSize.Large} convo={data.conversation} />
     )}
   </div>
 );

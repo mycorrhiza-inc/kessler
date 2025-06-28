@@ -62,53 +62,6 @@ const DocumentContent = ({
   return <ErrorMessage error="Cannot display this document type" />;
 };
 
-const DocumentHeader = ({
-  documentObject,
-  isPage,
-}: {
-  documentObject: CompleteFileSchema;
-  isPage: boolean;
-}) => {
-  const { name: title, id: objectId, extension = 'pdf', verified = false, extra, mdata, authors } = documentObject;
-  const summary = extra.summary;
-  const underscoredTitle = title.replace(/\s+/g, '_') || 'Unknown_Document';
-  const downloadUrl = `${CLIENT_API_URL}/public/files/${objectId}/raw/${underscoredTitle}.${extension}`;
-  const viewUrl = `/files/${objectId}`;
-  return (
-    <>
-      <div className="card-title flex justify-between items-start">
-        <h1 className="text-3xl break-words max-w-[70%]">{title}</h1>
-        <div className="flex gap-2">
-          <a className="btn btn-primary" href={downloadUrl} target="_blank" download={title}>
-            Download File
-          </a>
-          {!isPage && (
-            <Link className="btn btn-secondary" href={viewUrl} target="_blank">
-              Open in New Tab
-            </Link>
-          )}
-        </div>
-      </div>
-      <p><b>Case Number:</b> <ConversationPill docketId={mdata.docket_id as string} /></p>
-      {authors && (
-        <p>
-          <b>{authors.length === 1 ? 'Author' : 'Authors'}:</b>{' '}
-          {authors.map((a: AuthorInformation) => (
-            <AuthorInfoPill author_info={a} key={a.author_id} />
-          ))}
-        </p>
-      )}
-      <div className="p-4" />
-      <h2 className="text-xl"><b>LLM Summary:</b></h2>
-      <MarkdownRenderer>
-        {verified
-          ? summary
-          : 'Document processing in progress. Please check back later.'}
-      </MarkdownRenderer>
-      <div className="p-12" />
-    </>
-  );
-};
 
 export const DocumentMainTabsClient = ({
   documentObject,

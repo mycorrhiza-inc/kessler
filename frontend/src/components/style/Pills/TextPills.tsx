@@ -115,7 +115,7 @@ interface AuthorPillProps extends Omit<BasePillProps, 'children' | 'color' | 'hr
 export interface ConvoInfo {
   convo_id: string,
   convo_name: string,
-  convo_num: string,
+  convo_number: string,
 }
 interface ConvoPillProps extends Omit<BasePillProps, 'children' | 'color' | 'href'> {
   convo_info: ConvoInfo;
