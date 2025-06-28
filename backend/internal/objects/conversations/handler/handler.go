@@ -96,6 +96,9 @@ func ConvoRawToDocketCard(raw dbstore.DocketConversation) search.DocketCardData 
 	if actual_name == "" {
 		actual_name = raw.DocketGovID
 	}
+	if actual_name == "" {
+		actual_name = raw.Description
+	}
 	return search.DocketCardData{
 		Name:         raw.Name,
 		DocketNumber: raw.DocketGovID,
