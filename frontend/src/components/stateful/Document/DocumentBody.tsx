@@ -16,11 +16,11 @@ import { ConversationPill, AuthorInfoPill } from "@/components/style/Pills/TextP
 
 // Minimal data shape required by DocumentMainTabs
 export interface DocumentMainTabsData {
-  id: CompleteFileSchema['id'];
-  mdata: CompleteFileSchema['mdata'];
-  hash: CompleteFileSchema['hash'];
-  verified: CompleteFileSchema['verified'];
-  extension: CompleteFileSchema['extension'];
+  id: string;
+  mdata: any;
+  hash: string;
+  verified: boolean;
+  extension: string;
 }
 
 const MarkdownContent = memo(({ docUUID }: { docUUID: string }) => {
