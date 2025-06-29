@@ -63,11 +63,7 @@ export const searchWithUrlParams = async (
         }
       }
     );
-
-    return response.data.data.map((item): DocumentCardData => {
-      // Uncomment when validator is ready: return DocumentCardDataValidator.parse(item);
-      return item as DocumentCardData;
-    });
+    return response.data.data
   } catch (error) {
     console.error("Search request failed:", error);
     throw error;

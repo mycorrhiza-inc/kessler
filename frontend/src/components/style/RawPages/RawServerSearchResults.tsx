@@ -3,6 +3,8 @@ import { CardSize } from "../cards/SizedCards";
 import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import clsx from "clsx";
 import Card from "@/components/stateful/Card/LinkedCard";
+import { CardDataValidator } from "@/lib/types/generic_card_types";
+import ErrorMessage from "../messages/ErrorMessage";
 
 interface ServerSearchResultsRawParams {
   baseUrl: string;
@@ -11,9 +13,15 @@ interface ServerSearchResultsRawParams {
 }
 export default function ServerSearchResultsRaw({ baseUrl, urlParams, results }: ServerSearchResultsRawParams) {
   // Perform search based on URL params
-  const cardElements = results.map((card_data, index) => (
-    <Card key={`server-results-${card_data.id}-${index}`} size={CardSize.Medium} data={card_data} />
-  ));
+  const cardElements = results.map((card_data, index) => {
+    try {
+      const validatedData = CardDataValidator.parse(card_data);
+      return (<Card key={`server-results-${card_data.id}-${index}`} size={CardSize.Medium} data={validatedData} />)
+    } catch (err) {
+      return <ErrorMessage message="Server Returned Invalid Card Data" error={err} />
+    }
+  }
+  );
 
   // Pagination logic
   const currentPage = urlParams.paginationData.page || 1;
