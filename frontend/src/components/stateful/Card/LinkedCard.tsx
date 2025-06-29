@@ -14,7 +14,7 @@ const calculateHref = (objectId: string, objectType: CardType) => {
     case CardType.Docket:
       return `/docket/${objectId}`
     case CardType.Document:
-      return `/filling/${objectId}`
+      return `/filing/${objectId}`
   }
 }
 

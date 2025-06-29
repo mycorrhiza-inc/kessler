@@ -4,14 +4,14 @@ import { GenericSearchType } from "@/lib/adapters/genericSearchCallback";
 import { DocumentMainTabsClient } from "./DocumentBody";
 
 export default async function DocumentServerPage({
-  filling_id,
+  filing_id,
 }: {
-  filling_id: string
+  filing_id: string
 }) {
-  const doc_object = { verifed: true, id: filling_id, extension: "pdf" } as any;
+  const doc_object = { verifed: true, id: filing_id, extension: "pdf" } as any;
 
   return <>
-    <RenderedCardObject objectType={GenericSearchType.Filing} object_id={filling_id} size={CardSize.Large} />
+    <RenderedCardObject objectType={GenericSearchType.Filing} object_id={filing_id} size={CardSize.Large} />
     <DocumentMainTabsClient documentObject={doc_object} isPage />
   </>
 

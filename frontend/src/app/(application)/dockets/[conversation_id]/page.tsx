@@ -6,7 +6,7 @@ import { Suspense } from "react";
 import DefaultContainer from "@/components/stateful/PageContainer/DefaultContainer";
 import ServerSearchResults from "@/components/stateful/ServerResults/ServerResults";
 import { GenericSearchType } from "@/lib/adapters/genericSearchCallback";
-import RenderedCardObject from "@/components/stateful/RenderedObjectCards/RednderedObjectCard";
+import RenderedCardObject, { fetchCardData } from "@/components/stateful/RenderedObjectCards/RednderedObjectCard";
 import { CardSize } from "@/components/style/cards/SizedCards";
 
 export default async function Page({
@@ -19,6 +19,9 @@ export default async function Page({
 
   const urlParams = generateTypeUrlParams(await searchParams);
   const convo_id = (await params).conversation_id;
+  try {
+    const card_data = fetchCardData(convo_id, GenericSearchType.Docket)
+  }
 
   return (
     <DefaultContainer>
