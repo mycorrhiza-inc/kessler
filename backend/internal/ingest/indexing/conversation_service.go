@@ -46,22 +46,22 @@ func (ci *ConversationIndexer) IndexAllConversations(ctx context.Context) (int, 
 			continue
 		}
 
+		metadata, facets := ci.buildConversationMetadataAndFacets(conversationParams{
+			id:           c.ID,
+			docketGovID:  c.DocketGovID,
+			state:        c.State,
+			matterType:   c.MatterType,
+			industryType: c.IndustryType,
+			description:  c.Description,
+		})
+
 		recs = append(recs, fugusdk.ObjectRecord{
-			ID:   c.ID.String(),
-			Text: text,
-			Metadata: map[string]interface{}{
-				"docket_gov_id":   c.DocketGovID,
-				"description":     c.Description,
-				"state":           c.State,
-				"matter_type":     c.MatterType,
-				"industry_type":   c.IndustryType,
-				"conversation_id": c.ID.String(), // Store specific ID in metadata
-				"entity_type":     "conversation",
-			},
-			// Use proper namespace facet structure (categorical only)
-			Namespace:      ci.svc.defaultNamespace,
-			ConversationID: c.ID.String(),  // This triggers namespace/NYPUC/conversation facet
-			DataType:       "conversation", // This triggers namespace/NYPUC/data facet
+			ID:        c.ID.String(),
+			Text:      text,
+			Metadata:  metadata,
+			Facets:    facets,
+			Namespace: ci.svc.defaultNamespace,
+			DataType:  "data/conversation",
 		})
 	}
 
@@ -101,22 +101,22 @@ func (ci *ConversationIndexer) IndexConversationByID(ctx context.Context, idStr 
 		return 0, fmt.Errorf("conversation %s has no valid text content and cannot be indexed", idStr)
 	}
 
+	metadata, facets := ci.buildConversationMetadataAndFacets(conversationParams{
+		id:           c.ID,
+		docketGovID:  c.DocketGovID,
+		state:        c.State,
+		matterType:   c.MatterType,
+		industryType: c.IndustryType,
+		description:  c.Description,
+	})
+
 	rec := fugusdk.ObjectRecord{
-		ID:   c.ID.String(),
-		Text: text,
-		Metadata: map[string]interface{}{
-			"docket_gov_id":   c.DocketGovID,
-			"description":     c.Description,
-			"state":           c.State,
-			"matter_type":     c.MatterType,
-			"industry_type":   c.IndustryType,
-			"conversation_id": c.ID.String(), // Store specific ID in metadata
-			"entity_type":     "conversation",
-		},
-		// Use proper namespace facet structure (categorical only)
-		Namespace:      ci.svc.defaultNamespace,
-		ConversationID: c.ID.String(),
-		DataType:       "conversation",
+		ID:        c.ID.String(),
+		Text:      text,
+		Metadata:  metadata,
+		Facets:    facets,
+		Namespace: ci.svc.defaultNamespace,
+		DataType:  "data/conversation",
 	}
 
 	client, err := ci.svc.createFuguClient(ctx)
@@ -147,6 +147,62 @@ func (ci *ConversationIndexer) DeleteConversationFromIndex(ctx context.Context, 
 
 	log.Printf("Successfully deleted conversation %s from index: %s", idStr, response.Message)
 	return nil
+}
+
+// conversationParams holds the parameters for building conversation metadata and facets
+type conversationParams struct {
+	id           uuid.UUID
+	docketGovID  string
+	state        string
+	matterType   string
+	industryType string
+	description  string
+}
+
+// buildConversationMetadataAndFacets creates both metadata and facets for a conversation record
+func (ci *ConversationIndexer) buildConversationMetadataAndFacets(params conversationParams) (map[string]interface{}, []string) {
+	metadata := map[string]interface{}{
+		"entity_type":     "conversation",
+		"conversation_id": params.id.String(),
+	}
+
+	var facets []string
+
+	// Add namespace facets
+	facets = append(facets, ci.svc.defaultNamespace)
+	facets = append(facets, fmt.Sprintf("%s/data/conversation", ci.svc.defaultNamespace))
+
+	// Core facets with embedded values
+	facets = append(facets, "metadata/entity_type/conversation")
+	facets = append(facets, fmt.Sprintf("metadata/conversation_id/%s", params.id.String()))
+
+	// Add metadata and facets for each field if not empty
+	if params.docketGovID != "" {
+		metadata["docket_gov_id"] = params.docketGovID
+		facets = append(facets, fmt.Sprintf("metadata/docket_gov_id/%s", params.docketGovID))
+	}
+
+	if params.state != "" {
+		metadata["state"] = params.state
+		facets = append(facets, fmt.Sprintf("metadata/state/%s", params.state))
+	}
+
+	if params.matterType != "" {
+		metadata["matter_type"] = params.matterType
+		facets = append(facets, fmt.Sprintf("metadata/matter_type/%s", params.matterType))
+	}
+
+	if params.industryType != "" {
+		metadata["industry_type"] = params.industryType
+		facets = append(facets, fmt.Sprintf("metadata/industry_type/%s", params.industryType))
+	}
+
+	if params.description != "" {
+		metadata["description"] = params.description
+	}
+
+	return metadata, facets
+
 }
 
 // createConversationText creates a meaningful text field for conversation indexing
@@ -255,29 +311,28 @@ func (ci *ConversationIndexer) BulkUpdateConversationMetadata(ctx context.Contex
 			continue
 		}
 
-		// Merge existing metadata with updates
-		updatedMetadata := map[string]interface{}{
-			"docket_gov_id":   c.DocketGovID,
-			"description":     c.Description,
-			"state":           c.State,
-			"matter_type":     c.MatterType,
-			"industry_type":   c.IndustryType,
-			"conversation_id": c.ID.String(),
-			"entity_type":     "conversation",
-		}
+		// Build metadata and facets
+		baseMetadata, facets := ci.buildConversationMetadataAndFacets(conversationParams{
+			id:           c.ID,
+			docketGovID:  c.DocketGovID,
+			state:        c.State,
+			matterType:   c.MatterType,
+			industryType: c.IndustryType,
+			description:  c.Description,
+		})
 
 		// Add custom metadata updates
 		for key, value := range metadata {
-			updatedMetadata[key] = value
+			baseMetadata[key] = value
 		}
 
 		rec := fugusdk.ObjectRecord{
-			ID:             conversationID,
-			Text:           text,
-			Metadata:       updatedMetadata,
-			Namespace:      ci.svc.defaultNamespace,
-			ConversationID: conversationID,
-			DataType:       "conversation",
+			ID:        conversationID,
+			Text:      text,
+			Metadata:  baseMetadata,
+			Facets:    facets,
+			Namespace: ci.svc.defaultNamespace,
+			DataType:  "data/conversation",
 		}
 
 		if _, err := client.AddOrUpdateObject(ctx, rec); err != nil {

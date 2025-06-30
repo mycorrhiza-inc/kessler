@@ -3,6 +3,7 @@ package indexing
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"kessler/internal/dbstore"
 	"kessler/internal/fugusdk"
@@ -11,6 +12,7 @@ import (
 	"kessler/pkg/util"
 	"log"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -38,11 +40,97 @@ func (ai *AttachmentIndexer) IndexAllAttachments(ctx context.Context) (int, erro
 		return 0, fmt.Errorf("fetch all searchable attachments: %w", err)
 	}
 
-	var recs []fugusdk.ObjectRecord
+	if len(rows) == 0 {
+		log.Printf("No attachments to index")
+		return 0, nil
+	}
+
+	// Process attachments in parallel with worker pool
+	const maxWorkers = 10 // Limit concurrent processing to avoid overwhelming the system
+	workers := maxWorkers
+	if len(rows) < maxWorkers {
+		workers = len(rows)
+	}
+
+	// Channels for work distribution
+	attachmentChan := make(chan dbstore.GetAllSearchAttachmentsRow, len(rows))
+	resultChan := make(chan attachmentProcessingResult, len(rows))
+
+	// Start worker goroutines
+	var wg sync.WaitGroup
+	for i := 0; i < workers; i++ {
+		wg.Add(1)
+		go ai.attachmentWorker(ctx, q, attachmentChan, resultChan, &wg)
+	}
+
+	// Send work to workers
+	for _, row := range rows {
+		attachmentChan <- row
+	}
+	close(attachmentChan)
+
+	// Wait for all workers to finish
+	wg.Wait()
+	close(resultChan)
+
+	// Collect results
+	var allRecords []fugusdk.ObjectRecord
 	skippedCount := 0
 	segmentedCount := 0
 
-	for _, row := range rows {
+	for result := range resultChan {
+		if result.err != nil {
+			log.Printf("Skipping attachment %s: %v", result.attachmentID, result.err)
+			skippedCount++
+			continue
+		}
+		if result.segmented {
+			segmentedCount++
+		}
+		allRecords = append(allRecords, result.records...)
+	}
+
+	if skippedCount > 0 {
+		log.Printf("Skipped %d attachments with invalid content", skippedCount)
+	}
+	if segmentedCount > 0 {
+		log.Printf("Segmented %d attachments due to length limits", segmentedCount)
+	}
+	if len(allRecords) == 0 {
+		log.Printf("No valid attachments to index")
+		return 0, nil
+	}
+
+	log.Printf("Successfully processed %d attachments into %d records using %d workers",
+		len(rows)-skippedCount, len(allRecords), workers)
+
+	client, err := ai.svc.createFuguClient(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("new fugu client: %w", err)
+	}
+
+	return ai.svc.processBatchInChunks(ctx, client, allRecords, "attachments")
+}
+
+// attachmentProcessingResult holds the result of processing a single attachment
+type attachmentProcessingResult struct {
+	attachmentID string
+	records      []fugusdk.ObjectRecord
+	segmented    bool
+	err          error
+}
+
+// attachmentWorker processes attachments from the channel
+func (ai *AttachmentIndexer) attachmentWorker(
+	ctx context.Context,
+	q *dbstore.Queries,
+	attachmentChan <-chan dbstore.GetAllSearchAttachmentsRow,
+	resultChan chan<- attachmentProcessingResult,
+	wg *sync.WaitGroup,
+) {
+	defer wg.Done()
+
+	for row := range attachmentChan {
 		// Prepare createdAt pointer
 		var createdAt *time.Time
 		if row.CreatedAt.Valid {
@@ -57,35 +145,14 @@ func (ai *AttachmentIndexer) IndexAllAttachments(ctx context.Context) (int, erro
 			mdata:     row.Mdata,
 			rawText:   row.Text.String,
 		})
-		if err != nil {
-			// Skip attachments without valid content
-			log.Printf("Skipping attachment %s: %v", row.ID.String(), err)
-			skippedCount++
-			continue
+
+		resultChan <- attachmentProcessingResult{
+			attachmentID: row.ID.String(),
+			records:      records,
+			segmented:    segmented,
+			err:          err,
 		}
-		if segmented {
-			segmentedCount++
-		}
-		recs = append(recs, records...)
 	}
-
-	if skippedCount > 0 {
-		log.Printf("Skipped %d attachments with invalid content", skippedCount)
-	}
-	if segmentedCount > 0 {
-		log.Printf("Segmented %d attachments due to length limits", segmentedCount)
-	}
-	if len(recs) == 0 {
-		log.Printf("No valid attachments to index")
-		return 0, nil
-	}
-
-	client, err := ai.svc.createFuguClient(ctx)
-	if err != nil {
-		return 0, fmt.Errorf("new fugu client: %w", err)
-	}
-
-	return ai.svc.processBatchInChunks(ctx, client, recs, "attachments")
 }
 
 // IndexAttachmentByID retrieves one attachment by ID and indexes it as a data record.
@@ -382,7 +449,7 @@ func (ai *AttachmentIndexer) prepareAttachmentRecords(ctx context.Context, q *db
 		createdAt: createdAt,
 		mdata:     mdata,
 	}
-	baseMetadata := ai.buildAttachmentMetadata(metaParams)
+	baseMetadata, facets := ai.buildAttachmentMetadataAndFacets(metaParams)
 
 	// Parse date from metadata if available
 	if dateStr, ok := baseMetadata["date"].(string); ok {
@@ -406,41 +473,54 @@ func (ai *AttachmentIndexer) prepareAttachmentRecords(ctx context.Context, q *db
 			zap.Int("num_segments", len(segments)))
 	}
 
-	// Build object records for each segment
-	var records []fugusdk.ObjectRecord
+	// Build object records for each segment using goroutines
+	records := make([]fugusdk.ObjectRecord, len(segments))
+	var wg sync.WaitGroup
+
 	for i, segment := range segments {
-		// Copy base metadata
-		metadata := make(map[string]interface{}, len(baseMetadata)+5)
-		for k, v := range baseMetadata {
-			metadata[k] = v
-		}
-		// Add segment-specific metadata
-		if len(segments) > 1 {
-			metadata["is_segmented"] = true
-			metadata["segment_index"] = i
-			metadata["total_segments"] = len(segments)
-			metadata["original_text_length"] = len(text)
-			metadata["segment_text_length"] = len(segment)
-		} else {
-			metadata["is_segmented"] = false
-			metadata["segment_index"] = 0
-			metadata["total_segments"] = 1
-		}
+		wg.Add(1)
+		go func(segmentIndex int, segmentText string) {
+			defer wg.Done()
 
-		// Unique ID per segment
-		recID := id.String()
-		if len(segments) > 1 {
-			recID = fmt.Sprintf("%s-segment-%d", id.String(), i)
-		}
+			// Copy base metadata for this goroutine
+			metadata := make(map[string]interface{}, len(baseMetadata)+5)
+			for k, v := range baseMetadata {
+				metadata[k] = v
+			}
 
-		records = append(records, fugusdk.ObjectRecord{
-			ID:        recID,
-			Text:      segment,
-			Metadata:  metadata,
-			Namespace: ai.svc.defaultNamespace,
-			DataType:  "data/attachment",
-		})
+			// Add segment-specific metadata
+			if len(segments) > 1 {
+				metadata["is_segmented"] = true
+				metadata["segment_index"] = segmentIndex
+				metadata["total_segments"] = len(segments)
+				metadata["original_text_length"] = len(text)
+				metadata["segment_text_length"] = len(segmentText)
+			} else {
+				metadata["is_segmented"] = false
+				metadata["segment_index"] = 0
+				metadata["total_segments"] = 1
+			}
+
+			// Unique ID per segment
+			recID := id.String()
+			if len(segments) > 1 {
+				recID = fmt.Sprintf("%s-segment-%d", id.String(), segmentIndex)
+			}
+
+			// Store record at the correct index (no mutex needed since each goroutine writes to a unique index)
+			records[segmentIndex] = fugusdk.ObjectRecord{
+				ID:        recID,
+				Text:      segmentText,
+				Metadata:  metadata,
+				Facets:    facets, // Facets are read-only, safe to share
+				Namespace: ai.svc.defaultNamespace,
+				DataType:  "data/attachment",
+			}
+		}(i, segment)
 	}
+
+	// Wait for all goroutines to complete
+	wg.Wait()
 
 	return records, len(segments) > 1, nil
 }
@@ -458,23 +538,16 @@ type attachmentMetadataParams struct {
 	mdata     []byte
 }
 
-// buildAttachmentMetadata creates metadata for an attachment record
-func (ai *AttachmentIndexer) buildAttachmentMetadata(params attachmentMetadataParams) map[string]interface{} {
+// buildAttachmentMetadataAndFacets creates both metadata and facets for an attachment record
+func (ai *AttachmentIndexer) buildAttachmentMetadataAndFacets(params attachmentMetadataParams) (map[string]interface{}, []string) {
 	metadata := make(map[string]interface{})
+	var facets []string
 
-	// Add raw mdata if available
-	if len(params.mdata) > 0 {
-		metadata["raw_mdata"] = string(params.mdata)
-	}
-	if len(params.authorIDs) > 0 {
-		transform_into_string := func(id uuid.UUID) string {
-			return id.String()
-		}
-		authorIDStrings := util.Map(params.authorIDs, transform_into_string)
-		metadata["author_ids"] = authorIDStrings
-	}
+	// Add namespace facets
+	facets = append(facets, ai.svc.defaultNamespace)
+	facets = append(facets, fmt.Sprintf("%s/data/attachment", ai.svc.defaultNamespace))
 
-	// Add attachment-specific metadata
+	// Add attachment-specific metadata and facets
 	if params.name != "" {
 		metadata["file_name"] = params.name
 	}
@@ -484,13 +557,60 @@ func (ai *AttachmentIndexer) buildAttachmentMetadata(params attachmentMetadataPa
 	if params.createdAt != nil {
 		metadata["created_at"] = params.createdAt.Format(time.RFC3339)
 	}
+
+	// Core metadata fields
 	metadata["attachment_id"] = params.id.String()
 	metadata["file_id"] = params.fileID.String()
 	metadata["conversation_id"] = params.convoID.String()
 	metadata["migrated_at"] = time.Now().Format(time.RFC3339)
 	metadata["entity_type"] = "attachment"
 
-	return metadata
+	// Core facets with embedded values
+	facets = append(facets, fmt.Sprintf("metadata/attachment_id/%s", params.id.String()))
+	facets = append(facets, fmt.Sprintf("metadata/file_id/%s", params.fileID.String()))
+	facets = append(facets, fmt.Sprintf("metadata/conversation_id/%s", params.convoID.String()))
+	facets = append(facets, fmt.Sprintf("metadata/entity_type/%s", "attachment"))
+
+	// Author IDs
+	if len(params.authorIDs) > 0 {
+		transform_into_string := func(id uuid.UUID) string {
+			return id.String()
+		}
+		authorIDStrings := util.Map(params.authorIDs, transform_into_string)
+		metadata["author_ids"] = authorIDStrings
+
+		// Add facets for each author ID
+		for _, authorID := range authorIDStrings {
+			facets = append(facets, fmt.Sprintf("metadata/author_ids/%s", authorID))
+		}
+	}
+
+	// Parse and handle raw metadata
+	if len(params.mdata) > 0 {
+		rawMdataStr := string(params.mdata)
+		metadata["raw_mdata"] = rawMdataStr
+
+		// Try to parse JSON metadata and create facets from it
+		var parsedMdata map[string]interface{}
+		if err := json.Unmarshal(params.mdata, &parsedMdata); err == nil {
+			// Add parsed metadata fields and create facets
+			for key, value := range parsedMdata {
+				// Store the parsed value in metadata
+				metadata[key] = value
+
+				// Create facets for each parsed field
+				if valueStr, ok := value.(string); ok && valueStr != "" {
+					facets = append(facets, fmt.Sprintf("metadata/%s/%s", key, valueStr))
+				}
+			}
+		} else {
+			logger.Warn(context.Background(), "failed to parse raw metadata as JSON",
+				zap.String("attachment_id", params.id.String()),
+				zap.Error(err))
+		}
+	}
+
+	return metadata, facets
 }
 
 // parseDate attempts to parse various date formats (matching Python script logic)

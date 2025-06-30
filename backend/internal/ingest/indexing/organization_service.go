@@ -46,20 +46,21 @@ func (oi *OrganizationIndexer) IndexAllOrganizations(ctx context.Context) (int, 
 			continue
 		}
 
+		metadata, facets := oi.buildOrganizationMetadataAndFacets(organizationParams{
+			id:                     o.ID,
+			name:                   o.Name,
+			description:            o.Description,
+			isPerson:               o.IsPerson.Bool,
+			totalDocumentsAuthored: o.TotalDocumentsAuthored,
+		})
+
 		recs = append(recs, fugusdk.ObjectRecord{
-			ID:   o.ID.String(),
-			Text: text,
-			Metadata: map[string]interface{}{
-				"description":              o.Description,
-				"is_person":                o.IsPerson.Bool,
-				"total_documents_authored": o.TotalDocumentsAuthored,
-				"organization_name":        o.Name, // Store specific name in metadata
-				"entity_type":              "organization",
-			},
-			// Use proper namespace facet structure (categorical only)
-			Namespace:    oi.svc.defaultNamespace,
-			Organization: o.Name,         // This triggers namespace/NYPUC/organization facet
-			DataType:     "organization", // This triggers namespace/NYPUC/data facet
+			ID:        o.ID.String(),
+			Text:      text,
+			Metadata:  metadata,
+			Facets:    facets,
+			Namespace: oi.svc.defaultNamespace,
+			DataType:  "data/organization",
 		})
 	}
 
@@ -99,19 +100,22 @@ func (oi *OrganizationIndexer) IndexOrganizationByID(ctx context.Context, idStr 
 		return 0, fmt.Errorf("organization %s has no valid text content and cannot be indexed", idStr)
 	}
 
+	metadata, facets := oi.buildOrganizationMetadataAndFacets(organizationParams{
+		id:          o.ID,
+		name:        o.Name,
+		description: o.Description,
+		isPerson:    o.IsPerson.Bool,
+		// Note: OrganizationRead might not have TotalDocumentsAuthored field
+		// totalDocumentsAuthored: 0,
+	})
+
 	rec := fugusdk.ObjectRecord{
-		ID:   o.ID.String(),
-		Text: text,
-		Metadata: map[string]interface{}{
-			"description":       o.Description,
-			"is_person":         o.IsPerson.Bool,
-			"organization_name": o.Name, // Store specific name in metadata
-			"entity_type":       "organization",
-		},
-		// Use proper namespace facet structure (categorical only)
-		Namespace:    oi.svc.defaultNamespace,
-		Organization: o.Name,
-		DataType:     "organization",
+		ID:        o.ID.String(),
+		Text:      text,
+		Metadata:  metadata,
+		Facets:    facets,
+		Namespace: oi.svc.defaultNamespace,
+		DataType:  "data/organization",
 	}
 
 	client, err := oi.svc.createFuguClient(ctx)
@@ -142,6 +146,57 @@ func (oi *OrganizationIndexer) DeleteOrganizationFromIndex(ctx context.Context, 
 
 	log.Printf("Successfully deleted organization %s from index: %s", idStr, response.Message)
 	return nil
+}
+
+// organizationParams holds the parameters for building organization metadata and facets
+type organizationParams struct {
+	id                     uuid.UUID
+	name                   string
+	description            string
+	isPerson               bool
+	totalDocumentsAuthored int64
+}
+
+// buildOrganizationMetadataAndFacets creates both metadata and facets for an organization record
+func (oi *OrganizationIndexer) buildOrganizationMetadataAndFacets(params organizationParams) (map[string]interface{}, []string) {
+	metadata := map[string]interface{}{
+		"entity_type":       "organization",
+		"organization_id":   params.id.String(),
+		"organization_name": params.name,
+		"is_person":         params.isPerson,
+	}
+
+	if params.totalDocumentsAuthored > 0 {
+		metadata["total_documents_authored"] = params.totalDocumentsAuthored
+	}
+
+	if params.description != "" {
+		metadata["description"] = params.description
+	}
+
+	var facets []string
+
+	// Add namespace facets
+	facets = append(facets, oi.svc.defaultNamespace)
+	facets = append(facets, fmt.Sprintf("%s/data/organization", oi.svc.defaultNamespace))
+
+	// Core facets with embedded values
+	facets = append(facets, "metadata/entity_type/organization")
+	facets = append(facets, fmt.Sprintf("metadata/organization_id/%s", params.id.String()))
+
+	// Add facets for organization name if not empty
+	if params.name != "" {
+		facets = append(facets, fmt.Sprintf("metadata/organization_name/%s", params.name))
+	}
+
+	// Add facets for person type
+	if params.isPerson {
+		facets = append(facets, "metadata/is_person/true")
+	} else {
+		facets = append(facets, "metadata/is_person/false")
+	}
+
+	return metadata, facets
 }
 
 // createOrganizationText creates a meaningful text field for organization indexing
@@ -275,26 +330,28 @@ func (oi *OrganizationIndexer) BulkUpdateOrganizationMetadata(ctx context.Contex
 			continue
 		}
 
-		// Merge existing metadata with updates
-		updatedMetadata := map[string]interface{}{
-			"description":       o.Description,
-			"is_person":         o.IsPerson.Bool,
-			"organization_name": o.Name,
-			"entity_type":       "organization",
-		}
+		// Build metadata and facets
+		baseMetadata, facets := oi.buildOrganizationMetadataAndFacets(organizationParams{
+			id:          o.ID,
+			name:        o.Name,
+			description: o.Description,
+			isPerson:    o.IsPerson.Bool,
+			// Note: OrganizationRead might not have TotalDocumentsAuthored field
+			// totalDocumentsAuthored: 0,
+		})
 
 		// Add custom metadata updates
 		for key, value := range metadata {
-			updatedMetadata[key] = value
+			baseMetadata[key] = value
 		}
 
 		rec := fugusdk.ObjectRecord{
-			ID:           organizationID,
-			Text:         text,
-			Metadata:     updatedMetadata,
-			Namespace:    oi.svc.defaultNamespace,
-			Organization: o.Name,
-			DataType:     "organization",
+			ID:        organizationID,
+			Text:      text,
+			Metadata:  baseMetadata,
+			Facets:    facets,
+			Namespace: oi.svc.defaultNamespace,
+			DataType:  "data/organization",
 		}
 
 		if _, err := client.AddOrUpdateObject(ctx, rec); err != nil {
