@@ -36,6 +36,11 @@ func DefineFileRoutes(r *mux.Router, db dbstore.DBTX) {
 		"/{uuid}/card",
 		handler.FileCardGet,
 	).Methods(http.MethodGet)
+
+	r.HandleFunc(
+		"/{uuid}/pageinfo",
+		handler.FileCardGet,
+	).Methods(http.MethodGet)
 	// Minimal file endpoint
 
 	// Markdown file endpoint
