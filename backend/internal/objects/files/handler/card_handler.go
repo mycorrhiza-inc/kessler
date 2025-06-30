@@ -82,10 +82,10 @@ func FileSchemaToDocCard(fileSchema files.CompleteFileSchema) search.DocumentCar
 		Index:          0,
 		Type:           "document",
 		ObjectUUID:     fileSchema.ID,
+		FileUUID:       fileSchema.ID,
 		AttachmentUUID: attachID,
 		FragmentID:     "",
 		Authors:        docAuthors,
 		Conversation:   docConv,
 	}
 }
-

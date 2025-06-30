@@ -1,14 +1,13 @@
 import ErrorMessage from "@/components/style/messages/ErrorMessage"
-import { fetchAuthorCardData } from "../RenderedObjectCards/RednderedObjectCard"
-import AllInOneServerSearch from "../SearchBar/AllInOneServerSearch"
 import { TypedUrlParams } from "@/lib/types/url_params"
 import { CardSize } from "@/components/style/cards/SizedCards"
 import Card from "../Card/LinkedCard"
 import { DocumentMainTabsClient } from "../Document/DocumentBody"
+import { fetchDocketCardData, fetchDocumentCardData } from "../RenderedObjectCards/RednderedObjectCard"
 
 export default async function FilePage({ file_id, urlParams }: { file_id: string, urlParams: TypedUrlParams }) {
   try {
-    const card_data = await fetchAuthorCardData(file_id)
+    const card_data = await fetchDocumentCardData(file_id)
     const doc_object = { verifed: true, id: file_id, extension: "pdf" } as any;
     return (
       <>

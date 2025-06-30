@@ -26,6 +26,7 @@ export const DocketCardDataValidator = BaseCardDataValidator.extend({
 
 export const DocumentCardDataValidator = BaseCardDataValidator.extend({
   type: z.literal(CardType.Document),
+  file_uuid: z.string().uuid(),
   authors: z.array(
     z.object({
       author_name: z.string(),

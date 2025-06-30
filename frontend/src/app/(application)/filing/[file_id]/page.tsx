@@ -1,4 +1,3 @@
-import DocumentServerPage from "@/components/stateful/Document/DocumentServerPage";
 import FilePage from "@/components/stateful/ObjectPages/FilePage";
 import DefaultContainer from "@/components/stateful/PageContainer/DefaultContainer";
 import LoadingSpinner from "@/components/style/misc/LoadingSpinner";

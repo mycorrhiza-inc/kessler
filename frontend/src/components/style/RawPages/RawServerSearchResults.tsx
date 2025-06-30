@@ -18,6 +18,8 @@ export default function ServerSearchResultsRaw({ baseUrl, urlParams, results }: 
       const validatedData = CardDataValidator.parse(card_data);
       return (<Card key={`server-results-${card_data.id}-${index}`} size={CardSize.Medium} data={validatedData} />)
     } catch (err) {
+      console.log(card_data)
+      console.log(err)
       return <ErrorMessage message="Server Returned Invalid Card Data" error={err} />
     }
   }
