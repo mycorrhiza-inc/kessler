@@ -71,7 +71,7 @@ func (h *OrgHandler) OrganizationGetCardInfo(w http.ResponseWriter, r *http.Requ
 	rawOrgID := params["uuid"]
 	orgUUID, err := uuid.Parse(rawOrgID)
 	if err != nil {
-		errorstring := fmt.Sprintf("Error parsing file %v: %v", rawOrgID, err)
+		errorstring := fmt.Sprintf("Error parsing uuid %v: %v", rawOrgID, err)
 		log.Info(errorstring)
 		http.Error(w, errorstring, http.StatusBadRequest)
 		return
@@ -80,7 +80,7 @@ func (h *OrgHandler) OrganizationGetCardInfo(w http.ResponseWriter, r *http.Requ
 	q := dbstore.New(h.db)
 	orgRaw, err := q.OrganizationRead(ctx, orgUUID)
 	if err != nil {
-		log.Info("encountered error getting file from uuid", zap.Error(err))
+		log.Info("encountered error getting organization from uuid", zap.Error(err))
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

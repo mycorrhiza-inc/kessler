@@ -155,6 +155,7 @@ func (s *SearchService) HydrateDocument(ctx context.Context, result fugusdk.Fugu
 				return DocumentCardData{}, fmt.Errorf("Failed to parse file_id in metadata: %w", err)
 			}
 			card.ObjectUUID = fileID
+			card.FileUUID = fileID
 		}
 
 		// Conversation

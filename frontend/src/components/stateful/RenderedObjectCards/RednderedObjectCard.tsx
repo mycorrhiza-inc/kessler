@@ -3,43 +3,56 @@ import ErrorMessage from "@/components/style/messages/ErrorMessage";
 import { GenericSearchType } from "@/lib/adapters/genericSearchCallback";
 import { getContextualAPIUrl } from "@/lib/env_variables";
 import { generateFakeResultsRaw } from "@/lib/search/search_utils";
-import { AuthorCardDataValidator, DocketCardDataValidator, DocumentCardDataValidator } from "@/lib/types/generic_card_types";
+import { AuthorCardData, AuthorCardDataValidator, DocketCardData, DocketCardDataValidator, DocumentCardData, DocumentCardDataValidator } from "@/lib/types/generic_card_types";
 import { sleep } from "@/lib/utils";
 import axios from "axios";
 import Card from "../Card/LinkedCard";
 
-async function fetchCardData(object_id: string, objectType: GenericSearchType): Promise<CardData> {
-  const api_url = getContextualAPIUrl()
+
+// Define the API endpoint fetchers
+export async function fetchAuthorCardData(object_id: string): Promise<AuthorCardData> {
+  const api_url = getContextualAPIUrl();
+  const endpoint = `${api_url}/public/organizations/${object_id}/card`;
+  console.log("Fetching Organization data from:", endpoint);
+  const response = await axios.get(endpoint);
+  console.log("Organization response data:", response.data);
+  return AuthorCardDataValidator.parse(response.data);
+}
+
+export async function fetchDocketCardData(object_id: string): Promise<DocketCardData> {
+  const api_url = getContextualAPIUrl();
+  const endpoint = `${api_url}/public/conversations/${object_id}/card`;
+  console.log("Fetching Docket data from:", endpoint);
+  const response = await axios.get(endpoint);
+  console.log("Docket response data:", response.data);
+  return DocketCardDataValidator.parse(response.data);
+}
+
+export async function fetchDocumentCardData(object_id: string): Promise<DocumentCardData> {
+  const api_url = getContextualAPIUrl();
+  const endpoint = `${api_url}/public/files/${object_id}/card`;
+  console.log("Fetching Filling data from:", endpoint);
+  const response = await axios.get(endpoint);
+  console.log("Filling response data:", response.data);
+  return DocumentCardDataValidator.parse(response.data);
+}
+
+export async function fetchDummyCardData(): Promise<CardData> {
+  return generateFakeResultsRaw(1)[0];
+}
 
 
+// Define the main fetchCardData function
+export async function fetchCardData(object_id: string, objectType: GenericSearchType): Promise<CardData> {
   switch (objectType) {
     case GenericSearchType.Organization:
-      const org_endpoint = `${api_url}/public/organizations/${object_id}/card`
-      console.log("Fetching Organization data from:", org_endpoint)
-      const org_response = await axios.get(org_endpoint)
-      console.log("Organization response data:", org_response.data)
-      const org_raw_data = org_response.data
-      const org_data = AuthorCardDataValidator.parse(org_raw_data)
-      return org_data
-
+      return fetchAuthorCardData(object_id);
     case GenericSearchType.Docket:
-      const docket_endpoint = `${api_url}/public/conversations/${object_id}/card`
-      console.log("Fetching Docket data from:", docket_endpoint)
-      const docket_response = await axios.get(docket_endpoint)
-      console.log("Docket response data:", docket_response.data)
-      const docket_raw_data = docket_response.data
-      const docket_data = DocketCardDataValidator.parse(docket_raw_data)
-      return docket_data
+      return fetchDocketCardData(object_id);
     case GenericSearchType.Filing:
-      const filling_endpoint = `${api_url}/public/files/${object_id}/card`
-      console.log("Fetching Filling data from:", filling_endpoint)
-      const filling_response = await axios.get(filling_endpoint)
-      console.log("Filling response data:", filling_response.data)
-      const filling_raw_data = filling_response.data
-      const filling_data = DocumentCardDataValidator.parse(filling_raw_data)
-      return filling_data
+      return fetchDocumentCardData(object_id);
     case GenericSearchType.Dummy:
-      return generateFakeResultsRaw(1)[0]
+      return fetchDummyCardData();
   }
 }
 

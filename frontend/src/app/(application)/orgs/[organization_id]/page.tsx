@@ -7,8 +7,9 @@ import DefaultContainer from "@/components/stateful/PageContainer/DefaultContain
 import { GenericSearchType } from "@/lib/adapters/genericSearchCallback";
 import { CardSize } from "@/components/style/cards/SizedCards";
 import RenderedCardObject from "@/components/stateful/RenderedObjectCards/RednderedObjectCard";
+import OrgPage from "@/components/stateful/ObjectPages/OrgPage";
 
-export default async function OrgPage({
+export default async function Page({
   params,
   searchParams
 }: {
@@ -21,17 +22,16 @@ export default async function OrgPage({
 
   const org_id = (await params).organization_id;
 
+  if (org_id == undefined) {
+    throw new Error("Undefined org id")
+  }
+
   return (
     <DefaultContainer>
       <Suspense fallback={<LoadingSpinner loadingText="Loading Organization Data" />}>
-        <RenderedCardObject objectType={GenericSearchType.Organization} object_id={org_id} size={CardSize.Large} />
+        <OrgPage org_id={org_id} urlParams={urlParams} />
       </Suspense>
-      <AllInOneServerSearch
-        aboveSearchElement={<h1 className="text-2xl font-bold mb-4">Search [org-name]'s Filings</h1>}
-        urlParams={urlParams}
-        inherentRouteFilters={{ "author_id": org_id }}
-        baseUrl={`/orgs/${org_id}`}
-      />
     </DefaultContainer>
   );
 }
+

@@ -19,7 +19,7 @@ type FillingInfoPayload struct {
 }
 
 type NewFillingInfoPayload struct {
-	Filing   FilingChildInfo `json:"filling"`
+	Filing   FilingChildInfo `json:"filing"`
 	CaseInfo CaseInfoMinimal `json:"case_info"`
 }
 ```

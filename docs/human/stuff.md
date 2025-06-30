@@ -7,7 +7,7 @@ Ok so currently I am kinda stuck on actually finishing the implementation for th
 So would it be possible to figure out what the schema the backend is going to use when 
 
 1a. What schema is the backend returning for a search request on a table with filings.
-1b. What schema is being returned when querying a specific filling ID?
+1b. What schema is being returned when querying a specific filing ID?
 
 
 2a. What schema is the backend returning for a search request on a table with organizations.

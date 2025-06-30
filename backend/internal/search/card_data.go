@@ -66,6 +66,7 @@ type DocumentCardData struct {
 	Index          int                  `json:"index"`
 	Type           string               `json:"type"`
 	ObjectUUID     uuid.UUID            `json:"object_uuid"`
+	FileUUID       uuid.UUID            `json:"file_uuid"`
 	AttachmentUUID uuid.UUID            `json:"attachment_uuid"`
 	FragmentID     string               `json:"fragment_id"`
 	Authors        []DocumentAuthor     `json:"authors"`
