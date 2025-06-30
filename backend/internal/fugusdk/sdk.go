@@ -37,6 +37,8 @@ const (
 	MaxObjectIDLength   = 256
 	MaxNamespaceLength  = 128
 	MaxMetadataSize     = 1024 * 1024 // 1MB
+	MaxFacetsPerObject  = 100         // Maximum facets per object
+	MaxFacetLength      = 512         // Maximum length per facet
 
 	// Rate limiting
 	DefaultRateLimit = 100 // requests per second
@@ -139,6 +141,34 @@ func (s *InputSanitizer) ValidateMetadata(metadata map[string]interface{}) error
 
 	if len(data) > MaxMetadataSize {
 		return fmt.Errorf("metadata too large: maximum %d bytes", MaxMetadataSize)
+	}
+
+	return nil
+}
+
+// ValidateFacets validates facets array and individual facet strings
+func (s *InputSanitizer) ValidateFacets(facets []string) error {
+	if len(facets) == 0 {
+		return nil
+	}
+
+	if len(facets) > MaxFacetsPerObject {
+		return fmt.Errorf("too many facets: maximum %d per object", MaxFacetsPerObject)
+	}
+
+	for i, facet := range facets {
+		if len(facet) == 0 {
+			return fmt.Errorf("facet at index %d cannot be empty", i)
+		}
+		if len(facet) > MaxFacetLength {
+			return fmt.Errorf("facet at index %d too long: maximum %d characters", i, MaxFacetLength)
+		}
+		// Basic validation - facets should not contain control characters
+		for j, r := range facet {
+			if r < 32 && r != 9 && r != 10 && r != 13 { // Allow tab, LF, CR
+				return fmt.Errorf("facet at index %d contains invalid character at position %d", i, j)
+			}
+		}
 	}
 
 	return nil
@@ -258,6 +288,7 @@ type ObjectRecord struct {
 	Text      string                 `json:"text"`
 	Metadata  map[string]interface{} `json:"metadata,omitempty"`
 	Namespace string                 `json:"namespace,omitempty"`
+	Facets    []string               `json:"facets,omitempty"`
 
 	// New fields for namespace facets
 	Organization   string `json:"organization,omitempty"`
@@ -287,6 +318,13 @@ func (o *ObjectRecord) Validate(sanitizer *InputSanitizer) error {
 	if o.Namespace != "" {
 		if err := sanitizer.ValidateNamespace(o.Namespace); err != nil {
 			return fmt.Errorf("invalid namespace: %w", err)
+		}
+	}
+
+	// Validate facets if present
+	if len(o.Facets) > 0 {
+		if err := sanitizer.ValidateFacets(o.Facets); err != nil {
+			return fmt.Errorf("invalid facets: %w", err)
 		}
 	}
 
@@ -564,10 +602,10 @@ func (c *Client) IngestObjects(ctx context.Context, objects []ObjectRecord) (*Sa
 		return nil, fmt.Errorf("validation failed: %w", err)
 	}
 
-	// Check if any objects have namespace facet fields
+	// Check if any objects have namespace facet fields or facets
 	hasNamespaceFacets := false
 	for _, obj := range objects {
-		if obj.Organization != "" || obj.ConversationID != "" || obj.DataType != "" {
+		if obj.Organization != "" || obj.ConversationID != "" || obj.DataType != "" || len(obj.Facets) > 0 {
 			hasNamespaceFacets = true
 			break
 		}
