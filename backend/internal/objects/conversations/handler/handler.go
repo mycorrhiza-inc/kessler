@@ -115,7 +115,7 @@ func (h *ConversationHandler) ConversationGetByUnknownHandler(w http.ResponseWri
 	ctx := r.Context()
 	ctx, span := tracer.Start(ctx, "conversations:ConversationGetByUnknownHandler")
 	defer span.End()
-	logger.Info(ctx, "Getting file with metadata")
+	logger.Info(ctx, "Getting conversation with metadata")
 	q := database.GetQueries(h.db)
 
 	params := mux.Vars(r)

@@ -3,7 +3,7 @@ import { TypedUrlParams } from "@/lib/types/url_params"
 import { CardSize } from "@/components/style/cards/SizedCards"
 import Card from "../Card/LinkedCard"
 import { DocumentMainTabsClient } from "../Document/DocumentBody"
-import { fetchDocketCardData, fetchDocumentCardData } from "../RenderedObjectCards/RednderedObjectCard"
+import { fetchDocumentCardData } from "../RenderedObjectCards/RednderedObjectCard"
 
 export default async function FilePage({ file_id, urlParams }: { file_id: string, urlParams: TypedUrlParams }) {
   try {
