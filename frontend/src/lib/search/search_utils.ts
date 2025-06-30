@@ -59,6 +59,7 @@ export const generateFakeResultsRaw = (count: number): CardData[] => {
       case "document":
         const document_data: DocumentCardData = {
           ...base,
+          file_uuid: base.object_uuid,
           type: CardType.Document,
           name: `${faker.date.recent().getFullYear()} ${faker.commerce.department()} Report`,
           description: faker.lorem.sentence(),

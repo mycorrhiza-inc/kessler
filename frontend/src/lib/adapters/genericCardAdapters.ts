@@ -44,6 +44,7 @@ export function adaptFilingToCard(filing: Filing): DocumentCardData {
   return {
     type: CardType.Document,
     object_uuid: filing.id,
+    file_uuid: filing.id,
     index: 0,
     name: filing.title,
     description: filing.file_class || "",
