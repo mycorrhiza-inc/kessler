@@ -62,16 +62,26 @@ export interface DocumentMainTabsData {
   hash: string;
   verified: boolean;
   extension: string;
+  name: string; // Added for attachment names
 }
 
 // New Data
 export interface DocumentTabsData {
   attachments: {
-    atttachment_uuid: string;
-    atttachment_hash: string;
-    atttachment_name: string;
-    atttachment_extension: string;
+    attachment_uuid: string;
+    attachment_hash: string;
+    attachment_name: string;
+    attachment_extension: string;
+    // Note: we are adding verified to Data, because we want to validate text view per atttachment
+    attachment_verified: boolean; 
   }[]
+}
+
+export type AttachmentItem = {
+  id: string;
+  name: string;
+  extension: string;
+  verified: boolean;
 }
 
 // All of these tabs should be instantiated for every single attachment, it should end up requiring 2 layers of tabs 
@@ -83,51 +93,118 @@ export interface DocumentTabsData {
 //   - Attachment 2 Text
 export const DocumentMainTabsClient = ({
   documentObject,
+  attachments,
   isPage,
 }: {
   documentObject: DocumentMainTabsData;
+  attachments: DocumentTabsData;
   isPage: boolean;
 }) => {
-  const { id: docUUID, mdata, hash, verified, extension: rawExt } = documentObject;
-  const metadata = { ...mdata, hash };
-  const fileExt = fileExtensionFromText(rawExt);
-  const showRaw = true;
-  const showText = verified && rawExt !== 'xlsx';
+  // Precompute the attachments
+  const parsedAttachments: Array<AttachmentItem> = [{
+    id: documentObject.id,
+    name: documentObject.name,
+    extension: documentObject.extension,
+    verified: documentObject.verified
+  }, ...attachments.attachments.map(a => ({
+    id: a.attachment_uuid,
+    name: a.attachment_name,
+    extension: a.attachment_extension,
+    verified: a.attachment_verified
+  }))];
 
+  const [activeAttachmentIndex, setActiveAttachmentIndex] = useState<number>(0);
   type TabKey = 'raw' | 'text';
-  const defaultTab: TabKey = `raw`
-  const [activeTab, setActiveTab] = useState<TabKey>(defaultTab);
+  const [activeTabPerAttachment, setActiveTabPerAttachment] = useState<{[key: number]: TabKey}>(() => {
+    let result: {[key: number]: TabKey} = {};
+    parsedAttachments.forEach((attachment, i) => {
+      result[i] = 'raw'; // default tab per attachment
+    });
+    return result;
+  });
+
+  const activeAttachment = parsedAttachments[activeAttachmentIndex];
+  // For each attachment, we check showRaw and showText
+  const showRaw = true; // Always show raw tab
+  const showText = activeAttachment.verified && activeAttachment.extension !== 'xlsx';
+
+  // Called when changing attachment
+  const changeActiveAttachment = (index: number) => {
+    setActiveAttachmentIndex(index);
+    // Keep the current active tab for this attachment, if not set then default to 'raw'
+    if (activeTabPerAttachment[index] === undefined) {
+      setActiveTabPerAttachment(prev => ({
+        ...prev,
+        [index]: 'raw'
+      }));
+    }
+  };
+
+  // Called when changing tab for a given attachment
+  const changeActiveTab = (tab: TabKey, index: number) => {
+    setActiveTabPerAttachment(prev => ({
+      ...prev,
+      [index]: tab
+    }));
+  }
 
   return (
     <div className="modal-content standard-box">
-
-      <div role="tablist" aria-label="Document Sections" className="flex gap-2 border-b border-base-300">
-        {showRaw && (
+      {/* Top-level tabs for each attachment */}
+      <div role="tablist" aria-label="Attachment Sections" className="flex gap-2 border-b border-base-300 overflow-x-auto">
+        {parsedAttachments.map((attachment, i) => (
           <button
+            key={`${attachment.id}_top`}
             role="tab"
-            aria-selected={activeTab === 'raw'}
-            onClick={() => setActiveTab('raw')}
-            className={`px-6 py-3 font-bold ${activeTab === 'raw' ? 'border-b-2 border-primary text-primary' : 'hover:bg-base-200'}`}
+            aria-selected={activeAttachmentIndex === i}
+            onClick={() => changeActiveAttachment(i)}
+            className={`px-6 py-3 font-bold flex-shrink-0 ${activeAttachmentIndex === i ? 'border-b-2 border-primary text-primary' : 'hover:bg-base-200'}`}
           >
-            📄 Document
+            {attachment.name}
           </button>
-        )}
-        {showText && (
-          <button
-            role="tab"
-            aria-selected={activeTab === 'text'}
-            onClick={() => setActiveTab('text')}
-            className={`px-6 py-3 font-bold ${activeTab === 'text' ? 'border-b-2 border-primary text-primary' : 'hover:bg-base-200'}`}
-          >
-            📝 Text View
-          </button>
-        )}
+        ))}
       </div>
 
-      <div className="mt-4">
-        {showRaw && activeTab === 'raw' && <DocumentContent docUUID={docUUID} extension={fileExt} />}
-        {showText && activeTab === 'text' && <MarkdownContent docUUID={docUUID} />}
-      </div>
+      {/* Sub-tabs for the active attachment */}
+      {parsedAttachments.length > 0 && (
+        <>
+          <div role="tablist" aria-label="Document Sections" className="flex gap-2 border-b border-base-300">
+            {showRaw && (
+              <button
+                role="tab"
+                aria-selected={activeTabPerAttachment[activeAttachmentIndex] === 'raw'}
+                onClick={() => changeActiveTab('raw', activeAttachmentIndex)}
+                className={`px-6 py-3 font-bold ${activeTabPerAttachment[activeAttachmentIndex] === 'raw' ? 'border-b-2 border-primary text-primary' : 'hover:bg-base-200'}`}
+              >
+                📄 Document
+              </button>
+            )}
+            {showText && (
+              <button
+                role="tab"
+                aria-selected={activeTabPerAttachment[activeAttachmentIndex] === 'text'}
+                onClick={() => changeActiveTab('text', activeAttachmentIndex)}
+                className={`px-6 py-3 font-bold ${activeTabPerAttachment[activeAttachmentIndex] === 'text' ? 'border-b-2 border-primary text-primary' : 'hover:bg-base-200'}`}
+              >
+                📝 Text View
+              </button>
+            )}
+          </div>
+
+          {/* Content for the active attachment */}
+          <div className="mt-4">
+            {showRaw && activeTabPerAttachment[activeAttachmentIndex] === 'raw' && 
+              <DocumentContent 
+                docUUID={activeAttachment.id} 
+                extension={fileExtensionFromText(activeAttachment.extension)} 
+              />
+            }
+            {showText && activeTabPerAttachment[activeAttachmentIndex] === 'text' && 
+              <MarkdownContent docUUID={activeAttachment.id} />
+            }
+          </div>
+        </>
+      )}
     </div>
   );
 };
