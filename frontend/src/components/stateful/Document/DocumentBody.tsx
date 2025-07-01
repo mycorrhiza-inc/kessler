@@ -84,11 +84,11 @@ export const DocumentMainTabsClient = ({
   const { id: docUUID, mdata, hash, verified, extension: rawExt } = documentObject;
   const metadata = { ...mdata, hash };
   const fileExt = fileExtensionFromText(rawExt);
-  const showRaw = verified;
+  const showRaw = true;
   const showText = verified && rawExt !== 'xlsx';
 
-  type TabKey = 'raw' | 'text' | 'meta';
-  const defaultTab: TabKey = showRaw ? 'raw' : showText ? 'text' : 'meta';
+  type TabKey = 'raw' | 'text';
+  const defaultTab: TabKey = `raw`
   const [activeTab, setActiveTab] = useState<TabKey>(defaultTab);
 
   return (
@@ -115,20 +115,11 @@ export const DocumentMainTabsClient = ({
             📝 Text View
           </button>
         )}
-        <button
-          role="tab"
-          aria-selected={activeTab === 'meta'}
-          onClick={() => setActiveTab('meta')}
-          className={`px-6 py-3 font-bold ${activeTab === 'meta' ? 'border-b-2 border-primary text-primary' : 'hover:bg-base-200'}`}
-        >
-          ℹ️ Metadata
-        </button>
       </div>
 
       <div className="mt-4">
         {showRaw && activeTab === 'raw' && <DocumentContent docUUID={docUUID} extension={fileExt} />}
         {showText && activeTab === 'text' && <MarkdownContent docUUID={docUUID} />}
-        {activeTab === 'meta' && <MetadataContent metadata={metadata} />}
       </div>
     </div>
   );
