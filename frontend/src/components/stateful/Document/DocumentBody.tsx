@@ -15,13 +15,6 @@ import { AuthorInformation } from "@/lib/types/backend_schemas";
 import { ConversationPill, AuthorInfoPill } from "@/components/style/Pills/TextPills";
 
 // Minimal data shape required by DocumentMainTabs
-export interface DocumentMainTabsData {
-  id: string;
-  mdata: any;
-  hash: string;
-  verified: boolean;
-  extension: string;
-}
 
 const MarkdownContent = memo(({ docUUID }: { docUUID: string }) => {
   // TODO: wire up an SSR-friendly fetch for text
@@ -62,6 +55,24 @@ const DocumentContent = ({
   return <ErrorMessage error="Cannot display this document type" />;
 };
 
+// Legacy Data
+export interface DocumentMainTabsData {
+  id: string;
+  mdata: any;
+  hash: string;
+  verified: boolean;
+  extension: string;
+}
+
+// New Data
+export interface DocumentTabsData {
+  attachments: {
+    atttachment_uuid: string;
+    atttachment_hash: string;
+    atttachment_name: string;
+    atttachment_extension: string;
+  }[]
+}
 
 export const DocumentMainTabsClient = ({
   documentObject,
