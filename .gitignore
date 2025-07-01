@@ -72,3 +72,4 @@ global-env-configmap.yaml
 
 # Supabase
 /supabase/
+.aider*
