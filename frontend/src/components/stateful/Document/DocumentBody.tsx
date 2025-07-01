@@ -74,6 +74,13 @@ export interface DocumentTabsData {
   }[]
 }
 
+// All of these tabs should be instantiated for every single attachment, it should end up requiring 2 layers of tabs 
+// - Attachment 1 
+//   - Attachment 1 Preview 
+//   - Attachment 1 Text
+// - Attachment 2 
+//   - Attachment 2 Preview 
+//   - Attachment 2 Text
 export const DocumentMainTabsClient = ({
   documentObject,
   isPage,
