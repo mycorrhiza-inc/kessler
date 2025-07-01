@@ -73,7 +73,7 @@ export interface DocumentTabsData {
     attachment_name: string;
     attachment_extension: string;
     // Note: we are adding verified to Data, because we want to validate text view per atttachment
-    attachment_verified: boolean; 
+    attachment_verified: boolean;
   }[]
 }
 
@@ -115,8 +115,8 @@ export const DocumentMainTabsClient = ({
 
   const [activeAttachmentIndex, setActiveAttachmentIndex] = useState<number>(0);
   type TabKey = 'raw' | 'text';
-  const [activeTabPerAttachment, setActiveTabPerAttachment] = useState<{[key: number]: TabKey}>(() => {
-    let result: {[key: number]: TabKey} = {};
+  const [activeTabPerAttachment, setActiveTabPerAttachment] = useState<{ [key: number]: TabKey }>(() => {
+    let result: { [key: number]: TabKey } = {};
     parsedAttachments.forEach((attachment, i) => {
       result[i] = 'raw'; // default tab per attachment
     });
@@ -193,13 +193,13 @@ export const DocumentMainTabsClient = ({
 
           {/* Content for the active attachment */}
           <div className="mt-4">
-            {showRaw && activeTabPerAttachment[activeAttachmentIndex] === 'raw' && 
-              <DocumentContent 
-                docUUID={activeAttachment.id} 
-                extension={fileExtensionFromText(activeAttachment.extension)} 
+            {showRaw && activeTabPerAttachment[activeAttachmentIndex] === 'raw' &&
+              <DocumentContent
+                docUUID={activeAttachment.id}
+                extension={fileExtensionFromText(activeAttachment.extension)}
               />
             }
-            {showText && activeTabPerAttachment[activeAttachmentIndex] === 'text' && 
+            {showText && activeTabPerAttachment[activeAttachmentIndex] === 'text' &&
               <MarkdownContent docUUID={activeAttachment.id} />
             }
           </div>
