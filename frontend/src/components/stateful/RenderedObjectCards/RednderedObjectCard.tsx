@@ -37,6 +37,26 @@ export async function fetchDocumentCardData(object_id: string): Promise<Document
   return DocumentCardDataValidator.parse(response.data);
 }
 
+type FillingAttachmentInfo = {
+  atttachment_uuid: string;
+  atttachment_hash: string;
+  atttachment_name: string;
+  atttachment_extension: string;
+};
+
+type FilePageInfo = {
+  card_info: DocketCardData; // Ideally, replace 'any' with the actual type/interface for search.DocumentCardData
+  attachments: FillingAttachmentInfo[];
+};
+export async function fetchDocumentPageData(object_id: string): Promise<FilePageInfo> {
+  const api_url = getContextualAPIUrl();
+  const endpoint = `${api_url}/public/files/${object_id}/p`;
+  console.log("Fetching Filling data from:", endpoint);
+  const response = await axios.get(endpoint);
+  console.log("Filling response data:", response.data);
+  return response.data;
+}
+
 export async function fetchDummyCardData(): Promise<CardData> {
   return generateFakeResultsRaw(1)[0];
 }
