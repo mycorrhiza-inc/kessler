@@ -6,16 +6,14 @@ import { FileExtension } from "./FileExtension";
 import { ReactNode, Dispatch, SetStateAction } from "react";
 
 // Color generation utilities
-const oklchSubdivide = (colorNum: number, divisions?: number) => {
-  const defaultDivisions = divisions || 18;
-  const hue = (colorNum % defaultDivisions) * (360 / defaultDivisions);
-  return `oklch(83% 0.123 ${hue})`;
+const oklchHueSubdivide = (colorNum: number) => {
+  const hue = (colorNum % HUE_DIVISONS) * (360 / HUE_DIVISONS);
+  return `${hue})`;
 };
 
-export const subdividedHueFromSeed = (seed?: string): string => {
-  if (seed === undefined) {
-    return "oklch(80% 0.16 320)";
-  }
+const HUE_DIVISONS = 18;
+
+export const subdividedHueFromSeed = (seed: string) => {
   const seed_integer = Math.abs(
     seed
       .split("")
@@ -24,7 +22,14 @@ export const subdividedHueFromSeed = (seed?: string): string => {
         0,
       ),
   );
-  return oklchSubdivide(seed_integer, 18);
+  return oklchHueSubdivide(seed_integer);
+}
+
+export const subdividedColorFromSeed = (seed?: string): string => {
+  if (seed === undefined) {
+    return "oklch(80% 0.16 320)";
+  }
+  return `oklch(83 % 0.123 ${subdividedHueFromSeed(seed)})`
 };
 
 // File type colors
@@ -256,7 +261,7 @@ export const TextPill = ({
 }: TextPillProps) => {
   const textDefined = text || placeholder;
   const actualSeed = seed || textDefined;
-  const pillColor = subdividedHueFromSeed(actualSeed);
+  const pillColor = subdividedColorFromSeed(actualSeed);
 
   return (
     <BasePill color={pillColor} variant="default" {...props}>
