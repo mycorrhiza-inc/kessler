@@ -1,18 +1,13 @@
 "use client";
-
-import Link from 'next/link';
 import React, { memo, useState } from "react";
 
 import PDFViewer from "./PDFViewer";
 import XlsxViewer from "@/components/style/messages/XlsxCannotBeViewedMessage";
 import ErrorMessage from "@/components/style/messages/ErrorMessage";
-import MarkdownRenderer from "@/components/style/misc/MarkdownRenderer";
-import LoadingSpinner from "@/components/style/misc/LoadingSpinner";
 import { FileExtension, fileExtensionFromText } from "@/components/style/Pills/FileExtension";
 import { CLIENT_API_URL } from "@/lib/env_variables";
-import { CompleteFileSchema } from "@/lib/types/backend_schemas";
-import { AuthorInformation } from "@/lib/types/backend_schemas";
-import { ConversationPill, AuthorInfoPill } from "@/components/style/Pills/TextPills";
+import { FilePageInfo, FillingAttachmentInfo } from '../RenderedObjectCards/RednderedObjectCard';
+import clsx from "clsx";
 
 // Minimal data shape required by DocumentMainTabs
 
@@ -65,18 +60,6 @@ export interface DocumentMainTabsData {
   name: string; // Added for attachment names
 }
 
-// New Data
-export interface DocumentTabsData {
-  attachments: {
-    attachment_uuid: string;
-    attachment_hash: string;
-    attachment_name: string;
-    attachment_extension: string;
-    // Note: we are adding verified to Data, because we want to validate text view per atttachment
-    attachment_verified: boolean;
-  }[]
-}
-
 export type AttachmentItem = {
   id: string;
   name: string;
@@ -92,41 +75,29 @@ export type AttachmentItem = {
 //   - Attachment 2 Preview 
 //   - Attachment 2 Text
 export const DocumentMainTabsClient = ({
-  documentObject,
-  attachments,
+  attachmentInfos,
   isPage,
 }: {
-  documentObject: DocumentMainTabsData;
-  attachments: DocumentTabsData;
+  attachmentInfos: Array<FillingAttachmentInfo>;
   isPage: boolean;
 }) => {
   // Precompute the attachments
-  const parsedAttachments: Array<AttachmentItem> = [{
-    id: documentObject.id,
-    name: documentObject.name,
-    extension: documentObject.extension,
-    verified: documentObject.verified
-  }, ...attachments.attachments.map(a => ({
-    id: a.attachment_uuid,
-    name: a.attachment_name,
-    extension: a.attachment_extension,
-    verified: a.attachment_verified
-  }))];
 
   const [activeAttachmentIndex, setActiveAttachmentIndex] = useState<number>(0);
   type TabKey = 'raw' | 'text';
   const [activeTabPerAttachment, setActiveTabPerAttachment] = useState<{ [key: number]: TabKey }>(() => {
     let result: { [key: number]: TabKey } = {};
-    parsedAttachments.forEach((attachment, i) => {
+    attachmentInfos.forEach((attachment, i) => {
       result[i] = 'raw'; // default tab per attachment
     });
     return result;
   });
 
-  const activeAttachment = parsedAttachments[activeAttachmentIndex];
+  const activeAttachment = attachmentInfos[activeAttachmentIndex];
+
   // For each attachment, we check showRaw and showText
   const showRaw = true; // Always show raw tab
-  const showText = activeAttachment.verified && activeAttachment.extension !== 'xlsx';
+  const showText = true && activeAttachment.attachment_extension !== 'xlsx';
 
   // Called when changing attachment
   const changeActiveAttachment = (index: number) => {
@@ -152,21 +123,21 @@ export const DocumentMainTabsClient = ({
     <div className="modal-content standard-box">
       {/* Top-level tabs for each attachment */}
       <div role="tablist" aria-label="Attachment Sections" className="flex gap-2 border-b border-base-300 overflow-x-auto">
-        {parsedAttachments.map((attachment, i) => (
+        {attachmentInfos.map((attachment, i) => (
           <button
-            key={`${attachment.id}_top`}
+            key={`${attachment.attachment_uuid}_top`}
             role="tab"
             aria-selected={activeAttachmentIndex === i}
             onClick={() => changeActiveAttachment(i)}
-            className={`px-6 py-3 font-bold flex-shrink-0 ${activeAttachmentIndex === i ? 'border-b-2 border-primary text-primary' : 'hover:bg-base-200'}`}
+            className={clsx(`px-6 py-3 font-bold flex-shrink-0`, activeAttachmentIndex === i ? 'border-b-2 border-primary text-primary' : 'hover:bg-base-200')}
           >
-            {attachment.name}
+            {attachment.attachment_name}
           </button>
         ))}
       </div>
 
       {/* Sub-tabs for the active attachment */}
-      {parsedAttachments.length > 0 && (
+      {attachmentInfos.length > 0 && (
         <>
           <div role="tablist" aria-label="Document Sections" className="flex gap-2 border-b border-base-300">
             {showRaw && (
@@ -195,12 +166,12 @@ export const DocumentMainTabsClient = ({
           <div className="mt-4">
             {showRaw && activeTabPerAttachment[activeAttachmentIndex] === 'raw' &&
               <DocumentContent
-                docUUID={activeAttachment.id}
-                extension={fileExtensionFromText(activeAttachment.extension)}
+                docUUID={activeAttachment.attachment_uuid}
+                extension={fileExtensionFromText(activeAttachment.attachment_extension)}
               />
             }
             {showText && activeTabPerAttachment[activeAttachmentIndex] === 'text' &&
-              <MarkdownContent docUUID={activeAttachment.id} />
+              <MarkdownContent docUUID={activeAttachment.attachment_uuid} />
             }
           </div>
         </>

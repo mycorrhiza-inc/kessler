@@ -39,7 +39,7 @@ func DefineFileRoutes(r *mux.Router, db dbstore.DBTX) {
 
 	r.HandleFunc(
 		"/{uuid}/pageinfo",
-		handler.FileCardGet,
+		handler.FilePageInfoGet,
 	).Methods(http.MethodGet)
 	// Minimal file endpoint
 
