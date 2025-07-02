@@ -39,39 +39,11 @@ func DefineFileRoutes(r *mux.Router, db dbstore.DBTX) {
 
 	r.HandleFunc(
 		"/{uuid}/pageinfo",
-		handler.FileCardGet,
+		handler.FilePageInfoGet,
 	).Methods(http.MethodGet)
 	// Minimal file endpoint
 
 	// Markdown file endpoint
-	r.HandleFunc(
-		"/{uuid}/markdown",
-		handler.ReadFileHandler(
-			FileHandlerConfig{
-				private:     false,
-				return_type: "markdown",
-			},
-		)).Methods(http.MethodGet)
-
-	// Raw file endpoint
-	r.HandleFunc(
-		"/{uuid}/raw",
-		handler.ReadFileHandler(
-			FileHandlerConfig{
-				private:     false,
-				return_type: "raw",
-			},
-		)).Methods(http.MethodGet)
-
-	// DO NOT TOUCH. this is necessary for well named downloaded files
-	r.HandleFunc(
-		"/{uuid}/raw/{filename}",
-		handler.ReadFileHandler(
-			FileHandlerConfig{
-				private:     false,
-				return_type: "raw",
-			},
-		)).Methods(http.MethodGet)
 
 	// Metadata endpoint
 	r.HandleFunc(

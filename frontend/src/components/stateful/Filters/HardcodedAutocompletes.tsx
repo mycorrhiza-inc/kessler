@@ -1,4 +1,4 @@
-import { subdividedHueFromSeed } from "@/components/style/Pills/TextPills";
+import { subdividedColorStringFromSeed } from "@/components/style/Pills/TextPills";
 
 export interface OrgAutocompleteInfo {
   value: string;
@@ -25,7 +25,7 @@ export const orgAutocompleteToGeneralOption = (
   return {
     value: org.value,
     label: org.label,
-    color: subdividedHueFromSeed(org.uuid),
+    color: subdividedColorStringFromSeed(org.uuid),
   };
 };
 
@@ -35,7 +35,7 @@ export const convoAutocompleteToGeneralOption = (
   return {
     value: convo.value,
     label: convo.label,
-    color: subdividedHueFromSeed(convo.label),
+    color: subdividedColorStringFromSeed(convo.label),
   };
 };
 

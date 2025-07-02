@@ -5,17 +5,25 @@ import { AiOutlineFileUnknown } from "react-icons/ai";
 import { FileExtension } from "./FileExtension";
 import { ReactNode, Dispatch, SetStateAction } from "react";
 
+
+
+interface OklchColor {
+  hue: number,
+  lightness: number,
+  chroma: number,
+}
+export const color = (val: OklchColor) => {
+  return `oklch(${val.lightness}% ${val.chroma} ${val.hue})`;
+};
 // Color generation utilities
-const oklchSubdivide = (colorNum: number, divisions?: number) => {
-  const defaultDivisions = divisions || 18;
-  const hue = (colorNum % defaultDivisions) * (360 / defaultDivisions);
-  return `oklch(83% 0.123 ${hue})`;
+export const subdividedHueRaw = (colorNum: number) => {
+  const hue = (colorNum % HUE_DIVISONS) * (360 / HUE_DIVISONS);
+  return hue;
 };
 
-export const subdividedHueFromSeed = (seed?: string): string => {
-  if (seed === undefined) {
-    return "oklch(80% 0.16 320)";
-  }
+const HUE_DIVISONS = 18;
+
+export const subdividedHueFromSeed = (seed: string) => {
   const seed_integer = Math.abs(
     seed
       .split("")
@@ -24,7 +32,27 @@ export const subdividedHueFromSeed = (seed?: string): string => {
         0,
       ),
   );
-  return oklchSubdivide(seed_integer, 18);
+  return subdividedHueRaw(seed_integer);
+}
+
+
+
+export const subdividedColorFromSeed = (seed?: string): OklchColor => {
+  if (seed === undefined) {
+    return {
+      lightness: 80,
+      chroma: 0.16,
+      hue: 320
+    };
+  }
+  return {
+    lightness: 83,
+    chroma: 0.123,
+    hue: subdividedHueFromSeed(seed)
+  };
+}
+export const subdividedColorStringFromSeed = (seed?: string): string => {
+  return color(subdividedColorFromSeed(seed))
 };
 
 // File type colors
@@ -256,7 +284,7 @@ export const TextPill = ({
 }: TextPillProps) => {
   const textDefined = text || placeholder;
   const actualSeed = seed || textDefined;
-  const pillColor = subdividedHueFromSeed(actualSeed);
+  const pillColor = subdividedColorStringFromSeed(actualSeed);
 
   return (
     <BasePill color={pillColor} variant="default" {...props}>

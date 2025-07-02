@@ -10,6 +10,7 @@ import (
 	"kessler/pkg/logger"
 	"kessler/pkg/util"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -18,10 +19,10 @@ import (
 )
 
 type FillingAttachmentInfo struct {
-	AttachmentUUID      uuid.UUID          `json:"atttachment_uuid"`
-	AttachmentHash      hashes.KesslerHash `json:"atttachment_hash"`
-	AttachmentName      string             `json:"atttachment_name"`
-	AttachmentExtension string             `json:"atttachment_extension"`
+	AttachmentUUID      uuid.UUID          `json:"attachment_uuid"`
+	AttachmentHash      hashes.KesslerHash `json:"attachment_hash"`
+	AttachmentName      string             `json:"attachment_name"`
+	AttachmentExtension string             `json:"attachment_extension"`
 }
 
 type PageInfo struct {
@@ -65,10 +66,15 @@ func (h *FileHandler) FilePageInfoGet(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return FillingAttachmentInfo{}, err
 		}
+		extension := strings.TrimSpace(attach.Extension)
+		if extension == "" {
+			extension = "pdf"
+		}
 		return FillingAttachmentInfo{
-			AttachmentUUID: attach.ID,
-			AttachmentName: attach.Name,
-			AttachmentHash: parsedHash,
+			AttachmentUUID:      attach.ID,
+			AttachmentName:      attach.Name,
+			AttachmentHash:      parsedHash,
+			AttachmentExtension: extension,
 		}, nil
 	}
 	attachInfos, err := util.MapErrorBubble(attachments, extractAttachments)
