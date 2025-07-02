@@ -12,9 +12,7 @@ import (
 	"kessler/internal/objects/files"
 	"kessler/pkg/hashes"
 	"kessler/pkg/logger"
-	"kessler/pkg/s3utils"
 	"net/http"
-	"os"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -200,110 +198,6 @@ func (h *FileHandler) FileStageGet(ctx context.Context, q *dbstore.Queries, uuid
 		return stage, err
 	}
 	return stage, nil
-}
-
-// ReadFileHandler creates a handler for reading files in various formats
-func (h *FileHandler) ReadFileHandler(config FileHandlerConfig) http.HandlerFunc {
-	private := config.private
-	return_type := config.return_type
-
-	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		log := logger.FromContext(ctx)
-
-		q := dbstore.New(h.db)
-
-		// token := r.Header.Get("Authorization")
-		params := mux.Vars(r)
-		fileID := params["uuid"]
-		parsedUUID, err := uuid.Parse(fileID)
-		if err != nil {
-			http.Error(w, "Invalid File ID format", http.StatusBadRequest)
-			return
-		}
-
-		// if private {
-		// 	isAuthorized, err := checkPrivateFileAuthorization(q, ctx, parsedUUID, token)
-		// 	if !isAuthorized {
-		// 		http.Error(w, "Forbidden", http.StatusForbidden)
-		// 	}
-		// 	if err != nil {
-		// 		log.Info(fmt.Sprintf("Ran into the following error with authentication %v", err))
-		// 	}
-		// }
-
-		file_params := files.GetFileParam{
-			Queries: *q,
-			Context: ctx,
-			PgUUID:  parsedUUID,
-			Private: private,
-		}
-
-		switch return_type {
-		case "raw":
-			file, err := files.GetFileObjectRaw(file_params)
-			if err != nil {
-				error_string := fmt.Sprintf("Error retrieving file object %v", err)
-				log.Info(error_string)
-				http.Error(w, error_string, http.StatusNotFound)
-				return
-			}
-			filehash, err := hashes.HashFromString(file.Hash)
-			if err != nil {
-				error_string := fmt.Sprintf("ASSERTION ERROR: File hash could not be decoded: %v", err)
-				log.Error(error_string)
-				http.Error(w, error_string, http.StatusInternalServerError)
-				return
-			}
-			kefiles := s3utils.NewKeFileManager()
-			file_path, err := kefiles.DownloadFileFromS3(filehash)
-			if err != nil {
-				http.Error(w, fmt.Sprintf("Error encountered when getting file with hash %v from s3:%v", filehash, err), http.StatusInternalServerError)
-				return
-			}
-			content, err := os.ReadFile(file_path)
-			if err != nil {
-				http.Error(w, fmt.Sprintf("Error reading file: %v", err), http.StatusInternalServerError)
-				return
-			}
-
-			mimeType := http.DetectContentType(content)
-			// if mimeType == "application/octet-stream" {
-			// 	mimeType = "application/pdf" // Default to PDF if mime type can't be determined
-			// }
-
-			w.Header().Set("Content-Type", mimeType)
-			w.Write(content)
-
-		case "markdown":
-			originalLang := r.URL.Query().Get("original_lang") == "true"
-			matchLang := r.URL.Query().Get("match_lang")
-			markdownText, err := files.GetSpecificFileText(file_params, matchLang, originalLang)
-			if err != nil {
-				http.Error(w, "Error retrieving texts or no texts found that match query params", http.StatusNotFound)
-				return
-			}
-			w.Header().Set("Content-Type", "text/plain")
-			w.Write([]byte(markdownText))
-
-		case "object-minimal":
-			file, err := files.GetFileObjectRaw(file_params)
-			if err != nil {
-				http.Error(w, "File not found", http.StatusNotFound)
-				return
-			}
-			inflated_schema := file.CompleteFileSchemaInflateFromPartialSchema()
-
-			response, _ := json.Marshal(inflated_schema)
-
-			w.Header().Set("Content-Type", "application/json")
-			w.Write(response)
-
-		default:
-			log.Info("encountered unreachable code", zap.String("return_type", return_type))
-			http.Error(w, "Congratulations for encountering unreachable code about support types!", http.StatusInternalServerError)
-		}
-	}
 }
 
 // Helper functions that don't depend on the handler

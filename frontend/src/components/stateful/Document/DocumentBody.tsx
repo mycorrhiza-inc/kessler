@@ -39,13 +39,15 @@ const MetadataContent = memo(({ metadata }: { metadata: Record<string, any> }) =
 ));
 
 const DocumentContent = ({
-  docUUID,
+  hash,
+  name,
   extension,
 }: {
-  docUUID: string;
+  hash: string;
+  name: string;
   extension: FileExtension;
 }) => {
-  const documentUrl = `${CLIENT_API_URL}/public/files/${docUUID}/raw`;
+  const documentUrl = `${CLIENT_API_URL}/public/raw_attachments/${hash}/raw`;
   if (extension === FileExtension.PDF) return <PDFViewer file={documentUrl} />;
   if (extension === FileExtension.XLSX) return <XlsxViewer file={documentUrl} />;
   return <ErrorMessage error="Cannot display this document type" />;
@@ -129,7 +131,7 @@ export const DocumentMainTabsClient = ({
         {
           backgroundColor: color({
             lightness: 97,
-            chroma: 0.04,
+            chroma: 0.03,
             hue: attachmentHue
           })
         }
@@ -192,7 +194,8 @@ export const DocumentMainTabsClient = ({
           <div className="mt-4">
             {showRaw && activeTabPerAttachment[activeAttachmentIndex] === 'raw' &&
               <DocumentContent
-                docUUID={activeAttachment.attachment_uuid}
+                name={activeAttachment.attachment_name}
+                hash={activeAttachment.attachment_hash}
                 extension={fileExtensionFromText(activeAttachment.attachment_extension)}
               />
             }
