@@ -1,5 +1,5 @@
 import React from "react";
-import { subdividedColorFromSeed } from "../Pills/TextPills";
+import { subdividedColorStringFromSeed } from "../Pills/TextPills";
 
 interface MarkdownRendererProps {
   children: string;

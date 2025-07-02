@@ -8,6 +8,7 @@ import { FileExtension, fileExtensionFromText } from "@/components/style/Pills/F
 import { CLIENT_API_URL } from "@/lib/env_variables";
 import { FilePageInfo, FillingAttachmentInfo } from '../RenderedObjectCards/RednderedObjectCard';
 import clsx from "clsx";
+import { color, subdividedHueFromSeed, subdividedHueRaw } from "@/components/style/Pills/TextPills";
 
 // Minimal data shape required by DocumentMainTabs
 
@@ -118,9 +119,22 @@ export const DocumentMainTabsClient = ({
       [index]: tab
     }));
   }
+  const attachmentsHue = attachmentInfos.map((val, index) => subdividedHueRaw(index * 4))
+  const attachmentHue = attachmentsHue[activeAttachmentIndex]
 
   return (
-    <div className="modal-content standard-box">
+    <div className="modal-content standard-box flex flex-col items-center w-screen"
+
+      style={
+        {
+          backgroundColor: color({
+            lightness: 97,
+            chroma: 0.04,
+            hue: attachmentHue
+          })
+        }
+      }
+    >
       {/* Top-level tabs for each attachment */}
       <div role="tablist" aria-label="Attachment Sections" className="flex gap-2 border-b border-base-300 overflow-x-auto">
         {attachmentInfos.map((attachment, i) => (
@@ -129,7 +143,18 @@ export const DocumentMainTabsClient = ({
             role="tab"
             aria-selected={activeAttachmentIndex === i}
             onClick={() => changeActiveAttachment(i)}
+            style={
+              {
+                backgroundColor: color({
+                  lightness: 80 + 10 * Number(activeAttachmentIndex === i),
+                  chroma: 0.07,
+                  hue: attachmentsHue[i]
+                })
+              }
+            }
             className={clsx(`px-6 py-3 font-bold flex-shrink-0`, activeAttachmentIndex === i ? 'border-b-2 border-primary text-primary' : 'hover:bg-base-200')}
+          // className={clsx(`px-6 py-3 font-bold flex-shrink-0 bg-[oklch(78.2% 0.066 180)]`, activeAttachmentIndex === i ? 'border-b-2 border-primary text-primary' : 'hover:bg-base-200')}
+          // className={clsx(`px-6 py-3 font-bold flex-shrink-0 bg-[oklch(80% 0.12 ${attachmentsHue[i]})]`, activeAttachmentIndex === i ? 'border-b-2 border-primary text-primary' : 'hover:bg-base-200')}
           >
             {attachment.attachment_name}
           </button>
@@ -139,7 +164,8 @@ export const DocumentMainTabsClient = ({
       {/* Sub-tabs for the active attachment */}
       {attachmentInfos.length > 0 && (
         <>
-          <div role="tablist" aria-label="Document Sections" className="flex gap-2 border-b border-base-300">
+          <div role="tablist"
+            aria-label="Document Sections" className="flex gap-2 border-b border-base-300">
             {showRaw && (
               <button
                 role="tab"
