@@ -141,11 +141,11 @@ func (h *SearchServiceHandler) Search(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if searchReq.Query == "" {
-		logger.Error(ctx, "empty search query provided")
-		http.Error(w, "Query cannot be empty", http.StatusBadRequest)
-		return
-	}
+	// if searchReq.Query == "" {
+	// 	logger.Error(ctx, "empty search query provided")
+	// 	http.Error(w, "Query cannot be empty", http.StatusBadRequest)
+	// 	return
+	// }
 
 	// Set defaults for pagination
 	if searchReq.Page < 0 {
