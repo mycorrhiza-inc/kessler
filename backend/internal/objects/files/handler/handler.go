@@ -31,6 +31,23 @@ func DefineFileRoutes(r *mux.Router, db dbstore.DBTX) {
 	handler := NewFileHandler(db)
 
 	// Insert endpoint
+	r.HandleFunc(
+		"/insert",
+		handler.makeFileUpsertHandler(
+			FileUpsertHandlerConfig{
+				Private: false,
+				Insert:  true,
+			},
+		)).Methods(http.MethodPost)
+
+	r.HandleFunc(
+		"/{uuid}/update",
+		handler.makeFileUpsertHandler(
+			FileUpsertHandlerConfig{
+				Private: false,
+				Insert:  false,
+			},
+		)).Methods(http.MethodPost)
 
 	r.HandleFunc(
 		"/{uuid}/card",
