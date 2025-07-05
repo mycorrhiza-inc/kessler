@@ -4,21 +4,22 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 )
 
 var (
 	OPENSCRAPERS_API_URL = func() string {
-		if v := os.Getenv("OPENSCRAPERS_API_URL"); v != "" {
+		if v := strings.Trim(os.Getenv("OPENSCRAPERS_API_URL"), "/"); v != "" {
 			return v
 		}
 		return "https://openscrapers.kessler.xyz"
 	}()
-	INTERNAL_KESSLER_API_URL = os.Getenv("INTERNAL_KESSLER_API_URL")
-	NEXT_PUBLIC_KESSLER_API_URL   = os.Getenv("NEXT_PUBLIC_KESSLER_API_URL")
+	INTERNAL_KESSLER_API_URL    = strings.Trim(os.Getenv("INTERNAL_KESSLER_API_URL"), "/")
+	NEXT_PUBLIC_KESSLER_API_URL = strings.Trim(os.Getenv("NEXT_PUBLIC_KESSLER_API_URL"), "/")
 
 	DATALAB_API_KEY         = os.Getenv("DATALAB_API_KEY")
 	FIREWORKS_EMBEDDING_URL = "https://api.fireworks.ai/inference/v1"
-	MARKER_ENDPOINT_URL     = os.Getenv("MARKER_ENDPOINT_URL")
+	MARKER_ENDPOINT_URL     = strings.Trim(os.Getenv("MARKER_ENDPOINT_URL"), "/")
 
 	GROQ_API_KEY      = os.Getenv("GROQ_API_KEY")
 	OPENAI_API_KEY    = os.Getenv("OPENAI_API_KEY")

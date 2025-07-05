@@ -10,8 +10,11 @@ import (
 	"kessler/internal/objects/conversations"
 	"kessler/internal/objects/files/validation"
 	"kessler/pkg/constants"
+	"kessler/pkg/hashes"
 	"kessler/pkg/logger"
+	"kessler/pkg/s3utils"
 	"net/http"
+	"os"
 	"reflect"
 	"time"
 
@@ -79,6 +82,36 @@ func IngestOpenscrapersCase(ctx context.Context, caseInfo OpenscrapersCaseInfoPa
 	return nil
 }
 
+func FetchRawAttachmentFileFromOpenScrapers(hash hashes.KesslerHash) error {
+	fetch_file_url := fmt.Sprintf("%s/api/raw_attachments/%s/raw", constants.OPENSCRAPERS_API_URL, hash.String())
+
+	tmpDir := fmt.Sprintf("%s/openscrapers_tmp", constants.OS_TMPDIR)
+	os.MkdirAll(tmpDir, 0777)
+
+	// Save the resultant PDF file to a
+	path, err := s3utils.DownloadFile(fetch_file_url, tmpDir)
+	if err != nil {
+		return err
+	}
+	filehash, err := hashes.HashFromFile(path)
+	if err != nil {
+		return fmt.Errorf("failed to validate filehash: %w", err)
+	}
+	if filehash != hash {
+		return fmt.Errorf("Hash from retrived file does not match: %s != %s", filehash.String(), hash.String())
+	}
+	manager := s3utils.NewKeFileManager()
+	uploaded_hash, err := manager.UploadFileToS3(path)
+	if hash != uploaded_hash {
+		panic("ASSERTION ERROR: Hash got a different value dispite running into the same function twice.")
+	}
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // "request failed: Get \"https://openscrapers.kessler.xyz/api/raw_attachments/q24nB9T-EtQ4UAakxSqwVnUl4VNsDZ1FnpgD516x6k8=/obj\": context deadline exceeded (Client.Timeout exceeded while awaiting headers)"
 func FetchAttachmentDataFromOpenScrapers(attachment AttachmentChildInfo) (RawAttachmentData, error) {
 	if attachment.Hash.IsZero() {
@@ -117,6 +150,12 @@ func FetchAttachmentDataFromOpenScrapers(attachment AttachmentChildInfo) (RawAtt
 
 	fetch_file_url := fmt.Sprintf("%s/api/raw_attachments/%s/raw", constants.OPENSCRAPERS_API_URL, hashString)
 	result.GetAttachmentUrl = fetch_file_url
+
+	err = FetchRawAttachmentFileFromOpenScrapers(attachment.Hash)
+	if err != nil {
+		return RawAttachmentData{}, fmt.Errorf("Encountered error fetching file: %w", err)
+	}
+
 	var nilerr error
 
 	return result, nilerr
