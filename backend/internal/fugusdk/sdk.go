@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"kessler/pkg/logger"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -19,6 +20,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
+	"go.uber.org/zap"
 	"golang.org/x/time/rate"
 )
 
@@ -799,6 +801,25 @@ func (c *Client) GetNamespaceFilters(ctx context.Context, namespace string) (*Sa
 	return &result, err
 }
 
+// GetNamespaceFilters gets filters for a namespace - matches Rust /filters/{namespace} endpoint
+func (c *Client) GetNamespaceFilterData(ctx context.Context, namespace string) (*SanitizedResponse, error) {
+	// Validate namespace
+	if err := c.sanitizer.ValidateNamespace(namespace); err != nil {
+		return nil, fmt.Errorf("validation failed: %w", err)
+	}
+
+	path := fmt.Sprintf("/filters/namespace/%s", url.PathEscape(namespace))
+
+	resp, err := c.makeRequest(ctx, "GET", path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var result SanitizedResponse
+	err = c.handleResponse(resp, &result)
+	return &result, err
+}
+
 // Convenience methods for common operations
 
 // AddOrUpdateObject is a convenience method for upserting a single object
@@ -838,4 +859,89 @@ func (c *Client) AdvancedSearch(ctx context.Context, query string, filters []str
 	}
 
 	return c.Search(ctx, searchQuery)
+}
+
+// Add these methods to your fugusdk package (sdk.go)
+
+// Filter represents a filter path with its available values
+type Filter struct {
+	FilterPath string   `json:"filter_path"`
+	Values     []string `json:"values"`
+}
+
+// GetAllFilters retrieves all available filter paths and their values
+func (c *Client) GetAllFilters(ctx context.Context) ([]Filter, error) {
+	resp, err := c.makeRequest(ctx, "GET", "/filters/all", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var result SanitizedResponse
+	err = c.handleResponse(resp, &result)
+	if err != nil {
+		return nil, err
+	}
+
+	// Debug: log the raw response to understand the format
+	logger.Info(ctx, "GetAllFilters raw response", zap.Any("result", result))
+
+	// The response should contain filter_paths in the Data field
+	if result.Data == nil {
+		return []Filter{}, nil
+	}
+
+	// Try to extract filter_paths from the response
+	var filters []Filter
+
+	// Handle different possible response formats
+	switch data := result.Data.(type) {
+	case map[string]interface{}:
+		// Check if it has a "filter_paths" field
+		if filterPaths, ok := data["filter_paths"].(map[string]interface{}); ok {
+			for path, valuesInterface := range filterPaths {
+				values := make([]string, 0)
+				if valuesList, ok := valuesInterface.([]interface{}); ok {
+					for _, v := range valuesList {
+						if str, ok := v.(string); ok {
+							values = append(values, str)
+						}
+					}
+				}
+				filters = append(filters, Filter{
+					FilterPath: path,
+					Values:     values,
+				})
+			}
+		} else {
+			// If no filter_paths field, log the structure for debugging
+			logger.Warn(ctx, "Unexpected response structure", zap.Any("data", data))
+			return []Filter{}, fmt.Errorf("unexpected response structure: no filter_paths field")
+		}
+	default:
+		logger.Warn(ctx, "Unexpected response type", zap.Any("data", data))
+		return []Filter{}, fmt.Errorf("unexpected response format")
+	}
+
+	return filters, nil
+}
+
+// GetFilterValues retrieves all values for a specific filter path
+func (c *Client) GetFilterValues(ctx context.Context, filterPath string) (*SanitizedResponse, error) {
+	// Validate filter path
+	if len(filterPath) == 0 {
+		return nil, fmt.Errorf("filter path cannot be empty")
+	}
+
+	// The backend expects the path without leading slash for the URL parameter
+	cleanPath := strings.TrimPrefix(filterPath, "/")
+	path := fmt.Sprintf("/filters/path/%s", url.PathEscape(cleanPath))
+
+	resp, err := c.makeRequest(ctx, "GET", path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var result SanitizedResponse
+	err = c.handleResponse(resp, &result)
+	return &result, err
 }

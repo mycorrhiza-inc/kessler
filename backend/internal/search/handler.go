@@ -1,3 +1,4 @@
+// src: internal/search/handler.go
 package search
 
 import (
@@ -34,7 +35,7 @@ func RegisterSearchRoutes(router *mux.Router, db dbstore.DBTX) error {
 		return fmt.Errorf("failed to create search service: %w", err)
 	}
 
-	handler := NewSearchHandler(service, filterHandler)
+	handler := NewSearchHandler(service)
 
 	fmt.Println("🔧 Registering search routes...")
 
@@ -51,15 +52,14 @@ func RegisterSearchRoutes(router *mux.Router, db dbstore.DBTX) error {
 	router.HandleFunc("/info", handler.GetSearchInfo).Methods(http.MethodGet)
 	router.HandleFunc("/health", handler.HealthCheck).Methods(http.MethodGet)
 
-	// Filter configuration endpoints - delegated to filter handler
+	// Filter endpoints - use the dedicated filter handler
 	router.HandleFunc("/filters", handler.GetAvailableFilters).Methods(http.MethodGet)
-	router.HandleFunc("/filters/{namespace}", handler.filterHandler.GetNamespaceFilters).Methods(http.MethodGet)
-	router.HandleFunc("/filters/configuration", handler.filterHandler.GetConfiguration).Methods(http.MethodGet)
-	router.HandleFunc("/filters/convert", handler.filterHandler.ConvertFilters).Methods(http.MethodPost)
-	router.HandleFunc("/filters/validate", handler.filterHandler.ValidateFilters).Methods(http.MethodPost)
-	router.HandleFunc("/filters/options", handler.filterHandler.GetOptions).Methods(http.MethodPost)
+	router.HandleFunc("/filters/all", filterHandler.GetAllFilters).Methods(http.MethodGet)
+	router.HandleFunc("/filters/namespace/{namespace}", filterHandler.GetNamespaceFilters).Methods(http.MethodGet)
+	router.HandleFunc("/filters/path/{filterPath:.*}", filterHandler.GetFilterValues).Methods(http.MethodGet)
+	router.HandleFunc("/filters/invalidate", filterHandler.InvalidateCache).Methods(http.MethodPost)
 
-	fmt.Println("✅ Search routes registered successfully")
+	fmt.Println("✅ Search and filter routes registered successfully")
 	return nil
 }
 
@@ -87,15 +87,13 @@ func convertCardsToInterface(cards []CardData) []interface{} {
 
 // SearchServiceHandler handles HTTP requests for search
 type SearchServiceHandler struct {
-	service       *SearchService
-	filterHandler *filter.Handler
+	service *SearchService
 }
 
 // NewSearchHandler creates a new search handler
-func NewSearchHandler(service *SearchService, filterHandler *filter.Handler) *SearchServiceHandler {
+func NewSearchHandler(service *SearchService) *SearchServiceHandler {
 	return &SearchServiceHandler{
-		service:       service,
-		filterHandler: filterHandler,
+		service: service,
 	}
 }
 
@@ -322,7 +320,7 @@ func (h *SearchServiceHandler) handleNamespaceSearch(w http.ResponseWriter, r *h
 		zap.Int("result_count", len(response.Data)))
 }
 
-// GetAvailableFilters returns all available filters
+// GetAvailableFilters returns legacy filter format for backwards compatibility
 func (h *SearchServiceHandler) GetAvailableFilters(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	ctx, span := tracer.Start(ctx, "search-api:get-available-filters")
@@ -477,11 +475,10 @@ func (h *SearchServiceHandler) respondHealthSuccess(w http.ResponseWriter) {
 			"GET /search/info",
 			"GET /search/health",
 			"GET /search/filters",
-			"GET /search/filters/{namespace}",
-			"GET /search/filters/configuration",
-			"POST /search/filters/convert",
-			"POST /search/filters/validate",
-			"POST /search/filters/options",
+			"GET /search/filters/all",
+			"GET /search/filters/namespace/{namespace}",
+			"GET /search/filters/path/{filterPath}",
+			"POST /search/filters/invalidate",
 		},
 		"supported_filters": []string{
 			"metadata field filters (e.g., docket_gov_id=EPA-123)",
