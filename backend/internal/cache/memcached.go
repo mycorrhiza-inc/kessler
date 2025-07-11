@@ -121,6 +121,11 @@ func (cc CacheController) Get(key string) ([]byte, error) {
 	return item.Value, nil
 }
 
+// Delete removes a key from memcached
+func (cc CacheController) Delete(key string) error {
+	return cc.Client.Delete(key)
+}
+
 // Touch updates the expiration time for a key
 func (cc CacheController) Touch(key string, expiration int32) error {
 	return cc.Client.Touch(key, expiration)
