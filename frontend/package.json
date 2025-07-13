@@ -11,38 +11,39 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@clerk/nextjs": "^6.23.0",
-    "@faker-js/faker": "^9.8.0",
-    "@tailwindcss/postcss": "^4.1.10",
+    "@clerk/nextjs": "^6.24.0",
+    "@faker-js/faker": "^9.9.0",
+    "@tailwindcss/postcss": "^4.1.11",
     "axios": "^1.10.0",
     "clsx": "^2.1.1",
-    "framer-motion": "^12.19.1",
-    "next": "^15.3.4",
+    "framer-motion": "^12.23.3",
+    "next": "^15.3.5",
     "next-themes": "^0.4.6",
-    "posthog-js": "^1.255.1",
+    "posthog-js": "^1.257.0",
     "react": "^19.1.0",
     "react-date-range": "^2.0.1",
     "react-dom": "^19.1.0",
     "react-icons": "^5.5.0",
     "react-pdf": "^9.2.1",
     "tailwind-merge": "^3.3.1",
-    "zod": "^3.25.67",
-    "zustand": "^5.0.5"
+    "zod": "^3.25.76",
+    "zustand": "^5.0.6"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.16",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/react": "^16.3.0",
-    "@types/node": "^20.19.1",
+    "@types/node": "^20.19.7",
     "@types/react": "^19.1.8",
     "@types/react-date-range": "^1.4.10",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.6.0",
-    "daisyui": "^5.0.43",
+    "daisyui": "^5.0.46",
     "jsdom": "^26.1.0",
-    "tailwindcss": "^4.1.10",
+    "tailwindcss": "^4.1.11",
     "typescript": "^5.8.3",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.2.4"
-  }
+  },
+  "packageManager": "pnpm@10.12.4+sha512.5ea8b0deed94ed68691c9bad4c955492705c5eeb8a87ef86bc62c74a26b037b08ff9570f108b2e4dbd1dd1a9186fea925e527f141c648e85af45631074680184"
 }
