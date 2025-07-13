@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/charmbracelet/log"
+	"go.uber.org/zap"
 )
 
 func DownloadFile(url, dir string) (string, error) {
@@ -98,7 +99,7 @@ func (manager *KesslerFileManager) getS3KeyFromHash(hash hashes.KesslerHash) str
 }
 
 func (manager *KesslerFileManager) getLocalPathFromHash(hash hashes.KesslerHash) string {
-	return filepath.Join("/", manager.RawDir, hash.String())
+	return filepath.Join(manager.RawDir, hash.String())
 }
 
 // Upload file to S3
@@ -137,16 +138,18 @@ func (manager *KesslerFileManager) DownloadFileFromS3(hash hashes.KesslerHash) (
 		return localFilePath, nil
 	}
 	fileKey := manager.getS3KeyFromHash(hash)
-	log.Info(fmt.Sprintf("Attempting to download %s from s3 bucket %s\n", fileKey, manager.S3Bucket))
-	result_s3, err := manager.S3Client.GetObject(&s3.GetObjectInput{
+	log.Info("Attempting to download file from s3 bucket", zap.String("fileKey", fileKey), zap.String("bucket", manager.S3Bucket))
+	resultS3, err := manager.S3Client.GetObject(&s3.GetObjectInput{
 		Bucket: aws.String(manager.S3Bucket),
 		Key:    aws.String(fileKey),
 	})
 	if err != nil {
+		log.Warn("Failed to download file from s3.", zap.String("fileKey", fileKey), zap.String("bucket", manager.S3Bucket))
 		return "", err
 	}
-	log.Info(fmt.Sprintf("Got file from s3 successfully\n"))
-	var body io.ReadCloser = result_s3.Body
+	log.Info("Got file from s3 successfully", zap.String("fileKey", fileKey), zap.String("bucket", manager.S3Bucket))
+
+	var body io.ReadCloser = resultS3.Body
 	defer body.Close()
 
 	// Create the file
@@ -159,7 +162,7 @@ func (manager *KesslerFileManager) DownloadFileFromS3(hash hashes.KesslerHash) (
 	if err != nil {
 		return "", err
 	}
-	log.Info(fmt.Sprintf("Created local file successfully\n"))
+	log.Info("Created local file successfully", zap.String("path", localFilePath))
 	defer out.Close()
 
 	// Copy the body to the file
@@ -167,6 +170,6 @@ func (manager *KesslerFileManager) DownloadFileFromS3(hash hashes.KesslerHash) (
 	if err != nil {
 		return "", err
 	}
-	log.Info(fmt.Sprintf("Copied file successfully\n"))
+	log.Info("Copied file successfully", zap.String("path", localFilePath))
 	return localFilePath, nil
 }
