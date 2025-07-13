@@ -99,7 +99,7 @@ func (manager *KesslerFileManager) getS3KeyFromHash(hash hashes.KesslerHash) str
 }
 
 func (manager *KesslerFileManager) getLocalPathFromHash(hash hashes.KesslerHash) string {
-	return filepath.Join(manager.RawDir, hash.String())
+	return filepath.Join("/tmp/", manager.RawDir, hash.String())
 }
 
 // Upload file to S3
