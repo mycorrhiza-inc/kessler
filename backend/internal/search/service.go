@@ -123,7 +123,7 @@ func NewSearchService(fuguServerURL string, filterService *filter.Service, db db
 }
 
 // ProcessSearch processes a search request with namespace support
-func (s *SearchService) ProcessSearch(ctx context.Context, query string, filters map[string]string, pagination PaginationParams, namespace string) (*SearchResponse, error) {
+func (s *SearchService) ProcessSearch(ctx context.Context, query string, metadataFilters map[string]string, pagination PaginationParams, namespace string) (*SearchResponse, error) {
 	ctx, span := serviceTracer.Start(ctx, "search-service:process-search")
 	defer span.End()
 
@@ -146,11 +146,13 @@ func (s *SearchService) ProcessSearch(ctx context.Context, query string, filters
 
 	logger.Info(ctx, "fugu client created successfully")
 
+	rawFilters := convertMetadataFiltersToRaw(metadataFilters)
+
 	// Convert filters to backend format with namespace
-	backendFilters, err := s.convertFiltersToBackend(ctx, filters, namespace)
+	backendFilters, err := convertFiltersToBackend(ctx, rawFilters, namespace)
 	if err != nil {
 		logger.Warn(ctx, "failed to convert filters, proceeding with fallback", zap.Error(err))
-		backendFilters = s.fallbackFilterConversion(filters, namespace)
+		backendFilters = s.fallbackFilterConversion(rawFilters, namespace)
 	}
 
 	// Create fugu search query using SDK types
@@ -182,8 +184,18 @@ func (s *SearchService) ProcessSearch(ctx context.Context, query string, filters
 	return frontendResponse, nil
 }
 
+// convertMetadataFiltersToRaw takes a map of metadata filters and returns a new map
+// with the same values but with "metadata/" prepended to each key.
+func convertMetadataFiltersToRaw(metadataFilters map[string]string) map[string]string {
+	rawMetadataFilters := make(map[string]string)
+	for key, value := range metadataFilters {
+		rawMetadataFilters["metadata/"+key] = value
+	}
+	return rawMetadataFilters
+}
+
 // convertFiltersToBackend converts frontend filters to backend facet format
-func (s *SearchService) convertFiltersToBackend(ctx context.Context, filters map[string]string, namespace string) ([]string, error) {
+func convertFiltersToBackend(ctx context.Context, filters map[string]string, namespace string) ([]string, error) {
 	ctx, span := serviceTracer.Start(ctx, "search-service:convert-filters-to-backend")
 	defer span.End()
 

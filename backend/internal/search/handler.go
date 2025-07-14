@@ -262,7 +262,7 @@ func (h *SearchServiceHandler) handleNamespaceSearch(w http.ResponseWriter, r *h
 	defer span.End()
 
 	var query string
-	var filters map[string]string
+	var metadataFilters map[string]string
 	var pagination PaginationParams
 
 	if r.Method == http.MethodPost {
@@ -275,7 +275,7 @@ func (h *SearchServiceHandler) handleNamespaceSearch(w http.ResponseWriter, r *h
 		}
 
 		query = searchReq.Query
-		filters = searchReq.Filters
+		metadataFilters = searchReq.Filters
 		pagination = PaginationParams{
 			Page:  searchReq.Page,
 			Limit: searchReq.PerPage,
@@ -287,7 +287,7 @@ func (h *SearchServiceHandler) handleNamespaceSearch(w http.ResponseWriter, r *h
 		// Handle GET request
 		query = r.URL.Query().Get("q")
 		pagination = h.extractPagination(r)
-		filters = h.extractFilters(r)
+		metadataFilters = h.extractFilters(r)
 	}
 
 	if query == "" {
@@ -303,7 +303,7 @@ func (h *SearchServiceHandler) handleNamespaceSearch(w http.ResponseWriter, r *h
 		zap.Int("limit", pagination.Limit))
 
 	// Process the search with namespace
-	response, err := h.service.ProcessSearch(ctx, query, filters, pagination, namespace)
+	response, err := h.service.ProcessSearch(ctx, query, metadataFilters, pagination, namespace)
 	if err != nil {
 		logger.Error(ctx, "namespace search processing failed", zap.Error(err))
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
