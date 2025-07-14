@@ -139,7 +139,7 @@ const CardHeader: React.FC<{ data: CardData; size: CardSize }> = ({
             : "ml-2 text-lg font-semibold",
         )}
       >
-        {data.name || data.docket_number || ""}
+        {data.name || ""}
       </h2>
     </div>
     <CardBadge type={data.type} size={size} />

@@ -119,7 +119,7 @@ function PDFViewerRaw({
   }, []);
 
   // throw new Error("panicing now to avoid having to throw on a new dependancy, check PDFViewer.tsx for more details")
-  useResizeObserver(containerRef, resizeObserverOptions, onResize);
+  // ResizeObserver(containerRef, resizeObserverOptions, onResize);
 
   function onDocumentLoadSuccess({ numPages: nextNumPages }: any): void {
     setLoading(false);
