@@ -184,12 +184,20 @@ func (s *SearchService) ProcessSearch(ctx context.Context, query string, metadat
 	return frontendResponse, nil
 }
 
+var metadataFilterRenameDict map[string]string = map[string]string{
+	"convo_id": "conversation_id",
+}
+
 // convertMetadataFiltersToRaw takes a map of metadata filters and returns a new map
 // with the same values but with "metadata/" prepended to each key.
 func convertMetadataFiltersToRaw(metadataFilters map[string]string) map[string]string {
 	rawMetadataFilters := make(map[string]string)
 	for key, value := range metadataFilters {
-		rawMetadataFilters["metadata/"+key] = value
+		if renamedKey, ok := metadataFilterRenameDict[key]; ok {
+			rawMetadataFilters["metadata/"+renamedKey] = value
+		} else {
+			rawMetadataFilters["metadata/"+key] = value
+		}
 	}
 	return rawMetadataFilters
 }
