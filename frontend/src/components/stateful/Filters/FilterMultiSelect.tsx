@@ -10,6 +10,7 @@ export interface DynamicMultiSelectProps {
   onBlur?: () => void;
   disabled?: boolean;
   className?: string;
+  onDropdownStateChange?: (isOpen: boolean) => void; // New callback for parent to track state
 }
 
 export function DynamicMultiSelect({
@@ -20,6 +21,7 @@ export function DynamicMultiSelect({
   onBlur,
   disabled = false,
   className = "",
+  onDropdownStateChange,
 }: DynamicMultiSelectProps) {
   const [selectedValues, setSelectedValues] = useState<string[]>(
     value ? value.split(',').filter(Boolean) : []
@@ -61,10 +63,19 @@ export function DynamicMultiSelect({
 
   const handleDropdownToggle = useCallback(() => {
     if (!disabled) {
-      setIsOpen(prev => !prev);
-      if (!isOpen) onFocus?.(); else onBlur?.();
+      const newIsOpen = !isOpen;
+      setIsOpen(newIsOpen);
+
+      // Notify parent of state change
+      onDropdownStateChange?.(newIsOpen);
+
+      if (newIsOpen) {
+        onFocus?.();
+      } else {
+        onBlur?.();
+      }
     }
-  }, [disabled, isOpen, onFocus, onBlur]);
+  }, [disabled, isOpen, onFocus, onBlur, onDropdownStateChange]);
 
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -83,12 +94,13 @@ export function DynamicMultiSelect({
       const target = event.target as Element;
       if (isOpen && !target.closest('.multiselect-container')) {
         setIsOpen(false);
+        onDropdownStateChange?.(false);
         onBlur?.();
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isOpen, onBlur]);
+  }, [isOpen, onBlur, onDropdownStateChange]);
 
   return (
     <FilterMultiSelectRaw
