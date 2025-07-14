@@ -56,7 +56,7 @@ export function FilterMultiSelectRaw({
   onClearAll,
 }: FilterMultiSelectRawProps) {
   return (
-    <div className={`relative w-full multiselect-container ${className}`}>      
+    <div className={`relative w-full multiselect-container ${className}`}>
       <button
         type="button"
         className={
@@ -102,9 +102,8 @@ export function FilterMultiSelectRaw({
             )}
           </div>
           <svg
-            className={`w-5 h-5 text-gray-400 transition-transform flex-shrink-0 ml-2 ${
-              isOpen ? 'rotate-180' : ''
-            }`}
+            className={`w-5 h-5 text-gray-400 transition-transform flex-shrink-0 ml-2 ${isOpen ? 'rotate-180' : ''
+              }`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -116,7 +115,8 @@ export function FilterMultiSelectRaw({
 
       {isOpen && (
         <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-base-100 border-2 border-gray-200 rounded-lg shadow-lg max-h-80 overflow-hidden">
-          <div className="p-3 border-b border-gray-200 bg-base-100">
+          {/* Search bar section */}
+          <div className="p-3 border-b border-gray-200 bg-base-100 flex-shrink-0">
             <div className="relative">
               <input
                 type="text"
@@ -156,6 +156,7 @@ export function FilterMultiSelectRaw({
             </div>
           </div>
 
+          {/* Options section - scrollable */}
           <div className="max-h-60 overflow-y-auto">
             {filteredOptions.length === 0 ? (
               <div className="p-4 text-center text-gray-500 text-sm">
@@ -201,8 +202,9 @@ export function FilterMultiSelectRaw({
             )}
           </div>
 
+          {/* Footer section */}
           {selectedValues.length > 0 && (
-            <div className="p-3 border-t border-gray-200 bg-base-100 text-xs text-gray-600 flex justify-between items-center">
+            <div className="p-3 border-t border-gray-200 bg-base-100 text-xs text-gray-600 flex justify-between items-center flex-shrink-0">
               <span>
                 {selectedValues.length} item{selectedValues.length !== 1 ? 's' : ''} selected
               </span>
