@@ -40,9 +40,17 @@ func (s *SearchService) HydrateConversation(ctx context.Context, id string, scor
 		return nil, fmt.Errorf("failed to read conversation: %w", err)
 	}
 
+	convoDisplayName := conversation.Name
+	if convoDisplayName == "" {
+		convoDisplayName = conversation.DocketGovID
+	}
+	if convoDisplayName == "" {
+		convoDisplayName = conversation.Description
+	}
+
 	// Create card data
 	card := DocketCardData{
-		Name:        conversation.Name,
+		Name:        convoDisplayName,
 		Description: conversation.Description,
 		Timestamp:   conversation.CreatedAt.Time,
 		Index:       index,

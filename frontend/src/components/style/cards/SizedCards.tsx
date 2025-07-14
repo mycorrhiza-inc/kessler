@@ -41,30 +41,57 @@ const getTypeColor = (type: CardType): string => {
 const getIcon = (type: CardType) => {
   const baseClasses = clsx(
     getTypeColor(type),
-    "w-4 h-4 rounded-sm flex justify-center items-center"
+    "w-4 h-4 rounded-sm flex justify-center items-center",
   );
   switch (type) {
     case CardType.Author:
       return (
         <div className={baseClasses}>
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-3 w-3 text-white"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fillRule="evenodd"
+              d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+              clipRule="evenodd"
+            />
           </svg>
         </div>
       );
     case CardType.Docket:
       return (
         <div className={baseClasses}>
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4z" clipRule="evenodd" />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-3 w-3 text-white"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fillRule="evenodd"
+              d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4z"
+              clipRule="evenodd"
+            />
           </svg>
         </div>
       );
     case CardType.Document:
       return (
         <div className={baseClasses}>
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-3 w-3 text-white"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fillRule="evenodd"
+              d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"
+              clipRule="evenodd"
+            />
           </svg>
         </div>
       );
@@ -74,42 +101,61 @@ const getIcon = (type: CardType) => {
 };
 
 // Reusable subcomponents
-const CardBadge: React.FC<{ type: CardType; size: CardSize }> = ({ type, size }) => (
+const CardBadge: React.FC<{ type: CardType; size: CardSize }> = ({
+  type,
+  size,
+}) => (
   <div
     className={clsx(
       getTypeColor(type),
       "text-white rounded-sm capitalize",
-      size === CardSize.Large ? "px-4 py-2 text-lg" : size === CardSize.Small ? "px-1 py-0.5 text-xs" : "px-2 py-1 text-xs"
+      size === CardSize.Large
+        ? "px-4 py-2 text-lg"
+        : size === CardSize.Small
+          ? "px-1 py-0.5 text-xs"
+          : "px-2 py-1 text-xs",
     )}
   >
     {type}
   </div>
 );
 
-const CardHeader: React.FC<{ data: CardData; size: CardSize }> = ({ data, size }) => (
-  <div className={clsx(
-    "flex items-center justify-between",
-    size === CardSize.Large ? "mb-4" : "mb-2"
-  )}>
+const CardHeader: React.FC<{ data: CardData; size: CardSize }> = ({
+  data,
+  size,
+}) => (
+  <div
+    className={clsx(
+      "flex items-center justify-between",
+      size === CardSize.Large ? "mb-4" : "mb-2",
+    )}
+  >
     <div className="flex items-center">
       {getIcon(data.type)}
-      <h2 className={clsx(
-        size === CardSize.Large ? "text-4xl font-bold ml-4" : "ml-2 text-lg font-semibold"
-      )}>
-        {data.name}
+      <h2
+        className={clsx(
+          size === CardSize.Large
+            ? "text-4xl font-bold ml-4"
+            : "ml-2 text-lg font-semibold",
+        )}
+      >
+        {data.name || data.docket_number || ""}
       </h2>
     </div>
     <CardBadge type={data.type} size={size} />
   </div>
 );
 
-const CardDescription: React.FC<{ data: CardData; size: CardSize }> = ({ data, size }) => {
+const CardDescription: React.FC<{ data: CardData; size: CardSize }> = ({
+  data,
+  size,
+}) => {
   const className = clsx(
     size === CardSize.Large
       ? "text-lg mb-4"
       : size === CardSize.Medium
         ? "text-sm mb-4"
-        : "text-xs flex-1 truncate"
+        : "text-xs flex-1 truncate",
   );
   let content = data.description;
   if (size === CardSize.Small && content.length > 100) {
@@ -121,14 +167,20 @@ const CardDescription: React.FC<{ data: CardData; size: CardSize }> = ({ data, s
   return <p className={className}>{content}</p>;
 };
 
-
-const CardFooter: React.FC<{ data: CardData; size: CardSize }> = ({ data, size }) => (
-  <div className={clsx(
-    "flex items-center justify-between text-gray-500",
-    size === CardSize.Large ? "text-lg" : "text-xs"
-  )}>
+const CardFooter: React.FC<{ data: CardData; size: CardSize }> = ({
+  data,
+  size,
+}) => (
+  <div
+    className={clsx(
+      "flex items-center justify-between text-gray-500",
+      size === CardSize.Large ? "text-lg" : "text-xs",
+    )}
+  >
     <span>
-      {size === CardSize.Large ? `${getTimestampLabel(data.type)}:` : getTimestampLabel(data.type)}
+      {size === CardSize.Large
+        ? `${getTimestampLabel(data.type)}:`
+        : getTimestampLabel(data.type)}
     </span>
     <span>
       {/* {size === CardSize.Large ? data.timestamp : `${data.timestamp} - idx:${data.index}`} */}
@@ -137,31 +189,65 @@ const CardFooter: React.FC<{ data: CardData; size: CardSize }> = ({ data, size }
   </div>
 );
 
-const DocumentCardExtras = ({ authors, convo, size }: { authors: (AuthorInformation | undefined)[], size: CardSize, convo: ConvoInfo }) => (
-  <div className={clsx("flex flex-row space-x-2 justify-between", size === CardSize.Large ? "mt-6" : "mt-4")}>
+const DocumentCardExtras = ({
+  authors,
+  convo,
+  size,
+}: {
+  authors: (AuthorInformation | undefined)[];
+  size: CardSize;
+  convo: ConvoInfo;
+}) => (
+  <div
+    className={clsx(
+      "flex flex-row space-x-2 justify-between",
+      size === CardSize.Large ? "mt-6" : "mt-4",
+    )}
+  >
     <div>
-      <h3 className={clsx("mb-2",
-        size === CardSize.Large ? "text-2xl font-bold" : "text-sm font-semibold"
-      )}>
+      <h3
+        className={clsx(
+          "mb-2",
+          size === CardSize.Large
+            ? "text-2xl font-bold"
+            : "text-sm font-semibold",
+        )}
+      >
         Authors
       </h3>
-      <div className={clsx("flex flex-wrap",
-        size === CardSize.Large ? "gap-4" : "gap-2 bg-pink-100 p-2 rounded-sm"
-      )}>
-        {authors.map((author: AuthorInformation | undefined, idx) => author && (
-          <AuthorPill key={idx} author={author} />
-        ))}
+      <div
+        className={clsx(
+          "flex flex-wrap",
+          size === CardSize.Large
+            ? "gap-4"
+            : "gap-2 bg-pink-100 p-2 rounded-sm",
+        )}
+      >
+        {authors.map(
+          (author: AuthorInformation | undefined, idx) =>
+            author && <AuthorPill key={idx} author={author} />,
+        )}
       </div>
     </div>
     <div>
-      <h3 className={clsx("mb-2",
-        size === CardSize.Large ? "text-2xl font-bold" : "text-sm font-semibold"
-      )}>
+      <h3
+        className={clsx(
+          "mb-2",
+          size === CardSize.Large
+            ? "text-2xl font-bold"
+            : "text-sm font-semibold",
+        )}
+      >
         Docket
       </h3>
-      <div className={clsx("flex flex-wrap",
-        size === CardSize.Large ? "gap-4" : "gap-2 bg-green-100 p-2 rounded-sm"
-      )}>
+      <div
+        className={clsx(
+          "flex flex-wrap",
+          size === CardSize.Large
+            ? "gap-4"
+            : "gap-2 bg-green-100 p-2 rounded-sm",
+        )}
+      >
         <ConversationPill convo_info={convo} />
       </div>
     </div>
@@ -169,11 +255,17 @@ const DocumentCardExtras = ({ authors, convo, size }: { authors: (AuthorInformat
 );
 
 // Card variants
-const SmallCard: React.FC<{ data: CardData }> = ({ data }: { data: CardData }) => (
+const SmallCard: React.FC<{ data: CardData }> = ({
+  data,
+}: {
+  data: CardData;
+}) => (
   <div className="card bg-base-200 shadow p-2 mb-2">
     <div className="flex items-center space-x-2 text-xs">
       {getIcon(data.type)}
-      <span className="font-semibold truncate" title={data.name}>{data.name}</span>
+      <span className="font-semibold truncate" title={data.name}>
+        {data.name}
+      </span>
       <CardBadge type={data.type} size={CardSize.Small} />
       <CardDescription data={data} size={CardSize.Small} />
       <CardFooter data={data} size={CardSize.Small} />
@@ -181,25 +273,36 @@ const SmallCard: React.FC<{ data: CardData }> = ({ data }: { data: CardData }) =
   </div>
 );
 
-
-const MediumCard = ({ data, enableClickAnimation = false }: {
+const MediumCard = ({
+  data,
+  enableClickAnimation = false,
+}: {
   data: CardData;
   enableClickAnimation?: boolean;
 }) => (
   <div
-    className={`card bg-base-200 shadow-xl p-4 mb-4 transition-transform ${enableClickAnimation ? 'active:scale-95 cursor-pointer' : ''
-      }`}
+    className={`card bg-base-200 shadow-xl p-4 mb-4 transition-transform ${
+      enableClickAnimation ? "active:scale-95 cursor-pointer" : ""
+    }`}
   >
     <CardHeader data={data} size={CardSize.Medium} />
     <CardDescription data={data} size={CardSize.Medium} />
     <CardFooter data={data} size={CardSize.Medium} />
     {data.type === CardType.Document && data.authors && data.conversation && (
-      <DocumentCardExtras authors={data.authors} size={CardSize.Medium} convo={data.conversation} />
+      <DocumentCardExtras
+        authors={data.authors}
+        size={CardSize.Medium}
+        convo={data.conversation}
+      />
     )}
   </div>
 );
 
-const LargeCard: React.FC<{ data: CardData }> = ({ data }: { data: CardData }) => (
+const LargeCard: React.FC<{ data: CardData }> = ({
+  data,
+}: {
+  data: CardData;
+}) => (
   <div className="card bg-base-200 shadow-2xl p-8 mb-8 top-0 z-10 w-full max-w-full">
     <CardHeader data={data} size={CardSize.Large} />
     <div className="mb-6">
@@ -214,12 +317,14 @@ const LargeCard: React.FC<{ data: CardData }> = ({ data }: { data: CardData }) =
     )}
     <CardFooter data={data} size={CardSize.Large} />
     {data.type === CardType.Document && data.authors && data.conversation && (
-      <DocumentCardExtras authors={data.authors} size={CardSize.Large} convo={data.conversation} />
+      <DocumentCardExtras
+        authors={data.authors}
+        size={CardSize.Large}
+        convo={data.conversation}
+      />
     )}
   </div>
 );
-
-
 
 export { LargeCard, MediumCard, SmallCard };
 export type { CardData };

@@ -78,7 +78,7 @@ import (
 
 const (
 	defaultPort     = "4041"
-	standardTimeout = 20 * time.Second
+	standardTimeout = 120 * time.Second
 	adminTimeout    = 10 * time.Minute
 	shutdownTimeout = 30 * time.Second
 )

@@ -10,7 +10,7 @@ import "./PDFViewer.css";
 import LoadingSpinner from "@/components/style/misc/LoadingSpinner";
 import ErrorMessage from "@/components/style/messages/ErrorMessage";
 
-// import type { PDFDocumentProxy } from "pdfjs-dist";
+import type { PDFDocumentProxy } from "pdfjs-dist";
 
 // TODO : Inline at some point so we dont get screwed by a malicious cdn.
 pdfjs.GlobalWorkerOptions.workerSrc =
@@ -93,7 +93,7 @@ const PDFViewer = ({ file }: { file: string }) => {
     setRenderErr(err.message);
   };
   return (
-    <PDFViewerRaw file={fileData} setLoading={() => { }} onLoadError={onError} />
+    <PDFViewerRaw file={fileData} setLoading={() => {}} onLoadError={onError} />
   );
 };
 
@@ -118,12 +118,10 @@ function PDFViewerRaw({
     }
   }, []);
 
-  throw new Error("panicing now to avoid having to throw on a new dependancy, check PDFViewer.tsx for more details")
-  // useResizeObserver(containerRef, resizeObserverOptions, onResize);
+  // throw new Error("panicing now to avoid having to throw on a new dependancy, check PDFViewer.tsx for more details")
+  useResizeObserver(containerRef, resizeObserverOptions, onResize);
 
-  function onDocumentLoadSuccess({
-    numPages: nextNumPages,
-  }: any): void {
+  function onDocumentLoadSuccess({ numPages: nextNumPages }: any): void {
     setLoading(false);
     setNumPages(nextNumPages);
   }

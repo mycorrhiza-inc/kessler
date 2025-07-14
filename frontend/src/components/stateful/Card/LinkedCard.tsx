@@ -1,24 +1,36 @@
-
-'use client'
+"use client";
 import { CardData, CardType } from "@/lib/types/generic_card_types";
-import { useRouter } from 'next/navigation'
+import { useRouter } from "next/navigation";
 import React, { ReactNode } from "react";
-import { LargeCard, MediumCard, SmallCard, CardSize } from "@/components/style/cards/SizedCards";
+import {
+  LargeCard,
+  MediumCard,
+  SmallCard,
+  CardSize,
+} from "@/components/style/cards/SizedCards";
 
 const calculateHref = (objectId: string, objectType: CardType) => {
   // Cuts of any segmentation info added on at the end of the object_id
-  objectId = objectId.slice(0, 36)
+  objectId = objectId.slice(0, 36);
   switch (objectType) {
     case CardType.Author:
-      return `/orgs/${objectId}`
+      return `/orgs/${objectId}`;
     case CardType.Docket:
-      return `/docket/${objectId}`
+      return `/dockets/${objectId}`;
     case CardType.Document:
-      return `/filing/${objectId}`
+      return `/filing/${objectId}`;
   }
-}
+};
 
-const Card = ({ data, disableHref, size = CardSize.Medium }: { data: CardData, disableHref?: boolean, size?: CardSize }) => {
+const Card = ({
+  data,
+  disableHref,
+  size = CardSize.Medium,
+}: {
+  data: CardData;
+  disableHref?: boolean;
+  size?: CardSize;
+}) => {
   const router = useRouter();
   const rawCard: ReactNode = (() => {
     switch (size) {
@@ -31,26 +43,25 @@ const Card = ({ data, disableHref, size = CardSize.Medium }: { data: CardData, d
       default:
         return <MediumCard data={data} />;
     }
-  })()
+  })();
   if (disableHref) {
-    return rawCard
+    return rawCard;
   }
-  const href = calculateHref(data.object_uuid, data.type)
+  const href = calculateHref(data.object_uuid, data.type);
   // Handle click only if not clicking on an <a> tag inside the card
   const handleClick = (e: React.MouseEvent) => {
     // If the click target or any of its parents up to the div is an <a> tag, do nothing
-    let target = e.target as HTMLElement | null
+    let target = e.target as HTMLElement | null;
     while (target && target !== e.currentTarget) {
-      if (target.tagName === 'A') {
+      if (target.tagName === "A") {
         // Cancel router navigation
-        return
+        return;
       }
-      target = target.parentElement
+      target = target.parentElement;
     }
-    router.push(href)
-  }
+    router.push(href);
+  };
 
-  return <div onClick={handleClick}>{rawCard}</div>
-
+  return <div onClick={handleClick}>{rawCard}</div>;
 };
 export default Card;
