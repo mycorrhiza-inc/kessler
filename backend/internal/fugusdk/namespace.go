@@ -88,9 +88,6 @@ func (c *Client) IngestObjectsWithNamespaceFacets(ctx context.Context, objects [
 // SearchWithNamespaceFacets performs search with namespace facet filtering
 func (c *Client) SearchWithNamespaceFacets(ctx context.Context, query string, namespaceFacets []string, page, perPage int) (*SanitizedResponse, error) {
 	// Validate query
-	if err := c.sanitizer.ValidateQuery(query); err != nil {
-		return nil, fmt.Errorf("validation failed: %w", err)
-	}
 
 	searchQuery := FuguSearchQuery{
 		Query: query,

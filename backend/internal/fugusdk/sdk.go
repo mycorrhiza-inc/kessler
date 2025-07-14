@@ -119,17 +119,6 @@ func (s *InputSanitizer) ValidateNamespace(namespace string) error {
 	return nil
 }
 
-// ValidateQuery validates search query - simplified
-func (s *InputSanitizer) ValidateQuery(query string) error {
-	if len(query) == 0 {
-		return fmt.Errorf("query cannot be empty")
-	}
-	if len(query) > MaxQueryLength {
-		return fmt.Errorf("query too long: maximum %d characters", MaxQueryLength)
-	}
-	return nil
-}
-
 // ValidateMetadata validates metadata size and content
 func (s *InputSanitizer) ValidateMetadata(metadata map[string]interface{}) error {
 	if metadata == nil {
@@ -696,11 +685,6 @@ func (c *Client) DeleteObject(ctx context.Context, objectID string) (*SanitizedR
 
 // Search performs a POST search - enhanced to automatically use namespace endpoints when appropriate
 func (c *Client) Search(ctx context.Context, query FuguSearchQuery) (*SanitizedResponse, error) {
-	// Validate query
-	if err := c.sanitizer.ValidateQuery(query.Query); err != nil {
-		return nil, fmt.Errorf("validation failed: %w", err)
-	}
-
 	// Check if filters contain namespace facets
 	endpoint := "/search"
 	if query.Filters != nil {
@@ -732,11 +716,6 @@ func (c *Client) Search(ctx context.Context, query FuguSearchQuery) (*SanitizedR
 
 // SearchText performs a GET search with query parameter - matches Rust /search GET endpoint
 func (c *Client) SearchText(ctx context.Context, query string) (*SanitizedResponse, error) {
-	// Validate query
-	if err := c.sanitizer.ValidateQuery(query); err != nil {
-		return nil, fmt.Errorf("validation failed: %w", err)
-	}
-
 	params := url.Values{}
 	params.Add("q", query)
 
@@ -801,7 +780,7 @@ func (c *Client) GetNamespaceFilters(ctx context.Context, namespace string) (*Sa
 	return &result, err
 }
 
-// GetNamespaceFilters gets filters for a namespace - matches Rust /filters/{namespace} endpoint
+// GetNamespaceFilterData gets filters for a namespace - matches Rust /filters/{namespace} endpoint
 func (c *Client) GetNamespaceFilterData(ctx context.Context, namespace string) (*SanitizedResponse, error) {
 	// Validate namespace
 	if err := c.sanitizer.ValidateNamespace(namespace); err != nil {
