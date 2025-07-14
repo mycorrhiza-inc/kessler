@@ -31,9 +31,11 @@ export interface MinimalFilterDefinition {
 export default function HardcodedFileFilters({
   urlParams,
   baseUrl,
+  className = "",
 }: {
   urlParams: UrlQueryParams;
   baseUrl: string;
+  className?: string;
 }) {
   const fileFilterInfo: MinimalFilterDefinition[] = [
     {
@@ -71,6 +73,7 @@ export default function HardcodedFileFilters({
       urlQueryParams={urlParams}
       baseUrl={baseUrl}
       hardcodedFilterInfo={fileFilterInfo}
+      className={className}
     />
   );
 }
@@ -79,14 +82,17 @@ export function HardCodedFiltersFromInfo({
   urlQueryParams,
   baseUrl,
   hardcodedFilterInfo,
+  className = "",
 }: {
   urlQueryParams: UrlQueryParams;
   baseUrl: string;
   hardcodedFilterInfo: MinimalFilterDefinition[];
+  className?: string;
 }) {
   const router = useRouter();
   const initialFilters = urlQueryParams.filters || {};
   const [filterValues, setFilterValues] = useState<Record<string, string>>(initialFilters);
+  const [openDropdowns, setOpenDropdowns] = useState<Set<string>>(new Set());
 
   // Update filter and navigate
   const handleFilterChange = (id: string) => (value: string) => {
@@ -102,6 +108,19 @@ export function HardCodedFiltersFromInfo({
     router.push(endpoint);
   };
 
+  // Track which dropdowns are open to expand container accordingly
+  const handleDropdownStateChange = (id: string, isOpen: boolean) => {
+    setOpenDropdowns(prev => {
+      const newSet = new Set(prev);
+      if (isOpen) {
+        newSet.add(id);
+      } else {
+        newSet.delete(id);
+      }
+      return newSet;
+    });
+  };
+
   // Helper to map filter IDs to static autocomplete options
   const getStaticOptions = (id: string) => {
     switch (id) {
@@ -114,8 +133,18 @@ export function HardCodedFiltersFromInfo({
     }
   };
 
+  // Calculate additional height needed for open dropdowns
+  const dropdownHeight = 300; // Standard dropdown height
+  const additionalHeight = openDropdowns.size * dropdownHeight;
+  const hasOpenDropdowns = openDropdowns.size > 0;
+
   return (
-    <div className="filter-container flex flex-col space-y-24">
+    <div
+      className={`filter-container flex flex-col space-y-4 transition-all duration-300 ease-in-out overflow-visible ${className}`}
+      style={{
+        paddingBottom: hasOpenDropdowns ? `${additionalHeight}px` : '0px'
+      }}
+    >
       {hardcodedFilterInfo.map((def) => {
         const value = filterValues[def.id] || "";
         const options = getStaticOptions(def.id);
@@ -126,22 +155,29 @@ export function HardCodedFiltersFromInfo({
           placeholder: def.placeholder || "",
           options,
         };
-        return def.filterType === FilterType.Multi ? (
-          <DynamicMultiSelect
-            className="z-index-1"
-            key={def.id}
-            fieldDefinition={fieldDef}
-            value={value}
-            onChange={handleFilterChange(def.id)}
-          />
-        ) : (
-          <DynamicSingleSelect
-            className="z-index-1"
-            key={def.id}
-            fieldDefinition={fieldDef}
-            value={value}
-            onChange={handleFilterChange(def.id)}
-          />
+
+        const isOpen = openDropdowns.has(def.id);
+
+        return (
+          <div key={def.id} className="flex-shrink-0 relative">
+            {def.filterType === FilterType.Multi ? (
+              <DynamicMultiSelect
+                className=""
+                fieldDefinition={fieldDef}
+                value={value}
+                onChange={handleFilterChange(def.id)}
+                onDropdownStateChange={(open) => handleDropdownStateChange(def.id, open)}
+              />
+            ) : (
+              <DynamicSingleSelect
+                className=""
+                fieldDefinition={fieldDef}
+                value={value}
+                onChange={handleFilterChange(def.id)}
+                onDropdownStateChange={(open) => handleDropdownStateChange(def.id, open)}
+              />
+            )}
+          </div>
         );
       })}
     </div>

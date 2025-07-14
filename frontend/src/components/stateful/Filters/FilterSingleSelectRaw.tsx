@@ -56,14 +56,14 @@ export function FilterSingleSelectRaw({
 }: FilterSingleSelectRawProps) {
   return (
     <div
-      className={`relative z-50 singleselect-container ${className} ${!containerStyle ? 'w-full' : ''}`}
+      className={`relative singleselect-container ${className} ${!containerStyle ? 'w-full' : ''}`}
       style={containerStyle}
     >
       <button
         type="button"
         className={
           `w-full min-h-[3rem] p-3 text-left border-2 rounded-lg transition-all duration-200 flex items-center justify-between
-          ${isOpen ? 'border-primary-500 ring-2 ring-primary-200' : 'border-gray-300'}
+          ${isOpen ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-300'}
           ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-base-100 hover:border-gray-400 cursor-pointer'}
           ${selectedOption ? 'bg-base-100' : ''}`
         }
@@ -89,7 +89,7 @@ export function FilterSingleSelectRaw({
                 removable={allowClear}
                 onRemove={onClearSelection}
                 size="xs"
-                className="m-0 mt-0 mb-0 flex-shrink-0 ml-2"
+                className="m-0 mt-0 mb-0 flex-shrink-0"
               />
             </div>
           )}
@@ -105,8 +105,8 @@ export function FilterSingleSelectRaw({
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border-2 border-gray-200 rounded-lg shadow-lg max-h-80 overflow-hidden">
-          <div className="p-3 border-b border-gray-200 bg-gray-50">
+        <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-base-100 border-2 border-gray-200 rounded-lg shadow-lg max-h-80 overflow-hidden">
+          <div className="p-3 border-b border-gray-200 bg-base-100 flex-shrink-0">
             <div className="relative">
               <input
                 type="text"
@@ -125,15 +125,23 @@ export function FilterSingleSelectRaw({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               {searchTerm && (
-                <button
-                  type="button"
+                <span
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
                   onClick={onClearSearch}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      onClearSearch();
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  aria-label="Clear search"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
-                </button>
+                </span>
               )}
             </div>
           </div>
@@ -144,7 +152,7 @@ export function FilterSingleSelectRaw({
                 <button
                   type="button"
                   onClick={onClearSelection}
-                  className="w-full text-left p-3 hover:bg-gray-100 transition-colors text-gray-600 italic"
+                  className="w-full text-left p-3 hover:bg-base-100 transition-colors text-gray-600 italic"
                 >
                   <div className="flex items-center gap-3">
                     <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -172,8 +180,8 @@ export function FilterSingleSelectRaw({
                       disabled={option.disabled}
                       className={
                         `w-full text-left p-3 rounded-md transition-colors flex items-center justify-between
-                        ${option.disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100 cursor-pointer'}
-                        ${isSelected ? 'bg-blue-50 border-l-4 border-blue-500' : ''}`
+                        ${option.disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-base-100 cursor-pointer'}
+                        ${isSelected ? 'bg-base-200 border-l-4 border-blue-500' : 'bg-base-100'}`
                       }
                     >
                       <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -197,18 +205,26 @@ export function FilterSingleSelectRaw({
             )}
           </div>
 
-          <div className="p-3 border-t border-gray-200 bg-gray-50 text-xs text-gray-600">
+          <div className="p-3 border-t border-gray-200 bg-base-100 text-xs text-gray-600 flex-shrink-0">
             {selectedOption ? (
               <div className="flex justify-between items-center">
                 <span>Selected: {selectedOption.label}</span>
                 {allowClear && (
-                  <button
-                    type="button"
+                  <span
+                    className="text-blue-600 hover:text-blue-800 underline font-medium cursor-pointer"
                     onClick={onClearSelection}
-                    className="text-primary-600 hover:text-primary-800 underline font-medium"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onClearSelection();
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    aria-label="Clear selection"
                   >
                     Clear selection
-                  </button>
+                  </span>
                 )}
               </div>
             ) : (

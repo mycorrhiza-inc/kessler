@@ -19,6 +19,7 @@ export interface DynamicSingleSelectProps {
   dynamicWidth?: boolean;
   minWidth?: string;
   maxWidth?: string;
+  onDropdownStateChange?: (isOpen: boolean) => void; // New callback for parent to track state
 }
 
 export function DynamicSingleSelect({
@@ -34,6 +35,7 @@ export function DynamicSingleSelect({
   dynamicWidth = false,
   minWidth = '200px',
   maxWidth = '150px',
+  onDropdownStateChange,
 }: DynamicSingleSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -41,7 +43,7 @@ export function DynamicSingleSelect({
 
   useEffect(() => {
     if (!value && defaultValue &&
-        fieldDefinition.options?.some(opt => opt.value === defaultValue)
+      fieldDefinition.options?.some(opt => opt.value === defaultValue)
     ) {
       onChange(defaultValue);
     }
@@ -50,7 +52,8 @@ export function DynamicSingleSelect({
   const handleSelectionChange = useCallback((optValue: string) => {
     onChange(optValue);
     setIsOpen(false);
-  }, [onChange]);
+    onDropdownStateChange?.(false);
+  }, [onChange, onDropdownStateChange]);
 
   const clearSelection = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -92,10 +95,19 @@ export function DynamicSingleSelect({
 
   const handleDropdownToggle = useCallback(() => {
     if (!disabled) {
-      setIsOpen(prev => !prev);
-      if (!isOpen) onFocus?.(); else onBlur?.();
+      const newIsOpen = !isOpen;
+      setIsOpen(newIsOpen);
+
+      // Notify parent of state change
+      onDropdownStateChange?.(newIsOpen);
+
+      if (newIsOpen) {
+        onFocus?.();
+      } else {
+        onBlur?.();
+      }
     }
-  }, [disabled, isOpen, onFocus, onBlur]);
+  }, [disabled, isOpen, onFocus, onBlur, onDropdownStateChange]);
 
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -110,12 +122,13 @@ export function DynamicSingleSelect({
       const target = event.target as Element;
       if (isOpen && !target.closest('.singleselect-container')) {
         setIsOpen(false);
+        onDropdownStateChange?.(false);
         onBlur?.();
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isOpen, onBlur]);
+  }, [isOpen, onBlur, onDropdownStateChange]);
 
   const containerStyle = dynamicWidth
     ? { width: componentWidth, minWidth, maxWidth, transition: 'width 0.2s ease-in-out' }
