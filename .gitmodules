@@ -1,4 +1,4 @@
 [submodule "fugu"]
 	path = fugu
 	url = https://github.com/mycorrhiza-inc/fugu
-	branch = get-filters-working-megapatch
+	branch = main
