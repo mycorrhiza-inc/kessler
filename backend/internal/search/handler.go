@@ -139,11 +139,12 @@ func (h *SearchServiceHandler) Search(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if searchReq.Query == "" {
-		logger.Error(ctx, "empty search query provided")
-		http.Error(w, "Query cannot be empty", http.StatusBadRequest)
-		return
-	}
+	// // EMPTY QUERIES ARE GOOD!!
+	// if searchReq.Query == "" {
+	// 	logger.Error(ctx, "empty search query provided")
+	// 	http.Error(w, "Query cannot be empty", http.StatusBadRequest)
+	// 	return
+	// }
 
 	// Set defaults for pagination
 	if searchReq.Page < 0 {
@@ -195,11 +196,12 @@ func (h *SearchServiceHandler) SearchTextGet(w http.ResponseWriter, r *http.Requ
 
 	// Extract query parameter
 	query := r.URL.Query().Get("q")
-	if query == "" {
-		logger.Error(ctx, "empty search query provided")
-		http.Error(w, "Query parameter 'q' is required", http.StatusBadRequest)
-		return
-	}
+	// Empty queries should be allowed since they seem to work with fugu right now
+	// if query == "" {
+	// 	logger.Error(ctx, "empty search query provided")
+	// 	http.Error(w, "Query parameter 'q' is required", http.StatusBadRequest)
+	// 	return
+	// }
 
 	// Extract namespace
 	namespace := r.URL.Query().Get("namespace")
@@ -208,6 +210,7 @@ func (h *SearchServiceHandler) SearchTextGet(w http.ResponseWriter, r *http.Requ
 	pagination := h.extractPagination(r)
 
 	// Extract filters from query parameters
+	logger.Info(ctx, "extracting filters from query params")
 	filters := h.extractFilters(r)
 
 	logger.Info(ctx, "processing GET search request",
@@ -390,8 +393,9 @@ func (h *SearchServiceHandler) extractFilters(r *http.Request) map[string]string
 	for key, values := range r.URL.Query() {
 		if len(values) > 0 && values[0] != "" {
 			// Skip pagination and query parameters
-			if key != "page" && key != "limit" && key != "per_page" && key != "q" && key != "namespace" {
-				filters[key] = values[0]
+			if strippedKey, ok := strings.CutPrefix(key, "f:"); ok {
+				println("Found filter key: %v", strippedKey)
+				filters[strippedKey] = values[0]
 			}
 		}
 	}
