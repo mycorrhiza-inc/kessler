@@ -152,11 +152,11 @@ func (s *SearchService) ProcessSearch(ctx context.Context, query string, metadat
 	backendFilters, err := convertFiltersToBackend(ctx, rawFilters, namespace)
 	if err != nil {
 		logger.Warn(ctx, "failed to convert filters, proceeding with fallback", zap.Error(err))
-		backendFilters = s.fallbackFilterConversion(rawFilters, namespace)
+		backendFilters = fallbackFilterConversion(rawFilters, namespace)
 	}
 
 	// Create fugu search query using SDK types
-	fuguQuery := s.createFuguSearchQuery(query, backendFilters, pagination)
+	fuguQuery := createFuguSearchQuery(query, backendFilters, pagination)
 
 	// Execute search on fugu with timeout
 	searchCtx, searchCancel := context.WithTimeout(ctx, 15*time.Second)
@@ -185,7 +185,10 @@ func (s *SearchService) ProcessSearch(ctx context.Context, query string, metadat
 }
 
 var metadataFilterRenameDict map[string]string = map[string]string{
-	"convo_id": "conversation_id",
+	"convo_id":   "conversation_id",
+	"author_id":  "author_ids",
+	"authors_id": "author_ids",
+	"org_id":     "author_ids",
 }
 
 // convertMetadataFiltersToRaw takes a map of metadata filters and returns a new map
@@ -241,7 +244,7 @@ func convertFiltersToBackend(ctx context.Context, filters map[string]string, nam
 }
 
 // fallbackFilterConversion provides simple filter conversion when filter service is unavailable
-func (s *SearchService) fallbackFilterConversion(filters map[string]string, namespace string) []string {
+func fallbackFilterConversion(filters map[string]string, namespace string) []string {
 	var filterStrings []string
 
 	// Add namespace filter if specified
@@ -262,7 +265,7 @@ func (s *SearchService) fallbackFilterConversion(filters map[string]string, name
 }
 
 // createFuguSearchQuery creates a Fugu search query from the request parameters
-func (s *SearchService) createFuguSearchQuery(query string, filters []string, pagination PaginationParams) fugusdk.FuguSearchQuery {
+func createFuguSearchQuery(query string, filters []string, pagination PaginationParams) fugusdk.FuguSearchQuery {
 	// Convert our internal pagination to SDK pagination
 	var fuguPagination *fugusdk.Pagination
 	if pagination.Page > 0 || pagination.Limit > 0 {
