@@ -102,7 +102,7 @@ services:
     env_file:
       - ./config/global.env
     volumes:
-      - ./data/fugu_db:/app/fugu_db
+      - ./volumes/fugu_db:/app/fugu_db
     working_dir: /app
     expose:
       - 3301
