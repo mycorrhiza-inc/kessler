@@ -123,7 +123,7 @@ func NewSearchService(fuguServerURL string, filterService *filter.Service, db db
 }
 
 // ProcessSearch processes a search request with namespace support
-func (s *SearchService) ProcessSearch(ctx context.Context, query string, filters map[string]string, pagination PaginationParams, namespace string) (*SearchResponse, error) {
+func (s *SearchService) ProcessSearch(ctx context.Context, query string, metadataFilters map[string]string, pagination PaginationParams, namespace string) (*SearchResponse, error) {
 	ctx, span := serviceTracer.Start(ctx, "search-service:process-search")
 	defer span.End()
 
@@ -146,15 +146,17 @@ func (s *SearchService) ProcessSearch(ctx context.Context, query string, filters
 
 	logger.Info(ctx, "fugu client created successfully")
 
+	rawFilters := convertMetadataFiltersToRaw(metadataFilters)
+
 	// Convert filters to backend format with namespace
-	backendFilters, err := s.convertFiltersToBackend(ctx, filters, namespace)
+	backendFilters, err := convertFiltersToBackend(ctx, rawFilters, namespace)
 	if err != nil {
 		logger.Warn(ctx, "failed to convert filters, proceeding with fallback", zap.Error(err))
-		backendFilters = s.fallbackFilterConversion(filters, namespace)
+		backendFilters = fallbackFilterConversion(rawFilters, namespace)
 	}
 
 	// Create fugu search query using SDK types
-	fuguQuery := s.createFuguSearchQuery(query, backendFilters, pagination)
+	fuguQuery := createFuguSearchQuery(query, backendFilters, pagination)
 
 	// Execute search on fugu with timeout
 	searchCtx, searchCancel := context.WithTimeout(ctx, 15*time.Second)
@@ -182,8 +184,29 @@ func (s *SearchService) ProcessSearch(ctx context.Context, query string, filters
 	return frontendResponse, nil
 }
 
+var metadataFilterRenameDict map[string]string = map[string]string{
+	"convo_id":   "conversation_id",
+	"author_id":  "author_ids",
+	"authors_id": "author_ids",
+	"org_id":     "author_ids",
+}
+
+// convertMetadataFiltersToRaw takes a map of metadata filters and returns a new map
+// with the same values but with "metadata/" prepended to each key.
+func convertMetadataFiltersToRaw(metadataFilters map[string]string) map[string]string {
+	rawMetadataFilters := make(map[string]string)
+	for key, value := range metadataFilters {
+		if renamedKey, ok := metadataFilterRenameDict[key]; ok {
+			rawMetadataFilters["metadata/"+renamedKey] = value
+		} else {
+			rawMetadataFilters["metadata/"+key] = value
+		}
+	}
+	return rawMetadataFilters
+}
+
 // convertFiltersToBackend converts frontend filters to backend facet format
-func (s *SearchService) convertFiltersToBackend(ctx context.Context, filters map[string]string, namespace string) ([]string, error) {
+func convertFiltersToBackend(ctx context.Context, filters map[string]string, namespace string) ([]string, error) {
 	ctx, span := serviceTracer.Start(ctx, "search-service:convert-filters-to-backend")
 	defer span.End()
 
@@ -221,7 +244,7 @@ func (s *SearchService) convertFiltersToBackend(ctx context.Context, filters map
 }
 
 // fallbackFilterConversion provides simple filter conversion when filter service is unavailable
-func (s *SearchService) fallbackFilterConversion(filters map[string]string, namespace string) []string {
+func fallbackFilterConversion(filters map[string]string, namespace string) []string {
 	var filterStrings []string
 
 	// Add namespace filter if specified
@@ -242,7 +265,7 @@ func (s *SearchService) fallbackFilterConversion(filters map[string]string, name
 }
 
 // createFuguSearchQuery creates a Fugu search query from the request parameters
-func (s *SearchService) createFuguSearchQuery(query string, filters []string, pagination PaginationParams) fugusdk.FuguSearchQuery {
+func createFuguSearchQuery(query string, filters []string, pagination PaginationParams) fugusdk.FuguSearchQuery {
 	// Convert our internal pagination to SDK pagination
 	var fuguPagination *fugusdk.Pagination
 	if pagination.Page > 0 || pagination.Limit > 0 {
