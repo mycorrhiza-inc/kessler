@@ -13,6 +13,7 @@ use common::{
 };
 
 mod common;
+mod tasks;
 #[tokio::main]
 async fn main() -> anyhow::Result<Infallible> {
     // initialise our subscriber

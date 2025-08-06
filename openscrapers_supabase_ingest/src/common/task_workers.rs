@@ -31,11 +31,14 @@ struct PriorityTaskObject {
 }
 impl PriorityTaskObject {
     pub fn new(obj: Box<dyn ExecuteUserTask>, priority: i32) -> Self {
+        Self::new_with_id(obj, priority, random())
+    }
+    pub fn new_with_id(obj: Box<dyn ExecuteUserTask>, priority: i32, id: u64) -> Self {
         PriorityTaskObject {
             priority,
             task_object: obj,
             timestamp: Instant::now(),
-            task_id: random(),
+            task_id: id,
         }
     }
     pub fn get_task_type(&self) -> TypeId {
@@ -88,13 +91,7 @@ static TASK_STATUS_DATA: LazyLock<RwLock<HashMap<u64, TaskStatus>>> =
 pub async fn add_task_to_queue(obj: Box<dyn ExecuteUserTask>, priority: i32) -> TaskStatus {
     let task_object = PriorityTaskObject::new(obj, priority);
     let task_id = task_object.task_id;
-    let task_type_id = task_object.get_task_type();
-    let task_status = TaskStatus {
-        task_id,
-        task_type_id,
-        status: TaskState::Waiting,
-        return_value: None,
-    };
+    let task_status = TaskStatus::new(task_id, &*(task_object.task_object));
     let mut task_status_writelock = (*TASK_STATUS_DATA).write().await;
     task_status_writelock.insert(task_id, task_status.clone());
     drop(task_status_writelock);
@@ -142,10 +139,16 @@ pub async fn start_workers() -> Infallible {
                 tokio::spawn(async move {
                     let task_id = res.task_id;
                     let obj = res.task_object;
-                    let task_completed_status = obj.execute_task(task_id).await;
+                    let task_status_readlock = (*TASK_STATUS_DATA).read().await;
+                    let mut task_obj = task_status_readlock
+                        .get(&task_id)
+                        .cloned()
+                        .unwrap_or_else(|| TaskStatus::new(task_id, &*obj));
+                    drop(task_status_readlock);
+                    obj.execute_task_raw(&mut task_obj).await;
 
                     let mut task_status_writelock = (*TASK_STATUS_DATA).write().await;
-                    task_status_writelock.insert(task_id, task_completed_status);
+                    task_status_writelock.insert(task_id, task_obj);
                     drop(task_status_writelock);
                     drop(permit);
                 });
@@ -159,29 +162,49 @@ pub fn spawn_worker_loop() {
 }
 
 #[async_trait]
-pub trait ExecuteUserTask: Send {
-    async fn execute_task(self: Box<Self>, task_id: u64) -> TaskStatus;
+pub trait ExecuteUserTask: 'static + Send {
+    async fn execute_task(self: Box<Self>) -> Result<Value, Value>;
+    async fn execute_task_raw(self: Box<Self>, status: &mut TaskStatus) {
+        let return_result = self.execute_task().await;
+        let status_val = match return_result {
+            Ok(_) => TaskState::Successful,
+            Err(_) => TaskState::Errored,
+        };
+        status.status = status_val;
+        status.return_value = Some(return_result);
+    }
+    fn get_task_label(&self) -> &'static str;
 }
 
 #[derive(Clone, Copy, Serialize, Deserialize, JsonSchema, Debug, PartialEq, Eq)]
-enum TaskState {
+pub enum TaskState {
     Waiting,
     Processing,
     Successful,
     Errored,
 }
 impl TaskState {
-    fn is_completed(&self) -> bool {
+    pub fn is_completed(&self) -> bool {
         (*self == Self::Successful) || (*self == Self::Errored)
     }
 }
 
 #[derive(Clone, Debug)]
 pub struct TaskStatus {
-    task_id: u64,
-    status: TaskState,
-    task_type_id: TypeId,
-    return_value: Option<Result<Value, Value>>,
+    pub task_id: u64,
+    pub status: TaskState,
+    pub task_type_label: &'static str,
+    pub return_value: Option<Result<Value, Value>>,
+}
+impl TaskStatus {
+    fn new(task_id: u64, obj: &dyn ExecuteUserTask) -> Self {
+        return TaskStatus {
+            task_id,
+            task_type_label: obj.get_task_label(),
+            status: TaskState::Waiting,
+            return_value: None,
+        };
+    }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
@@ -189,7 +212,7 @@ pub struct TaskStatusDisplay {
     task_id: u64,
     status: TaskState,
     completed: bool,
-    task_type_id: String,
+    task_type_label: &'static str,
     check_url_leaf: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     sucess_info: Option<Value>,
@@ -211,7 +234,7 @@ impl From<TaskStatus> for TaskStatusDisplay {
             status: value.status,
             check_url_leaf: url_leaf,
             completed: value.status.is_completed(),
-            task_type_id: typeid_debug(value.task_type_id),
+            task_type_label: value.task_type_label,
             sucess_info: success_val,
             error_info: err_val,
         }
