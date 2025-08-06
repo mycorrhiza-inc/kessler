@@ -3,7 +3,7 @@ use axum_tracing_opentelemetry::middleware::{OtelAxumLayer, OtelInResponseLayer}
 use init_tracing_opentelemetry::tracing_subscriber_ext::init_subscribers_and_loglevel;
 use tracing::info;
 
-pub fn initialize_tracing_and_wrap_extensions(
+pub fn initialize_tracing_and_wrap_router(
     make_api: impl FnOnce() -> ApiRouter,
 ) -> anyhow::Result<ApiRouter> {
     let _ = init_subscribers_and_loglevel("")?;

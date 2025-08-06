@@ -4,14 +4,24 @@ use std::{
     collections::{BinaryHeap, HashMap},
     convert::Infallible,
     sync::LazyLock,
-    time::Instant,
+    time::{Duration, Instant},
 };
 
+use aide::{
+    axum::{ApiRouter, IntoApiResponse, routing::get_with},
+    transform::TransformOperation,
+};
 use async_trait::async_trait;
+use axum::{Json, extract::Path, response::IntoResponse};
 use rand::random;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use tokio::sync::{Mutex, RwLock, Semaphore};
+use serde_json::Value;
+use tokio::{
+    sync::{Mutex, RwLock, Semaphore},
+    time::sleep,
+};
+use tracing::{Instrument, info};
 
 struct PriorityTaskObject {
     priority: i32,
@@ -68,8 +78,6 @@ impl Ord for PriorityTaskObject {
             .then_with(|| self.task_id.cmp(&other.task_id))
     }
 }
-// Could you derive Ord on this object, ranking higher priorities higher, and on ties rank the
-// lower timestamp higher.
 
 static TASK_PRIORITY_QUEUE: Mutex<BinaryHeap<PriorityTaskObject>> =
     Mutex::const_new(BinaryHeap::new());
@@ -77,25 +85,24 @@ static TASK_PRIORITY_QUEUE: Mutex<BinaryHeap<PriorityTaskObject>> =
 static TASK_STATUS_DATA: LazyLock<RwLock<HashMap<u64, TaskStatus>>> =
     LazyLock::new(|| RwLock::new(HashMap::new()));
 
-async fn add_task_to_queue(obj: Box<dyn ExecuteUserTask>, priority: i32) {
+pub async fn add_task_to_queue(obj: Box<dyn ExecuteUserTask>, priority: i32) -> TaskStatus {
     let task_object = PriorityTaskObject::new(obj, priority);
     let task_id = task_object.task_id;
-    let task_type_str = task_object.get_task_type_string();
+    let task_type_id = task_object.get_task_type();
     let task_status = TaskStatus {
         task_id,
-        task_type_str,
-        completed: false,
-        state: TaskState::Waiting,
-        sucess_value: None,
-        error_value: None,
+        task_type_id,
+        status: TaskState::Waiting,
+        return_value: None,
     };
     let mut task_status_writelock = (*TASK_STATUS_DATA).write().await;
-    task_status_writelock.insert(task_id, task_status);
+    task_status_writelock.insert(task_id, task_status.clone());
     drop(task_status_writelock);
 
     let mut queue_guard = TASK_PRIORITY_QUEUE.lock().await;
     queue_guard.push(task_object);
     drop(queue_guard);
+    task_status
 }
 
 async fn pop_task_from_queue() -> Option<PriorityTaskObject> {
@@ -108,7 +115,7 @@ async fn pop_task_from_queue() -> Option<PriorityTaskObject> {
             let mut task_status_writelock = (*TASK_STATUS_DATA).write().await;
             let optref = task_status_writelock.get_mut(&val.task_id);
             if let Some(mutref) = optref {
-                mutref.state = TaskState::Processing
+                mutref.status = TaskState::Processing
             };
             Some(val)
         }
@@ -118,11 +125,19 @@ async fn pop_task_from_queue() -> Option<PriorityTaskObject> {
 const SIMULTANEOUS_USER_TASKS: usize = 20;
 static USER_TASK_SEMAPHORE: Semaphore = Semaphore::const_new(SIMULTANEOUS_USER_TASKS);
 
-async fn start_workers() -> Infallible {
+pub async fn start_workers() -> Infallible {
+    let mut trips_since_last_task: u64 = 0;
     loop {
         let permit = USER_TASK_SEMAPHORE.acquire().await.unwrap();
         match pop_task_from_queue().await {
-            None => drop(permit),
+            None => {
+                trips_since_last_task += 1;
+                if trips_since_last_task.is_power_of_two() {
+                    info!(seconds=%trips_since_last_task,"Have not gotten a new task dispite waiting at least n seconds.")
+                }
+                drop(permit);
+                sleep(Duration::from_secs(1)).await
+            }
             Some(res) => {
                 tokio::spawn(async move {
                     let task_id = res.task_id;
@@ -139,25 +154,105 @@ async fn start_workers() -> Infallible {
     }
 }
 
-#[derive(Clone, Copy, Serialize, Deserialize, JsonSchema, Debug)]
+pub fn spawn_worker_loop() {
+    tokio::spawn(start_workers().in_current_span());
+}
+
+#[async_trait]
+pub trait ExecuteUserTask: Send {
+    async fn execute_task(self: Box<Self>, task_id: u64) -> TaskStatus;
+}
+
+#[derive(Clone, Copy, Serialize, Deserialize, JsonSchema, Debug, PartialEq, Eq)]
 enum TaskState {
     Waiting,
     Processing,
     Successful,
     Errored,
 }
-
-#[derive(Clone, Serialize, Deserialize, JsonSchema, Debug)]
-pub struct TaskStatus {
-    task_id: u64,
-    completed: bool,
-    state: TaskState,
-    task_type_str: String,
-    sucess_value: Option<serde_json::Value>,
-    error_value: Option<serde_json::Value>,
+impl TaskState {
+    fn is_completed(&self) -> bool {
+        (*self == Self::Successful) || (*self == Self::Errored)
+    }
 }
 
-#[async_trait]
-pub trait ExecuteUserTask: Send {
-    async fn execute_task(self: Box<Self>, task_id: u64) -> TaskStatus;
+#[derive(Clone, Debug)]
+pub struct TaskStatus {
+    task_id: u64,
+    status: TaskState,
+    task_type_id: TypeId,
+    return_value: Option<Result<Value, Value>>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
+pub struct TaskStatusDisplay {
+    task_id: u64,
+    status: TaskState,
+    completed: bool,
+    task_type_id: String,
+    check_url_leaf: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    sucess_info: Option<Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    error_info: Option<Value>,
+}
+
+impl From<TaskStatus> for TaskStatusDisplay {
+    fn from(value: TaskStatus) -> Self {
+        let (success_val, err_val) = match value.return_value {
+            None => (None, None),
+            Some(Ok(success)) => (Some(success), None),
+            Some(Err(error)) => (None, Some(error)),
+        };
+        let url_leaf = format!("{CHECK_TASK_URL_LEAF}/{}", value.task_id);
+
+        TaskStatusDisplay {
+            task_id: value.task_id,
+            status: value.status,
+            check_url_leaf: url_leaf,
+            completed: value.status.is_completed(),
+            task_type_id: typeid_debug(value.task_type_id),
+            sucess_info: success_val,
+            error_info: err_val,
+        }
+    }
+}
+
+const CHECK_TASK_URL_LEAF: &str = "/tasks/check_status";
+
+#[derive(Clone, Copy, Serialize, Deserialize, JsonSchema)]
+pub struct TaskIDNumber {
+    task_id: u64,
+}
+pub async fn check_task_status(
+    Path(TaskIDNumber { task_id }): Path<TaskIDNumber>,
+) -> impl IntoApiResponse {
+    let read_guard = (*TASK_STATUS_DATA).read().await;
+    let status = read_guard.get(&task_id).cloned();
+    drop(read_guard);
+    match status {
+        None => (axum::http::StatusCode::NOT_FOUND, format!("Could not find task with task_id: {task_id}")).into_response()
+, // Return a 404 error with an error string "Could not find task with that id"
+        Some(status) => {
+            let display_status: TaskStatusDisplay = status.into();
+            // Return a 200 code with the status that wants to be returned.
+(axum::http::StatusCode::OK, Json(display_status)).into_response()
+        }
+    }
+}
+
+pub fn check_task_status_docs(op: TransformOperation) -> TransformOperation {
+    op.description("Fetch attachment data from S3.")
+        .response::<200, Json<TaskStatusDisplay>>()
+        .response_with::<404, String, _>(|res| {
+            res.description("Could not find task with that task_id")
+        })
+}
+
+pub fn define_generic_task_routes(router: ApiRouter) -> ApiRouter {
+    let check_path = CHECK_TASK_URL_LEAF.to_string() + "/{task_id}";
+    router.api_route(
+        &check_path,
+        get_with(check_task_status, check_task_status_docs),
+    )
 }
