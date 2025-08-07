@@ -1,9 +1,7 @@
-use std::any::TypeId;
-
 use async_trait::async_trait;
 use serde_json::Value;
 
-use crate::common::task_workers::{ExecuteUserTask, TaskState, TaskStatus};
+use crate::common::task_workers::ExecuteUserTask;
 
 struct NyPucIngestFull {}
 
