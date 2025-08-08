@@ -25,6 +25,32 @@ impl ExecuteUserTask for NyPucIngestFull {
 pub async fn get_all_ny_puc_data() -> anyhow::Result<()> {
     // This ny_puc ingest function will get a bunch of lists from the openscrapers api
     // Dont implement this for now
+    // if you run this curl command
+    // curl -X 'GET' \
+    // 'http://localhost:33399/public/caselist/ny/ny_puc/all' \
+    // -H 'accept: application/json'
+    // you get a response like this
+    // [
+    // "10-00036",
+    // "10-00320",
+    // "10-00529",
+    // "10-01102",
+    // "10-02623",
+    // "10-M-0082",
+    // "10-M-0186",
+    // "10-M-0218",
+    // "10-M-0365",
+    // "10-T-0019",
+    // "10-T-0453",
+    // "11-00714",
+    // "11-00751",]
+    // thats a bunch of govids for the dockets,
+    // then if you hit this endpoint:
+    // curl -X 'GET' \
+    // 'http://localhost:33399/public/cases/ny/ny_puc/10-00036' \
+    // -H 'accept: application/json'
+    // You get a GenericCaseLegacy type. Convert that to a GenericCase, and run the ingest on it.
+    // Do this for all case results, and maybe add some async so its faster.
     Ok(())
 }
 
