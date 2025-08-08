@@ -52,7 +52,7 @@ pub struct GenericAttachment {
 
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Clone, Default)]
-pub struct GenericFiling {
+pub struct GenericFilingLegacy {
     pub name: String,
     pub filed_date: DateTime<Utc>,
     pub party_name: String,
@@ -60,6 +60,34 @@ pub struct GenericFiling {
     pub description: String,
     pub attachments: Vec<GenericAttachment>,
     pub extra_metadata: HashMap<String, serde_json::Value>,
+}
+
+#[skip_serializing_none]
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Clone, Default)]
+pub struct GenericFiling {
+    pub name: String,
+    pub filed_date: DateTime<Utc>,
+    pub organization_authors: Vec<String>,
+    pub individual_authors: Vec<String>,
+    pub filing_type: String,
+    pub description: String,
+    pub attachments: Vec<GenericAttachment>,
+    pub extra_metadata: HashMap<String, serde_json::Value>,
+}
+
+impl From<GenericFilingLegacy> for GenericFiling {
+    fn from(value: GenericFilingLegacy) -> Self {
+        GenericFiling {
+            name: value.name,
+            filed_date: value.filed_date,
+            organization_authors: vec![value.party_name],
+            individual_authors: vec![],
+            filing_type: value.filing_type,
+            description: value.description,
+            attachments: value.attachments,
+            extra_metadata: value.extra_metadata,
+        }
+    }
 }
 
 #[skip_serializing_none]
