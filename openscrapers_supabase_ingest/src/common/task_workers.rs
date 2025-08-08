@@ -199,12 +199,12 @@ pub struct TaskStatus {
 }
 impl TaskStatus {
     fn new(task_id: u64, obj: &dyn ExecuteUserTask) -> Self {
-        return TaskStatus {
+        TaskStatus {
             task_id,
             task_type_label: obj.get_task_label(),
             status: TaskState::Waiting,
             return_value: None,
-        };
+        }
     }
 }
 

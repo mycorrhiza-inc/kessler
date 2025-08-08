@@ -107,6 +107,42 @@ pub struct GenericCase {
     pub extra_metadata: HashMap<String, serde_json::Value>,
     pub indexed_at: DateTime<Utc>,
 }
+#[skip_serializing_none]
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Clone, Default)]
+pub struct GenericCaseLegacy {
+    pub case_number: String,
+    pub case_name: String,
+    pub case_url: String,
+    pub case_type: Option<String>,
+    pub description: Option<String>,
+    pub industry: Option<String>,
+    pub petitioner: Option<String>,
+    pub hearing_officer: Option<String>,
+    pub opened_date: Option<DateTime<Utc>>,
+    pub closed_date: Option<DateTime<Utc>>,
+    pub filings: Vec<GenericFilingLegacy>,
+    pub extra_metadata: HashMap<String, serde_json::Value>,
+    pub indexed_at: DateTime<Utc>,
+}
+impl From<GenericCaseLegacy> for GenericCase {
+    fn from(value: GenericCaseLegacy) -> Self {
+        GenericCase {
+            case_number: value.case_number,
+            case_name: value.case_name,
+            case_url: value.case_url,
+            case_type: value.case_type,
+            description: value.description,
+            industry: value.industry,
+            petitioner: value.petitioner,
+            hearing_officer: value.hearing_officer,
+            opened_date: value.opened_date,
+            closed_date: value.closed_date,
+            filings: value.filings.into_iter().map(|f| f.into()).collect(),
+            extra_metadata: value.extra_metadata,
+            indexed_at: value.indexed_at,
+        }
+    }
+}
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, JsonSchema)]
 pub enum AttachmentTextQuality {
