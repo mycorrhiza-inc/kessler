@@ -147,8 +147,8 @@ pub async fn ingest_nypuc_case(case: GenericCase) -> anyhow::Result<()> {
                 && let Some(extension) = attachment.document_extension
             {
                 sqlx::query!(
-                "INSERT INTO attachments (parent_filling_uuid, blake2b_hash, attachment_file_extension, attachment_file_name, attachment_title, attachment_url)
-                 VALUES ($1, $2, $3, $4, $5, $6)",
+                "INSERT INTO attachments (parent_filling_uuid, blake2b_hash, attachment_file_extension, attachment_file_name, attachment_title, attachment_url, created_at, updated_at)
+                 VALUES ($1, $2, $3, $4, $5, $6, now(), now())",
                 filling_uuid,
                 hash.to_string(),
                 extension,
@@ -177,8 +177,9 @@ pub async fn ingest_nypuc_case(case: GenericCase) -> anyhow::Result<()> {
                 person
             } else {
                 let new_person: Uuid = sqlx::query_scalar!(
-                    "INSERT INTO artifical_persons (name, is_human, is_corporate_entity) VALUES ($1, true, false) RETURNING uuid",
-                    &author
+                    "INSERT INTO artifical_persons (name, is_human, is_corporate_entity, aliases) VALUES ($1, true, false, $2) RETURNING uuid",
+                    &author,
+                    &vec![author.to_owned()]
                 )
                 .fetch_one(&pool)
                 .await?;
@@ -206,8 +207,9 @@ pub async fn ingest_nypuc_case(case: GenericCase) -> anyhow::Result<()> {
                 person
             } else {
                 let new_person: Uuid = sqlx::query_scalar!(
-                    "INSERT INTO artifical_persons (name, is_human, is_corporate_entity) VALUES ($1, false, true) RETURNING uuid",
-                    &org
+                    "INSERT INTO artifical_persons (name, is_human, is_corporate_entity, aliases) VALUES ($1, false, true, $2) RETURNING uuid",
+                    &org,
+                    &vec![org.to_owned()]
                 )
                 .fetch_one(&pool)
                 .await?;

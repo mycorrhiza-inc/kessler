@@ -140,18 +140,27 @@ pub async fn start_workers() -> Infallible {
                 tokio::spawn(async move {
                     let task_id = res.task_id;
                     let obj = res.task_object;
-                    let task_status_readlock = (*TASK_STATUS_DATA).read().await;
-                    let mut task_obj = task_status_readlock
-                        .get(&task_id)
-                        .cloned()
-                        .unwrap_or_else(|| TaskStatus::new(task_id, &*obj));
-                    drop(task_status_readlock);
-                    obj.execute_task_raw(&mut task_obj).await;
+                    let task_type_label = obj.get_task_label();
+                    async move {
+                        let task_status_readlock = (*TASK_STATUS_DATA).read().await;
+                        let mut task_obj = task_status_readlock
+                            .get(&task_id)
+                            .cloned()
+                            .unwrap_or_else(|| TaskStatus::new(task_id, &*obj));
+                        drop(task_status_readlock);
+                        obj.execute_task_raw(&mut task_obj).await;
 
-                    let mut task_status_writelock = (*TASK_STATUS_DATA).write().await;
-                    task_status_writelock.insert(task_id, task_obj);
-                    drop(task_status_writelock);
-                    drop(permit);
+                        let mut task_status_writelock = (*TASK_STATUS_DATA).write().await;
+                        task_status_writelock.insert(task_id, task_obj);
+                        drop(task_status_writelock);
+                        drop(permit);
+                    }
+                    .instrument(tracing::info_span!(
+                        "task_execution",
+                        task_id = task_id,
+                        task_type = task_type_label
+                    ))
+                    .await
                 });
             }
         }
