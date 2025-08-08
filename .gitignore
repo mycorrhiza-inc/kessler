@@ -6,6 +6,7 @@ frontend-old/
 frontend-new/
 
 **/target
+**/.sqlx
 
 
 hidden_service

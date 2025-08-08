@@ -280,3 +280,8 @@ pub fn define_generic_task_routes(router: ApiRouter) -> ApiRouter {
         get_with(check_task_status, check_task_status_docs),
     )
 }
+
+#[derive(Clone, Copy, Default, Serialize, Deserialize, JsonSchema)]
+pub struct PriorityExtractor {
+    pub priority: i32,
+}

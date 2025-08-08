@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use std::{
-    convert::Infallible,
+    convert::{Infallible, identity},
     net::{Ipv4Addr, SocketAddr},
 };
 
@@ -11,6 +11,7 @@ use common::{
     otel_tracing::initialize_tracing_and_wrap_router,
     task_workers::{define_generic_task_routes, spawn_worker_loop},
 };
+use tasks::add_user_task_routes;
 
 mod common;
 mod tasks;
@@ -18,7 +19,12 @@ mod types;
 #[tokio::main]
 async fn main() -> anyhow::Result<Infallible> {
     // initialise our subscriber
-    let app_maker = || define_generic_task_routes(ApiRouter::new());
+    let app_maker = || {
+        let router = ApiRouter::new();
+        let router = define_generic_task_routes(router);
+        let router = add_user_task_routes(router);
+        identity(router)
+    };
     // Add HTTP tracing layer
     // include trace context as header into the response
 
