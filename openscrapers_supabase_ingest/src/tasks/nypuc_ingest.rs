@@ -1,5 +1,8 @@
+use std::env;
+
 use async_trait::async_trait;
 use serde_json::Value;
+use sqlx::{PgPool, types::Uuid};
 
 use crate::{common::task_workers::ExecuteUserTask, types::openscrapers::GenericCase};
 
@@ -26,22 +29,129 @@ pub async fn get_all_ny_puc_data() -> anyhow::Result<()> {
 }
 
 pub async fn ingest_nypuc_case(case: GenericCase) -> anyhow::Result<()> {
-    // this will take in a case from openscrapers of a schema GenericCase. Ingest it into a
-    // postgres database with schema in
-    // /home/nicole/Documents/mycorrhiza/kessler/openscrapers_supabase_ingest/supabase_sql_schema.sql
-    // use the sqlx library for everything.
-    //
-    // This should mainly get broken down into a bunch of different steps.
-    // Go ahead and create the docket object, (check and see if there is a govid match in the
-    // database, if so do a cascade delete.)]
-    //
-    // Create a bunch of filling objects each referencing back to the docket uuid.
-    //
-    // Then create a bunch of attachment objects that each reference back to that fileID
-    //
-    // Then check the artifical persons database to see if any entry has an organizationName that
-    // matches the name column in artifical persons, if not go ahead and create a new artifical
-    // person. And link that up to the filling via the relations table.
-    // Do the same for the individual authors.
-    todo!()
+    let db_url = env::var("DATABASE_URL")?;
+    let pool = PgPool::connect(&db_url).await?;
+
+    // Check for existing docket and delete if found
+    let existing_docket: Option<(Uuid,)> =
+        sqlx::query_as("SELECT uuid FROM dockets WHERE docket_govid = $1")
+            .bind(&case.case_number)
+            .fetch_optional(&pool)
+            .await?;
+
+    if let Some((docket_uuid,)) = existing_docket {
+        sqlx::query("DELETE FROM dockets WHERE uuid = $1")
+            .bind(docket_uuid)
+            .execute(&pool)
+            .await?;
+    }
+
+    // Create new docket
+    let docket_uuid: (Uuid,) = sqlx::query_as(
+        "INSERT INTO dockets (docket_govid, docket_description, docket_title, industry, petitioner, hearing_officer, opened_date, closed_date)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING uuid"
+    )
+    .bind(&case.case_number)
+    .bind(&case.description)
+    .bind(&case.case_name)
+    .bind(&case.industry)
+    .bind(&case.petitioner)
+    .bind(&case.hearing_officer)
+    .bind(case.opened_date)
+    .bind(case.closed_date)
+    .fetch_one(&pool)
+    .await?;
+
+    for filling in case.filings {
+        let filling_uuid: (Uuid,) = sqlx::query_as(
+            "INSERT INTO fillings (docket_uuid, docket_govid, individual_author_strings, organization_author_strings, filed_date, filling_type, filling_name, filling_description)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING uuid"
+        )
+        .bind(docket_uuid.0)
+        .bind(&case.case_number)
+        .bind(&filling.individual_authors)
+        .bind(&filling.organization_authors)
+        .bind(filling.filed_date)
+        .bind(&filling.filing_type)
+        .bind(&filling.name)
+        .bind(&filling.description)
+        .fetch_one(&pool)
+        .await?;
+
+        for attachment in filling.attachments {
+            if let Some(hash) = attachment.hash {
+                sqlx::query(
+                "INSERT INTO attachments (parent_filling_uuid, blake2b_hash, attachment_file_extension, attachment_file_name, attachment_title, attachment_url)
+                 VALUES ($1, $2, $3, $4, $5, $6)"
+            ).bind(filling_uuid.0)
+            .bind(hash.to_string())
+            .bind(&attachment.document_extension)
+            .bind(&attachment.name)
+            .bind(&attachment.name)
+            .bind(&attachment.url)
+            .execute(&pool)
+            .await?;
+            }
+        }
+
+        for author in filling.individual_authors {
+            let person: Option<(Uuid,)> = sqlx::query_as(
+                "SELECT uuid FROM artifical_persons WHERE name = $1 AND is_human = true",
+            )
+            .bind(&author)
+            .fetch_optional(&pool)
+            .await?;
+
+            let person_uuid = if let Some(person) = person {
+                person.0
+            } else {
+                let new_person: (Uuid,) = sqlx::query_as(
+                    "INSERT INTO artifical_persons (name, is_human, is_corporate_entity) VALUES ($1, true, false) RETURNING uuid"
+                )
+                .bind(&author)
+                .fetch_one(&pool)
+                .await?;
+                new_person.0
+            };
+
+            sqlx::query(
+                "INSERT INTO fillings_individual_authors_relation (author_individual_uuid, filling_uuid) VALUES ($1, $2)"
+            )
+            .bind(person_uuid)
+            .bind(filling_uuid.0)
+            .execute(&pool)
+            .await?;
+        }
+
+        for org in filling.organization_authors {
+            let person: Option<(Uuid,)> = sqlx::query_as(
+                "SELECT uuid FROM artifical_persons WHERE name = $1 AND is_corporate_entity = true",
+            )
+            .bind(&org)
+            .fetch_optional(&pool)
+            .await?;
+
+            let person_uuid = if let Some(person) = person {
+                person.0
+            } else {
+                let new_person: (Uuid,) = sqlx::query_as(
+                    "INSERT INTO artifical_persons (name, is_human, is_corporate_entity) VALUES ($1, false, true) RETURNING uuid"
+                )
+                .bind(&org)
+                .fetch_one(&pool)
+                .await?;
+                new_person.0
+            };
+
+            sqlx::query(
+                "INSERT INTO fillings_organization_authors_relation (author_organization_uuid, filling_uuid) VALUES ($1, $2)"
+            )
+            .bind(person_uuid)
+            .bind(filling_uuid.0)
+            .execute(&pool)
+            .await?;
+        }
+    }
+
+    Ok(())
 }
