@@ -2065,6 +2065,7 @@ dependencies = [
  "base64 0.22.1",
  "blake2",
  "chrono",
+ "futures",
  "futures-util",
  "hex",
  "hyper 1.6.0",
