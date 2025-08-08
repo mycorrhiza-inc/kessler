@@ -9,7 +9,7 @@ use sqlx::{PgPool, types::Uuid};
 
 use crate::{
     common::{
-        misc::map_empty,
+        misc::{fmap_empty, map_empty},
         task_workers::{ExecuteUserTask, PriorityExtractor, TaskStatusDisplay, add_task_to_queue},
     },
     types::openscrapers::{GenericCase, GenericCaseLegacy},
@@ -86,8 +86,11 @@ pub async fn get_all_ny_puc_data() -> anyhow::Result<()> {
     Ok(())
 }
 
-static DEFAULT_POSTGRES_CONNECTION_URL: LazyLock<String> =
-    LazyLock::new(|| env::var("POSTGRES_CONNECTION").unwrap());
+static DEFAULT_POSTGRES_CONNECTION_URL: LazyLock<String> = LazyLock::new(|| {
+    env::var("POSTGRES_CONNECTION")
+        .or(env::var("DATABASE_URL"))
+        .expect("POSTGRES_CONNECTION or DATABASE_URL should be set.")
+});
 
 pub async fn ingest_nypuc_case(case: GenericCase) -> anyhow::Result<()> {
     let db_url = &**DEFAULT_POSTGRES_CONNECTION_URL;
@@ -112,11 +115,11 @@ pub async fn ingest_nypuc_case(case: GenericCase) -> anyhow::Result<()> {
         "INSERT INTO dockets (docket_govid, docket_description, docket_title, industry, petitioner, hearing_officer, opened_date, closed_date)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING uuid",
         &case.case_number,
-        case.description.as_deref().unwrap_or_default(),
+        fmap_empty(case.description.as_ref()),
         &case.case_name,
-        case.industry.as_deref().unwrap_or_default(),
-        case.petitioner.as_deref().unwrap_or_default(),
-        case.hearing_officer.as_deref().unwrap_or_default(),
+        fmap_empty(case.industry.as_ref()),
+        fmap_empty(case.petitioner.as_ref()),
+        fmap_empty(case.hearing_officer.as_ref()),
         case.opened_date.map(|dt| dt.date_naive()),
         case.closed_date.map(|dt| dt.date_naive())
     )
@@ -140,18 +143,25 @@ pub async fn ingest_nypuc_case(case: GenericCase) -> anyhow::Result<()> {
         .await?;
 
         for attachment in filling.attachments {
-            if let Some(hash) = attachment.hash {
+            if let Some(hash) = attachment.hash
+                && let Some(extension) = attachment.document_extension
+            {
                 sqlx::query!(
                 "INSERT INTO attachments (parent_filling_uuid, blake2b_hash, attachment_file_extension, attachment_file_name, attachment_title, attachment_url)
                  VALUES ($1, $2, $3, $4, $5, $6)",
                 filling_uuid,
                 hash.to_string(),
-                attachment.document_extension.as_deref().unwrap_or_default(),
+                extension,
                 &attachment.name,
                 &attachment.name,
                 &attachment.url
             ).execute(&pool)
             .await?;
+            } else {
+                tracing::error!(
+                    ?attachment,
+                    "Encountered attachment with missing data, could not upload to database."
+                )
             }
         }
 

@@ -34,16 +34,22 @@ pub fn map_empty<T: IsEmpty>(val: &T) -> Option<&T> {
         false => Some(val),
     }
 }
-pub fn map_empty_mut<T: IsEmpty>(val: &mut T) -> Option<&mut T> {
-    match val.is_empty() {
-        true => None,
-        false => Some(val),
+
+pub fn fmap_empty<T: IsEmpty>(val: Option<&T>) -> Option<&T> {
+    match val {
+        None => None,
+        Some(val) => match val.is_empty() {
+            true => None,
+            false => Some(val),
+        },
     }
 }
-
-pub fn into_map_empty<T: IsEmpty>(val: T) -> Option<T> {
-    match val.is_empty() {
-        true => None,
-        false => Some(val),
+pub fn into_fmap_empty<T: IsEmpty>(val: Option<T>) -> Option<T> {
+    match val {
+        None => None,
+        Some(val) => match val.is_empty() {
+            true => None,
+            false => Some(val),
+        },
     }
 }
