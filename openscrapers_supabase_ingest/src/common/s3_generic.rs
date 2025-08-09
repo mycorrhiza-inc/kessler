@@ -33,32 +33,30 @@ impl S3Credentials {
     }
 }
 
-const DEFAULT_S3_REGION: &str = "sfo3";
-const DEFAULT_S3_ENDPOINT: &str = "https://sfo3.digitaloceanspaces.com";
-
 pub trait S3EnvNames {
     const REGION_ENV: &str;
     const ENDPOINT_ENV: &str;
     const ACCESS_ENV: &str;
     const SECRET_ENV: &str;
+    const DEFAULT_S3_REGION: &str = "sf03";
+    const DEFAULT_S3_ENDPOINT: &str = "https://sfo3.digitaloceanspaces.com";
 }
 fn init_from_env_vars<T: S3EnvNames>() -> S3Credentials {
     let cloud_region = std::env::var(T::REGION_ENV).unwrap_or_else(|_| {
-        println!("S3 region not set, using default: {DEFAULT_S3_REGION}");
-        DEFAULT_S3_REGION.to_string()
+        println!("S3 region not set, using default: {}", T::DEFAULT_S3_REGION);
+        T::DEFAULT_S3_REGION.to_string()
     });
     let endpoint = std::env::var(T::ENDPOINT_ENV).unwrap_or_else(|_| {
-        println!("S3 endpoint not set, using default: {DEFAULT_S3_ENDPOINT}");
-        DEFAULT_S3_ENDPOINT.to_string()
+        println!(
+            "S3 endpoint not set, using default: {}",
+            T::DEFAULT_S3_ENDPOINT
+        );
+        T::DEFAULT_S3_ENDPOINT.to_string()
     });
-    let access_key = std::env::var(T::ACCESS_ENV).expect(&format!(
-        "S3 access key env var was not set: {}",
-        T::ACCESS_ENV
-    ));
-    let secret_key = std::env::var(T::SECRET_ENV).expect(&format!(
-        "S3 secret key env var was not set: {}",
-        T::SECRET_ENV
-    ));
+    let access_key = std::env::var(T::ACCESS_ENV)
+        .unwrap_or_else(|_| panic!("S3 access key env var was not set: {}", T::ACCESS_ENV));
+    let secret_key = std::env::var(T::SECRET_ENV)
+        .unwrap_or_else(|_| panic!("S3 secret key env var was not set: {}", T::SECRET_ENV));
 
     S3Credentials {
         cloud_region,
