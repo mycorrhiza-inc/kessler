@@ -1,7 +1,8 @@
 use std::sync::LazyLock;
 
 use aws_config::{BehaviorVersion, Region};
-use aws_sdk_s3::{Client, config::Credentials};
+use aws_sdk_s3::{config::Credentials, Client};
+use aws_smithy_http_client::{tls, Builder};
 use tracing::info;
 
 pub struct S3Credentials {
@@ -13,7 +14,7 @@ pub struct S3Credentials {
 
 impl S3Credentials {
     pub async fn make_s3_client(&self) -> Client {
-        info!("Creating S3 client");
+        info!("Creating S3 client with s2n-tls");
         let creds = Credentials::new(
             &self.access_key,
             &self.secret_key,
@@ -22,8 +23,13 @@ impl S3Credentials {
             "manual",
         );
 
+        let http_client = Builder::new()
+            .tls_provider(tls::Provider::S2nTls)
+            .build_https();
+
         // Start from the env-loader so we still pick up other settings (timeouts, retry, etc)
         let cfg_loader = aws_config::defaults(BehaviorVersion::latest())
+            .http_client(http_client)
             .region(Region::new(self.cloud_region.clone()))
             .credentials_provider(creds)
             .endpoint_url(&self.endpoint);
@@ -68,4 +74,3 @@ fn init_from_env_vars<T: S3EnvNames>() -> S3Credentials {
 pub const fn make_s3_lazylock<T: S3EnvNames>() -> LazyLock<S3Credentials> {
     LazyLock::new(init_from_env_vars::<T>)
 }
-

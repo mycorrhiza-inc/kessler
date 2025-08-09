@@ -18,6 +18,7 @@ aide = { version = "0.15", features = ["axum", "axum-extra", "axum-extra-query",
 schemars = { version = "0.9", features = ["chrono04", "uuid1"] }
 aws-sdk-s3 = "1.85.0"
 aws-config = "1.6.2"
+aws-smithy-http-client = { version = "1.0", features = ["s2n-tls"] }
 
 anyhow = "1.0.98"
 hex = "0.4.3"
