@@ -7,7 +7,7 @@ use aws_sdk_s3::{Client as S3Client, primitives::ByteStream};
 use schemars::JsonSchema;
 use serde::Deserialize;
 use serde_json::Value;
-use tracing::{debug, error, info, instrument};
+use tracing::{debug, error, info, instrument, warn};
 
 use crate::{
     common::{
@@ -75,7 +75,7 @@ async fn transfer_s3_files_to_supabase(
     target_bucket: &str,
 ) -> anyhow::Result<()> {
     use futures::stream::{self, StreamExt};
-    const RAW_FILE_PREFIX: &str = "files/raw/";
+    const RAW_FILE_PREFIX: &str = "raw/file/";
     let s3_supabase = SUPABASE_S3.make_s3_client().await;
     let s3_ocean = DIGITALOCEAN_S3.make_s3_client().await;
 
@@ -97,9 +97,12 @@ async fn transfer_s3_files_to_supabase(
     let all_hashes = all_raw_tabulated_objects
         .into_iter()
         .filter_map(|result| match result {
-            Ok(output) => Some(output),
+            Ok(output) => {
+                debug!(?output, "Got output from S3");
+                Some(output)
+            }
             Err(err) => {
-                error!(error = %err, "Error listing objects");
+                error!(error = ?err, "Error listing objects");
                 None
             }
         })
@@ -130,14 +133,14 @@ async fn transfer_s3_files_to_supabase(
     };
 
     let process_hash = async |hash: Blake2bHash| {
-        info!(%hash, "Processing file");
+        debug!(%hash, "Processing file");
 
         let metadata_key = get_raw_attach_obj_key(hash);
         let metadata_bytes = match download_s3_bytes(&s3_ocean, source_bucket, &metadata_key).await
         {
             Ok(b) => b,
             Err(e) => {
-                error!(%hash, error = %e, "Failed to download metadata, skipping");
+                error!(%hash, error = ?e, %metadata_key, "Failed to download metadata, skipping");
                 return;
             }
         };
@@ -145,7 +148,7 @@ async fn transfer_s3_files_to_supabase(
         let raw_attachment: Option<RawAttachment> = match serde_json::from_slice(&metadata_bytes) {
             Ok(att) => Some(att),
             Err(e) => {
-                error!(%hash, error = %e, "Failed to deserialize metadata, transferring anyway");
+                warn!(%hash, error = %e, %metadata_key,"Failed to deserialize metadata, transferring anyway");
                 None
             }
         };
@@ -159,26 +162,30 @@ async fn transfer_s3_files_to_supabase(
         };
 
         if should_transfer {
-            info!(%hash, "Transfering file and metadata");
+            debug!(%hash, "Transfering file and metadata");
+
             let raw_file_key = get_raw_attach_file_key(hash);
-            let raw_file_bytes =
-                match download_s3_bytes(&s3_ocean, source_bucket, &raw_file_key).await {
-                    Ok(b) => b,
-                    Err(e) => {
-                        error!(%hash, error = %e, "Failed to download raw file, skipping");
-                        return;
-                    }
-                };
+            let raw_file_bytes = match download_s3_bytes(&s3_ocean, source_bucket, &raw_file_key)
+                .await
+            {
+                Ok(b) => b,
+                Err(e) => {
+                    error!(%hash, error = ?e, %raw_file_key,"Failed to download raw file for transfer to new bucket, skipping");
+                    return;
+                }
+            };
 
             if let Err(e) =
                 upload_s3_bytes(&s3_supabase, target_bucket, &raw_file_key, raw_file_bytes).await
             {
-                error!(%hash, error = %e, "Failed to upload raw file");
+                error!(%hash, error = ?e, "Failed to upload raw file to new bucket");
+                return;
             }
             if let Err(e) =
                 upload_s3_bytes(&s3_supabase, target_bucket, &metadata_key, metadata_bytes).await
             {
-                error!(%hash, error = %e, "Failed to upload metadata");
+                error!(%hash, error = ?e, "Failed to upload metadata to new bucket");
+                return;
             }
             info!(%hash, "Successfully transfered file and metadata");
         } else {
@@ -193,7 +200,6 @@ async fn transfer_s3_files_to_supabase(
     Ok(())
 }
 // Core function to download bytes from S3
-#[instrument(skip(s3_client))]
 pub async fn download_s3_bytes(
     s3_client: &S3Client,
     bucket: &str,
@@ -231,7 +237,6 @@ pub async fn download_s3_bytes(
 }
 
 // Core function to upload bytes to S3
-#[instrument(skip(s3_client, bytes))]
 pub async fn upload_s3_bytes(
     s3_client: &S3Client,
     bucket: &str,
@@ -247,7 +252,7 @@ pub async fn upload_s3_bytes(
         .send()
         .await
         .map_err(|err| {
-            error!(%err,%bucket, %key,"Failed to upload S3 object");
+            debug!(%err,%bucket, %key,"Failed to upload S3 object");
             anyhow!(err)
         })?;
     debug!( %bucket, %key,"Successfully uploaded s3 object");
@@ -255,13 +260,13 @@ pub async fn upload_s3_bytes(
 }
 
 pub fn get_raw_attach_obj_key(hash: Blake2bHash) -> String {
-    let key = format!("files/metadata/{hash}.json");
+    let key = format!("raw/metadata/{hash}.json");
     debug!(%hash, "Generated raw attachment object key: {}", key);
     key
 }
 
 pub fn get_raw_attach_file_key(hash: Blake2bHash) -> String {
-    let key = format!("files/raw/{hash}");
+    let key = format!("raw/file/{hash}");
     debug!(%hash, "Generated raw attachment file key: {}", key);
     key
 }
