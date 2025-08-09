@@ -2,7 +2,7 @@ use std::{path::Path, str::FromStr, sync::LazyLock};
 
 use anyhow::anyhow;
 use async_trait::async_trait;
-use aws_sdk_s3::{Client as S3Client, primitives::ByteStream};
+use aws_sdk_s3::{primitives::ByteStream, Client as S3Client};
 
 use schemars::JsonSchema;
 use serde::Deserialize;
@@ -12,7 +12,7 @@ use tracing::{debug, error, info, instrument, warn};
 use crate::{
     common::{
         hash::Blake2bHash,
-        s3_generic::{S3Credentials, S3EnvNames, make_s3_lazylock},
+        s3_generic::{make_s3_lazylock, S3Credentials, S3EnvNames},
         tasks::ExecuteUserTask,
     },
     types::openscrapers::{JurisdictionInfo, RawAttachment},

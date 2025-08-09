@@ -16,8 +16,10 @@ serde = { version = "1.0.219", features = ["derive"] }
 tokio = { version = "1.44.2", features = ["full"] }
 aide = { version = "0.15", features = ["axum", "axum-extra", "axum-extra-query", "axum-json", "axum-matched-path", "axum-multipart", "axum-query", "macros", "swagger"] }
 schemars = { version = "0.9", features = ["chrono04", "uuid1"] }
+
+# AWS SDK with rustls
 aws-sdk-s3 = "1.85.0"
-aws-config = "1.6.2"
+aws-config = { version = "1.6.2", features = ["rustls"] }
 
 anyhow = "1.0.98"
 hex = "0.4.3"
@@ -26,7 +28,6 @@ rand = "0.9.1"
 thiserror = "2.0.12"
 hyper = "1.6.0"
 futures-util = "0.3.31"
-
 
 
 tracing = "0.1.41"

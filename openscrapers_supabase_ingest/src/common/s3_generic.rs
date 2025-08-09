@@ -1,7 +1,7 @@
 use std::sync::LazyLock;
 
-use aws_config::{BehaviorVersion, Region};
-use aws_sdk_s3::{Client, config::Credentials};
+use aws_config::{BehaviorVersion, Region, SdkConfig};
+use aws_sdk_s3::{config::Credentials, Client};
 use tracing::info;
 
 pub struct S3Credentials {
@@ -13,7 +13,7 @@ pub struct S3Credentials {
 
 impl S3Credentials {
     pub async fn make_s3_client(&self) -> Client {
-        info!(region=%self.cloud_region, endpoint=%self.endpoint,"Creating S3 client");
+        info!(region=%self.cloud_region, endpoint=%self.endpoint,"Creating S3 client with rustls (auto-configured)");
         let creds = Credentials::new(
             &self.access_key,
             &self.secret_key,
@@ -22,7 +22,6 @@ impl S3Credentials {
             "manual",
         );
 
-        // Start from the env-loader so we still pick up other settings (timeouts, retry, etc)
         let cfg_loader = aws_config::defaults(BehaviorVersion::latest())
             .region(Region::new(self.cloud_region.clone()))
             .credentials_provider(creds)
