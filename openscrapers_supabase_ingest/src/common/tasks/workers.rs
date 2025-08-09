@@ -125,7 +125,7 @@ pub async fn start_workers() -> Infallible {
                 if trips_since_last_task.is_power_of_two() {
                     let time_since_last_task =
                         prettyprint_duration(Duration::from_secs(trips_since_last_task));
-                    info!(%time_since_last_task,"Have not gotten a new task dispite waiting a long time.")
+                    info!(%time_since_last_task,"Have not gotten a new task dispite waiting a long time")
                 }
                 drop(permit);
                 sleep(Duration::from_secs(1)).await

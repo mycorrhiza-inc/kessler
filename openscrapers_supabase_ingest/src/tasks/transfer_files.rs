@@ -29,7 +29,7 @@ pub struct TransferOpenscraperFilesIntoSupabase {
 impl ExecuteUserTask for TransferOpenscraperFilesIntoSupabase {
     async fn execute_task(self: Box<Self>) -> Result<Value, Value> {
         let res = transfer_s3_files_to_supabase(
-            self.only_transfer.as_deref(),
+            self.only_transfer,
             &self.digitalocean_source_bucket,
             &self.supabase_destination_bucket,
         )
@@ -70,7 +70,7 @@ impl S3EnvNames for OceanS3 {
 static DIGITALOCEAN_S3: LazyLock<S3Credentials> = make_s3_lazylock::<OceanS3>();
 
 async fn transfer_s3_files_to_supabase(
-    only_transfer: Option<&[JurisdictionInfo]>,
+    only_transfer: Option<Vec<JurisdictionInfo>>,
     source_bucket: &str,
     target_bucket: &str,
 ) -> anyhow::Result<()> {
@@ -81,19 +81,20 @@ async fn transfer_s3_files_to_supabase(
 
     let transfer_hashset = only_transfer.map(|jurisdictions| {
         jurisdictions
-            .iter()
-            .cloned()
+            .into_iter()
             .collect::<std::collections::HashSet<JurisdictionInfo>>()
     });
 
-    let all_hashes: Vec<Blake2bHash> = s3_ocean
+    let all_raw_tabulated_objects = s3_ocean
         .list_objects_v2()
         .bucket(source_bucket)
         .prefix(RAW_FILE_PREFIX)
         .into_paginator()
         .send()
         .collect::<Vec<_>>()
-        .await
+        .await;
+    info!(tabulated_count = %all_raw_tabulated_objects.len(),%source_bucket,"Got tabulated objects from s3");
+    let all_hashes = all_raw_tabulated_objects
         .into_iter()
         .filter_map(|result| match result {
             Ok(output) => Some(output),
@@ -108,11 +109,17 @@ async fn transfer_s3_files_to_supabase(
                 Path::new(&key)
                     .file_name()
                     .and_then(|s| s.to_str())
-                    .and_then(|s| Blake2bHash::from_str(s).ok())
+                    .and_then(|s| {
+                        Blake2bHash::from_str(s)
+                            .map_err(|e| {
+                                error!(%key, error = %e, "Failed to parse hash from key");
+                            })
+                            .ok()
+                    })
             })
         })
-        .collect();
-    info!(hashes_count = %all_hashes.len(),"Collected hashes from s3 to try and attempt transfer");
+        .collect::<Vec<_>>();
+    info!(hashes_count = %all_hashes.len(),%source_bucket,"Collected hashes from s3 to try and attempt transfer");
 
     let should_be_transfered_over = |value: &JurisdictionInfo| -> bool {
         match &transfer_hashset {
