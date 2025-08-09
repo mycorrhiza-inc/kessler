@@ -127,17 +127,25 @@ async fn transfer_s3_files_to_supabase(
                             }
                         };
 
-                    let raw_attachment: RawAttachment = match serde_json::from_slice(
+                    let raw_attachment: Option<RawAttachment> = match serde_json::from_slice(
                         &metadata_bytes,
                     ) {
-                        Ok(att) => att,
+                        Ok(att) => Some(att),
                         Err(e) => {
-                            error!(%hash, error = %e, "Failed to deserialize metadata, skipping");
-                            continue;
+                            error!(%hash, error = %e, "Failed to deserialize metadata, transferring anyway");
+                            None
                         }
                     };
 
-                    if should_be_transfered_over(&raw_attachment.jurisdiction_info) {
+                    let should_transfer = match &raw_attachment {
+                        Some(att) => should_be_transfered_over(&att.jurisdiction_info),
+                        None => {
+                            debug!(%hash, "Transferring file despite metadata deserialization failure");
+                            true
+                        }
+                    };
+
+                    if should_transfer {
                         info!(%hash, "Transfering file and metadata");
                         let raw_file_key = get_raw_attach_file_key(hash);
                         let raw_file_bytes = match download_s3_bytes(
