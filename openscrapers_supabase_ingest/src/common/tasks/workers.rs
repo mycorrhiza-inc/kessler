@@ -14,6 +14,8 @@ use tokio::{
 };
 use tracing::{Instrument, info};
 
+use crate::common::misc::prettyprint_duration;
+
 use super::{ExecuteUserTask, TaskState, TaskStatus};
 
 pub struct PriorityTaskObject {
@@ -121,7 +123,9 @@ pub async fn start_workers() -> Infallible {
             None => {
                 trips_since_last_task += 1;
                 if trips_since_last_task.is_power_of_two() {
-                    info!(seconds=%trips_since_last_task,"Have not gotten a new task dispite waiting at least n seconds.")
+                    let time_since_last_task =
+                        prettyprint_duration(Duration::from_secs(trips_since_last_task));
+                    info!(%time_since_last_task,"Have not gotten a new task dispite waiting a long time.")
                 }
                 drop(permit);
                 sleep(Duration::from_secs(1)).await
