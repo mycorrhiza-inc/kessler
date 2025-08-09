@@ -10,7 +10,10 @@ use sqlx::{PgPool, types::Uuid};
 use crate::{
     common::{
         misc::{fmap_empty, map_empty},
-        task_workers::{ExecuteUserTask, PriorityExtractor, TaskStatusDisplay, add_task_to_queue},
+        tasks::{
+            ExecuteUserTask, TaskStatusDisplay, routing::PriorityExtractor,
+            workers::add_task_to_queue,
+        },
     },
     types::openscrapers::{GenericCase, GenericCaseLegacy},
 };

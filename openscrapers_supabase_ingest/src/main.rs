@@ -9,7 +9,7 @@ use aide::axum::ApiRouter;
 use common::{
     api_documentation::generate_api_docs_and_serve,
     otel_tracing::initialize_tracing_and_wrap_router,
-    task_workers::{define_generic_task_routes, spawn_worker_loop},
+    tasks::{routing::define_generic_task_routes, workers::spawn_worker_loop},
 };
 use tasks::add_user_task_routes;
 
