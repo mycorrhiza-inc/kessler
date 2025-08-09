@@ -1,8 +1,15 @@
-use aide::axum::{ApiRouter, routing::post};
-use nypuc_ingest::add_nypuc_all_task;
+use std::convert::identity;
+
+use aide::axum::ApiRouter;
+use nypuc_ingest::NyPucIngestFull;
+
+use crate::common::tasks::routing::declare_task_route;
 
 pub mod nypuc_ingest;
+pub mod transfer_files;
 
 pub fn add_user_task_routes(router: ApiRouter) -> ApiRouter {
-    router.api_route("/tasks/new/ingest_all_nypuc", post(add_nypuc_all_task))
+    let router = declare_task_route::<NyPucIngestFull>(router);
+
+    identity(router)
 }

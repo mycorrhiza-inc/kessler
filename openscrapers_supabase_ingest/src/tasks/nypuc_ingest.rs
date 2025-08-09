@@ -4,6 +4,8 @@ use async_trait::async_trait;
 use axum::Json;
 use futures::stream::{self, StreamExt};
 use reqwest::Client;
+use schemars::JsonSchema;
+use serde::Deserialize;
 use serde_json::Value;
 use sqlx::{PgPool, types::Uuid};
 
@@ -18,7 +20,7 @@ use crate::{
     types::openscrapers::{GenericCase, GenericCaseLegacy},
 };
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Default, Deserialize, JsonSchema)]
 pub struct NyPucIngestFull {}
 
 #[async_trait]
@@ -31,6 +33,12 @@ impl ExecuteUserTask for NyPucIngestFull {
         }
     }
     fn get_task_label(&self) -> &'static str {
+        "ingest_nypuc_all"
+    }
+    fn get_task_label_static() -> &'static str
+    where
+        Self: Sized,
+    {
         "ingest_nypuc_all"
     }
 }

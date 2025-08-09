@@ -18,6 +18,9 @@ pub trait ExecuteUserTask: 'static + Send {
         status.status = status_val;
         status.return_value = Some(return_result);
     }
+    fn get_task_label_static() -> &'static str
+    where
+        Self: Sized;
     fn get_task_label(&self) -> &'static str;
 }
 
