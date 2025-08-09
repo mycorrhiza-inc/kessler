@@ -43,10 +43,6 @@ pub trait S3EnvNames {
     const SECRET_ENV: &str;
 }
 fn init_from_env_vars<T: S3EnvNames>() -> S3Credentials {
-    let access_key = std::env::var(T::ACCESS_ENV).expect(&format!(
-        "S3 access key env var was not set: {}",
-        T::ACCESS_ENV
-    ));
     let cloud_region = std::env::var(T::REGION_ENV).unwrap_or_else(|_| {
         println!("S3 region not set, using default: {DEFAULT_S3_REGION}");
         DEFAULT_S3_REGION.to_string()
@@ -55,6 +51,10 @@ fn init_from_env_vars<T: S3EnvNames>() -> S3Credentials {
         println!("S3 endpoint not set, using default: {DEFAULT_S3_ENDPOINT}");
         DEFAULT_S3_ENDPOINT.to_string()
     });
+    let access_key = std::env::var(T::ACCESS_ENV).expect(&format!(
+        "S3 access key env var was not set: {}",
+        T::ACCESS_ENV
+    ));
     let secret_key = std::env::var(T::SECRET_ENV).expect(&format!(
         "S3 secret key env var was not set: {}",
         T::SECRET_ENV

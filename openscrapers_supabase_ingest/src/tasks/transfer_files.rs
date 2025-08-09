@@ -40,13 +40,13 @@ impl ExecuteUserTask for TransferOpenscraperFilesIntoSupabase {
         }
     }
     fn get_task_label(&self) -> &'static str {
-        "ingest_nypuc_all"
+        "transfer_s3_files"
     }
     fn get_task_label_static() -> &'static str
     where
         Self: Sized,
     {
-        "ingest_nypuc_all"
+        "transfer_s3_files"
     }
 }
 

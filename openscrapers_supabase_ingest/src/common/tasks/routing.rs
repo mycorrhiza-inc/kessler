@@ -79,7 +79,7 @@ pub fn declare_task_route<T: for<'de> Deserialize<'de> + JsonSchema + ExecuteUse
     router: ApiRouter,
 ) -> ApiRouter {
     router.api_route(
-        &format!("tasks/types/{}", T::get_task_label_static()),
+        &format!("/tasks/types/{}", T::get_task_label_static()),
         post(handle_generic_task_route::<T>),
     )
 }
