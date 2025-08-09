@@ -13,7 +13,7 @@ pub struct S3Credentials {
 
 impl S3Credentials {
     pub async fn make_s3_client(&self) -> Client {
-        info!("Creating S3 client");
+        info!(region=%self.cloud_region, endpoint=%self.endpoint,"Creating S3 client");
         let creds = Credentials::new(
             &self.access_key,
             &self.secret_key,
@@ -68,4 +68,3 @@ fn init_from_env_vars<T: S3EnvNames>() -> S3Credentials {
 pub const fn make_s3_lazylock<T: S3EnvNames>() -> LazyLock<S3Credentials> {
     LazyLock::new(init_from_env_vars::<T>)
 }
-
