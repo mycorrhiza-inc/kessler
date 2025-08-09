@@ -7,7 +7,7 @@ use serde_with::skip_serializing_none;
 
 use crate::common::{file_extension::FileExtension, hash::Blake2bHash};
 
-#[derive(Serialize, Deserialize, Debug, JsonSchema, Clone)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema, Clone, Hash, PartialEq, Eq)]
 pub struct JurisdictionInfo {
     pub country: String,
     pub state: String,

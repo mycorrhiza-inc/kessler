@@ -8,6 +8,7 @@ use serde_json::Value;
 
 use crate::{
     common::{
+        misc::fmap_empty,
         s3_generic::{S3Credentials, S3EnvNames, s3_locked},
         tasks::ExecuteUserTask,
     },
@@ -67,6 +68,24 @@ async fn transfer_s3_files_to_supabase(
     let s3_supabase = SUPABASE_S3.make_s3_client().await;
     let s3_ocean = DIGITALOCEAN_S3.make_s3_client().await;
 
+    let transfer_hashset = only_transfer.map(|jurisdictions| {
+        jurisdictions
+            .iter()
+            .cloned()
+            .collect::<std::collections::HashSet<JurisdictionInfo>>()
+    });
+
+    let should_be_transfered_over = |value: &JurisdictionInfo| -> bool {
+        match &transfer_hashset {
+            // In the case where no value is set, transfer over all files.
+            None => true,
+            Some(set) => set.contains(value),
+        }
+    };
+
     Ok(())
     // Files flow from ocean -> supabase
+    // first get the list of all file hashes from "files/raw/"
+    // then iterate through and pull the json from "files/metadata" if the jurisdiction matches the
+    // criterion transfer both the metadata file and the raw file itself.
 }

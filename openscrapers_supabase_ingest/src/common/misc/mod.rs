@@ -28,14 +28,14 @@ impl<T> IsEmpty for Vec<T> {
         self.is_empty()
     }
 }
-pub fn map_empty<T: IsEmpty>(val: &T) -> Option<&T> {
+pub fn map_empty<T: IsEmpty + ?Sized>(val: &T) -> Option<&T> {
     match val.is_empty() {
         true => None,
         false => Some(val),
     }
 }
 
-pub fn fmap_empty<T: IsEmpty>(val: Option<&T>) -> Option<&T> {
+pub fn fmap_empty<T: IsEmpty + ?Sized>(val: Option<&T>) -> Option<&T> {
     match val {
         None => None,
         Some(val) => match val.is_empty() {
