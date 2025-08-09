@@ -1,4 +1,4 @@
-use std::{env, path::Path, str::FromStr, sync::LazyLock};
+use std::{path::Path, str::FromStr, sync::LazyLock};
 
 use anyhow::anyhow;
 use async_trait::async_trait;
@@ -12,7 +12,7 @@ use tracing::{debug, error, info, instrument};
 use crate::{
     common::{
         hash::Blake2bHash,
-        s3_generic::{S3Credentials, S3EnvNames, s3_locked},
+        s3_generic::{S3Credentials, S3EnvNames, make_s3_lazylock},
         tasks::ExecuteUserTask,
     },
     types::openscrapers::{JurisdictionInfo, RawAttachment},
@@ -57,7 +57,7 @@ impl S3EnvNames for SupS3 {
     const ACCESS_ENV: &str = "SUPABASE_S3_ACCESS_KEY";
     const SECRET_ENV: &str = "SUPABASE_S3_SECRET_KEY";
 }
-static SUPABASE_S3: LazyLock<S3Credentials> = s3_locked::<SupS3>();
+static SUPABASE_S3: LazyLock<S3Credentials> = make_s3_lazylock::<SupS3>();
 
 struct OceanS3 {}
 impl S3EnvNames for OceanS3 {
@@ -67,7 +67,7 @@ impl S3EnvNames for OceanS3 {
     const SECRET_ENV: &str = "DIGITALOCEAN_S3_SECRET_KEY";
 }
 
-static DIGITALOCEAN_S3: LazyLock<S3Credentials> = s3_locked::<OceanS3>();
+static DIGITALOCEAN_S3: LazyLock<S3Credentials> = make_s3_lazylock::<OceanS3>();
 
 async fn transfer_s3_files_to_supabase(
     only_transfer: Option<&[JurisdictionInfo]>,
