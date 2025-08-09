@@ -21,21 +21,17 @@ use crate::{
 #[derive(Clone, Default, Deserialize, JsonSchema)]
 pub struct TransferOpenscraperFilesIntoSupabase {
     only_transfer: Option<Vec<JurisdictionInfo>>,
+    digitalocean_source_bucket: String,
+    supabase_destination_bucket: String,
 }
-
-static SUPABASE_S3_BUCKET: LazyLock<String> =
-    LazyLock::new(|| env::var("SUPABASE_S3_BUCKET").expect("SUPABASE_S3_BUCKET must be set"));
-static DIGITALOCEAN_S3_BUCKET: LazyLock<String> = LazyLock::new(|| {
-    env::var("DIGITALOCEAN_S3_BUCKET").expect("DIGITALOCEAN_S3_BUCKET must be set")
-});
 
 #[async_trait]
 impl ExecuteUserTask for TransferOpenscraperFilesIntoSupabase {
     async fn execute_task(self: Box<Self>) -> Result<Value, Value> {
         let res = transfer_s3_files_to_supabase(
             self.only_transfer.as_deref(),
-            &DIGITALOCEAN_S3_BUCKET,
-            &SUPABASE_S3_BUCKET,
+            &self.digitalocean_source_bucket,
+            &self.supabase_destination_bucket,
         )
         .await;
         match res {
