@@ -2,7 +2,7 @@ use std::{path::Path, str::FromStr, sync::LazyLock};
 
 use anyhow::anyhow;
 use async_trait::async_trait;
-use aws_sdk_s3::{primitives::ByteStream, Client as S3Client};
+use aws_sdk_s3::{Client as S3Client, primitives::ByteStream};
 
 use schemars::JsonSchema;
 use serde::Deserialize;
@@ -12,10 +12,13 @@ use tracing::{debug, error, info, instrument, warn};
 use crate::{
     common::{
         hash::Blake2bHash,
-        s3_generic::{make_s3_lazylock, S3Credentials, S3EnvNames},
+        s3_generic::{S3Credentials, S3EnvNames, make_s3_lazylock},
         tasks::ExecuteUserTask,
     },
-    types::openscrapers::{JurisdictionInfo, RawAttachment},
+    types::{
+        openscrapers::{JurisdictionInfo, RawAttachment},
+        s3_stuff::{DIGITALOCEAN_S3, SUPABASE_S3},
+    },
 };
 
 #[derive(Clone, Default, Deserialize, JsonSchema)]
@@ -49,25 +52,6 @@ impl ExecuteUserTask for TransferOpenscraperFilesIntoSupabase {
         "transfer_s3_files"
     }
 }
-
-struct SupS3 {}
-impl S3EnvNames for SupS3 {
-    const REGION_ENV: &str = "SUPABASE_S3_REGION";
-    const ENDPOINT_ENV: &str = "SUPABASE_S3_ENDPOINT";
-    const ACCESS_ENV: &str = "SUPABASE_S3_ACCESS_KEY";
-    const SECRET_ENV: &str = "SUPABASE_S3_SECRET_KEY";
-}
-static SUPABASE_S3: LazyLock<S3Credentials> = make_s3_lazylock::<SupS3>();
-
-struct OceanS3 {}
-impl S3EnvNames for OceanS3 {
-    const REGION_ENV: &str = "DIGITALOCEAN_S3_REGION";
-    const ENDPOINT_ENV: &str = "DIGITALOCEAN_S3_ENDPOINT";
-    const ACCESS_ENV: &str = "DIGITALOCEAN_S3_ACCESS_KEY";
-    const SECRET_ENV: &str = "DIGITALOCEAN_S3_SECRET_KEY";
-}
-
-static DIGITALOCEAN_S3: LazyLock<S3Credentials> = make_s3_lazylock::<OceanS3>();
 
 async fn transfer_s3_files_to_supabase(
     only_transfer: Option<Vec<JurisdictionInfo>>,

@@ -6,6 +6,7 @@ use transfer_files::TransferOpenscraperFilesIntoSupabase;
 
 use crate::common::tasks::routing::declare_task_route;
 
+pub mod initialize_config;
 pub mod nypuc_ingest;
 pub mod transfer_files;
 
