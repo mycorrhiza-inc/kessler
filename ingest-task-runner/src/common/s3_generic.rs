@@ -1,6 +1,6 @@
 use std::sync::LazyLock;
 
-use aws_config::{BehaviorVersion, Region, SdkConfig};
+use aws_config::{BehaviorVersion, Region};
 use aws_sdk_s3::{config::Credentials, Client};
 use tracing::info;
 

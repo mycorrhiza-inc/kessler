@@ -1,11 +1,15 @@
 use async_trait::async_trait;
 
 use crate::{
-    common::tasks::ExecuteUserTask,
+    common::tasks::{ExecuteUserTask, display_error_as_json},
     types::s3_stuff::{DIGITALOCEAN_S3, OPENSCRAPERS_S3_BUCKET},
 };
 
-struct InitializeConfig {}
+use schemars::JsonSchema;
+use serde::Deserialize;
+
+#[derive(Debug, Copy, Clone, Deserialize, JsonSchema)]
+pub struct InitializeConfig {}
 #[async_trait]
 impl ExecuteUserTask for InitializeConfig {
     async fn execute_task(self: Box<Self>) -> Result<serde_json::Value, serde_json::Value> {
@@ -48,6 +52,6 @@ async fn make_openscrapers_public() -> Result<(), serde_json::Value> {
         .await;
     match res {
         Ok(_) => Ok(()),
-        Err(e) => Err(e.to_string().into()),
+        Err(err) => Err(display_error_as_json(&err)),
     }
 }

@@ -1863,6 +1863,46 @@ dependencies = [
 ]
 
 [[package]]
+name = "ingest-task-runner"
+version = "0.1.0"
+dependencies = [
+ "aide",
+ "anyhow",
+ "async-trait",
+ "aws-config",
+ "aws-sdk-s3",
+ "axum",
+ "axum-tracing-opentelemetry",
+ "base64 0.22.1",
+ "blake2",
+ "chrono",
+ "futures",
+ "futures-util",
+ "hex",
+ "hyper 1.6.0",
+ "init-tracing-opentelemetry",
+ "opentelemetry",
+ "opentelemetry-otlp",
+ "opentelemetry-stdout",
+ "opentelemetry_sdk",
+ "rand 0.9.2",
+ "rand_core 0.9.3",
+ "reqwest",
+ "schemars 0.9.0",
+ "serde",
+ "serde_json",
+ "serde_with",
+ "sqlx",
+ "thiserror",
+ "tokio",
+ "tracing",
+ "tracing-opentelemetry",
+ "tracing-subscriber",
+ "url",
+ "urlencoding",
+]
+
+[[package]]
 name = "init-tracing-opentelemetry"
 version = "0.30.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2229,46 +2269,6 @@ name = "once_cell"
 version = "1.21.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "42f5e15c9953c5e4ccceeb2e7382a716482c34515315f7b03532b8b4e8393d2d"
-
-[[package]]
-name = "openscrapers_supabase_ingest"
-version = "0.1.0"
-dependencies = [
- "aide",
- "anyhow",
- "async-trait",
- "aws-config",
- "aws-sdk-s3",
- "axum",
- "axum-tracing-opentelemetry",
- "base64 0.22.1",
- "blake2",
- "chrono",
- "futures",
- "futures-util",
- "hex",
- "hyper 1.6.0",
- "init-tracing-opentelemetry",
- "opentelemetry",
- "opentelemetry-otlp",
- "opentelemetry-stdout",
- "opentelemetry_sdk",
- "rand 0.9.2",
- "rand_core 0.9.3",
- "reqwest",
- "schemars 0.9.0",
- "serde",
- "serde_json",
- "serde_with",
- "sqlx",
- "thiserror",
- "tokio",
- "tracing",
- "tracing-opentelemetry",
- "tracing-subscriber",
- "url",
- "urlencoding",
-]
 
 [[package]]
 name = "openssl"
