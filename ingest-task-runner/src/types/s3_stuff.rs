@@ -12,7 +12,7 @@ impl S3EnvNames for SupS3 {
 
 pub static SUPABASE_S3: LazyLock<S3Credentials> = make_s3_lazylock::<SupS3>();
 pub static OPENSCRAPERS_S3_BUCKET: LazyLock<String> =
-    LazyLock::new(|| env::var("OPENSCRAPERS_S3_BUCKET").unwrap_or("OPENSCRAPERS".to_string()));
+    LazyLock::new(|| env::var("OPENSCRAPERS_S3_BUCKET").unwrap_or("openscrapers".to_string()));
 
 struct OceanS3 {}
 impl S3EnvNames for OceanS3 {

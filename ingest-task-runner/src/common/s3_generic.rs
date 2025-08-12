@@ -1,7 +1,7 @@
 use std::sync::LazyLock;
 
 use aws_config::{BehaviorVersion, Region};
-use aws_sdk_s3::{config::Credentials, Client};
+use aws_sdk_s3::{Client, config::Credentials};
 use tracing::info;
 
 pub struct S3Credentials {
@@ -11,9 +11,21 @@ pub struct S3Credentials {
     pub secret_key: String,
 }
 
+fn last_chars(s: &str, n: usize) -> &str {
+    if s.len() > n {
+        // Splitting on a char boundary is safe because we slice on UTF‑8 code‑points.
+        &s[s.len() - n..]
+    } else {
+        s
+    }
+}
+
 impl S3Credentials {
     pub async fn make_s3_client(&self) -> Client {
-        info!(region=%self.cloud_region, endpoint=%self.endpoint,"Creating S3 client with rustls (auto-configured)");
+        let redacted_secret = format!("*****{}", last_chars(&self.secret_key, 5));
+
+        let redacted_access = format!("*****{}", last_chars(&self.access_key, 5));
+        info!(region=%self.cloud_region, endpoint=%self.endpoint,redacted_secret,redacted_access,"Creating S3 client with rustls (auto-configured)");
         let creds = Credentials::new(
             &self.access_key,
             &self.secret_key,

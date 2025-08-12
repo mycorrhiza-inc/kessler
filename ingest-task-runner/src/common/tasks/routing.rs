@@ -9,13 +9,10 @@ use axum::{Json, extract::Path, response::IntoResponse};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::common::tasks::workers::read_task_status;
+use crate::common::tasks::workers::{add_task_to_queue_and_wait_to_see_if_done, read_task_status};
 use std::time::Duration;
 
-use super::{
-    ExecuteUserTask, TaskStatusDisplay,
-    workers::add_task_to_queue,
-};
+use super::{ExecuteUserTask, TaskStatusDisplay, workers::add_task_to_queue};
 pub const CHECK_TASK_URL_LEAF: &str = "/tasks";
 
 #[derive(Clone, Copy, Serialize, Deserialize, JsonSchema)]
@@ -70,10 +67,10 @@ pub async fn handle_generic_task_route<
 >(
     Json(extractor): Json<GeneralExtractor<T>>,
 ) -> Json<TaskStatusDisplay> {
-    const DELAY_AMOUNT: Duration = Duration::from_secs(2);
+    const WAIT_DURATION: Duration = Duration::from_secs(2);
     let obj = extractor.object;
     let priority = extractor.priority.unwrap_or(0);
-    let taskinfo = add_task_to_queue(obj, priority).await;
+    let taskinfo = add_task_to_queue_and_wait_to_see_if_done(obj, priority, WAIT_DURATION).await;
     Json(taskinfo.into())
 }
 
