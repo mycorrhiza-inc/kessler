@@ -20,6 +20,22 @@ pub fn prettyprint_duration(dur: Duration) -> String {
     }
 }
 
+pub fn is_env_var_true(var_name: &str) -> bool {
+    let Ok(var) = std::env::var(var_name) else {
+        return false;
+    };
+    if var.is_empty() {
+        return false;
+    }
+    if var == "0" {
+        return false;
+    }
+    if var == "false" {
+        return false;
+    }
+    return true;
+}
+
 pub trait IsEmpty {
     fn is_empty(&self) -> bool;
 }

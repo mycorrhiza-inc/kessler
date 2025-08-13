@@ -1895,6 +1895,7 @@ dependencies = [
  "sqlx",
  "thiserror",
  "tokio",
+ "tower-http",
  "tracing",
  "tracing-opentelemetry",
  "tracing-subscriber",

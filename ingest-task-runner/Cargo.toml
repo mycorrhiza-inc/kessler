@@ -47,3 +47,4 @@ futures = "0.3.31"
 
 
 sqlx = { version = "0.8", features = ["chrono", "json", "postgres", "runtime-tokio", "tls-native-tls", "uuid"] }
+tower-http = "0.6.6"
