@@ -7,7 +7,7 @@ use reqwest::Client;
 use schemars::JsonSchema;
 use serde::Deserialize;
 use serde_json::Value;
-use sqlx::{PgPool, postgres::PgPoolOptions, types::Uuid};
+use sqlx::{PgPool, Pool, Postgres, postgres::PgPoolOptions, types::Uuid};
 
 use crate::{
     common::{
@@ -17,7 +17,7 @@ use crate::{
             workers::add_task_to_queue,
         },
     },
-    types::openscrapers::{GenericCase, GenericCaseLegacy},
+    types::openscrapers::GenericCase,
 };
 
 #[derive(Clone, Copy, Default, Deserialize, JsonSchema)]
@@ -65,34 +65,38 @@ pub async fn get_all_ny_puc_data() -> anyhow::Result<()> {
         .json()
         .await?;
 
+    let db_url = &**DEFAULT_POSTGRES_CONNECTION_URL;
+    // let options =
+    let pool = PgPoolOptions::new()
+        .max_connections(30)
+        .connect(db_url)
+        .await?;
+
     // Create a stream of futures to fetch and ingest each case concurrently
     let futures = stream::iter(case_ids)
-        .map(|case_id| {
+        .map(async |case_id| {
             let client = reqwest_client.clone();
-            async move {
-                let url = format!("http://localhost:33399/public/cases/ny/ny_puc/{case_id}");
-                let res = client.get(&url).send().await;
+            let url = format!("http://localhost:33399/public/cases/ny/ny_puc/{case_id}");
+            let res = client.get(&url).send().await;
 
-                match res {
-                    Ok(response) => {
-                        let case = response.json::<GenericCase>().await;
-                        match case {
-                            Ok(case_legacy) => {
-                                let case = case_legacy.into();
-                                if let Err(e) = ingest_nypuc_case(case).await {
-                                    tracing::error!(case_id = %case_id, error = %e, "Failed to ingest case");
-                                }
-                            }
-                            Err(e) => {
-                                tracing::error!(case_id = %case_id, error = %e, "Failed to parse case")
+            match res {
+                Ok(response) => {
+                    let case_res = response.json::<GenericCase>().await;
+                    match case_res {
+                        Ok(case) => {
+                            if let Err(e) = ingest_nypuc_case(case,&pool).await {
+                                tracing::error!(case_id = %case_id, error = %e, "Failed to ingest case");
                             }
                         }
+                        Err(e) => {
+                            tracing::error!(case_id = %case_id, error = %e, "Failed to parse case")
+                        }
                     }
-                    Err(e) => tracing::error!(case_id = %case_id, error = %e, "Failed to fetch case"),
                 }
+                Err(e) => tracing::error!(case_id = %case_id, error = %e, "Failed to fetch case"),
             }
         })
-        .buffer_unordered(20); // Process up to 10 requests concurrently
+        .buffer_unordered(15); // Process up to 10 requests concurrently
 
     // Wait for all futures to complete
     futures.for_each(|_| async {}).await;
@@ -106,25 +110,18 @@ static DEFAULT_POSTGRES_CONNECTION_URL: LazyLock<String> = LazyLock::new(|| {
         .expect("POSTGRES_CONNECTION or DATABASE_URL should be set.")
 });
 
-pub async fn ingest_nypuc_case(case: GenericCase) -> anyhow::Result<()> {
-    let db_url = &**DEFAULT_POSTGRES_CONNECTION_URL;
-    // let options =
-    let pool = PgPoolOptions::new()
-        .max_connections(30)
-        .connect(db_url)
-        .await?;
-
+pub async fn ingest_nypuc_case(case: GenericCase, pool: &Pool<Postgres>) -> anyhow::Result<()> {
     // Check for existing docket and delete if found
     let existing_docket: Option<Uuid> = sqlx::query_scalar!(
         "SELECT uuid FROM dockets WHERE docket_govid = $1",
-        &case.case_number
+        &case.case_govid.as_str()
     )
-    .fetch_optional(&pool)
+    .fetch_optional(pool)
     .await?;
 
     if let Some(docket_uuid) = existing_docket {
         sqlx::query!("DELETE FROM dockets WHERE uuid = $1", docket_uuid)
-            .execute(&pool)
+            .execute(pool)
             .await?;
     }
 
@@ -132,16 +129,16 @@ pub async fn ingest_nypuc_case(case: GenericCase) -> anyhow::Result<()> {
     let docket_uuid: Uuid = sqlx::query_scalar!(
         "INSERT INTO dockets (docket_govid, docket_description, docket_title, industry, petitioner, hearing_officer, opened_date, closed_date)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING uuid",
-        &case.case_number,
-        fmap_empty(case.description.as_ref()),
+        &case.case_govid.as_str(),
+        fmap_empty(Some(&case.description)),
         &case.case_name,
-        fmap_empty(case.industry.as_ref()),
-        fmap_empty(case.petitioner.as_ref()),
-        fmap_empty(case.hearing_officer.as_ref()),
-        case.opened_date.map(|dt| dt.date_naive()),
-        case.closed_date.map(|dt| dt.date_naive())
+        fmap_empty(Some(&case.industry)),
+        fmap_empty(Some(&case.petitioner)),
+        fmap_empty(Some(&case.hearing_officer)),
+        case.opened_date,
+        case.closed_date
     )
-    .fetch_one(&pool)
+    .fetch_one(pool)
     .await?;
 
     for filling in case.filings {
@@ -149,46 +146,55 @@ pub async fn ingest_nypuc_case(case: GenericCase) -> anyhow::Result<()> {
             "INSERT INTO fillings (docket_uuid, docket_govid, individual_author_strings, organization_author_strings, filed_date, filling_type, filling_name, filling_description)
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING uuid",
             docket_uuid,
-            &case.case_number,
-            &filling.individual_authors,
-            &filling.organization_authors,
-            filling.filed_date.date_naive(),
+            &case.case_govid.as_str(),
+            &filling.individual_authors.iter().map(|s| s.to_string()).collect::<Vec<_>>(),
+            &filling.organization_authors.iter().map(|s| s.to_string()).collect::<Vec<_>>(),
+            filling.filed_date,
             &filling.filing_type,
             &filling.name,
             map_empty(&filling.description),
         )
-        .fetch_one(&pool)
+        .fetch_one(pool)
         .await?;
 
         for attachment in filling.attachments {
-            if let Some(hash) = attachment.hash
-                && let Some(extension) = attachment.document_extension
-            {
+            if let Some(hash) = attachment.hash {
                 sqlx::query!(
                 "INSERT INTO attachments (parent_filling_uuid, blake2b_hash, attachment_file_extension, attachment_file_name, attachment_title, attachment_url, created_at, updated_at)
                  VALUES ($1, $2, $3, $4, $5, $6, now(), now())",
                 filling_uuid,
                 hash.to_string(),
-                extension,
+                &attachment.document_extension.to_string(),
                 &attachment.name,
                 &attachment.name,
                 &attachment.url
-            ).execute(&pool)
+            ).execute(pool)
             .await?;
             } else {
-                tracing::error!(
+                tracing::warn!(
                     ?attachment,
-                    "Encountered attachment with missing data, could not upload to database."
-                )
+                    "Encountered attachment with missing hash, inserting regardless"
+                );
+                let nullstr: Option<&str> = None;
+                sqlx::query!(
+                "INSERT INTO attachments (parent_filling_uuid, blake2b_hash, attachment_file_extension, attachment_file_name, attachment_title, attachment_url, created_at, updated_at)
+                 VALUES ($1, $2, $3, $4, $5, $6, now(), now())",
+                filling_uuid,
+                nullstr,
+                &attachment.document_extension.to_string(),
+                &attachment.name,
+                &attachment.name,
+                &attachment.url
+            ).execute(pool).await?;
             }
         }
 
         for author in filling.individual_authors {
             let person: Option<Uuid> = sqlx::query_scalar!(
                 "SELECT uuid FROM artifical_persons WHERE name = $1 AND is_human = true",
-                &author
+                &author.as_str()
             )
-            .fetch_optional(&pool)
+            .fetch_optional(pool)
             .await?;
 
             let person_uuid = if let Some(person) = person {
@@ -196,10 +202,10 @@ pub async fn ingest_nypuc_case(case: GenericCase) -> anyhow::Result<()> {
             } else {
                 let new_person: Uuid = sqlx::query_scalar!(
                     "INSERT INTO artifical_persons (name, is_human, is_corporate_entity, aliases) VALUES ($1, true, false, $2) RETURNING uuid",
-                    &author,
-                    &vec![author.to_owned()]
+                    &author.as_str(),
+                    &vec![author.to_string()]
                 )
-                .fetch_one(&pool)
+                .fetch_one(pool)
                 .await?;
                 new_person
             };
@@ -209,16 +215,16 @@ pub async fn ingest_nypuc_case(case: GenericCase) -> anyhow::Result<()> {
                 person_uuid,
                 filling_uuid
             )
-            .execute(&pool)
+            .execute(pool)
             .await?;
         }
 
         for org in filling.organization_authors {
             let person: Option<Uuid> = sqlx::query_scalar!(
                 "SELECT uuid FROM artifical_persons WHERE name = $1 AND is_corporate_entity = true",
-                &org
+                &org.as_str()
             )
-            .fetch_optional(&pool)
+            .fetch_optional(pool)
             .await?;
 
             let person_uuid = if let Some(person) = person {
@@ -226,10 +232,10 @@ pub async fn ingest_nypuc_case(case: GenericCase) -> anyhow::Result<()> {
             } else {
                 let new_person: Uuid = sqlx::query_scalar!(
                     "INSERT INTO artifical_persons (name, is_human, is_corporate_entity, aliases) VALUES ($1, false, true, $2) RETURNING uuid",
-                    &org,
-                    &vec![org.to_owned()]
+                    &org.as_str(),
+                    &vec![org.to_string()]
                 )
-                .fetch_one(&pool)
+                .fetch_one(pool)
                 .await?;
                 new_person
             };
@@ -239,7 +245,7 @@ pub async fn ingest_nypuc_case(case: GenericCase) -> anyhow::Result<()> {
                 person_uuid,
                 filling_uuid
             )
-            .execute(&pool)
+            .execute(pool)
             .await?;
         }
     }
