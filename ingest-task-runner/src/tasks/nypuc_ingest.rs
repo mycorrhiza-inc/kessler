@@ -7,7 +7,7 @@ use reqwest::Client;
 use schemars::JsonSchema;
 use serde::Deserialize;
 use serde_json::Value;
-use sqlx::{PgPool, types::Uuid};
+use sqlx::{PgPool, postgres::PgPoolOptions, types::Uuid};
 
 use crate::{
     common::{
@@ -54,6 +54,9 @@ pub async fn add_nypuc_all_task(
 pub async fn get_all_ny_puc_data() -> anyhow::Result<()> {
     let reqwest_client = Client::new();
 
+    // Drop all existing tables first
+    delete_all_data().await?;
+
     // Get the list of case IDs
     let case_ids: Vec<String> = reqwest_client
         .get("http://localhost:33399/public/caselist/ny/ny_puc/all")
@@ -72,8 +75,8 @@ pub async fn get_all_ny_puc_data() -> anyhow::Result<()> {
 
                 match res {
                     Ok(response) => {
-                        let case_legacy = response.json::<GenericCaseLegacy>().await;
-                        match case_legacy {
+                        let case = response.json::<GenericCase>().await;
+                        match case {
                             Ok(case_legacy) => {
                                 let case = case_legacy.into();
                                 if let Err(e) = ingest_nypuc_case(case).await {
@@ -89,7 +92,7 @@ pub async fn get_all_ny_puc_data() -> anyhow::Result<()> {
                 }
             }
         })
-        .buffer_unordered(10); // Process up to 10 requests concurrently
+        .buffer_unordered(20); // Process up to 10 requests concurrently
 
     // Wait for all futures to complete
     futures.for_each(|_| async {}).await;
@@ -105,7 +108,11 @@ static DEFAULT_POSTGRES_CONNECTION_URL: LazyLock<String> = LazyLock::new(|| {
 
 pub async fn ingest_nypuc_case(case: GenericCase) -> anyhow::Result<()> {
     let db_url = &**DEFAULT_POSTGRES_CONNECTION_URL;
-    let pool = PgPool::connect(db_url).await?;
+    // let options =
+    let pool = PgPoolOptions::new()
+        .max_connections(30)
+        .connect(db_url)
+        .await?;
 
     // Check for existing docket and delete if found
     let existing_docket: Option<Uuid> = sqlx::query_scalar!(
@@ -236,6 +243,39 @@ pub async fn ingest_nypuc_case(case: GenericCase) -> anyhow::Result<()> {
             .await?;
         }
     }
+
+    Ok(())
+}
+
+pub async fn delete_all_data() -> anyhow::Result<()> {
+    let db_url = &**DEFAULT_POSTGRES_CONNECTION_URL;
+    let pool = PgPool::connect(db_url).await?;
+
+    // Drop all data from tables in the correct order to avoid foreign key constraint violations
+    // Start with the relation tables
+    sqlx::query!("DELETE FROM fillings_individual_authors_relation")
+        .execute(&pool)
+        .await?;
+
+    sqlx::query!("DELETE FROM fillings_organization_authors_relation")
+        .execute(&pool)
+        .await?;
+
+    // Then attachments
+    sqlx::query!("DELETE FROM attachments")
+        .execute(&pool)
+        .await?;
+
+    // Then fillings
+    sqlx::query!("DELETE FROM fillings").execute(&pool).await?;
+
+    // Then dockets
+    sqlx::query!("DELETE FROM dockets").execute(&pool).await?;
+
+    // Finally artificial persons
+    sqlx::query!("DELETE FROM artifical_persons")
+        .execute(&pool)
+        .await?;
 
     Ok(())
 }
