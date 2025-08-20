@@ -87,6 +87,7 @@ async fn simple_prompt(
         .await?;
 
     if !response.status().is_success() {
+        tracing::warn!("LLM Inference encountered error: {}", response.status());
         let error_body = response.text().await?;
         return Err(DeepInfraError::ApiError(error_body));
     }

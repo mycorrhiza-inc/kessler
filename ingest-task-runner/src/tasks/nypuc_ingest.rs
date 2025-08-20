@@ -146,10 +146,14 @@ pub async fn ingest_nypuc_case(case: RawGenericCase, pool: &Pool<Postgres>) -> a
     }
     // FIXME: Delete all this shit once its actually processed once, this should be an openscraper
     // responsibility.
-    let petitioner_str = map_empty(&*case.petitioner);
     let mut petitioner_list = vec![];
-    if let Some(petitioner_str) = petitioner_str {
-        petitioner_list = org_split_from_dump(petitioner_str).await?;
+    let petitioner_str_opt = map_empty((case.petitioner).trim());
+    if let Some(petitioner_str) = petitioner_str_opt {
+        if let Ok(llmed_petitioner_list) = org_split_from_dump(petitioner_str).await {
+            petitioner_list = llmed_petitioner_list;
+        } else {
+            petitioner_list.push(petitioner_str.to_string());
+        }
     }
 
     // Create new docket
