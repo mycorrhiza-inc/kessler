@@ -125,6 +125,8 @@ pub async fn ingest_nypuc_case(case: RawGenericCase, pool: &Pool<Postgres>) -> a
             .execute(pool)
             .await?;
     }
+    // FIXME: Delete all this shit once its actually processed once, this should be an openscraper
+    // responsibility.
     let petitioner_str = map_empty(&*case.petitioner);
     let mut petitioner_list = vec![];
     if let Some(petitioner_str) = petitioner_str {
@@ -148,6 +150,16 @@ pub async fn ingest_nypuc_case(case: RawGenericCase, pool: &Pool<Postgres>) -> a
     )
     .fetch_one(pool)
     .await?;
+    for petitioner in petitioner_list.iter() {
+        let petitioner_uuid = fetch_or_insert_new_orgstring(petitioner, pool).await?;
+        sqlx::query!(
+            "INSERT INTO docket_petitioned_by_org (docket_uuid, petitioner_uuid) VALUES ($1,$2)",
+            docket_uuid,
+            petitioner_uuid
+        )
+        .execute(pool)
+        .await?;
+    }
 
     for filling in case.filings {
         let filling_uuid: Uuid = sqlx::query_scalar!(
