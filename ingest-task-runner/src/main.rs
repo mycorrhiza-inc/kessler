@@ -28,7 +28,7 @@ async fn main() -> anyhow::Result<Infallible> {
     // Add HTTP tracing layer
     // include trace context as header into the response
 
-    let app = initialize_tracing_and_wrap_router(app_maker)?;
+    let (app, _guard) = initialize_tracing_and_wrap_router(app_maker)?;
     // Spawn background worker to process PDF tasks
     // This worker runs indefinitely
     spawn_worker_loop();

@@ -11,7 +11,8 @@ use sqlx::{PgPool, Pool, Postgres, postgres::PgPoolOptions, types::Uuid};
 
 use crate::{
     common::{
-        misc::{fmap_empty, map_empty},
+        llm_deepinfra::org_split_from_dump,
+        misc::map_empty,
         tasks::{
             ExecuteUserTask, TaskStatusDisplay, routing::PriorityExtractor,
             workers::add_task_to_queue,
@@ -124,19 +125,26 @@ pub async fn ingest_nypuc_case(case: GenericCase, pool: &Pool<Postgres>) -> anyh
             .execute(pool)
             .await?;
     }
+    let petitioner_str = map_empty(&*case.petitioner);
+    let mut petitioner_list = vec![];
+    if let Some(petitioner_str) = petitioner_str {
+        petitioner_list = org_split_from_dump(petitioner_str).await?;
+    }
 
     // Create new docket
     let docket_uuid: Uuid = sqlx::query_scalar!(
-        "INSERT INTO dockets (docket_govid, docket_description, docket_title, industry, petitioner, hearing_officer, opened_date, closed_date)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING uuid",
+        "INSERT INTO dockets (docket_govid, docket_description, docket_title, industry, hearing_officer, opened_date, closed_date, petitioner_strings, docket_type, docket_subtype )
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING uuid",
         &case.case_govid.as_str(),
-        fmap_empty(Some(&case.description)),
+        map_empty(&case.description),
         &case.case_name,
-        fmap_empty(Some(&case.industry)),
-        fmap_empty(Some(&case.petitioner)),
-        fmap_empty(Some(&case.hearing_officer)),
+        map_empty(&case.industry),
+        map_empty(&case.hearing_officer),
         case.opened_date,
-        case.closed_date
+        case.closed_date,
+        &petitioner_list,
+        map_empty(&case.case_type),
+        Option::<String>::None
     )
     .fetch_one(pool)
     .await?;
@@ -189,60 +197,23 @@ pub async fn ingest_nypuc_case(case: GenericCase, pool: &Pool<Postgres>) -> anyh
             }
         }
 
-        for author in filling.individual_authors {
-            let person: Option<Uuid> = sqlx::query_scalar!(
-                "SELECT uuid FROM artifical_persons WHERE name = $1 AND is_human = true",
-                &author.as_str()
-            )
-            .fetch_optional(pool)
-            .await?;
-
-            let person_uuid = if let Some(person) = person {
-                person
-            } else {
-                let new_person: Uuid = sqlx::query_scalar!(
-                    "INSERT INTO artifical_persons (name, is_human, is_corporate_entity, aliases) VALUES ($1, true, false, $2) RETURNING uuid",
-                    &author.as_str(),
-                    &vec![author.to_string()]
-                )
-                .fetch_one(pool)
-                .await?;
-                new_person
-            };
+        for indiv_author in filling.individual_authors {
+            let org_uuid = fetch_or_insert_new_orgstring(indiv_author.as_str(), pool).await?;
 
             sqlx::query!(
-                "INSERT INTO fillings_individual_authors_relation (author_individual_uuid, filling_uuid) VALUES ($1, $2)",
-                person_uuid,
+                "INSERT INTO fillings_filed_by_org_relation (author_individual_uuid, filling_uuid) VALUES ($1, $2)",
+                org_uuid,
                 filling_uuid
             )
             .execute(pool)
             .await?;
         }
 
-        for org in filling.organization_authors {
-            let person: Option<Uuid> = sqlx::query_scalar!(
-                "SELECT uuid FROM artifical_persons WHERE name = $1 AND is_corporate_entity = true",
-                &org.as_str()
-            )
-            .fetch_optional(pool)
-            .await?;
-
-            let person_uuid = if let Some(person) = person {
-                person
-            } else {
-                let new_person: Uuid = sqlx::query_scalar!(
-                    "INSERT INTO artifical_persons (name, is_human, is_corporate_entity, aliases) VALUES ($1, false, true, $2) RETURNING uuid",
-                    &org.as_str(),
-                    &vec![org.to_string()]
-                )
-                .fetch_one(pool)
-                .await?;
-                new_person
-            };
-
+        for org_author in filling.organization_authors {
+            let org_uuid = fetch_or_insert_new_orgstring(org_author.as_str(), pool).await?;
             sqlx::query!(
-                "INSERT INTO fillings_organization_authors_relation (author_organization_uuid, filling_uuid) VALUES ($1, $2)",
-                person_uuid,
+                "INSERT INTO fillings_on_behalf_of_org_relation (author_organization_uuid, filling_uuid) VALUES ($1, $2)",
+                org_uuid,
                 filling_uuid
             )
             .execute(pool)
@@ -253,17 +224,43 @@ pub async fn ingest_nypuc_case(case: GenericCase, pool: &Pool<Postgres>) -> anyh
     Ok(())
 }
 
+async fn fetch_or_insert_new_orgstring(
+    org_author: &str,
+    pool: &Pool<Postgres>,
+) -> Result<Uuid, anyhow::Error> {
+    let org_record: Option<Uuid> = sqlx::query_scalar!(
+        "SELECT uuid FROM organizations WHERE name = $1 AND artifical_person_type = 'organization'",
+        org_author
+    )
+    .fetch_optional(pool)
+    .await?;
+
+    let org_uuid = if let Some(org_record) = org_record {
+        org_record
+    } else {
+        let new_org: Uuid = sqlx::query_scalar!(
+                    "INSERT INTO organizations (name, artifical_person_type, aliases) VALUES ($1, 'organization', $2) RETURNING uuid",
+                    org_author,
+                    &vec![org_author.to_string()]
+                )
+                .fetch_one(pool)
+                .await?;
+        new_org
+    };
+    Ok(org_uuid)
+}
+
 pub async fn delete_all_data() -> anyhow::Result<()> {
     let db_url = &**DEFAULT_POSTGRES_CONNECTION_URL;
     let pool = PgPool::connect(db_url).await?;
 
     // Drop all data from tables in the correct order to avoid foreign key constraint violations
     // Start with the relation tables
-    sqlx::query!("DELETE FROM fillings_individual_authors_relation")
+    sqlx::query!("DELETE FROM fillings_filed_by_org_relation")
         .execute(&pool)
         .await?;
 
-    sqlx::query!("DELETE FROM fillings_organization_authors_relation")
+    sqlx::query!("DELETE FROM fillings_on_behalf_of_org_relation")
         .execute(&pool)
         .await?;
 
@@ -278,8 +275,8 @@ pub async fn delete_all_data() -> anyhow::Result<()> {
     // Then dockets
     sqlx::query!("DELETE FROM dockets").execute(&pool).await?;
 
-    // Finally artificial persons
-    sqlx::query!("DELETE FROM artifical_persons")
+    // Finally organizations
+    sqlx::query!("DELETE FROM organizations")
         .execute(&pool)
         .await?;
 

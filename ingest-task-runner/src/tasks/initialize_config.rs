@@ -60,7 +60,6 @@ async fn make_openscrapers_public() -> Result<(), serde_json::Value> {
     }
 }
 
-use std::error::Error;
 use tracing::info; // <‑‑ pull the macro into scope
 
 /// Checks that the S3 key‑pair we are using has enough permissions to
