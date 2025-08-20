@@ -20,6 +20,7 @@ use crate::{
     },
     types::openscrapers::RawGenericCase,
 };
+use tracing::info;
 
 #[derive(Clone, Copy, Default, Deserialize, JsonSchema)]
 pub struct NyPucIngestFull {}
@@ -30,7 +31,10 @@ impl ExecuteUserTask for NyPucIngestFull {
         let res = get_all_ny_puc_data().await;
         match res {
             Ok(()) => Ok("Task Completed Successfully".into()),
-            Err(err) => Err(err.to_string().into()),
+            Err(err) => {
+                tracing::error!(error= % err, error_debug= ?err,"Encountered error in ny_ingest");
+                Err(err.to_string().into())
+            }
         }
     }
     fn get_task_label(&self) -> &'static str {
@@ -53,10 +57,12 @@ pub async fn add_nypuc_all_task(
 }
 
 pub async fn get_all_ny_puc_data() -> anyhow::Result<()> {
+    info!("Got request to ingest all nypuc data.");
     let reqwest_client = Client::new();
 
     // Drop all existing tables first
     delete_all_data().await?;
+    info!("Successfully deleted all old case data.");
 
     // Get the list of case IDs
     let case_ids: Vec<String> = reqwest_client
@@ -65,6 +71,7 @@ pub async fn get_all_ny_puc_data() -> anyhow::Result<()> {
         .await?
         .json()
         .await?;
+    info!(length=%case_ids.len(),"Got list of all cases");
 
     let db_url = &**DEFAULT_POSTGRES_CONNECTION_URL;
     // let options =
@@ -72,6 +79,8 @@ pub async fn get_all_ny_puc_data() -> anyhow::Result<()> {
         .max_connections(30)
         .connect(db_url)
         .await?;
+
+    info!("Created pg pool");
 
     // Create a stream of futures to fetch and ingest each case concurrently
     let futures = stream::iter(case_ids)
@@ -82,25 +91,25 @@ pub async fn get_all_ny_puc_data() -> anyhow::Result<()> {
 
             match res {
                 Ok(response) => {
-                    let case_res = response.json::<RawGenericCase>().await;
+                    let response_bytes = response.text().await.unwrap_or("encountered error getting raw response bytes".to_string());
+                    let case_res = serde_json::from_str::<RawGenericCase>(&response_bytes);
                     match case_res {
                         Ok(case) => {
                             if let Err(e) = ingest_nypuc_case(case,&pool).await {
-                                tracing::error!(case_id = %case_id, error = %e, "Failed to ingest case");
+                                tracing::error!(case_id = %case_id, error = %e, error_debug = ?e, "Failed to ingest case");
                             }
                         }
                         Err(e) => {
-                            tracing::error!(case_id = %case_id, error = %e, "Failed to parse case")
+                            tracing::error!(case_id = %case_id, error = %e, error_debug = ?e, raw_response =%response_bytes[0..400],"Failed to parse case")
                         }
                     }
                 }
-                Err(e) => tracing::error!(case_id = %case_id, error = %e, "Failed to fetch case"),
+                Err(e) => tracing::error!(case_id = %case_id, error = %e, error_debug = ?e,"Failed to fetch case"),
             }
-        })
-        .buffer_unordered(15); // Process up to 10 requests concurrently
-
-    // Wait for all futures to complete
-    futures.for_each(|_| async {}).await;
+        }); // Process up to 10 requests concurrently
+    info!("Successfully initialized futures object");
+    let futures_count = futures.buffer_unordered(10).count().await;
+    info!(futures_completed=%futures_count,"Completed ingest process");
 
     Ok(())
 }
@@ -191,10 +200,10 @@ pub async fn ingest_nypuc_case(case: RawGenericCase, pool: &Pool<Postgres>) -> a
             ).execute(pool)
             .await?;
             } else {
-                tracing::warn!(
-                    ?attachment,
-                    "Encountered attachment with missing hash, inserting regardless"
-                );
+                // tracing::warn!(
+                //     ?attachment,
+                //     "Encountered attachment with missing hash, inserting regardless"
+                // );
                 let nullstr: Option<&str> = None;
                 sqlx::query!(
                 "INSERT INTO attachments (parent_filling_uuid, blake2b_hash, attachment_file_extension, attachment_file_name, attachment_title, attachment_url, created_at, updated_at)
@@ -232,6 +241,7 @@ pub async fn ingest_nypuc_case(case: RawGenericCase, pool: &Pool<Postgres>) -> a
             .await?;
         }
     }
+    tracing::info!(govid=%case.case_govid, uuid=%docket_uuid,"Successfully processed case with no errors");
 
     Ok(())
 }
