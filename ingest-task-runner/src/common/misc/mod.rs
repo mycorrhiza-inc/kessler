@@ -1,6 +1,13 @@
 use std::time::Duration;
 
+use rand::{rng, seq::SliceRandom};
+
 pub mod internet_check;
+
+pub fn shuffle_list<T>(x: &mut [T]) {
+    let mut rng = rng();
+    x.shuffle(&mut rng);
+}
 
 pub fn prettyprint_duration(dur: Duration) -> String {
     let total_secs = dur.as_secs();
