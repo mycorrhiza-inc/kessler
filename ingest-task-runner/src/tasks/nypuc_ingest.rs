@@ -76,41 +76,48 @@ pub async fn get_all_ny_puc_data() -> anyhow::Result<()> {
     let db_url = &**DEFAULT_POSTGRES_CONNECTION_URL;
     // let options =
     let pool = PgPoolOptions::new()
-        .max_connections(30)
+        .max_connections(60)
         .connect(db_url)
         .await?;
 
     info!("Created pg pool");
 
-    // Create a stream of futures to fetch and ingest each case concurrently
-    let futures = stream::iter(case_ids)
-        .map(async |case_id| {
-            let client = reqwest_client.clone();
-            let url = format!("http://localhost:33399/public/cases/ny/ny_puc/{case_id}");
-            let res = client.get(&url).send().await;
+    let execute_case_wraped = async |case_id| {
+        let client = reqwest_client.clone();
+        let url = format!("http://localhost:33399/public/cases/ny/ny_puc/{case_id}");
+        let res = client.get(&url).send().await;
 
-            match res {
-                Ok(response) => {
-                    let response_bytes = response.text().await.unwrap_or("encountered error getting raw response bytes".to_string());
-                    let case_res = serde_json::from_str::<RawGenericCase>(&response_bytes);
-                    match case_res {
-                        Ok(case) => {
-                            if let Err(e) = ingest_nypuc_case(case,&pool).await {
-                                tracing::error!(case_id = %case_id, error = %e, error_debug = ?e, "Failed to ingest case");
-                            }
-                        }
-                        Err(e) => {
-                            tracing::error!(case_id = %case_id, error = %e, error_debug = ?e, raw_response =%response_bytes[0..400],"Failed to parse case")
+        match res {
+            Ok(response) => {
+                let response_bytes = response
+                    .text()
+                    .await
+                    .unwrap_or("encountered error getting raw response bytes".to_string());
+                let case_res = serde_json::from_str::<RawGenericCase>(&response_bytes);
+                match case_res {
+                    Ok(case) => {
+                        if let Err(e) = ingest_nypuc_case(case, &pool).await {
+                            tracing::error!(case_id = %case_id, error = %e, error_debug = ?e, "Failed to ingest case");
                         }
                     }
+                    Err(e) => {
+                        tracing::error!(case_id = %case_id, error = %e, error_debug = ?e, raw_response =%response_bytes[0..400],"Failed to parse case")
+                    }
                 }
-                Err(e) => tracing::error!(case_id = %case_id, error = %e, error_debug = ?e,"Failed to fetch case"),
             }
-        }); // Process up to 10 requests concurrently
-    info!("Successfully initialized futures object");
-    let futures_count = futures.buffer_unordered(10).count().await;
-    info!(futures_completed=%futures_count,"Completed ingest process");
+            Err(e) => {
+                tracing::error!(url,case_id = %case_id, error = %e, error_debug = ?e,"Failed to fetch case")
+            }
+        }
+    };
 
+    // Create a stream of futures to fetch and ingest each case concurrently
+    let futures_count = stream::iter(case_ids)
+        .map(execute_case_wraped)
+        .buffer_unordered(10)
+        .count()
+        .await;
+    info!(futures_count, "Successfully completed all futures.");
     Ok(())
 }
 
