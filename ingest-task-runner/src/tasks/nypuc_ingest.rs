@@ -30,7 +30,10 @@ impl ExecuteUserTask for NyPucIngestFull {
     async fn execute_task(self: Box<Self>) -> Result<Value, Value> {
         let res = get_all_ny_puc_data().await;
         match res {
-            Ok(()) => Ok("Task Completed Successfully".into()),
+            Ok(()) => {
+                info!("Nypuc ingest completed.");
+                Ok("Task Completed Successfully".into())
+            }
             Err(err) => {
                 tracing::error!(error= % err, error_debug= ?err,"Encountered error in ny_ingest");
                 Err(err.to_string().into())
