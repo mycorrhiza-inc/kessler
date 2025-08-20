@@ -10,12 +10,10 @@ use serde_json::Value;
 use tracing::{debug, error, info, warn};
 
 use crate::{
-    common::{
-        hash::Blake2bHash,
-        tasks::ExecuteUserTask,
-    },
+    common::{hash::Blake2bHash, tasks::ExecuteUserTask},
     types::{
-        openscrapers::{JurisdictionInfo, RawAttachment},
+        jurisdictions::JurisdictionInfo,
+        openscrapers::RawAttachment,
         s3_stuff::{DIGITALOCEAN_S3, SUPABASE_S3},
     },
 };
