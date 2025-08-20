@@ -34,12 +34,12 @@ impl JurisdictionInfo {
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Clone)]
 pub struct CaseWithJurisdiction {
-    pub case: GenericCase,
+    pub case: RawGenericCase,
     pub jurisdiction: JurisdictionInfo,
 }
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Clone)]
-pub struct GenericAttachment {
+pub struct RawGenericAttachment {
     pub name: String,
     pub document_extension: FileExtension,
     #[serde(default)]
@@ -55,7 +55,7 @@ pub struct GenericAttachment {
 }
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Clone)]
-pub struct GenericFiling {
+pub struct RawGenericFiling {
     pub filed_date: NaiveDate,
     #[serde(default)]
     pub name: String,
@@ -68,13 +68,13 @@ pub struct GenericFiling {
     #[serde(default)]
     pub description: String,
     #[serde(default)]
-    pub attachments: Vec<GenericAttachment>,
+    pub attachments: Vec<RawGenericAttachment>,
     #[serde(default)]
     pub extra_metadata: HashMap<String, serde_json::Value>,
 }
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Clone)]
-pub struct GenericCase {
+pub struct RawGenericCase {
     pub case_govid: NonEmptyString,
     // This shouldnt be an optional field in the final submission, since it can be calculated from
     // the minimum of the fillings, and the scraper should calculate it.
@@ -98,7 +98,7 @@ pub struct GenericCase {
     #[serde(default)]
     pub closed_date: Option<NaiveDate>,
     #[serde(default)]
-    pub filings: Vec<GenericFiling>,
+    pub filings: Vec<RawGenericFiling>,
     #[serde(default)]
     pub case_parties: Vec<GenericParty>,
     #[serde(default)]

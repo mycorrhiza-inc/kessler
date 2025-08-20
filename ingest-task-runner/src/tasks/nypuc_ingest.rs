@@ -18,7 +18,7 @@ use crate::{
             workers::add_task_to_queue,
         },
     },
-    types::openscrapers::GenericCase,
+    types::openscrapers::RawGenericCase,
 };
 
 #[derive(Clone, Copy, Default, Deserialize, JsonSchema)]
@@ -82,7 +82,7 @@ pub async fn get_all_ny_puc_data() -> anyhow::Result<()> {
 
             match res {
                 Ok(response) => {
-                    let case_res = response.json::<GenericCase>().await;
+                    let case_res = response.json::<RawGenericCase>().await;
                     match case_res {
                         Ok(case) => {
                             if let Err(e) = ingest_nypuc_case(case,&pool).await {
@@ -111,7 +111,7 @@ static DEFAULT_POSTGRES_CONNECTION_URL: LazyLock<String> = LazyLock::new(|| {
         .expect("POSTGRES_CONNECTION or DATABASE_URL should be set.")
 });
 
-pub async fn ingest_nypuc_case(case: GenericCase, pool: &Pool<Postgres>) -> anyhow::Result<()> {
+pub async fn ingest_nypuc_case(case: RawGenericCase, pool: &Pool<Postgres>) -> anyhow::Result<()> {
     // Check for existing docket and delete if found
     let existing_docket: Option<Uuid> = sqlx::query_scalar!(
         "SELECT uuid FROM dockets WHERE docket_govid = $1",

@@ -60,7 +60,7 @@ async fn make_openscrapers_public() -> Result<(), serde_json::Value> {
     }
 }
 
-use tracing::info; // <‑‑ pull the macro into scope
+use tracing::info;
 
 /// Checks that the S3 key‑pair we are using has enough permissions to
 /// perform the most common bucket operations.

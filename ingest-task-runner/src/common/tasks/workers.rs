@@ -2,7 +2,7 @@ use std::{
     any::TypeId,
     cmp::Ordering,
     collections::{BinaryHeap, HashMap},
-    convert::Infallible,
+    convert::{Infallible, identity},
     env,
     sync::LazyLock,
     time::{Duration, Instant},
@@ -99,7 +99,7 @@ pub async fn add_task_to_queue(obj: impl ExecuteUserTask, priority: i32) -> Task
 pub async fn read_task_status(task_id: u64) -> Option<TaskStatus> {
     let read_guard = (*TASK_STATUS_DATA).read().await;
     let status = read_guard.get(&task_id).cloned();
-    status
+    identity(status)
 }
 pub async fn add_task_to_queue_and_wait_to_see_if_done(
     obj: impl ExecuteUserTask,
