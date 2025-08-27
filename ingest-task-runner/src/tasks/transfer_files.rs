@@ -4,18 +4,16 @@ use anyhow::anyhow;
 use async_trait::async_trait;
 use aws_sdk_s3::{Client as S3Client, primitives::ByteStream};
 
+use mycorrhiza_common::{hash::Blake2bHash, tasks::ExecuteUserTask};
 use schemars::JsonSchema;
 use serde::Deserialize;
 use serde_json::Value;
 use tracing::{debug, error, info, warn};
 
-use crate::{
-    common::{hash::Blake2bHash, tasks::ExecuteUserTask},
-    types::{
-        jurisdictions::JurisdictionInfo,
-        openscrapers::RawAttachment,
-        s3_stuff::{DIGITALOCEAN_S3, SUPABASE_S3},
-    },
+use crate::types::{
+    jurisdictions::JurisdictionInfo,
+    openscrapers_attachments::RawAttachment,
+    s3_stuff::{DIGITALOCEAN_S3, SUPABASE_S3},
 };
 
 #[derive(Clone, Default, Deserialize, JsonSchema)]

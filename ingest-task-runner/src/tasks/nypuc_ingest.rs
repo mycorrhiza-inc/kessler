@@ -2,21 +2,20 @@ use std::{env, sync::LazyLock};
 
 use async_trait::async_trait;
 use futures::stream::{self, StreamExt};
+use rand::{rngs::SmallRng, seq::SliceRandom, SeedableRng};
 use reqwest::Client;
 use schemars::JsonSchema;
 use serde::Deserialize;
 use serde_json::Value;
 use sqlx::{PgPool, Pool, Postgres, postgres::PgPoolOptions, types::Uuid};
 
-use crate::{
-    common::{
-        llm_deepinfra::org_split_from_dump,
-        misc::{map_empty, shuffle_list},
+use mycorrhiza_common::{
+        misc::{map_empty},
         tasks::ExecuteUserTask,
-    },
-    types::openscrapers::RawGenericCase,
-};
+    }
 use tracing::{info, warn};
+
+use crate::types::openscrapers::ProcessedGenericDocket;
 
 #[derive(Clone, Copy, Default, Deserialize, JsonSchema)]
 pub struct NyPucIngestPurgePrevious {}
@@ -102,7 +101,9 @@ pub async fn get_all_ny_puc_data(purge_data: bool) -> anyhow::Result<()> {
     info!(length=%case_ids.len(),"Got list of all cases");
 
     // randomize list before actual ingest process.
-    shuffle_list(&mut case_ids);
+    let mut rng = SmallRng::from_os_rng();
+    case_ids.shuffle(&mut rng);
+
     // We can set this to always true since we just purged the dataset.
     let ignore_existing = true;
 
@@ -130,7 +131,7 @@ async fn ingest_wrapped_ny_data(case_id: &str, pool: &PgPool, ignore_existing: b
                 .text()
                 .await
                 .unwrap_or("encountered error getting raw response bytes".to_string());
-            let case_res = serde_json::from_str::<RawGenericCase>(&response_bytes);
+            let case_res = serde_json::from_str::<ProcessedGenericDocket>;
             match case_res {
                 Ok(case) => {
                     const CASE_RETRIES: usize = 3;
@@ -156,14 +157,14 @@ async fn ingest_wrapped_ny_data(case_id: &str, pool: &PgPool, ignore_existing: b
     }
 }
 
-static DEFAULT_POSTGRES_CONNECTION_URL: LazyLock<String> = LazyLock::new(|| {
+pub static DEFAULT_POSTGRES_CONNECTION_URL: LazyLock<String> = LazyLock::new(|| {
     env::var("POSTGRES_CONNECTION")
         .or(env::var("DATABASE_URL"))
         .expect("POSTGRES_CONNECTION or DATABASE_URL should be set.")
 });
 
 pub async fn ingest_case_with_retries(
-    case: &RawGenericCase,
+    case: &ProcessedGenericDocket,
     pool: &Pool<Postgres>,
     ignore_existing: bool,
     tries: usize,
@@ -197,7 +198,7 @@ pub async fn ingest_case_with_retries(
 }
 
 pub async fn ingest_nypuc_case(
-    case: &RawGenericCase,
+    case: &ProcessedGenericDocket,
     pool: &Pool<Postgres>,
     ignore_existing: bool,
 ) -> anyhow::Result<()> {
@@ -221,14 +222,6 @@ pub async fn ingest_nypuc_case(
     // FIXME: Delete all this shit once its actually processed once, this should be an openscraper
     // responsibility.
     let mut petitioner_list = vec![];
-    let petitioner_str_opt = map_empty((case.petitioner).trim());
-    if let Some(petitioner_str) = petitioner_str_opt {
-        if let Ok(llmed_petitioner_list) = org_split_from_dump(petitioner_str).await {
-            petitioner_list = llmed_petitioner_list;
-        } else {
-            petitioner_list.push(petitioner_str.to_string());
-        }
-    }
 
     // Create new docket
     let docket_uuid: Uuid = sqlx::query_scalar!(
@@ -258,14 +251,16 @@ pub async fn ingest_nypuc_case(
         .await?;
     }
 
-    for filling in case.filings.iter() {
+    for (_,filling) in case.filings.iter() {
+        let individual_author_strings = filling.individual_authors.iter().map(|s| s.name.to_string()).collect::<Vec<_>>();
+        let organization_author_strings = filling.individual_authors.iter().map(|s| s.name.to_string()).collect::<Vec<_>>();
         let filling_uuid: Uuid = sqlx::query_scalar!(
             "INSERT INTO fillings (docket_uuid, docket_govid, individual_author_strings, organization_author_strings, filed_date, filling_type, filling_name, filling_description)
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING uuid",
             docket_uuid,
             &case.case_govid.as_str(),
-            &filling.individual_authors.iter().map(|s| s.to_string()).collect::<Vec<_>>(),
-            &filling.organization_authors.iter().map(|s| s.to_string()).collect::<Vec<_>>(),
+            &individual_author_strings,
+            &organization_author_strings,
             filling.filed_date,
             &filling.filing_type,
             &filling.name,
@@ -274,7 +269,7 @@ pub async fn ingest_nypuc_case(
         .fetch_one(pool)
         .await?;
 
-        for attachment in filling.attachments.iter() {
+        for (_,attachment) in filling.attachments.iter() {
             if let Some(hash) = attachment.hash {
                 sqlx::query!(
                 "INSERT INTO attachments (parent_filling_uuid, blake2b_hash, attachment_file_extension, attachment_file_name, attachment_title, attachment_url, created_at, updated_at)

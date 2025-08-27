@@ -1,6 +1,6 @@
 use std::{env, sync::LazyLock};
 
-use crate::common::s3_generic::{S3Credentials, S3EnvNames, make_s3_lazylock};
+use mycorrhiza_common::s3_generic::{S3Credentials, S3EnvNames, make_s3_lazylock};
 
 struct SupS3 {}
 impl S3EnvNames for SupS3 {

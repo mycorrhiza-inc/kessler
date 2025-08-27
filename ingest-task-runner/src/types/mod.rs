@@ -1,4 +1,5 @@
 pub mod openscrapers;
+pub mod openscrapers_attachments;
 pub mod s3_stuff;
 
 pub mod jurisdictions {

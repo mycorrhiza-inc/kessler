@@ -6,14 +6,13 @@ use std::{
 };
 
 use aide::axum::ApiRouter;
-use common::{
+use mycorrhiza_common::{
     api_documentation::generate_api_docs_and_serve,
     otel_tracing::initialize_tracing_and_wrap_router,
     tasks::{routing::define_generic_task_routes, workers::spawn_worker_loop},
 };
 use tasks::add_user_task_routes;
 
-mod common;
 mod tasks;
 mod types;
 #[tokio::main]
