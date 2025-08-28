@@ -27,7 +27,8 @@ impl ExecuteUserTask for NyPucIngestPurgePrevious {
                 Ok("Task Completed Successfully".into())
             }
             Err(err) => {
-                tracing::error!(error= % err, error_debug= ?err,"Encountered error in ny_ingest");
+                let err_debug = format!("{:?}", err);
+                tracing::error!(error= % err, error_debug= &err_debug[..500],"Encountered error in ny_ingest");
                 Err(err.to_string().into())
             }
         }
@@ -55,7 +56,8 @@ impl ExecuteUserTask for NyPucIngestGetMissingDockets {
                 Ok("Task Completed Successfully".into())
             }
             Err(err) => {
-                tracing::error!(error= % err, error_debug= ?err,"Encountered error in ny_ingest");
+                let err_debug = format!("{:?}", err);
+                tracing::error!(error= % err, error_debug= &err_debug[..500],"Encountered error in ny_ingest");
                 Err(err.to_string().into())
             }
         }
@@ -135,7 +137,8 @@ async fn ingest_wrapped_ny_data(case_id: &str, pool: &PgPool, ignore_existing: b
                     if let Err(e) =
                         ingest_case_with_retries(&case, pool, ignore_existing, CASE_RETRIES).await
                     {
-                        tracing::error!(case_id = %case_id, error = %e, error_debug = ?e, "Failed to ingest case, dispite retries.");
+                        let err_debug = format!("{:?}", e);
+                        tracing::error!(case_id = %case_id, error = %e, error_debug = &err_debug[..500], "Failed to ingest case, dispite retries.");
                     }
                 }
                 Err(e) => {
@@ -144,7 +147,8 @@ async fn ingest_wrapped_ny_data(case_id: &str, pool: &PgPool, ignore_existing: b
                     } else {
                         &response_bytes
                     };
-                    tracing::error!(case_id = %case_id, error = %e, error_debug = ?e, raw_response =%subslice,"Failed to parse case")
+                    let err_debug = format!("{:?}", e);
+                    tracing::error!(case_id = %case_id, error = %e, error_debug = &err_debug[..500], raw_response =%subslice,"Failed to parse case")
                 }
             }
         }
@@ -262,8 +266,8 @@ pub async fn ingest_nypuc_case(
             .map(|s| s.name.to_string())
             .collect::<Vec<_>>();
         let filling_uuid: Uuid = sqlx::query_scalar!(
-            "INSERT INTO fillings (docket_uuid, docket_govid, individual_author_strings, organization_author_strings, filed_date, filling_type, filling_name, filling_description)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING uuid",
+            "INSERT INTO fillings (docket_uuid, docket_govid, individual_author_strings, organization_author_strings, filed_date, filling_type, filling_name, filling_description, openscrapers_id)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING uuid",
             docket_uuid,
             &case.case_govid.as_str(),
             &individual_author_strings,
@@ -272,36 +276,29 @@ pub async fn ingest_nypuc_case(
             &filling.filing_type,
             &filling.name,
             &filling.description,
+            &filling.openscrapers_filling_id.to_string(),
         )
         .fetch_one(pool)
         .await?;
 
         for (_, attachment) in filling.attachments.iter() {
-            if let Some(hash) = attachment.hash {
-                sqlx::query!(
-                "INSERT INTO attachments (parent_filling_uuid, blake2b_hash, attachment_file_extension, attachment_file_name, attachment_title, attachment_url, created_at, updated_at)
-                 VALUES ($1, $2, $3, $4, $5, $6, now(), now())",
+            let hashstr = if let Some(hash) = attachment.hash {
+                hash.to_string()
+            } else {
+                "".to_string()
+            };
+            sqlx::query!(
+                "INSERT INTO attachments (parent_filling_uuid, blake2b_hash, attachment_file_extension, attachment_file_name, attachment_title, attachment_url, openscrapers_id)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7)",
                 filling_uuid,
-                hash.to_string(),
+                hashstr,
                 &attachment.document_extension.to_string(),
                 &attachment.name,
                 &attachment.name,
-                &attachment.url
+                &attachment.url,
+                &attachment.openscrapers_attachment_id.to_string()
             ).execute(pool)
             .await?;
-            } else {
-                let nullstr: Option<&str> = None;
-                sqlx::query!(
-                "INSERT INTO attachments (parent_filling_uuid, blake2b_hash, attachment_file_extension, attachment_file_name, attachment_title, attachment_url, created_at, updated_at)
-                 VALUES ($1, $2, $3, $4, $5, $6, now(), now())",
-                filling_uuid,
-                nullstr,
-                &attachment.document_extension.to_string(),
-                &attachment.name,
-                &attachment.name,
-                &attachment.url
-            ).execute(pool).await?;
-            }
         }
 
         for indiv_author in filling.individual_authors.iter() {
@@ -344,7 +341,7 @@ async fn fetch_or_insert_new_orgname(
     .await?;
 
     let org_uuid = if let Some(org_record) = org_record {
-        if org_record.org_suffix.is_none() && !org_author.suffix.is_empty() {
+        if org_record.org_suffix.is_empty() && !org_author.suffix.is_empty() {
             let _ = sqlx::query!(
                 "UPDATE organizations SET org_suffix = $1 WHERE uuid = $2",
                 &org_author.suffix,
@@ -355,7 +352,7 @@ async fn fetch_or_insert_new_orgname(
         };
         org_record.uuid
     } else {
-        let org_suffix = map_empty(&*org_author.suffix);
+        let org_suffix = &*org_author.suffix;
         let new_org: Uuid = sqlx::query_scalar!(
                     "INSERT INTO organizations (name, artifical_person_type, aliases, org_suffix) VALUES ($1, 'organization', $2, $3) RETURNING uuid",
                     org_author_str,

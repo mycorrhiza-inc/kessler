@@ -23,7 +23,7 @@ impl ExecuteUserTask for SplitCompatifiedTypeIntoSubtype {
                 Ok("Temp script task completed successfully".into())
             }
             Err(err) => {
-                tracing::error!(error = %err, error_debug = ?err, "Encountered error in temp script task");
+                tracing::error!(error = %err, "Encountered error in temp script task");
                 Err(err.to_string().into())
             }
         }
@@ -67,8 +67,8 @@ async fn process_docket_types() -> anyhow::Result<()> {
     let mut dockets_itemized = vec![];
 
     for docket in dockets {
-        if let Some(docket_type) = docket.docket_type {
-            dockets_itemized.push((docket.uuid, docket_type));
+        if !docket.docket_type.is_empty() {
+            dockets_itemized.push((docket.uuid, docket.docket_type));
         }
     }
 
