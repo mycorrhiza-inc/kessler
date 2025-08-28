@@ -4,9 +4,9 @@ use mycorrhiza_common::tasks::{ExecuteUserTask, display_error_as_json};
 use crate::types::s3_stuff::{DIGITALOCEAN_S3, OPENSCRAPERS_S3_BUCKET};
 
 use schemars::JsonSchema;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Copy, Clone, Deserialize, JsonSchema)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct InitializeConfig {}
 #[async_trait]
 impl ExecuteUserTask for InitializeConfig {

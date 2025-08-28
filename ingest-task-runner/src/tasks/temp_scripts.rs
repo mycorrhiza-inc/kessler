@@ -5,8 +5,6 @@ use serde::Deserialize;
 use serde_json::Value;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::types::Uuid;
-use std::env;
-use std::sync::LazyLock;
 use tracing::info;
 
 use crate::tasks::nypuc_ingest::DEFAULT_POSTGRES_CONNECTION_URL;

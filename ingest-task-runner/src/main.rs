@@ -8,15 +8,20 @@ use std::{
 use aide::axum::ApiRouter;
 use mycorrhiza_common::{
     api_documentation::generate_api_docs_and_serve,
+    llm_deepinfra::DEEPINFRA_API_KEY,
     otel_tracing::initialize_tracing_and_wrap_router,
     tasks::{routing::define_generic_task_routes, workers::spawn_worker_loop},
 };
 use tasks::add_user_task_routes;
 
+use crate::types::s3_stuff::DIGITALOCEAN_S3;
+
 mod tasks;
 mod types;
 #[tokio::main]
 async fn main() -> anyhow::Result<Infallible> {
+    let _ = *DEEPINFRA_API_KEY;
+    let _ = *DIGITALOCEAN_S3;
     // initialise our subscriber
     let app_maker = || {
         let router = ApiRouter::new();

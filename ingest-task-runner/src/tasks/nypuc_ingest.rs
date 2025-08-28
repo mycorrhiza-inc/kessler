@@ -242,7 +242,7 @@ pub async fn ingest_nypuc_case(
     .fetch_one(pool)
     .await?;
     for petitioner in petitioner_list.iter() {
-        let petitioner_uuid = fetch_or_insert_new_orgname(&petitioner, pool).await?;
+        let petitioner_uuid = fetch_or_insert_new_orgname(petitioner, pool).await?;
         sqlx::query!(
             "INSERT INTO docket_petitioned_by_org (docket_uuid, petitioner_uuid) VALUES ($1,$2)",
             docket_uuid,
@@ -372,31 +372,51 @@ async fn fetch_or_insert_new_orgname(
 }
 
 pub async fn delete_all_data(pool: &PgPool) -> anyhow::Result<()> {
-    // Drop all data from tables in the correct order to avoid foreign key constraint violations
-    // Start with the relation tables
-    sqlx::query!("DELETE FROM fillings_filed_by_org_relation")
-        .execute(pool)
+    info!("Starting full data deletion...");
+
+    // Start a transaction
+    let mut tx = pool.begin().await?;
+
+    // Disable statement timeout just for this transaction
+    sqlx::query("SET LOCAL statement_timeout = 0;")
+        .execute(&mut *tx)
+        .await?;
+    info!("Disabled statement_timeout for this transaction");
+
+    // Drop relation tables first
+    info!("Deleting from fillings_filed_by_org_relation");
+    sqlx::query!("TRUNCATE fillings_filed_by_org_relation")
+        .execute(&mut *tx)
         .await?;
 
-    sqlx::query!("DELETE FROM fillings_on_behalf_of_org_relation")
-        .execute(pool)
+    info!("Deleting from fillings_on_behalf_of_org_relation");
+    sqlx::query!("TRUNCATE fillings_on_behalf_of_org_relation")
+        .execute(&mut *tx)
         .await?;
 
-    // Then attachments
-    sqlx::query!("DELETE FROM attachments")
-        .execute(pool)
+    // Attachments
+    info!("Deleting from attachments");
+    sqlx::query!("TRUNCATE attachments")
+        .execute(&mut *tx)
         .await?;
 
-    // Then fillings
-    sqlx::query!("DELETE FROM fillings").execute(pool).await?;
-
-    // Then dockets
-    sqlx::query!("DELETE FROM dockets").execute(pool).await?;
-
-    // Finally organizations
-    sqlx::query!("DELETE FROM organizations")
-        .execute(pool)
+    // Organizations
+    info!("Deleting from organizations");
+    sqlx::query!("TRUNCATE organizations")
+        .execute(&mut *tx)
         .await?;
+
+    // Fillings
+    info!("Deleting from fillings");
+    sqlx::query!("TRUNCATE fillings").execute(&mut *tx).await?;
+
+    // Dockets
+    info!("Deleting from dockets");
+    sqlx::query!("TRUNCATE dockets").execute(&mut *tx).await?;
+
+    // Commit once everything is successful
+    tx.commit().await?;
+    info!("All data deleted successfully ✅");
 
     Ok(())
 }
