@@ -216,9 +216,7 @@ pub async fn ingest_nypuc_case(
                 .await?;
         }
     }
-    // FIXME: Delete all this shit once its actually processed once, this should be an openscraper
-    // responsibility.
-    let petitioner_list: Vec<OrgName> = vec![];
+    let petitioner_list: &[OrgName] = &case.petitioner_list;
     let petitioner_strings = petitioner_list
         .iter()
         .map(|n| n.name.to_string())
@@ -229,15 +227,15 @@ pub async fn ingest_nypuc_case(
         "INSERT INTO dockets (docket_govid, docket_description, docket_title, industry, hearing_officer, opened_date, closed_date, petitioner_strings, docket_type, docket_subtype )
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING uuid",
         &case.case_govid.as_str(),
-        map_empty(&case.description),
+        &case.description,
         &case.case_name,
-        map_empty(&case.industry),
-        map_empty(&case.hearing_officer),
+        &case.industry,
+        &case.hearing_officer,
         case.opened_date,
         case.closed_date,
         &petitioner_strings,
-        map_empty(&case.case_type),
-        Option::<String>::None
+        &case.case_type,
+        "".to_string()
     )
     .fetch_one(pool)
     .await?;
@@ -273,7 +271,7 @@ pub async fn ingest_nypuc_case(
             filling.filed_date,
             &filling.filing_type,
             &filling.name,
-            map_empty(&filling.description),
+            &filling.description,
         )
         .fetch_one(pool)
         .await?;

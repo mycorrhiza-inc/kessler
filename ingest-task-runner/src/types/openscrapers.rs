@@ -81,6 +81,9 @@ pub struct ProcessedGenericDocket {
     #[serde(default)]
     pub industry: String,
     #[serde(default)]
+    pub petitioner_list: Vec<OrgName>,
+    // Depricated field, use petitioner_list instead
+    #[serde(default, skip_serializing_if = "String::is_empty")]
     pub petitioner: String,
     #[serde(default)]
     pub hearing_officer: String,

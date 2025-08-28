@@ -88,6 +88,7 @@ pub async fn drop_existing_schema(tx: &mut PgConnection) -> anyhow::Result<()> {
 }
 
 pub async fn create_schema(tx: &mut PgConnection) -> anyhow::Result<()> {
+    // organizations
     sqlx::query!(
         "CREATE TABLE public.organizations (
           uuid uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -103,7 +104,11 @@ pub async fn create_schema(tx: &mut PgConnection) -> anyhow::Result<()> {
     )
     .execute(&mut *tx)
     .await?;
+    sqlx::query!("ALTER TABLE public.organizations ENABLE ROW LEVEL SECURITY;")
+        .execute(&mut *tx)
+        .await?;
 
+    // dockets
     sqlx::query!(
         "CREATE TABLE public.dockets (
           uuid uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -126,7 +131,11 @@ pub async fn create_schema(tx: &mut PgConnection) -> anyhow::Result<()> {
     )
     .execute(&mut *tx)
     .await?;
+    sqlx::query!("ALTER TABLE public.dockets ENABLE ROW LEVEL SECURITY;")
+        .execute(&mut *tx)
+        .await?;
 
+    // fillings
     sqlx::query!(
         "CREATE TABLE public.fillings (
           uuid uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -147,7 +156,11 @@ pub async fn create_schema(tx: &mut PgConnection) -> anyhow::Result<()> {
     )
     .execute(&mut *tx)
     .await?;
+    sqlx::query!("ALTER TABLE public.fillings ENABLE ROW LEVEL SECURITY;")
+        .execute(&mut *tx)
+        .await?;
 
+    // attachments
     sqlx::query!(
         "CREATE TABLE public.attachments (
           uuid uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -168,7 +181,11 @@ pub async fn create_schema(tx: &mut PgConnection) -> anyhow::Result<()> {
     )
     .execute(&mut *tx)
     .await?;
+    sqlx::query!("ALTER TABLE public.attachments ENABLE ROW LEVEL SECURITY;")
+        .execute(&mut *tx)
+        .await?;
 
+    // docket_petitioned_by_org
     sqlx::query!(
         "CREATE TABLE public.docket_petitioned_by_org (
           uuid uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -182,7 +199,11 @@ pub async fn create_schema(tx: &mut PgConnection) -> anyhow::Result<()> {
     )
     .execute(&mut *tx)
     .await?;
+    sqlx::query!("ALTER TABLE public.docket_petitioned_by_org ENABLE ROW LEVEL SECURITY;")
+        .execute(&mut *tx)
+        .await?;
 
+    // fillings_filed_by_org_relation
     sqlx::query!(
         "CREATE TABLE public.fillings_filed_by_org_relation (
           relation_uuid uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -196,7 +217,11 @@ pub async fn create_schema(tx: &mut PgConnection) -> anyhow::Result<()> {
     )
     .execute(&mut *tx)
     .await?;
+    sqlx::query!("ALTER TABLE public.fillings_filed_by_org_relation ENABLE ROW LEVEL SECURITY;")
+        .execute(&mut *tx)
+        .await?;
 
+    // fillings_on_behalf_of_org_relation
     sqlx::query!(
         "CREATE TABLE public.fillings_on_behalf_of_org_relation (
           relation_uuid uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -207,6 +232,11 @@ pub async fn create_schema(tx: &mut PgConnection) -> anyhow::Result<()> {
           CONSTRAINT fillings_organization_authors_rel_author_organization_uuid_fkey FOREIGN KEY (author_organization_uuid) REFERENCES public.organizations(uuid),
           CONSTRAINT fillings_organization_authors_relation_filling_uuid_fkey FOREIGN KEY (filling_uuid) REFERENCES public.fillings(uuid)
         );",
+    )
+    .execute(&mut *tx)
+    .await?;
+    sqlx::query!(
+        "ALTER TABLE public.fillings_on_behalf_of_org_relation ENABLE ROW LEVEL SECURITY;"
     )
     .execute(&mut *tx)
     .await?;
