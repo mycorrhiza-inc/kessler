@@ -1,9 +1,7 @@
 use async_trait::async_trait;
-use mycorrhiza_common::tasks::{ExecuteUserTask, display_error_as_json}
+use mycorrhiza_common::tasks::{ExecuteUserTask, display_error_as_json};
 
-use crate::{
-    types::s3_stuff::{DIGITALOCEAN_S3, OPENSCRAPERS_S3_BUCKET},
-};
+use crate::types::s3_stuff::{DIGITALOCEAN_S3, OPENSCRAPERS_S3_BUCKET};
 
 use schemars::JsonSchema;
 use serde::Deserialize;

@@ -2,20 +2,17 @@ use std::{env, sync::LazyLock};
 
 use async_trait::async_trait;
 use futures::stream::{self, StreamExt};
-use rand::{rngs::SmallRng, seq::SliceRandom, SeedableRng};
+use rand::{SeedableRng, rngs::SmallRng, seq::SliceRandom};
 use reqwest::Client;
 use schemars::JsonSchema;
 use serde::Deserialize;
 use serde_json::Value;
 use sqlx::{PgPool, Pool, Postgres, postgres::PgPoolOptions, types::Uuid};
 
-use mycorrhiza_common::{
-        misc::{map_empty},
-        tasks::ExecuteUserTask,
-    }
+use mycorrhiza_common::{misc::map_empty, tasks::ExecuteUserTask};
 use tracing::{info, warn};
 
-use crate::types::openscrapers::ProcessedGenericDocket;
+use crate::types::openscrapers::{OrgName, ProcessedGenericDocket};
 
 #[derive(Clone, Copy, Default, Deserialize, JsonSchema)]
 pub struct NyPucIngestPurgePrevious {}
@@ -131,7 +128,7 @@ async fn ingest_wrapped_ny_data(case_id: &str, pool: &PgPool, ignore_existing: b
                 .text()
                 .await
                 .unwrap_or("encountered error getting raw response bytes".to_string());
-            let case_res = serde_json::from_str::<ProcessedGenericDocket>;
+            let case_res = serde_json::from_str::<ProcessedGenericDocket>(&response_bytes);
             match case_res {
                 Ok(case) => {
                     const CASE_RETRIES: usize = 3;
@@ -221,7 +218,11 @@ pub async fn ingest_nypuc_case(
     }
     // FIXME: Delete all this shit once its actually processed once, this should be an openscraper
     // responsibility.
-    let mut petitioner_list = vec![];
+    let petitioner_list: Vec<OrgName> = vec![];
+    let petitioner_strings = petitioner_list
+        .iter()
+        .map(|n| n.name.to_string())
+        .collect::<Vec<_>>();
 
     // Create new docket
     let docket_uuid: Uuid = sqlx::query_scalar!(
@@ -234,14 +235,14 @@ pub async fn ingest_nypuc_case(
         map_empty(&case.hearing_officer),
         case.opened_date,
         case.closed_date,
-        &petitioner_list,
+        &petitioner_strings,
         map_empty(&case.case_type),
         Option::<String>::None
     )
     .fetch_one(pool)
     .await?;
     for petitioner in petitioner_list.iter() {
-        let petitioner_uuid = fetch_or_insert_new_orgstring(petitioner, pool).await?;
+        let petitioner_uuid = fetch_or_insert_new_orgname(&petitioner, pool).await?;
         sqlx::query!(
             "INSERT INTO docket_petitioned_by_org (docket_uuid, petitioner_uuid) VALUES ($1,$2)",
             docket_uuid,
@@ -251,9 +252,17 @@ pub async fn ingest_nypuc_case(
         .await?;
     }
 
-    for (_,filling) in case.filings.iter() {
-        let individual_author_strings = filling.individual_authors.iter().map(|s| s.name.to_string()).collect::<Vec<_>>();
-        let organization_author_strings = filling.individual_authors.iter().map(|s| s.name.to_string()).collect::<Vec<_>>();
+    for (_, filling) in case.filings.iter() {
+        let individual_author_strings = filling
+            .individual_authors
+            .iter()
+            .map(|s| s.name.to_string())
+            .collect::<Vec<_>>();
+        let organization_author_strings = filling
+            .individual_authors
+            .iter()
+            .map(|s| s.name.to_string())
+            .collect::<Vec<_>>();
         let filling_uuid: Uuid = sqlx::query_scalar!(
             "INSERT INTO fillings (docket_uuid, docket_govid, individual_author_strings, organization_author_strings, filed_date, filling_type, filling_name, filling_description)
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING uuid",
@@ -269,7 +278,7 @@ pub async fn ingest_nypuc_case(
         .fetch_one(pool)
         .await?;
 
-        for (_,attachment) in filling.attachments.iter() {
+        for (_, attachment) in filling.attachments.iter() {
             if let Some(hash) = attachment.hash {
                 sqlx::query!(
                 "INSERT INTO attachments (parent_filling_uuid, blake2b_hash, attachment_file_extension, attachment_file_name, attachment_title, attachment_url, created_at, updated_at)
@@ -298,7 +307,7 @@ pub async fn ingest_nypuc_case(
         }
 
         for indiv_author in filling.individual_authors.iter() {
-            let org_uuid = fetch_or_insert_new_orgstring(indiv_author.as_str(), pool).await?;
+            let org_uuid = fetch_or_insert_new_orgname(indiv_author, pool).await?;
 
             sqlx::query!(
                 "INSERT INTO fillings_filed_by_org_relation (author_individual_uuid, filling_uuid) VALUES ($1, $2)",
@@ -310,7 +319,7 @@ pub async fn ingest_nypuc_case(
         }
 
         for org_author in filling.organization_authors.iter() {
-            let org_uuid = fetch_or_insert_new_orgstring(org_author.as_str(), pool).await?;
+            let org_uuid = fetch_or_insert_new_orgname(org_author, pool).await?;
             sqlx::query!(
                 "INSERT INTO fillings_on_behalf_of_org_relation (author_organization_uuid, filling_uuid) VALUES ($1, $2)",
                 org_uuid,
@@ -325,24 +334,35 @@ pub async fn ingest_nypuc_case(
     Ok(())
 }
 
-async fn fetch_or_insert_new_orgstring(
-    org_author: &str,
+async fn fetch_or_insert_new_orgname(
+    org_author: &OrgName,
     pool: &Pool<Postgres>,
 ) -> Result<Uuid, anyhow::Error> {
-    let org_record: Option<Uuid> = sqlx::query_scalar!(
-        "SELECT uuid FROM organizations WHERE name = $1 AND artifical_person_type = 'organization'",
-        org_author
-    )
-    .fetch_optional(pool)
+    let org_author_str = org_author.name.as_str();
+    let org_record  = sqlx::query!(
+        "SELECT uuid, org_suffix FROM organizations WHERE name = $1 AND artifical_person_type = 'organization'",
+        org_author_str,
+    ).fetch_optional(pool)
     .await?;
 
     let org_uuid = if let Some(org_record) = org_record {
-        org_record
+        if org_record.org_suffix.is_none() && !org_author.suffix.is_empty() {
+            let _ = sqlx::query!(
+                "UPDATE organizations SET org_suffix = $1 WHERE uuid = $2",
+                &org_author.suffix,
+                &org_record.uuid
+            )
+            .execute(pool)
+            .await?;
+        };
+        org_record.uuid
     } else {
+        let org_suffix = map_empty(&*org_author.suffix);
         let new_org: Uuid = sqlx::query_scalar!(
-                    "INSERT INTO organizations (name, artifical_person_type, aliases) VALUES ($1, 'organization', $2) RETURNING uuid",
-                    org_author,
-                    &vec![org_author.to_string()]
+                    "INSERT INTO organizations (name, artifical_person_type, aliases, org_suffix) VALUES ($1, 'organization', $2, $3) RETURNING uuid",
+                    org_author_str,
+                    &vec![org_author_str.to_string()],
+                    org_suffix,
                 )
                 .fetch_one(pool)
                 .await?;
