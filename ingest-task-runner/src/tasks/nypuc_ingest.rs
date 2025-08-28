@@ -378,7 +378,7 @@ pub async fn delete_all_data(pool: &PgPool) -> anyhow::Result<()> {
     let mut tx = pool.begin().await?;
 
     // Disable statement timeout just for this transaction
-    sqlx::query("SET LOCAL statement_timeout = 0;")
+    sqlx::query!("SET LOCAL statement_timeout = 0;")
         .execute(&mut *tx)
         .await?;
     info!("Disabled statement_timeout for this transaction");

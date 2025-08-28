@@ -82,7 +82,7 @@ async fn process_docket_types() -> anyhow::Result<()> {
             let new_docket_subtype = parts[1].trim();
 
             // Update the docket with the new values
-            sqlx::query!(
+            let _ = sqlx::query!(
                 "UPDATE dockets SET docket_type = $1, docket_subtype = $2 WHERE uuid = $3",
                 new_docket_type,
                 new_docket_subtype,
@@ -92,7 +92,7 @@ async fn process_docket_types() -> anyhow::Result<()> {
             .await;
         }
     };
-    let iterators = stream::iter(dockets_itemized.into_iter())
+    let _iterators = stream::iter(dockets_itemized.into_iter())
         .map(docket_update_closure)
         .buffer_unordered(5)
         .count()

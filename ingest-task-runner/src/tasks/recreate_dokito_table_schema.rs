@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use schemars::JsonSchema;
 use serde::Deserialize;
 use serde_json::Value;
-use sqlx::{PgConnection, PgTransaction, postgres::PgPoolOptions};
+use sqlx::{PgConnection, postgres::PgPoolOptions};
 use tracing::info;
 
 use mycorrhiza_common::tasks::ExecuteUserTask;
@@ -46,7 +46,7 @@ pub async fn recreate_schema() -> anyhow::Result<()> {
 
     let mut tx = pool.begin().await?;
 
-    sqlx::query("SET LOCAL statement_timeout = 0;")
+    sqlx::query!("SET LOCAL statement_timeout = 0;")
         .execute(&mut *tx)
         .await?;
 
@@ -63,84 +63,84 @@ pub async fn recreate_schema() -> anyhow::Result<()> {
 }
 
 pub async fn drop_existing_schema(tx: &mut PgConnection) -> anyhow::Result<()> {
-    sqlx::query("DROP TABLE IF EXISTS public.docket_petitioned_by_org CASCADE;")
+    sqlx::query!("DROP TABLE IF EXISTS public.docket_petitioned_by_org CASCADE;")
         .execute(&mut *tx)
         .await?;
-    sqlx::query("DROP TABLE IF EXISTS public.fillings_filed_by_org_relation CASCADE;")
+    sqlx::query!("DROP TABLE IF EXISTS public.fillings_filed_by_org_relation CASCADE;")
         .execute(&mut *tx)
         .await?;
-    sqlx::query("DROP TABLE IF EXISTS public.fillings_on_behalf_of_org_relation CASCADE;")
+    sqlx::query!("DROP TABLE IF EXISTS public.fillings_on_behalf_of_org_relation CASCADE;")
         .execute(&mut *tx)
         .await?;
-    sqlx::query("DROP TABLE IF EXISTS public.attachments CASCADE;")
+    sqlx::query!("DROP TABLE IF EXISTS public.attachments CASCADE;")
         .execute(&mut *tx)
         .await?;
-    sqlx::query("DROP TABLE IF EXISTS public.fillings CASCADE;")
+    sqlx::query!("DROP TABLE IF EXISTS public.fillings CASCADE;")
         .execute(&mut *tx)
         .await?;
-    sqlx::query("DROP TABLE IF EXISTS public.dockets CASCADE;")
+    sqlx::query!("DROP TABLE IF EXISTS public.dockets CASCADE;")
         .execute(&mut *tx)
         .await?;
-    sqlx::query("DROP TABLE IF EXISTS public.organizations CASCADE;")
+    sqlx::query!("DROP TABLE IF EXISTS public.organizations CASCADE;")
         .execute(&mut *tx)
         .await?;
     Ok(())
 }
 
 pub async fn create_schema(tx: &mut PgConnection) -> anyhow::Result<()> {
-    sqlx::query(
+    sqlx::query!(
         "CREATE TABLE public.organizations (
           uuid uuid NOT NULL DEFAULT gen_random_uuid(),
           created_at timestamp with time zone NOT NULL DEFAULT now(),
           updated_at timestamp with time zone NOT NULL DEFAULT now(),
-          name character varying NOT NULL,
-          aliases ARRAY NOT NULL,
-          description character varying,
-          artifical_person_type character varying,
-          org_suffix character varying,
+          name TEXT NOT NULL DEFAULT '',
+          aliases TEXT[] NOT NULL DEFAULT '{}',
+          description TEXT NOT NULL DEFAULT '',
+          artifical_person_type TEXT NOT NULL DEFAULT '',
+          org_suffix TEXT NOT NULL DEFAULT '',
           CONSTRAINT organizations_pkey PRIMARY KEY (uuid)
         );",
     )
     .execute(&mut *tx)
     .await?;
 
-    sqlx::query(
+    sqlx::query!(
         "CREATE TABLE public.dockets (
           uuid uuid NOT NULL DEFAULT gen_random_uuid(),
           updated_at timestamp with time zone NOT NULL DEFAULT now(),
           created_at timestamp with time zone NOT NULL DEFAULT now(),
-          docket_govid character varying NOT NULL DEFAULT ''::character varying UNIQUE,
-          docket_subtype character varying,
-          docket_description character varying,
-          docket_title character varying,
-          industry character varying,
-          hearing_officer character varying,
+          docket_govid TEXT NOT NULL DEFAULT '' UNIQUE,
+          docket_subtype TEXT NOT NULL DEFAULT '',
+          docket_description TEXT NOT NULL DEFAULT '',
+          docket_title TEXT NOT NULL DEFAULT '',
+          industry TEXT NOT NULL DEFAULT '',
+          hearing_officer TEXT NOT NULL DEFAULT '',
           opened_date date NOT NULL,
           closed_date date,
-          current_status character varying,
-          assigned_judge character varying,
-          docket_type character varying,
-          petitioner_strings ARRAY,
+          current_status TEXT NOT NULL DEFAULT '',
+          assigned_judge TEXT NOT NULL DEFAULT '',
+          docket_type TEXT NOT NULL DEFAULT '',
+          petitioner_strings TEXT[] NOT NULL DEFAULT '{}',
           CONSTRAINT dockets_pkey PRIMARY KEY (uuid)
         );",
     )
     .execute(&mut *tx)
     .await?;
 
-    sqlx::query(
+    sqlx::query!(
         "CREATE TABLE public.fillings (
           uuid uuid NOT NULL DEFAULT gen_random_uuid(),
           docket_uuid uuid NOT NULL,
-          docket_govid character varying NOT NULL,
-          individual_author_strings ARRAY NOT NULL,
-          organization_author_strings ARRAY NOT NULL,
+          docket_govid TEXT NOT NULL DEFAULT '',
+          individual_author_strings TEXT[] NOT NULL DEFAULT '{}',
+          organization_author_strings TEXT[] NOT NULL DEFAULT '{}',
           filed_date date NOT NULL,
-          filling_type character varying,
-          filling_name character varying,
-          filling_description character varying,
+          filling_type TEXT NOT NULL DEFAULT '',
+          filling_name TEXT NOT NULL DEFAULT '',
+          filling_description TEXT NOT NULL DEFAULT '',
           created_at timestamp with time zone NOT NULL DEFAULT now(),
           updated_at timestamp with time zone NOT NULL DEFAULT now(),
-          filling_govid character varying,
+          filling_govid TEXT NOT NULL DEFAULT '',
           CONSTRAINT fillings_pkey PRIMARY KEY (uuid),
           CONSTRAINT fillings_docket_uuid_fkey FOREIGN KEY (docket_uuid) REFERENCES public.dockets(uuid)
         );",
@@ -148,20 +148,20 @@ pub async fn create_schema(tx: &mut PgConnection) -> anyhow::Result<()> {
     .execute(&mut *tx)
     .await?;
 
-    sqlx::query(
+    sqlx::query!(
         "CREATE TABLE public.attachments (
           uuid uuid NOT NULL DEFAULT gen_random_uuid(),
           created_at timestamp with time zone NOT NULL DEFAULT now(),
           updated_at timestamp with time zone NOT NULL DEFAULT now(),
-          blake2b_hash character varying,
+          blake2b_hash TEXT NOT NULL DEFAULT '',
           parent_filling_uuid uuid NOT NULL,
-          attachment_file_extension character varying,
-          attachment_file_name character varying,
-          attachment_title character varying,
-          attachment_type character varying,
-          attachment_subtype character varying,
-          attachment_url character varying,
-          openscrapers_id character varying NOT NULL DEFAULT ''::character varying UNIQUE,
+          attachment_file_extension TEXT NOT NULL DEFAULT '',
+          attachment_file_name TEXT NOT NULL DEFAULT '',
+          attachment_title TEXT NOT NULL DEFAULT '',
+          attachment_type TEXT NOT NULL DEFAULT '',
+          attachment_subtype TEXT NOT NULL DEFAULT '',
+          attachment_url TEXT NOT NULL DEFAULT '',
+          openscrapers_id TEXT NOT NULL DEFAULT '' UNIQUE,
           CONSTRAINT attachments_pkey PRIMARY KEY (uuid),
           CONSTRAINT attachments_parent_filling_uuid_fkey FOREIGN KEY (parent_filling_uuid) REFERENCES public.fillings(uuid)
         );",
@@ -169,7 +169,7 @@ pub async fn create_schema(tx: &mut PgConnection) -> anyhow::Result<()> {
     .execute(&mut *tx)
     .await?;
 
-    sqlx::query(
+    sqlx::query!(
         "CREATE TABLE public.docket_petitioned_by_org (
           uuid uuid NOT NULL DEFAULT gen_random_uuid(),
           created_at timestamp with time zone NOT NULL DEFAULT now(),
@@ -183,7 +183,7 @@ pub async fn create_schema(tx: &mut PgConnection) -> anyhow::Result<()> {
     .execute(&mut *tx)
     .await?;
 
-    sqlx::query(
+    sqlx::query!(
         "CREATE TABLE public.fillings_filed_by_org_relation (
           relation_uuid uuid NOT NULL DEFAULT gen_random_uuid(),
           created_at timestamp with time zone NOT NULL DEFAULT now(),
@@ -197,7 +197,7 @@ pub async fn create_schema(tx: &mut PgConnection) -> anyhow::Result<()> {
     .execute(&mut *tx)
     .await?;
 
-    sqlx::query(
+    sqlx::query!(
         "CREATE TABLE public.fillings_on_behalf_of_org_relation (
           relation_uuid uuid NOT NULL DEFAULT gen_random_uuid(),
           created_at timestamp with time zone NOT NULL DEFAULT now(),
@@ -210,5 +210,6 @@ pub async fn create_schema(tx: &mut PgConnection) -> anyhow::Result<()> {
     )
     .execute(&mut *tx)
     .await?;
+
     Ok(())
 }
